@@ -428,16 +428,16 @@ export const runP002 = () => {
                 
                 //await searchTable.fill(sqlInjectionQuery);
                 //await table.press('Enter');
-                await page.waitForTimeout(2000); // Wait for results to update
+                await page.waitForLoadState('networkidle');
                 const validRowsAfterSqlInjection = await getValidRows();
-                await page.waitForTimeout(2000); // Wait for results to update
+                await page.waitForLoadState('networkidle');
                 expect(validRowsAfterSqlInjection.length).toBe(0); // Expect no valid rows or appropriate handling
 
                 // XSS Test
                 const xssQuery = "<script>alert('XSS')</script>";
                 await searchTable.fill(xssQuery);
                 await searchTable.press('Enter');
-                await page.waitForTimeout(2000); // Wait for results to update
+                await page.waitForLoadState('networkidle');
                 const validRowsAfterXss = await getValidRows();
                 
                 expect(validRowsAfterXss.length).toBe(0); // Expect no valid rows or appropriate handling
