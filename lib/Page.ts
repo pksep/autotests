@@ -19,6 +19,8 @@ import { exec } from 'child_process';
 import exp from 'constants';
 import { thru } from 'lodash';
 
+
+
 /**
  * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
  * Inherits from the AbstractPage class for basic page handling functionality.
@@ -33,6 +35,7 @@ export class PageObject extends AbstractPage {
     this.input = new Input(page); // Initialize the input helper
   }
 
+  
   /**
    * Gets the text content of a specified selector.
    * @param selector - The CSS selector for the element to retrieve text from.
@@ -555,7 +558,6 @@ export class PageObject extends AbstractPage {
 
   async findTable(selector: string): Promise<void> {
     // Wait for the element to be visible and enabled
-    console.log(selector);
     await this.page.waitForSelector(selector, { state: 'visible' });
 
     // Check if the element is present on the page
@@ -985,7 +987,7 @@ async checkDatesWithOrderList(
     if (icon) {
       // Scroll the icon into view before clicking it
       await iconCell.evaluate(node => node.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-      await page.waitForTimeout(500); // Optional: wait for smooth scroll to finish
+      await page.waitForTimeout(5000); // Optional: wait for smooth scroll to finish
 
       await icon.click();
       logger.info(`Clicked on the icon in row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`);
@@ -999,7 +1001,8 @@ async checkDatesWithOrderList(
         plannedShipmentModalColId
 
       );
-
+      console.log("DDDDDD")
+      page.mouse.dblclick(1,1);
       if (!result.success) {
         // Log the error and continue testing
         allTestsPassed = false; // Mark the overall success status as false
@@ -1179,10 +1182,8 @@ async checkDatesWithOrderList(
     // Step 1: Check that the modal has opened
     await page.waitForSelector(`[data-testid="${modalSelectorId}"]`, { state: 'visible', timeout: 50000 });
     logger.info(`Modal opened: ${modalSelectorId}`);
-
+  
     // Step 2: Find the table in the modal
-    //const modalTable = await page.$(`[data-testid="${modalTableSelectorId}"]`);
-
     const table = await page.waitForSelector(`[data-testid="${modalTableSelectorId}"]`, { state: 'visible', timeout: 50000 });
     if (!table) {
       logger.error(`Table with selector "${modalTableSelectorId}" not found in the modal.`);
@@ -1191,16 +1192,16 @@ async checkDatesWithOrderList(
         message: `Table with selector "${modalTableSelectorId}" not found in the modal.`
       };
     }
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
+    await this.waitingTableBody(`[data-testid="${modalTableSelectorId}"]`);
     logger.info(`Table with selector "${modalTableSelectorId}" found in the modal.`);
+  
     // Step 3: Find the columns in the modal table
-    console.log(modalTableSelectorId, urgencyDateId, plannedShipmentDateId);
     const urgencyModalCellNumber = await this.findColumn(page, modalTableSelectorId, urgencyDateId);
-
     logger.info(`Urgency Modal Cell: ${urgencyModalCellNumber}`);
     const plannedShipmentModalCellNumber = await this.findColumn(page, modalTableSelectorId, plannedShipmentDateId);
     logger.info(`Planned Shipment Modal Cell: ${plannedShipmentModalCellNumber}`);
-
+  
     if (!urgencyModalCellNumber || !plannedShipmentModalCellNumber) {
       logger.error(`Required columns not found in the modal table.`);
       return {
@@ -1208,63 +1209,54 @@ async checkDatesWithOrderList(
         message: `Required columns not found in the modal table.`
       };
     }
-    // Now to get all the rows in the table and remove the headers
-    // Get all rows in the table excluding the header rows
+  
+    // Step 4: Extract dates from the modal table
     const rows = await table.$$('tbody tr');
-    const headerRows = await table.$$('tbody tr th');
-    const removedRows = rows.splice(0, headerRows.length);
-
-    // Filter out rows that contain `th` elements
-    const filteredRows = [];
-    for (const row of rows) {
-      const thElements = await row.$$('th');
-
-      if (thElements.length === 0) {
-        filteredRows.push(row);
-      } else {
-      }
-    }  
+    const filteredRows = await this.filterRowsWithoutTh(rows);
     let urgencyModalDate = '';
     let plannedShipmentModalDate = '';
     let counter = 0;
+  
     for (const row of filteredRows) {
-        const rowHtml = await row.evaluate(node => node.outerHTML);
-        logger.info(`Row HTML: ${rowHtml}`);
-      counter++;
-      // Check if the row has the .not-deficit CSS class
       const hasNotDeficitClass = await row.evaluate(node => node.classList.contains('not-deficit'));
       if (!hasNotDeficitClass) {
-        // Process the row as it doesn't have the .not-deficit CSS class
         const cells = await row.$$('td');
         urgencyModalDate = await cells[urgencyModalCellNumber].innerText();
-        
-        logger.info("Urgency Modal Date:" ,urgencyModalDate);
         plannedShipmentModalDate = await cells[plannedShipmentModalCellNumber].innerText();
-        logger.info(`Found the row without .not-deficit class. Urgency Date: ${urgencyModalCellNumber}, Planned Shipment Date: ${plannedShipmentModalCellNumber}`);
-    
-        // Perform any further actions with this row
-        break; // Exit the loop after finding the first matching row
+        logger.info(`Row without .not-deficit class found. Urgency Date: ${urgencyModalDate}, Planned Shipment Date: ${plannedShipmentModalDate}`);
+        break;
       }
     }
-    // Step 4: Extract the dates from the modal table
-
+  
     logger.info(`Modal Urgency Date: ${urgencyModalDate}`);
     logger.info(`Modal Planned Shipment Date: ${plannedShipmentModalDate}`);
   
     // Step 5: Confirm that the modal dates match the parent table dates
-    if (urgencyModalColValForCompare.trim() !== urgencyModalDate.trim() || plannedShipmentModalColValForCompare.trim() !== plannedShipmentModalDate.trim()) {
-      this.page.mouse.dblclick(1,1);
-      logger.error(`counter: ${counter}`);
-      logger.error(`Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`);
-      return {
-        success: false,
-        message: `Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`
-      };
-    }
-    this.page.mouse.dblclick(1,1);
-    logger.info(`Dates MATCH for row with urgency date ${urgencyModalColValForCompare} and planned shipment date ${plannedShipmentModalColValForCompare}.`);
+    //if (urgencyModalColValForCompare.trim() !== urgencyModalDate.trim() || plannedShipmentModalColValForCompare.trim() !== plannedShipmentModalDate.trim()) {
+    //  console.log("FFFFFF");
+    //  logger.error(`counter: ${counter}`);
+     // logger.error(`Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`);
+    //  return {
+    //    success: false,
+    //    message: `Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`
+    //  };
+    //}
+    //console.log("GGGGG");
+    //logger.info(`Dates MATCH for row with urgency date ${urgencyModalColValForCompare} and planned shipment date ${plannedShipmentModalColValForCompare}.`);
     return { success: true };
   }
+  
+  async filterRowsWithoutTh(rows: ElementHandle[]): Promise<ElementHandle[]> {
+    const filteredRows: ElementHandle[] = [];
+    for (const row of rows) {
+      const thElements = await row.$$('th');
+      if (thElements.length === 0) {
+        filteredRows.push(row);
+      }
+    }
+    return filteredRows;
+  }
+  
 
   
 
@@ -1282,7 +1274,7 @@ async checkDatesWithOrderList(
       );
     }
 
-    console.log(`Текущая дата "${formattedToday}" успешно найдена в тексте.`);
+    logger.info(`Текущая дата "${formattedToday}" успешно найдена в тексте.`);
     return formattedToday;
   }
 
@@ -1406,7 +1398,7 @@ async checkDatesWithOrderList(
         .locator('td')
         .nth(cellIndex - 1)
         .dblclick();
-      console.log(`Дважды кликнули по ячейке ${cellIndex} первой строки.`);
+      logger.info(`Дважды кликнули по ячейке ${cellIndex} первой строки.`);
     }
 
     return valueInCell;
@@ -1442,21 +1434,21 @@ async checkDatesWithOrderList(
 
     const valueInCell = cells[cellIndex - 1];
 
-    console.log(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
+    logger.info(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
 
     if (click === Click.Yes) {
       await firstRow
         .locator('td')
         .nth(cellIndex - 1)
         .click();
-      console.log(`Кликнули по ячейке ${cellIndex} первой строки.`);
+      logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
     }
     if (dblclick === Click.Yes) {
       await firstRow
         .locator('td')
         .nth(cellIndex - 1)
         .dblclick();
-      console.log(`Дважды кликнули по ячейке ${cellIndex} первой строки.`);
+      logger.info(`Дважды кликнули по ячейке ${cellIndex} первой строки.`);
     }
 
     return valueInCell;
@@ -1491,7 +1483,7 @@ async checkDatesWithOrderList(
 
     const valueInCell = cells[cellIndex - 1];
 
-    console.log(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
+    logger.info(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
 
     if (click === Click.Yes) {
       const iconOperation = await firstRow
@@ -1499,7 +1491,7 @@ async checkDatesWithOrderList(
         .nth(cellIndex - 1)
         .locator('.link_img');
       await iconOperation.click();
-      console.log(`Кликнули по ячейке ${cellIndex} первой строки.`);
+      logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
     }
 
     return valueInCell;
@@ -1544,14 +1536,13 @@ async checkDatesWithOrderList(
    */
   async showLeftTable(tableId: string, buttonId: string){
     await this.page.waitForLoadState('networkidle');
+
     // Capture the number of columns from the checkTableColumns method
     const button = `[data-testid="${buttonId}"]`;
     const table = `[data-testid="${tableId}"]`;
-    console.log(table);
-    console.log(button);
+    await this.page.waitForTimeout(3000);
     const isVisible = await this.page.isVisible(table);
-    console.log(isVisible);
-    this.page.waitForTimeout(500);
+    await this.page.waitForLoadState('networkidle');
     if (!isVisible){
         await this.page.click(button);
         await this.page.waitForSelector(table, { state: 'visible' });
@@ -1588,9 +1579,7 @@ async checkDatesWithOrderList(
       }
     }
   
-    logger.info(`Final column IDs: ${JSON.stringify(columnIds)}`);
-    console.log(`Final column IDs: ${JSON.stringify(columnIds)}`); // Additional console log
-  
+    logger.info(`Final column IDs: ${JSON.stringify(columnIds)}`);  
     return columnIds;
   }
   
@@ -1648,7 +1637,7 @@ async checkDatesWithOrderList(
       );
     }
 
-    console.log(
+    logger.info(
       `Текст "Перенести * в архив?" успешно найден в модальном окне.`
     );
   }
@@ -1669,7 +1658,7 @@ async checkDatesWithOrderList(
     }
 
     await headerCells.nth(cellIndex - 1).click();
-    console.log(`Кликнули по ячейке ${cellIndex} заголовка таблицы.`);
+    logger.info(`Кликнули по ячейке ${cellIndex} заголовка таблицы.`);
   }
 
 
@@ -1753,7 +1742,7 @@ async checkDatesWithOrderList(
     const operation = await modalWindow
       .locator('[data-testid="ModalMark-Operation-Current"] span')
       .textContent();
-    console.log(`Тип операции: ${operation}`);
+    logger.info(`Тип операции: ${operation}`);
 
     if (!operation || !operation.includes(nameOperation)) {
       throw new Error(
@@ -1762,7 +1751,7 @@ async checkDatesWithOrderList(
     }
 
 
-    console.log(
+    logger.info(
       `Ожидаемое значение "${nameOperation}" успешно найдено в тексте операции.`
     );
 

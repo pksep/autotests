@@ -7,6 +7,29 @@ import testData2 from '../testdata/DD18-T1.json'; // Import your test data
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
 
+const WAREHOUSE_PAGE_BUTTON = "Sclad-deficitProduction-deficitProduction";
+const RESET_FILTERS = "DeficitIzd-ShipmentList-ClearFilters";
+const SHOW_LEFT_TABLE_BUTTON = "DeficitIzd-ShipmentList-ShipmentsShow";
+const LEFT_DATA_TABLE = "ShipmentsListTable-Table";
+const LEFT_DATA_TABLE_URGENCY_DATA_COL = "ShipmentsListTable-TableRow-HeaderDateByUrgency";
+const LEFT_DATA_TABLE_PLANNED_DATA_COL = "ShipmentsListTable-TableRow-HeaderDateShipmentPlan";
+const LEFT_DATA_TABLE_SEARCHABLE_FIELD = "ShipmentsListTable-TableRow-HeaderOrder";
+
+const RIGHT_DATA_TABLE = "DeficitIzd-ScrollTable-Table";
+const RIGHT_DATA_TABLE_URGENCY_DATA_COL = "DeficitIzd-ScrollTable-TableSubHeader-DateByUrgency";
+const RIGHT_DATA_TABLE_PLANNED_DATA_COL = "DeficitIzd-ScrollTable-TableSubHeader-DateShipmentsPlan";
+const RIGHT_DATA_TABLE_SEARCHABLE_COLS1 = "DeficitIzd-ScrollTable-TableSubHeader-Designation";
+const RIGHT_DATA_TABLE_SEARCHABLE_COLS2 = "DeficitIzd-ScrollTable-TableSubHeader-Articl";
+const RIGHT_DATA_TABLE_SEARCHABLE_COLS3 = "DeficitIzd-ScrollTable-TableSubHeader-Name";
+const RIGHT_DATA_TABLE_ORDERS_ICON_COL = "DeficitIzd-ScrollTable-TableSubHeader-Orders";
+
+const RIGHT_MODAL_WINDOW_ID = "ModalShipmentsToIzed-destroyModalRight";
+const RIGHT_MODAL_TABLE_ID = "ModalShipmentsToIzed-table-buyers";
+const RIGHT_MODAL_TABLE_COL3 = "ModalShipmentsToIzed-thead-th3-buyers";
+const RIGHT_MODAL_TABLE_COL4 = "ModalShipmentsToIzed-thead-th4-buyers";
+const RIGHT_DATA_TABLE_CELL_X = "DeficitIzd-TableCell-Number";
+const LEFT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
+
 export const runP002 = () => {
     logger.info(`Starting test: Verify Product Shortage Page Functionality`);
     test.beforeEach(async ({ page }) => {
@@ -15,7 +38,7 @@ export const runP002 = () => {
         await allure.step('Step 1: Open the login page and login', async () => {
           // Perform the login using the performLogin function (imported from TC000.spec)
           await performLogin(page, '001', 'Перов Д.А.', '54321');
-          await page.click('button.btn.blues');
+          //await page.click('button.btn.blues');
           // Wait for navigation to complete after login
           //await page.waitForNavigation();
         });
@@ -28,12 +51,12 @@ export const runP002 = () => {
       
         await allure.step('Step 3: Find and click the Дефицит Продукции button', async () => {
           // Define the selector for the element
-          const selector = '[data-testid="Sclad-deficitProduction-deficitProduction"]'; // Дефицит Продукции button on warehouse page
+          const selector = `[data-testid="${WAREHOUSE_PAGE_BUTTON}"]`; // Дефицит Продукции button on warehouse page
           await shortagePage.findTable(selector);
           await page.waitForLoadState('networkidle');
         });
       });
-    test('Test Case - Verify Product Shortage Page Column Count and Order Check for RIGHT table', async ({ page }) => {
+    test('Test Case 1 - Verify Product Shortage Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
         allure.label('severity', 'normal');
@@ -61,7 +84,7 @@ export const runP002 = () => {
 
 
     });
-    test('Test Case - Verify Product Shortage Page Column Count and Order Check for LEFT table', async ({ page }) => {
+    test('Test Case 2 - Verify Product Shortage Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -71,9 +94,9 @@ export const runP002 = () => {
 
         let columnCount = 0;
         await allure.step('Step 4: Count the number of columns in the table and their order', async () => {
-            await shortagePage.showLeftTable("ShipmentsListTable-Table","DeficitIzd-ShipmentList-ShipmentsShow")            
+            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)            
             logger.info('STEP 4: Count the number of columns in the table and their order');        
-            columnCount = await shortagePage.checkTableColumns(page, 'ShipmentsListTable-Table');
+            columnCount = await shortagePage.checkTableColumns(page, LEFT_DATA_TABLE);
             logger.info(`Column count: ${columnCount}`);
         });
 
@@ -85,7 +108,7 @@ export const runP002 = () => {
         });  
         logger.info('Navigation to materials page completed');
     });
-    test('Test Case - Verify Product Shortage Page Column header values Check for RIGHT table', async ({ page }) => {
+    test('Test Case 3 - Verify Product Shortage Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -103,7 +126,7 @@ export const runP002 = () => {
 
     });
 
-    test('Test Case - Verify Product Shortage Page Column header values Check for LEFT table', async ({ page }) => {
+    test('Test Case 4 - Verify Product Shortage Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -113,16 +136,16 @@ export const runP002 = () => {
 
         await allure.step('Step 4: Check table column Header values', async () => {
             // Capture the number of columns from the checkTableColumns method
-            await shortagePage.showLeftTable("ShipmentsListTable-Table","DeficitIzd-ShipmentList-ShipmentsShow")
+            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
             logger.info('STEP 4: Check table column Header values');
-            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, 'ShipmentsListTable-Table',testData2);
+            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, LEFT_DATA_TABLE,testData2);
             expect(columnsVerified).toBe(true);
         });    
 
     }); 
 
 
-    test('Test Case - Verify Product Shortage Page Row Ordering for RIGHT table', async ({ page }) => {
+    test('Test Case 5 - Verify Product Shortage Page Row Ordering for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
@@ -135,7 +158,7 @@ export const runP002 = () => {
             logger.info('STEP 4: Page loaded. Starting column identification.');
             // Call the method for the 'DateByUrgency' header
             logger.info('Finding column for DateByUrgency');
-            const urgencyColId = await shortagePage.findColumn(page, 'DeficitIzd-ScrollTable-Table', 'DeficitIzd-ScrollTable-TableSubHeader-DateByUrgency');
+            const urgencyColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_URGENCY_DATA_COL);
             logger.info(`Urgency Column Index: ${urgencyColId}`);
 
             // Refresh the page to reset the state
@@ -144,13 +167,13 @@ export const runP002 = () => {
 
             // Call the method for the 'DateShipmentsPlan' header
             logger.info('Finding column for DateShipmentsPlan');
-            const plannedShipmentColId = await shortagePage.findColumn(page, 'DeficitIzd-ScrollTable-Table', 'DeficitIzd-ScrollTable-TableSubHeader-DateShipmentsPlan');
+            const plannedShipmentColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_PLANNED_DATA_COL);
             logger.info(`Planned Shipment Column Index: ${plannedShipmentColId}`);
 
             // Check if both columns are found
             if (urgencyColId !== false && plannedShipmentColId !== false) {
                 logger.info('Both columns found. Checking table row ordering.');
-                const sortedCorrect = await shortagePage.checkTableRowOrdering(page, 'DeficitIzd-ScrollTable-Table', urgencyColId, plannedShipmentColId);
+                const sortedCorrect = await shortagePage.checkTableRowOrdering(page, RIGHT_DATA_TABLE, urgencyColId, plannedShipmentColId);
 
                 // Log the return value
                 logger.info('Check Table Row Ordering Result:', sortedCorrect);
@@ -168,7 +191,7 @@ export const runP002 = () => {
             }
         });            
     });
-    test('Test Case - Verify Product Shortage Page Row Ordering for LEFT table', async ({ page }) => {
+    test('Test Case 6 - Verify Product Shortage Page Row Ordering for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -179,7 +202,7 @@ export const runP002 = () => {
         await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
             logger.info('STEP 4: Find if show left table button is visible and click it');
             await page.waitForLoadState('networkidle');
-            await shortagePage.showLeftTable("ShipmentsListTable-Table","DeficitIzd-ShipmentList-ShipmentsShow")
+            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
         });  
                   
         await allure.step('Step 5: Check Row ordering', async () => {
@@ -187,19 +210,19 @@ export const runP002 = () => {
 
             // Call the method for the 'DateByUrgency' header
             logger.info('Finding column for DateByUrgency');
-            const urgencyColId = await shortagePage.findColumn(page, 'ShipmentsListTable-Table', 'ShipmentsListTable-TableRow-HeaderDateByUrgency');
+            const urgencyColId = await shortagePage.findColumn(page, LEFT_DATA_TABLE, LEFT_DATA_TABLE_URGENCY_DATA_COL);
             logger.info(`Urgency Column Index: ${urgencyColId}`);
             await page.reload({ waitUntil: 'networkidle' });
-            await shortagePage.showLeftTable("ShipmentsListTable-Table","DeficitIzd-ShipmentList-ShipmentsShow")
+            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
             // Call the method for the 'DateShipmentsPlan' header
             logger.info('Finding column for DateShipmentsPlan');
-            const plannedShipmentColId = await shortagePage.findColumn(page, 'ShipmentsListTable-Table', 'ShipmentsListTable-TableRow-HeaderDateShipmentPlan');
+            const plannedShipmentColId = await shortagePage.findColumn(page, LEFT_DATA_TABLE, LEFT_DATA_TABLE_PLANNED_DATA_COL);
             logger.info(`Planned Shipment Column Index: ${plannedShipmentColId}`);
     
             // Check if both columns are found
             if (urgencyColId !== false && plannedShipmentColId !== false) {
                 logger.info('Both columns found. Checking table row ordering.');
-                const sortedCorrect = await shortagePage.checkTableRowOrdering(page, 'ShipmentsListTable-Table', urgencyColId, plannedShipmentColId);
+                const sortedCorrect = await shortagePage.checkTableRowOrdering(page, LEFT_DATA_TABLE, urgencyColId, plannedShipmentColId);
     
                 // Log the return value
                 logger.info('Check Table Row Ordering Result:', sortedCorrect);
@@ -218,7 +241,7 @@ export const runP002 = () => {
 
         }); 
     });
-    test('Test Case - Verify Product Shortage Page search functionality LEFT table', async ({ page }) => {
+    test('Test Case 7 - Verify Product Shortage Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -230,18 +253,18 @@ export const runP002 = () => {
         await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
             logger.info('STEP 4: Find if show left table button is visible and click it');
             await page.waitForLoadState('networkidle');
-            await shortagePage.showLeftTable("ShipmentsListTable-Table","DeficitIzd-ShipmentList-ShipmentsShow");
+            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
         });  
                   
         await allure.step('Step 5: Check Search Functionality', async () => {
             
-            const tableId = 'ShipmentsListTable-Table';
+            const tableId = LEFT_DATA_TABLE;
             const searchFieldId = 'Search-Cover-Input'; // Adjust as needed
-            const searchFields = ['ShipmentsListTable-TableRow-HeaderOrder']; // Adjust as needed
+            const searchFields = [LEFT_DATA_TABLE_SEARCHABLE_FIELD]; // Adjust as needed
 
             await allure.step('5.1: Reset Filters', async () => {
                 // Reset filters on the page
-                await shortagePage.clickButton(' Сбросить все фильтры ', '[data-testid="DeficitIzd-ShipmentList-ClearFilters"]');
+                await shortagePage.clickButton(' Сбросить все фильтры ', `[data-testid="${RESET_FILTERS}"]`);
             });
             // Find column IDs for specified search fields
             let columnIds: number[] = [];
@@ -252,12 +275,10 @@ export const runP002 = () => {
             await allure.step('5.3: Extract text from searchable columns of the first valid row for testing data', async () => {
                 let rowIndex = 1;
                 let found = false;
-            
                 while (!found) {
                     const row = await page.locator(`[data-testid="${tableId}"] tbody tr:nth-child(${rowIndex})`);
                     const cells = await row.locator('td');
                     const cellCount = await cells.count();
-            
                     if (cellCount > 0) {
                         found = true;
                         for (const columnId of columnIds) {
@@ -271,33 +292,42 @@ export const runP002 = () => {
                     } else {
                         rowIndex++;
                     }
-            
+
                     if (rowIndex > await page.locator(`[data-testid="${tableId}"] tbody tr`).count()) {
                         console.error('No valid rows found');
                         break;
                     }
+
                 }
+                
             });
 
-
+            
             searchQuery = firstRowData[0];
             for (let i = 0; i < firstRowData.length; i++) {
                 await allure.step(`5.4: Testing search results for text ${firstRowData[i]}`, async () => {
                     const searchValue = firstRowData[i];
-
+                    
                     await allure.step(`5.4.1: Reset the page before checking results`, async () => {
                         // Perform search using the first cell's value
-                        await page.reload({ waitUntil: 'networkidle' });
-                        await shortagePage.showLeftTable("ShipmentsListTable-Table","DeficitIzd-ShipmentList-ShipmentsShow")
+                        page.on('requestfailed', request => {
+                            console.error('Request failed:', request.url(), request.failure());
+                          });
+                          
+                          await page.evaluate(() => location.reload());
+                          await page.waitForLoadState('domcontentloaded');
+                          
+//                        await page.reload({ waitUntil: 'networkidle' });
+                        await page.waitForLoadState('networkidle');
+                        await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
                     });
-
                     await allure.step(`5.4.2: Performing search with ${searchValue}`, async () => {
                         await shortagePage.searchTableByIcon(searchValue, `[data-testid="${tableId}"]`);
                         await page.waitForSelector(`[data-testid="${tableId}"] tbody tr`, { state: 'visible' });
                     });
                     let validRows: ElementHandle<Element>[] = [];
                     let rowCount = 0;
-
+                    
                     await allure.step(`5.4.3: Retrieve results`, async () => {
                         const allRows = await page.locator(`[data-testid="${tableId}"] tbody tr`).elementHandles() as ElementHandle<Element>[];
                         const headerRows: ElementHandle<Element>[] = [];
@@ -314,7 +344,6 @@ export const runP002 = () => {
                         logger.info(`Total header rows found: ${headerRows.length}`);
                         logger.info(`Total valid rows found: ${rowCount}`);
                     });
-
                     await allure.step(`5.4.4: Confirm results are valid`, async () => {
                         // Log the HTML content of each valid row
                         for (let j = 0; j < rowCount; j++) {
@@ -329,7 +358,6 @@ export const runP002 = () => {
                             expect(cellValue).toContain(searchValue);
                         }
                     });
-
                     await allure.step(`5.4.5: Confirm search input contains search text`, async () => {
                         logger.info(`5.4.5: Confirm search input contains search text`);
                         const searchInputSelector = '[data-testid="Search-Cover-Input"]'; // Update this selector to match your search input element
@@ -339,7 +367,6 @@ export const runP002 = () => {
                     });
                 });
             }
-
             logger.info("finished result checking");
 
             // 5.5 Search History Dropdown
@@ -360,7 +387,7 @@ export const runP002 = () => {
 
               await shortagePage.searchTable(searchQuery,`[data-testid="${tableId}"]`);
 
-              const results = await page.locator('[data-testid="ShipmentsListTable-orderRow"]');
+              const results = await page.locator(`[data-testid="${LEFT_DATA_TABLE_CELL_X}"]`);
               //await results.waitFor();
               const end = Date.now();
               const timeTaken = end - start;
@@ -443,7 +470,7 @@ export const runP002 = () => {
           });
           
     });     
-    test('Test Case - Verify Product Shortage Page search functionality RIGHT table', async ({ page }) => {
+    test('Test Case 8 - Verify Product Shortage Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -455,14 +482,14 @@ export const runP002 = () => {
         await allure.step('Step 4: Check Search Functionality', async () => {
             logger.info('Step 4: Check Search Functionality');
 
-            const tableId = 'DeficitIzd-ScrollTable-Table';
+            const tableId = RIGHT_DATA_TABLE;
             const searchFieldId = 'Search-Cover-Input'; // Adjust as needed
-            const searchFields = ['DeficitIzd-ScrollTable-TableSubHeader-Designation','DeficitIzd-ScrollTable-TableSubHeader-Articl','DeficitIzd-ScrollTable-TableSubHeader-Name']; // Adjust as needed
+            const searchFields = [RIGHT_DATA_TABLE_SEARCHABLE_COLS1, RIGHT_DATA_TABLE_SEARCHABLE_COLS2, RIGHT_DATA_TABLE_SEARCHABLE_COLS3]; // Adjust as needed
 
             await allure.step('5.1: Reset Filters', async () => {
                 logger.info('5.1: Reset Filters');
                 // Reset filters on the page
-                await shortagePage.clickButton(' Сбросить все фильтры ', '[data-testid="DeficitIzd-ShipmentList-ClearFilters"]');
+                await shortagePage.clickButton(' Сбросить все фильтры ', `[data-testid="${RESET_FILTERS}"]`);
             });
           
             // Find column IDs for specified search fields
@@ -471,6 +498,7 @@ export const runP002 = () => {
                 logger.info('5.2: Determine searchable columns');
                 columnIds = await shortagePage.getSearchableColumnIds(page, tableId, searchFields);
             });
+         
             let firstRowData: string[] = [];
             await allure.step('5.3: Extract text from searchable columns of the first valid row for testing data', async () => {
                 logger.info('5.3: Extract text from searchable columns of the first valid row for testing data');
@@ -544,7 +572,10 @@ export const runP002 = () => {
             
                     await allure.step(`5.4.1: Reset the page before checking results`, async () => {
                         logger.info(`5.4.1: Reset the page before checking results`);
-                        await page.reload({ waitUntil: 'networkidle' });
+                        //await page.reload({ waitUntil: 'networkidle' });
+                        await page.evaluate(() => location.reload());
+                        await page.waitForLoadState('domcontentloaded');
+
                     });
             
                     await allure.step(`5.4.2: Performing search with ${searchValue}`, async () => {
@@ -610,8 +641,6 @@ export const runP002 = () => {
                 });
             }
             
-            
-
             logger.info("finished result checking");
 
             // 5.5 Search History Dropdown
@@ -633,7 +662,7 @@ export const runP002 = () => {
                 searchQuery = firstRowData[0];
                 await shortagePage.searchTable(searchQuery,`[data-testid="${tableId}"]`);
 
-                const results = await page.locator('[data-testid="DeficitIzd-TableCell-Number"]');
+                const results = await page.locator(`[data-testid="${RIGHT_DATA_TABLE_CELL_X}}"]`);
                 //await results.waitFor();
                 const end = Date.now();
                 const timeTaken = end - start;
@@ -738,7 +767,7 @@ export const runP002 = () => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Продукции');
+        allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify row sort ordering');
         allure.description('Verify Dates in main table match dates in the Orders List for RIGHT table.');        
         const shortagePage = new CreateShortageProductPage(page);
@@ -746,44 +775,39 @@ export const runP002 = () => {
         await allure.step('Step 4: compare the dates in each Row, with thier Orders list', async () => {
             logger.info('STEP 4: Find Columns to check ordering in main table.');
 
-            // Call the method for the 'DateByUrgency' header
+            // Call the method for the 'Name' header
             logger.info('Finding column for Name');
-            const nameColId = await shortagePage.findColumn(page, 'DeficitIzd-ScrollTable-Table', 'DeficitIzd-ScrollTable-TableSubHeader-Name');
+            const nameColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_SEARCHABLE_COLS3);
             logger.info(`Name Column Index: ${nameColId}`);
 
             // Call the method for the 'DateByUrgency' header
             logger.info('Finding column for Date By Urgency');
-            const urgencyColId = await shortagePage.findColumn(page, 'DeficitIzd-ScrollTable-Table', 'DeficitIzd-ScrollTable-TableSubHeader-DateByUrgency');
+            const urgencyColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_URGENCY_DATA_COL);
             logger.info(`Urgency Column Index: ${urgencyColId}`);
-
-            // Refresh the page to reset the state
-           // await page.reload({ waitUntil: 'networkidle' });
-            //logger.info('Page reloaded. Starting next column identification.');
 
             // Call the method for the 'Orders Icon' header
             logger.info('Finding column for Orders Icon');
-            const ordersColId = await shortagePage.findColumn(page, 'DeficitIzd-ScrollTable-Table', 'DeficitIzd-ScrollTable-TableSubHeader-Orders');
+            const ordersColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_ORDERS_ICON_COL);
             logger.info(`Planned Shipment Column Index: ${ordersColId}`);
 
-            
             // Call the method for the 'DateShipmentsPlan' header
             logger.info('Finding column for Date Shipments Planned');
-            const plannedShipmentColId = await shortagePage.findColumn(page, 'DeficitIzd-ScrollTable-Table', 'DeficitIzd-ScrollTable-TableSubHeader-DateShipmentsPlan');
+            const plannedShipmentColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_PLANNED_DATA_COL);
             logger.info(`Planned Shipment Column Index: ${plannedShipmentColId}`);
 
             // Check if all columns are found
             if (nameColId !== false && urgencyColId !== false && plannedShipmentColId !== false && ordersColId !== false) {
                 logger.info('All columns found. Checking table row ordering.');
                 const sortedCorrect = await shortagePage.checkDatesWithOrderList(page, 
-                    'DeficitIzd-ScrollTable-Table', 
+                    RIGHT_DATA_TABLE, 
                     nameColId,
                     urgencyColId, 
                     plannedShipmentColId, 
                     ordersColId,
-                    'ModalShipmentsToIzed-destroyModalRight', //modal id
-                    'ModalShipmentsToIzed-table-buyers', //table id
-                    'ModalShipmentsToIzed-thead-th3-buyers',
-                    'ModalShipmentsToIzed-thead-th4-buyers'
+                    RIGHT_MODAL_WINDOW_ID, //modal id
+                    RIGHT_MODAL_TABLE_ID, //table id
+                    RIGHT_MODAL_TABLE_COL3,
+                    RIGHT_MODAL_TABLE_COL4
                 );
             } else {
                 const missingCol = nameColId === false ? 'Name' :
@@ -791,6 +815,6 @@ export const runP002 = () => {
                     plannedShipmentColId === false ? 'Дата план. отгрузки' : 'Orders';
                 throw new Error(`Column "${missingCol}" not found`);
             }
-        });            
+        });
     });
 };
