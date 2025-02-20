@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "resolveJsonModule": true,
+    "module": "commonjs",
+    "lib": ["es2019", "dom"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist"
+  },
+  "include": [
+      "**/*.ts" // This will include all .ts files in the current directory and subdirectories
+  ]
+}

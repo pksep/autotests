@@ -1,0 +1,24 @@
+{
+  "name": "your-project-name",
+  "version": "1.0.0",
+  "description": "Your project description",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "npx ts-node setupTests.ts",
+    "test": "npx playwright test",
+    "ui": "pnpm exec playwright test --ui"
+  },
+  "author": "Your Name",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^14.14.31",
+    "allure-commandline": "^2.32.2",
+    "allure-js-commons": "^3.1.0",
+    "allure-playwright": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  }
+}
