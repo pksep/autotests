@@ -87,7 +87,7 @@ export const runP004 = () => {
 
 
     });
-    test('Test Case - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for LEFT table', async ({ page }) => {
+     test('Test Case - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -129,7 +129,7 @@ export const runP004 = () => {
 
     });
 
-    test('Test Case - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for LEFT table', async ({ page }) => {
+     test('Test Case - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -274,12 +274,14 @@ export const runP004 = () => {
             await allure.step('5.2: Determine searchable columns', async () => {
                 columnIds = await shortagePage.getSearchableColumnIds(page, tableId, searchFields);
             });
+            
             let firstRowData: string[] = [];
             await allure.step('5.3: Extract text from searchable columns of the first valid row for testing data', async () => {
                 let rowIndex = 1;
                 let found = false;
             
                 while (!found) {
+                    await page.waitForLoadState('networkidle');
                     const row = await page.locator(`[data-testid="${tableId}"] tbody tr:nth-child(${rowIndex})`);
                     const cells = await row.locator('td');
                     const cellCount = await cells.count();
