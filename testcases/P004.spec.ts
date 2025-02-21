@@ -483,7 +483,7 @@ export const runP004 = () => {
 
             const tableId = RIGHT_DATA_TABLE;
             const searchFieldId = 'Search-Cover-Input'; // Adjust as needed
-            const searchFields = [RIGHT_DATA_TABLE_SEARCABLE_COLS1, RIGHT_DATA_TABLE_SEARCABLE_COLS2, RIGHT_DATA_TABLE_SEARCABLE_COLS3]; // Adjust as needed
+            const searchFields = [RIGHT_DATA_TABLE_SEARCHABLE_COLS1, RIGHT_DATA_TABLE_SEARCHABLE_COLS2, RIGHT_DATA_TABLE_SEARCHABLE_COLS3]; // Adjust as needed
 
             await allure.step('5.1: Reset Filters', async () => {
                 logger.info('5.1: Reset Filters');
