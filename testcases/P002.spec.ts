@@ -31,7 +31,7 @@ const RIGHT_DATA_TABLE_CELL_X = "DeficitIzd-TableCell-Number";
 const LEFT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
 
 export const runP002 = () => {
-    logger.info(`Starting test: Verify Product Shortage Page Functionality`);
+    logger.info(`Starting test: Verify Дефицит Продукции (Product Deficit) Page Functionality`);
     test.beforeEach(async ({ page }) => {
         const shortagePage = new CreateShortageProductPage(page);
       
@@ -56,14 +56,14 @@ export const runP002 = () => {
           await page.waitForLoadState('networkidle');
         });
       });
-    test('Test Case 1 - Verify Product Shortage Page Column Count and Order Check for RIGHT table', async ({ page }) => {
+    test('Test Case 1 - Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify Column count and order');
-        allure.description('Verify Product Shortage Page Column Count and Order Check for RIGHT table.');
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for RIGHT table.');
 
         const shortagePage = new CreateShortageProductPage(page);
        let columnCount = 0;
@@ -84,12 +84,12 @@ export const runP002 = () => {
 
 
     });
-    test('Test Case 2 - Verify Product Shortage Page Column Count and Order Check for LEFT table', async ({ page }) => {
+    test('Test Case 2 - Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify Column count and order');
-        allure.description('Verify Product Shortage Page Column Count and Order Check for LEFT table.');
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for LEFT table.');
         const shortagePage = new CreateShortageProductPage(page);
 
         let columnCount = 0;
@@ -108,12 +108,12 @@ export const runP002 = () => {
         });  
         logger.info('Navigation to materials page completed');
     });
-    test('Test Case 3 - Verify Product Shortage Page Column header values Check for RIGHT table', async ({ page }) => {
+    test('Test Case 3 - Verify Дефицит Продукции (Product Deficit) Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify Column header values check');
-        allure.description('Verify Product Shortage Page Column header values Check for RIGHT table.');
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page Column header values Check for RIGHT table.');
 
         const shortagePage = new CreateShortageProductPage(page);
 
@@ -126,12 +126,12 @@ export const runP002 = () => {
 
     });
 
-    test('Test Case 4 - Verify Product Shortage Page Column header values Check for LEFT table', async ({ page }) => {
+    test('Test Case 4 - Verify Дефицит Продукции (Product Deficit) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify Column header values check');
-        allure.description('Verify Product Shortage Page Column header values Check for LEFT table.');        
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page Column header values Check for LEFT table.');        
         const shortagePage = new CreateShortageProductPage(page);
 
         await allure.step('Step 4: Check table column Header values', async () => {
@@ -145,13 +145,13 @@ export const runP002 = () => {
     }); 
 
 
-    test('Test Case 5 - Verify Product Shortage Page Row Ordering for RIGHT table', async ({ page }) => {
+    test('Test Case 5 - Verify Дефицит Продукции (Product Deficit) Page Row Ordering for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page Row Ordering for RIGHT table.');        
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page Row Ordering for RIGHT table.');        
         const shortagePage = new CreateShortageProductPage(page);
 
         await allure.step('Step 4: Check Row ordering', async () => {
@@ -191,12 +191,12 @@ export const runP002 = () => {
             }
         });            
     });
-    test('Test Case 6 - Verify Product Shortage Page Row Ordering for LEFT table', async ({ page }) => {
+    test('Test Case 6 - Verify Дефицит Продукции (Product Deficit) Page Row Ordering for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page Row Ordering for LEFT table.');    
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page Row Ordering for LEFT table.');    
         const shortagePage = new CreateShortageProductPage(page);
 
         await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
@@ -241,12 +241,12 @@ export const runP002 = () => {
 
         }); 
     });
-    test('Test Case 7 - Verify Product Shortage Page search functionality LEFT table', async ({ page }) => {
+    test('Test Case 7 - Verify Дефицит Продукции (Product Deficit) Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page search functionality for LEFT table.');    
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page search functionality for LEFT table.');    
         const shortagePage = new CreateShortageProductPage(page);
         let searchQuery = 'Обозначение';
       
@@ -470,12 +470,12 @@ export const runP002 = () => {
           });
           
     });     
-    test('Test Case 8 - Verify Product Shortage Page search functionality RIGHT table', async ({ page }) => {
+    test('Test Case 8 - Verify Дефицит Продукции (Product Deficit) Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page search functionality for LEFT table.');    
+        allure.description('Verify Дефицит Продукции (Product Deficit) Page search functionality for LEFT table.');    
         const shortagePage = new CreateShortageProductPage(page);
         let searchQuery = 'Обозначение';
 

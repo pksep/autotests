@@ -33,17 +33,13 @@ const RIGHT_DATA_TABLE_CELL_X = "AssemblySclad-PrintTableBody-";
 const LEFT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
 // Страница: Заказ склада на сборку
 export const runP003 = () => {
-    logger.info(`Starting test: Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Functionality`);
+    logger.info(`Starting test: Verify Сборка Склад (Assembly Warehouse) Page Functionality`);
     test.beforeEach(async ({ page }) => {
         const shortagePage = new CreateAssemblyWarehousePage(page);
       
         await allure.step('Step 1: Open the login page and login', async () => {
           // Perform the login using the performLogin function (imported from TC000.spec)
           await performLogin(page, '001', 'Перов Д.А.', '54321');
-          //await page.waitForTimeout(2000);
-          //await page.click('button.btn.blues');
-          // Wait for navigation to complete after login
-          //await page.waitForNavigation();
         });
       
         await allure.step('Step 2: Navigate to Склад', async () => {
@@ -52,22 +48,22 @@ export const runP003 = () => {
           await shortagePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
       
-        await allure.step('Step 3: Find and click the Дефицит Сборочных Едениц button', async () => {
+        await allure.step('Step 3: Find and click the Заказ склада на Сборку button', async () => {
           // Define the selector for the element
-          const selector = `[data-testid="${WAREHOUSE_PAGE_BUTTON}"]`; // Заказ склада на сборку button on warehouse page
+          const selector = `[data-testid="${WAREHOUSE_PAGE_BUTTON}"]`; // Заказ склада на Сборку button on warehouse page
 
           await shortagePage.findTable(selector);
           await page.waitForLoadState('networkidle');
         });
       });
-    test('Test Case 1 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
+    test('Test Case 1 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Еденицe');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify Column count and order');
-        allure.description('Verify Product Shortage Page Column Count and Order Check for RIGHT table.');
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for RIGHT table.');
 
         const shortagePage = new CreateAssemblyWarehousePage(page);
        let columnCount = 0;
@@ -87,12 +83,12 @@ export const runP003 = () => {
 
 
     });
-    test('Test Case 2 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for LEFT table', async ({ page }) => {
+    test('Test Case 2 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify Column count and order');
-        allure.description('Verify Product Shortage Page Column Count and Order Check for LEFT table.');
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for LEFT table.');
         const shortagePage = new CreateAssemblyWarehousePage(page);
 
         let columnCount = 0;
@@ -111,12 +107,12 @@ export const runP003 = () => {
         });  
         logger.info('Navigation to materials page completed');
     });
-    test('Test Case 3 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for RIGHT table', async ({ page }) => {
+    test('Test Case 3 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify Column header values check');
-        allure.description('Verify Product Shortage Page Column header values Check for RIGHT table.');
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table.');
 
         const shortagePage = new CreateAssemblyWarehousePage(page);
 
@@ -129,12 +125,12 @@ export const runP003 = () => {
 
     });
 
-    test('Test Case 4 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for LEFT table', async ({ page }) => {
+    test('Test Case 4 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify Column header values check');
-        allure.description('Verify Product Shortage Page Column header values Check for LEFT table.');        
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table.');        
         const shortagePage = new CreateAssemblyWarehousePage(page);
 
         await allure.step('Step 4: Check table column Header values', async () => {
@@ -148,13 +144,13 @@ export const runP003 = () => {
     }); 
 
 
-    test('Test Case 5 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Row Ordering for RIGHT table', async ({ page }) => {
+    test('Test Case 5 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page Row Ordering for RIGHT table.');        
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table.');        
         const shortagePage = new CreateAssemblyWarehousePage(page);
 
         await allure.step('Step 4: Check Row ordering', async () => {
@@ -194,12 +190,12 @@ export const runP003 = () => {
             }
         });            
     });
-    test('Test Case 6 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Row Ordering for LEFT table', async ({ page }) => {
+    test('Test Case 6 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page Row Ordering for LEFT table.');    
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table.');    
         const shortagePage = new CreateAssemblyWarehousePage(page);
 
         await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
@@ -244,12 +240,12 @@ export const runP003 = () => {
 
         }); 
     });
-    test('Test Case 7 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page search functionality LEFT table', async ({ page }) => {
+    test('Test Case 7 - Verify Сборка Склад (Assembly Warehouse) Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page search functionality for LEFT table.');    
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page search functionality for LEFT table.');    
         const shortagePage = new CreateAssemblyWarehousePage(page);
         let searchQuery = 'Обозначение';
         test.setTimeout(600000);
@@ -478,12 +474,12 @@ export const runP003 = () => {
           });
           
     });     
-    test('Test Case 8 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page search functionality RIGHT table', async ({ page }) => {
+    test('Test Case 8 - Verify Сборка Склад (Assembly Warehouse) Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Product Shortage Page search functionality for LEFT table.');    
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page search functionality for LEFT table.');    
         test.setTimeout(600000);
         const shortagePage = new CreateAssemblyWarehousePage(page);
         let searchQuery = 'Обозначение';
@@ -799,13 +795,13 @@ export const runP003 = () => {
             });*/
           });
     });     
-    test('Test Case 9 - Compare dates with Order List for RIGHT table', async ({ page }) => {
+    test('Test Case 9 - Verify Сборка Склад (Assembly Warehouse) Page - Compare dates with Order List for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
-        allure.label('feature', 'Дефицит Сборочных Едениц');
+        allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Dates in main table match dates in the Orders List for RIGHT table.');        
+        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Dates in main table match dates in the Orders List for RIGHT table.');        
         const shortagePage = new CreateAssemblyWarehousePage(page);
 
         await allure.step('Step 4: compare the dates in each Row, with thier Orders list', async () => {

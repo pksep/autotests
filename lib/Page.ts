@@ -112,13 +112,21 @@ export class PageObject extends AbstractPage {
  ): Promise<void> {
   const delay = (ms: number) =>
    new Promise(resolve => setTimeout(resolve, ms));
+// Step 2: Wait for and select the "tabel" option
+try {
+  await page.waitForSelector('select[data-testid="Authorization-Form-SelectTabel"]', { state: 'visible', timeout: 100000 });
+  logger.info('Select element found and visible.');
+} catch (error) {
+  logger.error('Error waiting for select element:', error);
+  throw error; // Rethrow the error after logging
+}
 
   // Wait for and select the "tabel" option
-  await delay(1000);
-  await page.waitForSelector(
-   'select[data-testid="Authorization-Form-SelectTabel"]',
-   { state: 'visible' }
-  );
+  //await this.page.waitForLoadState('networkidle');
+  //await page.waitForSelector(
+  // 'select[data-testid="Authorization-Form-SelectTabel"]',
+  // { state: 'visible' }
+  //);
 
   const tableSelectElement = await page.$(
    'select[data-testid="Authorization-Form-SelectTabel"]'
