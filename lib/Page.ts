@@ -34,50 +34,94 @@ export class PageObject extends AbstractPage {
   this.input = new Input(page); // Initialize the input helper
  }
 
- /**
- * Scans and validates the structure of tables within a specified element.
+
+
+
+/**
+ * Scans and validates the structure of tables within a specified element, and identifies rows with duplicate data-testids.
  * @param page - The Playwright page instance.
  * @param dataTestId - The data-testid of the container element.
  * @returns A promise that resolves once the validation is complete.
+ * @throws An error if any validation check fails.
  */
-    async scanTablesWithinElement(page: Page, dataTestId: string) {
-        // Locate the element with the specified data-testid
-        const container = await page.$(`[data-testid="${dataTestId}"]`);
-    
-        if (!container) {
-            logger.error(`Element with data-testid "${dataTestId}" not found.`);
-            return;
-        }
+async scanTablesWithinElement(page: Page, dataTestId: string): Promise<void> {
+  const errors: string[] = [];
 
-        // Find all tables within the located container
-        const tables = await container.$$('table');
+  // Locate the element with the specified data-testid
+  const container = await page.$(`[data-testid="${dataTestId}"]`);
+  
+  if (!container) {
+      const errorMessage = `Element with data-testid "${dataTestId}" not found.`;
+      logger.error(errorMessage);
+      errors.push(errorMessage);
+  } else {
+      // Find all tables within the located container
+      const tables = await container.$$('table');
 
-        if (tables.length === 0) {
-            logger.error(`No tables found within the element with data-testid "${dataTestId}".`);
-            return;
-        }
+      if (tables.length === 0) {
+          const errorMessage = `No tables found within the element with data-testid "${dataTestId}".`;
+          logger.error(errorMessage);
+          errors.push(errorMessage);
+      } else {
+          // Iterate through each table and validate its structure
+          for (const [index, table] of tables.entries()) {
+              const tableErrors: string[] = [];
+              logger.info(`Validating Table ${index + 1} within data-testid "${dataTestId}":`);
 
-        // Iterate through each table and validate its structure
-        for (const [index, table] of tables.entries()) {
-            logger.info(`Validating Table ${index + 1} within data-testid "${dataTestId}":`);
+              // Validate the table structure (you can expand this as needed)
+              const thead = await table.$('thead');
+              if (!thead) {
+                  const errorMessage = `Table ${index + 1} is missing <thead>.`;
+                  logger.error(errorMessage);
+                  tableErrors.push(errorMessage);
+              }
 
-            // Validate the table structure (you can expand this as needed)
-            const thead = await table.$('thead');
-            if (!thead) {
-                logger.error(`Table ${index + 1} is missing <thead>.`);
-                continue;
-            }
+              const tbody = await table.$('tbody');
+              if (!tbody) {
+                  const errorMessage = `Table ${index + 1} is missing <tbody>.`;
+                  logger.error(errorMessage);
+                  tableErrors.push(errorMessage);
+              }
 
-            const tbody = await table.$('tbody');
-            if (!tbody) {
-                logger.error(`Table ${index + 1} is missing <tbody>.`);
-                continue;
-            }
+              // Check for duplicate data-testids in rows
+              const rows = await table.$$('tr');
+              const dataTestIdMap = new Map();
+              const duplicateDataTestIds = new Set();
+              for (const row of rows) {
+                  const rowDataTestId = await row.getAttribute('data-testid');
+                  if (rowDataTestId) {
+                      if (dataTestIdMap.has(rowDataTestId)) {
+                          duplicateDataTestIds.add(rowDataTestId);
+                      } else {
+                          dataTestIdMap.set(rowDataTestId, true);
+                      }
+                  }
+              }
 
-            // Further validations can be added here
-            logger.info(`Table ${index + 1} has a valid structure.`);
-        }
-    }
+              // Log duplicate data-testids only once per data-testid
+              duplicateDataTestIds.forEach(duplicateId => {
+                  const errorMessage = `Duplicate data-testid "${duplicateId}" found in Table ${index + 1}`;
+                  logger.warn(errorMessage);
+                  tableErrors.push(errorMessage);
+              });
+
+              // Further validations can be added here
+              if (tableErrors.length === 0) {
+                  logger.info(`Table ${index + 1} has a valid structure.`);
+              } else {
+                  errors.push(...tableErrors);
+              }
+          }
+      }
+  }
+
+  if (errors.length > 0) {
+      const errorMessage = `Validation failed with the following errors:\n${errors.join('\n')}`;
+      throw new Error(errorMessage);
+  }
+}
+
+ 
  /**
  * Finds an element with the specified data-testid and clicks on it.
  * @param page - The Playwright page instance.
@@ -85,26 +129,29 @@ export class PageObject extends AbstractPage {
  * @returns A promise that resolves once the element is clicked.
  */
  async findAndClickElement(page: Page, partialDataTestId: string, waitTime: number = 2000): Promise<void> {
-    console.info(`Searching for elements with partial data-testid="${partialDataTestId}"`);
+    logger.info(`Searching for elements with partial data-testid="${partialDataTestId}"`);
     
     // Locate all elements with the partial data-testid
     const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
     
-    console.info(`Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`);
+    logger.info(`Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`);
     
     if (elements.length > 0) {
+      if (elements.length > 1) {
+        logger.error(`Found multiple elements with data-testid="${partialDataTestId}"`);
+      }
       // Click on the first element
       await elements[0].click();
       
-      console.info(`Clicked on the first element with partial data-testid="${partialDataTestId}"`);
+      logger.info(`Clicked on the first element with partial data-testid="${partialDataTestId}"`);
       
       // Wait for the specified amount of time
       await page.waitForTimeout(waitTime);
       
-      console.info(`Waited for ${waitTime}ms after clicking the element`);
+      logger.info(`Waited for ${waitTime}ms after clicking the element`);
     } else {
       // Log that no elements were found
-      console.error(`No elements found with partial data-testid="${partialDataTestId}"`);
+      logger.error(`No elements found with partial data-testid="${partialDataTestId}"`);
     }
   }
  /**
