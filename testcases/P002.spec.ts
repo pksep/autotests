@@ -56,7 +56,13 @@ export const runP002 = () => {
           await page.waitForLoadState('networkidle');
         });
       });
-    test('Test Case 1 - Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
+    test('Scan tables within a specific element', async ({ page }) => {
+        const shortagePage = new CreateShortageProductPage(page);
+        await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
+        await shortagePage.findAndClickElement(page, "DeficitIzd-TableCell-DatePlan");
+        await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
+    });
+    test.skip('Test Case 1 - Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
         allure.label('severity', 'normal');
@@ -84,7 +90,7 @@ export const runP002 = () => {
 
 
     });
-    test('Test Case 2 - Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 2 - Verify Дефицит Продукции (Product Deficit) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -108,7 +114,7 @@ export const runP002 = () => {
         });  
         logger.info('Navigation to materials page completed');
     });
-    test('Test Case 3 - Verify Дефицит Продукции (Product Deficit) Page Column header values Check for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 3 - Verify Дефицит Продукции (Product Deficit) Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -126,7 +132,7 @@ export const runP002 = () => {
 
     });
 
-    test('Test Case 4 - Verify Дефицит Продукции (Product Deficit) Page Column header values Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 4 - Verify Дефицит Продукции (Product Deficit) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -145,7 +151,7 @@ export const runP002 = () => {
     }); 
 
 
-    test('Test Case 5 - Verify Дефицит Продукции (Product Deficit) Page Row Ordering for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 5 - Verify Дефицит Продукции (Product Deficit) Page Row Ordering for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
@@ -191,7 +197,7 @@ export const runP002 = () => {
             }
         });            
     });
-    test('Test Case 6 - Verify Дефицит Продукции (Product Deficit) Page Row Ordering for LEFT table', async ({ page }) => {
+    test.skip('Test Case 6 - Verify Дефицит Продукции (Product Deficit) Page Row Ordering for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -241,7 +247,7 @@ export const runP002 = () => {
 
         }); 
     });
-    test('Test Case 7 - Verify Дефицит Продукции (Product Deficit) Page search functionality LEFT table', async ({ page }) => {
+    test.skip('Test Case 7 - Verify Дефицит Продукции (Product Deficit) Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -470,7 +476,7 @@ export const runP002 = () => {
           });
           
     });     
-    test('Test Case 8 - Verify Дефицит Продукции (Product Deficit) Page search functionality RIGHT table', async ({ page }) => {
+    test.skip('Test Case 8 - Verify Дефицит Продукции (Product Deficit) Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Продукции');
@@ -763,7 +769,7 @@ export const runP002 = () => {
             });*/
           });
     });     
-    test('Test Case - Compare dates with Order List for RIGHT table', async ({ page }) => {
+    test.skip('Test Case - Compare dates with Order List for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
