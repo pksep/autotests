@@ -10,7 +10,7 @@ import { runP002 } from './testcases/P002.spec';
 import { runP003 } from './testcases/P003.spec';
 import { runP004 } from './testcases/P004.spec';
 import { runP005 } from './testcases/P005.spec';
-
+import { runP008 } from './testcases/P008.spec';
 import { runP010 } from './testcases/P010.spec';
 
 
@@ -100,46 +100,58 @@ export const testSuites = {
         ],
     },
 
-  page005: {
+    page005: {
 
-    description:
-      'Page 004 test suite to verify functionalities specific to Page 005.',
-    tests: [
-      {
-        test: runP005,
-        description: 'This test checks the responsiveness of Page 005.'
-      }
-      // Add more test cases as needed
-    ]
-  }, 
-  page010: {
-    description: 'Ordered from suppliers.',
-    tests: [
-      {
-        test: runP010,
-        description: 'Order a part.'
-      }
-      // Add more test cases as needed
-    ]
-  },
-  suite01: {
-    description: 'This is a group of full page tests p02 - P04',
-    tests: [
-           {
-            test: runP002,
-            description: 'This test checks the responsiveness of Page 002.',
-           },
-           {
-            test: runP003,
-            description: 'This test checks the responsiveness of Page 003.',
-          },
-          {
-          test: runP004,
-          description: 'This test checks the responsiveness of Page 004.',
-      },
-           // Add more test cases as needed
-       ],
-   }
-  
+        description:
+            'Page 004 test suite to verify functionalities specific to Page 005.',
+        tests: [
+            {
+                test: runP005,
+                description: 'This test checks the responsiveness of Page 005.'
+            }
+            // Add more test cases as needed
+        ]
+    },
+    page008: {
+
+        description:
+            'Page 008 test suite to verify functionalities specific to Page 008.',
+        tests: [
+            {
+                test: runP008,
+                description: 'This test checks the responsiveness of Page 008.'
+            }
+            // Add more test cases as needed
+        ]
+    },
+    page010: {
+        description: 'Ordered from suppliers.',
+        tests: [
+            {
+                test: runP010,
+                description: 'Order a part.'
+            }
+            // Add more test cases as needed
+        ]
+    },
+    suite01: {
+        description: 'This is a group of full page tests p02 - P04',
+        tests: [
+            {
+                test: runP002,
+                description: 'This test checks the responsiveness of Page 002.',
+            },
+            {
+                test: runP003,
+                description: 'This test checks the responsiveness of Page 003.',
+            },
+            {
+                test: runP004,
+                description: 'This test checks the responsiveness of Page 004.',
+            },
+            // Add more test cases as needed
+        ],
+    }
+
 
 };
