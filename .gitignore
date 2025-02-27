@@ -2,7 +2,7 @@
 node_modules
 config.ts
 playwright.config.ts
-
+/playwright.config.ts
 
 # Log files
 npm-debug.log*
