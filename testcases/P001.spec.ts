@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { CreatePartsPage } from '../pages/CreatePartsPage'; 
+import { CreatePartsPage } from '../pages/CreatePartsPage';
 import { ENV } from '../config'; // Import the configuration
 
 export const runP001 = (isSingleTest: boolean, iterations: number) => {

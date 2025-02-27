@@ -82,7 +82,7 @@ export const testSuites = {
         tests: [
             {
                 test: runP004,
-                description: "This test checks the responsiveness of Page 003.",
+                description: "This test checks the responsiveness of Page 004.",
             },
             // Add more test cases as needed
         ],
@@ -99,16 +99,7 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
-    description:
-      'Page 004 test suite to verify functionalities specific to Page 004.',
-    tests: [
-      {
-        test: runP004,
-        description: 'This test checks the responsiveness of Page 003.'
-      }
-      // Add more test cases as needed
-    ]
-  },  
+
   page005: {
 
     description:
