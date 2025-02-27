@@ -25,4 +25,5 @@ pnpm-debug.log*
 /blob-report/
 /playwright/.cache/
 /allure-results/
+/allure-report/
 /logs/

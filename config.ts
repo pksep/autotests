@@ -12,12 +12,12 @@
  *     npm install winston-daily-rotate-file
  */
 
-export const ENV = {
-    BASE_URL: process.env.BASE_URL || "http://dev.npoamotiv.ru/",
-    HEADLESS: process.env.HEADLESS === "false",
-    TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    DEBUG: "info",
-    // TEST_SUITE: "page003",
+
+  BASE_URL: process.env.BASE_URL || 'http://localhost:8080/',
+  HEADLESS: process.env.HEADLESS === 'false',
+  TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
+  DEBUG: false,
+  TEST_SUITE: 'suite01',
 
     //TEST_SUITE: 'pageCreatePart'
     //TEST_SUITE: 'pageProductShortage'
