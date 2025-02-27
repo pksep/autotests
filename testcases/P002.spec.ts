@@ -51,7 +51,7 @@ export const runP002 = () => {
         
           });
       });
-      test('Scan tables within a specific element', async ({ page }) => {
+      test('Test case 0: Дефицит Продукции (Product Deficit) Page - Scan tables within a specific element', async ({ page }) => {
           test.setTimeout(600000);
           const shortagePage = new CreateShortageProductPage(page);
           await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
@@ -771,7 +771,7 @@ export const runP002 = () => {
             });*/
           });
     });     
-    test.skip('Test Case - Compare dates with Order List for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 9 - Verify Дефицит Продукции (Product Deficit) Page - Compare dates with Order List for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');

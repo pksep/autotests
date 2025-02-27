@@ -53,7 +53,7 @@ export const runP004 = () => {
         
           });
       });
-      test('Scan tables within a specific element', async ({ page }) => {
+      test('Test Case 0: Дефицит Сборочных Еденицe Page - Scan tables within a specific element', async ({ page }) => {
           test.setTimeout(600000);
           const shortagePage = new CreatShortageAssembliesPage(page);
           await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);

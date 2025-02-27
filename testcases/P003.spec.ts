@@ -56,7 +56,7 @@ export const runP003 = () => {
       
         });
     });
-    test('Scan tables within a specific element', async ({ page }) => {
+    test('Test Case 0: Заказ склада на сборку Page - Scan tables within a specific element', async ({ page }) => {
         test.setTimeout(600000);
         const shortagePage = new CreateAssemblyWarehousePage(page);
         await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
