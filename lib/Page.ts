@@ -23,301 +23,247 @@ import exp from "constants";
  * Inherits from the AbstractPage class for basic page handling functionality.
  */
 export class PageObject extends AbstractPage {
-
- protected button: Button; // Button helper instance
- protected input: Input; // Input helper instance
-
- constructor(page: Page) {
-  super(page); // Initialize the base AbstractPage with the page object
-  this.button = new Button(page); // Initialize the button helper
-  this.input = new Input(page); // Initialize the input helper
- }
-
-
-
-/**
- * Scans and validates the structure of tables within a specified element, and identifies rows with duplicate data-testids and cells missing data-testids.
- * @param page - The Playwright page instance.
- * @param dataTestId - The data-testid of the container element.
- * @returns A promise that resolves once the validation is complete.
- * @throws An error if any validation check fails.
- */
-
-
-async scanTablesWithinElement(page: Page, dataTestId: string): Promise<ValidationResult> {
-  const errors: string[] = [];
-
-  // Locate the element with the specified data-testid
-  const container = await page.$(`[data-testid="${dataTestId}"]`);
-  if (!container) {
-    const errorMessage = `Element with data-testid "${dataTestId}" not found.`;
-    logger.error(errorMessage);
-    errors.push(errorMessage);
-  } else {
-    // Find all tables within the located container
-    const tables = await container.$$('table');
-    if (tables.length === 0) {
-      const errorMessage = `No tables found within the element with data-testid "${dataTestId}".`;
-      logger.error(errorMessage);
-      errors.push(errorMessage);
-    } else {
-      // Iterate through each table and validate its structure
-      for (const [index, table] of tables.entries()) {
-        const tableErrors: string[] = [];
-        logger.info(`Validating Table ${index + 1} within data-testid "${dataTestId}":`);
-
-        // Validate the table structure (you can expand this as needed)
-        const thead = await table.$('thead');
-        if (!thead) {
-          const errorMessage = `Table ${index + 1} is missing <thead>.`;
-          logger.error(errorMessage);
-          tableErrors.push(errorMessage);
-        }
-
-        const tbody = await table.$('tbody');
-        if (!tbody) {
-          const errorMessage = `Table ${index + 1} is missing <tbody>.`;
-          logger.error(errorMessage);
-          tableErrors.push(errorMessage);
-        }
-
-        // Check for duplicate data-testids in rows
-        const rows = await table.$$('tr');
-        const dataTestIdMap = new Map();
-        const duplicateDataTestIds = new Set();
-        for (const row of rows) {
-          const rowDataTestId = await row.evaluate(node => node.getAttribute('data-testid'));
-          if (rowDataTestId) {
-            if (dataTestIdMap.has(rowDataTestId)) {
-              duplicateDataTestIds.add(rowDataTestId);
-            } else {
-              dataTestIdMap.set(rowDataTestId, true);
-            }
-          }
-        }
-
-        // Log duplicate data-testids only once per data-testid
-        duplicateDataTestIds.forEach(duplicateId => {
-          const errorMessage = `Duplicate data-testid "${duplicateId}" found in Table ${index + 1}`;
-          logger.warn(errorMessage);
-          tableErrors.push(errorMessage);
-        });
-
-        // Check for th and td cells missing data-testid
-        const cells = await table.$$('th, td');
-        for (const cell of cells) {
-          const cellDataTestId = await cell.evaluate(node => node.getAttribute('data-testid'));
-          if (!cellDataTestId) {
-            const cellTagName = await cell.evaluate(node => node.tagName.toLowerCase());
-            const errorMessage = `Cell <${cellTagName}> is missing data-testid in Table ${index + 1}`;
-            logger.warn(errorMessage);
-            tableErrors.push(errorMessage);
-          }
-        }
-
-        // Find the closest preceding h3 tag containing the header of the page or modal window
-        const header = await table.evaluate(node => {
-          let element = node as HTMLElement;
-          while (element && element.tagName.toLowerCase() !== 'body') {
-            const previousElement = element.previousElementSibling as HTMLElement;
-            if (previousElement) {
-              element = previousElement;
-              if (element.tagName.toLowerCase() === 'h3') {
-                return element.innerText;
-              }
-            } else {
-              element = element.parentElement as HTMLElement;
-            }
-          }
-          return null;
-        });
-
-        const headerText = header ? ` (Header: ${header})` : '';
-
-        // Append header text to each error message and remove duplicates
-        const tableErrorMessages = Array.from(new Set(tableErrors.map(error => `${error}${headerText}`)));
-
-        // Further validations can be added here
-        if (tableErrors.length === 0) {
-          logger.info(`Table ${index + 1} has a valid structure.`);
-        } else {
-          errors.push(...tableErrorMessages);
-        }
-      }
-    }
-  }
-
-  return {
-    success: errors.length === 0,
-    errors,
-  };
-}
-
-
-
-
-
-
- /**
-  * Finds an element with the specified partial data-testid and clicks on it.
-  * If not found, it tries to find an element with the same value as id and clicks on it.
-  * @param page - The Playwright page instance.
-  * @param partialDataTestId - The partial data-testid of the elements to search for.
-  * @param waitTime - The amount of time to wait after clicking, in milliseconds.
-  * @returns A promise that resolves once the element is clicked and the wait time has elapsed.
-  */
- async findAndClickElement(page: Page, partialDataTestId: string, waitTime: number = 10000): Promise<void> {
-   logger.info(`Searching for elements with partial data-testid="${partialDataTestId}"`);
-   
-   // Locate all elements with the partial data-testid
-   const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
-   
-   logger.info(`Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`);
-   
-   if (elements.length > 0) {
-     if (elements.length > 1) {
-       logger.error(`Found multiple elements with data-testid="${partialDataTestId}"`);
-     }
-     // Click on the first element
-     //await elements[0].click();
-     await elements[0].click({ force: true });
-     logger.info(`Clicked on the first element with partial data-testid="${partialDataTestId}"`);
-     await elements[0].evaluate((element) => {
-      element.style.border = '2px solid red';
-      element.style.backgroundColor = 'yellow';
-    });
-     // Wait for the specified amount of time
-     await page.waitForTimeout(waitTime);
-     
-     logger.info(`Waited for ${waitTime}ms after clicking the element`);
-   } else {
-     // Log that no elements were found
-     logger.error(`No elements found with partial data-testid="${partialDataTestId}"`);
-     
-     // Attempt to find an element with the same value as id
-     logger.info(`Searching for element with id="${partialDataTestId}"`);
-     const elementById = await page.$(`#${partialDataTestId}`);
-     
-     if (elementById) {
-       // Log that the element was found
-       logger.info(`Element with id="${partialDataTestId}" found`);
-       
-       // Ensure the element is visible and click it
-       await elementById.scrollIntoViewIfNeeded();
-       //await elementById.click();
-       await elementById.evaluate((element) => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'yellow';
-      });
-       await elementById.click({ force: true });
-       logger.info(`Clicked on the element with id="${partialDataTestId}"`);
-       
-       // Wait for the specified amount of time
-       await page.waitForTimeout(waitTime);
-       
-       logger.info(`Waited for ${waitTime}ms after clicking the element with id="${partialDataTestId}"`);
-     } else {
-       // Log that no element was found with the id
-       logger.error(`No element found with id="${partialDataTestId}"`);
-       
-       // Log the full HTML content of the page for further debugging
-       //const pageContent = await page.content();
-       //logger.info(`Page content: ${pageContent}`);
-     }
-   }
- }
- 
- /**
-  * Gets the text content of a specified selector.
-  * @param selector - The CSS selector for the element to retrieve text from.
-  * @returns The text content of the element or null if the element doesn't exist.
-  */
- async getText(selector: string): Promise<string | null> {
-  return await this.page.textContent(selector); // Return the text content of the element
- }
-
- /**
-  * Normalizes a string by removing extra spaces and normalizing Unicode characters.
-  * @param text - The text string to normalize.
-  * @returns The normalized text string.
-  */
- normalizeText(text: string): string {
-  return text
-   .normalize('NFC')
-   .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
-   .trim(); // Trim leading and trailing spaces
- }
-
- /**
-  * Retrieves and normalizes the text content of a specified selector.
-  * @param selector - The CSS selector for the element to retrieve text from.
-  * @returns The normalized text content of the element or null if the element doesn't exist.
-  */
- async getTextNormalized(selector: string): Promise<string | null> {
-  const text = await this.getText(selector); // Get the raw text
-  return text ? this.normalizeText(text) : null; // Return normalized text if available
- }
-
- /**
-  * Retrieves the error message or any other message and returns the normalized text.
-  * @param selector - The CSS selector for the element containing the error message.
-  * @returns The normalized error message or null if no message is found.
-  */
- async getErrorMessage(selector: string): Promise<string | null> {
-  return await this.getTextNormalized(selector); // Use the getTextNormalized method to fetch and normalize the error message
- }
-
- /**
-  * Opens the specified URL or the default base URL if none is provided.
-  * @param url - The URL to navigate to. Defaults to BASE_URL from ENV if not provided.
-  */
- async goto(url: string = ENV.BASE_URL): Promise<void> {
-  await this.page.goto(url, { waitUntil: 'domcontentloaded' }); // Navigate to the provided URL and wait until the DOM content is loaded
- }
-
- /**
-  * Pauses the test execution for a specified amount of time (in milliseconds).
-  * @param ms - The duration in milliseconds to pause the execution. Defaults to 1000ms.
-  */
- async waitForTimeout(ms: number = 1000): Promise<void> {
-  if (ENV.DEBUG) {
-   logger.info(`Page Class: Pausing for ${ms} milliseconds...`); // Log the pause action for debugging purposes
-  }
-  await this.page.waitForTimeout(ms); // Wait for the specified timeout duration
-  if (ENV.DEBUG) {
-   logger.info('Page Class: Pause complete'); // Log after the pause is complete
-  }
- }
- /**
-  * Fill in the login form.
-  * @param page - The Playwright page instance.
-  * @param tabel - The table value.
-  * @param login - The login username.
-  * @param password - The login password.
-  */
-
- async fillLoginForm(
-  page: Page,
-  tabel: string,
-  login: string,
-  password: string
- ): Promise<void> {
-  const delay = (ms: number) =>
-   new Promise(resolve => setTimeout(resolve, ms));
-// Step 2: Wait for and select the "tabel" option
-try {
-  await page.waitForSelector('select[data-testid="Authorization-Form-SelectTabel"]', { state: 'visible', timeout: 100000 });
-  logger.info('Select element found and visible.');
-} catch (error) {
-  logger.error('Error waiting for select element:', error);
-  throw error; // Rethrow the error after logging
-}
-
+    protected button: Button; // Button helper instance
+    protected input: Input; // Input helper instance
 
     constructor(page: Page) {
         super(page); // Initialize the base AbstractPage with the page object
         this.button = new Button(page); // Initialize the button helper
         this.input = new Input(page); // Initialize the input helper
+    }
+
+    /**
+     * Scans and validates the structure of tables within a specified element, and identifies rows with duplicate data-testids and cells missing data-testids.
+     * @param page - The Playwright page instance.
+     * @param dataTestId - The data-testid of the container element.
+     * @returns A promise that resolves once the validation is complete.
+     * @throws An error if any validation check fails.
+     */
+    async scanTablesWithinElement(
+        page: Page,
+        dataTestId: string
+    ): Promise<ValidationResult> {
+        const errors: string[] = [];
+
+        // Locate the element with the specified data-testid
+        const container = await page.$(`[data-testid="${dataTestId}"]`);
+        if (!container) {
+            const errorMessage = `Element with data-testid "${dataTestId}" not found.`;
+            logger.error(errorMessage);
+            errors.push(errorMessage);
+        } else {
+            // Find all tables within the located container
+            const tables = await container.$$("table");
+            if (tables.length === 0) {
+                const errorMessage = `No tables found within the element with data-testid "${dataTestId}".`;
+                logger.error(errorMessage);
+                errors.push(errorMessage);
+            } else {
+                // Iterate through each table and validate its structure
+                for (const [index, table] of tables.entries()) {
+                    const tableErrors: string[] = [];
+                    logger.info(
+                        `Validating Table ${
+                            index + 1
+                        } within data-testid "${dataTestId}":`
+                    );
+
+                    // Validate the table structure (you can expand this as needed)
+                    const thead = await table.$("thead");
+                    if (!thead) {
+                        const errorMessage = `Table ${
+                            index + 1
+                        } is missing <thead>.`;
+                        logger.error(errorMessage);
+                        tableErrors.push(errorMessage);
+                    }
+
+                    const tbody = await table.$("tbody");
+                    if (!tbody) {
+                        const errorMessage = `Table ${
+                            index + 1
+                        } is missing <tbody>.`;
+                        logger.error(errorMessage);
+                        tableErrors.push(errorMessage);
+                    }
+
+                    // Check for duplicate data-testids in rows
+                    const rows = await table.$$("tr");
+                    const dataTestIdMap = new Map();
+                    const duplicateDataTestIds = new Set();
+                    for (const row of rows) {
+                        const rowDataTestId = await row.evaluate((node) =>
+                            node.getAttribute("data-testid")
+                        );
+                        if (rowDataTestId) {
+                            if (dataTestIdMap.has(rowDataTestId)) {
+                                duplicateDataTestIds.add(rowDataTestId);
+                            } else {
+                                dataTestIdMap.set(rowDataTestId, true);
+                            }
+                        }
+                    }
+
+                    // Log duplicate data-testids only once per data-testid
+                    duplicateDataTestIds.forEach((duplicateId) => {
+                        const errorMessage = `Duplicate data-testid "${duplicateId}" found in Table ${
+                            index + 1
+                        }`;
+                        logger.warn(errorMessage);
+                        tableErrors.push(errorMessage);
+                    });
+
+                    // Check for th and td cells missing data-testid
+                    const cells = await table.$$("th, td");
+                    for (const cell of cells) {
+                        const cellDataTestId = await cell.evaluate((node) =>
+                            node.getAttribute("data-testid")
+                        );
+                        if (!cellDataTestId) {
+                            const cellTagName = await cell.evaluate((node) =>
+                                node.tagName.toLowerCase()
+                            );
+                            const errorMessage = `Cell <${cellTagName}> is missing data-testid in Table ${
+                                index + 1
+                            }`;
+                            logger.warn(errorMessage);
+                            tableErrors.push(errorMessage);
+                        }
+                    }
+
+                    // Find the closest preceding h3 tag containing the header of the page or modal window
+                    const header = await table.evaluate((node) => {
+                        let element = node as HTMLElement;
+                        while (
+                            element &&
+                            element.tagName.toLowerCase() !== "body"
+                        ) {
+                            const previousElement =
+                                element.previousElementSibling as HTMLElement;
+                            if (previousElement) {
+                                element = previousElement;
+                                if (element.tagName.toLowerCase() === "h3") {
+                                    return element.innerText;
+                                }
+                            } else {
+                                element = element.parentElement as HTMLElement;
+                            }
+                        }
+                        return null;
+                    });
+
+                    const headerText = header ? ` (Header: ${header})` : "";
+
+                    // Append header text to each error message and remove duplicates
+                    const tableErrorMessages = Array.from(
+                        new Set(
+                            tableErrors.map((error) => `${error}${headerText}`)
+                        )
+                    );
+
+                    // Further validations can be added here
+                    if (tableErrors.length === 0) {
+                        logger.info(
+                            `Table ${index + 1} has a valid structure.`
+                        );
+                    } else {
+                        errors.push(...tableErrorMessages);
+                    }
+                }
+            }
+        }
+
+        return {
+            success: errors.length === 0,
+            errors,
+        };
+    }
+
+    /**
+     * Finds an element with the specified partial data-testid and clicks on it.
+     * If not found, it tries to find an element with the same value as id and clicks on it.
+     * @param page - The Playwright page instance.
+     * @param partialDataTestId - The partial data-testid of the elements to search for.
+     * @param waitTime - The amount of time to wait after clicking, in milliseconds.
+     * @returns A promise that resolves once the element is clicked and the wait time has elapsed.
+     */
+    async findAndClickElement(
+        page: Page,
+        partialDataTestId: string,
+        waitTime: number = 10000
+    ): Promise<void> {
+        logger.info(
+            `Searching for elements with partial data-testid="${partialDataTestId}"`
+        );
+
+        // Locate all elements with the partial data-testid
+        const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
+
+        logger.info(
+            `Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`
+        );
+
+        if (elements.length > 0) {
+            if (elements.length > 1) {
+                logger.error(
+                    `Found multiple elements with data-testid="${partialDataTestId}"`
+                );
+            }
+            // Click on the first element
+            //await elements[0].click();
+            await elements[0].click({ force: true });
+            logger.info(
+                `Clicked on the first element with partial data-testid="${partialDataTestId}"`
+            );
+            await elements[0].evaluate((element) => {
+                element.style.border = "2px solid red";
+                element.style.backgroundColor = "yellow";
+            });
+            // Wait for the specified amount of time
+            await page.waitForTimeout(waitTime);
+
+            logger.info(`Waited for ${waitTime}ms after clicking the element`);
+        } else {
+            // Log that no elements were found
+            logger.error(
+                `No elements found with partial data-testid="${partialDataTestId}"`
+            );
+
+            // Attempt to find an element with the same value as id
+            logger.info(`Searching for element with id="${partialDataTestId}"`);
+            const elementById = await page.$(`#${partialDataTestId}`);
+
+            if (elementById) {
+                // Log that the element was found
+                logger.info(`Element with id="${partialDataTestId}" found`);
+
+                // Ensure the element is visible and click it
+                await elementById.scrollIntoViewIfNeeded();
+                //await elementById.click();
+                await elementById.evaluate((element) => {
+                    element.style.border = "2px solid red";
+                    element.style.backgroundColor = "yellow";
+                });
+                await elementById.click({ force: true });
+                logger.info(
+                    `Clicked on the element with id="${partialDataTestId}"`
+                );
+
+                // Wait for the specified amount of time
+                await page.waitForTimeout(waitTime);
+
+                logger.info(
+                    `Waited for ${waitTime}ms after clicking the element with id="${partialDataTestId}"`
+                );
+            } else {
+                // Log that no element was found with the id
+                logger.error(`No element found with id="${partialDataTestId}"`);
+
+                // Log the full HTML content of the page for further debugging
+                //const pageContent = await page.content();
+                //logger.info(`Page content: ${pageContent}`);
+            }
+        }
     }
 
     /**
@@ -381,6 +327,7 @@ try {
             logger.info("Page Class: Pause complete"); // Log after the pause is complete
         }
     }
+
     /**
      * Fill in the login form.
      * @param page - The Playwright page instance.
@@ -903,7 +850,6 @@ try {
         }
     }
 
-  
     /**
      * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
      * @param page - The Playwright page instance.
@@ -1037,118 +983,6 @@ try {
         }
         return columnIndex; // Возвращаем индекс колонки
     }
-
-/**
-  * Check the ordering of table rows based on the urgency date and planned shipment date columns.
-  * @param page - The Playwright page instance.
-  * @param tableId - The ID or data-testid of the table element.
-  * @param urgencyColIndex - The index of the urgency date column.
-  * @param plannedShipmentColIndex - The index of the planned shipment date column.
-  * @returns An object containing the success status and an optional message if the ordering check fails.
-  */
-
-async checkDatesWithOrderList(
- page: Page,
- tableId: string,
- nameColIdIndex: number,
- urgencyColIndex: number,
- plannedShipmentColIndex: number,
- ordersIconColIndex: number,
- modalSelector: string,
- modalTableSelector: string,
- urgencyModalColId: string,
- plannedShipmentModalColId: string
-): Promise<{ success: boolean; message?: string }> {
- // Step 1: Get all rows in the table
- logger.info(urgencyColIndex);
-
- let table = await page.$(`#${tableId}`);
- if (!table) {
-  table = await page.$(`[data-testid="${tableId}"]`);
- }
-
- if (!table) {
-  return {
-   success: false,
-   message: `Table with id "${tableId}" not found`
-  };
- }
-
- // Step 2: Get all rows in the table
- const rows = await table.$$('tbody tr');
- 
- // Step 3: Filter out rows that contain `th` elements
- const filteredRows = [];
- for (const row of rows) {
-  const thElements = await row.$$('th');
-  if (thElements.length === 0) {
-   filteredRows.push(row);
-  }
- }
-
- // Step 4: Log total rows found
- logger.info(`Total rows found in the table: ${filteredRows.length}`);
-
- let allTestsPassed = true; // Variable to track the overall success status
-
- for (let i = 0; i < filteredRows.length; i++) {
-
-  if (i > 30) {
-   break
-  }
-  const row = filteredRows[i];
-  const cells = await row.$$('td');
-  let nameForErrorReport = await cells[nameColIdIndex].innerText();
-  let urgencyDateForCompare = await cells[urgencyColIndex].innerText();
-  let plannedShipmentDateForCompare = await cells[plannedShipmentColIndex].innerText();
-
-  logger.info(`Urgency Date: ${urgencyDateForCompare}`);
-  logger.info(`Planned Shipment Date: ${plannedShipmentDateForCompare}`);
-
-  // Click on the icon in the ordersIconColIndex column
-  const iconCell = cells[ordersIconColIndex];
-  const icon = await iconCell.$('img.link_img');
-  if (icon) {
-   // Scroll the icon into view before clicking it
-   await iconCell.evaluate(node => node.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-   await page.waitForTimeout(5000); // Optional: wait for smooth scroll to finish
-
-   await icon.click();
-   logger.info(`Clicked on the icon in row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`);
-   const result = await this.ordersListVerifyModalDates(
-    page,
-    modalSelector,
-    modalTableSelector,
-    urgencyDateForCompare,
-    plannedShipmentDateForCompare,
-    urgencyModalColId,
-    plannedShipmentModalColId
-
-   );
-
-   page.mouse.dblclick(1,1);
-   if (!result.success) {
-    // Log the error and continue testing
-    allTestsPassed = false; // Mark the overall success status as false
-    logger.error(`Test failed for order ${nameForErrorReport}. Dates do not match.`);
-   }
-
-  } else {
-   logger.warn(`No icon found in the ordersIconColIndex column for row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`);
-  }
- }
-
- // Return the overall success status
- if (!allTestsPassed) {
-  return {
-   success: false,
-   message: "One or more orders failed the date comparison test. Check logs for details."
-  };
- }
-
- return { success: true };
-}
-
 
     /**
      * Check the ordering of table rows based on the urgency date and planned shipment date columns.
@@ -1481,7 +1315,6 @@ async checkDatesWithOrderList(
         await expect(checkHeader.locator("h3").nth(0)).toHaveText(header);
     }
 
-
     async ordersListVerifyModalDates(
         page: Page,
         modalSelectorId: string,
@@ -1586,7 +1419,6 @@ async checkDatesWithOrderList(
         // logger.info(`Dates MATCH for row with urgency date ${urgencyModalColValForCompare} and planned shipment date ${plannedShipmentModalColValForCompare}.`);
         return { success: true };
     }
-
 
     /** Checks the current date in the locator
      * @param locator - the full locator of the table
@@ -1905,9 +1737,6 @@ async checkDatesWithOrderList(
         await expect(containsSearchValue).toBe(true);
     }
 
-
-
-
     /**
      * Check that the first row contains the searched name
      * @param name - the searched value
@@ -2195,7 +2024,7 @@ async checkDatesWithOrderList(
         if (checkbox === true) {
             const tableDataTestId =
                 "ModalAddWaybill-ShipmentDetailsTable-Table";
-            const numberColumn = await this.findColumnNew(
+            const numberColumn = await this.findColumn(
                 this.page,
                 tableDataTestId,
                 "ModalAddWaybill-ShipmentDetailsTable-SelectColumn"
@@ -2305,174 +2134,79 @@ async checkDatesWithOrderList(
         const modalWindow = await this.page.locator(locator);
         await expect(modalWindow).toBeHidden();
     }
+
+    async filterRowsWithoutTh(rows: ElementHandle[]): Promise<ElementHandle[]> {
+        const filteredRows: ElementHandle[] = [];
+        for (const row of rows) {
+            const thElements = await row.$$("th");
+            if (thElements.length === 0) {
+                filteredRows.push(row);
+            }
+        }
+        return filteredRows;
+    }
+
     /**
-     * Scans and validates the structure of tables within a specified element.
-     * @param page - The Playwright page instance.
-     * @param dataTestId - The data-testid of the container element.
-     * @returns A promise that resolves once the validation is complete.
+     * Show the left table if it is not visible
+     * @param tableId of the table to search for
+     * @param buttonId of the button that we will click on
      */
-    async scanTablesWithinElement(page: Page, dataTestId: string) {
-        // Locate the element with the specified data-testid
-        const container = await page.$(`[data-testid="${dataTestId}"]`);
+    async showLeftTable(tableId: string, buttonId: string) {
+        await this.page.waitForLoadState("networkidle");
 
-        if (!container) {
-            logger.error(`Element with data-testid "${dataTestId}" not found.`);
-            return;
-        }
-
-        // Find all tables within the located container
-        const tables = await container.$$("table");
-
-        if (tables.length === 0) {
-            logger.error(
-                `No tables found within the element with data-testid "${dataTestId}".`
-            );
-            return;
-        }
-
-        // Iterate through each table and validate its structure
-        for (const [index, table] of tables.entries()) {
-            logger.info(
-                `Validating Table ${
-                    index + 1
-                } within data-testid "${dataTestId}":`
-            );
-
-            // Validate the table structure (you can expand this as needed)
-            const thead = await table.$("thead");
-            if (!thead) {
-                logger.error(`Table ${index + 1} is missing <thead>.`);
-                continue;
-            }
-
-            const tbody = await table.$("tbody");
-            if (!tbody) {
-                logger.error(`Table ${index + 1} is missing <tbody>.`);
-                continue;
-            }
-
-            // Further validations can be added here
-            logger.info(`Table ${index + 1} has a valid structure.`);
+        // Capture the number of columns from the checkTableColumns method
+        const button = `[data-testid="${buttonId}"]`;
+        const table = `[data-testid="${tableId}"]`;
+        await this.page.waitForTimeout(3000);
+        const isVisible = await this.page.isVisible(table);
+        await this.page.waitForLoadState("networkidle");
+        if (!isVisible) {
+            await this.page.click(button);
+            await this.page.waitForSelector(table, { state: "visible" });
         }
     }
 
-    async findAndClickElement(
+    /**
+     * Get the ids of all the columns data-testid passed in and return an array of Ids
+     * @param tableId of the table to search for
+     * @param page curent Page
+     * @param searchFields the array of data-testids to search for
+     * @returns array of integers
+     */
+    async getSearchableColumnIds(
         page: Page,
-        partialDataTestId: string,
-        waitTime: number = 2000
-    ): Promise<void> {
-        logger.info(
-            `Searching for elements with partial data-testid="${partialDataTestId}"`
-        );
+        tableId: string,
+        searchFields: string[]
+    ): Promise<number[]> {
+        const columnIds: number[] = [];
 
-        // Locate all elements with the partial data-testid
-        const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
+        // Wait for the table to be visible
+        const tableSelector = `[data-testid="${tableId}"], #${tableId}`;
+        await page.waitForSelector(tableSelector, {
+            state: "visible",
+            timeout: 10000,
+        });
+        logger.info(`Table with ID ${tableId} is visible`);
 
-        logger.info(
-            `Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`
-        );
+        for (const field of searchFields) {
+            logger.info(`Finding column for field: ${field}`);
 
-        if (elements.length > 0) {
-            if (elements.length > 1) {
-                logger.error(
-                    `Found multiple elements with data-testid="${partialDataTestId}"`
-                );
+            const columnId = await this.findColumn(page, tableId, field);
+
+            logger.info(`Found column ID: ${columnId} for field: ${field}`);
+
+            if (columnId !== -1) {
+                columnIds.push(columnId);
+                logger.info(`Column ID ${columnId} added to columnIds array`);
+            } else {
+                // Handle the case where the column is not found
+                logger.warn(`Column not found for field: ${field}`);
             }
-            // Click on the first element
-            await elements[0].click();
-
-            logger.info(
-                `Clicked on the first element with partial data-testid="${partialDataTestId}"`
-            );
-
-            // Wait for the specified amount of time
-            await page.waitForTimeout(waitTime);
-
-            logger.info(`Waited for ${waitTime}ms after clicking the element`);
-        } else {
-            // Log that no elements were found
-            logger.error(
-                `No elements found with partial data-testid="${partialDataTestId}"`
-            );
         }
+
+        logger.info(`Final column IDs: ${JSON.stringify(columnIds)}`);
+        return columnIds;
     }
-
- 
- async filterRowsWithoutTh(rows: ElementHandle[]): Promise<ElementHandle[]> {
-  const filteredRows: ElementHandle[] = [];
-  for (const row of rows) {
-   const thElements = await row.$$('th');
-   if (thElements.length === 0) {
-    filteredRows.push(row);
-   }
-  }
-  return filteredRows;
- }
- 
-  /** 
-  * Show the left table if it is not visible
-  * @param tableId of the table to search for
-  * @param buttonId of the button that we will click on
-  */
- async showLeftTable(tableId: string, buttonId: string){
-  await this.page.waitForLoadState('networkidle');
-
-  // Capture the number of columns from the checkTableColumns method
-  const button = `[data-testid="${buttonId}"]`;
-  const table = `[data-testid="${tableId}"]`;
-  await this.page.waitForTimeout(3000);
-  const isVisible = await this.page.isVisible(table);
-  await this.page.waitForLoadState('networkidle');
-  if (!isVisible){
-    await this.page.click(button);
-    await this.page.waitForSelector(table, { state: 'visible' });
-  }
- }
-
-
- /** 
-  * Get the ids of all the columns data-testid passed in and return an array of Ids
-  * @param tableId of the table to search for
-  * @param page curent Page
-  * @param searchFields the array of data-testids to search for
-  * @returns array of integers
-  */
- async getSearchableColumnIds(page: Page, tableId: string, searchFields: string[]): Promise<number[]> {
-  const columnIds: number[] = [];
- 
-  // Wait for the table to be visible
-  const tableSelector = `[data-testid="${tableId}"], #${tableId}`;
-  await page.waitForSelector(tableSelector, { state: 'visible', timeout: 10000 });
-  logger.info(`Table with ID ${tableId} is visible`);
- 
-  for (const field of searchFields) {
-   logger.info(`Finding column for field: ${field}`);
-
-   const columnId = await this.findColumn(page, tableId, field);
-  
-   logger.info(`Found column ID: ${columnId} for field: ${field}`);
- 
-   if (columnId !== false) {
-    columnIds.push(columnId);
-    logger.info(`Column ID ${columnId} added to columnIds array`);
-   } else {
-    // Handle the case where the column is not found
-    logger.warn(`Column not found for field: ${field}`);
-   }
-  }
- 
-  logger.info(`Final column IDs: ${JSON.stringify(columnIds)}`); 
-  return columnIds;
- }
-
-
-
-
- 
- 
-
-
-
 }
 
 // Retrieving descendants from the entity specification
@@ -2539,8 +2273,8 @@ async function extractDataSpetification(
 }
 
 interface ValidationResult {
-  success: boolean;
-  errors: string[];
+    success: boolean;
+    errors: string[];
 }
 
 export interface ISpetificationData {
