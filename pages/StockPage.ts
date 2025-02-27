@@ -21,9 +21,11 @@ export class CreateStockPage extends PageObject {
         tableSelection: TableSelection
     ) {
         let tableLocator: string = ".scroll-table.product";
+        let tableDataTestId: string = "";
 
         if (tableSelection === TableSelection.cbed) {
             tableLocator = ".scroll-table.cbed";
+            tableDataTestId = "ModalAddWaybill-ShipmentDetailsTable-Table";
         } else if (tableSelection === TableSelection.detail) {
             tableLocator = ".scroll-table.detal";
         }
@@ -52,7 +54,12 @@ export class CreateStockPage extends PageObject {
         // Check that the first row of the table contains the variable name
         await this.checkNameInLineFromFirstRow(serachName, tableLocator);
 
-        // Upd:
+        // const numberColumn = await this.findColumnNew(
+        //     this.page,
+        //     tableDataTestId,
+        //     "ModalAddWaybill-ShipmentDetailsTable-SelectColumn"
+        // );
+        // console.log("numberColumn: ", numberColumn);
         let remainingStock = await this.getValueOrClickFromFirstRow(
             tableLocator,
             2

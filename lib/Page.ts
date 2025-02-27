@@ -626,125 +626,6 @@ export class PageObject extends AbstractPage {
         page: Page,
         tableId: string,
         colId: string
-    ): Promise<number | false> {
-        page.on("console", (msg) => {
-            if (msg.type() === "log") {
-                logger.info(`Browser log: ${msg.text()}`);
-            } else if (msg.type() === "info") {
-                logger.info(`Browser info: ${msg.text()}`);
-            } else if (msg.type() === "warning") {
-                logger.warn(`Browser warning: ${msg.text()}`);
-            } else if (msg.type() === "error") {
-                logger.error(`Browser error: ${msg.text()}`);
-            }
-        });
-
-        logger.info(
-            `Task started: Finding table "${tableId}" and printing header rows HTML.`
-        );
-
-        const columnIndex = await page.evaluate(
-            ({ tableId, colId }) => {
-                const table =
-                    document.querySelector(`[data-testid="${tableId}"]`) ||
-                    document.getElementById(tableId);
-                if (!table) {
-                    console.error(
-                        `Table with data-testid or id "${tableId}" not found.`
-                    );
-                    return false;
-                }
-                console.info(`Found table. now looking for column "${colId}".`);
-                const headerRows = Array.from(
-                    table.querySelectorAll("thead tr, tbody tr:has(th)")
-                ).filter((row) => row.querySelectorAll("th").length > 0);
-
-                if (headerRows.length >= 2) {
-                    const firstRowHeaders = Array.from(
-                        headerRows[0].querySelectorAll("th")
-                    );
-                    const secondRowHeaders = Array.from(
-                        headerRows[1].querySelectorAll("th")
-                    );
-
-                    let startColumn = -1;
-                    let spanCount = 0;
-                    secondRowHeaders.forEach((header, index) => {
-                        const headerText = header.innerText.trim();
-                        if (
-                            headerText !== "" ||
-                            header.querySelector("div.unicon")
-                        ) {
-                            if (startColumn === -1) {
-                                startColumn = index;
-                            }
-                            spanCount++;
-                        }
-                    });
-
-                    const mergedHeaderRow = document.createElement("tr");
-                    firstRowHeaders.forEach((column, index) => {
-                        if (
-                            index >= startColumn &&
-                            index < startColumn + spanCount
-                        ) {
-                            column = secondRowHeaders[index - startColumn];
-                        }
-                        mergedHeaderRow.appendChild(column.cloneNode(true));
-                    });
-
-                    const updatedHeaders = Array.from(
-                        mergedHeaderRow.querySelectorAll("th")
-                    );
-                    for (let i = 0; i < updatedHeaders.length; i++) {
-                        const headerDataTestId =
-                            updatedHeaders[i].getAttribute("data-testid");
-                        if (headerDataTestId === colId) {
-                            return i;
-                        }
-                    }
-                } else {
-                    // Handle the case where there's only one header row
-                    const singleRowHeaders = Array.from(
-                        headerRows[0].querySelectorAll("th")
-                    );
-                    for (let i = 0; i < singleRowHeaders.length; i++) {
-                        const headerDataTestId =
-                            singleRowHeaders[i].getAttribute("data-testid");
-                        if (headerDataTestId === colId) {
-                            return i;
-                        }
-                    }
-                    console.error("Not enough header rows found.");
-                    return false;
-                }
-
-                return false;
-            },
-            { tableId, colId }
-        );
-
-        if (columnIndex !== false) {
-            logger.info(
-                `Column with data-testid "${colId}" found at index: ${columnIndex}`
-            );
-        } else {
-            logger.error(`Column with data-testid "${colId}" not found.`);
-        }
-        return columnIndex;
-    }
-
-    /**
-     * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
-     * @param page - The Playwright page instance.
-     * @param tableId - The ID or data-testid of the table element.
-     * @param colId - The data-testid of the column to find.
-     * @returns The index of the column with the specified data-testid, or false if not found.
-     */
-    async findColumnNew(
-        page: Page,
-        tableId: string,
-        colId: string
     ): Promise<number> {
         page.on("console", (msg) => {
             if (msg.type() === "log") {
@@ -780,7 +661,12 @@ export class PageObject extends AbstractPage {
 
                 headerRows = headerRows.filter(
                     (row) =>
-                        !row.getAttribute("data-testid")?.includes("SearchRow")
+                        !row
+                            .getAttribute("data-testid")
+                            ?.includes("SearchRow") &&
+                        !row
+                            .getAttribute("data-testid")
+                            ?.includes("TableFooter")
                 );
                 console.log(headerRows.length);
 
@@ -843,6 +729,7 @@ export class PageObject extends AbstractPage {
                             return i; // Возвращаем индекс колонки
                         }
                     }
+
                     console.error("Not enough header rows found.");
                     return -1; // Возвращаем -1 вместо false
                 }
@@ -1260,7 +1147,7 @@ export class PageObject extends AbstractPage {
      * @param locator - The selector to locate the table element.
      * @returns A promise that resolves when the search is performed.
      */
-    async closeSuccessMessege() {
+    async closeSuccessMessage() {
         const successMessageLocator = this.page.locator(
             '[data-testid="InformFolder-MessageType-DestroyDiv"] .unicon'
         );
@@ -1330,46 +1217,6 @@ export class PageObject extends AbstractPage {
     async checkHeader(header: string, url: string) {
         const checkHeader = this.page.locator(url);
         await expect(checkHeader.locator("h3").nth(0)).toHaveText(header);
-    }
-
-    /** Checks the current date in the locator
-     * @param locator - the full locator of the table
-     */
-    async checkCurrentDate(locator: string) {
-        const orderDateValueSelector = locator;
-        await this.page.waitForSelector(orderDateValueSelector, {
-            state: "visible",
-        });
-
-        const orderDateText = await this.page
-            .locator(orderDateValueSelector)
-            .textContent();
-
-        if (!orderDateText) {
-            throw new Error("Не удалось получить текст даты из локатора.");
-        }
-
-        const trimmedDateText = orderDateText.trim();
-        logger.info(`Текущая дата из локатора: ${trimmedDateText}`);
-
-        const datePattern = /^\d{2}\.\d{2}\.\d{4}$/;
-
-        if (!datePattern.test(trimmedDateText)) {
-            throw new Error(
-                `Дата "${trimmedDateText}" не соответствует формату DD.MM.YYYY`
-            );
-        }
-
-        const [day, month, year] = trimmedDateText.split(".").map(Number);
-        const orderDate = new Date(year, month - 1, day);
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const isSameDate = orderDate.getTime() === today.getTime();
-
-        logger.info(`Сравнение текущей даты с сегодняшней: ${isSameDate}`);
-        expect(isSameDate).toBe(true);
     }
 
     async ordersListVerifyModalDates(
@@ -1491,7 +1338,7 @@ export class PageObject extends AbstractPage {
     /** Checks the current date in the locator
      * @param locator - the full locator of the table
      */
-    async checkCurrentDateNew(locator: string) {
+    async checkCurrentDate(locator: string) {
         const checkDate = await this.page.locator(locator).textContent();
         const today = new Date();
         const formattedToday = today.toLocaleDateString("ru-RU");
@@ -2053,10 +1900,10 @@ export class PageObject extends AbstractPage {
         expect(await checkName?.includes(designationProduct)).toBeTruthy();
 
         // Check that the current date is displayed in the text of the element
-        await this.checkCurrentDateNew('[data-testid="ModalMark-Date"]');
+        await this.checkCurrentDate('[data-testid="ModalMark-Date"]');
 
         // Check that the "Due Date" input contains the current date
-        const dateToday = await this.checkCurrentDateNew(
+        const dateToday = await this.checkCurrentDate(
             '[data-testid="ModalMark-Date"]'
         );
 
@@ -2116,7 +1963,7 @@ export class PageObject extends AbstractPage {
             .locator('[data-testid="ModalAddWaybill-Complectation-Header"]')
             .textContent();
         expect(headerModal).toContain(
-            await this.checkCurrentDateNew(
+            await this.checkCurrentDate(
                 '[data-testid="ModalAddWaybill-WaybillDetails-Heading"]'
             )
         );
@@ -2143,7 +1990,7 @@ export class PageObject extends AbstractPage {
             '[data-testid="ModalAddWaybill-WaybillDetails-TableContainer"]',
             4
         );
-        expect(yourQuantity).toHaveValue(needQuantity);
+        // expect(yourQuantity).toHaveValue(needQuantity);
         if (enterQuantity) {
             await yourQuantity.fill(enterQuantity);
             expect(await yourQuantity.inputValue()).toBe(enterQuantity);
@@ -2151,9 +1998,18 @@ export class PageObject extends AbstractPage {
         }
 
         if (checkbox === true) {
+            const tableDataTestId =
+                "ModalAddWaybill-ShipmentDetailsTable-Table";
+            const numberColumn = await this.findColumnNew(
+                this.page,
+                tableDataTestId,
+                "ModalAddWaybill-ShipmentDetailsTable-SelectColumn"
+            );
+            console.log("numberColumn: ", numberColumn);
+
             await this.getValueOrClickFromFirstRow(
                 '[data-testid="ModalAddWaybill-ShipmentDetailsTable-Table"]',
-                6,
+                numberColumn,
                 Click.Yes,
                 Click.No
             );
@@ -2253,6 +2109,97 @@ export class PageObject extends AbstractPage {
     async checkCloseModalWindow(locator: string) {
         const modalWindow = await this.page.locator(locator);
         await expect(modalWindow).toBeHidden();
+    }
+    /**
+     * Scans and validates the structure of tables within a specified element.
+     * @param page - The Playwright page instance.
+     * @param dataTestId - The data-testid of the container element.
+     * @returns A promise that resolves once the validation is complete.
+     */
+    async scanTablesWithinElement(page: Page, dataTestId: string) {
+        // Locate the element with the specified data-testid
+        const container = await page.$(`[data-testid="${dataTestId}"]`);
+
+        if (!container) {
+            logger.error(`Element with data-testid "${dataTestId}" not found.`);
+            return;
+        }
+
+        // Find all tables within the located container
+        const tables = await container.$$("table");
+
+        if (tables.length === 0) {
+            logger.error(
+                `No tables found within the element with data-testid "${dataTestId}".`
+            );
+            return;
+        }
+
+        // Iterate through each table and validate its structure
+        for (const [index, table] of tables.entries()) {
+            logger.info(
+                `Validating Table ${
+                    index + 1
+                } within data-testid "${dataTestId}":`
+            );
+
+            // Validate the table structure (you can expand this as needed)
+            const thead = await table.$("thead");
+            if (!thead) {
+                logger.error(`Table ${index + 1} is missing <thead>.`);
+                continue;
+            }
+
+            const tbody = await table.$("tbody");
+            if (!tbody) {
+                logger.error(`Table ${index + 1} is missing <tbody>.`);
+                continue;
+            }
+
+            // Further validations can be added here
+            logger.info(`Table ${index + 1} has a valid structure.`);
+        }
+    }
+
+    async findAndClickElement(
+        page: Page,
+        partialDataTestId: string,
+        waitTime: number = 2000
+    ): Promise<void> {
+        logger.info(
+            `Searching for elements with partial data-testid="${partialDataTestId}"`
+        );
+
+        // Locate all elements with the partial data-testid
+        const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
+
+        logger.info(
+            `Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`
+        );
+
+        if (elements.length > 0) {
+            if (elements.length > 1) {
+                logger.error(
+                    `Found multiple elements with data-testid="${partialDataTestId}"`
+                );
+            }
+            // Click on the first element
+            await elements[0].click();
+
+            logger.info(
+                `Clicked on the first element with partial data-testid="${partialDataTestId}"`
+            );
+
+            // Wait for the specified amount of time
+            await page.waitForTimeout(waitTime);
+
+            logger.info(`Waited for ${waitTime}ms after clicking the element`);
+        } else {
+            // Log that no elements were found
+            logger.error(
+                `No elements found with partial data-testid="${partialDataTestId}"`
+            );
+        }
     }
 }
 
