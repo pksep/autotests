@@ -4,7 +4,7 @@ import { ENV } from "./config";
 import path from "path";
 
 export default defineConfig({
-    testDir: "C:/Users/lostname/Desktop/Work/autotests", // Directory where your test files are located
+    testDir: "D:/Work/sep_autotests", // Directory where your test files are located
     timeout: 30000,
     retries: 0,
     use: {

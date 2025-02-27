@@ -1,41 +1,41 @@
 import { test, expect, ElementHandle } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec'; // Adjust the import path as necessary
-import { CreatShortagePartsPage } from '../pages/ShortagePartsPage';
+import { CreateCompletingAssembliesToPlanPage } from '../pages/CompletingAssembliesToPlanPage';
 import { ENV, SELECTORS } from '../config'; // Import the configuration
 import testData from '../testdata/AUS18-T2.json'; // Import your test data
 import testData2 from '../testdata/AUS18-T1.json'; // Import your test data
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
 
-const WAREHOUSE_PAGE_BUTTON = "Sclad-deficitDetal-deficitDetal";
-const RESET_FILTERS = "DeficitDetal-Table-ButtonFilter";
-const SHOW_LEFT_TABLE_BUTTON = "DeficitDetal-Shipments-Hidden";
+const WAREHOUSE_PAGE_BUTTON = "Sclad-completionCbedPlan";
+const RESET_FILTERS = "TableComplect-ShipmentList-ShipmentClear";
+const SHOW_LEFT_TABLE_BUTTON = "TableComplect-ShipmentList-ShipmentShow";
 const LEFT_DATA_TABLE = "ShipmentsListTable-Table";
 const LEFT_DATA_TABLE_URGENCY_DATA_COL = "ShipmentsListTable-TableRow-HeaderDateByUrgency";
 const LEFT_DATA_TABLE_PLANNED_DATA_COL = "ShipmentsListTable-TableRow-HeaderDateShipmentPlan";
 const LEFT_DATA_TABLE_SEARCHABLE_FIELD = "ShipmentsListTable-TableRow-HeaderOrder";
 
-const RIGHT_DATA_TABLE = "DeficitCbed-Table";
-const RIGHT_DATA_TABLE_URGENCY_DATA_COL = "DeficitCbed-TableHeader-UrgencyDate";
-const RIGHT_DATA_TABLE_PLANNED_DATA_COL = "DeficitCbed-TableHeader-PlanDate";
+const RIGHT_DATA_TABLE = "TableComplect-TableComplect-Table";
+const RIGHT_DATA_TABLE_URGENCY_DATA_COL = "TableComplect-TableComplect-UrgencyDateColumn";
+const RIGHT_DATA_TABLE_PLANNED_DATA_COL = "TableComplect-TableComplect-PlannedShipmentDateColumn";
 const RIGHT_DATA_TABLE_SUBPLANNED_DATA_COL = "DeficitCbed-TableHeader-Orders";//??????
-const RIGHT_DATA_TABLE_SEARCHABLE_COLS1 = "DeficitCbed-TableHeader-Type";
-const RIGHT_DATA_TABLE_SEARCHABLE_COLS2 = "DeficitCbed-TableHeader-Designation";
-const RIGHT_DATA_TABLE_SEARCHABLE_COLS3 = "DeficitCbed-TableHeader-Name";
-const RIGHT_DATA_TABLE_ORDERS_ICON_COL = "DeficitCbed-TableHeader-Orders";
+const RIGHT_DATA_TABLE_SEARCHABLE_COLS1 = "TableComplect-TableComplect-DesignationColumn";
+const RIGHT_DATA_TABLE_SEARCHABLE_COLS2 = "TableComplect-TableComplect-NameColumn";
+const RIGHT_DATA_TABLE_SEARCHABLE_COLS3 = "TableComplect-TableComplect-NameColumn";
+const RIGHT_DATA_TABLE_ORDERS_ICON_COL = "TableComplect-TableComplect-RowShipmentsCell";
 
 const RIGHT_MODAL_WINDOW_ID = "ModalShipmentsToIzed-destroyModalRight";
 const RIGHT_MODAL_TABLE_ID = "ModalShipmentsToIzed-table-buyers";
 const RIGHT_MODAL_TABLE_COL3 = "ModalShipmentsToIzed-thead-th3-buyers";
 const RIGHT_MODAL_TABLE_COL4 = "ModalShipmentsToIzed-thead-th4-buyers";
-const RIGHT_DATA_TABLE_CELL_X = "DeficitCbed-TableBody-Number";
-const LEFT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
+const RIGHT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
+const LEFT_DATA_TABLE_CELL_X = "TableComplect-TableComplect-TableRow";
 
 
-export const runP007 = () => {
+export const runP008 = () => {
     logger.info(`Starting test: Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Functionality`);
     test.beforeEach(async ({ page }) => {
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
 
         await allure.step('Step 1: Open the login page and login', async () => {
             await performLogin(page, '001', 'Перов Д.А.', '54321');
@@ -55,10 +55,33 @@ export const runP007 = () => {
     });
     test('Test Case 0: Дефицит Сборочных Еденицe Page - Scan tables within a specific element', async ({ page }) => {
         test.setTimeout(600000);
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
         await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
-        const result = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
-        expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
+        await shortagePage.findAndClickElement(page, "TableComplect-TableComplect-RowOperationsCell", 3000);
+        const result1 = await shortagePage.scanTablesWithinElement(page, 'ModalOperationPath-destroyModalRight'); // Replace with your data-testid
+        page.mouse.click(1, 1);
+        await shortagePage.findAndClickElement(page, "TableComplect-TableComplect-RowShipmentsCell", 3000);
+        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-tbody-tr-sclad", 3000);
+        const result2 = await shortagePage.scanTablesWithinElement(page, 'ModalWorker-StockOrderModal-Content'); // Replace with your data-testid
+        page.mouse.click(1, 1);
+        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-tbody-tr-buyers", 3000);
+        await shortagePage.findAndClickElement(page, "complect", 3000);
+        await shortagePage.findAndClickElement(page, "ModalKomplect-komplect-table-body-row", 3000);
+        await shortagePage.findAndClickElement(page, "TableDocument-TableRow", 3000);
+        const result3 = await shortagePage.scanTablesWithinElement(page, 'App-RouterView');
+
+
+        // Combine results and errors
+        const combinedErrors = [
+            ...result1.errors,
+            ...result2.errors,
+            ...result3.errors
+        ];
+
+        const success = result1.success && result2.success && result3.success;
+
+        // Use Playwright's assertion to check the combined result and fail the test if needed
+        expect(success, 'Validation failed with the following errors:\n' + combinedErrors.join('\n')).toBeTruthy();
 
     });
     test.skip('Test Case 1 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
@@ -70,7 +93,7 @@ export const runP007 = () => {
         allure.label('story', 'Verify Column count and order');
         allure.description('Verify Product Shortage Page Column Count and Order Check for RIGHT table.');
 
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
         let columnCount = 0;
         await allure.step('Step 4: Count the number of columns in the table and their order', async () => {
             // Capture the number of columns from the checkTableColumns method
@@ -94,7 +117,7 @@ export const runP007 = () => {
         allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify Column count and order');
         allure.description('Verify Product Shortage Page Column Count and Order Check for LEFT table.');
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
 
         let columnCount = 0;
         await allure.step('Step 4: Count the number of columns in the table and their order', async () => {
@@ -119,7 +142,7 @@ export const runP007 = () => {
         allure.label('story', 'Verify Column header values check');
         allure.description('Verify Product Shortage Page Column header values Check for RIGHT table.');
 
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
 
         await allure.step('Step 4: Check table column Header values', async () => {
             logger.info('STEP 4: Check table column Header values');
@@ -136,7 +159,7 @@ export const runP007 = () => {
         allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify Column header values check');
         allure.description('Verify Product Shortage Page Column header values Check for LEFT table.');
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
 
         await allure.step('Step 4: Check table column Header values', async () => {
             // Capture the number of columns from the checkTableColumns method
@@ -156,7 +179,7 @@ export const runP007 = () => {
         allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify row sort ordering');
         allure.description('Verify Product Shortage Page Row Ordering for RIGHT table.');
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
 
         await allure.step('Step 4: Check Row ordering', async () => {
             logger.info('STEP 4: Page loaded. Starting column identification.');
@@ -201,7 +224,7 @@ export const runP007 = () => {
         allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify row sort ordering');
         allure.description('Verify Product Shortage Page Row Ordering for LEFT table.');
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
 
         await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
             logger.info('STEP 4: Find if show left table button is visible and click it');
@@ -251,7 +274,7 @@ export const runP007 = () => {
         allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify row sort ordering');
         allure.description('Verify Product Shortage Page search functionality for LEFT table.');
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
         let searchQuery = 'Обозначение';
 
         await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
@@ -478,7 +501,7 @@ export const runP007 = () => {
         allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify row sort ordering');
         allure.description('Verify Product Shortage Page search functionality for LEFT table.');
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
         let searchQuery = 'Обозначение';
 
         await allure.step('Step 4: Check Search Functionality', async () => {
@@ -771,7 +794,7 @@ export const runP007 = () => {
         allure.label('feature', 'Дефицит Сборочных Едениц');
         allure.label('story', 'Verify row sort ordering');
         allure.description('Verify Dates in main table match dates in the Orders List for RIGHT table.');
-        const shortagePage = new CreatShortagePartsPage(page);
+        const shortagePage = new CreateCompletingAssembliesToPlanPage(page);
 
         await allure.step('Step 4: compare the dates in each Row, with thier Orders list', async () => {
             logger.info('STEP 4: Find Columns to check ordering in main table.');
