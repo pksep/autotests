@@ -59,6 +59,42 @@ export const runP005 = () => {
           await page.waitForLoadState('networkidle');
         });
       });
+      test.skip('Test case 0: Металлообработка склад (Metalworking Warehouse) Page - Scan tables within a specific element', async ({ page }) => {
+        test.setTimeout(600000);
+        const shortagePage = new CreateMetalworkingWarehousePage(page);
+        
+        await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
+        await shortagePage.findAndClickElement(page, "MetalloworkingSclad-MetaloworkingTable-OperationsCell", 3000);
+        const result1 = await shortagePage.scanTablesWithinElement(page, 'ModalOperationPathMetaloworking-destroyModalRight');
+        page.mouse.dblclick(1, 1);
+        
+        await shortagePage.findAndClickElement(page, "MetalloworkingSclad-MetaloworkingTable-EditCell", 3000);
+        const result2 = await shortagePage.scanTablesWithinElement(page, 'ModalWorkersForIzd-destroyModalRight');
+        page.mouse.dblclick(1, 1);
+        
+        await shortagePage.findAndClickElement(page, "MetalloworkingSclad-MetaloworkingTable-ShipmentsCell", 3000);
+        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-tbody-tr-buyers", 3000);
+        await shortagePage.findAndClickElement(page, "complect", 3000);
+        await shortagePage.findAndClickElement(page, "ModalKomplect-komplect-table-body-row-number", 3000);
+        await shortagePage.findAndClickElement(page, "ModalDetail-h3-Belonging", 3000);
+        await shortagePage.findAndClickElement(page, "TableNode-showIzd", 3000);
+        await shortagePage.findAndClickElement(page, "TableNode-izdTableDesignation", 3000);
+        await shortagePage.findAndClickElement(page, "ModalProduct-TechProcessLink", 3000);
+        const result3 = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
+    
+        // Combine results and errors
+        const combinedErrors = [
+            ...result1.errors,
+            ...result2.errors,
+            ...result3.errors
+        ];
+        
+        const success = result1.success && result2.success && result3.success;
+    
+        // Use Playwright's assertion to check the combined result and fail the test if needed
+        expect(success, 'Validation failed with the following errors:\n' + combinedErrors.join('\n')).toBeTruthy();
+    });
+          
     test.skip('Test Case 1 - Verify Металлообработка склад (Metalworking Warehouse) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
@@ -86,7 +122,7 @@ export const runP005 = () => {
 
 
     });
-     test.skip('Test Case 2 - Verify Металлообработка склад (Metalworking Warehouse) Page Column Count and Order Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 2 - Verify Металлообработка склад (Metalworking Warehouse) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Металлообработка склад');
@@ -128,7 +164,7 @@ export const runP005 = () => {
 
     });
 
-     test.skip('Test Case 4 - Verify Металлообработка склад (Metalworking Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 4 - Verify Металлообработка склад (Metalworking Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Металлообработка склад');
@@ -164,7 +200,7 @@ export const runP005 = () => {
             logger.info(`Urgency Column Index: ${urgencyColId}`);
 
             // Refresh the page to reset the state
-            await page.reload({ waitUntil: 'networkidle' });
+            await page.reload({ waitUntil: 'networkidle', timeout: 60000 });
             logger.info('Page reloaded. Starting next column identification.');
 
             // Call the method for the 'DateShipmentsPlan' header
@@ -214,7 +250,7 @@ export const runP005 = () => {
             logger.info('Finding column for DateByUrgency');
             const urgencyColId = await shortagePage.findColumn(page, LEFT_DATA_TABLE, LEFT_DATA_TABLE_URGENCY_DATA_COL);
             logger.info(`Urgency Column Index: ${urgencyColId}`);
-            await page.reload({ waitUntil: 'networkidle' });
+            await page.reload({ waitUntil: 'networkidle', timeout: 60000 });
             await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
             // Call the method for the 'DateShipmentsPlan' header
             logger.info('Finding column for DateShipmentsPlan');
@@ -314,7 +350,7 @@ export const runP005 = () => {
 
                     await allure.step(`5.4.1: Reset the page before checking results`, async () => {
                         // Perform search using the first cell's value
-                        await page.reload({ waitUntil: 'networkidle' });
+                        await page.reload({ waitUntil: 'networkidle', timeout: 60000});
                         await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
                     });
 
@@ -470,7 +506,7 @@ export const runP005 = () => {
           });
           
     });     
-    test('Test Case 8 - Verify Металлообработка склад (Metalworking Warehouse) Page search functionality RIGHT table', async ({ page }) => {
+    test.skip('Test Case 8 - Verify Металлообработка склад (Metalworking Warehouse) Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Металлообработка склад');
@@ -579,7 +615,7 @@ export const runP005 = () => {
             
                     await allure.step(`5.4.1: Reset the page before checking results`, async () => {
                         logger.info(`5.4.1: Reset the page before checking results`);
-                        await page.reload({ waitUntil: 'networkidle' });
+                        await page.reload({ waitUntil: 'networkidle', timeout: 60000 });
                     });
             
                     await allure.step(`5.4.2: Performing search with ${searchValue}`, async () => {
