@@ -6,6 +6,8 @@ import { runP001 } from './testcases/P001.spec';
 import { runP002 } from './testcases/P002.spec';
 import { runP003 } from './testcases/P003.spec';
 import { runP004 } from './testcases/P004.spec';
+import { runP005 } from './testcases/P005.spec';
+
 import { runP010 } from './testcases/P010.spec';
 import { runP011 } from './testcases/P011.spec';
 // import { runP010 } from './testcases/P010.spec';
@@ -83,7 +85,18 @@ export const testSuites = {
       // Add more test cases as needed
     ]
   },  
+  page005: {
 
+    description:
+      'Page 004 test suite to verify functionalities specific to Page 005.',
+    tests: [
+      {
+        test: runP005,
+        description: 'This test checks the responsiveness of Page 005.'
+      }
+      // Add more test cases as needed
+    ]
+  }, 
   page010: {
     description: 'Ordered from suppliers.',
     tests: [
