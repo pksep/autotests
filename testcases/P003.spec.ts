@@ -34,28 +34,40 @@ const LEFT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
 // Страница: Заказ склада на сборку
 export const runP003 = () => {
     logger.info(`Starting test: Verify Сборка Склад (Assembly Warehouse) Page Functionality`);
-    test.beforeEach(async ({ page }) => {
-        const shortagePage = new CreateAssemblyWarehousePage(page);
-      
-        await allure.step('Step 1: Open the login page and login', async () => {
-          // Perform the login using the performLogin function (imported from TC000.spec)
-          await performLogin(page, '001', 'Перов Д.А.', '54321');
-        });
-      
-        await allure.step('Step 2: Navigate to Склад', async () => {
-          // Navigate to the materials page
-          await page.waitForTimeout(5000);
-          await shortagePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        });
-      
-        await allure.step('Step 3: Find and click the Заказ склада на Сборку button', async () => {
-          // Define the selector for the element
-          const selector = `[data-testid="${WAREHOUSE_PAGE_BUTTON}"]`; // Заказ склада на Сборку button on warehouse page
+    ;
 
-          await shortagePage.findTable(selector);
-          await page.waitForLoadState('networkidle');
-        });
+    // Use a separate step to initialize the shortagePage
+    test.beforeEach(async ({ page }) => {
+      const shortagePage = new CreateAssemblyWarehousePage(page);
+  
+      await allure.step('Step 1: Open the login page and login', async () => {
+        await performLogin(page, '001', 'Перов Д.А.', '54321');
       });
+  
+      await allure.step('Step 2: Navigate to Склад', async () => {
+        await page.waitForTimeout(5000);
+        await shortagePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+      });
+  
+      await allure.step('Step 3: Find and click the Заказ склада на Сборку button', async () => {
+        const selector = `[data-testid="${WAREHOUSE_PAGE_BUTTON}"]`;
+        await shortagePage.findTable(selector);
+        await page.waitForLoadState('networkidle');
+      
+        });
+    });
+    test('Test Case 0: Заказ склада на сборку Page - Scan tables within a specific element', async ({ page }) => {
+        test.setTimeout(600000);
+        const shortagePage = new CreateAssemblyWarehousePage(page);
+        await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
+        await shortagePage.findAndClickElement(page, "AssemblySclad-PrintTableBody-ShipmentsCell",3000);
+        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-tbody-tr-buyers",3000);
+        await shortagePage.findAndClickElement(page, "complect",3000);
+        await shortagePage.findAndClickElement(page, "ModalKomplect-komplect-table-body-row",3000);
+        const result = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
+        expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
+
+    });
     test('Test Case 1 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
@@ -83,7 +95,7 @@ export const runP003 = () => {
 
 
     });
-    test('Test Case 2 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for LEFT table', async ({ page }) => {
+      test('Test Case 2 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -107,7 +119,7 @@ export const runP003 = () => {
         });  
         logger.info('Navigation to materials page completed');
     });
-    test('Test Case 3 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table', async ({ page }) => {
+      test('Test Case 3 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -125,7 +137,7 @@ export const runP003 = () => {
 
     });
 
-    test('Test Case 4 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
+      test('Test Case 4 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -144,7 +156,7 @@ export const runP003 = () => {
     }); 
 
 
-    test('Test Case 5 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table', async ({ page }) => {
+      test('Test Case 5 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
@@ -190,7 +202,7 @@ export const runP003 = () => {
             }
         });            
     });
-    test('Test Case 6 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table', async ({ page }) => {
+      test('Test Case 6 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -240,7 +252,7 @@ export const runP003 = () => {
 
         }); 
     });
-    test('Test Case 7 - Verify Сборка Склад (Assembly Warehouse) Page search functionality LEFT table', async ({ page }) => {
+      test('Test Case 7 - Verify Сборка Склад (Assembly Warehouse) Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -474,7 +486,7 @@ export const runP003 = () => {
           });
           
     });     
-    test('Test Case 8 - Verify Сборка Склад (Assembly Warehouse) Page search functionality RIGHT table', async ({ page }) => {
+      test('Test Case 8 - Verify Сборка Склад (Assembly Warehouse) Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
