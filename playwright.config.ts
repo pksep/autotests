@@ -1,14 +1,13 @@
 import { defineConfig } from "@playwright/test";
 import { ENV } from "./config";
-
 import path from "path";
 
 export default defineConfig({
-    testDir: "C:/Users/lostname/Desktop/Work/autotests", // Directory where your test files are located
+    testDir: process.env.TEST_DIR || path.join(__dirname, "tests"), // Default to 'tests' directory if not set
     timeout: 30000,
     retries: 0,
     use: {
-        baseURL: ENV.BASE_URL,
+        baseURL: process.env.BASE_URL || ENV.BASE_URL,
         headless: ENV.HEADLESS,
         viewport: { width: 1920, height: 929 },
         actionTimeout: 10000,
