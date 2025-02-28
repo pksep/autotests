@@ -34,11 +34,21 @@ jobs:
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
       - name: Generate Allure report
+        if: always() # Ensure this step runs even if tests fail
         run: |
           npm install -g allure-commandline --save-dev
           allure generate --clean
 
+      - name: List Allure report directory
+        if: always() # Ensure this step runs even if tests fail
+        run: ls -la allure-report
+
+      - name: List current working directory
+        if: always() # Ensure this step runs even if tests fail
+        run: ls -la
+
       - name: Deploy Allure report to GitHub Pages
+        if: always() # Ensure this step runs even if tests fail
         run: |
           npm install -g gh-pages
           gh-pages -d allure-report
