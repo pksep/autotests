@@ -6,7 +6,7 @@
   "scripts": {
     "pretest": "echo 'No pretest script'",
     "test": "npx playwright test",
-    "ui": "pnpm exec playwright test --ui"
+    "ui": "pnpm exec playwright test --ui" 
   },
   "author": "Your Name",
   "license": "ISC",
