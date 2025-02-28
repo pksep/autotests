@@ -42,7 +42,7 @@ export const runP002 = () => {
         await allure.step('Step 2: Navigate to Склад', async () => {
             await page.waitForTimeout(5000);
             await shortagePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        });
+        });//test
 
         await allure.step('Step 3: Find and click the Заказ склада на Сборку button', async () => {
             const selector = `[data-testid="${WAREHOUSE_PAGE_BUTTON}"]`;
