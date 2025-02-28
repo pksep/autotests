@@ -2,8 +2,8 @@ import { Page } from "@playwright/test";
 import { PageObject } from "../lib/Page";
 import logger from "../lib/logger";
 
-// Страница: Металлообработка склад
-export class CreateMetalworkingWarehousePage extends PageObject {
+// Страница: Металлообработка
+export class CreateMetalworkingPage extends PageObject {
     constructor(page: Page) {
         super(page);
         this.page = page;
