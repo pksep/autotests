@@ -50,8 +50,8 @@ jobs:
       - name: Configure git
         if: always()
         run: |
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
+          git config --global user.email "rgjoyce111@gmail.com"
+          git config --global user.name "Robert Joyce"
 
       - name: Deploy Allure report to GitHub Pages
         if: always()
