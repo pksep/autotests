@@ -18,13 +18,13 @@ export const ENV = {
     HEADLESS: process.env.HEADLESS === "false",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
     DEBUG: false,
-    //   TEST_SUITE: 'suite01',
+    TEST_SUITE: 'page008',
 
 
     //TEST_SUITE: 'pageCreatePart'
     //TEST_SUITE: 'pageProductShortage'
     // TEST_SUITE: 'pageOrderedFromSuppliers',
-    TEST_SUITE: "U001",
+    //TEST_SUITE: "U001",
 };
 
 export const SELECTORS = {
