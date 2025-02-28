@@ -1,0 +1,35 @@
+name: CI/CD for Main Branch
+
+on:
+  pull_request:
+    branches:
+      - CI-CD-Test-Main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Playwright tests
+        run: npm run test
+
+      - name: Generate Allure report
+        run: |
+          npm install -g allure-commandline --save-dev
+          allure generate --clean
+
+      - name: Deploy Allure report to GitHub Pages
+        run: |
+          npm install -g gh-pages
+          gh-pages -d allure-report -b gh-pages
