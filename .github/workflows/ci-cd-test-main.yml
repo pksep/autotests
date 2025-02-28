@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
@@ -23,30 +23,33 @@ jobs:
 
       - name: Install missing libraries
         run: |
-          sudo yum -y update
-          sudo yum -y install \
-            gtk3 \
-            graphene \
-            woff2 \
-            libvpx \
-            libevent \
-            opus \
-            gstreamer1 \
-            gstreamer1-plugins-base \
-            gstreamer1-plugins-good \
-            gstreamer1-plugins-bad \
-            gstreamer1-plugins-ugly \
-            gstreamer1-libav \
-            gstreamer1-tools \
-            gstreamer1-plugins-base-tools \
-            gstreamer1-plugins-good-extras \
-            flite \
-            harfbuzz \
-            libsecret \
-            hyphen \
-            manette \
-            mesa-libGL \
-            x264
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-0 \
+            libgtk-4-1 \
+            libgraphene-1.0-0 \
+            libwoff1 \
+            libvpx-dev \
+            libevent-2.1-7 \
+            libopus0 \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-plugins-ugly \
+            gstreamer1.0-libav \
+            gstreamer1.0-tools \
+            gstreamer1.0-x \
+            gstreamer1.0-alsa \
+            gstreamer1.0-gl \
+            gstreamer1.0-gtk3 \
+            gstreamer1.0-pulseaudio \
+            libflite1 \
+            libharfbuzz-icu0 \
+            libsecret-1-0 \
+            libhyphen0 \
+            libmanette-0.2-0 \
+            libgles2 \
+            libx264-dev
 
       - name: Install Playwright browsers
         run: npx playwright install
