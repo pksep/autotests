@@ -21,41 +21,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install missing libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-0 \
-            libgtk-4-1 \
-            libgraphene-1.0-0 \
-            libwoff1 \
-            libvpx-dev \
-            libevent-2.1-7 \
-            libopus0 \
-            gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good \
-            gstreamer1.0-plugins-bad \
-            gstreamer1.0-plugins-ugly \
-            gstreamer1.0-libav \
-            gstreamer1.0-tools \
-            gstreamer1.0-x \
-            gstreamer1.0-alsa \
-            gstreamer1.0-gl \
-            gstreamer1.0-gtk3 \
-            gstreamer1.0-pulseaudio \
-            libflite1 \
-            libharfbuzz-icu0 \
-            libsecret-1-0 \
-            libhyphen0 \
-            libmanette-0.2-0 \
-            libgles2 \
-            libx264-dev
+      - name: Install Playwright dependencies
+        run: sudo npx playwright install-deps
 
       - name: Install Playwright browsers
         run: npx playwright install
-
-      - name: Install Playwright dependencies
-        run: npx playwright install-deps
 
       - name: Run Playwright tests with xvfb
         env:
