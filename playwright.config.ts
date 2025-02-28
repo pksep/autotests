@@ -3,7 +3,7 @@ import { ENV } from "./config";
 import path from "path";
 
 export default defineConfig({
-    testDir: process.env.TEST_DIR || path.join(__dirname, "tests"), // Relative path to 'tests' directory
+    testDir: process.env.TEST_DIR || path.join(__dirname, "."), // Replace 'your-test-directory' with the actual directory
     timeout: 30000,
     retries: 0,
     use: {

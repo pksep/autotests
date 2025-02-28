@@ -1,14 +1,14 @@
 {
-  "name": "your-project-name",
+  "name": "NPO-Automotive",
   "version": "1.0.0",
-  "description": "Your project description",
+  "description": "test scripts",
   "main": "index.js",
   "scripts": {
     "pretest": "echo 'No pretest script'",
     "test": "npx playwright test",
     "ui": "pnpm exec playwright test --ui"
   },
-  "author": "Your Name",
+  "author": "Rob Joyce",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.50.1",
