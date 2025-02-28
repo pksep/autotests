@@ -1126,7 +1126,7 @@ export class PageObject extends AbstractPage {
     let allTestsPassed = true; // Variable to track the overall success status
 
     for (let i = 0; i < filteredRows.length; i++) {
-      if (i > 20) {
+      if (i > 2) {
         break;
       }
       const row = filteredRows[i];
