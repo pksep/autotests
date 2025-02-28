@@ -3,11 +3,11 @@ import { ENV } from "./config";
 import path from "path";
 
 export default defineConfig({
-    testDir: process.env.TEST_DIR || path.join(__dirname, "tests"), // Default to 'tests' directory if not set
+    testDir: process.env.TEST_DIR || path.join(__dirname, "tests"), // Relative path to 'tests' directory
     timeout: 30000,
     retries: 0,
     use: {
-        baseURL: process.env.BASE_URL || ENV.BASE_URL,
+        baseURL: process.env.BASE_URL || 'http://dev.npoamotiv.ru',
         headless: ENV.HEADLESS,
         viewport: { width: 1920, height: 929 },
         actionTimeout: 10000,
@@ -23,5 +23,5 @@ export default defineConfig({
     reporter: [
         ["line"], // Console output
         ["allure-playwright"], // Allure reporter
-    ], // Run setupTests.ts before tests
+    ],
 });
