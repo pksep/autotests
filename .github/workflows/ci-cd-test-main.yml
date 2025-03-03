@@ -17,9 +17,18 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '22.13.1'
+          cache: 'npm'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install Playwright dependencies
         run: sudo npx playwright install-deps
@@ -33,36 +42,37 @@ jobs:
           BASE_URL: 'http://dev.npoamotiv.ru'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@master
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 20
+
+      - name: Get Allure history
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
       - name: Generate Allure report
+        uses: simple-elf/allure-report-action@master
         if: always()
-        run: |
-          npm install -g allure-commandline --save-dev
-          allure generate --clean
+        id: allure-report
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
 
-      - name: List Allure report directory
+      - name: Deploy report to Github Pages
         if: always()
-        run: ls -la allure-report
-
-      - name: List current working directory
-        if: always()
-        run: ls -la
-
-      - name: Configure git
-        if: always()
-        run: |
-          git config --global user.email "rgjoyce111@gmail.com"
-          git config --global user.name "atomant1969"
-
-      - name: Deploy Allure report to GitHub Pages
-        if: always()
+        uses: peaceiris/actions-gh-pages@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          git config --global user.email "rgjoyce111@gmail.com"
-          git config --global user.name "atomant1969"
-          echo "Setting up remote..."
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/npo-automotive/autotests.git"
-          echo "Installing gh-pages..."
-          npm install -g gh-pages
-          echo "Deploying to gh-pages..."
-          gh-pages -d allure-report --dotfiles true --message "Update Allure report" -r "https://x-access-token:${GITHUB_TOKEN}@github.com/npo-automotive/autotests.git"
+          PERSONAL_TOKEN: ${{ secrets.GH_PAT }}
+          PUBLISH_BRANCH: gh-pages
+          PUBLISH_DIR: allure-history
