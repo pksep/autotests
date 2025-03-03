@@ -24,7 +24,7 @@ export const ENV = {
     //TEST_SUITE: 'pageCreatePart'
     //TEST_SUITE: 'pageProductShortage'
     // TEST_SUITE: 'pageOrderedFromSuppliers',
-    TEST_SUITE: "page003",
+    TEST_SUITE: "page002",
 };
 
 export const SELECTORS = {
