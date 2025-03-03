@@ -3,7 +3,7 @@ name: CI/CD for Main Branch
 on:
   pull_request:
     branches:
-      - CI-CD-Test-Main
+      - main
 
 permissions:
   contents: write
