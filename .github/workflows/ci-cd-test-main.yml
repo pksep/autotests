@@ -17,18 +17,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '22.13.1'
-          cache: 'npm'
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            playwright-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Playwright dependencies
         run: sudo npx playwright install-deps
@@ -65,8 +56,13 @@ jobs:
       - name: Deploy Allure report to GitHub Pages
         if: always()
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          git remote set-url origin https://$GH_PAT@github.com/npo-automotive/autotests.git
+          git config --global user.email "rgjoyce111@gmail.com"
+          git config --global user.name "atomant1969"
+          echo "Setting up remote..."
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/npo-automotive/autotests.git"
+          echo "Installing gh-pages..."
           npm install -g gh-pages
-          gh-pages -d allure-report -u "github-actions-bot <support+actions@github.com>"
+          echo "Deploying to gh-pages..."
+          gh-pages -d allure-report --dotfiles true --message "Update Allure report" --debug
