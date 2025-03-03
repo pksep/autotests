@@ -43,28 +43,18 @@ jobs:
         if: always()
         run: ls -la allure-report
 
-      - name: Upload Allure report as artifact
+      - name: List current working directory
         if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: allure-report
-          path: allure-report
+        run: ls -la
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Configure git
+        if: always()
+        run: |
+          git config --global user.email "rgjoyce111@gmail.com"
+          git config --global user.name "Robert Joyce"
 
-      - name: Download Allure report artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: allure-report
-          path: allure-report
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
-        with:
-          branch: gh-pages
-          folder: allure-report
+      - name: Deploy Allure report to GitHub Pages
+        if: always()
+        run: |
+          npm install -g gh-pages
+          gh-pages -d allure-report
