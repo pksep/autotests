@@ -65,4 +65,4 @@ jobs:
           echo "Installing gh-pages..."
           npm install -g gh-pages
           echo "Deploying to gh-pages..."
-          gh-pages -d allure-report --dotfiles true --message "Update Allure report" --debug
+          gh-pages -d allure-report --dotfiles true --message "Update Allure report" -r "https://x-access-token:${GITHUB_TOKEN}@github.com/npo-automotive/autotests.git"
