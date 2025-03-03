@@ -18,7 +18,7 @@ export const ENV = {
     HEADLESS: process.env.HEADLESS === "false",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
     DEBUG: false,
-    TEST_SUITE: 'suite02',
+    TEST_SUITE: 'page002',
 
 
     //TEST_SUITE: 'pageCreatePart'
