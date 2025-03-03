@@ -51,10 +51,12 @@ jobs:
         if: always()
         run: |
           git config --global user.email "rgjoyce111@gmail.com"
-          git config --global user.name "Robert Joyce"
+          git config --global user.name "atomant1969"
 
       - name: Deploy Allure report to GitHub Pages
         if: always()
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           npm install -g gh-pages
-          gh-pages -d allure-report
+          gh-pages -d allure-report --repo https://${GH_PAT}@github.com/npo-automotive/autotests.git
