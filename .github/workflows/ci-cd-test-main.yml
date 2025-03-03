@@ -10,6 +10,10 @@ permissions:
   pages: write
   id-token: write
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -21,6 +25,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
