@@ -1,0 +1,113 @@
+name: CI/CD for Main Branch
+
+on:
+  pull_request:
+    branches:
+      - CI-CD-Test-Main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global init.defaultBranch main
+          git config --global advice.detachedHead false
+          git config --global core.autocrlf false
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22.13.1'
+          cache: 'npm'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright dependencies
+        run: sudo npx playwright install-deps
+
+      - name: Install Playwright browsers
+        run: npx playwright install
+
+      - name: Run Playwright tests with xvfb
+        env:
+          TEST_DIR: '.'
+          BASE_URL: 'http://dev.npoamotiv.ru'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@master
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 20
+
+      - name: Get Allure history
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        id: allure-report
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
+
+      - name: Create index.html
+        if: always()
+        run: |
+          echo '<meta http-equiv="refresh" content="0; URL=./latest/index.html">' > allure-history/index.html
+
+      - name: Deploy report to Github Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+          force_orphan: true
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          git config --global --unset safe.directory || true
+          rm -rf .git/modules/* || true
