@@ -59,4 +59,4 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           npm install -g gh-pages
-          gh-pages -d allure-report --repo https://${GH_PAT}@github.com/npo-automotive/autotests.git
+          gh-pages -d allure-report --repo https://$GH_PAT@github.com/npo-automotive/autotests.git
