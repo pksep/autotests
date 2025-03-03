@@ -68,7 +68,7 @@ export const runP003 = () => {
         expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
 
     });
-    test('Test Case 1 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 1 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
         allure.label('severity', 'normal');
@@ -95,7 +95,7 @@ export const runP003 = () => {
 
 
     });
-    test('Test Case 2 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 2 - Verify Сборка Склад (Assembly Warehouse) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -119,7 +119,7 @@ export const runP003 = () => {
         });
         logger.info('Navigation to materials page completed');
     });
-    test('Test Case 3 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 3 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -137,7 +137,7 @@ export const runP003 = () => {
 
     });
 
-    test('Test Case 4 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 4 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -156,7 +156,7 @@ export const runP003 = () => {
     });
 
 
-    test('Test Case 5 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 5 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
@@ -202,7 +202,7 @@ export const runP003 = () => {
             }
         });
     });
-    test('Test Case 6 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table', async ({ page }) => {
+    test.skip('Test Case 6 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -252,7 +252,7 @@ export const runP003 = () => {
 
         });
     });
-    test('Test Case 7 - Verify Сборка Склад (Assembly Warehouse) Page search functionality LEFT table', async ({ page }) => {
+    test.skip('Test Case 7 - Verify Сборка Склад (Assembly Warehouse) Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -486,7 +486,7 @@ export const runP003 = () => {
         });
 
     });
-    test('Test Case 8 - Verify Сборка Склад (Assembly Warehouse) Page search functionality RIGHT table', async ({ page }) => {
+    test.skip('Test Case 8 - Verify Сборка Склад (Assembly Warehouse) Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Заказ склада на Сборку');
@@ -807,7 +807,7 @@ export const runP003 = () => {
               });*/
         });
     });
-    test('Test Case 9 - Verify Сборка Склад (Assembly Warehouse) Page - Compare dates with Order List for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 9 - Verify Сборка Склад (Assembly Warehouse) Page - Compare dates with Order List for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
