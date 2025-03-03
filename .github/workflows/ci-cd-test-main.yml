@@ -23,11 +23,18 @@ jobs:
       id-token: write
 
     steps:
+      - name: Configure Git
+        run: |
+          git config --global init.defaultBranch main
+          git config --global advice.detachedHead false
+          git config --global core.autocrlf false
+
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: false
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
