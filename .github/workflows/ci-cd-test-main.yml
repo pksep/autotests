@@ -58,5 +58,6 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
+          git remote set-url origin https://$GH_PAT@github.com/npo-automotive/autotests.git
           npm install -g gh-pages
-          gh-pages -d allure-report --repo https://$GH_PAT@github.com/npo-automotive/autotests.git
+          gh-pages -d allure-report -u "github-actions-bot <support+actions@github.com>"
