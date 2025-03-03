@@ -91,6 +91,7 @@ jobs:
       - name: Create index.html
         if: always()
         run: |
+          mkdir -p allure-history
           echo '<meta http-equiv="refresh" content="0; URL=./latest/index.html">' > allure-history/index.html
 
       - name: Deploy report to Github Pages
