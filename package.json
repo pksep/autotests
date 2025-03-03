@@ -1,10 +1,10 @@
 {
-  "name": "your-project-name",
+  "name": "NPO-Automotive",
   "version": "1.0.0",
-  "description": "Your project description",
+  "description": "Factory Manufacturing Management System",
   "main": "index.js",
   "scripts": {
-    "pretest": "npx ts-node setupTests.ts",
+    "pretest": "echo 'No pretest script'",
     "test": "npx playwright test",
     "ui": "pnpm exec playwright test --ui"
   },
