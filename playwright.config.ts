@@ -1,15 +1,14 @@
 import { defineConfig } from "@playwright/test";
 import { ENV } from "./config";
-
 import path from "path";
 
 export default defineConfig({
-    testDir: "C:/Users/lostname/Desktop/Work/autotests", // Directory where your test files are located
+    testDir: process.env.TEST_DIR || path.join(__dirname, "."), // Replace 'your-test-directory' with the actual directory
     timeout: 30000,
     retries: 0,
     use: {
-        baseURL: ENV.BASE_URL,
-        headless: ENV.HEADLESS,
+        baseURL: process.env.BASE_URL || 'http://dev.npoamotiv.ru',
+        headless: true, //ENV.HEADLESS,
         viewport: { width: 1920, height: 929 },
         actionTimeout: 10000,
         ignoreHTTPSErrors: true,
@@ -24,5 +23,5 @@ export default defineConfig({
     reporter: [
         ["line"], // Console output
         ["allure-playwright"], // Allure reporter
-    ], // Run setupTests.ts before tests
+    ],
 });
