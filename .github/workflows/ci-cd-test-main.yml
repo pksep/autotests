@@ -17,9 +17,18 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '22.13.1'
+          cache: 'npm'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install Playwright dependencies
         run: sudo npx playwright install-deps
