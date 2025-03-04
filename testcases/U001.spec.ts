@@ -22,6 +22,7 @@ import { CreateWarehouseTaskForShipmentPage } from "../pages/WarehouseTaskForShi
 import { CreateStockPage, TableSelection } from "../pages/StockPage";
 import { CreatShortagePartsPage } from "../pages/ShortagePartsPage";
 import { CreateShortageProductPage } from "../pages/ShortageProductPage";
+import { CreateCompleteSetsPage } from "../pages/CompleteSetsPage";
 import { ISpetificationData, Click, TypeInvoice } from "../lib/Page";
 import { ENV, SELECTORS } from "../config";
 import logger from "../lib/logger";
@@ -977,6 +978,109 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         }
     });
 
+    test("Test Case Test 07 - Disassembly of the set", async ({ page }) => {
+        const completeSets = new CreateCompleteSetsPage(page);
+        const completeSetsTable = '[data-testid="ComplectKit-Table-Main"]';
+        const nameCbed = "Лапа ПШ-150, 250 (496мм)";
+        const designationCbed = "030.0.1-09.000 СБ";
+
+        await allure.step("Step 1: Open the warehouse page", async () => {
+            // Go to the Warehouse page
+            await completeSets.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+        });
+
+        await allure.step(
+            "Step 2: Open the shortage product page",
+            async () => {
+                // Find and go to the page using the locator Shortage of Products
+                const selector = '[data-testid="Sclad-completeSets"]';
+                await completeSets.findTable(selector);
+
+                // Wait for the table body to load
+                // await completeSets.waitingTableBody(completeSetsTable);
+
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+            }
+        );
+
+        await allure.step("Step 3: Search product", async () => {
+            // Using table search we look for the value of the variable
+            await completeSets.searchTable(nameCbed, completeSetsTable);
+
+            // Wait for the table body to load
+            // await completeSets.waitingTableBody(completeSetsTable);
+            await completeSets.waitForTimeout(500);
+
+            // Wait for loading
+            await page.waitForLoadState("networkidle");
+        });
+
+        await allure.step(
+            "Step 4: We check the number of those launched into production",
+            async () => {
+                // const tableTestId = "ComplectKit-Table-Main";
+                // const numberColumn = await completeSets.findColumn(
+                //     page,
+                //     tableTestId,
+                //     "ComplectKit-TableHeader-Assembled"
+                // );
+                // console.log("numberColumn: ", numberColumn);
+
+                // Upd:
+                const numberLaunched =
+                    await completeSets.getValueOrClickFromFirstRow(
+                        completeSetsTable,
+                        9
+                    );
+                console.log("numberLaunched: ", numberLaunched);
+                await completeSets.checkNameInLineFromFirstRow(
+                    nameCbed,
+                    completeSetsTable
+                );
+            }
+        );
+
+        await allure.step(
+            "Step 5: Look for the column with the checkbox and click on it",
+            async () => {
+                const tableTestId = "ComplectKit-Table-Main";
+                const numberColumn = await completeSets.findColumn(
+                    page,
+                    tableTestId,
+                    "ComplectKit-TableHeader-PlannedShipmentDate"
+                );
+                console.log("numberColumn: ", numberColumn);
+
+                // Upd:
+
+                await completeSets.getValueOrClickFromFirstRow(
+                    completeSetsTable,
+                    0,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        // await allure.step(
+        //     "Step 6: Click on the Submit for assembly button",
+        //     async () => {
+        //         await completeSets.clickButton(
+        //             " Передать на сборку ",
+        //             '[data-testid="ComplectKit-Button-TransferToAssembly"]'
+        //         );
+        //     }
+        // );
+
+        // await allure.step("Step 7: Check modal window ", async () => {
+        //     await completeSets.disassemblyModalWindow(
+        //         nameCbed,
+        //         designationCbed
+        //     );
+        // });
+    });
+
     test.skip("Test Case 07 - Receiving Part And Check Stock", async ({
         page,
     }) => {
@@ -1706,7 +1810,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
     });
 
-    test("Test Case 11 - Uploading Shipment Task", async ({ page }) => {
+    test.skip("Test Case 11 - Uploading Shipment Task", async ({ page }) => {
         const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
             page
         );

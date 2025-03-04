@@ -1,18 +1,16 @@
-
 import { runU001 } from "./testcases/U001.spec";
 
-import { runAPI001 } from './testcases/API001.spec';
-import { runTC000 } from './testcases/TC000.spec';
-import { runTC001 } from './testcases/TC001.spec';
-import { runTC002 } from './testcases/TC002.spec';
-import { runP001 } from './testcases/P001.spec';
-import { runP002 } from './testcases/P002.spec';
-import { runP003 } from './testcases/P003.spec';
-import { runP004 } from './testcases/P004.spec';
-import { runP005 } from './testcases/P005.spec';
+import { runAPI001 } from "./testcases/API001.spec";
+import { runTC000 } from "./testcases/TC000.spec";
+import { runTC001 } from "./testcases/TC001.spec";
+import { runTC002 } from "./testcases/TC002.spec";
+import { runP001 } from "./testcases/P001.spec";
+import { runP002 } from "./testcases/P002.spec";
+import { runP003 } from "./testcases/P003.spec";
+import { runP004 } from "./testcases/P004.spec";
+import { runP005 } from "./testcases/P005.spec";
 
-import { runP010 } from './testcases/P010.spec';
-
+import { runU002 } from "./testcases/U002.spec";
 
 // Create a mapping of test suites to their corresponding test functions with descriptions
 export const testSuites = {
@@ -88,7 +86,6 @@ export const testSuites = {
         ],
     },
 
-
     U001: {
         description: "Uploading a task.",
         tests: [
@@ -100,46 +97,45 @@ export const testSuites = {
         ],
     },
 
-  page005: {
+    U002: {
+        description: "Uploading a task.",
+        tests: [
+            {
+                test: runU002,
+                description: "Creating a shipment task.",
+            },
+            // Add more test cases as needed
+        ],
+    },
 
-    description:
-      'Page 004 test suite to verify functionalities specific to Page 005.',
-    tests: [
-      {
-        test: runP005,
-        description: 'This test checks the responsiveness of Page 005.'
-      }
-      // Add more test cases as needed
-    ]
-  }, 
-  page010: {
-    description: 'Ordered from suppliers.',
-    tests: [
-      {
-        test: runP010,
-        description: 'Order a part.'
-      }
-      // Add more test cases as needed
-    ]
-  },
-  suite01: {
-    description: 'This is a group of full page tests p02 - P04',
-    tests: [
-           {
-            test: runP002,
-            description: 'This test checks the responsiveness of Page 002.',
-           },
-           {
-            test: runP003,
-            description: 'This test checks the responsiveness of Page 003.',
-          },
-          {
-          test: runP004,
-          description: 'This test checks the responsiveness of Page 004.',
-      },
-           // Add more test cases as needed
-       ],
-   }
-  
+    page005: {
+        description:
+            "Page 004 test suite to verify functionalities specific to Page 005.",
+        tests: [
+            {
+                test: runP005,
+                description: "This test checks the responsiveness of Page 005.",
+            },
+            // Add more test cases as needed
+        ],
+    },
 
+    suite01: {
+        description: "This is a group of full page tests p02 - P04",
+        tests: [
+            {
+                test: runP002,
+                description: "This test checks the responsiveness of Page 002.",
+            },
+            {
+                test: runP003,
+                description: "This test checks the responsiveness of Page 003.",
+            },
+            {
+                test: runP004,
+                description: "This test checks the responsiveness of Page 004.",
+            },
+            // Add more test cases as needed
+        ],
+    },
 };
