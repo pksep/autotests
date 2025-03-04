@@ -851,138 +851,145 @@ export class PageObject extends AbstractPage {
     }
 
     /**
-     * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
-     * @param page - The Playwright page instance.
-     * @param tableId - The ID or data-testid of the table element.
-     * @param colId - The data-testid of the column to find.
-     * @returns The index of the column with the specified data-testid, or false if not found.
-     */
-    async findColumn(
-        page: Page,
-        tableId: string,
-        colId: string
-    ): Promise<number> {
-        page.on("console", (msg) => {
-            if (msg.type() === "log") {
-                logger.info(`Browser log: ${msg.text()}`);
-            } else if (msg.type() === "info") {
-                logger.info(`Browser info: ${msg.text()}`);
-            } else if (msg.type() === "warning") {
-                logger.warn(`Browser warning: ${msg.text()}`);
-            } else if (msg.type() === "error") {
-                logger.error(`Browser error: ${msg.text()}`);
+   * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
+   * @param page - The Playwright page instance.
+   * @param tableId - The ID or data-testid of the table element.
+   * @param colId - The data-testid of the column to find.
+   * @returns The index of the column with the specified data-testid, or false if not found.
+   */
+  async findColumn(
+    page: Page,
+    tableId: string,
+    colId: string
+  ): Promise<number> {
+    page.on("console", (msg) => {
+      if (msg.type() === "log") {
+        logger.info(`Browser log: ${msg.text()}`);
+      } else if (msg.type() === "info") {
+        logger.info(`Browser info: ${msg.text()}`);
+      } else if (msg.type() === "warning") {
+        logger.warn(`Browser warning: ${msg.text()}`);
+      } else if (msg.type() === "error") {
+        logger.error(`Browser error: ${msg.text()}`);
+      }
+    });
+
+    logger.info(`Task started: Finding table "${tableId}" and printing header rows HTML.`);
+
+    const columnIndex = await page.evaluate(({ tableId, colId }) => {
+      const table = document.querySelector(`[data-testid="${tableId}"]`) || document.getElementById(tableId);
+      if (!table) {
+        console.error(`Table with data-testid or id "${tableId}" not found.`);
+        return -1;
+      }
+      console.info(`Found table. Now looking for column "${colId}".`);
+      let headerRows = Array.from(table.querySelectorAll("thead tr, tbody tr:has(th)")
+      ).filter((row) => row.querySelectorAll("th").length > 0);
+
+      // Remove any search row (assuming it has specific identifying attributes)																			  
+      headerRows = headerRows.filter(
+        (row) =>
+          !row
+            .getAttribute("data-testid")
+            ?.includes("SearchRow") &&
+          !row
+            .getAttribute("data-testid")
+            ?.includes("TableFooter")
+      );
+      console.log(headerRows.length);
+
+      if (headerRows.length >= 2) {
+        const firstRowHeaders = Array.from(headerRows[0].querySelectorAll("th"));
+        const secondRowHeaders = Array.from(headerRows[1].querySelectorAll("th"));
+
+        let startColumn = -1;
+        let spanCount = 0;
+        // Determine the start column and span count in the second header row																		   
+        secondRowHeaders.forEach((header, index) => {
+          const headerText = header.innerText.trim();
+          if (headerText !== "" || header.querySelector("div.unicon")) {
+            if (startColumn === -1) {
+              startColumn = index;
             }
+            spanCount++;
+          }
         });
 
-        logger.info(
-            `Task started: Finding table "${tableId}" and printing header rows HTML.`
-        );
+        // Determine the parent column in the first header row
+        const parentColumnIndex = firstRowHeaders.findIndex((header, index) => {
+          return index >= startColumn && index < startColumn + spanCount;
+        });
+        // Replace the parent column in the first row with the columns from the second row																				
+        const mergedHeaderRow = document.createElement("tr");
+        let isParentColumnReplaced = false;
+        firstRowHeaders.forEach((column, index) => {
+          if (index === parentColumnIndex && !isParentColumnReplaced) {
 
-        const columnIndex = await page.evaluate(
-            ({ tableId, colId }) => {
-                const table =
-                    document.querySelector(`[data-testid="${tableId}"]`) ||
-                    document.getElementById(tableId);
-                if (!table) {
-                    console.error(
-                        `Table with data-testid or id "${tableId}" not found.`
-                    );
-                    return -1;
-                }
-                console.info(`Found table. now looking for column "${colId}".`);
-                let headerRows = Array.from(
-                    table.querySelectorAll("thead tr, tbody tr:has(th)")
-                ).filter((row) => row.querySelectorAll("th").length > 0);
 
-                headerRows = headerRows.filter(
-                    (row) =>
-                        !row
-                            .getAttribute("data-testid")
-                            ?.includes("SearchRow") &&
-                        !row
-                            .getAttribute("data-testid")
-                            ?.includes("TableFooter")
-                );
-                console.log(headerRows.length);
 
-                if (headerRows.length >= 2) {
-                    const firstRowHeaders = Array.from(
-                        headerRows[0].querySelectorAll("th")
-                    );
-                    const secondRowHeaders = Array.from(
-                        headerRows[1].querySelectorAll("th")
-                    );
+            secondRowHeaders.forEach(secondRowHeader => {
+              mergedHeaderRow.appendChild(secondRowHeader.cloneNode(true));
+            });
+            isParentColumnReplaced = true;
+          } else {
+            mergedHeaderRow.appendChild(column.cloneNode(true));
+          }
+        });
 
-                    let startColumn = -1;
-                    let spanCount = 0;
-                    secondRowHeaders.forEach((header, index) => {
-                        const headerText = header.innerText.trim();
-                        if (
-                            headerText !== "" ||
-                            header.querySelector("div.unicon")
-                        ) {
-                            if (startColumn === -1) {
-                                startColumn = index;
-                            }
-                            spanCount++;
-                        }
-                    });
-
-                    const mergedHeaderRow = document.createElement("tr");
-                    firstRowHeaders.forEach((column, index) => {
-                        if (
-                            index >= startColumn &&
-                            index < startColumn + spanCount
-                        ) {
-                            column = secondRowHeaders[index - startColumn];
-                        }
-                        mergedHeaderRow.appendChild(column.cloneNode(true));
-                    });
-
-                    const updatedHeaders = Array.from(
-                        mergedHeaderRow.querySelectorAll("th")
-                    );
-                    for (let i = 0; i < updatedHeaders.length; i++) {
-                        const headerDataTestId =
-                            updatedHeaders[i].getAttribute("data-testid");
-                        if (headerDataTestId === colId) {
-                            return i; // Возвращаем индекс колонки
-                        }
-                    }
-                } else {
-                    // Handle the case where there's only one header row
-                    const singleRowHeaders = Array.from(
-                        headerRows[0].querySelectorAll("th")
-                    );
-                    for (let i = 0; i < singleRowHeaders.length; i++) {
-                        const headerDataTestId =
-                            singleRowHeaders[i].getAttribute("data-testid");
-                        if (
-                            headerDataTestId === colId &&
-                            singleRowHeaders[i].tagName === "TH"
-                        ) {
-                            return i; // Возвращаем индекс колонки
-                        }
-                    }
-
-                    console.error("Not enough header rows found.");
-                    return -1; // Возвращаем -1 вместо false
-                }
-
-                return -1; // Возвращаем -1, если колонка не найдена
-            },
-            { tableId, colId }
-        );
-
-        if (columnIndex !== -1) {
-            logger.info(
-                `Column with data-testid "${colId}" found at index: ${columnIndex}`
-            );
-        } else {
-            logger.error(`Column with data-testid "${colId}" not found.`);
+        const updatedHeaders = Array.from(
+          mergedHeaderRow.querySelectorAll("th"));
+        console.log("All Columns and their IDs:");
+        const loggedHeaders = new Set(); // Use a set to keep track of logged headers
+        updatedHeaders.forEach((header, index) => {
+          const headerDataTestId = header.getAttribute("data-testid");
+          const headerId = header.getAttribute("id");
+          const logString = `Column ${index}: data-testid="${headerDataTestId}", id="${headerId}"`;
+          if (!loggedHeaders.has(logString)) { // Check if this header has already been logged
+            console.log(logString);
+            loggedHeaders.add(logString); // Add the header to the set
+          }
+        });
+        for (let i = 0; i < updatedHeaders.length; i++) {
+          const headerDataTestId =
+            updatedHeaders[i].getAttribute("data-testid");
+          if (headerDataTestId === colId) {
+            return i; // Возвращаем индекс колонки
+          }
         }
-        return columnIndex; // Возвращаем индекс колонки
+      } else {
+        // Handle the case where there's only one header row
+        const singleRowHeaders = Array.from(headerRows[0].querySelectorAll("th"));
+        console.log("All Columns and their IDs:");
+        singleRowHeaders.forEach((header, index) => {
+          const headerDataTestId = header.getAttribute("data-testid");
+          const headerId = header.getAttribute("id");
+          console.log(`Column ${index}: data-testid="${headerDataTestId}", id="${headerId}"`);
+        });
+        for (let i = 0; i < singleRowHeaders.length; i++) {
+          const headerDataTestId =
+            singleRowHeaders[i].getAttribute("data-testid");
+          if (
+            headerDataTestId === colId &&
+            singleRowHeaders[i].tagName === "TH"
+          ) {
+            return i; // Возвращаем индекс колонки
+          }
+        }
+        console.error("Not enough header rows found.");
+        return -1; // Возвращаем -1 вместо false
+      }
+      return -1; // Возвращаем -1, если колонка не найдена
+    },
+      { tableId, colId }
+    );
+
+    if (columnIndex !== -1) {
+      logger.info(`Column with data-testid "${colId}" found at index: ${columnIndex}`);
+    } else {
+      logger.error(`Column with data-testid "${colId}" not found.`);
     }
+    return columnIndex; // Возвращаем индекс колонки
+  }
 
     /**
      * Check the ordering of table rows based on the urgency date and planned shipment date columns.
