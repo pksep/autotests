@@ -39,7 +39,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     test.skip("Спецификация", async ({ page }) => {
-        // Удалить после
         const loadingTaskPage = new CreateLoadingTaskPage(page);
 
         await allure.step("Step 1: Open the shipment task page", async () => {
@@ -256,6 +255,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Go to the Warehouse page
             await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
+
         await allure.step(
             "Step 2: Open the shortage product page",
             async () => {
@@ -1775,7 +1775,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 console.log("numberColumn: ", numberColumn);
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    numberColumn,
+                    0,
                     Click.Yes,
                     Click.No
                 );
@@ -1785,13 +1785,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
             "Step 6: Closing a modal window by clicking on the logo",
             async () => {
-                // Close the modal window
-                await page.mouse.click(1, 1);
-
                 // Wait for the modal window to open BUG
                 await warehouseTaskForShipment.waitForSelector(
                     '[data-testid="ModalKomplect-destroyModalRight"]'
                 );
+                // Close the modal window
+                await page.mouse.click(1, 1);
             }
         );
 
@@ -1801,7 +1800,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Find the checkbox column and click
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    numberColumn,
+                    1,
                     Click.Yes,
                     Click.No
                 );
@@ -1958,149 +1957,5 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 `оприходовали в количестве: ${incomingQuantity}, ` +
                 `и после оприходования: ${remainingStockAfter}.`
         );
-    });
-
-    test.skip("Test Case 05 - Marking parts test", async ({ page }) => {
-        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
-
-        // Go to the Warehouse page
-        await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-
-        // Find and go to the page using the locator Order a warehouse for Metalworking
-        const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
-        await metalworkingWarehouse.findTable(selector);
-
-        const tableMetalworkingWarehouse =
-            '[data-testid="MetalloworkingSclad-ScrollTable"]';
-
-        const designationDetail = "030.0.1-01.03.01.004-01";
-        // Check if the array is empty
-        // if (descendantsDetailArray.length === 0) {
-        //     console.error("Массив пустой. Перебор невозможен.");
-        // } else {
-        //     // Iterate through the array of parts
-        //     for (const part of descendantsDetailArray) {
-        //         // Wait for the table body to load
-        await metalworkingWarehouse.waitingTableBody(
-            tableMetalworkingWarehouse
-        );
-
-        // Using table search we look for the value of the variable
-        await metalworkingWarehouse.searchTable(
-            designationDetail,
-            tableMetalworkingWarehouse
-        );
-
-        // Waiting for loading
-        await page.waitForLoadState("networkidle");
-
-        // Wait for the table body to load
-        await metalworkingWarehouse.waitingTableBody(
-            tableMetalworkingWarehouse
-        );
-
-        // Check that the first row of the table contains the variable name
-        await metalworkingWarehouse.checkNameInLineFromFirstRow(
-            designationDetail,
-            tableMetalworkingWarehouse
-        );
-
-        // Wait for the table body to load
-        await metalworkingWarehouse.waitingTableBody(
-            tableMetalworkingWarehouse
-        );
-
-        const numberColumn = await metalworkingWarehouse.findColumn(
-            page,
-            "MetalloworkingSclad-ScrollTable",
-            "MetalloworkingSclad-DetailsTableHeader-OperationsColumn"
-        );
-        console.log("numberColumn: ", numberColumn);
-
-        // Upd:
-        await metalworkingWarehouse.clickIconOperationNew(
-            tableMetalworkingWarehouse,
-            numberColumn,
-            Click.Yes
-        );
-
-        // Waiting for loading
-        await page.waitForLoadState("networkidle");
-
-        // Check the production path modal window
-        await metalworkingWarehouse.productionPathDetailskModalWindow();
-
-        // Wait for the table body to load
-        const productionTable = '[data-testid="OperationPathInfo-table"]';
-        await metalworkingWarehouse.waitingTableBody(productionTable);
-
-        // Getting cell value by id
-        const operationTable = "OperationPathInfo-table";
-        const numberColumnQunatityMade = await metalworkingWarehouse.findColumn(
-            page,
-            operationTable,
-            "OperationPathInfo-thead-tr-th-sdelano-sh"
-        );
-        console.log("numberColumn: ", numberColumnQunatityMade);
-
-        await metalworkingWarehouse.getValueOrClickFromFirstRow(
-            productionTable,
-            numberColumnQunatityMade,
-            Click.Yes
-        );
-
-        // Getting the value of the first operation
-        const numberColumnFirstOperation =
-            await metalworkingWarehouse.findColumn(
-                page,
-                operationTable,
-                "OperationPathInfo-thead-tr-th-sdelano-sh"
-            );
-        console.log("numberColumn: ", numberColumnQunatityMade);
-        const firstOperation =
-            await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                productionTable,
-                numberColumnFirstOperation
-            );
-        console.log(firstOperation);
-        logger.info(firstOperation);
-
-        // Click on the button
-        await metalworkingWarehouse.clickButton(
-            " Добавить Отметку для выбранной операции ",
-            '[data-testid="ModalOperationPathMetaloworking-add-mark-button"]'
-        );
-
-        // Wait for loading
-        await page.waitForLoadState("networkidle");
-
-        // Check the progress check modal window
-        // await metalworkingWarehouse.completionMarkModalWindow(
-        //     firstOperation,
-        //     designationDetail,
-        //     part.designation
-        // );
-
-        // Click on the button
-        await metalworkingWarehouse.clickButton(
-            " Сохранить Отметку ",
-            ".btn-status"
-        );
-
-        // Check the production path modal window
-        await metalworkingWarehouse.productionPathDetailskModalWindow();
-
-        // Wait for the table body to load
-        await metalworkingWarehouse.waitingTableBody(productionTable);
-
-        // Double click on the coordinates and close the modal window
-        await page.mouse.dblclick(1, 1);
-
-        // Wait for the table body to load
-        await metalworkingWarehouse.waitingTableBody(
-            tableMetalworkingWarehouse
-        );
-        // }
-        // }
     });
 };

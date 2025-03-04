@@ -1,8 +1,10 @@
 import { expect, Page } from "@playwright/test";
-import { PageObject } from "../lib/Page";
+import { PageObject, Click } from "../lib/Page";
 import logger from "../lib/logger";
 import { exec } from "child_process";
 import { time } from "console";
+import { allure } from "allure-playwright";
+import { ENV, SELECTORS } from "../config";
 
 export enum Supplier {
     cbed = "Сборка",
@@ -54,48 +56,6 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         expect(selectSuppler).toBe(supplier);
     }
 
-    // Поиск в модальном окне
-    async searchModalWindow(nameSearch: string) {
-        await this.waitingTableBodyModalWindow();
-
-        const searchModalWindow = this.page
-            .locator('[data-testid="Search-Cover-Input"]')
-            .nth(1);
-        await searchModalWindow.fill(nameSearch);
-        expect(await searchModalWindow.inputValue()).toBe(nameSearch);
-        await searchModalWindow.press("Enter");
-
-        await this.waitingTableBodyModalWindow();
-
-        const cells = await this.page
-            .locator("table tbody tr:first-child td")
-            .allInnerTexts();
-
-        // Проверяем, содержится ли искомое значение в одной из ячеек
-        const containsSearchValue = cells.some((cellText) =>
-            cellText.includes(nameSearch)
-        );
-
-        // Ожидаем, что хотя бы одна ячейка содержит искомое значение
-        await expect(containsSearchValue).toBe(true);
-    }
-
-    // Отметка чекбокса
-    async checkTheBox() {
-        const checkbox = this.page.locator(".checkbox_block").nth(0);
-        await checkbox.click();
-    }
-
-    // Водим количество для заказа
-    async enteringOrderQuantity(qunatity: string) {
-        const cellOwnQuantity = this.page.locator(
-            '[data-testid="ModalAddOrder-ProductionTable-TableRowYourQuantityCell-4439"] input'
-        );
-        expect(await cellOwnQuantity.inputValue()).toBe("");
-        await cellOwnQuantity.fill(qunatity);
-        expect(await cellOwnQuantity.inputValue()).toBe(qunatity);
-    }
-
     // Проверяем, что в последнем созданном заказе номер заказа совпадает
     async compareOrderNumbers(orderNumber: string) {
         await this.page
@@ -118,19 +78,205 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         console.log(`Номера заказов совпадают.`);
     }
 
-    // Нажатие на кнопку отменить
-    async clickButtonCansel() {
-        const buttonCansel = this.page.locator(
-            '[data-testid="ModalAddOrder-ProductionTable-CancelButton"]'
-        );
-        await expect(buttonCansel).toBeVisible();
-        await buttonCansel.click();
-    }
+    async launchIntoProductionSupplier(
+        name: string,
+        quantityOrder: string,
+        supplier: Supplier
+    ): Promise<{ quantityLaunchInProduct: string; checkOrderNumber: string }> {
+        // Quantity launched into production
+        let quantityLaunchInProduct: string = "0";
+        let checkOrderNumber: string = "";
 
-    // Ожидание тела таблицы в модальном окне создание заказа поставщика
-    private async waitingTableBodyModalWindow() {
-        await this.page.waitForSelector(
-            '[data-testid="ModalAddOrder-ProductionTable-TableRow-0"]'
+        const tableModalWindow =
+            '[data-testid="ModalAddOrder-ProductionTable-Table"]';
+        const test =
+            '[data-testid="ModalAddOrder-ProductionTable-ScrollContainer"]';
+        const tableModalWindowDataTestId =
+            "ModalAddOrder-ProductionTable-Table";
+        const tableModalCheckbox = "ModalAddOrder-ProductionTable-SelectColumn";
+        const tableModalCell =
+            "ModalAddOrder-ProductionTable-OrderedOnProductionColumn";
+        const tableModalWindowLaunch =
+            "ModalStartProduction-ComplectationTable";
+        const cellQuantityTable =
+            "ModalStartProduction-ComplectationTableHeaderMyQuantity";
+        const selector = '[data-testid="Sclad-orderingSuppliers"]';
+        const tableYourQunatityCell =
+            "ModalAddOrder-ProductionTable-YourQuantityColumn";
+
+        await allure.step("Step 1: Open the warehouse page", async () => {
+            // Go to the Warehouse page
+            await this.page.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+        });
+
+        await allure.step(
+            "Step 2: Open the shortage assemblies page",
+            async () => {
+                await this.findTable(selector);
+                await this.page.waitForLoadState("networkidle");
+            }
         );
+
+        await allure.step(
+            "Step 3: Click on the Launch on Production button",
+            async () => {
+                await this.clickButton(" Создать заказ ", ".btn-add");
+            }
+        );
+
+        await allure.step(
+            "Step 4: Select the selector in the modal window",
+            async () => {
+                if (supplier == Supplier.cbed) {
+                    await this.selectSupplier(Supplier.cbed);
+                } else if (supplier == Supplier.details) {
+                    await this.selectSupplier(Supplier.details);
+                } else if (supplier == Supplier.product) {
+                    await this.selectSupplier(Supplier.product);
+                }
+            }
+        );
+
+        await allure.step("Step 5: Search product", async () => {
+            await this.waitingTableBody(test);
+            await this.searchTable(name, test);
+            await this.page.waitForLoadState("networkidle");
+            await this.waitingTableBody(test);
+        });
+
+        await allure.step(
+            "Step 6: Find the checkbox column and click",
+            async () => {
+                // Find the checkbox column and click
+                const numberColumn = await this.findColumn(
+                    this.page,
+                    tableModalWindowDataTestId,
+                    tableModalCheckbox
+                );
+                console.log("numberColumn: ", numberColumn);
+                await this.getValueOrClickFromFirstRow(
+                    tableModalWindow,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step(
+            "Step 7: We find the value in the cell ordered for production and get the value",
+            async () => {
+                // Find the cell column
+                const numberColumn = await this.findColumn(
+                    this.page,
+                    tableModalWindowDataTestId,
+                    tableModalCell
+                );
+
+                quantityLaunchInProduct =
+                    await this.getValueOrClickFromFirstRow(
+                        tableModalWindow,
+                        numberColumn
+                    );
+                console.log(
+                    "quantityLaunchInProduct :",
+                    quantityLaunchInProduct
+                );
+            }
+        );
+
+        await allure.step(
+            "Step 8: Enter the quantity into the input cell",
+            async () => {
+                // Find the cell column
+                const numberColumn = await this.findColumn(
+                    this.page,
+                    tableModalWindowDataTestId,
+                    tableYourQunatityCell
+                );
+
+                await this.findAndFillCell(
+                    this.page,
+                    tableModalWindowDataTestId,
+                    name,
+                    numberColumn,
+                    quantityOrder
+                );
+            }
+        );
+
+        await allure.step("Step 9: Click on the Order button", async () => {
+            await this.clickButton(
+                "Заказать",
+                '[data-testid="ModalAddOrder-ProductionTable-OrderButton"]'
+            );
+        });
+
+        await allure.step("Step 10: Check quantity on order", async () => {
+            const numberColumn = await this.findColumn(
+                this.page,
+                tableModalWindowLaunch,
+                cellQuantityTable
+            );
+            console.log("numberColumn: ", numberColumn);
+
+            const qunatityValue = await this.findAndFillCell(
+                this.page,
+                tableModalWindowLaunch,
+                name,
+                numberColumn
+            );
+            console.log("qunatityValue: ", qunatityValue);
+        });
+
+        await allure.step("Step 11: Click on the Order button", async () => {
+            await this.clickButton(
+                " Заказать ",
+                '[data-testid="ModalAddOrder-ProductionTable-OrderButton"]'
+            );
+        });
+
+        await allure.step(
+            "Step 12: Check modal window launch in to production",
+            async () => {
+                await this.checkModalWindowLaunchIntoProduction();
+
+                await this.checkCurrentDate(
+                    '[data-testid="ModalStartProduction-OrderDateValue"]'
+                );
+
+                checkOrderNumber = await this.checkOrderNumber();
+                console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+            }
+        );
+
+        await allure.step("Step 13: Click on the Order button", async () => {
+            await this.clickButton(" В производство ", ".btn-status");
+
+            await this.getMessage(checkOrderNumber);
+        });
+
+        await allure.step("Step 13: Click on the close button", async () => {
+            await this.clickButton(
+                " Отменить ",
+                '[data-testid="ModalAddOrder-ProductionTable-CancelButton"]'
+            );
+        });
+
+        await allure.step("Step 14: Search product", async () => {
+            await this.searchTable(
+                name,
+                '[data-testid="OrderSuppliers-ScrollTable-TableContainer"]'
+            );
+
+            await this.waitingTableBody(
+                '[data-testid="OrderSuppliers-ScrollTable-TableContainer"]'
+            );
+        });
+
+        await allure.step("Step 15: Checking the order number", async () => {
+            await this.compareOrderNumbers(checkOrderNumber);
+        });
+        return { quantityLaunchInProduct, checkOrderNumber };
     }
 }
