@@ -852,6 +852,7 @@ export class PageObject extends AbstractPage {
      * @param colId - The data-testid of the column to find.
      * @returns The index of the column with the specified data-testid, or -1 if not found.
      */
+
   async findColumn(
     page: Page,
     tableId: string,
@@ -895,6 +896,23 @@ export class PageObject extends AbstractPage {
           const dataTestId = row?.getAttribute?.("data-testid"); // Safely access the attribute
           return !dataTestId?.includes("SearchRow") && !dataTestId?.includes("TableFooter");
         });
+        // Handle the case for a single row of headers
+        if (headerRows.length === 1) {
+          console.info("Only one header row found. No merging necessary.");
+          const singleRow = headerRows[0];
+          const singleRowCells = Array.from(singleRow.querySelectorAll("th"));
+
+          // Look for the column in the single row
+          for (let i = 0; i < singleRowCells.length; i++) {
+            const headerDataTestId = singleRowCells[i].getAttribute("data-testid");
+            if (headerDataTestId === colId) {
+              return i; // Return the index of the column
+            }
+          }
+
+          console.error("Column not found in the single header row.");
+          return -1; // Return -1 if not found
+        }
 
 
         // Start with the last row as the initial merged row
