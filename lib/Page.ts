@@ -665,9 +665,11 @@ export class PageObject extends AbstractPage {
   async checkTableColumnHeaders(
     page: Page,
     tableId: string,
-    expectedHeaders: any
+    expectedHeaders: any,
+    skip?: boolean
   ): Promise<boolean> {
     // Define the selector for the table header
+    await page.waitForTimeout(1000);
     let tab = await page.$(`#${tableId}`);
     if (!tab) {
       tab = await page.$(`[data-testid="${tableId}"]`);
@@ -679,7 +681,9 @@ export class PageObject extends AbstractPage {
 
     // Get all rows in the table containing th tags
     const allRows = await tab.$$("tr:has(th)");
-
+    if (skip && allRows.length > 0) {
+      allRows.shift(); // removes the first element from the array
+    }
     // Initialize the column count and headerTexts
     let headerTexts: string[] = [];
 
@@ -873,112 +877,103 @@ export class PageObject extends AbstractPage {
       }
     });
 
-    logger.info(`Task started: Finding table "${tableId}" and printing header rows HTML.`);
+    logger.info(`Task started: Finding table "${tableId}" and analyzing header rows.`);
 
-    const columnIndex = await page.evaluate(({ tableId, colId }) => {
-      const table = document.querySelector(`[data-testid="${tableId}"]`) || document.getElementById(tableId);
-      if (!table) {
-        console.error(`Table with data-testid or id "${tableId}" not found.`);
-        return -1;
-      }
-      console.info(`Found table. Now looking for column "${colId}".`);
-      let headerRows = Array.from(table.querySelectorAll("thead tr, tbody tr:has(th)")
-      ).filter((row) => row.querySelectorAll("th").length > 0);
+    const columnIndex = await page.evaluate(
+      ({ tableId, colId }) => {
+        const table =
+          document.querySelector(`[data-testid="${tableId}"]`) ||
+          document.getElementById(tableId);
+        if (!table) {
+          console.error(
+            `Table with data-testid or id "${tableId}" not found.`
+          );
+          return -1;
+        }
+        console.info(`Found table. Now analyzing rows to locate column "${colId}".`);
 
-      // Remove any search row (assuming it has specific identifying attributes)																			  
-      headerRows = headerRows.filter(
-        (row) =>
-          !row
-            .getAttribute("data-testid")
-            ?.includes("SearchRow") &&
-          !row
-            .getAttribute("data-testid")
-            ?.includes("TableFooter")
-      );
-      console.log(headerRows.length);
+        // Extract header rows
+        let headerRows = Array.from(
+          table.querySelectorAll("thead tr, tbody tr:has(th)")
+        ).filter((row) => row.querySelectorAll("th").length > 0);
 
-      if (headerRows.length >= 2) {
-        const firstRowHeaders = Array.from(headerRows[0].querySelectorAll("th"));
-        const secondRowHeaders = Array.from(headerRows[1].querySelectorAll("th"));
 
-        let startColumn = -1;
-        let spanCount = 0;
-        // Determine the start column and span count in the second header row																		   
-        secondRowHeaders.forEach((header, index) => {
-          const headerText = header.innerText.trim();
-          if (headerText !== "" || header.querySelector("div.unicon")) {
-            if (startColumn === -1) {
-              startColumn = index;
+        // Filter out irrelevant rows
+        headerRows = headerRows.filter((row) => {
+          const dataTestId = row?.getAttribute?.("data-testid"); // Safely access the attribute
+          return !dataTestId?.includes("SearchRow") && !dataTestId?.includes("TableFooter");
+        });
+        // Handle the case for a single row of headers
+        if (headerRows.length === 1) {
+          console.info("Only one header row found. No merging necessary.");
+          const singleRow = headerRows[0];
+          const singleRowCells = Array.from(singleRow.querySelectorAll("th"));
+
+          // Look for the column in the single row
+          for (let i = 0; i < singleRowCells.length; i++) {
+            const headerDataTestId = singleRowCells[i].getAttribute("data-testid");
+            if (headerDataTestId === colId) {
+              return i; // Return the index of the column
             }
-            spanCount++;
           }
-        });
 
-        // Determine the parent column in the first header row
-        const parentColumnIndex = firstRowHeaders.findIndex((header, index) => {
-          return index >= startColumn && index < startColumn + spanCount;
-        });
-        // Replace the parent column in the first row with the columns from the second row																				
-        const mergedHeaderRow = document.createElement("tr");
-        let isParentColumnReplaced = false;
-        firstRowHeaders.forEach((column, index) => {
-          if (index === parentColumnIndex && !isParentColumnReplaced) {
+          console.error("Column not found in the single header row.");
+          return -1; // Return -1 if not found
+        }
 
 
+        // Start with the last row as the initial merged row
+        let mergedRow = Array.from(
+          headerRows[headerRows.length - 1].querySelectorAll("th")
+        );
 
-            secondRowHeaders.forEach(secondRowHeader => {
-              mergedHeaderRow.appendChild(secondRowHeader.cloneNode(true));
-            });
-            isParentColumnReplaced = true;
-          } else {
-            mergedHeaderRow.appendChild(column.cloneNode(true));
+        // Iterate backward through the rows to merge
+        for (let i = headerRows.length - 2; i >= 0; i--) {
+          const currentRow = Array.from(headerRows[i].querySelectorAll("th"));
+          const newMergedRow = [];
+
+          let childIndex = 0;
+          for (let j = 0; j < currentRow.length; j++) {
+            const cell = currentRow[j];
+
+            const colspan = parseInt(cell.getAttribute("colspan") || "1");
+
+            if (colspan > 1) {
+              // Replace parent with child columns from the merged row
+              for (let k = 0; k < colspan; k++) {
+                newMergedRow.push(mergedRow[childIndex++]);
+              }
+            } else {
+              // Add the current cell as-is
+              newMergedRow.push(cell);
+            }
           }
-        });
+          // Update mergedRow for the next iteration
+          mergedRow = newMergedRow;
+        }
 
-        const updatedHeaders = Array.from(
-          mergedHeaderRow.querySelectorAll("th"));
-        console.log("All Columns and their IDs:");
-        const loggedHeaders = new Set(); // Use a set to keep track of logged headers
-        updatedHeaders.forEach((header, index) => {
-          const headerDataTestId = header.getAttribute("data-testid");
-          const headerId = header.getAttribute("id");
-          const logString = `Column ${index}: data-testid="${headerDataTestId}", id="${headerId}"`;
-          if (!loggedHeaders.has(logString)) { // Check if this header has already been logged
-            console.log(logString);
-            loggedHeaders.add(logString); // Add the header to the set
-          }
-        });
-        for (let i = 0; i < updatedHeaders.length; i++) {
-          const headerDataTestId =
-            updatedHeaders[i].getAttribute("data-testid");
+        // Print all data-testid values in the final merged row
+
+        const dataTestIds = mergedRow
+          .filter((cell) => cell && typeof cell.getAttribute === "function") // Validate each element
+          .map((cell) => cell.getAttribute("data-testid")); // Extract the data-testid attribute
+
+
+        console.info("All data-testid values in the final merged row:");
+        // Look for the column in the final merged row
+        for (let i = 0; i < mergedRow.length; i++) {
+
+          const headerDataTestId = mergedRow[i].getAttribute("data-testid");
+
           if (headerDataTestId === colId) {
-            return i; // Возвращаем индекс колонки
+
+            return i; // Return the index of the column
           }
         }
-      } else {
-        // Handle the case where there's only one header row
-        const singleRowHeaders = Array.from(headerRows[0].querySelectorAll("th"));
-        console.log("All Columns and their IDs:");
-        singleRowHeaders.forEach((header, index) => {
-          const headerDataTestId = header.getAttribute("data-testid");
-          const headerId = header.getAttribute("id");
-          console.log(`Column ${index}: data-testid="${headerDataTestId}", id="${headerId}"`);
-        });
-        for (let i = 0; i < singleRowHeaders.length; i++) {
-          const headerDataTestId =
-            singleRowHeaders[i].getAttribute("data-testid");
-          if (
-            headerDataTestId === colId &&
-            singleRowHeaders[i].tagName === "TH"
-          ) {
-            return i; // Возвращаем индекс колонки
-          }
-        }
-        console.error("Not enough header rows found.");
-        return -1; // Возвращаем -1 вместо false
-      }
-      return -1; // Возвращаем -1, если колонка не найдена
-    },
+
+        console.error("Column not found.");
+        return -1; // Return -1 if not found
+      },
       { tableId, colId }
     );
 
@@ -987,101 +982,8 @@ export class PageObject extends AbstractPage {
     } else {
       logger.error(`Column with data-testid "${colId}" not found.`);
     }
-    return columnIndex; // Возвращаем индекс колонки
-  }
 
-  /**
-   * Check the ordering of table rows based on the urgency date and planned shipment date columns.
-   * @param page - The Playwright page instance.
-   * @param tableId - The ID or data-testid of the table element.
-   * @param urgencyColIndex - The index of the urgency date column.
-   * @param plannedShipmentColIndex - The index of the planned shipment date column.
-   * @returns An object containing the success status and an optional message if the ordering check fails.
-   */
-
-  async checkTableRowOrdering(
-    page: Page,
-    tableId: string,
-    urgencyColIndex: number,
-    plannedShipmentColIndex: number
-  ): Promise<{ success: boolean; message?: string }> {
-    // Get all rows in the table
-    logger.info(urgencyColIndex);
-
-    let table = await page.$(`#${tableId}`);
-    if (!table) {
-      table = await page.$(`[data-testid="${tableId}"]`);
-    }
-
-    if (!table) {
-      return {
-        success: false,
-        message: `Table with id "${tableId}" not found`,
-      };
-    }
-
-    // Get all rows in the table excluding the header rows
-    const rows = await table.$$("tbody tr");
-    const headerRows = await table.$$("tbody tr th");
-    rows.splice(0, headerRows.length); // Remove header rows
-
-    // Filter out rows that contain `th` elements
-    const filteredRows = rows.filter(async (row) => {
-      const thElements = await row.$$("th");
-      return thElements.length === 0;
-    });
-
-    // Debug: Log the count of rows found
-    logger.info(`Total rows found in the table: ${filteredRows.length}`);
-
-    // Extract data from rows
-    const rowData = await Promise.all(
-      filteredRows.map(async (row) => {
-        const cells = await row.$$("td");
-        const urgencyDate =
-          (await cells[urgencyColIndex]?.innerText()) ?? "";
-        const plannedShipmentDate =
-          (await cells[plannedShipmentColIndex]?.innerText()) ?? "";
-        return { urgencyDate, plannedShipmentDate };
-      })
-    );
-
-    // Function to parse date strings with various separators
-    const parseDate = (dateStr: string): Date => {
-      const parts = dateStr.split(/[.\-\/]/); // Split by dots, hyphens, or slashes
-      if (parts.length === 3) {
-        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Convert to YYYY-MM-DD
-      }
-      return new Date(dateStr); // Fallback to default Date parsing
-    };
-
-    // Sort rows
-    const compareDates = (a: string, b: string) =>
-      parseDate(a).getTime() - parseDate(b).getTime();
-
-    // Verify row ordering for urgencyDate
-    let lastUrgencyDateIndex = -1;
-    for (let i = 0; i < rowData.length; i++) {
-      if (rowData[i].urgencyDate) {
-        if (
-          lastUrgencyDateIndex >= 0 &&
-          compareDates(
-            rowData[lastUrgencyDateIndex].urgencyDate,
-            rowData[i].urgencyDate
-          ) > 0
-        ) {
-          return {
-            success: false,
-            message: `Row ordering error in urgencyDate at index ${i}`,
-          };
-        }
-        lastUrgencyDateIndex = i;
-      } else {
-        break; // Exit the loop once we encounter a row with an empty urgencyDate
-      }
-    }
-
-    return { success: true };
+    return columnIndex;
   }
 
   /**

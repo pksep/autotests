@@ -5,7 +5,7 @@ import { ENV, SELECTORS } from '../config'; // Import the configuration
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
 
-import testData from '../testdata/PD18-T1.json'; // Import your test data
+import testData1 from '../testdata/PD18-T1.json'; // Import your test data
 import testData2 from '../testdata/PD18-T2.json'; // Import your test data
 import testData3 from '../testdata/PD18-T3.json'; // Import your test data
 
@@ -85,7 +85,7 @@ export const runP010 = () => {
 
         await allure.step('Step 5: Check table column count from the test data and compare to the page', async () => {
             logger.info('STEP 5: Check table column count from the test data and compare to the page');
-            const expectedColumnCount = await shortagePage.countColumns(testData.headers);
+            const expectedColumnCount = await shortagePage.countColumns(testData1.headers);
             logger.info(`Expected column count: ${expectedColumnCount}`);
             expect(columnCount).toBe(expectedColumnCount);
         });
@@ -109,14 +109,14 @@ export const runP010 = () => {
 
         await allure.step('Step 5: Check table column count from the test data and compare to the page', async () => {
             logger.info('STEP 5: Check table column count from the test data and compare to the page');
-            const expectedColumnCount = await shortagePage.countColumns(testData.headers);
+            const expectedColumnCount = await shortagePage.countColumns(testData2.headers);
             logger.info(`Expected column count: ${expectedColumnCount}`);
             expect(columnCount).toBe(expectedColumnCount);
         });
     });
     test('Test Case 3 - Verify База деталей (Parts Database) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
-        allure.label('epic', 'Склад');
+        allure.label('epic', 'База деталей');
         allure.label('feature', 'Заказ склада на Сборку');
         allure.label('story', 'Verify Column count and order');
         allure.description('Verify База деталей (Parts Database) Page Column Count and Order Check for RIGHT table.');
@@ -132,161 +132,65 @@ export const runP010 = () => {
 
         await allure.step('Step 5: Check table column count from the test data and compare to the page', async () => {
             logger.info('STEP 5: Check table column count from the test data and compare to the page');
-            const expectedColumnCount = await shortagePage.countColumns(testData2.headers);
+            const expectedColumnCount = await shortagePage.countColumns(testData3.headers);
             logger.info(`Expected column count: ${expectedColumnCount}`);
             expect(columnCount).toBe(expectedColumnCount);
         });
         logger.info('Navigation to materials page completed');
     });
-    test.skip('Test Case 4 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table', async ({ page }) => {
+    test('Test Case 4 - Verify База деталей (Parts Database) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
-        allure.label('epic', 'Склад');
-        allure.label('feature', 'Заказ склада на Сборку');
+        allure.label('epic', 'База деталей');
+        allure.label('feature', 'База деталей');
         allure.label('story', 'Verify Column header values check');
-        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for LEFT table.');
+        allure.description('Verify База деталей (Parts Database) Page Column header values Check for LEFT table.');
 
         const shortagePage = new CreatePartsDatabasePage(page);
 
         await allure.step('Step 4: Check table column Header values', async () => {
             logger.info('STEP 4: Check table column Header values');
             // Capture the number of columns from the checkTableColumns method
-            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, LEFT_DATA_TABLE, testData);
+            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, LEFT_DATA_TABLE, testData1, true);
             expect(columnsVerified).toBe(true);
         });
 
     });
-    test.skip('Test Case 5 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for CENTER table', async ({ page }) => {
+    test('Test Case 5 - Verify База деталей (Parts Database) Page Column header values Check for CENTER table', async ({ page }) => {
         allure.label('severity', 'normal');
-        allure.label('epic', 'Склад');
-        allure.label('feature', 'Заказ склада на Сборку');
+        allure.label('epic', 'База деталей');
+        allure.label('feature', 'База деталей');
         allure.label('story', 'Verify Column header values check');
-        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for CENTER table.');
+        allure.description('Verify База деталей (Parts Database) Page Column header values Check for CENTER table.');
 
         const shortagePage = new CreatePartsDatabasePage(page);
 
         await allure.step('Step 4: Check table column Header values', async () => {
             logger.info('STEP 4: Check table column Header values');
             // Capture the number of columns from the checkTableColumns method
-            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, CENTER_DATA_TABLE, testData);
+            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, CENTER_DATA_TABLE, testData2, true);
             expect(columnsVerified).toBe(true);
         });
 
     });
-    test.skip('Test Case 6 - Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table', async ({ page }) => {
+    test('Test Case 6 - Verify База деталей (Parts Database) Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
-        allure.label('epic', 'Склад');
-        allure.label('feature', 'Заказ склада на Сборку');
+        allure.label('epic', 'База деталей');
+        allure.label('feature', 'База деталей');
         allure.label('story', 'Verify Column header values check');
-        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Column header values Check for RIGHT table.');
+        allure.description('Verify База деталей (Parts Database) Page Column header values Check for RIGHT table.');
         const shortagePage = new CreatePartsDatabasePage(page);
 
         await allure.step('Step 4: Check table column Header values', async () => {
             // Capture the number of columns from the checkTableColumns method
             //await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
             logger.info('STEP 4: Check table column Header values');
-            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, RIGHT_DATA_TABLE, testData2);
+            const columnsVerified = await shortagePage.checkTableColumnHeaders(page, RIGHT_DATA_TABLE, testData3, true);
             expect(columnsVerified).toBe(true);
         });
 
     });
 
 
-    test.skip('Test Case 7 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table', async ({ page }) => {
-        test.setTimeout(600000);
-        allure.label('severity', 'normal');
-        allure.label('epic', 'Склад');
-        allure.label('feature', 'Заказ склада на Сборку');
-        allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for RIGHT table.');
-        const shortagePage = new CreatePartsDatabasePage(page);
-
-        await allure.step('Step 4: Check Row ordering', async () => {
-            logger.info('STEP 4: Page loaded. Starting column identification.');
-            // Call the method for the 'DateByUrgency' header
-            logger.info('Finding column for DateByUrgency');
-            const urgencyColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_URGENCY_DATA_COL);
-            logger.info(`Urgency Column Index: ${urgencyColId}`);
-
-            // Refresh the page to reset the state
-            await page.reload({ waitUntil: 'networkidle' });
-            logger.info('Page reloaded. Starting next column identification.');
-
-            // Call the method for the 'DateShipmentsPlan' header
-            logger.info('Finding column for DateShipmentsPlan');
-            const plannedShipmentColId = await shortagePage.findColumn(page, RIGHT_DATA_TABLE, RIGHT_DATA_TABLE_PLANNED_DATA_COL);
-            logger.info(`Planned Shipment Column Index: ${plannedShipmentColId}`);
-
-            // Check if both columns are found
-            if (urgencyColId !== -1 && plannedShipmentColId !== -1) {
-                logger.info('Both columns found. Checking table row ordering.');
-                const sortedCorrect = await shortagePage.checkTableRowOrdering(page, RIGHT_DATA_TABLE, urgencyColId, plannedShipmentColId);
-
-                // Log the return value
-                logger.info('Check Table Row Ordering Result:', sortedCorrect);
-
-                // Assert the result
-                expect(sortedCorrect).toBeDefined();
-                expect(sortedCorrect.success).toBe(true);
-
-                if (!sortedCorrect.success) {
-                    logger.info(`Error: ${sortedCorrect.message}`);
-                }
-            } else {
-                const missingCol = urgencyColId === -1 ? 'Дата по срочности' : 'Дата план. отгрузки';
-                throw new Error(`Column "${missingCol}" not found`);
-            }
-        });
-    });
-    test.skip('Test Case 8 - Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table', async ({ page }) => {
-        allure.label('severity', 'normal');
-        allure.label('epic', 'Склад');
-        allure.label('feature', 'Заказ склада на Сборку');
-        allure.label('story', 'Verify row sort ordering');
-        allure.description('Verify Сборка Склад (Assembly Warehouse) Page Row Ordering for LEFT table.');
-        const shortagePage = new CreatePartsDatabasePage(page);
-
-        await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
-            logger.info('STEP 4: Find if show left table button is visible and click it');
-            await page.waitForLoadState('networkidle');
-            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
-        });
-
-        await allure.step('Step 5: Check Row ordering', async () => {
-            logger.info('STEP 5: Page loaded. Starting column identification.');
-
-            // Call the method for the 'DateByUrgency' header
-            logger.info('Finding column for DateByUrgency');
-            const urgencyColId = await shortagePage.findColumn(page, LEFT_DATA_TABLE, LEFT_DATA_TABLE_URGENCY_DATA_COL);
-            logger.info(`Urgency Column Index: ${urgencyColId}`);
-            await page.reload({ waitUntil: 'networkidle' });
-            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
-            // Call the method for the 'DateShipmentsPlan' header
-            logger.info('Finding column for DateShipmentsPlan');
-            const plannedShipmentColId = await shortagePage.findColumn(page, LEFT_DATA_TABLE, LEFT_DATA_TABLE_PLANNED_DATA_COL);
-            logger.info(`Planned Shipment Column Index: ${plannedShipmentColId}`);
-
-            // Check if both columns are found
-            if (urgencyColId !== -1 && plannedShipmentColId !== -1) {
-                logger.info('Both columns found. Checking table row ordering.');
-                const sortedCorrect = await shortagePage.checkTableRowOrdering(page, LEFT_DATA_TABLE, urgencyColId, plannedShipmentColId);
-
-                // Log the return value
-                logger.info('Check Table Row Ordering Result:', sortedCorrect);
-
-                // Assert the result
-                expect(sortedCorrect).toBeDefined();
-                expect(sortedCorrect.success).toBe(true);
-
-                if (!sortedCorrect.success) {
-                    logger.info(`Error: ${sortedCorrect.message}`);
-                }
-            } else {
-                const missingCol = urgencyColId === -1 ? 'Дата по срочности' : 'Дата план. отгрузки';
-                throw new Error(`Column "${missingCol}" not found`);
-            }
-
-        });
-    });
     test.skip('Test Case 9 - Verify Сборка Склад (Assembly Warehouse) Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
