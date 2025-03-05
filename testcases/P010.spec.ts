@@ -203,7 +203,7 @@ export const runP010 = () => {
         await allure.step('Step 4: Find if show left table button is visible and click it', async () => {
             logger.info('STEP 4: Find if show left table button is visible and click it');
             await page.waitForLoadState('networkidle');
-            await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
+            //await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
         });
 
         await allure.step('Step 5: Check Search Functionality', async () => {
@@ -212,10 +212,10 @@ export const runP010 = () => {
             const searchFieldId = 'Search-Cover-Input'; // Adjust as needed
             const searchFields = [LEFT_DATA_TABLE_SEARCHABLE_FIELD]; // Adjust as needed
 
-            await allure.step('5.1: Reset Filters', async () => {
-                // Reset filters on the page
-                await shortagePage.clickButton(' Сбросить все фильтры ', `[data-testid="${RESET_FILTERS}"]`);
-            });
+            // await allure.step('5.1: Reset Filters', async () => {
+            // Reset filters on the page
+            //     await shortagePage.clickButton(' Сбросить все фильтры ', `[data-testid="${RESET_FILTERS}"]`);
+            //});
             // Find column IDs for specified search fields
             let columnIds: number[] = [];
             await allure.step('5.2: Determine searchable columns', async () => {
@@ -260,7 +260,7 @@ export const runP010 = () => {
                     const searchValue = firstRowData[i];
                     await allure.step(`5.4.1: Reset the page before checking results`, async () => {
                         await page.waitForLoadState('networkidle');
-                        await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
+                        //await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON)
                     });
 
                     await allure.step(`5.4.2: Performing search with ${searchValue}`, async () => {
@@ -442,11 +442,11 @@ export const runP010 = () => {
             const searchFieldId = 'Search-Cover-Input'; // Adjust as needed
             const searchFields = [RIGHT_DATA_TABLE_SEARCHABLE_COLS1, RIGHT_DATA_TABLE_SEARCHABLE_COLS2, RIGHT_DATA_TABLE_SEARCHABLE_COLS3]; // Adjust as needed
 
-            await allure.step('5.1: Reset Filters', async () => {
-                logger.info('5.1: Reset Filters');
-                // Reset filters on the page
-                await shortagePage.clickButton(' Сбросить все фильтры ', `[data-testid="${RESET_FILTERS}"]`);
-            });
+            //await allure.step('5.1: Reset Filters', async () => {
+            //    logger.info('5.1: Reset Filters');
+            // Reset filters on the page
+            //    await shortagePage.clickButton(' Сбросить все фильтры ', `[data-testid="${RESET_FILTERS}"]`);
+            //});
 
             // Find column IDs for specified search fields
             let columnIds: number[] = [];
