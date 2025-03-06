@@ -68,7 +68,7 @@ export const SELECTORS = {
             TEXT_ENG: "Assembly Units",
             DATA_TESTID: "menu-assembly-units",
         },
-        PARTS: {
+        PARTS_DATABASE: {
             URL: "basedetals",
             TEXT_RUS: "База деталей",
             TEXT_ENG: "Parts",
