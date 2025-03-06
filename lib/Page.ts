@@ -597,9 +597,10 @@ export class PageObject extends AbstractPage {
    * @param tableId - The ID of the table to locate.
    * @returns The column count as a number.
    */
-  async checkTableColumns(page: Page, tableId: string): Promise<number> {
+  async checkTableColumns(page: Page, tableId: string, skip?: boolean): Promise<number> {
     // Locate the table with the specific id
     logger.info(tableId);
+    await page.waitForLoadState("networkidle");
     // Try to find the table using both selectors
     let tab = await page.$(`#${tableId}`);
     if (!tab) {
@@ -611,8 +612,11 @@ export class PageObject extends AbstractPage {
     }
 
     // Get all rows in the table containing th tags
-    const allRows = await tab.$$("tr:has(th)");
 
+    const allRows = await tab.$$("tr:has(th)");
+    if (skip && allRows.length > 0) {
+      allRows.shift(); // removes the first element from the array
+    }
     // Initialize the column count
     let columnCount = 0;
 
@@ -661,9 +665,11 @@ export class PageObject extends AbstractPage {
   async checkTableColumnHeaders(
     page: Page,
     tableId: string,
-    expectedHeaders: any
+    expectedHeaders: any,
+    skip?: boolean
   ): Promise<boolean> {
     // Define the selector for the table header
+    await page.waitForTimeout(1000);
     let tab = await page.$(`#${tableId}`);
     if (!tab) {
       tab = await page.$(`[data-testid="${tableId}"]`);
@@ -675,7 +681,9 @@ export class PageObject extends AbstractPage {
 
     // Get all rows in the table containing th tags
     const allRows = await tab.$$("tr:has(th)");
-
+    if (skip && allRows.length > 0) {
+      allRows.shift(); // removes the first element from the array
+    }
     // Initialize the column count and headerTexts
     let headerTexts: string[] = [];
 
@@ -846,13 +854,12 @@ export class PageObject extends AbstractPage {
   }
 
   /**
-     * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
-     * @param page - The Playwright page instance.
-     * @param tableId - The ID or data-testid of the table element.
-     * @param colId - The data-testid of the column to find.
-     * @returns The index of the column with the specified data-testid, or -1 if not found.
-     */
-
+* Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
+* @param page - The Playwright page instance.
+* @param tableId - The ID or data-testid of the table element.
+* @param colId - The data-testid of the column to find.
+* @returns The index of the column with the specified data-testid, or -1 if not found.
+*/
   async findColumn(
     page: Page,
     tableId: string,
@@ -871,6 +878,10 @@ export class PageObject extends AbstractPage {
     });
 
     logger.info(`Task started: Finding table "${tableId}" and analyzing header rows.`);
+    // Wait for the table to load completely
+    await page.waitForSelector(`[data-testid="${tableId}"]`, {
+      state: 'visible' // Ensures the element is visible in the DOM
+    });
 
     const columnIndex = await page.evaluate(
       ({ tableId, colId }) => {
@@ -978,7 +989,6 @@ export class PageObject extends AbstractPage {
 
     return columnIndex;
   }
-
   /**
    * Check the ordering of table rows based on the urgency date and planned shipment date columns.
    * @param page - The Playwright page instance.
@@ -1072,7 +1082,6 @@ export class PageObject extends AbstractPage {
 
     return { success: true };
   }
-
   /**
    * Check the ordering of table rows based on the urgency date and planned shipment date columns.
    * @param page - The Playwright page instance.
@@ -1402,13 +1411,13 @@ export class PageObject extends AbstractPage {
 
     // Step 5: Confirm that the modal dates match the parent table dates
     // if (urgencyModalColValForCompare.trim() !== urgencyModalDate.trim() || plannedShipmentModalColValForCompare.trim() !== plannedShipmentModalDate.trim()) {
-    //  console.log("FFFFFF");
-    //  logger.error(`counter: ${counter}`);
-    //  logger.error(`Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`);
-    //  return {
-    //    success: false,
-    //    message: `Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`
-    //  };
+    //    console.log("FFFFFF");
+    //    logger.error(`counter: ${counter}`);
+    //    logger.error(`Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`);
+    //    return {
+    //        success: false,
+    //        message: `Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`
+    //    };
     // }
     // console.log("GGGGG");
     // logger.info(`Dates MATCH for row with urgency date ${urgencyModalColValForCompare} and planned shipment date ${plannedShipmentModalColValForCompare}.`);
@@ -2131,7 +2140,7 @@ export class PageObject extends AbstractPage {
   }
 
   /** Waiting close modal window
-   *  @param locator - Locator of the input.
+   *    @param locator - Locator of the input.
    */
   async checkCloseModalWindow(locator: string) {
     const modalWindow = await this.page.locator(locator);
