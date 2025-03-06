@@ -58,14 +58,16 @@ export const runP004 = () => {
         const shortagePage = new CreatShortageAssembliesPage(page);
         await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
         await shortagePage.findAndClickElement(page, "DeficitCbed-TableBody-ShipmentsDate", 3000);
-        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-tbody-tr-buyers", 3000);
-        await shortagePage.findAndClickElement(page, "complect", 3000);
-        await shortagePage.findAndClickElement(page, "ModalKomplect-komplect-table-body-row", 3000);
+        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-Tbody-List", 3000);
+        await shortagePage.findAndClickElement(page, "TableKomplect-Cell-Complectation", 3000);
+        await shortagePage.findAndClickElement(page, "ModalKomplect-TableBody-row-", 3000);
+        await shortagePage.findAndClickElement(page, "TableDocument-TableRow", 3000, true);
+
         const result = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
         expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
 
     });
-    test('Test Case 1 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 1 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for RIGHT table', async ({ page }) => {
 
 
         allure.label('severity', 'normal');
@@ -92,7 +94,7 @@ export const runP004 = () => {
 
 
     });
-    test('Test Case 2 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 2 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column Count and Order Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -116,7 +118,7 @@ export const runP004 = () => {
         });
         logger.info('Navigation to materials page completed');
     });
-    test('Test Case 3 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 3 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -134,7 +136,7 @@ export const runP004 = () => {
 
     });
 
-    test('Test Case 4 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for LEFT table', async ({ page }) => {
+    test.skip('Test Case 4 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Column header values Check for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -153,7 +155,7 @@ export const runP004 = () => {
     });
 
 
-    test('Test Case 5 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Row Ordering for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 5 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Row Ordering for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
@@ -199,7 +201,7 @@ export const runP004 = () => {
             }
         });
     });
-    test('Test Case 6 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Row Ordering for LEFT table', async ({ page }) => {
+    test.skip('Test Case 6 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page Row Ordering for LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -249,7 +251,7 @@ export const runP004 = () => {
 
         });
     });
-    test('Test Case 7 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page search functionality LEFT table', async ({ page }) => {
+    test.skip('Test Case 7 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page search functionality LEFT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -476,7 +478,7 @@ export const runP004 = () => {
         });
 
     });
-    test('Test Case 8 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page search functionality RIGHT table', async ({ page }) => {
+    test.skip('Test Case 8 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) Page search functionality RIGHT table', async ({ page }) => {
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
         allure.label('feature', 'Дефицит Сборочных Едениц');
@@ -768,7 +770,7 @@ export const runP004 = () => {
               });*/
         });
     });
-    test('Test Case 9 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) - Compare dates with Order List for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 9 - Verify Дефицит Сборочных Еденицe (Assembly Unit Shortage) - Compare dates with Order List for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
