@@ -1,7 +1,3 @@
-//placeholder so that we don't have to rewrite the testSuiteConfig all the time
-export const runP010 = () => {
-
-}
 import { test, expect, ElementHandle } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec'; // Adjust the import path as necessary
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
