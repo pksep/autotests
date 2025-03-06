@@ -858,7 +858,7 @@ export class PageObject extends AbstractPage {
  * @param page - The Playwright page instance.
  * @param tableId - The ID or data-testid of the table element.
  * @param colId - The data-testid of the column to find.
- * @returns The index of the column with the specified data-testid, or false if not found.
+ * @returns The index of the column with the specified data-testid, or -1 if not found.
  */
   async findColumn(
     page: Page,
