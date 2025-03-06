@@ -15,7 +15,7 @@
 
 export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
-    HEADLESS: process.env.HEADLESS === "false",
+    HEADLESS: false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
     DEBUG: false,
     TEST_SUITE: 'page002',
