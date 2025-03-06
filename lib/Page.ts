@@ -878,6 +878,10 @@ export class PageObject extends AbstractPage {
     });
 
     logger.info(`Task started: Finding table "${tableId}" and analyzing header rows.`);
+    // Wait for the table to load completely
+    await page.waitForSelector(`[data-testid="${tableId}"]`, {
+      state: 'visible' // Ensures the element is visible in the DOM
+    });
 
     const columnIndex = await page.evaluate(
       ({ tableId, colId }) => {
@@ -985,7 +989,99 @@ export class PageObject extends AbstractPage {
 
     return columnIndex;
   }
+  /**
+   * Check the ordering of table rows based on the urgency date and planned shipment date columns.
+   * @param page - The Playwright page instance.
+   * @param tableId - The ID or data-testid of the table element.
+   * @param urgencyColIndex - The index of the urgency date column.
+   * @param plannedShipmentColIndex - The index of the planned shipment date column.
+   * @returns An object containing the success status and an optional message if the ordering check fails.
+   */
 
+  async checkTableRowOrdering(
+    page: Page,
+    tableId: string,
+    urgencyColIndex: number,
+    plannedShipmentColIndex: number
+  ): Promise<{ success: boolean; message?: string }> {
+    // Get all rows in the table
+    logger.info(urgencyColIndex);
+
+    let table = await page.$(`#${tableId}`);
+    if (!table) {
+      table = await page.$(`[data-testid="${tableId}"]`);
+    }
+
+    if (!table) {
+      return {
+        success: false,
+        message: `Table with id "${tableId}" not found`,
+      };
+    }
+
+    // Get all rows in the table excluding the header rows
+    const rows = await table.$$("tbody tr");
+    const headerRows = await table.$$("tbody tr th");
+    rows.splice(0, headerRows.length); // Remove header rows
+
+    // Filter out rows that contain `th` elements
+    const filteredRows = rows.filter(async (row) => {
+      const thElements = await row.$$("th");
+      return thElements.length === 0;
+    });
+
+    // Debug: Log the count of rows found
+    logger.info(`Total rows found in the table: ${filteredRows.length}`);
+
+    // Extract data from rows
+    const rowData = await Promise.all(
+      filteredRows.map(async (row) => {
+        const cells = await row.$$("td");
+        const urgencyDate =
+          (await cells[urgencyColIndex]?.innerText()) ?? "";
+        const plannedShipmentDate =
+          (await cells[plannedShipmentColIndex]?.innerText()) ?? "";
+        return { urgencyDate, plannedShipmentDate };
+      })
+    );
+
+    // Function to parse date strings with various separators
+    const parseDate = (dateStr: string): Date => {
+      const parts = dateStr.split(/[.\-\/]/); // Split by dots, hyphens, or slashes
+      if (parts.length === 3) {
+        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Convert to YYYY-MM-DD
+      }
+      return new Date(dateStr); // Fallback to default Date parsing
+    };
+
+    // Sort rows
+    const compareDates = (a: string, b: string) =>
+      parseDate(a).getTime() - parseDate(b).getTime();
+
+    // Verify row ordering for urgencyDate
+    let lastUrgencyDateIndex = -1;
+    for (let i = 0; i < rowData.length; i++) {
+      if (rowData[i].urgencyDate) {
+        if (
+          lastUrgencyDateIndex >= 0 &&
+          compareDates(
+            rowData[lastUrgencyDateIndex].urgencyDate,
+            rowData[i].urgencyDate
+          ) > 0
+        ) {
+          return {
+            success: false,
+            message: `Row ordering error in urgencyDate at index ${i}`,
+          };
+        }
+        lastUrgencyDateIndex = i;
+      } else {
+        break; // Exit the loop once we encounter a row with an empty urgencyDate
+      }
+    }
+
+    return { success: true };
+  }
   /**
    * Check the ordering of table rows based on the urgency date and planned shipment date columns.
    * @param page - The Playwright page instance.
