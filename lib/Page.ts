@@ -185,7 +185,8 @@ export class PageObject extends AbstractPage {
   async findAndClickElement(
     page: Page,
     partialDataTestId: string,
-    waitTime: number = 10000
+    waitTime: number = 10000,
+    doubleClick?: boolean
   ): Promise<void> {
     logger.info(
       `Searching for elements with partial data-testid="${partialDataTestId}"`
@@ -200,13 +201,18 @@ export class PageObject extends AbstractPage {
 
     if (elements.length > 0) {
       if (elements.length > 1) {
-        logger.error(
-          `Found multiple elements with data-testid="${partialDataTestId}"`
+        logger.warn(
+          `Found multiple elements with data-testid="${partialDataTestId}" will click first`
         );
       }
       // Click on the first element
       //await elements[0].click();
-      await elements[0].click({ force: true });
+      if (!doubleClick) {
+        await elements[0].click({ force: true });
+      } else {
+        await elements[0].dblclick({ force: true });
+      }
+
       logger.info(
         `Clicked on the first element with partial data-testid="${partialDataTestId}"`
       );
@@ -239,7 +245,12 @@ export class PageObject extends AbstractPage {
           element.style.border = "2px solid red";
           element.style.backgroundColor = "yellow";
         });
-        await elementById.click({ force: true });
+        if (!doubleClick) {
+          await elementById.click({ force: true });
+        } else {
+          await elementById.dblclick({ force: true });
+        }
+
         logger.info(
           `Clicked on the element with id="${partialDataTestId}"`
         );
