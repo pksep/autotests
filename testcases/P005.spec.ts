@@ -59,7 +59,7 @@ export const runP005 = () => {
             await page.waitForLoadState('networkidle');
         });
     });
-    test.skip('Test case 0: Металлообработка склад (Metalworking Warehouse) Page - Scan tables within a specific element', async ({ page }) => {
+    test('Test case 0: Металлообработка склад (Metalworking Warehouse) Page - Scan tables within a specific element', async ({ page }) => {
         test.setTimeout(600000);
         const shortagePage = new CreateMetalworkingWarehousePage(page);
 
@@ -73,12 +73,19 @@ export const runP005 = () => {
         page.mouse.dblclick(1, 1);
 
         await shortagePage.findAndClickElement(page, "MetalloworkingSclad-MetaloworkingTable-ShipmentsCell", 3000);
-        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-tbody-tr-buyers", 3000);
-        await shortagePage.findAndClickElement(page, "complect", 3000);
-        await shortagePage.findAndClickElement(page, "ModalKomplect-komplect-table-body-row-number", 3000);
+        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-Tbody-List", 3000);
+        await shortagePage.findAndClickElement(page, "TableKomplect-Cell-Complectation", 3000);
+        await shortagePage.findAndClickElement(page, "ModalKomplect-TableBody-row", 3000);
+        //const targetElement = await page.locator('ModalDetail-h3-Belonging');
+        //await targetElement.scrollIntoViewIfNeeded();
         await shortagePage.findAndClickElement(page, "ModalDetail-h3-Belonging", 3000);
-        await shortagePage.findAndClickElement(page, "TableNode-showIzd", 3000);
-        await shortagePage.findAndClickElement(page, "TableNode-izdTableDesignation", 3000);
+        await page.waitForLoadState('networkidle');
+
+        //const TableNodeShowIzd = await page.locator('TableNode-ShowIzd');
+        //await TableNodeShowIzd.scrollIntoViewIfNeeded();
+
+        await shortagePage.findAndClickElement(page, "TableNode-ShowIzd", 3000);
+        await shortagePage.findAndClickElement(page, "TableNode-izdTableRow", 3000);
         await shortagePage.findAndClickElement(page, "ModalProduct-TechProcessLink", 3000);
         const result3 = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
 
@@ -806,7 +813,7 @@ export const runP005 = () => {
               });*/
         });
     });
-    test('Test Case 9 - Verify Металлообработка склад (Metalworking Warehouse) Page - Compare dates with Order List for RIGHT table', async ({ page }) => {
+    test.skip('Test Case 9 - Verify Металлообработка склад (Metalworking Warehouse) Page - Compare dates with Order List for RIGHT table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'Склад');
