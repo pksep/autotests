@@ -91,7 +91,8 @@ export const runTC100 = () => {
                 await shortagePage.processProduct(row, shortagePage, page);
                 break;
             }
-
+            await page.waitForTimeout(1000);
+            CreatePartsDatabasePage.printGroups();
         });
     });
 
