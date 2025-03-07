@@ -188,9 +188,9 @@ export class CreatePartsDatabasePage extends PageObject {
         const groups = await shortagePage.processTableData(table); // Process the main table
 
         // Handle rows in each group
-        await this.processGroupRows(groups.Д, 'Д', page);
-        await this.processGroupRows(groups.ПД, 'ПД', page);
-        await this.processGroupRows(groups.РМ, 'РМ', page);
+        //await this.processGroupRows(groups.Д, 'Д', page);
+        //await this.processGroupRows(groups.ПД, 'ПД', page);
+        //await this.processGroupRows(groups.РМ, 'РМ', page);
         await this.processSBGroupRows(groups.СБ, page, shortagePage);
 
         return groups; // Return all processed data
@@ -383,6 +383,7 @@ export class CreatePartsDatabasePage extends PageObject {
         for (const item of rows) {
             console.log(`Processing СБ item:`, item);
 
+
             // Locate and click the row to open the modal
             const rowLocator = page.locator(`[data-testid="${item.dataTestId}"]`); // Adjust selector as necessary
             await rowLocator.evaluate((element: HTMLElement) => {
@@ -396,7 +397,51 @@ export class CreatePartsDatabasePage extends PageObject {
             const modal = page.locator('div[data-testid="ModalCbed-destroyModalRight"]').last();
             await modal.waitFor();
             const tableInModal = modal.locator('[data-testid="TableSpecification-Table"]');
+            let ele = await page.locator('[data-testid="ModalCbed-Title"]').last();
+            await ele.waitFor({ state: 'attached', timeout: 30000 });
+            await ele.evaluate((element: HTMLElement) => {
+                element.style.border = "3px solid red"; // Highlight
+                element.style.backgroundColor = "yellow";
+            });
+            ele = await page
+                .locator('[data-testid="ModalCbed-Title"]')
+                .last()
+                .textContent();
+            if (ele.trim() != testData.titles.СБ.label) {
+                logger.error("Incorrect modal title for Type СБ");
+                expect(ele.trim()).toBe(testData.titles.СБ.label);
+            }
+            await page.waitForTimeout(1000);
+            let elem = await page.locator('[data-testid="ModalCbed-Text-Name"]').last();
+            await elem.waitFor({ state: 'attached', timeout: 30000 });
+            await elem.evaluate((element: HTMLElement) => {
+                element.style.border = "3px solid red"; // Highlight
+                element.style.backgroundColor = "yellow";
+            });
+            elem = await page
+                .locator('[data-testid="ModalCbed-Text-Name"]')
+                .last()
+                .textContent();
+            if (elem != item.name) {
+                logger.error("Incorrect Product Name for Type СБ");
+                expect(elem.trim()).toBe(item.name);
+            }
 
+            await page.waitForTimeout(1000);
+            let eleme = await page.locator('[data-testid="ModalCbed-Text-Designation"]').last();
+            await eleme.waitFor({ state: 'attached', timeout: 30000 });
+            await eleme.evaluate((element: HTMLElement) => {
+                element.style.border = "3px solid red"; // Highlight
+                element.style.backgroundColor = "yellow";
+            });
+            eleme = await page
+                .locator('[data-testid="ModalCbed-Text-Designation"]')
+                .last()
+                .textContent();
+            if (eleme != item.partNumber) {
+                logger.error("Incorrect Part Number for Type СБ");
+                expect(elem.trim()).toBe(item.partNumber);
+            }
             // Process the modal's table recursively
             const subGroups = await this.processTableDataAndHandleModals(tableInModal, shortagePage, page);
 
