@@ -1,6 +1,6 @@
-import { test, expect, ElementHandle } from '@playwright/test';
+import { test, expect, ElementHandle, Locator } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec'; // Adjust the import path as necessary
-import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
+import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import { ENV, SELECTORS } from '../config'; // Import the configuration
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
@@ -66,20 +66,58 @@ export const runTC100 = () => {
             expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
         });
     });
-    test('Test Case 1: База деталей Page - Select a product and Click the Edit button', async ({ page }) => {
+    test('Test Case 1: База деталей Page - get a list of all products in the first table', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'База деталей');
         allure.label('feature', 'База деталей');
         allure.label('story', 'Edit Product');
         allure.description('База деталей Page - Select first Product.');
+        const shortagePage = new CreatePartsDatabasePage(page);
+        let dataRows: Locator[]; // Changed from ElementHandle to Locator
 
-        await allure.step('Step 1: Select the first product and click edit', async () => {
-            const shortagePage = new CreatePartsDatabasePage(page);
+        await allure.step('Step 1: get a list of all products in the first table.', async () => {
+            //const shortagePage = new CreatePartsDatabasePage(page);
             await page.waitForLoadState('networkidle');
-            const table = await shortagePage.findTable('BasePaginationTable-Table-Component-product');
+            const table = page.locator(`[data-testid="BasePaginationTable-Table-Product"]`);
+            await table.evaluate((element) => {
+                element.style.outline = "2px solid red";
+                element.style.backgroundColor = "yellow";
+            });
+            dataRows = await shortagePage.getAllDataRows(table);
+            logger.info(dataRows);
+        });
 
+        await allure.step('Step 2: Process each row data', async () => {
+            let counter = 1;
+            dataRows.shift();
+            for (const row of dataRows) {
+                if (counter > 1) {
+                    break;
+                }
 
+                await row.evaluate((element) => {
+                    const htmlElement = element as HTMLElement; // Cast to HTMLElement for style manipulation
+                    htmlElement.style.border = "3px solid red"; // Add a red border
+                    htmlElement.style.backgroundColor = "yellow"; // Change background to yellow
+                });
+                await row.click();
+
+                await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
+
+                let table2 = page.locator('[data-testid="TableSpecification-Root"]');
+                let groups: {
+                    СБ: Item[],
+                    Д: Item[],
+                    ПД: Item[],
+                    РМ: Item[],
+                    ALL: Map<string, Item>
+                } = await shortagePage.processTableData(table2);
+                await page.waitForTimeout(5000);
+                logger.info("Groups:")
+                logger.info(groups);
+                counter += 1;
+            }
         });
     });
 
