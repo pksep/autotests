@@ -854,12 +854,12 @@ export class PageObject extends AbstractPage {
   }
 
   /**
-* Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
-* @param page - The Playwright page instance.
-* @param tableId - The ID or data-testid of the table element.
-* @param colId - The data-testid of the column to find.
-* @returns The index of the column with the specified data-testid, or -1 if not found.
-*/
+  * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
+  * @param page - The Playwright page instance.
+  * @param tableId - The ID or data-testid of the table element.
+  * @param colId - The data-testid of the column to find.
+  * @returns The index of the column with the specified data-testid, or -1 if not found.
+  */
   async findColumn(
     page: Page,
     tableId: string,
@@ -2427,6 +2427,28 @@ export class PageObject extends AbstractPage {
 
     throw new Error(`Переменная "${variableName}" не найдена в таблице.`);
   }
+
+  /**
+   * Retrieve all rows as Locators from a table.
+   * @param table - The Playwright Locator for the table element.
+   * @returns A promise that resolves to an array of row Locators.
+   */
+  async getAllDataRows(table: Locator): Promise<Locator[]> {
+    // Locate all <tbody><tr> elements that contain <td> and exclude <th>
+    const rowsLocator = table.locator('tbody tr:has(td)');
+    const rowsCount = await rowsLocator.count();
+
+    // Collect all rows as Locators
+    const rows: Locator[] = [];
+    for (let i = 0; i < rowsCount; i++) {
+      rows.push(rowsLocator.nth(i));
+    }
+    logger.info(rows.length);
+    return rows;
+  }
+
+
+
 }
 
 // Retrieving descendants from the entity specification
