@@ -188,7 +188,7 @@ export class CreatePartsDatabasePage extends PageObject {
         const groups = await shortagePage.processTableData(table); // Process the main table
 
         // Handle rows in each group
-        //await this.processGroupRows(groups.Д, 'Д', page);
+        await this.processGroupRows(groups.Д, 'Д', page);
         //await this.processGroupRows(groups.ПД, 'ПД', page);
         //await this.processGroupRows(groups.РМ, 'РМ', page);
         await this.processSBGroupRows(groups.СБ, page, shortagePage);
@@ -220,17 +220,17 @@ export class CreatePartsDatabasePage extends PageObject {
 
                     // Code block for case value1
                     let el = await page.locator('[data-testid="ModalDetail-h3-BriefDetailInformation"]').last();
+                    await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    //let elementValue = await page.locator('[data-testid="ModalDetail-h3-BriefDetailInformation"]').textContent();
+
                     let elementValue = await page
                         .locator('[data-testid="ModalDetail-h3-BriefDetailInformation"]')
                         .last()
                         .textContent();
-
 
                     if (elementValue.trim() != testData.titles.Д.label) {
                         logger.error("Incorrect modal title for Type Д");
@@ -238,7 +238,9 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                     el = '';
                     elementValue = '';
+                    console.log(groupType);
                     el = await page.locator('[data-testid="ModalDetail-span-Name"]').last();
+                    await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
@@ -255,6 +257,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     el = '';
                     elementValue = '';
                     el = await page.locator('[data-testid="ModalDetail-span-Designation"]').last();
+                    await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
@@ -271,6 +274,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     el = '';
                     elementValue = '';
                     el = await page.locator('[data-testid="ModalDetail-span-Material"]').last();
+                    await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
