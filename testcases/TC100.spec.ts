@@ -66,58 +66,32 @@ export const runTC100 = () => {
             expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
         });
     });
-    test('Test Case 1: База деталей Page - get a list of all products in the first table', async ({ page }) => {
+    test('Test Case 1: База деталей Page - process all products with recursive logic', async ({ page }) => {
         test.setTimeout(600000);
         allure.label('severity', 'normal');
         allure.label('epic', 'База деталей');
         allure.label('feature', 'База деталей');
-        allure.label('story', 'Edit Product');
-        allure.description('База деталей Page - Select first Product.');
-        const shortagePage = new CreatePartsDatabasePage(page);
-        let dataRows: Locator[]; // Changed from ElementHandle to Locator
+        allure.label('story', 'Recursive Processing');
+        allure.description('Processes all products recursively, handling nested СБ items.');
 
-        await allure.step('Step 1: get a list of all products in the first table.', async () => {
-            //const shortagePage = new CreatePartsDatabasePage(page);
+        const shortagePage = new CreatePartsDatabasePage(page);
+        let dataRows: Locator[]; // Holds rows of all products
+
+        await allure.step('Step 1: Get a list of all products in the first table', async () => {
             await page.waitForLoadState('networkidle');
             const table = page.locator(`[data-testid="BasePaginationTable-Table-Product"]`);
-            await table.evaluate((element) => {
-                element.style.outline = "2px solid red";
-                element.style.backgroundColor = "yellow";
-            });
             dataRows = await shortagePage.getAllDataRows(table);
-            logger.info(dataRows);
+            logger.info(`Found ${dataRows.length} products.`);
         });
 
-        await allure.step('Step 2: Process each row data', async () => {
-            let counter = 1;
+        await allure.step('Step 2: Process each product row and its tables', async () => {
+            dataRows.shift();
             dataRows.shift();
             for (const row of dataRows) {
-                if (counter > 1) {
-                    break;
-                }
-
-                await row.evaluate((element) => {
-                    const htmlElement = element as HTMLElement; // Cast to HTMLElement for style manipulation
-                    htmlElement.style.border = "3px solid red"; // Add a red border
-                    htmlElement.style.backgroundColor = "yellow"; // Change background to yellow
-                });
-                await row.click();
-
-                await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
-
-                let table2 = page.locator('[data-testid="TableSpecification-Root"]');
-                let groups: {
-                    СБ: Item[],
-                    Д: Item[],
-                    ПД: Item[],
-                    РМ: Item[],
-                    ALL: Map<string, Item>
-                } = await shortagePage.processTableData(table2);
-                await page.waitForTimeout(5000);
-                logger.info("Groups:")
-                logger.info(groups);
-                counter += 1;
+                await shortagePage.processProduct(row, shortagePage, page);
+                break;
             }
+
         });
     });
 
