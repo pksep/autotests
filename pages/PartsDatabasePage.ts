@@ -185,12 +185,12 @@ export class CreatePartsDatabasePage extends PageObject {
         ALL: Map<string, Item>
     }> {
 
-        const groups = await shortagePage.processTableData(table); // Process the main table
+        const groups = await this.processTableData(table); // Process the main table
 
         // Handle rows in each group
         await this.processGroupRows(groups.Д, 'Д', page);
-        //await this.processGroupRows(groups.ПД, 'ПД', page);
-        //await this.processGroupRows(groups.РМ, 'РМ', page);
+        await this.processGroupRows(groups.ПД, 'ПД', page);
+        await this.processGroupRows(groups.РМ, 'РМ', page);
         await this.processSBGroupRows(groups.СБ, page, shortagePage);
 
         return groups; // Return all processed data
