@@ -20,7 +20,16 @@ export class CreatePartsDatabasePage extends PageObject {
         super(page);
         this.page = page;
     }
-
+    // this item will store everything that we parse for later processing and validations
+    static globalTableData = {
+        СБ: [] as Item[],   // Сборочные единицы
+        Д: [] as Item[],    // Детали
+        ПМ: [] as Item[],   // Покупные материалы
+        МД: [] as Item[],   // Материалы для деталей
+        РМ: [] as Item[],   // Расходные материалы
+        ПД: [] as Item[],   // Расходные материалы        
+        ALL: new Map<string, Item>() // Consolidated details
+    };
     /**
      * Process table data to group items by their types (СБ, Д, ПД, РМ) and create an ALL group.
      * @param table - The Playwright Locator for the table element.
@@ -62,13 +71,24 @@ export class CreatePartsDatabasePage extends PageObject {
             const uniqueKey = `${item.partNumber} ${item.name}`.trim();
             const existingItem = groups.ALL.get(uniqueKey);
 
+            // Update the groups.ALL map
             if (existingItem) {
                 existingItem.quantity += item.quantity;
             } else {
                 groups.ALL.set(uniqueKey, item);
             }
             logger.info(`ALL group updated: Current size = ${groups.ALL.size}`);
+
+            // Also update the global ALL map
+            const globalExistingItem = CreatePartsDatabasePage.globalTableData.ALL.get(uniqueKey);
+            if (globalExistingItem) {
+                globalExistingItem.quantity += item.quantity;
+            } else {
+                CreatePartsDatabasePage.globalTableData.ALL.set(uniqueKey, item);
+            }
+            logger.info(`Global ALL group updated: Current size = ${CreatePartsDatabasePage.globalTableData.ALL.size}`);
         };
+
 
         // Initialize the first group as 'СБ' by default (header in <thead>)
         let currentGroup: keyof typeof groups = 'СБ';
@@ -125,6 +145,10 @@ export class CreatePartsDatabasePage extends PageObject {
 
                     // Add item to the current group
                     groups[currentGroup].push(item);
+                    if (Array.isArray(CreatePartsDatabasePage.globalTableData[currentGroup as keyof typeof CreatePartsDatabasePage.globalTableData])) {
+                        (CreatePartsDatabasePage.globalTableData[currentGroup as keyof typeof CreatePartsDatabasePage.globalTableData] as Item[]).push(item);
+                    }
+
                     logger.info(`Added item to group ${currentGroup}: ${JSON.stringify(item)}`);
 
                     // Add to ALL for groups Д, ПД, and РМ
@@ -170,6 +194,23 @@ export class CreatePartsDatabasePage extends PageObject {
         logger.info("Processed Groups:");
         logger.info(groups);
         return
+    }
+    printGlobalTableData(): void {
+        console.log("Global Table Data Overview:");
+
+        // Iterate through each group in the globalTableData
+        Object.keys(CreatePartsDatabasePage.globalTableData).forEach((key) => {
+            // Handle ALL group separately since it's a Map
+            if (key === 'ALL') {
+                console.log("\nALL (Consolidated Items):");
+                console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
+            } else {
+                console.log(`\n${key} (Items in this Group):`);
+                console.table(CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData]);
+            }
+        });
+
+        console.log("\nEnd of Global Table Data.");
     }
 
 

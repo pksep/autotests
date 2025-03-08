@@ -91,6 +91,7 @@ export const runTC100 = () => {
                 await shortagePage.processProduct(row, shortagePage, page);
                 break;
             }
+            shortagePage.printGlobalTableData();
 
         });
     });
