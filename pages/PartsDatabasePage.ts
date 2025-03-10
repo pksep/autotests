@@ -173,7 +173,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
 
-    async processProduct(row: Locator, shortagePage: any, page: any, title?: string): Promise<void> {
+    async processProduct(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
         // Highlight and click the product row
         await row.evaluate((element) => {
             element.style.border = "3px solid red"; // Highlight
@@ -227,7 +227,7 @@ export class CreatePartsDatabasePage extends PageObject {
         table: Locator,
         shortagePage: any,
         page: any,
-        title?: string
+        title: string
     ): Promise<{
         СБ: Item[],
         Д: Item[],
@@ -440,7 +440,10 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
             // Locate and click the row to open the modal
-            const rowLocator = page.locator(`[data-testid="${item.dataTestId}"]`); // Adjust selector as necessary
+            console.log('XXXXXX')
+            console.log(item.dataTestId)
+            const rowLocator = page.locator(`[data-testid="${item.dataTestId}"]`).last();
+            await rowLocator.waitFor();
             await rowLocator.evaluate((element: HTMLElement) => {
                 element.style.border = "3px solid red"; // Highlight
                 element.style.backgroundColor = "yellow";
@@ -455,6 +458,10 @@ export class CreatePartsDatabasePage extends PageObject {
             // Extract the title of the СБ
             const sbTitleElement = modal.locator('[data-testid="ModalCbed-Text-Designation"]').last();
             await sbTitleElement.waitFor({ state: 'attached', timeout: 30000 });
+            await sbTitleElement.evaluate((element: HTMLElement) => {
+                element.style.border = "3px solid red"; // Highlight
+                element.style.backgroundColor = "yellow";
+            });
 
             const title = (await sbTitleElement.textContent())?.trim();
             console.log(`Extracted СБ Title: ${title}`);
