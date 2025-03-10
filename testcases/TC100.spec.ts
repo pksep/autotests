@@ -88,7 +88,13 @@ export const runTC100 = () => {
             dataRows.shift();
             dataRows.shift();
             for (const row of dataRows) {
-                await shortagePage.processProduct(row, shortagePage, page);
+
+                const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
+
+                // Extract the text content of the designation field
+                const designation = await designationLocator.textContent() ?? '';
+
+                await shortagePage.processProduct(row, shortagePage, page, designation);
                 break;
             }
             shortagePage.printGlobalTableData();

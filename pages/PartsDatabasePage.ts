@@ -7,11 +7,13 @@ import testData from '../testdata/PU18-Names.json'; // Import your test data
 
 export type Item = {
     id: string;
+    parentPartNumber: string;
     partNumber: string;
     name: string;
     dataTestId: string;
     material: string;
     quantity: number;
+
 };
 
 // Страница: Сборка
@@ -35,7 +37,7 @@ export class CreatePartsDatabasePage extends PageObject {
      * @param table - The Playwright Locator for the table element.
      * @returns An object with grouped items and the ALL group.
      */
-    async processTableData(table: Locator): Promise<{
+    async processTableData(table: Locator, title: string): Promise<{
         СБ: Item[],
         Д: Item[],
         ПД: Item[],
@@ -68,7 +70,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
         // Helper function to add to ALL group using concatenated `partNumber` and `name` as the unique key
         const addToAll = (item: Item) => {
-            const uniqueKey = `${item.partNumber} ${item.name}`.trim();
+            const uniqueKey = `${item.partNumber} ${item.partNumber} ${item.name}`.trim();
             const existingItem = groups.ALL.get(uniqueKey);
 
             // Update the groups.ALL map
@@ -136,11 +138,13 @@ export class CreatePartsDatabasePage extends PageObject {
                 if (id && name && quantity) {
                     const item: Item = {
                         id: id.trim(),
+                        parentPartNumber: title,
                         partNumber: partNumber.trim(),
                         name: name.trim(),
                         dataTestId: rowTestId,
                         material: '',
                         quantity
+
                     };
 
                     // Add item to the current group
@@ -169,7 +173,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
 
-    async processProduct(row: Locator, shortagePage: any, page: any): Promise<void> {
+    async processProduct(row: Locator, shortagePage: any, page: any, title?: string): Promise<void> {
         // Highlight and click the product row
         await row.evaluate((element) => {
             element.style.border = "3px solid red"; // Highlight
@@ -183,13 +187,14 @@ export class CreatePartsDatabasePage extends PageObject {
         // Process the main table for the product
         const table = page.locator('[data-testid="TableSpecification-Root"]');
 
+
         const groups: {
             СБ: Item[],
             Д: Item[],
             ПД: Item[],
             РМ: Item[],
             ALL: Map<string, Item>
-        } = await this.processTableDataAndHandleModals(table, shortagePage, page);
+        } = await this.processTableDataAndHandleModals(table, shortagePage, page, title);
 
         logger.info("Processed Groups:");
         logger.info(groups);
@@ -202,11 +207,14 @@ export class CreatePartsDatabasePage extends PageObject {
         Object.keys(CreatePartsDatabasePage.globalTableData).forEach((key) => {
             // Handle ALL group separately since it's a Map
             if (key === 'ALL') {
-                console.log("\nALL (Consolidated Items):");
+                const totalCount = CreatePartsDatabasePage.globalTableData.ALL.size; // Count items in ALL (Map)
+                console.log(`\nALL (Consolidated Items: ${totalCount}):`);
                 console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
             } else {
-                console.log(`\n${key} (Items in this Group):`);
-                console.table(CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData]);
+                const groupItems = CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData];
+                const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Safely count items in the group
+                console.log(`\n${key} (Items in this Group: ${totalCount}):`);
+                console.table(groupItems);
             }
         });
 
@@ -214,10 +222,12 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
 
+
     async processTableDataAndHandleModals(
         table: Locator,
         shortagePage: any,
-        page: any
+        page: any,
+        title?: string
     ): Promise<{
         СБ: Item[],
         Д: Item[],
@@ -226,7 +236,7 @@ export class CreatePartsDatabasePage extends PageObject {
         ALL: Map<string, Item>
     }> {
 
-        const groups = await this.processTableData(table); // Process the main table
+        const groups = await this.processTableData(table, title); // Process the main table
 
         // Handle rows in each group
         await this.processGroupRows(groups.Д, 'Д', page);
@@ -441,6 +451,14 @@ export class CreatePartsDatabasePage extends PageObject {
             // Wait for modal and locate its table
             const modal = page.locator('div[data-testid="ModalCbed-destroyModalRight"]').last();
             await modal.waitFor();
+
+            // Extract the title of the СБ
+            const sbTitleElement = modal.locator('[data-testid="ModalCbed-Text-Designation"]').last();
+            await sbTitleElement.waitFor({ state: 'attached', timeout: 30000 });
+
+            const title = (await sbTitleElement.textContent())?.trim();
+            console.log(`Extracted СБ Title: ${title}`);
+
             const tableInModal = modal.locator('[data-testid="TableSpecification-Table"]');
             let ele = await page.locator('[data-testid="ModalCbed-Title"]').last();
             await ele.waitFor({ state: 'attached', timeout: 30000 });
@@ -488,7 +506,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 expect(elem.trim()).toBe(item.partNumber);
             }
             // Process the modal's table recursively
-            const subGroups = await this.processTableDataAndHandleModals(tableInModal, shortagePage, page);
+            const subGroups = await this.processTableDataAndHandleModals(tableInModal, shortagePage, page, title);
 
             // Merge subGroups into the main structure or log them
             console.log("Processed Sub-Groups for СБ item:", subGroups);
