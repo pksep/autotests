@@ -13,6 +13,7 @@ import { runP010 } from './testcases/P010.spec';
 import { runTC000 } from './testcases/TC000.spec';
 import { runTC001 } from './testcases/TC001.spec';
 import { runTC002 } from './testcases/TC002.spec';
+import { runTC100 } from './testcases/TC100.spec';
 import { runU001 } from "./testcases/U001.spec";
 import { runU002 } from "./testcases/U002.spec";
 import { runU003 } from "./testcases/U003.spec";
@@ -166,6 +167,16 @@ export const testSuites = {
             },
             // Add more test cases as needed
         ],
+    },
+    TC100: {
+        description: 'Ordered from suppliers.',
+        tests: [
+            {
+                test: runTC100,
+                description: 'Order a part.'
+            }
+            // Add more test cases as needed
+        ]
     },
     U001: {
         description: "Uploading a task.",
