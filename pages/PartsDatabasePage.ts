@@ -37,7 +37,7 @@ export class CreatePartsDatabasePage extends PageObject {
      * @param table - The Playwright Locator for the table element.
      * @returns An object with grouped items and the ALL group.
      */
-    async processTableData(table: Locator, title: string): Promise<{
+    async processTableData(table: Locator, title: string, parentQuantity: number): Promise<{
         СБ: Item[],
         Д: Item[],
         ПД: Item[],
@@ -75,7 +75,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
             // Update the groups.ALL map
             if (existingItem) {
-                existingItem.quantity += item.quantity;
+                existingItem.quantity;
             } else {
                 groups.ALL.set(uniqueKey, item);
             }
@@ -84,7 +84,7 @@ export class CreatePartsDatabasePage extends PageObject {
             // Also update the global ALL map
             const globalExistingItem = CreatePartsDatabasePage.globalTableData.ALL.get(uniqueKey);
             if (globalExistingItem) {
-                globalExistingItem.quantity += item.quantity;
+                globalExistingItem.quantity;
             } else {
                 CreatePartsDatabasePage.globalTableData.ALL.set(uniqueKey, item);
             }
@@ -131,8 +131,14 @@ export class CreatePartsDatabasePage extends PageObject {
                 const id = await row.locator('td:nth-child(1)').textContent() ?? '';
                 const partNumber = await row.locator('td:nth-child(2)').textContent() ?? '';
                 const name = await row.locator('td:nth-child(3)').textContent() ?? '';
-                const quantity = parseInt(await row.locator('td:nth-child(5)').textContent() ?? '0', 10);
-
+                let quantity = parseInt(await row.locator('td:nth-child(5)').textContent() ?? '0', 10);
+                //quantity *= parentQuantity;
+                console.log(rowTestId)
+                console.log(id)
+                console.log(partNumber)
+                console.log(name)
+                console.log(quantity)
+                console.log('ParentQty: ' + parentQuantity)
                 logger.info(`Item details: id=${id}, partNumber=${partNumber}, name=${name}, quantity=${quantity}, data-testid=${rowTestId}`);
 
                 if (id && name && quantity) {
@@ -146,7 +152,8 @@ export class CreatePartsDatabasePage extends PageObject {
                         quantity
 
                     };
-
+                    console.log("YYYYYYYYYYYYYYYYYY: " + currentGroup)
+                    console.log(item);
                     // Add item to the current group
                     groups[currentGroup].push(item);
                     if (Array.isArray(CreatePartsDatabasePage.globalTableData[currentGroup as keyof typeof CreatePartsDatabasePage.globalTableData])) {
@@ -179,11 +186,11 @@ export class CreatePartsDatabasePage extends PageObject {
             element.style.border = "3px solid red"; // Highlight
             element.style.backgroundColor = "yellow";
         });
-        await row.click();
+        await row.click(); //opened the product page
 
         // Open the product editor
-        await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
-
+        await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500); //clicked the edit button
+        let parentQuantity = 1;
         // Process the main table for the product
         const table = page.locator('[data-testid="TableSpecification-Root"]');
 
@@ -194,7 +201,7 @@ export class CreatePartsDatabasePage extends PageObject {
             ПД: Item[],
             РМ: Item[],
             ALL: Map<string, Item>
-        } = await this.processTableDataAndHandleModals(table, shortagePage, page, title);
+        } = await this.processTableDataAndHandleModals(table, shortagePage, page, title, parentQuantity);
 
         logger.info("Processed Groups:");
         logger.info(groups);
@@ -227,7 +234,8 @@ export class CreatePartsDatabasePage extends PageObject {
         table: Locator,
         shortagePage: any,
         page: any,
-        title: string
+        title: string,
+        parentQuantity: number
     ): Promise<{
         СБ: Item[],
         Д: Item[],
@@ -236,18 +244,18 @@ export class CreatePartsDatabasePage extends PageObject {
         ALL: Map<string, Item>
     }> {
 
-        const groups = await this.processTableData(table, title); // Process the main table
-
+        const groups = await this.processTableData(table, title, parentQuantity); // Process the main table
+        console.log('XXXXXXXXXXXXXXXX Parent Quantity: ' + parentQuantity);
         // Handle rows in each group
-        await this.processGroupRows(groups.Д, 'Д', page);
-        await this.processGroupRows(groups.ПД, 'ПД', page);
-        await this.processGroupRows(groups.РМ, 'РМ', page);
-        await this.processSBGroupRows(groups.СБ, page, shortagePage);
+        await this.processGroupRows(groups.Д, 'Д', page, parentQuantity);
+        await this.processGroupRows(groups.ПД, 'ПД', page, parentQuantity);
+        await this.processGroupRows(groups.РМ, 'РМ', page, parentQuantity);
+        await this.processSBGroupRows(groups.СБ, page, shortagePage, parentQuantity);
 
         return groups; // Return all processed data
     }
 
-    async processGroupRows(rows: Item[], groupType: string, page: any): Promise<void> {
+    async processGroupRows(rows: Item[], groupType: string, page: any, parentQuantity: number): Promise<void> {
 
         for (const item of rows) {
             logger.info(`Processing ${groupType} item:`, item);
@@ -340,7 +348,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     } else {
                         item.material = elementValue;
                     }
-
+                    item.quantity *= parentQuantity;
                     break; // Exit the switch statement
                 case 'ПД':
                     const modal2 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]').last(); // Adjust selector for modal
@@ -378,6 +386,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     } else {
                         item.material = elementValue2;
                     }
+                    item.quantity *= parentQuantity;
                     break; // Exit the switch statement
                 case 'РМ':
                     const modal3 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]').last(); // Adjust selector for modal
@@ -415,6 +424,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     } else {
                         item.material = elementValue3;
                     }
+                    item.quantity *= parentQuantity;
                     break; // Exit the switch statementeak;
 
                 default:
@@ -433,15 +443,12 @@ export class CreatePartsDatabasePage extends PageObject {
     async processSBGroupRows(
         rows: Item[],
         page: any,
-        shortagePage: any
+        shortagePage: any,
+        parentQuantity: number
     ): Promise<void> {
         for (const item of rows) {
             console.log(`Processing СБ item:`, item);
-
-
-            // Locate and click the row to open the modal
-            console.log('XXXXXX')
-            console.log(item.dataTestId)
+            //item.quantity *= parentQuantity;
             const rowLocator = page.locator(`[data-testid="${item.dataTestId}"]`).last();
             await rowLocator.waitFor();
             await rowLocator.evaluate((element: HTMLElement) => {
@@ -512,8 +519,23 @@ export class CreatePartsDatabasePage extends PageObject {
                 logger.error("Incorrect Part Number for Type СБ");
                 expect(elem.trim()).toBe(item.partNumber);
             }
+            let eRow = await page.locator(`[data-testid="${item.dataTestId}"]`).last();
+            await eRow.waitFor({ state: 'attached', timeout: 30000 });
+            await eRow.evaluate((element: HTMLElement) => {
+                element.style.border = "3px solid red"; // Highlight
+                element.style.backgroundColor = "yellow";
+            });
+
+            item.quantity *= parentQuantity;
+
             // Process the modal's table recursively
-            const subGroups = await this.processTableDataAndHandleModals(tableInModal, shortagePage, page, title);
+            const subGroups = await this.processTableDataAndHandleModals(
+                tableInModal,
+                shortagePage,
+                page,
+                title,
+                item.quantity
+            );
 
             // Merge subGroups into the main structure or log them
             console.log("Processed Sub-Groups for СБ item:", subGroups);
@@ -522,6 +544,7 @@ export class CreatePartsDatabasePage extends PageObject {
             await page.mouse.click(1, 1);
         }
     }
+
 
 
 }
