@@ -132,13 +132,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 const partNumber = await row.locator('td:nth-child(2)').textContent() ?? '';
                 const name = await row.locator('td:nth-child(3)').textContent() ?? '';
                 let quantity = parseInt(await row.locator('td:nth-child(5)').textContent() ?? '0', 10);
-                //quantity *= parentQuantity;
-                console.log(rowTestId)
-                console.log(id)
-                console.log(partNumber)
-                console.log(name)
-                console.log(quantity)
-                console.log('ParentQty: ' + parentQuantity)
+
                 logger.info(`Item details: id=${id}, partNumber=${partNumber}, name=${name}, quantity=${quantity}, data-testid=${rowTestId}`);
 
                 if (id && name && quantity) {
@@ -152,8 +146,7 @@ export class CreatePartsDatabasePage extends PageObject {
                         quantity
 
                     };
-                    console.log("YYYYYYYYYYYYYYYYYY: " + currentGroup)
-                    console.log(item);
+
                     // Add item to the current group
                     groups[currentGroup].push(item);
                     if (Array.isArray(CreatePartsDatabasePage.globalTableData[currentGroup as keyof typeof CreatePartsDatabasePage.globalTableData])) {
@@ -208,24 +201,24 @@ export class CreatePartsDatabasePage extends PageObject {
         return
     }
     printGlobalTableData(): void {
-        console.log("Global Table Data Overview:");
+        logger.info("Global Table Data Overview:");
 
         // Iterate through each group in the globalTableData
         Object.keys(CreatePartsDatabasePage.globalTableData).forEach((key) => {
             // Handle ALL group separately since it's a Map
             if (key === 'ALL') {
                 const totalCount = CreatePartsDatabasePage.globalTableData.ALL.size; // Count items in ALL (Map)
-                console.log(`\nALL (Consolidated Items: ${totalCount}):`);
+                logger.info(`\nALL (Consolidated Items: ${totalCount}):`);
                 console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
             } else {
                 const groupItems = CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData];
                 const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Safely count items in the group
-                console.log(`\n${key} (Items in this Group: ${totalCount}):`);
+                logger.info(`\n${key} (Items in this Group: ${totalCount}):`);
                 console.table(groupItems);
             }
         });
 
-        console.log("\nEnd of Global Table Data.");
+        logger.info("\nEnd of Global Table Data.");
     }
 
 
@@ -245,7 +238,7 @@ export class CreatePartsDatabasePage extends PageObject {
     }> {
 
         const groups = await this.processTableData(table, title, parentQuantity); // Process the main table
-        console.log('XXXXXXXXXXXXXXXX Parent Quantity: ' + parentQuantity);
+
         // Handle rows in each group
         await this.processGroupRows(groups.Д, 'Д', page, parentQuantity);
         await this.processGroupRows(groups.ПД, 'ПД', page, parentQuantity);
@@ -268,7 +261,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 element.style.backgroundColor = "yellow";
             });
             await rowLocator.click();
-
+            expect(item.quantity).toBeGreaterThan(0);
             // Validate modal content
 
             switch (groupType) {
@@ -297,7 +290,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                     el = '';
                     elementValue = '';
-                    console.log(groupType);
+
                     el = await page.locator('[data-testid="ModalDetail-span-Name"]').last();
                     await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
@@ -447,7 +440,7 @@ export class CreatePartsDatabasePage extends PageObject {
         parentQuantity: number
     ): Promise<void> {
         for (const item of rows) {
-            console.log(`Processing СБ item:`, item);
+            logger.info(`Processing СБ item:`, item);
             //item.quantity *= parentQuantity;
             const rowLocator = page.locator(`[data-testid="${item.dataTestId}"]`).last();
             await rowLocator.waitFor();
@@ -471,7 +464,7 @@ export class CreatePartsDatabasePage extends PageObject {
             });
 
             const title = (await sbTitleElement.textContent())?.trim();
-            console.log(`Extracted СБ Title: ${title}`);
+            logger.info(`Extracted СБ Title: ${title}`);
 
             const tableInModal = modal.locator('[data-testid="TableSpecification-Table"]');
             let ele = await page.locator('[data-testid="ModalCbed-Title"]').last();
@@ -538,7 +531,7 @@ export class CreatePartsDatabasePage extends PageObject {
             );
 
             // Merge subGroups into the main structure or log them
-            console.log("Processed Sub-Groups for СБ item:", subGroups);
+            logger.info("Processed Sub-Groups for СБ item:", subGroups);
 
             // Close the modal
             await page.mouse.click(1, 1);
