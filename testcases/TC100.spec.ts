@@ -94,12 +94,20 @@ export const runTC100 = () => {
                 // Extract the text content of the designation field
                 const designation = await designationLocator.textContent() ?? '';
 
-                await shortagePage.processProduct(row, shortagePage, page, designation);
+                //await shortagePage.processProduct(row, shortagePage, page, designation);
+
+                //shortagePage.printGlobalTableData();
+                await allure.step('Step 2.1: Compare the full specifications page results with the previous scan results', async () => {
+                    const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
+                    // Extract the text content of the designation field
+                    const designation = await designationLocator.textContent() ?? '';
+                    await shortagePage.getProductSpecificationsTable(row, shortagePage, page, designation);
+
+                });
                 break;
             }
-            shortagePage.printGlobalTableData();
-
         });
+
     });
 
 };

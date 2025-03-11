@@ -160,7 +160,8 @@ export class CreatePartsDatabasePage extends PageObject {
                         addToAll(item);
                     }
                 } else {
-                    logger.warn(`Skipped row ${i}: Missing required data (id, name, or quantity)`);
+                    logger.warn(`Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
+                    expect(1).toBe(0);
                 }
             } else if (!isDataRow) {
                 logger.warn(`Skipped row ${i}: Not a data row`);
@@ -172,7 +173,15 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
 
-
+    async getProductSpecificationsTable(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
+        // Highlight and click the product row
+        await row.evaluate((element) => {
+            element.style.border = "3px solid red"; // Highlight
+            element.style.backgroundColor = "yellow";
+        });
+        await row.click(); //opened the product page
+        await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500); //clicked the edit button
+    }
     async processProduct(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
         // Highlight and click the product row
         await row.evaluate((element) => {
@@ -261,17 +270,16 @@ export class CreatePartsDatabasePage extends PageObject {
                 element.style.backgroundColor = "yellow";
             });
             await rowLocator.click();
-            expect(item.quantity).toBeGreaterThan(0);
-            // Validate modal content
+
 
             switch (groupType) {
                 case 'Д':
-                    const modal = page.locator('div[data-testid="ModalDetal-destroyModalRight"]').last();
+
+                    const modal = page.locator('div[data-testid="ModalDetal-destroyModalRight"]:not(.content-modal-right-menu-hidden)').last();
                     await modal.waitFor({ state: 'attached', timeout: 30000 });
 
-
-                    // Code block for case value1
-                    let el = await page.locator('[data-testid="ModalDetail-h3-BriefDetailInformation"]').last();
+                    // Validate modal title
+                    let el = await modal.locator('[data-testid="ModalDetail-h3-BriefDetailInformation"]').last();
                     await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
@@ -279,100 +287,93 @@ export class CreatePartsDatabasePage extends PageObject {
                     });
                     await page.waitForTimeout(1000);
 
-                    let elementValue = await page
-                        .locator('[data-testid="ModalDetail-h3-BriefDetailInformation"]')
-                        .last()
-                        .textContent();
-
-                    if (elementValue.trim() != testData.titles.Д.label) {
+                    let elementValue = await el.textContent();
+                    if (elementValue?.trim() !== testData.titles.Д.label) {
                         logger.error("Incorrect modal title for Type Д");
-                        expect(elementValue.trim()).toBe(testData.titles.Д.label);
+                        expect(elementValue?.trim()).toBe(testData.titles.Д.label);
                     }
-                    el = '';
-                    elementValue = '';
 
-                    el = await page.locator('[data-testid="ModalDetail-span-Name"]').last();
+                    // Validate product name
+                    el = await modal.locator('[data-testid="ModalDetail-span-Name"]').last();
                     await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    elementValue = await page
-                        .locator('[data-testid="ModalDetail-span-Name"]')
-                        .last()
-                        .textContent();
-                    if (elementValue != item.name) {
+
+                    elementValue = await el.textContent();
+                    if (elementValue !== item.name) {
                         logger.error("Incorrect Product Name for Type Д");
-                        expect(elementValue.trim()).toBe(item.name);
+                        await page.pause();
+                        expect(elementValue?.trim()).toBe(item.name);
                     }
-                    el = '';
-                    elementValue = '';
-                    el = await page.locator('[data-testid="ModalDetail-span-Designation"]').last();
+
+                    // Validate product designation
+                    el = await modal.locator('[data-testid="ModalDetail-span-Designation"]').last();
                     await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    elementValue = await page
-                        .locator('[data-testid="ModalDetail-span-Designation"]')
-                        .last()
-                        .textContent();
-                    if (elementValue != item.partNumber) {
+
+                    elementValue = await el.textContent();
+                    if (elementValue !== item.partNumber) {
                         logger.error("Incorrect Product Designation for Type Д");
-                        expect(elementValue.trim()).toBe(item.partNumber);
+                        expect(elementValue?.trim()).toBe(item.partNumber);
                     }
-                    el = '';
-                    elementValue = '';
-                    el = await page.locator('[data-testid="ModalDetail-span-Material"]').last();
+
+                    // Validate product material
+                    el = await modal.locator('[data-testid="ModalDetail-span-Material"]').last();
                     await el.waitFor({ state: 'attached', timeout: 30000 });
                     await el.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    elementValue = await page
-                        .locator('[data-testid="ModalDetail-span-Material"]')
-                        .last()
-                        .textContent();
+
+                    elementValue = await el.textContent();
                     if (!elementValue) {
-                        logger.error("Incorrect Product Meterial not found for Type Д");
+                        logger.error("Incorrect Product Material not found for Type Д");
                     } else {
                         item.material = elementValue;
                     }
+
+                    // Update item quantity
                     item.quantity *= parentQuantity;
-                    break; // Exit the switch statement
+                    break;
+
                 case 'ПД':
-                    const modal2 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]').last(); // Adjust selector for modal
+                    //const modal2 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]').last();
+                    const modal2 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]:not(.content-modal-right-menu-hidden)').last();
                     await modal2.waitFor({ state: 'attached', timeout: 30000 });
-                    // Code block for case value1
-                    let el2 = await page.locator('[data-testid="ModalMaterialInformation-Title"]').last();
+
+                    let el2 = await modal2.locator('[data-testid="ModalMaterialInformation-Title"]').last(); // Scoped to modal2
+                    await el2.waitFor({ state: 'attached', timeout: 30000 });
                     await el2.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    let elementValue2 = await page
-                        .locator('[data-testid="ModalMaterialInformation-Title"]')
-                        .last()
-                        .textContent();
+
+                    let elementValue2 = await el2.textContent();
                     if (elementValue2.trim() != testData.titles.ПД.label) {
                         logger.error("Incorrect modal title for Type ПД");
                         expect(elementValue2.trim()).toBe(testData.titles.ПД.label);
                     }
                     el2 = '';
                     elementValue2 = '';
-                    el2 = await page.locator('[data-testid="ModalMaterialInformation-NameValue"]').last();
+
+                    el2 = await modal2.locator('[data-testid="ModalMaterialInformation-NameValue"]').last(); // Scoped to modal2
+                    await el2.waitFor({ state: 'attached', timeout: 30000 });
                     await el2.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    elementValue2 = await page
-                        .locator('[data-testid="ModalMaterialInformation-NameValue"]')
-                        .last()
-                        .textContent();
+
+                    elementValue2 = await el2.textContent();
                     if (elementValue2 != item.name) {
                         logger.error("Incorrect Product Name for Type ПД");
                         expect(elementValue2.trim()).toBe(item.name);
@@ -380,58 +381,58 @@ export class CreatePartsDatabasePage extends PageObject {
                         item.material = elementValue2;
                     }
                     item.quantity *= parentQuantity;
-                    break; // Exit the switch statement
+                    break;
+
                 case 'РМ':
-                    const modal3 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]').last(); // Adjust selector for modal
+
+                    const modal3 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]:not(.content-modal-right-menu-hidden)').last();
                     await modal3.waitFor({ state: 'attached', timeout: 30000 });
-                    // Code block for case value1
-                    let el3 = await page.locator('[data-testid="ModalMaterialInformation-Title"]').last();
+
+                    let el3 = await modal3.locator('[data-testid="ModalMaterialInformation-Title"]').last(); // Scoped to modal3
+                    await el3.waitFor({ state: 'attached', timeout: 30000 });
                     await el3.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    let elementValue3 = await page
-                        .locator('[data-testid="ModalMaterialInformation-Title"]')
-                        .last()
-                        .textContent();
+
+                    let elementValue3 = await el3.textContent();
                     if (elementValue3.trim() != testData.titles.РМ.label) {
                         logger.error("Incorrect modal title for Type РМ");
-                        expect(elementValue3.trim()).toBe(testData.titles.ПД.label);
+                        expect(elementValue3.trim()).toBe(testData.titles.РМ.label);
                     }
                     el3 = '';
                     elementValue3 = '';
-                    el3 = await page.locator('[data-testid="ModalMaterialInformation-NameValue"]').last();
+
+                    el3 = await modal3.locator('[data-testid="ModalMaterialInformation-NameValue"]').last(); // Scoped to modal3
+                    await el3.waitFor({ state: 'attached', timeout: 30000 });
                     await el3.evaluate((element: HTMLElement) => {
                         element.style.border = "3px solid red"; // Highlight
                         element.style.backgroundColor = "yellow";
                     });
                     await page.waitForTimeout(1000);
-                    elementValue3 = await page
-                        .locator('[data-testid="ModalMaterialInformation-NameValue"]')
-                        .last()
-                        .textContent();
+
+                    elementValue3 = await el3.textContent();
                     if (elementValue3 != item.name) {
                         logger.error("Incorrect Product Name for Type РМ");
                         expect(elementValue3.trim()).toBe(item.name);
                     } else {
                         item.material = elementValue3;
                     }
+                    expect(item.quantity).toBeGreaterThan(0);
                     item.quantity *= parentQuantity;
-                    break; // Exit the switch statementeak;
+                    break;
 
                 default:
-                    // Code block if no case matches
                     logger.error("No matching case");
                     break;
             }
-            //const modalDetails = await modal.textContent();
-            //logger.info(`Modal details for ${groupType} item:`, modalDetails);
 
             // Close the modal
             await page.mouse.click(1, 1);
         }
     }
+
 
     async processSBGroupRows(
         rows: Item[],
