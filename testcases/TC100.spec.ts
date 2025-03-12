@@ -85,7 +85,7 @@ export const runTC100 = () => {
         });
 
         await allure.step('Step 2: Process each product row and its tables', async () => {
-            dataRows.shift();
+            //dataRows.shift();
             dataRows.shift();
             for (const row of dataRows) {
 
@@ -94,10 +94,15 @@ export const runTC100 = () => {
                 // Extract the text content of the designation field
                 const designation = await designationLocator.textContent() ?? '';
 
-                //await shortagePage.processProduct(row, shortagePage, page, designation);
+                await shortagePage.processProduct(row, shortagePage, page, designation);
 
-                //shortagePage.printGlobalTableData();
+                await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500); // Clicked the в база button
+
+                shortagePage.printGlobalTableData();
+
                 await allure.step('Step 2.1: Compare the full specifications page results with the previous scan results', async () => {
+                    //row.click();
+                    //await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
                     const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
                     // Extract the text content of the designation field
                     const designation = await designationLocator.textContent() ?? '';

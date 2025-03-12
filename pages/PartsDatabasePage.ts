@@ -4,6 +4,7 @@ import logger from "../lib/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
 import testData from '../testdata/PU18-Names.json'; // Import your test data
+import { allure } from 'allure-playwright';
 
 export type Item = {
     id: string;
@@ -174,14 +175,549 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
     async getProductSpecificationsTable(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
+        const ASSEMBLY_UNIT_TOTAL_LINE = "ModalComplect-CbedsTitle";
+        const ASSEMBLY_UNIT_TABLE_ID = "ModalComplect-CbedsTable";
+        const ASSEMBLY_UNIT_TABLE_PARTNO_ID = "ModalComplect-CbedsTableHead-Designation";
+        const ASSEMBLY_UNIT_TABLE_NAME_ID = "ModalComplect-CbedsTableHead-Name";
+
+        const DETAILS_TOTAL_LINE = "ModalComplect-DetalsTitle";
+        const DETAILS_TABLE_ID = "ModalComplect-DetalsTable";
+        const DETAILS_TABLE_PARTNO_ID = "ModalComplect-DetalsTableHead-Designation";
+        const DETAILS_TABLE_NAME_ID = "ModalComplect-DetalsTableHead-Name";
+
+        const BUYMATERIALS_TOTAL_LINE = "ModalComplect-BuyMaterialsTitle";
+        const BUYMATERIALS_TABLE_ID = "ModalComplect-BuyMaterialsTable";
+        const BUYMATERIALS_TABLE_NAME_ID = "ModalComplect-BuyMaterialsTableHead-Name";
+
+        const MATERIALPARTS_TOTAL_LINE = "ModalComplect-DetailMaterialsTitle";
+        const MATERIALPARTS_TABLE_ID = "ModalComplect-DetailMaterialsTable";
+        const MATERIALPARTS_TABLE_NAME_ID = "ModalComplect-DetailMaterialsTableHead-Name";
+
+        const CONSUMABLES_TOTAL_LINE = "ModalComplect-ConsumableMaterialsTitle";
+        const CONSUMABLES_TABLE_ID = "ModalComplect-ConsumableMaterialsTable";
+        const CONSUMABLES_TABLE_NAME_ID = "ModalComplect-ConsumableMaterialsTableHead-Name";
+
+        let hasDuplicates = false;
+
         // Highlight and click the product row
         await row.evaluate((element) => {
             element.style.border = "3px solid red"; // Highlight
             element.style.backgroundColor = "yellow";
         });
-        await row.click(); //opened the product page
-        await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500); //clicked the edit button
+        await row.click(); // Opened the product page
+
+        await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500); // Clicked the edit button
+        const pageLocator = page.locator(`[data-testid="App-RouterView"]`);
+        await pageLocator.waitFor({ state: 'attached', timeout: 30000 });
+        await shortagePage.findAndClickElement(page, 'TableSpecification-Button-FullSpecification', 500); // Clicked the full specification button
+        const modalLocator = page.locator(`[data-testid="ModalComplect-RightContent"]`);
+        await modalLocator.waitFor({ state: 'attached', timeout: 30000 });
+
+        /**
+         * Checks for duplicate entries in a specified table on the web page.
+         * 
+         * This function scans a table for duplicate rows based on the provided column identifiers
+         * (e.g., part number and name), filters out nested rows to avoid irrelevant data,
+         * and logs any duplicate entries along with their counts for debugging purposes.
+         *
+         * @param {string} tableId - The data-testid of the table to be analyzed for duplicates.
+         * @param {string} tableName - The name of the table (used in log messages).
+         * @param {string | null} partNumberId - The data-testid of the column containing part numbers (can be null).
+         * @param {string} nameId - The data-testid of the column containing names.
+         * @returns {Promise<void>} - A promise that resolves when the duplicate check is complete.
+         */
+        const checkForDuplicates = async (
+            tableId: string,
+            tableName: string,
+            partNumberId: string | null,
+            nameId: string
+        ): Promise<void> => {
+            /**
+             * Step 1: Locate the table on the web page and ensure it is attached to the DOM.
+             */
+            const table = page.locator(`[data-testid="${tableId}"]`);
+            await table.waitFor({ state: 'attached', timeout: 30000 });
+
+            /**
+             * Step 2: Identify the indices of the required columns.
+             * The partNumberId is optional, and the nameId is mandatory.
+             */
+            const designationColumnIndex = partNumberId
+                ? await shortagePage.findColumn(page, tableId, partNumberId)
+                : -1; // Use -1 if partNumberId is not provided
+            const nameColumnIndex = await shortagePage.findColumn(page, tableId, nameId);
+
+            if (nameColumnIndex === -1 || (partNumberId && designationColumnIndex === -1)) {
+                logger.error(`Could not find required columns in ${tableName}`);
+                return; // Exit if required columns cannot be found
+            }
+
+            /**
+             * Step 3: Retrieve all rows in the table and filter out nested rows.
+             * Rows with a nested mini table (e.g., <tbody> <tr> <td> <div> <tr>) are excluded.
+             */
+            let rows = await table.locator('tbody tr').all();
+            const filteredRows = [];
+            for (const row of rows) {
+                const isNested = await row.evaluate((node: Element) => {
+                    // Check if the <tr> is a descendant of a <td>
+                    return node.closest('td') !== null;
+                });
+                if (!isNested) {
+                    filteredRows.push(row); // Only add rows that are not nested
+                }
+            }
+
+            /**
+             * Step 4: Log the row counts for verification.
+             */
+            logger.info(`Total Rows: ${rows.length}`);
+            logger.info(`Filtered Rows: ${filteredRows.length}`);
+            rows = filteredRows;
+
+            if (rows.length === 0) {
+                logger.error(`No rows found in table ${tableName}`);
+                return; // Exit if there are no valid rows to process
+            }
+            logger.info(`Processing ${rows.length} rows in table: ${tableName}`);
+
+            /**
+             * Step 5: Initialize a Map to track duplicate rows and their counts.
+             */
+            const seen = new Map<string, number>();
+            const duplicates: string[] = [];
+
+            /**
+             * Step 6: Process each row to extract data and check for duplicates.
+             */
+            for (const row of rows) {
+                try {
+                    // Extract all cells in the current row
+                    const cells = await row.locator('td').all();
+
+                    // Safely extract part number and name columns
+                    const designation = designationColumnIndex !== -1 && cells[designationColumnIndex]
+                        ? await cells[designationColumnIndex].innerText()
+                        : null;
+
+                    const name = cells[nameColumnIndex]
+                        ? await cells[nameColumnIndex].innerText()
+                        : null;
+
+                    // Log and skip rows with missing data
+                    if (!designation && !name) {
+                        logger.warn(`Empty designation and name in row. Skipping...`);
+                        const rowHtml = await row.evaluate((el: Element) => el.outerHTML);
+                        console.log(`Problematic row HTML: ${rowHtml}`);
+                        continue;
+                    }
+
+                    // Generate a unique identifier for the row
+                    const identifier = designationColumnIndex !== -1
+                        ? `${designation?.trim() || ''} ${name?.trim() || ''}`.trim() // Combine part number and name
+                        : `${name?.trim() || ''}`.trim(); // Use only name if part number is unavailable
+
+                    // Track duplicates
+                    if (seen.has(identifier)) {
+                        duplicates.push(identifier); // Add identifier to duplicates list
+                        seen.set(identifier, seen.get(identifier)! + 1); // Increment count in Map
+                    } else {
+                        seen.set(identifier, 1); // Add new identifier to Map
+                    }
+                } catch (error) {
+                    // Log any errors encountered while processing the row
+                    logger.error(`Error processing row in ${tableName}: ${error}`);
+                    continue;
+                }
+            }
+
+            /**
+             * Step 7: Log duplicate entries and their counts.
+             */
+            if (duplicates.length > 0) {
+                logger.error(`Duplicates found in ${tableName}: ${duplicates}`);
+                logger.error(
+                    `Duplicate counts: ${Array.from(seen.entries()).filter(([key, count]) => count > 1)}`
+                );
+            } else {
+                logger.info(`No duplicates found in ${tableName}`);
+            }
+        };
+
+
+        /**
+         * Compares the displayed total value of a specific table or element on the web page
+         * with a precomputed total from the global dataset.
+         * 
+         * This function highlights the targeted element for visibility, extracts its numeric content,
+         * and validates it against the corresponding global value. Mismatches are logged for debugging.
+         *
+         * @param {Locator} modalLocator - The locator for the modal containing the element.
+         * @param {string} testId - The data-testid of the element to validate.
+         * @param {keyof typeof CreatePartsDatabasePage.globalTableData} globalKey - The global dataset key to validate against.
+         * @returns {Promise<void>} - A promise that resolves when the comparison is complete.
+         */
+        const compareTotals = async (
+            modalLocator: Locator,
+            testId: string,
+            globalKey: keyof typeof CreatePartsDatabasePage.globalTableData
+        ): Promise<void> => {
+            /**
+             * Step 1: Locate the specific element within the modal.
+             * Wait for it to be attached to the DOM to ensure it's ready for interaction.
+             */
+            const element = modalLocator.locator(`[data-testid="${testId}"]`).last();
+            await element.waitFor({ state: 'attached', timeout: 30000 });
+
+            /**
+             * Step 2: Highlight the element to improve visibility during execution.
+             * Adds a red border and yellow background color for debugging purposes.
+             */
+            await element.evaluate((el: HTMLElement) => {
+                el.style.border = "3px solid red";
+                el.style.backgroundColor = "yellow";
+            });
+
+            /**
+             * Step 3: Extract the numeric content from the element's text content.
+             * Uses a regular expression to find and parse the first numeric value.
+             */
+            const textContent = await element.textContent(); // Get the raw text content
+            const numericValue = textContent?.match(/\d+/); // Extract numeric characters
+            const extractedValue = numericValue ? parseInt(numericValue[0], 10) : 0; // Parse as an integer or default to 0
+
+            /**
+             * Step 4: Retrieve the corresponding global total value based on the globalKey.
+             * 'ALL' corresponds to the size of a Map, while other keys use array length.
+             */
+            const globalValue =
+                globalKey === 'ALL'
+                    ? CreatePartsDatabasePage.globalTableData.ALL.size // Global value for "ALL" is the size of the Map
+                    : CreatePartsDatabasePage.globalTableData[globalKey].length; // Global value for other keys is array length
+
+            /**
+             * Step 5: Log and compare the extracted value with the global value.
+             * Logs informative messages for both matches and mismatches.
+             */
+            logger.info(`${globalKey}: extracted value = ${extractedValue}, global value = ${globalValue}`);
+            if (extractedValue !== globalValue) {
+                // Log an error if there is a mismatch
+                logger.error(`Mismatch for ${globalKey}: expected ${globalValue}, got ${extractedValue}`);
+            } else {
+                // Log success if the values match
+                logger.info(`Matched for ${globalKey}: ${extractedValue}`);
+            }
+        };
+
+
+        /**
+         * Compares the content of a "Cbeds" table on the web page with a predefined dataset.
+         * 
+         * This function extracts data from a table (of the CB group) on the web page, processes it,
+         * and compares it with an array stored in the global object. Mismatches between the table
+         * data and the array data are logged in detail for debugging purposes.
+         *
+         * @param {Locator} modalLocator - The locator for the modal containing the table.
+         * @param {string} tableId - The data-testid of the table to extract data from.
+         * @returns {Promise<void>} - A promise that resolves when the comparison is complete.
+         */
+        const compareItemsCB = async (
+            modalLocator: Locator,
+            tableId: string
+        ): Promise<void> => {
+            const globalKey = 'СБ'; // Define the global key for the CB group
+
+            // Locate the table inside the modal
+            const table = modalLocator.locator(`[data-testid="${tableId}"]`).last();
+
+            /**
+             * Step 1: Extract all rows from the table.
+             * These rows include the header row, which we will skip later.
+             */
+            const rows = await table.locator('tr').all();
+
+            /**
+             * Step 2: Find column indices for relevant data fields.
+             * These indices are used to locate specific cells within each row.
+             */
+            const partNoIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-CbedsTableHead-Designation');
+            const partNameIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-CbedsTableHead-Name');
+            const partCountIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-CbedsTableHead-Count');
+
+            /**
+             * Step 3: Process rows to extract data into an object.
+             * Each row corresponds to a part, and its data is organized by partNumber.
+             */
+            const tableData: { [partNumber: string]: { quantity: number; partName: string } } = {};
+            rows.shift(); // Skip the header row
+            for (const row of rows) {
+                // Extract all cells in the current row
+                const cells = await row.locator('td').all();
+
+                // Extract part-specific information from the respective cells
+                const partNumber = cells[partNoIndex] ? await cells[partNoIndex].innerText() : null;
+                const partName = cells[partNameIndex] ? await cells[partNameIndex].innerText() : null;
+                const quantity = cells[partCountIndex]
+                    ? parseInt(await cells[partCountIndex].innerText(), 10) // Parse quantity as an integer
+                    : null;
+
+                // Add the extracted data to tableData if all fields are valid
+                if (partNumber && partName && quantity !== null) {
+                    tableData[partNumber] = { quantity, partName };
+                } else {
+                    console.warn('Incomplete data found for a row, skipping...');
+                }
+            }
+
+            /**
+             * Step 4: Retrieve the global array data for comparison.
+             */
+            const arrayData = CreatePartsDatabasePage.globalTableData[globalKey];
+
+            if (Array.isArray(arrayData)) {
+                /**
+                 * Step 5: Compare table data with array data.
+                 */
+                for (const tableItemPartNumber in tableData) {
+                    const tableItem = tableData[tableItemPartNumber];
+
+                    // Find a matching item in the array
+                    const matchingArrayItem = arrayData.find(
+                        item =>
+                            item.partNumber === tableItemPartNumber &&
+                            item.name === tableItem.partName &&
+                            item.quantity === tableItem.quantity
+                    );
+
+                    if (!matchingArrayItem) {
+                        // Log mismatch details
+                        console.error(
+                            `Mismatch found: Part Number '${tableItemPartNumber}', Name '${tableItem.partName}', and Quantity '${tableItem.quantity}' exist in the table but not in the array.`
+                        );
+                    }
+                }
+
+                /**
+                 * Step 6: Compare array data with table data.
+                 */
+                for (const arrayItem of arrayData) {
+                    const matchingTableItem = tableData[arrayItem.partNumber];
+                    if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
+                        // Log mismatch details
+                        console.error(
+                            `Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
+                        );
+                    }
+                }
+            } else {
+                // Log error if the global array data is not an array
+                console.error(`Unsupported data type for globalKey: ${globalKey}`);
+            }
+
+            // Log completion of comparison
+            console.log(`Comparison for ${globalKey} complete.`);
+        };
+
+
+        /**
+         * Compares the content of a details table on the web page with a predefined dataset.
+         * 
+         * This function extracts data from a table (of the D group) on the web page,
+         * cleans up problematic nested rows and cells, and compares the extracted data
+         * with an existing array in the global object. It identifies mismatches and logs
+         * detailed error messages for debugging.
+         *
+         * @param {Locator} modalLocator - The locator for the modal containing the table.
+         * @param {string} tableId - The data-testid of the table to extract data from.
+         * @returns {Promise<void>} - A promise that resolves when the comparison is complete.
+         */
+        const compareItemsD = async (
+            modalLocator: Locator,
+            tableId: string
+        ): Promise<void> => {
+            const globalKey = 'Д'; // Define the global key for the D group
+
+            // Locate the table inside the modal
+            const table = modalLocator.locator(`[data-testid="${tableId}"]`).last();
+
+            /**
+             * Step 1: Clear problematic cells containing nested rows.
+             * This is necessary to avoid processing irrelevant data within <td> cells.
+             */
+            const problematicCells = await table.locator('td[data-testid^="ModalComplect-DetalsTableBody-WorkpieceCharacterization"]').all();
+            for (const cell of problematicCells) {
+                await cell.evaluate((node: HTMLElement) => {
+                    node.innerHTML = ''; // Clear out the inner HTML of the problematic cell
+                });
+            }
+
+            /**
+             * Step 2: Extract all rows from the table and filter out nested rows.
+             * Filters ensure that only valid top-level rows are processed.
+             */
+            let rows = await table.locator('tr').all();
+            const filteredRows = [];
+            for (const row of rows) {
+                const isNested = await row.evaluate((node: Element) => {
+                    // Check if the <tr> is a descendant of a <td>
+                    return node.closest('td') !== null;
+                });
+                if (!isNested) {
+                    filteredRows.push(row); // Only add rows that are not nested
+                }
+            }
+            rows = filteredRows;
+
+            /**
+             * Step 3: Find column indices for relevant data fields.
+             * These indices are used to locate specific cells within each row.
+             */
+            const parentPartIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-DetalsTableHead-CbedDesignation');
+            const partNoIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-DetalsTableHead-Designation');
+            const partNameIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-DetalsTableHead-Name');
+            const partMaterialIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-DetalsTableHead-Zag');
+            const partCountIndex = await shortagePage.findColumn(page, tableId, 'ModalComplect-DetalsTableHead-Count');
+
+            /**
+             * Step 4: Extract data from each row into an object for comparison.
+             */
+            const tableData: {
+                [partNumber: string]: {
+                    parentPartNumber: string;
+                    quantity: number;
+                    partName: string;
+                    partMaterial: string;
+                };
+            } = {};
+            rows.shift(); // Skip the header row
+            for (const row of rows) {
+                const cells = await row.locator('td').all();
+                const parentPartNumber = cells[parentPartIndex] ? await cells[parentPartIndex].innerText() : null;
+                const partNumber = cells[partNoIndex] ? await cells[partNoIndex].innerText() : null;
+                const partName = cells[partNameIndex] ? await cells[partNameIndex].innerText() : null;
+                const partMaterial = cells[partMaterialIndex] ? await cells[partMaterialIndex].innerText() : null;
+
+                // Extract and clean up quantity
+                const rawQuantityText = cells[partCountIndex]
+                    ? await cells[partCountIndex].innerText()
+                    : null;
+
+                let quantity = null;
+                if (rawQuantityText) {
+                    try {
+                        const cleanedQuantityText = rawQuantityText.trim().replace(/\D/g, ''); // Remove non-numeric characters
+                        quantity = cleanedQuantityText ? parseInt(cleanedQuantityText, 10) : null;
+                    } catch (error) {
+                        console.error(`Failed to parse quantity: ${rawQuantityText}`, error);
+                    }
+                }
+
+                if (parentPartNumber && partNumber && partName && partMaterial && quantity !== null) {
+                    tableData[partNumber] = { parentPartNumber, quantity, partName, partMaterial };
+                } else {
+                    console.warn('Incomplete data found for a row, skipping...');
+                }
+            }
+
+            /**
+             * Step 5: Fetch the array data from the global object and compare it with table data.
+             */
+            const arrayData = CreatePartsDatabasePage.globalTableData[globalKey];
+
+            if (Array.isArray(arrayData)) {
+                // Compare table data with array data
+                for (const tableItemPartNumber in tableData) {
+                    const tableItem = tableData[tableItemPartNumber];
+
+                    // Find a matching item in the array
+                    const matchingArrayItem = arrayData.find(
+                        item =>
+                            item.parentPartNumber === tableItem.parentPartNumber &&
+                            item.partNumber === tableItemPartNumber &&
+                            item.name === tableItem.partName &&
+                            item.material === tableItem.partMaterial &&
+                            item.quantity === tableItem.quantity
+                    );
+
+                    if (!matchingArrayItem) {
+                        const closestMatch = arrayData.find(item => item.partNumber === tableItemPartNumber);
+
+                        if (closestMatch) {
+                            console.error(
+                                `Mismatch found:\n` +
+                                `Table Entry => Parent: '${tableItem.parentPartNumber}', Part Number: '${tableItemPartNumber}', Name: '${tableItem.partName}', Material: '${tableItem.partMaterial}', Quantity: '${tableItem.quantity}'\n` +
+                                `Closest Array Entry => Parent: '${closestMatch.parentPartNumber}', Part Number: '${closestMatch.partNumber}', Name: '${closestMatch.name}', Material: '${closestMatch.material}', Quantity: '${closestMatch.quantity}'`
+                            );
+                        } else {
+                            console.error(
+                                `Mismatch found:\n` +
+                                `Table Entry => Parent: '${tableItem.parentPartNumber}', Part Number: '${tableItemPartNumber}', Name: '${tableItem.partName}', Material: '${tableItem.partMaterial}', Quantity: '${tableItem.quantity}'\n` +
+                                `No matching partNumber found in the array.`
+                            );
+                        }
+                    }
+                }
+
+                // Compare array data with table data
+                for (const arrayItem of arrayData) {
+                    const matchingTableItem = tableData[arrayItem.partNumber];
+                    if (
+                        !matchingTableItem ||
+                        matchingTableItem.parentPartNumber !== arrayItem.parentPartNumber ||
+                        matchingTableItem.partName !== arrayItem.name ||
+                        matchingTableItem.partMaterial !== arrayItem.material ||
+                        matchingTableItem.quantity !== arrayItem.quantity
+                    ) {
+                        console.error(
+                            `Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
+                        );
+                    }
+                }
+            } else {
+                console.error(`Unsupported data type for globalKey: ${globalKey}`);
+            }
+
+            logger.info(`Comparison for ${globalKey} complete.`);
+        };
+
+
+
+
+        // await allure.step('Step 2.1.1: Checking sections for duplicate rows', async () => {
+        //     // Perform duplicate checks
+        //     await checkForDuplicates(ASSEMBLY_UNIT_TABLE_ID, "Assembly Units", ASSEMBLY_UNIT_TABLE_PARTNO_ID, ASSEMBLY_UNIT_TABLE_NAME_ID);
+        //     await checkForDuplicates(DETAILS_TABLE_ID, "Details", DETAILS_TABLE_PARTNO_ID, DETAILS_TABLE_NAME_ID);
+        //     await checkForDuplicates(BUYMATERIALS_TABLE_ID, "Buy Materials", null, BUYMATERIALS_TABLE_NAME_ID);
+        //     await checkForDuplicates(MATERIALPARTS_TABLE_ID, "Material Parts", null, MATERIALPARTS_TABLE_NAME_ID);
+        //     await checkForDuplicates(CONSUMABLES_TABLE_ID, "Consumables", null, CONSUMABLES_TABLE_NAME_ID);
+        // });
+        // await allure.step('Step 2.1.2: Confirm that totals match', async () => {
+        //     // Compare totals
+        //     await compareTotals(modalLocator, ASSEMBLY_UNIT_TOTAL_LINE, 'СБ');
+        //     await compareTotals(modalLocator, DETAILS_TOTAL_LINE, 'Д');
+        //     await compareTotals(modalLocator, BUYMATERIALS_TOTAL_LINE, 'ПМ');
+        //     await compareTotals(modalLocator, MATERIALPARTS_TOTAL_LINE, 'МД');
+        //     await compareTotals(modalLocator, CONSUMABLES_TOTAL_LINE, 'РМ');
+        // });
+        await allure.step('Step 2.1.3: Verify СБ Line Items and quantity match the scanned ones', async () => {
+            // Compare totals
+            //await compareItemsCB(modalLocator, ASSEMBLY_UNIT_TABLE_ID);
+            await compareItemsD(modalLocator, DETAILS_TABLE_ID);
+            //await compareItems(modalLocator, CONSUMABLES_TABLE_ID, 'РМ');
+        });
+        // await allure.step('Step 2.1.4: Verify Д Line Items and quantity match the scanned ones', async () => {
+        //     // Compare totals
+        //     await compareTotals(modalLocator, ASSEMBLY_UNIT_TOTAL_LINE, 'СБ');
+        //     await compareTotals(modalLocator, DETAILS_TOTAL_LINE, 'Д');
+        //     await compareTotals(modalLocator, BUYMATERIALS_TOTAL_LINE, 'ПМ');
+        //     await compareTotals(modalLocator, MATERIALPARTS_TOTAL_LINE, 'МД');
+        //     await compareTotals(modalLocator, CONSUMABLES_TOTAL_LINE, 'РМ');
+        // });
+
     }
+
+
+
     async processProduct(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
         // Highlight and click the product row
         await row.evaluate((element) => {
@@ -217,12 +753,12 @@ export class CreatePartsDatabasePage extends PageObject {
             // Handle ALL group separately since it's a Map
             if (key === 'ALL') {
                 const totalCount = CreatePartsDatabasePage.globalTableData.ALL.size; // Count items in ALL (Map)
-                logger.info(`\nALL (Consolidated Items: ${totalCount}):`);
+                console.log(`\nALL (Consolidated Items: ${totalCount}):`);
                 console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
             } else {
                 const groupItems = CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData];
                 const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Safely count items in the group
-                logger.info(`\n${key} (Items in this Group: ${totalCount}):`);
+                console.log(`\n${key} (Items in this Group: ${totalCount}):`);
                 console.table(groupItems);
             }
         });
