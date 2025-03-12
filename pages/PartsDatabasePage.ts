@@ -680,6 +680,235 @@ export class CreatePartsDatabasePage extends PageObject {
             logger.info(`Comparison for ${globalKey} complete.`);
         };
 
+        /**
+         * Compares the content of a "Consumable Materials" table on the web page with a predefined dataset.
+         * 
+         * This function extracts the name and quantity data from a consumable materials table
+         * and compares it with the corresponding global dataset. Mismatches are logged for debugging.
+         *
+         * @param {Locator} modalLocator - The locator for the modal containing the table.
+         * @param {string} tableId - The data-testid of the table to validate.
+         * @returns {Promise<void>} - A promise that resolves when the comparison is complete.
+         */
+        const compareItemsCon = async (
+            modalLocator: Locator,
+            tableId: string
+        ): Promise<void> => {
+            const globalKey = 'РМ'; // Define the global key for the consumable materials group
+
+            // Locate the table inside the modal
+            const table = modalLocator.locator(`[data-testid="${tableId}"]`).last();
+
+            /**
+             * Step 1: Extract all rows from the table.
+             * These rows include the header row, which we will skip later.
+             */
+            const rows = await table.locator('tr').all();
+
+            /**
+             * Step 2: Find column indices for relevant data fields.
+             * These indices are used to locate specific cells within each row.
+             */
+            const nameIndex = await shortagePage.findColumn(
+                page,
+                tableId,
+                'ModalComplect-ConsumableMaterialsTableHead-Name'
+            );
+            const quantityIndex = await shortagePage.findColumn(
+                page,
+                tableId,
+                'ModalComplect-ConsumableMaterialsTableHead-Count'
+            );
+
+            /**
+             * Step 3: Process rows to extract data into an object.
+             * Each row corresponds to a consumable material, and its data is organized by name.
+             */
+            const tableData: { [materialName: string]: { quantity: number } } = {};
+            rows.shift(); // Skip the header row
+            for (const row of rows) {
+                // Extract all cells in the current row
+                const cells = await row.locator('td').all();
+
+                // Extract specific information from the respective cells
+                const materialName = cells[nameIndex] ? await cells[nameIndex].innerText() : null;
+                const quantity = cells[quantityIndex]
+                    ? parseInt(await cells[quantityIndex].innerText(), 10) // Parse quantity as an integer
+                    : null;
+
+                // Add the extracted data to tableData if all fields are valid
+                if (materialName && quantity !== null) {
+                    tableData[materialName] = { quantity };
+                } else {
+                    console.warn('Incomplete data found for a row, skipping...');
+                }
+            }
+
+            /**
+             * Step 4: Retrieve the global array data for comparison.
+             */
+            const arrayData = CreatePartsDatabasePage.globalTableData[globalKey];
+
+            if (Array.isArray(arrayData)) {
+                /**
+                 * Step 5: Compare table data with array data.
+                 */
+                for (const tableItemName in tableData) {
+                    const tableItem = tableData[tableItemName];
+
+                    // Find a matching item in the array
+                    const matchingArrayItem = arrayData.find(
+                        item =>
+                            item.name === tableItemName &&
+                            item.quantity === tableItem.quantity
+                    );
+
+                    if (!matchingArrayItem) {
+                        // Log mismatch details
+                        console.error(
+                            `Mismatch found: Name '${tableItemName}' and Quantity '${tableItem.quantity}' exist in the table but not in the array.`
+                        );
+                    }
+                }
+
+                /**
+                 * Step 6: Compare array data with table data.
+                 */
+                for (const arrayItem of arrayData) {
+                    const matchingTableItem = tableData[arrayItem.name];
+                    if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
+                        // Log mismatch details
+                        console.error(
+                            `Mismatch found: Name '${arrayItem.name}' and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
+                        );
+                    }
+                }
+            } else {
+                // Log error if the global array data is not an array
+                console.error(`Unsupported data type for globalKey: ${globalKey}`);
+            }
+
+            // Log completion of comparison
+            console.log(`Comparison for ${globalKey} complete.`);
+        };
+
+        /**
+         * Confirms that all materials listed in the Материалы для деталей table
+         * exist in the materials column of the Детали table.
+         *
+         * This function checks that every material from the Материалы для деталей table
+         * is present in the materials column of the Детали table, without comparing quantities.
+         *
+         * @param {Locator} modalLocator - The locator for the modal containing the tables.
+         * @param {string} detailsTableId - The data-testid of the Детали table.
+         * @param {string} materialsTableId - The data-testid of the Материалы для деталей table.
+         * @returns {Promise<void>} - A promise that resolves when the validation is complete.
+         */
+        const validateMaterialExistence = async (
+            modalLocator: Locator,
+            detailsTableId: string,
+            materialsTableId: string
+        ): Promise<void> => {
+            try {
+                /**
+                 * Step 1: Locate the Детали table, ensure readiness, and extract materials.
+                 */
+                const detailsTable = modalLocator.locator(`[data-testid="${detailsTableId}"]`).last();
+                await detailsTable.waitFor({ state: 'visible', timeout: 30000 });
+
+                let detailsRows = await detailsTable.locator('tr').all();
+
+                // Filter out nested rows from the Детали table
+                const filteredDetailsRows = [];
+                for (const row of detailsRows) {
+                    const isNested = await row.evaluate((node: Element) => node.closest('td') !== null);
+                    if (!isNested) {
+                        filteredDetailsRows.push(row);
+                    }
+                }
+                detailsRows = filteredDetailsRows;
+
+                // Find column index for the materials in the Детали table
+                const detailsMaterialNameIndex = await shortagePage.findColumn(
+                    page,
+                    detailsTableId,
+                    'ModalComplect-DetalsTableHead-Zag'
+                );
+                if (detailsMaterialNameIndex === -1) {
+                    throw new Error('Material column not found in the Детали table.');
+                }
+
+                // Extract all materials from the Детали table
+                const detailsMaterials = new Set<string>();
+                detailsRows.shift(); // Skip the header row
+                for (const row of detailsRows) {
+                    const cells = await row.locator('td').all();
+                    const materialName = cells[detailsMaterialNameIndex]
+                        ? await cells[detailsMaterialNameIndex].innerText()
+                        : null;
+
+                    if (materialName) {
+                        detailsMaterials.add(materialName.trim());
+                    }
+                }
+
+                /**
+                 * Step 2: Locate the Материалы для деталей table, ensure readiness, and extract materials.
+                 */
+                const materialsTable = modalLocator.locator(`[data-testid="${materialsTableId}"]`).last();
+                await materialsTable.waitFor({ state: 'visible', timeout: 30000 });
+
+                const materialsRows = await materialsTable.locator('tr').all();
+
+                // Find column index for materials in the Материалы для деталей table
+                const materialsTableNameIndex = await shortagePage.findColumn(
+                    page,
+                    materialsTableId,
+                    'ModalComplect-DetailMaterialsTableHead-Name'
+                );
+                if (materialsTableNameIndex === -1) {
+                    throw new Error('Material column not found in the Материалы для деталей table.');
+                }
+
+                // Extract all materials from the Материалы для деталей table
+                const materialsList = [];
+                materialsRows.shift(); // Skip the header row
+                for (const row of materialsRows) {
+                    const cells = await row.locator('td').all();
+                    const materialName = cells[materialsTableNameIndex]
+                        ? await cells[materialsTableNameIndex].innerText()
+                        : null;
+
+                    if (materialName) {
+                        materialsList.push(materialName.trim());
+                    }
+                }
+
+                /**
+                 * Step 3: Validate that all materials in Материалы для деталей exist in the Детали table.
+                 */
+                let hasMismatch = false;
+                for (const material of materialsList) {
+                    if (!detailsMaterials.has(material)) {
+                        console.error(`Material '${material}' from Материалы для деталей table is not found in the Детали table.`);
+                        hasMismatch = true;
+                    }
+                }
+
+                /**
+                 * Step 4: Log the final result of the validation.
+                 */
+                if (!hasMismatch) {
+                    console.log('All materials in Материалы для деталей exist in the Детали table.');
+                } else {
+                    console.error('Some materials in Материалы для деталей are missing in the Детали table.');
+                }
+            } catch (error) {
+                console.error('An error occurred during material validation:', error);
+            }
+        };
+
+
 
 
 
@@ -702,8 +931,10 @@ export class CreatePartsDatabasePage extends PageObject {
         await allure.step('Step 2.1.3: Verify СБ Line Items and quantity match the scanned ones', async () => {
             // Compare totals
             //await compareItemsCB(modalLocator, ASSEMBLY_UNIT_TABLE_ID);
-            await compareItemsD(modalLocator, DETAILS_TABLE_ID);
-            //await compareItems(modalLocator, CONSUMABLES_TABLE_ID, 'РМ');
+            //await compareItemsD(modalLocator, DETAILS_TABLE_ID);
+            //await compareItemsCon(modalLocator, CONSUMABLES_TABLE_ID);
+            await validateMaterialExistence(modalLocator, DETAILS_TABLE_ID, MATERIALPARTS_TABLE_ID);
+
         });
         // await allure.step('Step 2.1.4: Verify Д Line Items and quantity match the scanned ones', async () => {
         //     // Compare totals
