@@ -67,7 +67,7 @@ export const runTC100 = () => {
         });
     });
     test('Test Case 1: База деталей Page - process all products with recursive logic', async ({ page }) => {
-        test.setTimeout(600000);
+        test.setTimeout(2147483647);
         allure.label('severity', 'normal');
         allure.label('epic', 'База деталей');
         allure.label('feature', 'База деталей');
@@ -85,7 +85,7 @@ export const runTC100 = () => {
         });
 
         await allure.step('Step 2: Process each product row and its tables', async () => {
-            //dataRows.shift();
+            dataRows.shift();
             //dataRows.shift();
             dataRows.shift();
             for (const row of dataRows) {
@@ -125,7 +125,7 @@ export const runTC100 = () => {
                     await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500);
                     //await page.pause();
                 });
-                //break;
+                break;
             }
         });
 

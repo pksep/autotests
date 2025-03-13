@@ -34,13 +34,13 @@ export class CreatePartsDatabasePage extends PageObject {
         ALL: new Map<string, Item>() // Consolidated details
     };
     static resetGlobalTableData(): void {
-        globalTableData.СБ.length = 0; // Clear Сборочные единицы
-        globalTableData.Д.length = 0; // Clear Детали
-        globalTableData.ПМ.length = 0; // Clear Покупные материалы
-        globalTableData.МД.length = 0; // Clear Материалы для деталей
-        globalTableData.РМ.length = 0; // Clear Расходные материалы
-        globalTableData.ПД.length = 0; // Clear Расходные материалы
-        globalTableData.ALL.clear();  // Clear the Map
+        CreatePartsDatabasePage.globalTableData.СБ.length = 0; // Clear Сборочные единицы
+        CreatePartsDatabasePage.globalTableData.Д.length = 0; // Clear Детали
+        CreatePartsDatabasePage.globalTableData.ПМ.length = 0; // Clear Покупные материалы
+        CreatePartsDatabasePage.globalTableData.МД.length = 0; // Clear Материалы для деталей
+        CreatePartsDatabasePage.globalTableData.РМ.length = 0; // Clear Расходные материалы
+        CreatePartsDatabasePage.globalTableData.ПД.length = 0; // Clear Расходные материалы
+        CreatePartsDatabasePage.globalTableData.ALL.clear();  // Clear the Map
     }
     /**
      * Process table data to group items by their types (СБ, Д, ПД, РМ) and create an ALL group.
@@ -144,7 +144,9 @@ export class CreatePartsDatabasePage extends PageObject {
                 let quantity = parseInt(await row.locator('td:nth-child(5)').textContent() ?? '0', 10);
 
                 logger.info(`Item details: id=${id}, partNumber=${partNumber}, name=${name}, quantity=${quantity}, data-testid=${rowTestId}`);
-
+                if (quantity < 1) {
+                    logger.error(`Skipped row ${i}: Invalid Quantity value: Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
+                }
                 if (id && name && quantity) {
                     const item: Item = {
                         id: id.trim(),
@@ -242,7 +244,7 @@ export class CreatePartsDatabasePage extends PageObject {
             partNumberId: string | null,
             nameId: string
         ): Promise<void> => {
-            console.log("Started checkForDuplicates function");
+            console.log(`Started checkForDuplicates function for ${tableName}`);
             /**
              * Step 1: Locate the table on the web page and ensure it is attached to the DOM.
              */
@@ -373,7 +375,7 @@ export class CreatePartsDatabasePage extends PageObject {
             testId: string,
             globalKey: keyof typeof CreatePartsDatabasePage.globalTableData
         ): Promise<void> => {
-            console.log("Started compareTotals function");
+            console.log(`Started compareTotals function for group ${globalKey}`);
             /**
              * Step 1: Locate the specific element within the modal.
              * Wait for it to be attached to the DOM to ensure it's ready for interaction.
@@ -1032,10 +1034,11 @@ export class CreatePartsDatabasePage extends PageObject {
         const groups = await this.processTableData(table, title, parentQuantity); // Process the main table
 
         // Handle rows in each group
+        await this.processSBGroupRows(groups.СБ, page, shortagePage, parentQuantity);
         await this.processGroupRows(groups.Д, 'Д', page, parentQuantity);
         await this.processGroupRows(groups.ПД, 'ПД', page, parentQuantity);
         await this.processGroupRows(groups.РМ, 'РМ', page, parentQuantity);
-        await this.processSBGroupRows(groups.СБ, page, shortagePage, parentQuantity);
+
 
         return groups; // Return all processed data
     }
@@ -1119,6 +1122,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     elementValue = await el.textContent();
                     if (!elementValue) {
                         logger.error("Incorrect Product Material not found for Type Д");
+                        logger.error(JSON.stringify(item, null, 2));
                     } else {
                         item.material = elementValue;
                     }
