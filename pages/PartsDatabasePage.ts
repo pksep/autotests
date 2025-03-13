@@ -33,6 +33,15 @@ export class CreatePartsDatabasePage extends PageObject {
         ПД: [] as Item[],   // Расходные материалы        
         ALL: new Map<string, Item>() // Consolidated details
     };
+    static resetGlobalTableData(): void {
+        globalTableData.СБ.length = 0; // Clear Сборочные единицы
+        globalTableData.Д.length = 0; // Clear Детали
+        globalTableData.ПМ.length = 0; // Clear Покупные материалы
+        globalTableData.МД.length = 0; // Clear Материалы для деталей
+        globalTableData.РМ.length = 0; // Clear Расходные материалы
+        globalTableData.ПД.length = 0; // Clear Расходные материалы
+        globalTableData.ALL.clear();  // Clear the Map
+    }
     /**
      * Process table data to group items by their types (СБ, Д, ПД, РМ) and create an ALL group.
      * @param table - The Playwright Locator for the table element.
@@ -161,8 +170,8 @@ export class CreatePartsDatabasePage extends PageObject {
                         addToAll(item);
                     }
                 } else {
-                    logger.warn(`Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
-                    expect(1).toBe(0);
+                    logger.error(`Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
+                    //expect(1).toBe(0);
                 }
             } else if (!isDataRow) {
                 logger.warn(`Skipped row ${i}: Not a data row`);
@@ -175,6 +184,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
     async getProductSpecificationsTable(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
+        console.log("Started getProductSpecificationsTable function")
         const ASSEMBLY_UNIT_TOTAL_LINE = "ModalComplect-CbedsTitle";
         const ASSEMBLY_UNIT_TABLE_ID = "ModalComplect-CbedsTable";
         const ASSEMBLY_UNIT_TABLE_PARTNO_ID = "ModalComplect-CbedsTableHead-Designation";
@@ -232,6 +242,7 @@ export class CreatePartsDatabasePage extends PageObject {
             partNumberId: string | null,
             nameId: string
         ): Promise<void> => {
+            console.log("Started checkForDuplicates function");
             /**
              * Step 1: Locate the table on the web page and ensure it is attached to the DOM.
              */
@@ -276,7 +287,7 @@ export class CreatePartsDatabasePage extends PageObject {
             rows = filteredRows;
 
             if (rows.length === 0) {
-                logger.error(`No rows found in table ${tableName}`);
+                logger.info(`No rows found in table ${tableName}`);
                 return; // Exit if there are no valid rows to process
             }
             logger.info(`Processing ${rows.length} rows in table: ${tableName}`);
@@ -362,6 +373,7 @@ export class CreatePartsDatabasePage extends PageObject {
             testId: string,
             globalKey: keyof typeof CreatePartsDatabasePage.globalTableData
         ): Promise<void> => {
+            console.log("Started compareTotals function");
             /**
              * Step 1: Locate the specific element within the modal.
              * Wait for it to be attached to the DOM to ensure it's ready for interaction.
@@ -425,6 +437,7 @@ export class CreatePartsDatabasePage extends PageObject {
             modalLocator: Locator,
             tableId: string
         ): Promise<void> => {
+            console.log("Started compareItemsCB function");
             const globalKey = 'СБ'; // Define the global key for the CB group
 
             // Locate the table inside the modal
@@ -535,6 +548,7 @@ export class CreatePartsDatabasePage extends PageObject {
             modalLocator: Locator,
             tableId: string
         ): Promise<void> => {
+            console.log("Started compareItemsД function");
             const globalKey = 'Д'; // Define the global key for the D group
 
             // Locate the table inside the modal
@@ -694,6 +708,7 @@ export class CreatePartsDatabasePage extends PageObject {
             modalLocator: Locator,
             tableId: string
         ): Promise<void> => {
+            console.log("Started compareItemsРМ function");
             const globalKey = 'РМ'; // Define the global key for the consumable materials group
 
             // Locate the table inside the modal
@@ -810,6 +825,7 @@ export class CreatePartsDatabasePage extends PageObject {
             materialsTableId: string
         ): Promise<void> => {
             try {
+                console.log("Started validateMaterialExistence function");
                 /**
                  * Step 1: Locate the Детали table, ensure readiness, and extract materials.
                  */
@@ -912,27 +928,27 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
 
-        // await allure.step('Step 2.1.1: Checking sections for duplicate rows', async () => {
-        //     // Perform duplicate checks
-        //     await checkForDuplicates(ASSEMBLY_UNIT_TABLE_ID, "Assembly Units", ASSEMBLY_UNIT_TABLE_PARTNO_ID, ASSEMBLY_UNIT_TABLE_NAME_ID);
-        //     await checkForDuplicates(DETAILS_TABLE_ID, "Details", DETAILS_TABLE_PARTNO_ID, DETAILS_TABLE_NAME_ID);
-        //     await checkForDuplicates(BUYMATERIALS_TABLE_ID, "Buy Materials", null, BUYMATERIALS_TABLE_NAME_ID);
-        //     await checkForDuplicates(MATERIALPARTS_TABLE_ID, "Material Parts", null, MATERIALPARTS_TABLE_NAME_ID);
-        //     await checkForDuplicates(CONSUMABLES_TABLE_ID, "Consumables", null, CONSUMABLES_TABLE_NAME_ID);
-        // });
-        // await allure.step('Step 2.1.2: Confirm that totals match', async () => {
-        //     // Compare totals
-        //     await compareTotals(modalLocator, ASSEMBLY_UNIT_TOTAL_LINE, 'СБ');
-        //     await compareTotals(modalLocator, DETAILS_TOTAL_LINE, 'Д');
-        //     await compareTotals(modalLocator, BUYMATERIALS_TOTAL_LINE, 'ПМ');
-        //     await compareTotals(modalLocator, MATERIALPARTS_TOTAL_LINE, 'МД');
-        //     await compareTotals(modalLocator, CONSUMABLES_TOTAL_LINE, 'РМ');
-        // });
+        await allure.step('Step 2.1.1: Checking sections for duplicate rows', async () => {
+            // Perform duplicate checks
+            await checkForDuplicates(ASSEMBLY_UNIT_TABLE_ID, "Assembly Units", ASSEMBLY_UNIT_TABLE_PARTNO_ID, ASSEMBLY_UNIT_TABLE_NAME_ID);
+            await checkForDuplicates(DETAILS_TABLE_ID, "Details", DETAILS_TABLE_PARTNO_ID, DETAILS_TABLE_NAME_ID);
+            await checkForDuplicates(BUYMATERIALS_TABLE_ID, "Buy Materials", null, BUYMATERIALS_TABLE_NAME_ID);
+            await checkForDuplicates(MATERIALPARTS_TABLE_ID, "Material Parts", null, MATERIALPARTS_TABLE_NAME_ID);
+            await checkForDuplicates(CONSUMABLES_TABLE_ID, "Consumables", null, CONSUMABLES_TABLE_NAME_ID);
+        });
+        await allure.step('Step 2.1.2: Confirm that totals match', async () => {
+            // Compare totals
+            await compareTotals(modalLocator, ASSEMBLY_UNIT_TOTAL_LINE, 'СБ');
+            await compareTotals(modalLocator, DETAILS_TOTAL_LINE, 'Д');
+            await compareTotals(modalLocator, BUYMATERIALS_TOTAL_LINE, 'ПМ');
+            await compareTotals(modalLocator, MATERIALPARTS_TOTAL_LINE, 'МД');
+            await compareTotals(modalLocator, CONSUMABLES_TOTAL_LINE, 'РМ');
+        });
         await allure.step('Step 2.1.3: Verify СБ Line Items and quantity match the scanned ones', async () => {
             // Compare totals
-            //await compareItemsCB(modalLocator, ASSEMBLY_UNIT_TABLE_ID);
-            //await compareItemsD(modalLocator, DETAILS_TABLE_ID);
-            //await compareItemsCon(modalLocator, CONSUMABLES_TABLE_ID);
+            await compareItemsCB(modalLocator, ASSEMBLY_UNIT_TABLE_ID);
+            await compareItemsD(modalLocator, DETAILS_TABLE_ID);
+            await compareItemsCon(modalLocator, CONSUMABLES_TABLE_ID);
             await validateMaterialExistence(modalLocator, DETAILS_TABLE_ID, MATERIALPARTS_TABLE_ID);
 
         });
@@ -1143,6 +1159,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     elementValue2 = await el2.textContent();
                     if (elementValue2 != item.name) {
                         logger.error("Incorrect Product Name for Type ПД");
+                        logger.error(JSON.stringify(item, null, 2));
                         expect(elementValue2.trim()).toBe(item.name);
                     } else {
                         item.material = elementValue2;

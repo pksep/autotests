@@ -86,9 +86,23 @@ export const runTC100 = () => {
 
         await allure.step('Step 2: Process each product row and its tables', async () => {
             //dataRows.shift();
+            //dataRows.shift();
             dataRows.shift();
             for (const row of dataRows) {
+                const rowHtml = await row.evaluate((el: Element) => el.outerHTML);
+                const articleLocator = row.locator('[data-testid="TableProduct-TableArticle"]');
+                const nameLocator = row.locator('[data-testid="TableProduct-TableName"]');
 
+                // Extract the text content of the article and name
+                const article = await articleLocator.textContent();
+                const name = await nameLocator.textContent();
+
+                // Log the output in the required format
+                if (article && name) {
+                    console.log(`Processing product: ${article.trim()} - ${name.trim()}`);
+                } else {
+                    console.error('Failed to extract product information from the row.');
+                }
                 const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
 
                 // Extract the text content of the designation field
@@ -107,9 +121,11 @@ export const runTC100 = () => {
                     // Extract the text content of the designation field
                     const designation = await designationLocator.textContent() ?? '';
                     await shortagePage.getProductSpecificationsTable(row, shortagePage, page, designation);
-
+                    await page.mouse.click(1, 1);
+                    await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500);
+                    //await page.pause();
                 });
-                break;
+                //break;
             }
         });
 
