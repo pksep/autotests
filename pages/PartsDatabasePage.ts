@@ -29,8 +29,8 @@ export class CreatePartsDatabasePage extends PageObject {
         Д: [] as Item[],    // Детали
         ПМ: [] as Item[],   // Покупные материалы
         МД: [] as Item[],   // Материалы для деталей
+        ПД: [] as Item[],   // Расходные материалы                
         РМ: [] as Item[],   // Расходные материалы
-        ПД: [] as Item[],   // Расходные материалы        
         ALL: new Map<string, Item>() // Consolidated details
     };
     static resetGlobalTableData(): void {
@@ -78,29 +78,27 @@ export class CreatePartsDatabasePage extends PageObject {
             ALL: new Map()
         };
 
-        // Helper function to add to ALL group using concatenated `partNumber` and `name` as the unique key
+        // Helper function to add to ALL group using a unique key
         const addToAll = (item: Item) => {
-            const uniqueKey = `${item.partNumber} ${item.partNumber} ${item.name}`.trim();
+            const uniqueKey = `${item.partNumber} ${item.name}`.trim();
             const existingItem = groups.ALL.get(uniqueKey);
 
-            // Update the groups.ALL map
             if (existingItem) {
-                existingItem.quantity;
+                existingItem.quantity += item.quantity; // Update quantity for duplicates
             } else {
                 groups.ALL.set(uniqueKey, item);
             }
             logger.info(`ALL group updated: Current size = ${groups.ALL.size}`);
 
-            // Also update the global ALL map
+            // Update the global ALL map
             const globalExistingItem = CreatePartsDatabasePage.globalTableData.ALL.get(uniqueKey);
             if (globalExistingItem) {
-                globalExistingItem.quantity;
+                globalExistingItem.quantity += item.quantity;
             } else {
                 CreatePartsDatabasePage.globalTableData.ALL.set(uniqueKey, item);
             }
             logger.info(`Global ALL group updated: Current size = ${CreatePartsDatabasePage.globalTableData.ALL.size}`);
         };
-
 
         // Initialize the first group as 'СБ' by default (header in <thead>)
         let currentGroup: keyof typeof groups = 'СБ';
@@ -146,7 +144,9 @@ export class CreatePartsDatabasePage extends PageObject {
                 logger.info(`Item details: id=${id}, partNumber=${partNumber}, name=${name}, quantity=${quantity}, data-testid=${rowTestId}`);
                 if (quantity < 1) {
                     logger.error(`Skipped row ${i}: Invalid Quantity value: Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
+                    continue;
                 }
+
                 if (id && name && quantity) {
                     const item: Item = {
                         id: id.trim(),
@@ -156,13 +156,30 @@ export class CreatePartsDatabasePage extends PageObject {
                         dataTestId: rowTestId,
                         material: '',
                         quantity
-
                     };
 
                     // Add item to the current group
                     groups[currentGroup].push(item);
+
                     if (Array.isArray(CreatePartsDatabasePage.globalTableData[currentGroup as keyof typeof CreatePartsDatabasePage.globalTableData])) {
-                        (CreatePartsDatabasePage.globalTableData[currentGroup as keyof typeof CreatePartsDatabasePage.globalTableData] as Item[]).push(item);
+                        if (currentGroup === 'ПД') {
+                            let isDuplicate = false;
+                            for (const row of CreatePartsDatabasePage.globalTableData[currentGroup]) {
+                                if (row.name.trim().toLowerCase() === item.material.trim().toLowerCase()) {
+
+                                    row.quantity += item.quantity; // Update quantity for duplicates
+                                    isDuplicate = true;
+                                    break;
+                                }
+                            }
+
+                            if (!isDuplicate) {
+                                (CreatePartsDatabasePage.globalTableData[currentGroup] as Item[]).push(item);
+                                logger.info(`Added new item to ПД group: "${item.material}"`);
+                            }
+                        } else {
+                            (CreatePartsDatabasePage.globalTableData[currentGroup as keyof typeof CreatePartsDatabasePage.globalTableData] as Item[]).push(item);
+                        }
                     }
 
                     logger.info(`Added item to group ${currentGroup}: ${JSON.stringify(item)}`);
@@ -173,7 +190,6 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                 } else {
                     logger.error(`Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
-                    //expect(1).toBe(0);
                 }
             } else if (!isDataRow) {
                 logger.warn(`Skipped row ${i}: Not a data row`);
@@ -183,6 +199,7 @@ export class CreatePartsDatabasePage extends PageObject {
         logger.info(`Final groups: СБ=${groups.СБ.length}, Д=${groups.Д.length}, ПД=${groups.ПД.length}, РМ=${groups.РМ.length}, ALL size=${groups.ALL.size}`);
         return groups;
     }
+
 
 
     async getProductSpecificationsTable(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
@@ -261,7 +278,8 @@ export class CreatePartsDatabasePage extends PageObject {
             const nameColumnIndex = await shortagePage.findColumn(page, tableId, nameId);
 
             if (nameColumnIndex === -1 || (partNumberId && designationColumnIndex === -1)) {
-                logger.error(`Could not find required columns in ${tableName}`);
+                console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
+                console.error(`Could not find required columns in ${tableName}`);
                 return; // Exit if required columns cannot be found
             }
 
@@ -273,6 +291,7 @@ export class CreatePartsDatabasePage extends PageObject {
             const filteredRows = [];
             for (const row of rows) {
                 const isNested = await row.evaluate((node: Element) => {
+                    console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
                     // Check if the <tr> is a descendant of a <td>
                     return node.closest('td') !== null;
                 });
@@ -289,7 +308,8 @@ export class CreatePartsDatabasePage extends PageObject {
             rows = filteredRows;
 
             if (rows.length === 0) {
-                logger.info(`No rows found in table ${tableName}`);
+                console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
+                console.log(`No rows found in table ${tableName}`);
                 return; // Exit if there are no valid rows to process
             }
             logger.info(`Processing ${rows.length} rows in table: ${tableName}`);
@@ -348,13 +368,17 @@ export class CreatePartsDatabasePage extends PageObject {
              * Step 7: Log duplicate entries and their counts.
              */
             if (duplicates.length > 0) {
-                logger.error(`Duplicates found in ${tableName}: ${duplicates}`);
-                logger.error(
+                console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
+                console.error(`Duplicates found in ${tableName}: ${duplicates}`);
+                console.error(
                     `Duplicate counts: ${Array.from(seen.entries()).filter(([key, count]) => count > 1)}`
                 );
             } else {
                 logger.info(`No duplicates found in ${tableName}`);
             }
+
+            console.log('%c✔️  Completed checkForDuplicates function for group СБ', 'color: green; font-weight: bold;');
+
         };
 
 
@@ -415,11 +439,13 @@ export class CreatePartsDatabasePage extends PageObject {
              */
             logger.info(`${globalKey}: extracted value = ${extractedValue}, global value = ${globalValue}`);
             if (extractedValue !== globalValue) {
+                console.log('%c❌ Completed compareTotals function for group СБ', 'color: red; font-weight: bold;');
                 // Log an error if there is a mismatch
                 logger.error(`Mismatch for ${globalKey}: expected ${globalValue}, got ${extractedValue}`);
             } else {
                 // Log success if the values match
                 logger.info(`Matched for ${globalKey}: ${extractedValue}`);
+                console.log('%c✔️  Completed compareTotals function for group СБ', 'color: green; font-weight: bold;');
             }
         };
 
@@ -518,19 +544,24 @@ export class CreatePartsDatabasePage extends PageObject {
                 for (const arrayItem of arrayData) {
                     const matchingTableItem = tableData[arrayItem.partNumber];
                     if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
+                        console.log('%c❌ Completed compareItemsCB function for group СБ', 'color: red; font-weight: bold;');
                         // Log mismatch details
                         console.error(
                             `Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
                         );
+                        console.error(tableData[arrayItem.partNumber]);
+                        console.error(arrayItem);
                     }
                 }
             } else {
+                console.log('%c❌ Completed compareItemsCB function for group СБ', 'color: red; font-weight: bold;');
                 // Log error if the global array data is not an array
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             // Log completion of comparison
             console.log(`Comparison for ${globalKey} complete.`);
+            console.log('%c✔️  Completed compareItemsCB function for group СБ', 'color: green; font-weight: bold;');
         };
 
 
@@ -648,7 +679,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     // Find a matching item in the array
                     const matchingArrayItem = arrayData.find(
                         item =>
-                            item.parentPartNumber === tableItem.parentPartNumber &&
+                            //item.parentPartNumber === tableItem.parentPartNumber &&
                             item.partNumber === tableItemPartNumber &&
                             item.name === tableItem.partName &&
                             item.material === tableItem.partMaterial &&
@@ -684,16 +715,19 @@ export class CreatePartsDatabasePage extends PageObject {
                         matchingTableItem.partMaterial !== arrayItem.material ||
                         matchingTableItem.quantity !== arrayItem.quantity
                     ) {
+                        console.log('%c❌ Completed compareItemsD function for group СБ', 'color: red; font-weight: bold;');
                         console.error(
                             `Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
                         );
                     }
                 }
             } else {
+                console.log('%c❌ Completed compareItemsD function for group СБ', 'color: red; font-weight: bold;');
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             logger.info(`Comparison for ${globalKey} complete.`);
+            console.log('%c✔️  Completed compareItemsD function for group СБ', 'color: green; font-weight: bold;');
         };
 
         /**
@@ -794,6 +828,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 for (const arrayItem of arrayData) {
                     const matchingTableItem = tableData[arrayItem.name];
                     if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
+                        console.log('%c❌ Completed compareItemsCon function for group СБ', 'color: red; font-weight: bold;');
                         // Log mismatch details
                         console.error(
                             `Mismatch found: Name '${arrayItem.name}' and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
@@ -801,12 +836,14 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                 }
             } else {
+                console.log('%c❌ Completed compareItemsCon function for group СБ', 'color: red; font-weight: bold;');
                 // Log error if the global array data is not an array
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             // Log completion of comparison
             console.log(`Comparison for ${globalKey} complete.`);
+            console.log('%c✔️  Completed compareItemsCon function for group СБ', 'color: green; font-weight: bold;');
         };
 
         /**
@@ -908,6 +945,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 let hasMismatch = false;
                 for (const material of materialsList) {
                     if (!detailsMaterials.has(material)) {
+                        console.log('%c❌ Completed validateMaterialExistence function for group СБ', 'color: red; font-weight: bold;');
                         console.error(`Material '${material}' from Материалы для деталей table is not found in the Детали table.`);
                         hasMismatch = true;
                     }
@@ -917,11 +955,14 @@ export class CreatePartsDatabasePage extends PageObject {
                  * Step 4: Log the final result of the validation.
                  */
                 if (!hasMismatch) {
+                    console.log('%c✔️  Completed validateMaterialExistence function for group СБ', 'color: green; font-weight: bold;');
                     console.log('All materials in Материалы для деталей exist in the Детали table.');
                 } else {
+                    console.log('%c❌ Completed validateMaterialExistence function for group СБ', 'color: red; font-weight: bold;');
                     console.error('Some materials in Материалы для деталей are missing in the Детали table.');
                 }
             } catch (error) {
+                console.log('%c❌ Completed validateMaterialExistence function for group СБ', 'color: red; font-weight: bold;');
                 console.error('An error occurred during material validation:', error);
             }
         };
@@ -942,15 +983,15 @@ export class CreatePartsDatabasePage extends PageObject {
             // Compare totals
             await compareTotals(modalLocator, ASSEMBLY_UNIT_TOTAL_LINE, 'СБ');
             await compareTotals(modalLocator, DETAILS_TOTAL_LINE, 'Д');
-            await compareTotals(modalLocator, BUYMATERIALS_TOTAL_LINE, 'ПМ');
+            await compareTotals(modalLocator, BUYMATERIALS_TOTAL_LINE, 'ПД');//.2025-03-13 16:56:30 [error]: Mismatch for ПМ: expected 0, got 1 Покупные материалы
             await compareTotals(modalLocator, MATERIALPARTS_TOTAL_LINE, 'МД');
             await compareTotals(modalLocator, CONSUMABLES_TOTAL_LINE, 'РМ');
         });
         await allure.step('Step 2.1.3: Verify СБ Line Items and quantity match the scanned ones', async () => {
             // Compare totals
-            await compareItemsCB(modalLocator, ASSEMBLY_UNIT_TABLE_ID);
-            await compareItemsD(modalLocator, DETAILS_TABLE_ID);
-            await compareItemsCon(modalLocator, CONSUMABLES_TABLE_ID);
+            await compareItemsCB(modalLocator, ASSEMBLY_UNIT_TABLE_ID); //СБ
+            await compareItemsD(modalLocator, DETAILS_TABLE_ID); //Д
+            await compareItemsCon(modalLocator, CONSUMABLES_TABLE_ID); //РМ
             await validateMaterialExistence(modalLocator, DETAILS_TABLE_ID, MATERIALPARTS_TABLE_ID);
 
         });
@@ -997,13 +1038,23 @@ export class CreatePartsDatabasePage extends PageObject {
     printGlobalTableData(): void {
         logger.info("Global Table Data Overview:");
 
-        // Iterate through each group in the globalTableData
-        Object.keys(CreatePartsDatabasePage.globalTableData).forEach((key) => {
-            // Handle ALL group separately since it's a Map
+        // Define the updated order including МД
+        const orderedKeys = ['СБ', 'Д', 'ПМ', 'МД', 'РМ', 'ALL'];
+
+        // Iterate through each group in the specific order
+        orderedKeys.forEach((key) => {
             if (key === 'ALL') {
                 const totalCount = CreatePartsDatabasePage.globalTableData.ALL.size; // Count items in ALL (Map)
                 console.log(`\nALL (Consolidated Items: ${totalCount}):`);
                 console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
+            } else if (key === 'ПМ') {
+                // Merge ПМ and ПД groups
+                const pmItems = CreatePartsDatabasePage.globalTableData['ПМ'] || [];
+                const pdItems = CreatePartsDatabasePage.globalTableData['ПД'] || [];
+                const combinedItems = [...pmItems, ...pdItems];
+                const totalCount = combinedItems.length; // Count items in ПМ + ПД
+                console.log(`\nПМ (Includes Items from ПД, Total: ${totalCount}):`);
+                console.table(combinedItems);
             } else {
                 const groupItems = CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData];
                 const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Safely count items in the group
@@ -1014,6 +1065,8 @@ export class CreatePartsDatabasePage extends PageObject {
 
         logger.info("\nEnd of Global Table Data.");
     }
+
+
 
 
 
@@ -1034,11 +1087,10 @@ export class CreatePartsDatabasePage extends PageObject {
         const groups = await this.processTableData(table, title, parentQuantity); // Process the main table
 
         // Handle rows in each group
-        await this.processSBGroupRows(groups.СБ, page, shortagePage, parentQuantity);
         await this.processGroupRows(groups.Д, 'Д', page, parentQuantity);
         await this.processGroupRows(groups.ПД, 'ПД', page, parentQuantity);
         await this.processGroupRows(groups.РМ, 'РМ', page, parentQuantity);
-
+        await this.processSBGroupRows(groups.СБ, page, shortagePage, parentQuantity);
 
         return groups; // Return all processed data
     }
@@ -1060,7 +1112,6 @@ export class CreatePartsDatabasePage extends PageObject {
 
             switch (groupType) {
                 case 'Д':
-
                     const modal = page.locator('div[data-testid="ModalDetal-destroyModalRight"]:not(.content-modal-right-menu-hidden)').last();
                     await modal.waitFor({ state: 'attached', timeout: 30000 });
 
@@ -1091,8 +1142,12 @@ export class CreatePartsDatabasePage extends PageObject {
                     elementValue = await el.textContent();
                     if (elementValue !== item.name) {
                         logger.error("Incorrect Product Name for Type Д");
-                        await page.pause();
                         expect(elementValue?.trim()).toBe(item.name);
+                    } else {
+                        // Add only the product name to the Д group (avoiding duplicates)
+                        if (!CreatePartsDatabasePage.globalTableData.Д.some(existingItem => existingItem.name === item.name)) {
+                            CreatePartsDatabasePage.globalTableData.Д.push(item);
+                        }
                     }
 
                     // Validate product designation
@@ -1121,15 +1176,86 @@ export class CreatePartsDatabasePage extends PageObject {
 
                     elementValue = await el.textContent();
                     if (!elementValue) {
-                        logger.error("Incorrect Product Material not found for Type Д");
+                        logger.error("Incorrect: Product Material not found for Type Д");
                         logger.error(JSON.stringify(item, null, 2));
                     } else {
-                        item.material = elementValue;
+                        item.material = elementValue.trim();
+
+                        // Check the BlankMass value and content of ModalDetail-TableZag
+                        const blankMassElement = await modal.locator('[data-testid="ModalDetail-span-BlankMass"]').last();
+                        await blankMassElement.waitFor({ state: 'attached', timeout: 30000 });
+                        await blankMassElement.evaluate((element: HTMLElement) => {
+                            element.style.border = "3px solid red"; // Highlight
+                            element.style.backgroundColor = "yellow";
+                        });
+                        const blankMassValue = await blankMassElement.textContent();
+
+                        const tableZagElement = await modal.locator('div[data-testid="ModalDetail-TableZag"]').last();
+                        await tableZagElement.waitFor({ state: 'attached', timeout: 30000 });
+                        await tableZagElement.evaluate((element: HTMLElement) => {
+                            element.style.border = "3px solid red"; // Highlight
+                            element.style.backgroundColor = "yellow";
+                        });
+                        let tableZagContent = await tableZagElement.innerHTML();
+                        tableZagContent = tableZagContent.replace(/<!--v-if-->/g, '').trim(); // Remove comments
+
+                        const hasTableRows = /<tr[^>]*>/i.test(tableZagContent); // Check for <tr> tags
+
+                        if (blankMassValue?.trim() === '0' && !hasTableRows) {
+                            // Add to the ПМ group or increment the quantity if the material already exists
+                            const existingItem = CreatePartsDatabasePage.globalTableData.ПМ.find(existingItem => {
+                                const existingMaterial = existingItem.material.trim().toLowerCase();
+                                const newMaterial = item.material.trim().toLowerCase();
+
+                                console.log(`Comparing: "${existingMaterial}" with "${newMaterial}"`);
+                                return existingMaterial === newMaterial;
+                            });
+
+                            if (existingItem) {
+                                // Increment the quantity if material already exists
+                                existingItem.quantity += item.quantity + 500;
+                            } else {
+                                // Add the material as a new entry
+                                CreatePartsDatabasePage.globalTableData.ПМ.push({
+                                    id: '', // Provide a default or placeholder value
+                                    parentPartNumber: '', // Placeholder
+                                    partNumber: '', // Placeholder
+                                    name: '', // Placeholder
+                                    dataTestId: '', // Placeholder
+                                    material: item.material.trim(),
+                                    quantity: item.quantity,
+                                } as Item);
+                            }
+                        } else {
+                            // Add to МД group
+                            const existingMDItem = CreatePartsDatabasePage.globalTableData.МД.find(existingItem =>
+                                existingItem.material.trim().toLowerCase() === item.material.trim().toLowerCase()
+                            );
+
+                            if (existingMDItem) {
+                                existingMDItem.quantity += item.quantity;
+                                logger.info(`Updated quantity for material "${existingMDItem.material}" in МД group.`);
+                            } else {
+                                CreatePartsDatabasePage.globalTableData.МД.push({
+                                    id: '',
+                                    parentPartNumber: '',
+                                    partNumber: '',
+                                    name: '',
+                                    dataTestId: '',
+                                    material: item.material,
+                                    quantity: item.quantity,
+                                } as Item);
+                                logger.info(`Added material "${item.material}" to МД group.`);
+                            }
+                        }
+
+
                     }
 
                     // Update item quantity
                     item.quantity *= parentQuantity;
                     break;
+
 
                 case 'ПД':
                     //const modal2 = page.locator('div[data-testid="ModalMaterialInformation-RightContent"]').last();

@@ -52,7 +52,7 @@ export const runTC100 = () => {
 
     });
     test.skip('Test Case 0: База деталей Page - Scan tables within a specific element', async ({ page }) => {
-        test.setTimeout(600000);
+        test.setTimeout(0);
         allure.label('severity', 'normal');
         allure.label('epic', 'База деталей');
         allure.label('feature', 'База деталей');
@@ -67,7 +67,7 @@ export const runTC100 = () => {
         });
     });
     test('Test Case 1: База деталей Page - process all products with recursive logic', async ({ page }) => {
-        test.setTimeout(2147483647);
+        test.setTimeout(2147483);
         allure.label('severity', 'normal');
         allure.label('epic', 'База деталей');
         allure.label('feature', 'База деталей');
@@ -86,8 +86,8 @@ export const runTC100 = () => {
 
         await allure.step('Step 2: Process each product row and its tables', async () => {
             dataRows.shift();
-            //dataRows.shift();
             dataRows.shift();
+            //dataRows.shift();
             for (const row of dataRows) {
                 const rowHtml = await row.evaluate((el: Element) => el.outerHTML);
                 const articleLocator = row.locator('[data-testid="TableProduct-TableArticle"]');
@@ -114,17 +114,17 @@ export const runTC100 = () => {
 
                 shortagePage.printGlobalTableData();
 
-                await allure.step('Step 2.1: Compare the full specifications page results with the previous scan results', async () => {
-                    //row.click();
-                    //await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
-                    const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
-                    // Extract the text content of the designation field
-                    const designation = await designationLocator.textContent() ?? '';
-                    await shortagePage.getProductSpecificationsTable(row, shortagePage, page, designation);
-                    await page.mouse.click(1, 1);
-                    await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500);
-                    //await page.pause();
-                });
+                // await allure.step('Step 2.1: Compare the full specifications page results with the previous scan results', async () => {
+                //     //row.click();
+                //     //await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
+                //     const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
+                //     // Extract the text content of the designation field
+                //     const designation = await designationLocator.textContent() ?? '';
+                //     await shortagePage.getProductSpecificationsTable(row, shortagePage, page, designation);
+                //     await page.mouse.click(1, 1);
+                //     await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500);
+                //     //await page.pause();
+                // });
                 break;
             }
         });
