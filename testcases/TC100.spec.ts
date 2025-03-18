@@ -114,17 +114,17 @@ export const runTC100 = () => {
 
                 shortagePage.printGlobalTableData();
 
-                // await allure.step('Step 2.1: Compare the full specifications page results with the previous scan results', async () => {
-                //     //row.click();
-                //     //await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
-                //     const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
-                //     // Extract the text content of the designation field
-                //     const designation = await designationLocator.textContent() ?? '';
-                //     await shortagePage.getProductSpecificationsTable(row, shortagePage, page, designation);
-                //     await page.mouse.click(1, 1);
-                //     await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500);
-                //     //await page.pause();
-                // });
+                await allure.step('Step 2.1: Compare the full specifications page results with the previous scan results', async () => {
+                    //row.click();
+                    //await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
+                    const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
+                    // Extract the text content of the designation field
+                    const designation = await designationLocator.textContent() ?? '';
+                    await shortagePage.getProductSpecificationsTable(row, shortagePage, page, designation);
+                    await page.mouse.click(1, 1);
+                    await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500);
+                    //await page.pause();
+                });
                 break;
             }
         });

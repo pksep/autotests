@@ -277,12 +277,16 @@ export class CreatePartsDatabasePage extends PageObject {
                 : -1; // Use -1 if partNumberId is not provided
             const nameColumnIndex = await shortagePage.findColumn(page, tableId, nameId);
 
-            if (nameColumnIndex === -1 || (partNumberId && designationColumnIndex === -1)) {
-                console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
-                console.error(`Could not find required columns in ${tableName}`);
+            if ((partNumberId && designationColumnIndex === -1)) {
+                console.log(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
+                console.error(`Could not find partNumber column ${nameId} in ${tableName}`);
                 return; // Exit if required columns cannot be found
             }
-
+            if (nameColumnIndex === -1) {
+                console.log(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
+                console.error(`Could not find 'name' column ${nameId} in ${tableName}`);
+                return; // Exit if required columns cannot be found
+            }
             /**
              * Step 3: Retrieve all rows in the table and filter out nested rows.
              * Rows with a nested mini table (e.g., <tbody> <tr> <td> <div> <tr>) are excluded.
@@ -291,7 +295,7 @@ export class CreatePartsDatabasePage extends PageObject {
             const filteredRows = [];
             for (const row of rows) {
                 const isNested = await row.evaluate((node: Element) => {
-                    console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
+                    //console.log(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
                     // Check if the <tr> is a descendant of a <td>
                     return node.closest('td') !== null;
                 });
@@ -308,8 +312,8 @@ export class CreatePartsDatabasePage extends PageObject {
             rows = filteredRows;
 
             if (rows.length === 0) {
-                console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
-                console.log(`No rows found in table ${tableName}`);
+                //console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
+                console.log(`No rows found in table ${tableName} with Id ${tableId}`);
                 return; // Exit if there are no valid rows to process
             }
             logger.info(`Processing ${rows.length} rows in table: ${tableName}`);
@@ -439,7 +443,7 @@ export class CreatePartsDatabasePage extends PageObject {
              */
             logger.info(`${globalKey}: extracted value = ${extractedValue}, global value = ${globalValue}`);
             if (extractedValue !== globalValue) {
-                console.log('%c❌ Completed compareTotals function for group СБ', 'color: red; font-weight: bold;');
+                console.log(`%c❌ Completed compareTotals function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 // Log an error if there is a mismatch
                 logger.error(`Mismatch for ${globalKey}: expected ${globalValue}, got ${extractedValue}`);
             } else {
@@ -1012,12 +1016,22 @@ export class CreatePartsDatabasePage extends PageObject {
         // Highlight and click the product row
         await row.evaluate((element) => {
             element.style.border = "3px solid red"; // Highlight
-            element.style.backgroundColor = "yellow";
+            element.style.backgroundColor = "green";
         });
         await row.click(); //opened the product page
 
+        const editButton = page.locator(`[data-testid="BaseDetals-Button-EditProduct"]`);
+        await editButton.waitFor({ state: 'attached', timeout: 30000 });
+        await editButton.evaluate((element: HTMLElement) => {
+            element.style.border = "3px solid red"; // Highlight
+            element.style.backgroundColor = "yellow";
+        });
+
+        await editButton.click();
+        //logger.info(`Opened details for product: ${editButton}`);
+
         // Open the product editor
-        await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500); //clicked the edit button
+        //await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500); //clicked the edit button
         let parentQuantity = 1;
         // Process the main table for the product
         const table = page.locator('[data-testid="TableSpecification-Root"]');
