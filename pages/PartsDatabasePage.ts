@@ -312,7 +312,6 @@ export class CreatePartsDatabasePage extends PageObject {
             rows = filteredRows;
 
             if (rows.length === 0) {
-                //console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
                 console.log(`No rows found in table ${tableName} with Id ${tableId}`);
                 return; // Exit if there are no valid rows to process
             }
@@ -372,7 +371,7 @@ export class CreatePartsDatabasePage extends PageObject {
              * Step 7: Log duplicate entries and their counts.
              */
             if (duplicates.length > 0) {
-                console.log('%c❌ Completed checkForDuplicates function for group СБ', 'color: red; font-weight: bold;');
+                console.log(`%c❌ Completed checkForDuplicates function for ${tableName} table`, 'color: red; font-weight: bold;');
                 console.error(`Duplicates found in ${tableName}: ${duplicates}`);
                 console.error(
                     `Duplicate counts: ${Array.from(seen.entries()).filter(([key, count]) => count > 1)}`
@@ -381,7 +380,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 logger.info(`No duplicates found in ${tableName}`);
             }
 
-            console.log('%c✔️  Completed checkForDuplicates function for group СБ', 'color: green; font-weight: bold;');
+            console.log(`%c✔️  Completed checkForDuplicates function for ${tableName} table`, 'color: green; font-weight: bold;');
 
         };
 
@@ -449,7 +448,7 @@ export class CreatePartsDatabasePage extends PageObject {
             } else {
                 // Log success if the values match
                 logger.info(`Matched for ${globalKey}: ${extractedValue}`);
-                console.log('%c✔️  Completed compareTotals function for group СБ', 'color: green; font-weight: bold;');
+                console.log(`%c✔️  Completed compareTotals function for group ${globalKey}`, 'color: green; font-weight: bold;');
             }
         };
 
@@ -548,7 +547,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 for (const arrayItem of arrayData) {
                     const matchingTableItem = tableData[arrayItem.partNumber];
                     if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
-                        console.log('%c❌ Completed compareItemsCB function for group СБ', 'color: red; font-weight: bold;');
+                        console.log(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
                         // Log mismatch details
                         console.error(
                             `Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
@@ -558,14 +557,14 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                 }
             } else {
-                console.log('%c❌ Completed compareItemsCB function for group СБ', 'color: red; font-weight: bold;');
+                console.log(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 // Log error if the global array data is not an array
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             // Log completion of comparison
             console.log(`Comparison for ${globalKey} complete.`);
-            console.log('%c✔️  Completed compareItemsCB function for group СБ', 'color: green; font-weight: bold;');
+            console.log(`%c✔️  Completed compareItemsCB function for group ${globalKey}`, 'color: green; font-weight: bold;');
         };
 
 
@@ -719,19 +718,19 @@ export class CreatePartsDatabasePage extends PageObject {
                         matchingTableItem.partMaterial !== arrayItem.material ||
                         matchingTableItem.quantity !== arrayItem.quantity
                     ) {
-                        console.log('%c❌ Completed compareItemsD function for group СБ', 'color: red; font-weight: bold;');
+                        console.log(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
                         console.error(
                             `Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
                         );
                     }
                 }
             } else {
-                console.log('%c❌ Completed compareItemsD function for group СБ', 'color: red; font-weight: bold;');
+                console.log(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             logger.info(`Comparison for ${globalKey} complete.`);
-            console.log('%c✔️  Completed compareItemsD function for group СБ', 'color: green; font-weight: bold;');
+            console.log(`%c✔️  Completed compareItemsD function for group ${globalKey}`, 'color: green; font-weight: bold;');
         };
 
         /**
@@ -832,7 +831,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 for (const arrayItem of arrayData) {
                     const matchingTableItem = tableData[arrayItem.name];
                     if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
-                        console.log('%c❌ Completed compareItemsCon function for group СБ', 'color: red; font-weight: bold;');
+                        console.log(`%c❌ Completed compareItemsCon function for group ${globalKey}`, 'color: red; font-weight: bold;');
                         // Log mismatch details
                         console.error(
                             `Mismatch found: Name '${arrayItem.name}' and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
@@ -840,14 +839,14 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                 }
             } else {
-                console.log('%c❌ Completed compareItemsCon function for group СБ', 'color: red; font-weight: bold;');
+                console.log(`%c❌ Completed compareItemsCon function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 // Log error if the global array data is not an array
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             // Log completion of comparison
             console.log(`Comparison for ${globalKey} complete.`);
-            console.log('%c✔️  Completed compareItemsCon function for group СБ', 'color: green; font-weight: bold;');
+            console.log(`%c✔️  Completed compareItemsCon function for group ${globalKey}`, 'color: green; font-weight: bold;');
         };
 
         /**
@@ -949,7 +948,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 let hasMismatch = false;
                 for (const material of materialsList) {
                     if (!detailsMaterials.has(material)) {
-                        console.log('%c❌ Completed validateMaterialExistence function for group СБ', 'color: red; font-weight: bold;');
+                        console.log('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
                         console.error(`Material '${material}' from Материалы для деталей table is not found in the Детали table.`);
                         hasMismatch = true;
                     }
@@ -959,14 +958,14 @@ export class CreatePartsDatabasePage extends PageObject {
                  * Step 4: Log the final result of the validation.
                  */
                 if (!hasMismatch) {
-                    console.log('%c✔️  Completed validateMaterialExistence function for group СБ', 'color: green; font-weight: bold;');
+                    console.log('%c✔️  Completed validateMaterialExistence function for group Д', 'color: green; font-weight: bold;');
                     console.log('All materials in Материалы для деталей exist in the Детали table.');
                 } else {
-                    console.log('%c❌ Completed validateMaterialExistence function for group СБ', 'color: red; font-weight: bold;');
+                    console.log('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
                     console.error('Some materials in Материалы для деталей are missing in the Детали table.');
                 }
             } catch (error) {
-                console.log('%c❌ Completed validateMaterialExistence function for group СБ', 'color: red; font-weight: bold;');
+                console.log('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
                 console.error('An error occurred during material validation:', error);
             }
         };
@@ -977,11 +976,11 @@ export class CreatePartsDatabasePage extends PageObject {
 
         await allure.step('Step 2.1.1: Checking sections for duplicate rows', async () => {
             // Perform duplicate checks
-            await checkForDuplicates(ASSEMBLY_UNIT_TABLE_ID, "Assembly Units", ASSEMBLY_UNIT_TABLE_PARTNO_ID, ASSEMBLY_UNIT_TABLE_NAME_ID);
-            await checkForDuplicates(DETAILS_TABLE_ID, "Details", DETAILS_TABLE_PARTNO_ID, DETAILS_TABLE_NAME_ID);
-            await checkForDuplicates(BUYMATERIALS_TABLE_ID, "Buy Materials", null, BUYMATERIALS_TABLE_NAME_ID);
-            await checkForDuplicates(MATERIALPARTS_TABLE_ID, "Material Parts", null, MATERIALPARTS_TABLE_NAME_ID);
-            await checkForDuplicates(CONSUMABLES_TABLE_ID, "Consumables", null, CONSUMABLES_TABLE_NAME_ID);
+            await checkForDuplicates(ASSEMBLY_UNIT_TABLE_ID, "Assembly Units СБ", ASSEMBLY_UNIT_TABLE_PARTNO_ID, ASSEMBLY_UNIT_TABLE_NAME_ID);
+            await checkForDuplicates(DETAILS_TABLE_ID, "Details Д", DETAILS_TABLE_PARTNO_ID, DETAILS_TABLE_NAME_ID);
+            await checkForDuplicates(BUYMATERIALS_TABLE_ID, "Buy Materials ПМ", null, BUYMATERIALS_TABLE_NAME_ID);
+            await checkForDuplicates(MATERIALPARTS_TABLE_ID, "Material Parts МД", null, MATERIALPARTS_TABLE_NAME_ID);
+            await checkForDuplicates(CONSUMABLES_TABLE_ID, "Consumables РМ", null, CONSUMABLES_TABLE_NAME_ID);
         });
         await allure.step('Step 2.1.2: Confirm that totals match', async () => {
             // Compare totals

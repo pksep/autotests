@@ -85,7 +85,7 @@ export const runTC100 = () => {
         });
 
         await allure.step('Step 2: Process each product row and its tables', async () => {
-            dataRows.shift();
+            //dataRows.shift();
             dataRows.shift();
             //dataRows.shift();
             for (const row of dataRows) {
