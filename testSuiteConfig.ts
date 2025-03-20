@@ -169,11 +169,11 @@ export const testSuites = {
         ],
     },
     TC100: {
-        description: 'Ordered from suppliers.',
+        description: 'Complete specifications verification.',
         tests: [
             {
                 test: runTC100,
-                description: 'Order a part.'
+                description: 'verifies the complete specifications matches the scanned product.'
             }
             // Add more test cases as needed
         ]
@@ -184,6 +184,16 @@ export const testSuites = {
             {
                 test: runU001,
                 description: "Creating a shipment task.",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004,
+                description: "verify changes to full specifications after adding items to the product",
             },
             // Add more test cases as needed
         ],
