@@ -2504,10 +2504,115 @@ export class PageObject extends AbstractPage {
     logger.info(rows.length);
     return rows;
   }
+  /**
+   * Get all H3 tag values within a specific element by class name.
+   * Excludes H3 tags inside <dialog> or <dialogs> tags.
+   *
+   * @param {string} className - The class name of the container to scan.
+   * @returns {string[]} - Array of H3 text content.
+   */
+  async getAllH3TitlesInClass(page: Page, className: string): Promise<string[]> {
+    // Step 1: Collect all H3 titles inside dialogs
+    const allDialogs = await page.locator('dialog').elementHandles();
+    const dialogTitles: string[] = [];
+    for (const dialog of allDialogs) {
+      const h3Tags = await dialog.$$('h3');
+      for (const h3 of h3Tags) {
+        const title = await h3.textContent();
+        if (title) {
+          dialogTitles.push(title.trim());
+        }
+      }
+    }
+    logger.info('H3 Titles Found Inside Dialogs:', dialogTitles);
+
+    // Step 2: Collect all H3 titles inside the specified class
+    const container = page.locator(`.${className}`);
+    const classTitles: string[] = [];
+    const h3Elements = await container.locator('h3').all();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          classTitles.push(title.trim());
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+    logger.info('H3 Titles Found Inside Class:', classTitles);
+
+    // Step 3: Remove dialog titles from class titles
+    const filteredTitles = classTitles.filter((title) => !dialogTitles.includes(title));
+    logger.info('Filtered H3 Titles (Excluding Dialogs):', filteredTitles);
+
+    return filteredTitles;
+  }
+
+
+  async isButtonVisible(
+    page: Page,
+    buttonSelector: string,
+    label: string,
+    Benabled: boolean = true // Default is true
+  ): Promise<boolean> {
+    try {
+      // Locate the button using the selector and label
+      const button = page.locator(buttonSelector, { hasText: new RegExp(`^\\s*${label}\\s*$`) });
+
+      // Debugging: Log initial info
+      console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}`);
+
+      // Highlight the button for debugging
+      await button.evaluate((row) => {
+        row.style.backgroundColor = 'yellow';
+        row.style.border = '2px solid red';
+        row.style.color = 'blue';
+      });
+
+      // Wait for the button to be attached to the DOM
+      await button.waitFor({ state: 'attached' });
+
+      console.log(`Button "${label}" is attached to the DOM.`);
+
+      // Verify visibility
+      await expect(button).toBeVisible();
+      const isVisible = await button.isVisible();
+      console.log(`Button "${label}" visibility: ${isVisible}`);
+
+      // Check for 'disabled-yui-kit' class
+      const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
+      console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+
+      // Handle based on Benabled state
+      if (Benabled) {
+        console.log(`Expecting button "${label}" to be enabled.`);
+        expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
+        const isDisabled = await button.evaluate((btn) => btn.hasAttribute('disabled'));
+        console.log(`Disabled attribute present for button "${label}": ${isDisabled}`);
+        expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
+      } else {
+        console.log(`Expecting button "${label}" to be disabled.`);
+        expect(hasDisabledClass).toBeTruthy(); // Button should be disabled
+      }
+
+      console.log(`Button "${label}" passed all checks.`);
+      return true; // If everything passes, the button is valid
+    } catch (error) {
+      console.error(`Error while checking button "${label}" state:`, error);
+      return false; // Return false on failure
+    }
+  }
+
+
+
+
 
 
 
 }
+
+
 
 // Retrieving descendants from the entity specification
 /**
