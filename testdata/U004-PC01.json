@@ -6,6 +6,29 @@
           "Изделие",
           "Сборочная единица (Тип СБ)",
           "Деталь (Тип Д)"
+        ],
+        "buttons": [
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Редактировать",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Создать",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Создать копированием",
+            "state": "true"
+          } ,
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Архив",
+            "state": "true"
+          }         
+
         ]
       },
       "EditPage": {
@@ -16,6 +39,59 @@
           "Параметры",
           "Описание / Примечание",
           "Медиа файлы"
+        ],
+        "buttons": [
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "Технологический процесс",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "label": "Себестоимость",
+            "state": "false"
+          },
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "История изменений",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "label": "Публикация",
+            "state": "false"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit.specification__btns-adding",
+            "label": "Добавить",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit.editor__specification-media__btn",
+            "label": "Добавить из базы",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "Отменить",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "label": "Сохранить",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "label": "Архив",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "label": "Создать копированием",
+            "state": "true"
+          }         
+
         ]
       },
       "Modals": {

@@ -93,14 +93,28 @@ export const runU004 = () => {
             const rowCount = await leftTable.locator('tbody tr').count();
             expect(rowCount).toBeGreaterThan(0); // Asserts that the row count is greater than 1
         });
+        let firstCellValue = '';
+        let secondCellValue = '';
+        let thirdCellValue = '';
+
         await allure.step("Step 09: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable.)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
+
             // Get the value of the first cell in the first row
-            const firstCellValue = await leftTable.locator('tbody tr:first-child td:first-child').innerText();
+            firstCellValue = await leftTable.locator('tbody tr:first-child td:nth-child(1)').innerText();
+            firstCellValue = firstCellValue.trim();
+            // Get the value of the second cell in the first row
+            secondCellValue = await leftTable.locator('tbody tr:first-child td:nth-child(2)').innerText();
+            secondCellValue = secondCellValue.trim();
+            // Get the value of the third cell in the first row
+            thirdCellValue = await leftTable.locator('tbody tr:first-child td:nth-child(3)').innerText();
+            thirdCellValue = thirdCellValue.trim();
+
             // Confirm that the first cell contains the search term
             expect(firstCellValue).toContain(TEST_PRODUCT); // Validate that the value matches the search term
         });
+
 
         await allure.step("Step 10: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
             // Wait for loading
@@ -128,44 +142,33 @@ export const runU004 = () => {
             // Wait for the row to become visible
             await firstRow.waitFor({ state: 'visible' });
             await page.waitForTimeout(500);
-            // Validate if the button is visible and enabled
-            let isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Редактировать');
-            // Expect the button to be visible and enabled
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Редактировать" button visible and enabled?`, isButtonReady);
 
-            isButtonReady = false;
+            const buttons = testData1.elements.MainPage.buttons;
+            // Iterate over each button in the array
+            for (const button of buttons) {
+                // Extract the class, label, and state from the button object
+                const buttonClass = button.class;
+                const buttonLabel = button.label;
+                const expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
 
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Создать');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Создать" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
+                // Perform the validation for the button
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    // Check if the button is visible and enabled
+                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
 
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Создать копированием');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Создать копированием" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Архив');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Архив" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-
-
-
+                    // Validate the button's visibility and state
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                });
+            }
         });
-
         await allure.step("Step 12: Нажимаем по данной кнопке. (Press the button)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
             await editButton.click();
             // Debugging pause to verify visually in the browser
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(500);
         });
 
         await allure.step("Step 13: Проверяем заголовки страницы: (Validate the page headers)", async () => {
@@ -189,100 +192,71 @@ export const runU004 = () => {
             // Validate content and order
             expect(normalizedH3Titles).toEqual(titles);
         });
-
-
-
-
         await allure.step("Step 14: Проверяем наличие кнопок на странице (Check for the visibility of action buttons on the page)", async () => {
             await page.waitForLoadState("networkidle");
+            const buttons = testData1.elements.EditPage.buttons;
+            // Iterate over each button in the array
+            for (const button of buttons) {
+                // Extract the class, label, and state from the button object
+                const buttonClass = button.class;
+                const buttonLabel = button.label;
+                const expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
 
-            // Wait for the row to become visible
+                // Perform the validation for the button
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    // Check if the button is visible and enabled
+                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
 
+                    // Validate the button's visibility and state
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                });
+            }
 
-
-
-            // Wait for loading
-            let isButtonReady = false;
-            //Технологический процесс
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.outline-yui-kit', 'Технологический процесс');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Технологический процесс" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //Себестоимость
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit', 'Себестоимость', false);
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Себестоимость" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //История изменений
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.outline-yui-kit', 'История изменений');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "История изменений" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //История изменений
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit', 'Публикация', false);
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Публикация" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //Добавить
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', 'Добавить');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Добавить" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //Добавить из базы
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit.editor__specification-media__btn', 'Добавить из базы');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Добавить из базы" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //Отменить
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.outline-yui-kit', 'Отменить');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Отменить" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //Сохранить
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.primary-yui-kit', 'Сохранить');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Сохранить" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //Архив
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.primary-yui-kit', 'Архив');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Архив" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
-
-            //Создать копированием
-            isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.medium.primary-yui-kit', 'Создать копированием');
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "Создать копированием" button visible and enabled?`, isButtonReady);
-            // Reset the variable after the validation (if this is intentional)
-            isButtonReady = false;
             await page.waitForLoadState("networkidle");
         });
-        /*                        await allure.step("Step 15: Проверяем, что в инпуте наименования совпадает со значением переменной, по которой мы осуществляли поиск данного изделия (We check that the name in the input matches the value of the variable by which we searched for this product.)", async () => {
-                                    // Wait for loading+
-                                    await page.waitForLoadState("networkidle");
-                                });
-                                await allure.step("Step 16: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (under the комплектации table)", async () => {
-                                    // Wait for loading
-                                    await page.waitForLoadState("networkidle");
-                                });
-                                await allure.step("Step 17: Проверяем, что в списке есть селекторы с названиями. (Check that the list contains selectors with names)", async () => {
+        await allure.step("Step 15: Проверяем, что в инпуте наименования совпадает со значением переменной, по которой мы осуществляли поиск данного изделия (We check that the name in the input matches the value of the variable by which we searched for this product.)", async () => {
+            // Wait for loading+
+            console.log("1:" + firstCellValue);
+            console.log("2:" + secondCellValue);
+            console.log("3:" + thirdCellValue);
+            // Wait for the page to stabilize
+            await page.waitForLoadState("networkidle");
+
+            // Locate all input fields with the specified class
+            const inputFields = page.locator('.input-yui-kit.initial.editor__information-input input.input-yui-kit__input');
+
+            // Get the value of the first input field
+            const firstInputValue = await inputFields.nth(0).inputValue();
+
+            expect(firstInputValue).toBe(secondCellValue);
+            console.log(`Value in first input field: ${firstInputValue}`);
+
+            // Get the value of the second input field
+            const secondInputValue = await inputFields.nth(1).inputValue();
+            expect(secondInputValue).toBe(firstCellValue);
+            console.log(`Value in second input field: ${secondInputValue}`);
+            // Get the value of the third input field
+
+            const thirdInputValue = await inputFields.nth(2).inputValue();
+            expect(thirdInputValue).toBe(thirdCellValue);
+            console.log(`Value in third input field: ${thirdInputValue}`);
+            await page.waitForLoadState("networkidle");
+        });
+        await allure.step("Step 16: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (under the комплектации table)", async () => {
+            // Wait for loading
+            await page.waitForLoadState("networkidle");
+            const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+            await addButton.evaluate((row) => {
+                row.style.backgroundColor = 'green';
+                row.style.border = '2px solid red';
+                row.style.color = 'red';
+            });
+            addButton.hover();
+            addButton.click();
+            await page.waitForTimeout(5000);
+        });
+        /*                        await allure.step("Step 17: Проверяем, что в списке есть селекторы с названиями. (Check that the list contains selectors with names)", async () => {
                                     // Wait for loading
                                     await page.waitForLoadState("networkidle");
                                 });
