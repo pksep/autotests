@@ -14,19 +14,53 @@ export class CreateCompleteSetsPage extends PageObject {
 
     async disassemblyModalWindow(name: string, designation: string) {
         const modalWindow = this.page.locator(
-            '[data-testid="ModalComplectKit-RightContent"]'
+            '[data-testid="ModalUncomplectKit-RightContent"]'
         );
 
-        expect(await modalWindow).toBeVisible();
-        expect(
-            await modalWindow.locator(
-                '[data-testid="ModalComplectKit-AssemblyName"]'
+        await expect(modalWindow).toBeVisible();
+        await expect(
+            modalWindow.locator(
+                '[data-testid="ModalUncomplectKit-AssemblyName"]'
             )
         ).toContainText(name);
-        expect(
-            await modalWindow.locator(
-                '[data-testid="ModalComplectKit-AssemblyDesignation"]'
+        await expect(
+            modalWindow.locator(
+                '[data-testid="ModalUncomplectKit-AssemblyDesignation"]'
             )
         ).toContainText(designation);
+        await expect(
+            modalWindow.locator("h3", {
+                hasText: " Скомплектованные наборы ",
+            })
+        ).toBeVisible();
+    }
+
+    /** Checks and enters the quantity in the disassembly modal window
+     * @param quantity - checks that the input has this value
+     * @param quantityOrder - if this parameter is specified, enters this value in the input field
+     */
+    async checkDisassemblyQuantity(
+        locator: string,
+        qunatity: string,
+        qunatityOrder?: string
+    ) {
+        const modalWindowLaunchIntoProduction = this.page.locator(locator);
+        if (qunatityOrder) {
+            await modalWindowLaunchIntoProduction
+                .locator("input")
+                .fill(qunatityOrder);
+            expect(
+                await modalWindowLaunchIntoProduction
+                    .locator("input")
+                    .inputValue()
+            ).toBe(qunatityOrder);
+        }
+        if (!qunatityOrder) {
+            expect(
+                await modalWindowLaunchIntoProduction
+                    .locator("input")
+                    .inputValue()
+            ).toBe(qunatity);
+        }
     }
 }

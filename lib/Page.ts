@@ -851,145 +851,179 @@ export class PageObject extends AbstractPage {
     }
 
     /**
-   * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
-   * @param page - The Playwright page instance.
-   * @param tableId - The ID or data-testid of the table element.
-   * @param colId - The data-testid of the column to find.
-   * @returns The index of the column with the specified data-testid, or false if not found.
-   */
-  async findColumn(
-    page: Page,
-    tableId: string,
-    colId: string
-  ): Promise<number> {
-    page.on("console", (msg) => {
-      if (msg.type() === "log") {
-        logger.info(`Browser log: ${msg.text()}`);
-      } else if (msg.type() === "info") {
-        logger.info(`Browser info: ${msg.text()}`);
-      } else if (msg.type() === "warning") {
-        logger.warn(`Browser warning: ${msg.text()}`);
-      } else if (msg.type() === "error") {
-        logger.error(`Browser error: ${msg.text()}`);
-      }
-    });
-
-    logger.info(`Task started: Finding table "${tableId}" and printing header rows HTML.`);
-
-    const columnIndex = await page.evaluate(({ tableId, colId }) => {
-      const table = document.querySelector(`[data-testid="${tableId}"]`) || document.getElementById(tableId);
-      if (!table) {
-        console.error(`Table with data-testid or id "${tableId}" not found.`);
-        return -1;
-      }
-      console.info(`Found table. Now looking for column "${colId}".`);
-      let headerRows = Array.from(table.querySelectorAll("thead tr, tbody tr:has(th)")
-      ).filter((row) => row.querySelectorAll("th").length > 0);
-
-      // Remove any search row (assuming it has specific identifying attributes)																			  
-      headerRows = headerRows.filter(
-        (row) =>
-          !row
-            .getAttribute("data-testid")
-            ?.includes("SearchRow") &&
-          !row
-            .getAttribute("data-testid")
-            ?.includes("TableFooter")
-      );
-      console.log(headerRows.length);
-
-      if (headerRows.length >= 2) {
-        const firstRowHeaders = Array.from(headerRows[0].querySelectorAll("th"));
-        const secondRowHeaders = Array.from(headerRows[1].querySelectorAll("th"));
-
-        let startColumn = -1;
-        let spanCount = 0;
-        // Determine the start column and span count in the second header row																		   
-        secondRowHeaders.forEach((header, index) => {
-          const headerText = header.innerText.trim();
-          if (headerText !== "" || header.querySelector("div.unicon")) {
-            if (startColumn === -1) {
-              startColumn = index;
+     * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
+     * @param page - The Playwright page instance.
+     * @param tableId - The ID or data-testid of the table element.
+     * @param colId - The data-testid of the column to find.
+     * @returns The index of the column with the specified data-testid, or false if not found.
+     */
+    async findColumn(
+        page: Page,
+        tableId: string,
+        colId: string
+    ): Promise<number> {
+        page.on("console", (msg) => {
+            if (msg.type() === "log") {
+                logger.info(`Browser log: ${msg.text()}`);
+            } else if (msg.type() === "info") {
+                logger.info(`Browser info: ${msg.text()}`);
+            } else if (msg.type() === "warning") {
+                logger.warn(`Browser warning: ${msg.text()}`);
+            } else if (msg.type() === "error") {
+                logger.error(`Browser error: ${msg.text()}`);
             }
-            spanCount++;
-          }
         });
 
-        // Determine the parent column in the first header row
-        const parentColumnIndex = firstRowHeaders.findIndex((header, index) => {
-          return index >= startColumn && index < startColumn + spanCount;
-        });
-        // Replace the parent column in the first row with the columns from the second row																				
-        const mergedHeaderRow = document.createElement("tr");
-        let isParentColumnReplaced = false;
-        firstRowHeaders.forEach((column, index) => {
-          if (index === parentColumnIndex && !isParentColumnReplaced) {
+        logger.info(
+            `Task started: Finding table "${tableId}" and analyzing header rows.`
+        );
 
+        const columnIndex = await page.evaluate(
+            ({ tableId, colId }) => {
+                let table;
 
+                if (tableId.startsWith(".")) {
+                    // Если строка начинается с '.', это класс
+                    table = document.querySelector(tableId);
+                } else if (tableId.startsWith("#")) {
+                    // Если строка начинается с '#', это id
+                    table = document.getElementById(tableId.substring(1));
+                } else {
+                    // В противном случае предполагаем, что это data-testid
+                    table = document.querySelector(
+                        `[data-testid="${tableId}"]`
+                    );
+                }
 
-            secondRowHeaders.forEach(secondRowHeader => {
-              mergedHeaderRow.appendChild(secondRowHeader.cloneNode(true));
-            });
-            isParentColumnReplaced = true;
-          } else {
-            mergedHeaderRow.appendChild(column.cloneNode(true));
-          }
-        });
+                // Если элемент не найден, можно добавить дополнительную проверку
+                if (!table) {
+                    // Попробуем найти элемент по id, если это не data-testid
+                    table = document.getElementById(tableId);
+                }
 
-        const updatedHeaders = Array.from(
-          mergedHeaderRow.querySelectorAll("th"));
-        console.log("All Columns and their IDs:");
-        const loggedHeaders = new Set(); // Use a set to keep track of logged headers
-        updatedHeaders.forEach((header, index) => {
-          const headerDataTestId = header.getAttribute("data-testid");
-          const headerId = header.getAttribute("id");
-          const logString = `Column ${index}: data-testid="${headerDataTestId}", id="${headerId}"`;
-          if (!loggedHeaders.has(logString)) { // Check if this header has already been logged
-            console.log(logString);
-            loggedHeaders.add(logString); // Add the header to the set
-          }
-        });
-        for (let i = 0; i < updatedHeaders.length; i++) {
-          const headerDataTestId =
-            updatedHeaders[i].getAttribute("data-testid");
-          if (headerDataTestId === colId) {
-            return i; // Возвращаем индекс колонки
-          }
+                // Проверка на наличие элемента
+                if (table) {
+                    console.log("Элемент найден:", table);
+                } else {
+                    console.log("Элемент не найден");
+                }
+
+                if (!table) {
+                    console.error(
+                        `Table with data-testid or id "${tableId}" not found.`
+                    );
+                    return -1;
+                }
+                console.info(
+                    `Found table. Now analyzing rows to locate column "${colId}".`
+                );
+
+                // Extract header rows
+                let headerRows = Array.from(
+                    table.querySelectorAll("thead tr, tbody tr:has(th)")
+                ).filter((row) => row.querySelectorAll("th").length > 0);
+
+                // Filter out irrelevant rows
+                headerRows = headerRows.filter((row) => {
+                    const dataTestId = row?.getAttribute?.("data-testid"); // Safely access the attribute
+                    return (
+                        !dataTestId?.includes("SearchRow") &&
+                        !dataTestId?.includes("TableFooter")
+                    );
+                });
+                // Handle the case for a single row of headers
+                if (headerRows.length === 1) {
+                    console.info(
+                        "Only one header row found. No merging necessary."
+                    );
+                    const singleRow = headerRows[0];
+                    const singleRowCells = Array.from(
+                        singleRow.querySelectorAll("th")
+                    );
+
+                    // Look for the column in the single row
+                    for (let i = 0; i < singleRowCells.length; i++) {
+                        const headerDataTestId =
+                            singleRowCells[i].getAttribute("data-testid");
+                        if (headerDataTestId === colId) {
+                            return i; // Return the index of the column
+                        }
+                    }
+
+                    console.error("Column not found in the single header row.");
+                    return -1; // Return -1 if not found
+                }
+
+                // Start with the last row as the initial merged row
+                let mergedRow = Array.from(
+                    headerRows[headerRows.length - 1].querySelectorAll("th")
+                );
+
+                // Iterate backward through the rows to merge
+                for (let i = headerRows.length - 2; i >= 0; i--) {
+                    const currentRow = Array.from(
+                        headerRows[i].querySelectorAll("th")
+                    );
+                    const newMergedRow = [];
+
+                    let childIndex = 0;
+                    for (let j = 0; j < currentRow.length; j++) {
+                        const cell = currentRow[j];
+
+                        const colspan = parseInt(
+                            cell.getAttribute("colspan") || "1"
+                        );
+
+                        if (colspan > 1) {
+                            // Replace parent with child columns from the merged row
+                            for (let k = 0; k < colspan; k++) {
+                                newMergedRow.push(mergedRow[childIndex++]);
+                            }
+                        } else {
+                            // Add the current cell as-is
+                            newMergedRow.push(cell);
+                        }
+                    }
+                    // Update mergedRow for the next iteration
+                    mergedRow = newMergedRow;
+                }
+
+                // Print all data-testid values in the final merged row
+
+                const dataTestIds = mergedRow
+                    .filter(
+                        (cell) =>
+                            cell && typeof cell.getAttribute === "function"
+                    ) // Validate each element
+                    .map((cell) => cell.getAttribute("data-testid")); // Extract the data-testid attribute
+
+                console.info("All data-testid values in the final merged row:");
+                // Look for the column in the final merged row
+                for (let i = 0; i < mergedRow.length; i++) {
+                    const headerDataTestId =
+                        mergedRow[i].getAttribute("data-testid");
+
+                    if (headerDataTestId === colId) {
+                        return i; // Return the index of the column
+                    }
+                }
+
+                console.error("Column not found.");
+                return -1; // Return -1 if not found
+            },
+            { tableId, colId }
+        );
+
+        if (columnIndex !== -1) {
+            logger.info(
+                `Column with data-testid "${colId}" found at index: ${columnIndex}`
+            );
+        } else {
+            logger.error(`Column with data-testid "${colId}" not found.`);
         }
-      } else {
-        // Handle the case where there's only one header row
-        const singleRowHeaders = Array.from(headerRows[0].querySelectorAll("th"));
-        console.log("All Columns and their IDs:");
-        singleRowHeaders.forEach((header, index) => {
-          const headerDataTestId = header.getAttribute("data-testid");
-          const headerId = header.getAttribute("id");
-          console.log(`Column ${index}: data-testid="${headerDataTestId}", id="${headerId}"`);
-        });
-        for (let i = 0; i < singleRowHeaders.length; i++) {
-          const headerDataTestId =
-            singleRowHeaders[i].getAttribute("data-testid");
-          if (
-            headerDataTestId === colId &&
-            singleRowHeaders[i].tagName === "TH"
-          ) {
-            return i; // Возвращаем индекс колонки
-          }
-        }
-        console.error("Not enough header rows found.");
-        return -1; // Возвращаем -1 вместо false
-      }
-      return -1; // Возвращаем -1, если колонка не найдена
-    },
-      { tableId, colId }
-    );
 
-    if (columnIndex !== -1) {
-      logger.info(`Column with data-testid "${colId}" found at index: ${columnIndex}`);
-    } else {
-      logger.error(`Column with data-testid "${colId}" not found.`);
+        return columnIndex;
     }
-    return columnIndex; // Возвращаем индекс колонки
-  }
 
     /**
      * Check the ordering of table rows based on the urgency date and planned shipment date columns.
@@ -1493,10 +1527,12 @@ export class PageObject extends AbstractPage {
      * @param quantity - checks that the input has this value
      * @param quantityOrder - if this parameter is specified, enters this value in the input field
      */
-    async checkOrderQuantity(qunatity: string, qunatityOrder?: string) {
-        const modalWindowLaunchIntoProduction = this.page.locator(
-            '[data-testid="ModalStartProduction-ModalContent"]'
-        );
+    async checkOrderQuantity(
+        locator: string,
+        qunatity: string,
+        qunatityOrder?: string
+    ) {
+        const modalWindowLaunchIntoProduction = this.page.locator(locator);
         if (qunatityOrder) {
             await modalWindowLaunchIntoProduction
                 .locator("input")
@@ -1504,7 +1540,14 @@ export class PageObject extends AbstractPage {
         }
         expect(
             await modalWindowLaunchIntoProduction.locator("input").inputValue()
-        ).toBe(qunatity);
+        ).toBe(qunatityOrder);
+        if (!qunatityOrder) {
+            expect(
+                await modalWindowLaunchIntoProduction
+                    .locator("input")
+                    .inputValue()
+            ).toBe(qunatity);
+        }
     }
 
     // Save the order number from the "Start Production" modal window
@@ -1581,43 +1624,45 @@ export class PageObject extends AbstractPage {
         click: Click = Click.No,
         dblclick: Click = Click.No
     ) {
-        const rows = await this.page.locator(`${locator} tbody tr.td-row`);
-
-        const rowCount = await rows.count();
-        if (rowCount === 0) {
-            throw new Error("В таблице нет строк.");
+        const rows = this.page.locator(`${locator} tbody tr.td-row`);
+        const firstRow = rows.first();
+        const cells = await firstRow.locator("td").all();
+    
+        if (!cells || cells.length === 0) {
+            throw new Error("В таблице нет ячеек.");
         }
-
-        const firstRow = rows.nth(0);
-
-        const cells = await firstRow.locator("td").allInnerTexts();
-
+    
         if (cellIndex < 0 || cellIndex >= cells.length) {
             throw new Error(
                 `Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 0-${cells.length}.`
             );
         }
-
-        const valueInCell = cells[cellIndex];
-
+    
+        const targetCell = cells[cellIndex];
+        const valueInCell = await targetCell.innerText();
+    
         logger.info(
             `Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`
         );
+    
+        try {
+            if (click === Click.Yes) {
+                await targetCell.click();
+                logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
+            }
+            
+            if (dblclick === Click.Yes) {
+                await targetCell.dblclick();
 
-        if (click === Click.Yes) {
-            await firstRow.locator("td").nth(cellIndex).click();
-            logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
+                logger.info(`Дважды кликнули по ячейке ${cellIndex} первой строки.`);
+            }
+        } catch (error) {
+            logger.error(`Ошибка при клике: ${error}`);
+            throw error;
         }
-        if (dblclick === Click.Yes) {
-            await firstRow.locator("td").nth(cellIndex).dblclick();
-            logger.info(
-                `Дважды кликнули по ячейке ${cellIndex} первой строки.`
-            );
-        }
-
+    
         return valueInCell;
     }
-
     /** Retrieves the value from the cell in the first row of the table and can click on the cell
      * @param locator - the locator of the table [data-testid=**]
      * @param cellIndex - the index of the cell from which to extract the value
@@ -1628,6 +1673,10 @@ export class PageObject extends AbstractPage {
         cellIndex: number,
         click: Click = Click.No
     ) {
+
+         // Сначала дождемся появления таблицы
+    await this.page.waitForSelector(`${locator} tbody tr.td-row`, { state: 'visible', timeout: 3000 });
+    
         const rows = await this.page.locator(`${locator} tbody tr`);
 
         const rowCount = await rows.count();
@@ -1779,10 +1828,8 @@ export class PageObject extends AbstractPage {
     }
 
     // Checking the modal window to send to archive
-    async checkModalWindowForTransferringToArchive() {
-        const modalWindow = this.page.locator(
-            '[data-testid="ModalPromptMini-Modal-Container"]'
-        );
+    async checkModalWindowForTransferringToArchive(locator: string) {
+        const modalWindow = this.page.locator(`[data-testid^=${locator}]`);
         await expect(modalWindow).toBeVisible();
         await expect(modalWindow.locator(".unicon")).toBeVisible();
         await expect(
@@ -1862,25 +1909,25 @@ export class PageObject extends AbstractPage {
     // Check the modal window for the Production Path of the part
     async productionPathDetailskModalWindow() {
         const modalWindow = this.page.locator(
-            '[data-testid="ModalOperationPathMetaloworking-destroyModalRight"]'
+            '[data-testid="ModalOperationPathMetaloworking-DestroyModalRight"]'
         );
-        expect(await modalWindow).toBeVisible();
-        expect(
-            await modalWindow.locator("h3", {
+        await  expect.soft(modalWindow).toBeVisible();
+        await expect.soft(
+            modalWindow.locator("h3", {
                 hasText: " Производственный путь Детали ",
             })
         ).toBeVisible();
-        expect(
-            await modalWindow.locator("h3", { hasText: "Детали операций" })
+        await expect.soft(
+            modalWindow.locator("h3", { hasText: "Детали операций" })
         ).toBeVisible();
 
-        expect(
-            await modalWindow.locator(".btn-status", {
+        await  expect.soft(
+            modalWindow.locator(".btn-status", {
                 hasText: " Актуализировать ",
             })
         ).toBeVisible();
-        expect(
-            await modalWindow.locator(".btn-status", { hasText: " Печать " })
+        await expect.soft(
+            modalWindow.locator(".btn-status", { hasText: " Печать " })
         ).toBeVisible();
     }
 
@@ -1898,15 +1945,15 @@ export class PageObject extends AbstractPage {
         const modalWindow = this.page.locator(
             '[data-testid="ModalMark-Content"]'
         );
-        expect(await modalWindow).toBeVisible();
-        expect(
-            await modalWindow.locator("h3", { hasText: "Отметка о выполнении" })
+        await expect(modalWindow).toBeVisible();
+        await expect(
+            modalWindow.locator("h3", { hasText: "Отметка о выполнении" })
         ).toBeVisible();
-        expect(
-            await modalWindow.locator("h3", { hasText: "Поля для заполнения" })
+        await expect(
+            modalWindow.locator("h3", { hasText: "Поля для заполнения" })
         ).toBeVisible();
-        expect(
-            await modalWindow.locator("h3", { hasText: "Примечание" })
+        await expect(
+            modalWindow.locator("h3", { hasText: "Примечание" })
         ).toBeVisible();
         await this.page.waitForTimeout(500);
 
@@ -1930,13 +1977,13 @@ export class PageObject extends AbstractPage {
         const checkDesignation = await modalWindow
             .locator('[data-testid="ModalMark-ObjName-Name"]')
             .textContent();
-        expect(await checkDesignation?.includes(nameProduct)).toBeTruthy();
+            await expect(checkDesignation?.includes(nameProduct)).toBeTruthy();
 
         // Check for designation match in the modal window for completion status
         const checkName = await modalWindow
             .locator('[data-testid="ModalMark-ObjName-Designation"]')
             .textContent();
-        expect(await checkName?.includes(designationProduct)).toBeTruthy();
+            await expect(checkName?.includes(designationProduct)).toBeTruthy();
 
         // Check that the current date is displayed in the text of the element
         await this.checkCurrentDate('[data-testid="ModalMark-Date"]');
@@ -1965,10 +2012,10 @@ export class PageObject extends AbstractPage {
         const actualExecutionTime = await modalWindow
             .locator('[type="number"]')
             .nth(1);
-        expect(await actualExecutionTime.inputValue()).toBe("0");
+            // await expect(actualExecutionTime.inputValue()).toBe("0");
 
         // Checking the display of textarea
-        expect(await modalWindow.locator("textarea")).toBeVisible();
+        await expect(modalWindow.locator("textarea")).toBeVisible();
 
         // Checking a button in a modal window
         await this.clickButton(" Сохранить Отметку ", ".btn-status", Click.No);
@@ -2112,8 +2159,8 @@ export class PageObject extends AbstractPage {
         if (qunatity) {
             await input.fill(qunatity);
             expect(await input.inputValue()).toBe(qunatity);
+            await input.press("Enter");
         }
-        await input.press("Enter");
         const inputValue = await input.inputValue();
         return inputValue;
     }

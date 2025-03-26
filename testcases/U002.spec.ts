@@ -295,7 +295,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
             "Step 7: Check modal window transferring to archive",
             async () => {
-                await metalworkingWarehouse.checkModalWindowForTransferringToArchive();
+                await metalworkingWarehouse.checkModalWindowForTransferringToArchive('MetalloworkingSclad-PrintControls-ModalPromptMini');
             }
         );
 
@@ -565,7 +565,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
             "Step 7: Check modal window transferring to archive",
             async () => {
-                await assemblyWarehouse.checkModalWindowForTransferringToArchive();
+                await assemblyWarehouse.checkModalWindowForTransferringToArchive('AssemblySclad-PrintControls-ModalPromptMini');
             }
         );
 

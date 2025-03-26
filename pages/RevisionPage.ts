@@ -11,4 +11,9 @@ export class CreateRevisionPage extends PageObject {
         super(page);
         this.page = page;
     }
+
+    async changeWarehouseBalances(quantity: string) {
+        await this.page.locator('[data-testid="TableRevisionPagination-EditPen"]').fill(quantity)
+        await this.page.locator('[data-testid="TableRevisionPagination-EditPen"]').press('Enter')
+    }
 }
