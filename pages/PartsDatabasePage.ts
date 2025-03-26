@@ -1467,5 +1467,44 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
 
+    async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
+        // Locate the table using its data-testid
+        const table = page.locator(`[data-testid="${tableTestId}"]`);
+
+        // Wait for the table rows to be visible
+        await table.locator('tr').first().waitFor({ state: 'visible' });
+
+        // Extract all rows from the table's tbody
+        const rows = await table.locator('tbody tr').elementHandles();
+        console.log(`Total rows in tbody: ${rows.length}`);
+
+        if (rows.length === 0) {
+            throw new Error('No rows found in the table.');
+        }
+
+        const groups: { groupName: string; items: string[][] }[] = [];
+        let currentGroup: { groupName: string; items: string[][] } | null = null;
+
+        for (let row of rows) {
+            // Process the row
+            const groupHeaderCell = await row.$eval('td[colspan]', (cell) => cell?.textContent?.trim()).catch(() => null);
+            if (groupHeaderCell) {
+                // Create a new group
+                currentGroup = { groupName: groupHeaderCell, items: [] };
+                groups.push(currentGroup);
+                console.log(`Group header detected: "${currentGroup.groupName}"`);
+            } else if (currentGroup) {
+                // Extract row data for non-header rows
+                const rowData = await row.$$eval('td', (cells) => cells.map((cell) => cell.textContent?.trim() || ''));
+                currentGroup.items.push(rowData);
+                console.log(`Added data row to group "${currentGroup.groupName}": ${rowData}`);
+            }
+        }
+
+        console.log(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
+        return groups;
+    }
+
+
 
 }

@@ -2554,11 +2554,18 @@ export class PageObject extends AbstractPage {
     page: Page,
     buttonSelector: string,
     label: string,
-    Benabled: boolean = true // Default is true
+    Benabled: boolean = true, // Default is true
+    dialogContext: string = '' // Optional: Specify dialog context for scoping
   ): Promise<boolean> {
     try {
-      // Locate the button using the selector and label
-      const button = page.locator(buttonSelector, { hasText: new RegExp(`^\\s*${label}\\s*$`) });
+      // Apply dialog context if provided
+      const scopedSelector = dialogContext
+        ? `${dialogContext} ${buttonSelector}`
+        : buttonSelector;
+
+      // Locate the button using the updated selector
+      const button = page.locator(scopedSelector, { hasText: new RegExp(`^\\s*${label.trim()}\\s*$`) });
+      console.log(`Found ${await button.count()} buttons matching selector "${scopedSelector}" and label "${label}".`);
 
       // Debugging: Log initial info
       console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}`);
@@ -2572,19 +2579,17 @@ export class PageObject extends AbstractPage {
 
       // Wait for the button to be attached to the DOM
       await button.waitFor({ state: 'attached' });
-
       console.log(`Button "${label}" is attached to the DOM.`);
 
       // Verify visibility
-      await expect(button).toBeVisible();
       const isVisible = await button.isVisible();
       console.log(`Button "${label}" visibility: ${isVisible}`);
+      await expect(button).toBeVisible(); // Assert visibility explicitly
 
       // Check for 'disabled-yui-kit' class
       const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
       console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
 
-      // Handle based on Benabled state
       if (Benabled) {
         console.log(`Expecting button "${label}" to be enabled.`);
         expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
@@ -2602,6 +2607,55 @@ export class PageObject extends AbstractPage {
       console.error(`Error while checking button "${label}" state:`, error);
       return false; // Return false on failure
     }
+  }
+
+
+
+  async getAllH3TitlesInModalClass(page: Page, className: string): Promise<string[]> {
+    // Step 1: Locate the container by the specified class
+    const container = page.locator(`.${className}`);
+    const titles: string[] = [];
+
+    // Step 2: Find all <h3> elements within the container
+    const h3Elements = await container.locator('h3').all();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          titles.push(title.trim()); // Trim to remove unnecessary whitespace
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+
+    // Step 3: Log the collected titles
+    logger.info(`H3 Titles Found Inside Class '${className}':`, titles);
+
+    return titles;
+  }
+
+  async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
+    // Locate the dialog using the class and `open` attribute
+    const dialogLocator = page.locator(`dialog.${dialogClass}[open]`);
+
+    // Find all buttons inside the scoped dialog
+    return dialogLocator.locator(buttonSelector);
+  }
+  async arraysAreIdentical<T>(arr1: T[], arr2: T[]): Promise<boolean> {
+    if (arr1.length !== arr2.length) {
+      return false; // Arrays have different lengths
+    }
+
+    const areEqual = arr1.every((value, index) => {
+      const value2 = arr2[index];
+      if (Array.isArray(value) && Array.isArray(value2)) {
+        return this.arraysAreIdentical(value, value2); // Recursive call
+      }
+      return value === value2; // Compare primitives
+    });
+
+    return areEqual;
   }
 
 

@@ -92,7 +92,53 @@
             "state": "true"
           }         
 
-        ]
+        ],
+        "modalAddButtonsPopup": [
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Сборочную единицу",
+            "state": "true"
+          },
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Деталь",
+            "state": "true"
+          },
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Cтандартную или покупную деталь",
+            "state": "true"
+          },
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Расходный материал",
+            "state": "true"
+          }
+        ],
+        "modalAddСБ": {
+          "titles":[
+            "База сборочных единиц",
+            "Изделие",
+            "Сборочная единица (Тип СБ)"            
+          ],
+          "buttons":[
+            {
+              "class": "button-yui-kit.medium.outline-yui-kit",
+              "label": "Отменить",
+              "state": "true"
+            },
+            {
+              "class": "button-yui-kit.medium.primary-yui-kit",
+              "label": "Добавить",
+              "state": "true"
+            },
+            {
+              "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button",
+              "label": "Выбрать",
+              "state": "false"
+            }            
+          ]
+        }
       },
       "Modals": {
         "titles": []
