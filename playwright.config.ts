@@ -7,7 +7,7 @@ export default defineConfig({
     timeout: 30000,
     retries: 0,
     use: {
-        baseURL: process.env.BASE_URL || "http://dev.pksep.ru",
+        baseURL: process.env.BASE_URL || ENV.BASE_URL,
         headless: false, //ENV.HEADLESS,
         viewport: { width: 1920, height: 929 },
         actionTimeout: 10000,
