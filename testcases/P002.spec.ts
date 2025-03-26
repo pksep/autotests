@@ -56,9 +56,10 @@ export const runP002 = () => {
         const shortagePage = new CreateShortageProductPage(page);
         await shortagePage.showLeftTable(LEFT_DATA_TABLE, SHOW_LEFT_TABLE_BUTTON);
         await shortagePage.findAndClickElement(page, "DeficitIzd-TableCell-DatePlan", 3000);
-        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-tbody-tr-buyers", 3000);
-        await shortagePage.findAndClickElement(page, "complect", 3000);
-        await shortagePage.findAndClickElement(page, "ModalKomplect-komplect-table-body-row", 3000);
+        await shortagePage.findAndClickElement(page, "ModalShipmentsToIzed-Tbody-List", 3000);
+        await page.waitForLoadState('networkidle');
+        await shortagePage.findAndClickElement(page, "TableKomplect-Cell-Complectation", 3000);
+        await shortagePage.findAndClickElement(page, "ModalKomplect-TableBody-row-", 3000);
         const result = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
         expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
 

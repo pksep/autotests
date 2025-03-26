@@ -14,15 +14,10 @@
 
 export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://dev.pksep.ru/",
-    HEADLESS: process.env.HEADLESS === "false",
+    HEADLESS: process.env.HEADLESS === "true",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    DEBUG: true,
-    // TEST_SUITE: 'page002',
-
-    //TEST_SUITE: 'pageCreatePart'
-    //TEST_SUITE: 'pageProductShortage'
-    // TEST_SUITE: 'pageOrderedFromSuppliers',
-    TEST_SUITE: "U002",
+    TEST_SUITE: 'page002',
+    TEST_DIR: '.',
 };
 
 export const SELECTORS = {
@@ -66,7 +61,7 @@ export const SELECTORS = {
             TEXT_ENG: "Assembly Units",
             DATA_TESTID: "menu-assembly-units",
         },
-        PARTS: {
+        PARTS_DATABASE: {
             URL: "basedetals",
             TEXT_RUS: "База деталей",
             TEXT_ENG: "Parts",
