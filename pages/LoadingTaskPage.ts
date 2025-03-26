@@ -142,4 +142,26 @@ export class CreateLoadingTaskPage extends PageObject {
 
         throw new Error('Не удалось извлечь информацию о заказе');
     }
+
+    /** Checks and enters the quantity in the order modal window
+     * @param locator - selector for the quantity input field
+     * @param quantity - expected value in the input (checked only if quantityOrder is not provided)
+     * @param quantityOrder - if specified, enters this value in the input field
+     */
+    async checkOrderQuantity(
+        locator: string,
+        quantity: string,
+        quantityOrder?: string
+    ) {
+        const input = this.page.locator(locator).locator("input");
+
+        if (quantityOrder) {
+            // Если указано quantityOrder, просто вводим его значение
+            await input.fill(quantityOrder);
+        } else {
+            // Если quantityOrder не указан, проверяем текущее значение с quantity
+            const currentValue = await input.inputValue();
+            expect(currentValue).toBe(quantity);
+        }
+    }
 }

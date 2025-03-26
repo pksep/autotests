@@ -16,8 +16,9 @@ export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://dev.pksep.ru/",
     HEADLESS: process.env.HEADLESS === "true",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'page002',
+    TEST_SUITE: 'U001',
     TEST_DIR: '.',
+    DEBUG: false,
 };
 
 export const SELECTORS = {
