@@ -8,4 +8,6 @@ export class CreateAssemblyWarehousePage extends PageObject {
         super(page);
         this.page = page;
     }
+
+    
 }
