@@ -18,6 +18,7 @@ export const ENV = {
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
     TEST_SUITE: 'page002',
     TEST_DIR: '.',
+    DEBUG: false,
 };
 
 export const SELECTORS = {

@@ -289,7 +289,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 9: We change the quantity of the ordered product",
             async () => {
                 const locator = '[data-testid="AddAddOrder-QuantitySection"]';
-                await loadingTaskPage.checkOrderQuantity(locator, "1", "2");
+                await loadingTaskPage.checkOrderQuantity(locator, "1", quantityProductLaunchOnProduction);
                 // await loadingTaskPage.waitForTimeout(1000)
                 // await loadingTaskPage.clickButton(
                 //     " Применить изменения ",
@@ -1237,9 +1237,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
                         // Wait for the table body to load
 
-                        // await metalworkingWarehouse.waitingTableBody(
-                        //     productionTable
-                        // );
+                        await metalworkingWarehouse.waitingTableBody(
+                            productionTable
+                        );
                     }
                 );
 
@@ -2098,6 +2098,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         // Check the modal window Completed sets
                         await stockReceipt.completesSetsModalWindow();
+                        await stockReceipt.waitingTableBody('[data-testid="ModalKitsList-HiddenContent"]');
                     }
                 );
 
@@ -2438,6 +2439,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 // Check the modal window Completed sets
                 await stockReceipt.completesSetsModalWindow();
+                await stockReceipt.waitingTableBody('[data-testid="ModalKitsList-HiddenContent"]');
             }
         );
 
@@ -3052,7 +3054,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             urgencyDateSecond
                         );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+                        expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
 
@@ -3116,9 +3118,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
                         // Wait for the table body to load
 
-                        // await metalworkingWarehouse.waitingTableBody(
-                        //     productionTable
-                        // );
+                        await metalworkingWarehouse.waitingTableBody(
+                            productionTable
+                        );
                     }
                 );
 
@@ -3316,7 +3318,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             urgencyDateSecond
                         );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+                        expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
             }
@@ -3374,7 +3376,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     urgencyDateSecond
                 );
 
-                expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+                expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
             })
     });
 
@@ -3678,6 +3680,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         // Check the modal window Completed sets
                         await stockReceipt.completesSetsModalWindow();
+                        await stockReceipt.waitingTableBody('[data-testid="ModalKitsList-HiddenContent"]');
                     }
                 );
 
@@ -4018,6 +4021,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 // Check the modal window Completed sets
                 await stockReceipt.completesSetsModalWindow();
+                await stockReceipt.waitingTableBody('[data-testid="ModalKitsList-HiddenContent"]');
             }
         );
 
