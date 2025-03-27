@@ -1471,39 +1471,101 @@ export class CreatePartsDatabasePage extends PageObject {
         // Locate the table using its data-testid
         const table = page.locator(`[data-testid="${tableTestId}"]`);
 
-        // Wait for the table rows to be visible
+        // Wait for the first row of the table to be visible
         await table.locator('tr').first().waitFor({ state: 'visible' });
 
-        // Extract all rows from the table's tbody
+        // Fetch all rows inside tbody
         const rows = await table.locator('tbody tr').elementHandles();
         console.log(`Total rows in tbody: ${rows.length}`);
 
+        // Return error if no rows are found
         if (rows.length === 0) {
             throw new Error('No rows found in the table.');
         }
 
+        // Initialize groups array
         const groups: { groupName: string; items: string[][] }[] = [];
         let currentGroup: { groupName: string; items: string[][] } | null = null;
 
-        for (let row of rows) {
-            // Process the row
-            const groupHeaderCell = await row.$eval('td[colspan]', (cell) => cell?.textContent?.trim()).catch(() => null);
-            if (groupHeaderCell) {
-                // Create a new group
-                currentGroup = { groupName: groupHeaderCell, items: [] };
-                groups.push(currentGroup);
-                console.log(`Group header detected: "${currentGroup.groupName}"`);
-            } else if (currentGroup) {
-                // Extract row data for non-header rows
-                const rowData = await row.$$eval('td', (cells) => cells.map((cell) => cell.textContent?.trim() || ''));
-                currentGroup.items.push(rowData);
-                console.log(`Added data row to group "${currentGroup.groupName}": ${rowData}`);
+        // Iterate over each row
+        for (const row of rows) {
+            try {
+                // Check if the row is a group header
+                const groupHeaderCell = await row.$eval('td[colspan]', (cell) => cell?.textContent?.trim()).catch(() => null);
+                if (groupHeaderCell) {
+                    // Create a new group with group name
+                    currentGroup = { groupName: groupHeaderCell, items: [] };
+                    groups.push(currentGroup);
+                    console.log(`Group header detected: "${currentGroup.groupName}"`);
+                } else if (currentGroup) {
+                    // Add data rows under the current group
+                    const rowData = await row.$$eval('td', (cells) =>
+                        cells.map((cell) => cell.textContent?.trim() || '')
+                    );
+                    currentGroup.items.push(rowData);
+                    console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+                }
+            } catch (error) {
+                console.error(`Error processing row: ${error}`);
             }
         }
 
-        console.log(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
+        // Debug final parsed result
+        logger.info(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
         return groups;
     }
+    async compareTableData<T>(
+        data1: { groupName: string; items: T[][] }[],
+        data2: { groupName: string; items: T[][] }[]
+    ): Promise<boolean> {
+        if (data1.length !== data2.length) {
+            console.error("Data length mismatch");
+            return false; // Arrays are different lengths
+        }
+
+        return data1.every((group1, index) => {
+            const group2 = data2[index];
+
+            // Compare group names
+            if (group1.groupName !== group2.groupName) {
+                console.error(`Group name mismatch: "${group1.groupName}" !== "${group2.groupName}"`);
+                return false;
+            }
+
+            // Compare group items
+            if (group1.items.length !== group2.items.length) {
+                console.error(`Item count mismatch in group "${group1.groupName}"`);
+                return false;
+            }
+
+            // Compare each item row
+            return group1.items.every((row1, rowIndex) => {
+                const row2 = group2.items[rowIndex];
+
+                // Check if rows have the same length
+                if (row1.length !== row2.length) {
+                    console.error(
+                        `Row length mismatch in group "${group1.groupName}", row ${rowIndex + 1}`
+                    );
+                    return false;
+                }
+
+                // Compare individual cells
+                return row1.every((cell1, cellIndex) => {
+                    const cell2 = row2[cellIndex];
+                    if (cell1 !== cell2) {
+                        console.error(
+                            `Mismatch in group "${group1.groupName}", row ${rowIndex + 1}, cell ${cellIndex + 1}: "${cell1}" !== "${cell2}"`
+                        );
+                        return false;
+                    }
+                    return true;
+                });
+            });
+        });
+    }
+
+
 
 
 
