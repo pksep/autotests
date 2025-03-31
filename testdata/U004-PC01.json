@@ -67,7 +67,7 @@
             "state": "true"
           },
           {
-            "class": "button.button-yui-kit.small.primary-yui-kit.editor__specification-media__btn",
+            "class": "button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
             "label": "Добавить из базы",
             "state": "true"
           },
@@ -82,12 +82,12 @@
             "state": "true"
           },
           {
-            "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
             "label": "Архив",
             "state": "true"
           },
           {
-            "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
             "label": "Создать копированием",
             "state": "true"
           }         
@@ -96,7 +96,7 @@
         "modalAddButtonsPopup": [
           {
             "class": "div.card-yui-kit.specification-dialog__card",
-            "label": "Сборочную единицу",
+            "label": "Сборочную\u00A0единицу",
             "state": "true"
           },
           {
@@ -106,12 +106,12 @@
           },
           {
             "class": "div.card-yui-kit.specification-dialog__card",
-            "label": "Cтандартную или покупную деталь",
+            "label": "Cтандартную\u00A0или покупную\u00A0деталь",
             "state": "true"
           },
           {
             "class": "div.card-yui-kit.specification-dialog__card",
-            "label": "Расходный материал",
+            "label": "Расходный\u00A0материал",
             "state": "true"
           }
         ],
@@ -134,7 +134,7 @@
             },
             {
               "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button",
-              "label": "Выбрать",
+              "label": "Добавить",
               "state": "false"
             }            
           ]

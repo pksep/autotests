@@ -2623,6 +2623,11 @@ export class PageObject extends AbstractPage {
         const title = await h3Tag.textContent();
         if (title) {
           titles.push(title.trim()); // Trim to remove unnecessary whitespace
+          await h3Tag.evaluate((row) => {
+            row.style.backgroundColor = 'yellow';
+            row.style.border = '2px solid red';
+            row.style.color = 'blue';
+          });
         }
       } catch (error) {
         console.error('Error processing H3 tag:', error);
