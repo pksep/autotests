@@ -1563,7 +1563,14 @@ export class CreatePartsDatabasePage extends PageObject {
                 });
             });
         });
+
     }
+    async isStringInNestedArray(nestedArray: string[][], searchString: string): Promise<boolean> {
+        return nestedArray.some(innerArray => innerArray.includes(searchString));
+    }
+
+
+
 
 
 
