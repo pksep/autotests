@@ -850,7 +850,7 @@ export const runU004 = () => {
             });
         });
     });
-    test("TestCase 02 - Добавьте каждый тип материала по отдельности. (Add Each Material Type Individually)", async ({ page }) => {
+    test.skip("TestCase 02 - Добавьте каждый тип материала по отдельности. (Add Each Material Type Individually)", async ({ page }) => {
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
         const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
@@ -1511,40 +1511,30 @@ export const runU004 = () => {
             await allure.step("Step 13: Нажимаем по кнопке \"Выбрать\" в модальном окне (Click on the \"Выбрать\" button in the modal window)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                await page.waitForTimeout(1000);
+
                 const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
-                const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
+                //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
-
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    const cls = 'button-yui-kit.small.primary-yui-kit.base-modal__section-select__button';
-                    const scopedButtonSelector = `${dialogSelector} button.${cls}`;
-                    const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
-
-                    const isButtonReady = await shortagePage.isButtonVisible(
-                        page,
-                        scopedButtonSelector,
-                        buttonLabel,
-                        expectedState
-                    );
-                    //expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-
                 const clas = 'button-yui-kit.small.primary-yui-kit.base-modal__section-select__button';
-                // Reuse the locator for the button
-                const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
+                const scopedButtonSelector = `${dialogSelector} button.${clas}`;
+                const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+                await page.waitForTimeout(500);
+                const isButtonReady = await shortagePage.isButtonVisible(
+                    page,
+                    scopedButtonSelector,
+                    buttonLabel,
+                    expectedState
+                );
                 await buttonLocator.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                // Perform hover and click actions
-                //await buttonLocator.hover();
                 await buttonLocator.click();
                 await page.waitForTimeout(500);
             });
+
             await allure.step("Step 14: Ensure the selected row is now showing in the bottom table", async () => {
                 // Wait for the page to load
                 await page.waitForLoadState("networkidle");
@@ -1915,6 +1905,573 @@ export const runU004 = () => {
             const result4 = await shortagePage.isStringInNestedArray(nestedArray, TESTCASE_2_PRODUCT_РМ); // Output: true
 
             expect(result1 && result2 && result3 && result4).toBeTruthy();
+        });
+    });
+    test("TestCase 02a - Очистка после теста. (Cleanup after test)", async ({ page }) => {
+        test.setTimeout(70000);
+        const shortagePage = new CreatePartsDatabasePage(page);
+        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        let firstCellValue = '';
+        let secondCellValue = '';
+        let thirdCellValue = '';
+        await allure.step("Step 001: Find СБ к товару (find СБ product)", async () => {
+            await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
+                // Wait for loading
+                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+                await page.waitForTimeout(500);
+                await page.waitForLoadState("networkidle");
+            });
+            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+
+                const rowCount = await leftTable.locator('tbody tr').count();
+                expect(rowCount).toBeGreaterThan(0);
+            });
+            await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
+                await page.waitForLoadState("networkidle");
+                await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+            });
+            await allure.step("Step 04: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
+                // Locate the search field within the left table and fill it
+                await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);
+                await page.waitForLoadState("networkidle");
+                // Optionally, validate that the search input is visible
+                await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+            });
+            await allure.step("Step 05: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
+                // Simulate pressing "Enter" in the search field
+                await leftTable.locator('input.search-yui-kit__input').press('Enter');
+                await page.waitForLoadState("networkidle");
+            });
+            await allure.step("Step 06: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+                // Find the first row in the table
+                const firstRow = leftTable.locator('tbody tr:first-child');
+                await firstRow.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
+                    row.style.border = '2px solid red';  // Add a red border for extra visibility
+                    row.style.color = 'blue'; // Change text color to blue
+                });
+                // Wait for the row to be visible and click on it
+                await firstRow.waitFor({ state: 'visible' });
+                await firstRow.hover();
+                await firstRow.click();
+            });
+            await allure.step("Step 07: Найдите кнопку «Редактировать» и нажмите ее. (Find the edit button and click it)", async () => {
+                const firstRow = leftTable.locator('tbody tr:first-child');
+                // Locate the "Редактировать" button
+                const editButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Редактировать' });
+                editButton.hover();
+                editButton.click();
+            });
+        });
+        await allure.step("Step 002: Очистка после теста. (Cleanup after test)", async () => {
+            //remove the item we added СБ
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1000);
+            await allure.step("Step 002 sub step 1: find and click the Добавить button", async () => {
+                const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+                await addButton.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                addButton.hover();
+                addButton.click();
+                await page.waitForTimeout(500);
+                await page.waitForLoadState("networkidle");
+            });
+            await allure.step("Step 002 sub step 2: find and click the Сборочную единицу button", async () => {
+                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });
+                await add2Button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                add2Button.click();
+                await page.waitForTimeout(1000);
+            });
+            await allure.step("Step 002 sub step 3: find the bottom table", async () => {
+                const selectedPartNumber = TEST_PRODUCT_СБ; // Replace with actual part number
+
+                const bottomTableLocator = page.locator('[data-testid="table1-xxxxx"]'); // Adjust 'xxxxx' as per actual table id
+
+                // Locate all rows in the table body
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+                expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+
+                let isRowFound = false;
+
+                // Iterate through each row
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+
+                    // Extract the partNumber from the input field in the first cell
+                    const partNumber = await row.locator('td').nth(0).textContent();
+                    const partNumberCell = await row.locator('td').nth(0);
+                    // Extract the partName from the second cell (assuming it's direct text)
+                    const partName = await row.locator('td').nth(1).textContent();
+
+                    console.log(`Row ${i + 1}: PartNumber=${partNumber?.trim()}, PartName=${partName?.trim()}`);
+
+                    // Compare the extracted values
+                    if (partNumber?.trim() === selectedPartNumber) {
+                        isRowFound = true;
+                        await partNumberCell.evaluate((row) => {
+                            row.style.backgroundColor = 'black';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'white';
+                        });
+                        console.log(`Selected row found in row ${i + 1}`);
+                        const deleteCell = await row.locator('td').nth(4);
+                        await page.waitForTimeout(500);
+                        deleteCell.click();
+                        await page.waitForTimeout(1000);
+                        break;
+                    }
+                }
+            });
+
+            await allure.step("Step 002 sub step 4: Нажимаем по кнопке \"Добавить\" в модальном окне (Click on the \"Добавить\" button in the modal window)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+
+                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
+                const buttonLabel = 'Добавить';
+                let expectedState = true;
+
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    const cls = 'button-yui-kit.medium.primary-yui-kit';
+                    const scopedButtonSelector = `${dialogSelector} button.${cls}`;
+                    const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+
+                    const isButtonReady = await shortagePage.isButtonVisible(
+                        page,
+                        scopedButtonSelector,
+                        buttonLabel,
+                        expectedState
+                    );
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                });
+
+                const clas = 'button-yui-kit.medium.primary-yui-kit';
+                // Reuse the locator for the button
+                const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
+                await buttonLocator.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                // Perform hover and click actions
+                //await buttonLocator.hover();
+                await page.waitForTimeout(1000);
+                await buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+            await allure.step("Step 002 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
+                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(1000);
+            });
+            ////////////////// end of СБ deletion
+            //remove the item we added Д
+            await page.waitForLoadState("networkidle");
+            await allure.step("Step 003 sub step 1: find and click the Добавить button", async () => {
+                const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+                await addButton.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                addButton.hover();
+                addButton.click();
+                await page.waitForLoadState("networkidle");
+            });
+            await allure.step("Step 003 sub step 2: find and click the Деталь button", async () => {
+                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Деталь' }).filter({
+                    hasNotText: 'Cтандартную или покупную деталь'
+                });
+                await add2Button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                add2Button.click();
+                await page.waitForTimeout(500);
+            });
+            await allure.step("Step 003 sub step 3: find the bottom table", async () => {
+                const selectedPartNumber = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
+
+                const bottomTableLocator = page.locator('[data-testid="table1-xxxxx"]'); // Adjust 'xxxxx' as per actual table id
+
+                // Locate all rows in the table body
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+                expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+
+                let isRowFound = false;
+
+                // Iterate through each row
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+
+                    // Extract the partNumber from the input field in the first cell
+                    const partNumber = await row.locator('td').nth(0).textContent();
+                    const partNumberCell = await row.locator('td').nth(0);
+                    // Extract the partName from the second cell (assuming it's direct text)
+                    const partName = await row.locator('td').nth(1).textContent();
+
+                    console.log(`Row ${i + 1}: PartNumber=${partNumber?.trim()}, PartName=${partName?.trim()}`);
+
+                    // Compare the extracted values
+                    if (partNumber?.trim() === selectedPartNumber) {
+                        isRowFound = true;
+                        await partNumberCell.evaluate((row) => {
+                            row.style.backgroundColor = 'black';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'white';
+                        });
+                        console.log(`Selected row found in row ${i + 1}`);
+                        const deleteCell = await row.locator('td').nth(4);
+                        await deleteCell.evaluate((row) => {
+                            row.style.backgroundColor = 'black';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'white';
+                        });
+                        await page.waitForTimeout(500);
+                        deleteCell.click();
+                        break;
+                    }
+                }
+            });
+
+            await allure.step("Step 007 sub step 4: Нажимаем по кнопке \"Добавить\" в модальном окне (Click on the \"Добавить\" button in the modal window)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+
+                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
+                const buttonLabel = 'Добавить';
+                let expectedState = true;
+
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    const cls = 'button-yui-kit.medium.primary-yui-kit';
+                    const scopedButtonSelector = `${dialogSelector} button.${cls}`;
+                    const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+
+                    const isButtonReady = await shortagePage.isButtonVisible(
+                        page,
+                        scopedButtonSelector,
+                        buttonLabel,
+                        expectedState
+                    );
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                });
+
+                const clas = 'button-yui-kit.medium.primary-yui-kit';
+                // Reuse the locator for the button
+                const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
+                await buttonLocator.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                // Perform hover and click actions
+                //await buttonLocator.hover();
+                await buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+            await allure.step("Step 007 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
+                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(1000);
+            });
+            ///// end of Д removal
+            page.reload();
+            //remove the item we added ПД
+            await page.waitForLoadState("networkidle");
+            await allure.step("Step 007 sub step 1: find and click the Добавить button", async () => {
+                const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+                await addButton.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                addButton.hover();
+                addButton.click();
+                await page.waitForLoadState("networkidle");
+            });
+            await allure.step("Step 007 sub step 2: find and click the Cтандартную или покупную деталь button", async () => {
+                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Cтандартную или покупную деталь' });
+                await add2Button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                add2Button.click();
+                await page.waitForTimeout(1000);
+            });
+            await allure.step("Step 007 sub step 3: find the bottom table", async () => {
+                const selectedPartNumber = TESTCASE_2_PRODUCT_ПД; // Replace with actual part number
+
+                const bottomTableLocator = page.locator('[data-testid="table1-xxxxx"]'); // Adjust 'xxxxx' as per actual table id
+                await page.waitForTimeout(5000);
+                await bottomTableLocator.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                // Locate all rows in the table body
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+                expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+
+                let isRowFound = false;
+
+                // Iterate through each row
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+
+                    // Extract the partNumber from the input field in the first cell
+                    const partNumber = await row.locator('td').nth(1).textContent();
+                    console.log("XXXXXXXXXXXXXXXX: ");
+                    console.log(partNumber);
+                    const partNumberCell = await row.locator('td').nth(1);
+                    // Extract the partName from the second cell (assuming it's direct text)
+                    //const partName = await row.locator('td').nth(2).textContent();
+
+                    console.log(`Row ${i + 1}: PartNumber=${partNumber?.trim()}`);
+
+                    // Compare the extracted values
+                    if (partNumber?.trim() === selectedPartNumber) {
+                        isRowFound = true;
+                        await partNumberCell.evaluate((row) => {
+                            row.style.backgroundColor = 'black';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'white';
+                        });
+                        console.log(`Selected row found in row ${i + 1}`);
+                        const deleteCellValue = await row.locator('td').nth(4).textContent();
+                        console.log("XXXXXXXXXXXXXXXX: ");
+                        console.log(deleteCellValue);
+                        const deleteCell = await row.locator('td').nth(4);
+                        await deleteCell.evaluate((row) => {
+                            row.style.backgroundColor = 'black';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'white';
+                        });
+                        deleteCell.click();
+                        await page.waitForTimeout(500);
+                        break;
+                    }
+                }
+            });
+
+            await allure.step("Step 007 sub step 4: Нажимаем по кнопке \"Добавить\" в модальном окне (Click on the \"Добавить\" button in the modal window)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+
+                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
+                const buttonLabel = 'Добавить';
+                let expectedState = true;
+
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    const cls = 'button-yui-kit.medium.primary-yui-kit';
+                    const scopedButtonSelector = `${dialogSelector} button.${cls}`;
+                    const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+
+                    const isButtonReady = await shortagePage.isButtonVisible(
+                        page,
+                        scopedButtonSelector,
+                        buttonLabel,
+                        expectedState
+                    );
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                });
+
+                const clas = 'button-yui-kit.medium.primary-yui-kit';
+                // Reuse the locator for the button
+                const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
+                await buttonLocator.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                // Perform hover and click actions
+                //await buttonLocator.hover();
+                await buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+            await allure.step("Step 007 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
+                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(2000);
+            });
+            ////////////////// end of ПД deletion
+            ///////////// start РМ deletion
+            page.reload();
+            //remove the item we added ПД
+            await page.waitForLoadState("networkidle");
+            await allure.step("Step 007 sub step 1: find and click the Добавить button", async () => {
+                const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+                await addButton.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                addButton.hover();
+                addButton.click();
+                await page.waitForLoadState("networkidle");
+            });
+            await allure.step("Step 007 sub step 2: find and click the Расходный материал button", async () => {
+                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Расходный материал' });
+                await add2Button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                add2Button.click();
+                await page.waitForTimeout(1000);
+            });
+            await allure.step("Step 007 sub step 3: find the bottom table", async () => {
+                const selectedPartNumber = TESTCASE_2_PRODUCT_РМ; // Replace with actual part number
+
+                const bottomTableLocator = page.locator('[data-testid="table1-xxxxx"]'); // Adjust 'xxxxx' as per actual table id
+                await page.waitForTimeout(1000);
+                await bottomTableLocator.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                // Locate all rows in the table body
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+                expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+
+                let isRowFound = false;
+
+                // Iterate through each row
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+
+                    // Extract the partNumber from the input field in the first cell
+                    const partNumber = await row.locator('td').nth(1).textContent();
+                    console.log("XXXXXXXXXXXXXXXX: ");
+                    console.log(partNumber);
+                    const partNumberCell = await row.locator('td').nth(1);
+                    // Extract the partName from the second cell (assuming it's direct text)
+                    //const partName = await row.locator('td').nth(2).textContent();
+
+                    console.log(`Row ${i + 1}: PartNumber=${partNumber?.trim()}`);
+
+                    // Compare the extracted values
+                    if (partNumber?.trim() === selectedPartNumber) {
+                        isRowFound = true;
+                        await partNumberCell.evaluate((row) => {
+                            row.style.backgroundColor = 'black';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'white';
+                        });
+                        console.log(`Selected row found in row ${i + 1}`);
+                        const deleteCellValue = await row.locator('td').nth(4).textContent();
+                        console.log("XXXXXXXXXXXXXXXX: ");
+                        console.log(deleteCellValue);
+                        const deleteCell = await row.locator('td').nth(4);
+                        await deleteCell.evaluate((row) => {
+                            row.style.backgroundColor = 'black';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'white';
+                        });
+                        deleteCell.click();
+                        await page.waitForTimeout(500);
+                        break;
+                    }
+                }
+            });
+
+            await allure.step("Step 007 sub step 4: Нажимаем по кнопке \"Добавить\" в модальном окне (Click on the \"Добавить\" button in the modal window)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+
+                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
+                const buttonLabel = 'Добавить';
+                let expectedState = true;
+
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    const cls = 'button-yui-kit.medium.primary-yui-kit';
+                    const scopedButtonSelector = `${dialogSelector} button.${cls}`;
+                    const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+
+                    const isButtonReady = await shortagePage.isButtonVisible(
+                        page,
+                        scopedButtonSelector,
+                        buttonLabel,
+                        expectedState
+                    );
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                });
+
+                const clas = 'button-yui-kit.medium.primary-yui-kit';
+                // Reuse the locator for the button
+                const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
+                await buttonLocator.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                // Perform hover and click actions
+                //await buttonLocator.hover();
+                await buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+            await allure.step("Step 007 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
+                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await button.evaluate((row) => {
+                    row.style.backgroundColor = 'black';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'white';
+                });
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(500);
+                button.click();
+                await page.waitForTimeout(2000);
+            });
+            ////////////////// end of РМ deletion
         });
 
     });
