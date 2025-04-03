@@ -1568,12 +1568,20 @@ export class CreatePartsDatabasePage extends PageObject {
     async isStringInNestedArray(nestedArray: string[][], searchString: string): Promise<boolean> {
         return nestedArray.some(innerArray => innerArray.includes(searchString));
     }
-
-
-
-
-
-
+    async getQuantityByLineItem(
+        data: { groupName: string; items: string[][] }[],
+        searchString: string
+    ): Promise<number> {
+        for (const group of data) {
+            for (const lineItem of group.items) {
+                if (lineItem.includes(searchString)) {
+                    // Return the quantity (assuming the quantity is in the last position of the line item array)
+                    return Promise.resolve(parseInt(lineItem[lineItem.length - 1], 10));
+                }
+            }
+        }
+        return Promise.resolve(0); // Return 0 if the string is not found
+    }
 
 
 }
