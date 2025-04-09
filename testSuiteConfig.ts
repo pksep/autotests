@@ -1,4 +1,3 @@
-
 import { runAPI001 } from './testcases/API001.spec';
 import { runP001 } from './testcases/P001.spec';
 import { runP002 } from './testcases/P002.spec';
@@ -21,7 +20,6 @@ import { runU004 } from "./testcases/U004.spec";
 import { runU005 } from "./testcases/U005.spec";
 import { runU006 } from "./testcases/U006.spec";
 import { runU007 } from "./testcases/U007.spec";
-
 
 // Create a mapping of test suites to their corresponding test functions with descriptions
 export const testSuites = {
@@ -81,7 +79,6 @@ export const testSuites = {
         ],
     },
     page005: {
-
         description:
             'Page 005 test suite to verify functionalities specific to Page 005.',
         tests: [
@@ -93,7 +90,6 @@ export const testSuites = {
         ]
     },
     page006: {
-
         description:
             'Page 006 test suite to verify functionalities specific to Page 006.',
         tests: [
@@ -105,7 +101,6 @@ export const testSuites = {
         ]
     },
     page007: {
-
         description:
             'Page 007 test suite to verify functionalities specific to Page 007.',
         tests: [
@@ -117,7 +112,6 @@ export const testSuites = {
         ]
     },
     page008: {
-
         description:
             'Page 008 test suite to verify functionalities specific to Page 008.',
         tests: [
@@ -129,7 +123,6 @@ export const testSuites = {
         ]
     },
     page009: {
-
         description:
             'Page 009 test suite to verify functionalities specific to Page 009.',
         tests: [
@@ -188,6 +181,16 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
+    U002: {
+        description: "Launch into production.",
+        tests: [
+            {
+                test: runU002,
+                description: "Creating a warehouse task for production.",
+            },
+            // Add more test cases as needed
+        ],
+    },
     U004: {
         description: "verify changes to full specifications after adding items to the product",
         tests: [
@@ -207,7 +210,24 @@ export const testSuites = {
             },
             // Add more test cases as needed
         ],
-    }
-
+    },
+    suite01: {
+        description: "This is a group of full page tests p02 - P04",
+        tests: [
+            {
+                test: runP002,
+                description: "This test checks the responsiveness of Page 002.",
+            },
+            {
+                test: runP003,
+                description: "This test checks the responsiveness of Page 003.",
+            },
+            {
+                test: runP004,
+                description: "This test checks the responsiveness of Page 004.",
+            },
+            // Add more test cases as needed
+        ],
+    },
 
 };

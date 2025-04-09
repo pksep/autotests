@@ -60,7 +60,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     async compareOrderNumbers(orderNumber: string) {
         await this.page
             .locator('[data-testid="OrderSuppliers-LinkImage"]')
-            .last()
+            .first()
             .click();
         const headerModalWindow = this.page
             .locator('[data-testid="ModalWorker-StockOrderModal-Heading"]')
@@ -99,7 +99,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         const tableModalWindowLaunch =
             "ModalStartProduction-ComplectationTable";
         const cellQuantityTable =
-            "ModalStartProduction-ComplectationTableHeaderMyQuantity";
+            "ModalStartProduction-ComplectationTableHeader-MyQuantity";
         const selector = '[data-testid="Sclad-orderingSuppliers"]';
         const tableYourQunatityCell =
             "ModalAddOrder-ProductionTable-YourQuantityColumn";
