@@ -412,7 +412,48 @@ export class PageObject extends AbstractPage {
 
         // Pause the page for inspection (you can remove this in production)
     }
+  async newFillLoginForm(
+    page: Page,
+    tabel: string,
+    login: string,
+    password: string
+  ): Promise<void> {
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+    try {
+      // Step 1: Fill "Табельный номер" field
+      await page.waitForSelector('#tabel .combobox__input', { state: 'visible', timeout: 10000 });
+      console.log('Табельный номер field is visible.');
+      await page.click('#tabel .combobox__input'); // Open dropdown
+      await page.waitForSelector('.select-list-yui-kit__list', { state: 'visible' });
+      await page.click(`.select-list-yui-kit__item:has-text("${tabel}")`);
+      console.log(`Табельный номер set to: ${tabel}`);
+      //await delay(1000); // Allow dynamic "Логин" field to load
+
+      // Step 2: Fill "Логин" field
+      await page.waitForSelector('#initial .combobox__input', { state: 'visible', timeout: 10000 });
+      console.log('Логин field is visible.');
+      await page.fill('#initial .combobox__input', login); // Type the login
+      //await delay(500); // Allow list of logins to appear
+
+      // Select the correct login option from the dropdown
+      await page.waitForSelector(`.select-list-yui-kit__item:has-text("${login}")`, { state: 'visible' });
+      await page.click(`.select-list-yui-kit__item:has-text("${login}")`);
+      console.log(`Логин set to: ${login}`);
+      //await delay(500); // Ensure proper state update before proceeding
+
+      // Step 3: Fill "Пароль" field
+      await page.waitForSelector('#password .input-yui-kit__input', { state: 'visible', timeout: 10000 });
+      console.log('Пароль field is visible.');
+      await page.fill('#password .input-yui-kit__input', password);
+      console.log('Пароль filled successfully.');
+
+      console.log('Form filled successfully!');
+    } catch (error) {
+      console.error('Error filling the login form:', error);
+      throw error;
+    }
+  }
     /**
      * Hover over an element and read the tooltip text.
      * @param hoverSelector - The selector for the element to hover over.
