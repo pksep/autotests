@@ -1582,6 +1582,52 @@ export class CreatePartsDatabasePage extends PageObject {
         }
         return Promise.resolve(0); // Return 0 if the string is not found
     }
+    async validateTable(page: Page, tableTitle: string, expectedRows: { [key: string]: string }[]): Promise<boolean> {
+        try {
+            // Locate the table by its title
+            const tableSection = page.locator(`h3:has-text("${tableTitle}")`).locator('..'); // Finds the section containing the title
+            await tableSection.evaluate((row) => {
+                row.style.border = '2px solid red';
+            });
+            const tableRows = tableSection.locator('table tbody tr'); // Locate all rows in the table body
+
+            // Wait for the table rows to be visible
+            await tableRows.first().waitFor({ timeout: 10000 });
+
+            // Iterate through the expected rows and validate against the table rows
+            for (let i = 0; i < expectedRows.length; i++) {
+                const expectedRow = expectedRows[i];
+                const row = tableRows.nth(i); // Get the corresponding table row
+                await row.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                });
+                // Extract actual content from the row
+                const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+                const actualValue = (await row.locator('td').nth(2).textContent())?.trim();
+
+                // Compare actual content with the expected data
+                if (
+                    actualName !== expectedRow['Наименование'] ||
+                    actualUnit !== expectedRow['ЕИ'] ||
+                    actualValue !== expectedRow['Значение']
+                ) {
+                    console.error(`Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\nFound: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`);
+                    return false; // Validation failed
+                }
+            }
+
+            console.log(`Table "${tableTitle}" validation passed.`);
+            return true; // Validation passed
+        } catch (error) {
+            console.error(`Error validating table "${tableTitle}":`, error);
+            return false; // Validation failed due to an error
+        }
+    }
+
+
+
+
 
 
 }

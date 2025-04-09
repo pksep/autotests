@@ -198,6 +198,16 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
+    U005: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU005,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    }
 
 
 };

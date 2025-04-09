@@ -2536,6 +2536,11 @@ export class PageObject extends AbstractPage {
         const title = await h3Tag.textContent();
         if (title) {
           classTitles.push(title.trim());
+          await h3Tag.evaluate((row) => {
+            row.style.backgroundColor = 'yellow';
+            row.style.border = '2px solid red';
+            row.style.color = 'blue';
+          });
         }
       } catch (error) {
         console.error('Error processing H3 tag:', error);
