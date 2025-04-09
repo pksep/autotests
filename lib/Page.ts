@@ -17,6 +17,7 @@ import logger from "./logger"; // Import logger utility for logging messages
 import { table } from "console";
 import { exec } from "child_process";
 import exp from "constants";
+import { allure } from "allure-playwright";
 
 /**
  * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
