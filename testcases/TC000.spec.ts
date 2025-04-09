@@ -18,9 +18,6 @@ export const runTC000 = (isSingleTest: boolean) => {
         test('Test Case - Login with Data', async ({ page }) => {
             const { table, login, password } = testData.users[0];
             await performLogin(page, table, login, password);
-            await page.waitForSelector('button.btn.blues');
-
-            await page.click('button.btn.blues');
         });
     } else {
         // Loop through all test data
@@ -28,9 +25,6 @@ export const runTC000 = (isSingleTest: boolean) => {
             test(`Test Case - Login with Data for User ${index + 1} `, async ({ page }) => {
                 const { table, login, password } = user;
                 await performLogin(page, table, login, password);
-                await page.waitForSelector('button.btn.blues');
-
-                await page.click('button.btn.blues');
             });
         });
     }

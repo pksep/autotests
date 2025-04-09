@@ -181,6 +181,16 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
+    U002: {
+        description: "Launch into production.",
+        tests: [
+            {
+                test: runU002,
+                description: "Creating a warehouse task for production.",
+            },
+            // Add more test cases as needed
+        ],
+    },
     U004: {
         description: "verify changes to full specifications after adding items to the product",
         tests: [
@@ -191,12 +201,12 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
-    U002: {
-        description: "Launch into production.",
+    U005: {
+        description: "verify changes to full specifications after adding items to the product",
         tests: [
             {
-                test: runU002,
-                description: "Creating a warehouse task for production.",
+                test: runU005,
+                description: "verify changes to full specifications after adding items to the product",
             },
             // Add more test cases as needed
         ],
@@ -219,4 +229,5 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
+
 };

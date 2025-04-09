@@ -1467,5 +1467,167 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
 
+    async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
+        // Locate the table using its data-testid
+        const table = page.locator(`[data-testid="${tableTestId}"]`);
+
+        // Wait for the first row of the table to be visible
+        await table.locator('tr').first().waitFor({ state: 'visible' });
+
+        // Fetch all rows inside tbody
+        const rows = await table.locator('tbody tr').elementHandles();
+        console.log(`Total rows in tbody: ${rows.length}`);
+
+        // Return error if no rows are found
+        if (rows.length === 0) {
+            throw new Error('No rows found in the table.');
+        }
+
+        // Initialize groups array
+        const groups: { groupName: string; items: string[][] }[] = [];
+        let currentGroup: { groupName: string; items: string[][] } | null = null;
+
+        // Iterate over each row
+        for (const row of rows) {
+            try {
+                // Check if the row is a group header
+                const groupHeaderCell = await row.$eval('td[colspan]', (cell) => cell?.textContent?.trim()).catch(() => null);
+                if (groupHeaderCell) {
+                    // Create a new group with group name
+                    currentGroup = { groupName: groupHeaderCell, items: [] };
+                    groups.push(currentGroup);
+                    console.log(`Group header detected: "${currentGroup.groupName}"`);
+                } else if (currentGroup) {
+                    // Add data rows under the current group
+                    const rowData = await row.$$eval('td', (cells) =>
+                        cells.map((cell) => cell.textContent?.trim() || '')
+                    );
+                    currentGroup.items.push(rowData);
+                    console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+                }
+            } catch (error) {
+                console.error(`Error processing row: ${error}`);
+            }
+        }
+
+        // Debug final parsed result
+        logger.info(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
+        return groups;
+    }
+    async compareTableData<T>(
+        data1: { groupName: string; items: T[][] }[],
+        data2: { groupName: string; items: T[][] }[]
+    ): Promise<boolean> {
+        if (data1.length !== data2.length) {
+            console.error("Data length mismatch");
+            return false; // Arrays are different lengths
+        }
+
+        return data1.every((group1, index) => {
+            const group2 = data2[index];
+
+            // Compare group names
+            if (group1.groupName !== group2.groupName) {
+                console.error(`Group name mismatch: "${group1.groupName}" !== "${group2.groupName}"`);
+                return false;
+            }
+
+            // Compare group items
+            if (group1.items.length !== group2.items.length) {
+                console.error(`Item count mismatch in group "${group1.groupName}"`);
+                return false;
+            }
+
+            // Compare each item row
+            return group1.items.every((row1, rowIndex) => {
+                const row2 = group2.items[rowIndex];
+
+                // Check if rows have the same length
+                if (row1.length !== row2.length) {
+                    console.error(
+                        `Row length mismatch in group "${group1.groupName}", row ${rowIndex + 1}`
+                    );
+                    return false;
+                }
+
+                // Compare individual cells
+                return row1.every((cell1, cellIndex) => {
+                    const cell2 = row2[cellIndex];
+                    if (cell1 !== cell2) {
+                        console.error(
+                            `Mismatch in group "${group1.groupName}", row ${rowIndex + 1}, cell ${cellIndex + 1}: "${cell1}" !== "${cell2}"`
+                        );
+                        return false;
+                    }
+                    return true;
+                });
+            });
+        });
+
+    }
+    async isStringInNestedArray(nestedArray: string[][], searchString: string): Promise<boolean> {
+        return nestedArray.some(innerArray => innerArray.includes(searchString));
+    }
+    async getQuantityByLineItem(
+        data: { groupName: string; items: string[][] }[],
+        searchString: string
+    ): Promise<number> {
+        for (const group of data) {
+            for (const lineItem of group.items) {
+                if (lineItem.includes(searchString)) {
+                    // Return the quantity (assuming the quantity is in the last position of the line item array)
+                    return Promise.resolve(parseInt(lineItem[lineItem.length - 1], 10));
+                }
+            }
+        }
+        return Promise.resolve(0); // Return 0 if the string is not found
+    }
+    async validateTable(page: Page, tableTitle: string, expectedRows: { [key: string]: string }[]): Promise<boolean> {
+        try {
+            // Locate the table by its title
+            const tableSection = page.locator(`h3:has-text("${tableTitle}")`).locator('..'); // Finds the section containing the title
+            await tableSection.evaluate((row) => {
+                row.style.border = '2px solid red';
+            });
+            const tableRows = tableSection.locator('table tbody tr'); // Locate all rows in the table body
+
+            // Wait for the table rows to be visible
+            await tableRows.first().waitFor({ timeout: 10000 });
+
+            // Iterate through the expected rows and validate against the table rows
+            for (let i = 0; i < expectedRows.length; i++) {
+                const expectedRow = expectedRows[i];
+                const row = tableRows.nth(i); // Get the corresponding table row
+                await row.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                });
+                // Extract actual content from the row
+                const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+                const actualValue = (await row.locator('td').nth(2).textContent())?.trim();
+
+                // Compare actual content with the expected data
+                if (
+                    actualName !== expectedRow['Наименование'] ||
+                    actualUnit !== expectedRow['ЕИ'] ||
+                    actualValue !== expectedRow['Значение']
+                ) {
+                    console.error(`Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\nFound: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`);
+                    return false; // Validation failed
+                }
+            }
+
+            console.log(`Table "${tableTitle}" validation passed.`);
+            return true; // Validation passed
+        } catch (error) {
+            console.error(`Error validating table "${tableTitle}":`, error);
+            return false; // Validation failed due to an error
+        }
+    }
+
+
+
+
+
 
 }

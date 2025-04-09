@@ -17,6 +17,7 @@ import logger from "./logger"; // Import logger utility for logging messages
 import { table } from "console";
 import { exec } from "child_process";
 import exp from "constants";
+import { allure } from "allure-playwright";
 
 /**
  * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
@@ -453,6 +454,115 @@ export class PageObject extends AbstractPage {
       console.error('Error filling the login form:', error);
       throw error;
     }
+
+    const tableSelectElement = await page.$(
+      'select[data-testid="Authorization-Form-SelectTabel"]'
+    );
+    if (!tableSelectElement) {
+      throw new Error('Select element with name "tabel" not found');
+    }
+    await tableSelectElement.selectOption({ value: tabel });
+
+    // Wait for and select the "initial" option
+    await page.waitForSelector(
+      'select[data-testid="Authorization-Form-SelectInitial"]',
+      { state: "visible" }
+    );
+    const initialSelectElement = await page.$(
+      'select[data-testid="Authorization-Form-SelectInitial"]'
+    );
+    if (!initialSelectElement) {
+      throw new Error('Select element with name "initial" not found');
+    }
+    await initialSelectElement.selectOption({ value: login });
+
+    // Wait for and fill the password input
+    await page.waitForSelector(
+      'input[data-testid="Authorization-Form-InputPassword"]',
+      { state: "visible" }
+    );
+    const passwordInputElement = await page.$(
+      'input[data-testid="Authorization-Form-InputPassword"]'
+    );
+    if (!passwordInputElement) {
+      throw new Error("Password input field not found");
+    }
+    await passwordInputElement.fill(password);
+
+    // Optionally, log the HTML to confirm it was set correctly
+    const html = await page.evaluate(
+      (el) => el.outerHTML,
+      passwordInputElement
+    );
+
+    // Pause the page for inspection (you can remove this in production)
+  }
+
+
+
+  async newFillLoginForm(
+    page: Page,
+    tabel: string,
+    login: string,
+    password: string
+  ): Promise<void> {
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    try {
+      // Step 1: Fill "Табельный номер" field
+      await page.waitForSelector('#tabel .combobox__input', { state: 'visible', timeout: 10000 });
+      console.log('Табельный номер field is visible.');
+      await page.click('#tabel .combobox__input'); // Open dropdown
+      await page.waitForSelector('.select-list-yui-kit__list', { state: 'visible' });
+      await page.click(`.select-list-yui-kit__item:has-text("${tabel}")`);
+      console.log(`Табельный номер set to: ${tabel}`);
+      //await delay(1000); // Allow dynamic "Логин" field to load
+
+      // Step 2: Fill "Логин" field
+      await page.waitForSelector('#initial .combobox__input', { state: 'visible', timeout: 10000 });
+      console.log('Логин field is visible.');
+      await page.fill('#initial .combobox__input', login); // Type the login
+      //await delay(500); // Allow list of logins to appear
+
+      // Select the correct login option from the dropdown
+      await page.waitForSelector(`.select-list-yui-kit__item:has-text("${login}")`, { state: 'visible' });
+      await page.click(`.select-list-yui-kit__item:has-text("${login}")`);
+      console.log(`Логин set to: ${login}`);
+      //await delay(500); // Ensure proper state update before proceeding
+
+      // Step 3: Fill "Пароль" field
+      await page.waitForSelector('#password .input-yui-kit__input', { state: 'visible', timeout: 10000 });
+      console.log('Пароль field is visible.');
+      await page.fill('#password .input-yui-kit__input', password);
+      console.log('Пароль filled successfully.');
+
+      console.log('Form filled successfully!');
+    } catch (error) {
+      console.error('Error filling the login form:', error);
+      throw error;
+    }
+  }
+
+
+
+  /**
+   * Hover over an element and read the tooltip text.
+   * @param hoverSelector - The selector for the element to hover over.
+   * @param tooltipSelector - The selector for the tooltip element.
+   * @returns The text content of the tooltip, or null if not found.
+   */
+
+  async readTooltip(
+    hoverSelector: string,
+    tooltipSelector: string
+  ): Promise<string | null> {
+    await this.page.hover(hoverSelector);
+    await this.page.waitForSelector(tooltipSelector);
+    const tooltipText = await this.page
+      .locator(tooltipSelector)
+      .textContent();
+    return tooltipText;
+
   }
     /**
      * Hover over an element and read the tooltip text.
@@ -2494,9 +2604,180 @@ export class PageObject extends AbstractPage {
         return rows;
     }
 
+  /**
+   * Get all H3 tag values within a specific element by class name.
+   * Excludes H3 tags inside <dialog> or <dialogs> tags.
+   *
+   * @param {string} className - The class name of the container to scan.
+   * @returns {string[]} - Array of H3 text content.
+   */
+  async getAllH3TitlesInClass(page: Page, className: string): Promise<string[]> {
+    // Step 1: Collect all H3 titles inside dialogs
+    const allDialogs = await page.locator('dialog').elementHandles();
+    const dialogTitles: string[] = [];
+    for (const dialog of allDialogs) {
+      const h3Tags = await dialog.$$('h3');
+      for (const h3 of h3Tags) {
+        const title = await h3.textContent();
+        if (title) {
+          dialogTitles.push(title.trim());
+        }
+      }
+    }
+    logger.info('H3 Titles Found Inside Dialogs:', dialogTitles);
+
+    // Step 2: Collect all H3 titles inside the specified class
+    const container = page.locator(`.${className}`);
+    const classTitles: string[] = [];
+    const h3Elements = await container.locator('h3').all();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          classTitles.push(title.trim());
+          await h3Tag.evaluate((row) => {
+            row.style.backgroundColor = 'yellow';
+            row.style.border = '2px solid red';
+            row.style.color = 'blue';
+          });
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+    logger.info('H3 Titles Found Inside Class:', classTitles);
+
+    // Step 3: Remove dialog titles from class titles
+    const filteredTitles = classTitles.filter((title) => !dialogTitles.includes(title));
+    logger.info('Filtered H3 Titles (Excluding Dialogs):', filteredTitles);
+
+    return filteredTitles;
+  }
+
+
+  async isButtonVisible(
+    page: Page,
+    buttonSelector: string,
+    label: string,
+    Benabled: boolean = true, // Default is true
+    dialogContext: string = '' // Optional: Specify dialog context for scoping
+  ): Promise<boolean> {
+    try {
+      // Apply dialog context if provided
+      const scopedSelector = dialogContext
+        ? `${dialogContext} ${buttonSelector}`
+        : buttonSelector;
+
+      // Locate the button using the updated selector
+      const button = page.locator(scopedSelector, { hasText: new RegExp(`^\\s*${label.trim()}\\s*$`) });
+      console.log(`Found ${await button.count()} buttons matching selector "${scopedSelector}" and label "${label}".`);
+
+      // Debugging: Log initial info
+      console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}`);
+
+      // Highlight the button for debugging
+      await button.evaluate((row) => {
+        row.style.backgroundColor = 'yellow';
+        row.style.border = '2px solid red';
+        row.style.color = 'blue';
+      });
+
+      // Wait for the button to be attached to the DOM
+      await button.waitFor({ state: 'attached' });
+      console.log(`Button "${label}" is attached to the DOM.`);
+
+      // Verify visibility
+      const isVisible = await button.isVisible();
+      console.log(`Button "${label}" visibility: ${isVisible}`);
+      await expect(button).toBeVisible(); // Assert visibility explicitly
+
+      // Check for 'disabled-yui-kit' class
+      const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
+      console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+
+      if (Benabled) {
+        console.log(`Expecting button "${label}" to be enabled.`);
+        expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
+        const isDisabled = await button.evaluate((btn) => btn.hasAttribute('disabled'));
+        console.log(`Disabled attribute present for button "${label}": ${isDisabled}`);
+        expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
+      } else {
+        console.log(`Expecting button "${label}" to be disabled.`);
+        expect(hasDisabledClass).toBeTruthy(); // Button should be disabled
+      }
+
+      console.log(`Button "${label}" passed all checks.`);
+      return true; // If everything passes, the button is valid
+    } catch (error) {
+      console.error(`Error while checking button "${label}" state:`, error);
+      return false; // Return false on failure
+    }
+  }
+
+
+
+  async getAllH3TitlesInModalClass(page: Page, className: string): Promise<string[]> {
+    // Step 1: Locate the container by the specified class
+    const container = page.locator(`.${className}`);
+    const titles: string[] = [];
+
+    // Step 2: Find all <h3> elements within the container
+    const h3Elements = await container.locator('h3').all();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          titles.push(title.trim()); // Trim to remove unnecessary whitespace
+          await h3Tag.evaluate((row) => {
+            row.style.backgroundColor = 'yellow';
+            row.style.border = '2px solid red';
+            row.style.color = 'blue';
+          });
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+
+    // Step 3: Log the collected titles
+    logger.info(`H3 Titles Found Inside Class '${className}':`, titles);
+
+    return titles;
+  }
+
+  async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
+    // Locate the dialog using the class and `open` attribute
+    const dialogLocator = page.locator(`dialog.${dialogClass}[open]`);
+
+    // Find all buttons inside the scoped dialog
+    return dialogLocator.locator(buttonSelector);
+  }
+  async arraysAreIdentical<T>(arr1: T[], arr2: T[]): Promise<boolean> {
+    if (arr1.length !== arr2.length) {
+      return false; // Arrays have different lengths
+    }
+
+    const areEqual = arr1.every((value, index) => {
+      const value2 = arr2[index];
+      if (Array.isArray(value) && Array.isArray(value2)) {
+        return this.arraysAreIdentical(value, value2); // Recursive call
+      }
+      return value === value2; // Compare primitives
+    });
+
+    return areEqual;
+  }
+
+
+
+
+
+
 
 
 }
+
+
 
 // Retrieving descendants from the entity specification
 /**
