@@ -7,7 +7,7 @@ import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U005-PC01.json'; // Import your test data
 import testData2 from '../testdata/U004-PC01.json';
 const LEFT_DATA_TABLE = "table1-product";
-
+const TEST_DETAIL_NAME = "U005_test2_DETAILName";
 
 export const runU005 = () => {
 
@@ -238,7 +238,84 @@ export const runU005 = () => {
 
             await page.waitForTimeout(500);
         });
+        await allure.step("Step 12: откройте диалоговое окно Добавление материала и подтвердите заголовки. (open Добавление материала dialog and verify titles)", async () => {
+            // Wait for the page to stabilize
+            await page.waitForLoadState("networkidle");
+            // Locate the table container by searching for the h3 with the specific title.
+            const tableContainer = page.locator('div.editor__specification-characteristic__table:has(h3:has-text("Характеристики заготовки"))');
+            await tableContainer.waitFor({ state: 'visible' });
+            const firstDataRow = tableContainer.locator('table tbody tr').first();
+            const targetButton = firstDataRow.locator('td').nth(2).locator('button');
+            await targetButton.evaluate((row) => {
+                row.style.backgroundColor = 'yellow';
+                row.style.border = '2px solid red';
+                row.style.color = 'blue';
+            });
+            await targetButton.click();
+            const titles = testData1.elements.CreatePage.modalAddMaterial.titles.map((title) => title.trim());
 
+            // Retrieve all H3 titles from the specified class
+            const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'modal-yui-kit__modal-content');
+            const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
+            // Wait for the page to stabilize
+            await page.waitForLoadState("networkidle");
+
+            // Log for debugging
+            logger.info('Expected Titles:', titles);
+            logger.info('Received Titles:', normalizedH3Titles);
+
+            // Validate length
+            expect(normalizedH3Titles.length).toBe(titles.length);
+
+            // Validate content and order
+            expect(normalizedH3Titles).toEqual(titles);
+
+            await page.waitForTimeout(500);
+        });
+        await allure.step("Step 13: Проверьте, что каждая таблица имеет правильное название.(Validate that each table exists with the correct title)", async () => {
+            // Extract tables data from JSON
+            const tables = testData1.elements.CreatePage.modalAddMaterial.tablesВсе;
+
+            // Iterate over each table definition
+            for (const table of tables) {
+                const tableTitle = table.title;
+                // Use a CSS attribute selector to locate the table by its data-testid
+                const targetTable = page.locator(`[data-testid="${table["data-testid"]}"]`);
+
+                // Ensure the table exists (is visible)
+                await expect(targetTable).toBeVisible();
+
+                // Find the title element within the table and verify its text content.
+                // Adjust the selector if the title element is not directly a child.
+                const actualTitleElement = targetTable.locator('h3');
+                await expect(actualTitleElement).toBeVisible();
+
+                const actualTitle = await actualTitleElement.textContent();
+                expect(actualTitle?.trim()).toBe(tableTitle);
+
+                logger.info(`Table with title "${tableTitle}" is present and correct.`);
+            }
+
+            await page.waitForTimeout(500);
+        });
+
+    });
+    test.skip("TestCase 02 - создат дитайл", async ({ browser, page }) => {
+        const shortagePage = new CreatePartsDatabasePage(page);
+        await allure.step("Step 01: Перейдите на страницу создания детали. (Navigate to the create part page)", async () => {
+            shortagePage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
+        });
+        await allure.step("Step 01: В поле ввода инпута \"Наименование\" вводим значение переменной. (In the input field \"Name\" we enter the value of the variable)", async () => {
+            const field = page.locator('div.editor__information-inputs.w-full:has-text("Наименование") input.input-yui-kit__input');
+            await field.evaluate((row) => {
+                row.style.backgroundColor = 'yellow';
+                row.style.border = '2px solid red';
+                row.style.color = 'blue';
+            });
+            await page.fill('div.editor__information-inputs.w-full:has-text("Наименование") input.input-yui-kit__input', TEST_DETAIL_NAME);
+            await expect(await field.inputValue()).toBe(TEST_DETAIL_NAME);
+            await page.waitForTimeout(5000);
+        });
     });
 }

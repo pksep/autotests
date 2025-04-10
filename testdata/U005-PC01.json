@@ -17,7 +17,8 @@
           {
             "Наименование": "Масса детали",
             "ЕИ": "кг",
-            "Значение": "0"
+            "Значение": "0",
+            "":""
           }
         ]
       },
@@ -27,12 +28,14 @@
           {
             "Наименование": "Материал заготовки",
             "ЕИ": "шт",
-            "Значение": "Задать"
+            "Значение": "Задать",
+            "":""
           },
           {
             "Наименование": "Материал заготовки(Заменитель)",
             "ЕИ": "шт",
-            "Значение": "Задать"
+            "Значение": "Задать",
+            "":""
           }
         ]
       },
@@ -139,27 +142,76 @@
           "state": "true"
         }
       ],
-      "modalAddСБ": {
+      "modalAddMaterial": {
         "titles": [
-          "База сборочных единиц",
-          "Изделие",
-          "Сборочная единица (Тип СБ)"
+          "Добавление материала"
+        ],
+        "tablesВсе": [
+          {
+            "title": "Тип (Тип профиля заготовки)",
+            "data-testid": "table1-type"
+          },
+          {
+            "title": "Подтип (Материал заготовки)",
+            "data-testid": "table1-subtype"
+          },
+          {
+            "title": "Наименование (Марка / типоразмер)",
+            "data-testid": "table1-item"
+          }
+        ],
+        "tablesМатериалыДляДеталей": [
+          {
+            "title": "Тип (Тип профиля заготовки)",
+            "data-testid": "table1-type"
+          },
+          {
+            "title": "Подтип (Материал заготовки)",
+            "data-testid": "table1-subtype"
+          },
+          {
+            "title": "Наименование (Марка / типоразмер)",
+            "data-testid": "table1-item"
+          }
+        ],
+        "tablesПокупныеДетали": [
+          {
+            "title": "Тип (Категория)",
+            "data-testid": "table1-type"
+          },
+          {
+            "title": "Подтип (Материал)",
+            "data-testid": "table1-subtype"
+          },
+          {
+            "title": "Наименование (Марка / типоразмер)",
+            "data-testid": "table1-item"
+          }
+        ],
+        "tablesРасходныеМатериалы": [
+          {
+            "title": "Тип (Категория)",
+            "data-testid": "table1-type"
+          },
+          {
+            "title": "Подтип (Материал)",
+            "data-testid": "table1-subtype"
+          },
+          {
+            "title": "Наименование (Марка / типоразмер)",
+            "data-testid": "table1-item"
+          }
         ],
         "buttons": [
           {
-            "class": "button-yui-kit.medium.outline-yui-kit",
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
             "label": "Отменить",
             "state": "true"
           },
           {
-            "class": "button-yui-kit.medium.primary-yui-kit",
-            "label": "Добавить",
+            "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "label": "Сохранить",
             "state": "true"
-          },
-          {
-            "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button",
-            "label": "Добавить",
-            "state": "false"
           }
         ]
       }
