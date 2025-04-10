@@ -8,8 +8,8 @@ export async function performLogin(page: Page, table: string, login: string, pas
     const loginPage = new LoginPage(page);
     await loginPage.goto(ENV.BASE_URL);
     await loginPage.newFillLoginForm(page, table, login, password);
-    await page.waitForTimeout(1000)
-    await page.click('button[type="submit"]');
+
+
 }
 
 // Define runTC000 to use the performLogin function
