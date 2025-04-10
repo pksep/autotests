@@ -106,7 +106,7 @@ export const runU005 = () => {
 
             await page.waitForTimeout(500);
         });
-        await allure.step("Step 17: Проверяем, что в списке есть селекторы с названиями. (Check that the list contains selectors with names)", async () => {
+        await allure.step("Step 06: Проверяем, что в списке есть селекторы с названиями. (Check that the list contains selectors with names)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
             const buttons = testData1.elements.CreatePage.modalAddButtonsPopup;
@@ -130,7 +130,7 @@ export const runU005 = () => {
                 });
             }
         });
-        await allure.step("Step 05: нажмите кнопку деталь. (click on the create detail button)", async () => {
+        await allure.step("Step 07: нажмите кнопку деталь. (click on the create detail button)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             const createButton = page.locator('div.card-yui-kit.detailsdb-dialog__card', { hasText: 'Деталь' });
@@ -143,10 +143,10 @@ export const runU005 = () => {
 
             await page.waitForTimeout(500);
         });
-        await allure.step("Step 02: Проверяем наличия заголовка на странице \"Создать деталь\" (Check for the presence of the title on the 'Create Parts' page)", async () => {
+        await allure.step("Step 08: Проверяем наличия заголовка на странице \"Создать деталь\" (Check for the presence of the title on the 'Create Parts' page)", async () => {
             const shortagePage = new CreatePartsDatabasePage(page);
             // Wait for loading
-            const titles = testData1.elements.MainPage.titles.map((title) => title.trim());
+            const titles = testData1.elements.CreatePage.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
             const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'editor');
@@ -156,8 +156,8 @@ export const runU005 = () => {
             await page.waitForLoadState("networkidle");
 
             // Log for debugging
-            logger.info('Expected Titles:', titles);
-            logger.info('Received Titles:', normalizedH3Titles);
+            console.log('Expected Titles:', titles);
+            console.log('Received Titles:', normalizedH3Titles);
 
             // Validate length
             expect(normalizedH3Titles.length).toBe(titles.length);
@@ -166,12 +166,12 @@ export const runU005 = () => {
             expect(normalizedH3Titles).toEqual(titles);
             await page.waitForTimeout(500);
         });
-        await allure.step("Step 04: Проверяем наличие кнопки (Verify the presence of buttons on the page)", async () => {
+        await allure.step("Step 09: Проверяем наличие кнопки (Verify the presence of buttons on the page)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(500);
 
-            const buttons = testData1.elements.MainPage.buttons;
+            const buttons = testData1.elements.CreatePage.buttons;
             // Iterate over each button in the array
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
@@ -192,12 +192,12 @@ export const runU005 = () => {
             }
             await page.waitForTimeout(500);
         });
-        await allure.step("Step 04: Проверяем таблиц и содержимого по умолчанию (Verify tables and default content)", async () => {
+        await allure.step("Step 10: Проверяем таблиц и содержимого по умолчанию (Verify tables and default content)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(500);
 
-            const tables = testData1.elements.tables;
+            const tables = testData1.elements.CreatePage.tables;
 
             // Iterate over each table in the array
             for (const table of tables) {
@@ -221,6 +221,24 @@ export const runU005 = () => {
 
             await page.waitForTimeout(500);
         });
+        await allure.step("Step 11: существуют тестовые поля ввода (Verify input fields exist)", async () => {
+            // Wait for the page to stabilize
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(500);
+
+            // Extract the array of input fields from your JSON data
+            const inputFields = testData1.elements.CreatePage.InputFields;
+
+            // Call the helper function, passing the entire fields array
+            const areFieldsValid = await shortagePage.validateInputFields(page, inputFields);
+
+            // Validate that all fields are successfully validated
+            expect(areFieldsValid).toBeTruthy();
+            logger.info("All input fields are valid and writable.", areFieldsValid);
+
+            await page.waitForTimeout(500);
+        });
+
 
     });
 }
