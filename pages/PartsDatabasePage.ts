@@ -1582,48 +1582,126 @@ export class CreatePartsDatabasePage extends PageObject {
         }
         return Promise.resolve(0); // Return 0 if the string is not found
     }
-    async validateTable(page: Page, tableTitle: string, expectedRows: { [key: string]: string }[]): Promise<boolean> {
+    async validateTable(
+        page: Page,
+        tableTitle: string,
+        expectedRows: { [key: string]: string }[]
+    ): Promise<boolean> {
         try {
-            // Locate the table by its title
-            const tableSection = page.locator(`h3:has-text("${tableTitle}")`).locator('..'); // Finds the section containing the title
-            await tableSection.evaluate((row) => {
-                row.style.border = '2px solid red';
-            });
-            const tableRows = tableSection.locator('table tbody tr'); // Locate all rows in the table body
+            // Locate the section containing the table (using its h3 heading)
+            const tableSection = page.locator(`h3:has-text("${tableTitle}")`).locator('..');
+            // Debug: highlight the table section
+            await tableSection.evaluate((el) => { el.style.border = '2px solid red'; });
 
-            // Wait for the table rows to be visible
-            await tableRows.first().waitFor({ timeout: 10000 });
-
-            // Iterate through the expected rows and validate against the table rows
-            for (let i = 0; i < expectedRows.length; i++) {
-                const expectedRow = expectedRows[i];
-                const row = tableRows.nth(i); // Get the corresponding table row
-                await row.evaluate((row) => {
-                    row.style.backgroundColor = 'yellow';
-                });
-                // Extract actual content from the row
-                const actualName = (await row.locator('td').nth(0).textContent())?.trim();
-                const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
-                const actualValue = (await row.locator('td').nth(2).textContent())?.trim();
-
-                // Compare actual content with the expected data
-                if (
-                    actualName !== expectedRow['Наименование'] ||
-                    actualUnit !== expectedRow['ЕИ'] ||
-                    actualValue !== expectedRow['Значение']
-                ) {
-                    console.error(`Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\nFound: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`);
-                    return false; // Validation failed
+            // ----- Validate Column Headers Order ----- //
+            const headerCells = tableSection.locator('table thead tr th');
+            const headerCount = await headerCells.count();
+            // Expected column order is derived from the keys of the first expected row.
+            // For a 3-col table, the keys might be: [ "Наименование", "ЕИ", "Значение" ]
+            // For a 4-col table, they might be: [ "Наименование", "ЕИ", "Значение", "" ]
+            const expectedColOrder = Object.keys(expectedRows[0]);
+            if (headerCount !== expectedColOrder.length) {
+                console.error(
+                    `Header column count mismatch for "${tableTitle}": expected ${expectedColOrder.length}, found ${headerCount}`
+                );
+                return false;
+            }
+            for (let i = 0; i < headerCount; i++) {
+                const headerText = (await headerCells.nth(i).textContent())?.trim();
+                if (headerText !== expectedColOrder[i]) {
+                    console.error(
+                        `Column header mismatch in table "${tableTitle}" at index ${i}: expected "${expectedColOrder[i]}", got "${headerText}"`
+                    );
+                    return false;
                 }
             }
 
+            // ----- Validate Table Rows ----- //
+            const tableRows = tableSection.locator('table tbody tr');
+            // Wait for the first row to be visible before proceeding.
+            await tableRows.first().waitFor({ timeout: 10000 });
+
+            // Handle the two different table structures based on headerCount
+            if (headerCount === 3) {
+                // For tables with 3 columns (e.g., "Параметры детали")
+                for (let i = 0; i < expectedRows.length; i++) {
+                    const expectedRow = expectedRows[i];
+                    const row = tableRows.nth(i);
+                    // Debug: highlight each row
+                    await row.evaluate((el) => { el.style.backgroundColor = 'yellow'; });
+
+                    const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                    const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+                    const actualValue = (await row.locator('td').nth(2).textContent())?.trim();
+
+                    if (
+                        actualName !== expectedRow['Наименование'] ||
+                        actualUnit !== expectedRow['ЕИ'] ||
+                        actualValue !== expectedRow['Значение']
+                    ) {
+                        console.error(
+                            `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
+                            `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                        );
+                        return false;
+                    }
+                }
+            } else if (headerCount === 4) {
+                // For tables with 4 columns (e.g., "Характеристики детали")
+                for (let i = 0; i < expectedRows.length; i++) {
+                    const expectedRow = expectedRows[i];
+                    const row = tableRows.nth(i);
+                    // Debug: highlight each row
+                    await row.evaluate((el) => { el.style.backgroundColor = 'yellow'; });
+
+                    const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                    const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+
+                    // Third column: attempt to read an input inside the cell first;
+                    // if no input exists, fallback to reading the cell text.
+                    const cellThird = row.locator('td').nth(2);
+                    let actualValue = "";
+                    if (await cellThird.locator('input').count() > 0) {
+                        actualValue = (await cellThird.locator('input').inputValue()).trim();
+                    } else {
+                        actualValue = ((await cellThird.textContent()) || "").trim();
+                    }
+
+                    // Fourth column: confirms that a button is visible.
+                    const isButtonVisible = await row.locator('td').nth(3).locator('button').isVisible();
+
+                    if (
+                        actualName !== expectedRow['Наименование'] ||
+                        actualUnit !== expectedRow['ЕИ'] ||
+                        actualValue !== expectedRow['Значение']
+                    ) {
+                        console.error(
+                            `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
+                            `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                        );
+                        return false;
+                    }
+                    if (!isButtonVisible) {
+                        console.error(`Button in the fourth column is not visible in row ${i + 1} of table "${tableTitle}".`);
+                        return false;
+                    }
+                }
+            } else {
+                console.error(`Unexpected header count (${headerCount}) for table "${tableTitle}".`);
+                return false;
+            }
+
             console.log(`Table "${tableTitle}" validation passed.`);
-            return true; // Validation passed
+            return true;
         } catch (error) {
             console.error(`Error validating table "${tableTitle}":`, error);
-            return false; // Validation failed due to an error
+            return false;
         }
     }
+
+
+
+
 
     /**
      * Validates an array of input field definitions.

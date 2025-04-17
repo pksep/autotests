@@ -210,24 +210,6 @@ export const testSuites = {
             },
             // Add more test cases as needed
         ],
-    },
-    suite01: {
-        description: "This is a group of full page tests p02 - P04",
-        tests: [
-            {
-                test: runP002,
-                description: "This test checks the responsiveness of Page 002.",
-            },
-            {
-                test: runP003,
-                description: "This test checks the responsiveness of Page 003.",
-            },
-            {
-                test: runP004,
-                description: "This test checks the responsiveness of Page 004.",
-            },
-            // Add more test cases as needed
-        ],
-    },
+    }
 
 };
