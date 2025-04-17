@@ -18,7 +18,7 @@ let value_before_changequantity: number = 0;
 let detailvalue_original_before_changequantity: number = 5;
 
 
-const LEFT_DATA_TABLE = "table1-product";
+const LEFT_DATA_TABLE = "BasePaginationTable-Table-product";
 const TEST_PRODUCT = '109.02-00СБ';
 const TESTCASE_2_PRODUCT_1 = '109.02-00СБ';
 
@@ -50,7 +50,7 @@ export const runU004 = () => {
         });
     });
 
-    test.skip("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
+    test("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
         test.setTimeout(50000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
@@ -376,8 +376,8 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
 
             // Define locators for the two tables within the modal
-            table1Locator = page.locator('[data-testid="table1-product"]');
-            table2Locator = page.locator('[data-testid="table1-cbed"]'); // Adjust the selector as needed for the second table
+            table1Locator = page.locator('[data-testid="BasePaginationTable-Table-product"]');
+            table2Locator = page.locator('[data-testid="BasePaginationTable-Table-cbed"]'); // Adjust the selector as needed for the second table
 
             // Assert that both tables are visible
             await expect(table1Locator).toBeVisible();
@@ -576,13 +576,18 @@ export const runU004 = () => {
             console.log(selectedPartNumber);
             console.log(selectedPartName);
             // Locate the bottom table
-            const bottomTableLocator = page.locator('[data-testid="table1-xxxxx"]'); // Adjust 'xxxxx' as per actual table id
-
+            const modal = await page.locator('[data-testid="Spectification-ModalBaseCbed114"]')
+            const bottomTableLocator = await modal.locator('[data-testid="Spectification-ModalBaseCbed114-Table"]'); // Adjust 'xxxxx' as per actual table id
+            await bottomTableLocator.evaluate((element) => {
+                element.style.border = "2px solid red";
+                element.style.backgroundColor = "yellow";
+            });
+            await page.waitForTimeout(5000);
             // Locate all rows in the table body
             const rowsLocator = bottomTableLocator.locator('tbody tr');
             const rowCount = await rowsLocator.count();
             expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
-
+            await page.waitForTimeout(5000);
             let isRowFound = false;
 
             // Iterate through each row
@@ -854,7 +859,7 @@ export const runU004 = () => {
         //     });
         // });
     });
-    test.skip("TestCase 02 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
+    test("TestCase 02 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
         const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
@@ -943,8 +948,13 @@ export const runU004 = () => {
             await allure.step("Step 002 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TEST_PRODUCT_СБ; // Replace with actual part number
 
-                const bottomTableLocator = page.locator('[data-testid="table1-xxxxx"]'); // Adjust 'xxxxx' as per actual table id
-
+                //const bottomTableLocator = page.locator('[data-testid="Spectification-ModalBaseCbed857-Table"]'); // Adjust 'xxxxx' as per actual table id
+                const bottomTableLocator = page.locator('[data-testid="Spectification-ModalBaseCbed857-Table"]');
+                await bottomTableLocator.waitFor({ state: 'visible' });
+                await bottomTableLocator.evaluate((element) => {
+                    element.style.border = "2px solid red";
+                    element.style.backgroundColor = "yellow";
+                });
                 // Locate all rows in the table body
                 const rowsLocator = bottomTableLocator.locator('tbody tr');
                 const rowCount = await rowsLocator.count();

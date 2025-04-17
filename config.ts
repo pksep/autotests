@@ -14,11 +14,10 @@
 
 
 export const ENV = {
-    BASE_URL: process.env.BASE_URL || "http://dev.npoamotiv.ru/",
-    HEADLESS: false,
+    BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
+    HEADLESS: process.env.HEADLESS === "false",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    DEBUG: false,
-    TEST_SUITE: 'page002',
+    TEST_SUITE: 'U004',
     TEST_DIR: '.',
 
     //TEST_SUITE: 'pageCreatePart'
@@ -177,4 +176,12 @@ export const SELECTORS = {
             DATA_TESTID: "menu-archive",
         },
     },
+    SUBPAGES: {
+        CREATEDETAIL: {
+            URL: "detal/add",
+            TEXT_RUS: "Создать деталь",
+            TEXT_ENG: "Create a part",
+            DATA_TESTID: "",
+        },
+    }
 };
