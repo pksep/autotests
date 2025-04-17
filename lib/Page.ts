@@ -2637,7 +2637,34 @@ export class PageObject extends AbstractPage {
 
     return titles;
   }
+  async getAllH3TitlesInModalClassNew(page: Page, className: string): Promise<string[]> {
+    // Step 1: Locate the container by the specified class
+    const container = page.locator(`${className}`);
+    const titles: string[] = [];
 
+    // Step 2: Find all <h3> elements within the container
+    const h3Elements = await container.locator('h3').all();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          titles.push(title.trim()); // Trim to remove unnecessary whitespace
+          await h3Tag.evaluate((row) => {
+            row.style.backgroundColor = 'yellow';
+            row.style.border = '2px solid red';
+            row.style.color = 'blue';
+          });
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+
+    // Step 3: Log the collected titles
+    logger.info(`H3 Titles Found Inside Class '${className}':`, titles);
+
+    return titles;
+  }
 
   async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
     // Locate the dialog using the class and `open` attribute
@@ -2706,6 +2733,7 @@ export class PageObject extends AbstractPage {
     logger.info(`Collected Titles:`, titles);
     return titles;
   }
+
 
   async extractNotificationMessage(page: Page): Promise<{ title: string, message: string } | null> {
     // Define the locator for the dynamic notification div
