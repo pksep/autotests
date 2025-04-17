@@ -2638,6 +2638,7 @@ export class PageObject extends AbstractPage {
     return titles;
   }
 
+
   async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
     // Locate the dialog using the class and `open` attribute
     const dialogLocator = page.locator(`dialog.${dialogClass}[open]`);
@@ -2660,11 +2661,81 @@ export class PageObject extends AbstractPage {
 
     return areEqual;
   }
+  async getAllH4TitlesInModalClass(page: Page, modalClassName: string): Promise<string[]> {
+    await page.waitForLoadState('networkidle');
+    const section = page.locator('.basefile__modal-section');
+    await section.waitFor({ state: 'attached', timeout: 5000 }); // Wait for the section to populate
+    await page.waitForTimeout(1000); // Extra time for dynamic rendering, if needed
 
+    const container = await page.locator(`.${modalClassName}`);
+    const modalInnerHTML = await container.innerHTML();
+    logger.info("Modal inner HTML:", modalInnerHTML);
 
+    await expect(container).toBeVisible({ timeout: 5000 });
+    logger.info("Container visibility confirmed.");
 
+    const h4Elements = container.locator('h4');
+    const h4Count = await h4Elements.count();
+    logger.info(`Number of <h4> elements found: ${h4Count}`);
 
+    if (h4Count === 0) {
+      logger.warn(`No <h4> elements found inside class '${modalClassName}'.`);
+      return [];
+    }
 
+    const titles: string[] = [];
+    for (let i = 0; i < h4Count; i++) {
+      const h4Tag = h4Elements.nth(i);
+      await h4Tag.evaluate((row) => {
+        row.style.backgroundColor = 'yellow';
+        row.style.border = '2px solid red';
+        row.style.color = 'blue';
+      });
+      const title = await h4Tag.evaluate((element) => {
+        return Array.from(element.childNodes)
+          .map((node) => node.textContent?.trim() || '')
+          .join(' ');
+      });
+      console.log(`H4 Element ${i + 1}:`, title);
+
+      if (title) {
+        titles.push(title);
+      }
+    }
+
+    logger.info(`Collected Titles:`, titles);
+    return titles;
+  }
+
+  async extractNotificationMessage(page: Page): Promise<{ title: string, message: string } | null> {
+    // Define the locator for the dynamic notification div
+    const notificationDiv = page.locator('div.push-notification-yui-kit');
+
+    // Check if the notification div is present
+    const isPresent = await notificationDiv.isVisible();
+    if (!isPresent) {
+      console.log("Notification div is not visible.");
+      return null; // Return null if the div is not present
+    }
+
+    console.log("Notification div is visible.");
+
+    // Extract the title (h4 tag within the notification)
+    const titleLocator = notificationDiv.locator('h4.notification-yui-kit__block-title');
+    const title = await titleLocator.textContent();
+    console.log(`Notification Title: ${title}`);
+
+    // Extract the message (span tag within the notification)
+    const messageLocator = notificationDiv.locator('span.notification-yui-kit__block-text');
+    const message = await messageLocator.textContent();
+    console.log(`Notification Message: ${message}`);
+
+    // Return the extracted title and message
+    return {
+      title: title?.trim() || '', // Trim whitespace and ensure it's a string
+      message: message?.trim() || '' // Trim whitespace and ensure it's a string
+    };
+  }
 
 
 

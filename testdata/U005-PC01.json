@@ -137,6 +137,27 @@
           "type": "input"
         }
       ],
+      "modalAddDocuments": {
+        "titles": [
+          "Добавление документа"
+        ],
+        "titlesh4": [
+          "Файл № 1",
+          "Файл № 2"
+        ],
+        "buttons": [
+        {
+          "class": "button.button-yui-kit.medium.outline-yui-kit.cancel-btn",
+          "label": "Отменить",
+          "state": "true"
+        },
+        {
+          "class": "button.button-yui-kit.medium.primary-yui-kit.upload-btn",
+          "label": "Загрузить все файлы",
+          "state": "true"
+        }
+      ]
+      },
       "modalAddButtonsPopup": [
         {
           "class": "div.card-yui-kit.detailsdb-dialog__card",
@@ -162,57 +183,57 @@
           "tablesВсе": [
             {
               "title": "Тип (Тип профиля заготовки)",
-              "data-testid": "table1-type"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
             },
             {
               "title": "Подтип (Материал заготовки)",
-              "data-testid": "table1-subtype"
+              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "table1-item"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
             }
           ],
           "tablesМатериалыДляДеталей": [
             {
               "title": "Тип (Тип профиля заготовки)",
-              "data-testid": "table1-type"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
             },
             {
               "title": "Подтип (Материал заготовки)",
-              "data-testid": "table1-subtype"
+              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "table1-item"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
             }
           ],
           "tablesПокупныеДетали": [
             {
               "title": "Тип (Категория)",
-              "data-testid": "table1-type"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
             },
             {
               "title": "Подтип (Материал)",
-              "data-testid": "table1-subtype"
+              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "table1-item"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
             }
           ],
           "tablesРасходныеМатериалы": [
             {
               "title": "Тип (Категория)",
-              "data-testid": "table1-type"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
             },
             {
               "title": "Подтип (Материал)",
-              "data-testid": "table1-subtype"
+              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "table1-item"
+              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
             }
           ]
         },
@@ -303,6 +324,9 @@
         ],
         "tables": [
           {
+            "title": ""
+          },
+          {
             "title": "№"
           },
           {
@@ -316,10 +340,7 @@
           },
           {
             "title": "Примечание"
-          },
-          {
-            "title": ""
-          }
+          }          
         ]
       }
     }

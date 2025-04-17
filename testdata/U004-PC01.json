@@ -7,11 +7,64 @@
           "Сборочная единица (Тип СБ)",
           "Деталь (Тип Д)"
         ],
+        "tables": [
+          {
+            "title": "Изделие",
+            "id": "BasePaginationTable-Table-product",            
+            "cols": [
+                "Обозначение",
+                "Артикул",
+                "Наименование"
+            ]
+          },
+          {
+            "title": "Сборочная единица (Тип СБ)",
+            "id": "BasePaginationTable-Table-cbed",
+            "cols": [
+              "Обозначение",
+              "Наименование"
+            ]
+          },
+          {
+            "title": "Деталь (Тип Д)",
+            "id": "BasePaginationTable-Table-detal",            
+            "cols": [
+              "Обозначение",
+              "Наименование"
+            ]
+          }
+        ],
         "buttons": [
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
             "label": "Редактировать",
             "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
+            "label": "Создать",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
+            "label": "Создать копированием",
+            "state": "true"
+          } ,
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
+            "label": "Архив",
+            "state": "true"
+          }               
+        ],
+        "buttonsBefore": [
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Редактировать",
+            "state": "false"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
@@ -21,14 +74,30 @@
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
             "label": "Создать копированием",
-            "state": "true"
+            "state": "false"
           } ,
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
             "label": "Архив",
+            "state": "false"
+          }               
+        ],
+        "filters": [
+          {
+            "class": "button.filters__btn",
+            "label": "Сортировать по отметке",
             "state": "true"
-          }         
-
+          },
+          {
+            "class": "button.filters__btn",
+            "label": "Сортировать по дате создания",
+            "state": "true"
+          },
+          {
+            "class": "button.filters__btn",
+            "label": "Показать мои",
+            "state": "false"
+          }
         ]
       },
       "EditPage": {
