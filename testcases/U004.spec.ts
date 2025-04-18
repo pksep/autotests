@@ -50,6 +50,7 @@ export const runU004 = () => {
         });
     });
 
+
     test("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
         test.setTimeout(50000);
         const shortagePage = new CreatePartsDatabasePage(page);
@@ -267,6 +268,7 @@ export const runU004 = () => {
         await allure.step("Step 16: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (above the комплектации table)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(2000);
             //store the original contents of the table
             tableData_original = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
             detailvalue_original_before_changequantity = await shortagePage.getQuantityByLineItem(tableData_original, TESTCASE_2_PRODUCT_Д)
