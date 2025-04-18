@@ -1581,7 +1581,7 @@ export const runU004 = () => {
                 }
 
                 // Assert that the selected row is found
-                //expect(isRowFound).toBeTruthy();
+                expect(isRowFound).toBeTruthy();
                 logger.info(`The selected row with PartNumber="${selectedPartNumber}" and PartName="${selectedPartName}" is present in the bottom table.`);
             });
             await allure.step("Step 15: Нажимаем по bottom кнопке \"Добавить\" в модальном окне (Click on the bottom \"Добавить\" button in the modal window)", async () => {
@@ -1632,7 +1632,9 @@ export const runU004 = () => {
                     row.style.color = 'blue';
                 });
                 //button.hover();
+                await page.waitForTimeout(500);
                 button.click();
+                await page.waitForTimeout(500);
             });
         });
         await allure.step("Step 003: Добавить ПД к товару (Add ПД to the product and save)", async () => {
