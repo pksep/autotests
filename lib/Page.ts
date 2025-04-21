@@ -2738,6 +2738,37 @@ export class PageObject extends AbstractPage {
     return titles;
   }
 
+  async getAllH3TitlesInModalTestId(page: Page, testId: string): Promise<string[]> {
+    // Step 1: Locate the container by the specified data-testid
+    const container = page.locator(`[data-testid^="${testId}"]`);
+    const titles: string[] = [];
+
+    // Step 2: Find all <h3> elements within the container
+    const h3Elements = await container.locator('h3').elementHandles();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          titles.push(title.trim()); // Trim to remove unnecessary whitespace
+          // Cast the element to HTMLElement before accessing style
+          await h3Tag.evaluate((row) => {
+            (row as HTMLElement).style.backgroundColor = 'yellow';
+            (row as HTMLElement).style.border = '2px solid red';
+            (row as HTMLElement).style.color = 'blue';
+          });
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+
+    // Step 3: Log the collected titles
+    logger.info(`H3 Titles Found Inside TestId '${testId}':`, titles);
+
+    return titles;
+  }
+
+
   async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
     // Locate the dialog using the class and `open` attribute
     const dialogLocator = page.locator(`dialog.${dialogClass}[open]`);

@@ -21,10 +21,20 @@ const MAIN_PAGE_MAIN_DIV = "BaseDetals-Container-MainContainer";
 const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
 const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
 const MAIN_PAGE_Д_TABLE = "BasePaginationTable-Table-detal";
-const MAIN_PAGE_SMALL_DIALOG = "BaseDetals-Dialog-CreateOptions"; //
-const MAIN_PAGE_SMALL_DIALOG_DETAIL = "BaseDetals-CreateLink-base-detail";//
+const MAIN_PAGE_SMALL_DIALOG = "Spectification-DialogSpecification"; //
+const MAIN_PAGE_SMALL_DIALOG_Д = "Spectification-Dialog-CardbaseDetail";//
+const MAIN_PAGE_SMALL_DIALOG_СБ = "Spectification-Dialog-CardbaseOfAssemblyUnits";//
+const MAIN_PAGE_SMALL_DIALOG_РМ = "Spectification-Dialog-CardtheDatabaseOfMaterials";//
+const MAIN_PAGE_SMALL_DIALOG_ПД = "Spectification-Dialog-CardtheDatabaseOfMaterials";//
+
+
 const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";//
 
+const EDIT_PAGE_MAIN_ID = "Creator";
+const EDIT_PAGE_SPECIFICATIONS_TABLE = "Spectification-TableSpecification-Product";
+const EDIT_PAGE_ADD_BUTTON = "Spectification-Buttons-addingSpecification";
+
+const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG = "modal-yui-kit__modal-content";
 
 
 const CREATE_DETAIL_PAGE_SPECIFICATION_ADD_BUTTON = "Spectification-Buttons-addingSpecification";//
@@ -209,7 +219,6 @@ export const runU004 = () => {
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
                 });
             }
-            console.log("step 11 finished");
         });
         await allure.step("Step 12: Нажимаем по данной кнопке. (Press the button)", async () => {
             // Wait for the page to stabilize
@@ -226,7 +235,7 @@ export const runU004 = () => {
             const titles = testData1.elements.EditPage.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'editor');
+            const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, EDIT_PAGE_MAIN_ID);
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
@@ -250,12 +259,13 @@ export const runU004 = () => {
                 // Extract the class, label, and state from the button object
                 const buttonClass = button.class;
                 const buttonLabel = button.label;
+                const buttonDataTestId = button.datatestid;
                 const expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
 
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -264,27 +274,28 @@ export const runU004 = () => {
             }
 
             await page.waitForLoadState("networkidle");
+
         });
         await allure.step("Step 15: Проверяем, что в инпуте наименования совпадает со значением переменной, по которой мы осуществляли поиск данного изделия (We check that the name in the input matches the value of the variable by which we searched for this product.)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
             // Locate all input fields with the specified class
-            const inputFields = page.locator('.input-yui-kit.initial.editor__information-input input.input-yui-kit__input');
+            const inputFields = page.locator('.input-yui-kit.initial.editor__information-input input.input-yui-kit__input');//DATATESTID
 
             // Get the value of the first input field
-            const firstInputValue = await inputFields.nth(0).inputValue();
+            const firstInputValue = await inputFields.nth(0).inputValue();//DATATESTID
 
             expect(firstInputValue).toBe(secondCellValue);
             console.log(`Value in first input field: ${firstInputValue}`);
 
             // Get the value of the second input field
-            const secondInputValue = await inputFields.nth(1).inputValue();
+            const secondInputValue = await inputFields.nth(1).inputValue();//DATATESTID
             expect(secondInputValue).toBe(firstCellValue);
             console.log(`Value in second input field: ${secondInputValue}`);
             // Get the value of the third input field
 
-            const thirdInputValue = await inputFields.nth(2).inputValue();
+            const thirdInputValue = await inputFields.nth(2).inputValue();//DATATESTID
             expect(thirdInputValue).toBe(thirdCellValue);
             console.log(`Value in third input field: ${thirdInputValue}`);
             await page.waitForLoadState("networkidle");
@@ -294,12 +305,12 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(2000);
             //store the original contents of the table
-            tableData_original = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_original = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             detailvalue_original_before_changequantity = await shortagePage.getQuantityByLineItem(tableData_original, TESTCASE_2_PRODUCT_Д)
             // Example assertion
             expect(tableData_original.length).toBeGreaterThan(0); // Ensure groups are present
-
-            const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+            //const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+            const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -309,33 +320,42 @@ export const runU004 = () => {
             addButton.click();
             await page.waitForTimeout(500);
         });
-        await allure.step("Step 17: Проверяем, что в списке есть селекторы с названиями. (Check that the list contains selectors with names)", async () => {
-            // Wait for loading
+        await allure.step("Step 17: Verify that the dialog contains all required cards with correct labels.", async () => {
+            // Wait for the page to load completely
             await page.waitForLoadState("networkidle");
-            const buttons = testData1.elements.EditPage.modalAddButtonsPopup;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
 
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-                    const buttons = await page.locator('div.card-yui-kit.specification-dialog__card');
-                    const buttonTexts = await buttons.evaluateAll(elements => elements.map(e => e.textContent!.trim()));
-                    console.log('Button texts:', buttonTexts);
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+            const cards = testData1.elements.EditPage.modalAddButtonsPopup; // Read card data from the JSON file dynamically
+
+            for (const card of cards) {
+                await allure.step(`Validate card with label: "${card.label}"`, async () => {
+                    const cardDataTestId = card.datatestid || ""; // Read the data-testid value dynamically
+                    const cardLabel = card.label; // Read the label dynamically
+
+                    // Locate the card using its dynamically provided data-testid
+                    const cardElement = await page.locator(`div[data-testid="${cardDataTestId}"]`);
+
+                    // Check if the card is present
+                    const isCardPresent = await cardElement.count() > 0;
+                    expect(isCardPresent).toBeTruthy();
+                    console.log(`Card with data-testid "${cardDataTestId}" is present.`);
+
+                    // Extract the text content of the card and trim whitespace
+                    const cardText = (await cardElement.textContent())?.trim();
+                    console.log(`Card text: "${cardText}"`);
+
+                    // Validate the text content matches the expected label
+                    expect(cardText).toBe(cardLabel);
+                    console.log(`Card with data-testid "${cardDataTestId}" has the correct label: "${cardLabel}".`);
                 });
             }
+
+            logger.info("All cards are present and have correct labels.");
         });
+
+
         await allure.step("Step 18: Нажимаем по селектору из выпадающего списке \"Сборочную единицу (тип СБ)\". (Click on the selector from the drop-down list \"Assembly unit (type СБ)\".)", async () => {
             await page.waitForLoadState("networkidle");
-            const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });
+            const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -350,15 +370,17 @@ export const runU004 = () => {
             const titles = testData1.elements.EditPage.modalAddСБ.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInModalClass(page, 'modal-yui-kit__modal-content');
+            //const h3Titles = await shortagePage.getAllH3TitlesInModalClass(page, 'modal-yui-kit__modal-content');
+            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, EDIT_PAGE_ADD_СБ_RIGHT_DIALOG);
+
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-
+            console.log("UUUUUUUUUUUUUUU")
             // Log for debugging
-            logger.info('Expected Titles:', titles);
-            logger.info('Received Titles:', normalizedH3Titles);
+            console.log('Expected Titles:', titles);
+            console.log('Received Titles:', normalizedH3Titles);
 
             // Validate length
             expect(normalizedH3Titles.length).toBe(titles.length);
@@ -366,6 +388,8 @@ export const runU004 = () => {
             // Validate content and order
             expect(normalizedH3Titles).toEqual(titles);
             await page.waitForLoadState("networkidle");
+
+            console.log("Finish step 19");
         });
         await allure.step("Step 20: Проверяем наличие кнопок на странице  (Check for the visibility of action buttons on the page)", async () => {
             await page.waitForLoadState("networkidle");
@@ -709,7 +733,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
             // Parse the table
-            tableData1 = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData1 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             // Example assertion
             expect(tableData1.length).toBeGreaterThan(0); // Ensure groups are present
         });
@@ -730,7 +754,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
             // Parse the table
-            tableData2 = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData2 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             // Example assertion
             expect(tableData2.length).toBeGreaterThan(0); // Ensure groups are present
         });
@@ -773,7 +797,7 @@ export const runU004 = () => {
             editButton.click();
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(3000);
-            tableData3 = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData3 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             const identical = await shortagePage.compareTableData(tableData1, tableData2);
 
             console.log(`Are tableData1 and tableData3 identical? ${identical}`);
@@ -794,7 +818,7 @@ export const runU004 = () => {
                 await page.waitForLoadState("networkidle");
             });
             await allure.step("Step 39 sub step 2: find and click the Сборочную единицу button", async () => {
-                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });
+                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
                 await add2Button.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
@@ -919,7 +943,7 @@ export const runU004 = () => {
             await allure.step("Step 39 sub step 6: получить содержимое основной таблицы  (get the content of the main table )", async () => {
                 await page.waitForLoadState("networkidle");
                 // Parse the table
-                tableData4 = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+                tableData4 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
                 // Example assertion
                 expect(tableData2.length).toBeGreaterThan(0); // Ensure groups are present
             });
@@ -1010,7 +1034,7 @@ export const runU004 = () => {
                 await page.waitForLoadState("networkidle");
             });
             await allure.step("Step 002 sub step 2: find and click the Сборочную единицу button", async () => {
-                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });
+                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
                 await add2Button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
@@ -1198,7 +1222,7 @@ export const runU004 = () => {
 
             await allure.step("Step 09: Нажимаем по селектору из выпадающего списке \"Сборочную единицу (тип СБ)\". (Click on the selector from the drop-down list \"Assembly unit (type СБ)\".)", async () => {
                 await page.waitForLoadState("networkidle");
-                const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });
+                const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
                 await addButton.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
@@ -2174,7 +2198,7 @@ export const runU004 = () => {
         });
         await allure.step("Step 005: Получить и сохранить текущую основную таблицу продуктов. (Get and store the current main product table)", async () => {
             await page.waitForLoadState("networkidle");
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
 
         });
         await allure.step("Step 006: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)", async () => {
@@ -2269,7 +2293,7 @@ export const runU004 = () => {
                 await page.waitForLoadState("networkidle");
             });
             await allure.step("Step 002 sub step 2: find and click the Сборочную единицу button", async () => {
-                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });
+                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
                 await add2Button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
@@ -2829,7 +2853,7 @@ export const runU004 = () => {
         await allure.step("Step 08: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (above the комплектации table)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            table_before_changequantity = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            table_before_changequantity = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             value_before_changequantity = await shortagePage.getQuantityByLineItem(table_before_changequantity, TESTCASE_2_PRODUCT_Д)
 
             const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
@@ -3191,7 +3215,7 @@ export const runU004 = () => {
         await allure.step("Step 18: извлечь основную таблицу продуктов и сохранить ее в массиве. (extract the main product table and store it in an array)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 19: проверьте, что количество обновлено. (check that the quantity has been updated)", async () => {
             await page.waitForLoadState("networkidle");
@@ -3396,7 +3420,7 @@ export const runU004 = () => {
         await allure.step("Step 13: извлечь основную таблицу продуктов и сохранить ее в массиве. (extract the main product table and store it in an array)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 14: проверьте, что количество обновлено. (check that the quantity has been updated)", async () => {
             await page.waitForLoadState("networkidle");
@@ -3686,7 +3710,7 @@ export const runU004 = () => {
 
         await allure.step("Step 18: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)", async () => {
             await page.waitForLoadState("networkidle");
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             const nestedArray = tableData_full.map(group => group.items).flat();
 
             const result = await shortagePage.isStringInNestedArray(nestedArray, TESTCASE_2_PRODUCT_ASSIGNEMNT); // Output: true
@@ -4133,7 +4157,7 @@ export const runU004 = () => {
         });
         await allure.step("Step 16: Захват таблицы и сохранение ее в массиве. (Capture table and store it in an array)", async () => {
             await page.waitForLoadState("networkidle");
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 17: Подтвердите, что элемент теперь находится в массиве. (Confirm that the item is now in the array)", async () => {
             const nestedArray = tableData_full.map(group => group.items).flat();
@@ -4287,7 +4311,7 @@ export const runU004 = () => {
         });
         await allure.step("Step 20: Захват таблицы и сохранение ее в массиве. (Capture table and store it in an array)", async () => {
             await page.waitForLoadState("networkidle");
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 21: Подтвердите, что элемент теперь НЕ находится в массиве. (Confirm that the item is now NOT in the array)", async () => {
             const nestedArray = tableData_full.map(group => group.items).flat();
@@ -4562,7 +4586,7 @@ export const runU004 = () => {
                 timeout: 5000, // Sets a 500ms timeout
                 waitUntil: 'networkidle', // Waits until the page reaches network idle state
             });
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             await page.waitForLoadState("networkidle");
             const nestedArray = tableData_full.map(group => group.items).flat();
             const result = await shortagePage.isStringInNestedArray(nestedArray, TESTCASE_2_PRODUCT_РМ); // Output: true			
@@ -4713,7 +4737,7 @@ export const runU004 = () => {
                 timeout: 5000, // Sets a 500ms timeout
                 waitUntil: 'networkidle', // Waits until the page reaches network idle state
             });
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             await page.waitForLoadState("networkidle");
             const nestedArray = tableData_full.map(group => group.items).flat();
             const result = await shortagePage.isStringInNestedArray(nestedArray, TESTCASE_2_PRODUCT_РМ); // Output: true			
@@ -4783,7 +4807,7 @@ export const runU004 = () => {
             await page.waitForTimeout(1000);
         });
         await allure.step("Step 08: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-            tableData_temp = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_temp = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'black';
@@ -4797,7 +4821,7 @@ export const runU004 = () => {
             await page.waitForTimeout(1000);
         });
         await allure.step("Step 09: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-            tableData_full = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             await page.waitForLoadState("networkidle");
             const identical = await shortagePage.compareTableData(tableData_temp, tableData_full);
 
@@ -4870,7 +4894,7 @@ export const runU004 = () => {
         await allure.step("Step 08: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (above the комплектации table)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            table_before_changequantity = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            table_before_changequantity = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             value_before_changequantity = await shortagePage.getQuantityByLineItem(table_before_changequantity, TESTCASE_2_PRODUCT_Д)
 
             const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
@@ -5072,7 +5096,7 @@ export const runU004 = () => {
         await allure.step("Step 17: извлечь текущую таблицу спецификаций (extract the current specifications table)", async () => {
             // get table from page
             await page.waitForLoadState("networkidle");
-            tableData_temp = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_temp = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 18: сравните исходную таблицу с текущей таблицей (compare the original table with the current table)", async () => {
             //compare extracted table with the original table - should be the same
@@ -5416,7 +5440,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+            const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });//DATATSTID
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -5429,7 +5453,7 @@ export const runU004 = () => {
         // Start adding СБ
         await allure.step("Step 09: Нажимаем по селектору из выпадающего списке \"Сборочную единицу (тип СБ)\". (Click on the selector from the drop-down list \"Assembly unit (type СБ)\".)", async () => {
             await page.waitForLoadState("networkidle");
-            const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });
+            const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -6224,7 +6248,7 @@ export const runU004 = () => {
         });
         await allure.step("Step 44: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)", async () => {
             await page.waitForLoadState("networkidle");
-            tableData_temp = await shortagePage.parseStructuredTable(page, 'Spectification-TableSpecification-Product');
+            tableData_temp = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             const nestedArray = tableData_temp.map(group => group.items).flat();
             let quantity1 = 0;
             let quantity2 = 0;

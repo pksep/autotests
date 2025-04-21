@@ -16,7 +16,7 @@
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-            "datatestid": "BaseDetals-Button-Copy",
+            "datatestid": "BaseDetals-Button-Create",
             "label": "Создать",
             "state": "true"
           },
@@ -47,51 +47,61 @@
         "buttons": [
           {
             "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "datatestid": "Creator-Buttons-TechProcess",
             "label": "Технологический процесс",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "datatestid": "Creator-Buttons-CostPrice",
             "label": "Себестоимость",
             "state": "false"
           },
           {
             "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "datatestid": "Creator-Buttons-ChangeHistory",
             "label": "История изменений",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "datatestid": "Creator-Buttons-Publication",
             "label": "Публикация",
             "state": "false"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit.specification__btns-adding",
+            "datatestid": "Spectification-Buttons-addingSpecification",
             "label": "Добавить",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+            "datatestid": "Creator-FileComponent-AddFileButton",
             "label": "Добавить из базы",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "datatestid": "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel",
             "label": "Отменить",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "datatestid": "Creator-ButtonSaveAndCancel-ButtonsCenter-Save",
             "label": "Сохранить",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "datatestid": "Creator-ButtonSaveAndCancel-ButtonsRight-Archive",
             "label": "Архив",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "datatestid": "Creator-ButtonSaveAndCancel-ButtonsRight-CreateCopy",
             "label": "Создать копированием",
             "state": "true"
           }         
@@ -100,21 +110,25 @@
         "modalAddButtonsPopup": [
           {
             "class": "div.card-yui-kit.specification-dialog__card",
+            "datatestid": "Spectification-Dialog-CardbaseOfAssemblyUnits",
             "label": "Сборочную\u00A0единицу",
             "state": "true"
           },
           {
             "class": "div.card-yui-kit.specification-dialog__card",
+            "datatestid": "Spectification-Dialog-CardbaseDetail",
             "label": "Деталь",
             "state": "true"
           },
           {
             "class": "div.card-yui-kit.specification-dialog__card",
+            "datatestid": "Spectification-Dialog-CardtheDatabaseOfMaterials",
             "label": "Cтандартную\u00A0или покупную\u00A0деталь",
             "state": "true"
           },
           {
             "class": "div.card-yui-kit.specification-dialog__card",
+            "datatestid": "Spectification-Dialog-CardtheDatabaseOfMaterials",
             "label": "Расходный\u00A0материал",
             "state": "true"
           }
