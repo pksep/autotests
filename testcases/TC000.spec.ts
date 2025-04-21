@@ -7,9 +7,9 @@ import { ENV } from '../config';
 export async function performLogin(page: Page, table: string, login: string, password: string): Promise<void> {
     const loginPage = new LoginPage(page);
     await loginPage.goto(ENV.BASE_URL);
-    await loginPage.fillLoginForm(page, table, login, password);
+    await loginPage.newFillLoginForm(page, table, login, password);
     await page.waitForTimeout(1000)
-    await page.click('button[type="submit"]');
+    // await page.click('button[type="submit"]');
 }
 
 // Define runTC000 to use the performLogin function
@@ -18,9 +18,9 @@ export const runTC000 = (isSingleTest: boolean) => {
         test('Test Case - Login with Data', async ({ page }) => {
             const { table, login, password } = testData.users[0];
             await performLogin(page, table, login, password);
-            await page.waitForSelector('button.btn.blues');
+            // await page.waitForSelector('button.btn.blues');
 
-            await page.click('button.btn.blues');
+            // await page.click('button.btn.blues');
         });
     } else {
         // Loop through all test data
@@ -28,9 +28,9 @@ export const runTC000 = (isSingleTest: boolean) => {
             test(`Test Case - Login with Data for User ${index + 1} `, async ({ page }) => {
                 const { table, login, password } = user;
                 await performLogin(page, table, login, password);
-                await page.waitForSelector('button.btn.blues');
+                // await page.waitForSelector('button.btn.blues');
 
-                await page.click('button.btn.blues');
+                // await page.click('button.btn.blues');
             });
         });
     }

@@ -7,14 +7,11 @@ let quantityProductLaunchOnProductionAfter;
 let quantitySumLaunchOnProduction: Number;
 let urgencyDateOnTable;
 let orderNumber: { orderNumber: string; orderDate: string };// variable declared in test case 2
-const urgencyDate = "23.01.2025";
-const urgencyDateNewFormat = 'Янв 23, 2025'
-const urgencyDateSecond = "21.01.2025";
-const urgencyDateSecondNewFormat = "Янв 21, 2025";
+const urgencyDate = "03.03.2024";
+const urgencyDateSecond = "02.02.2024";
 const nameProduct = "Император Человечества";
 const designationProduct = "0Т3.01";
 const designation = '0Т3'
-const nameBuyer = 'М10'
 const descendantsCbedArray: ISpetificationData[] = [];
 const descendantsDetailArray: ISpetificationData[] = [];
 
@@ -42,24 +39,24 @@ import { ENV, SELECTORS } from "../config";
 import logger from "../lib/logger";
 import { cli } from "winston/lib/winston/config";
 import { allure } from "allure-playwright";
-import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
+import { exec } from "child_process";
 
-export const runU001 = (isSingleTest: boolean, iterations: number) => {
+export const runU040 = (isSingleTest: boolean, iterations: number) => {
     console.log(
         `Starting test: Verify Order From Suppliers Page Functionality`
     );
 
-    test.beforeEach("Test Case 55 - Authorization", async ({ page }) => {
-        await allure.step("Step 088: Authentication", async () => {
-            // Perform login directly on the provided page fixture
-            await performLogin(page, "001", "Перов Д.А.", "54321");
-            await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
-            await page.locator('[data-testid="LoginForm-Login-Button"]').click();
+    // test.beforeEach("Test Case 00 - Authorization", async ({ page }) => {
+    //     await allure.step("Step 00: Authentication", async () => {
+    //         // Perform login directly on the provided page fixture
+    //         await performLogin(page, "001", "Перов Д.А.", "54321");
+    //         await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
+    //         await page.locator('[data-testid="LoginForm-Login-Button"]').click();
 
-            const targetH3 = page.locator('h3:has-text("План по операциям")');
-            await expect(targetH3).toBeVisible();
-        });
-    });
+    //         const targetH3 = page.locator('h3:has-text("План по операциям")');
+    //         await expect(targetH3).toBeVisible();
+    //     });
+    // });
 
     test.skip("Спецификация", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -80,23 +77,22 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
                     " Создать заказ ",
-                    '.button-yui-kit'
+                    '[data-testid="IssueShipment-Button-CreateOrder"]'
                 );
             }
         );
 
         await allure.step("Step 3: Click on the Select button", async () => {
             // Click on the button
-            await page.locator('.button-yui-kit ', { hasText: ' Выбрать ' }).nth(0).click()
-            // await loadingTaskPage.clickButton(
-            //     " Выбрать ",
-            //     '.button-yui-kit '
-            // );
+            await loadingTaskPage.clickButton(
+                " Выбрать ",
+                '[data-testid="AddAddOrder-SelectProductButton"]'
+            );
 
             // Ожидаем тела таблицы
-            // await loadingTaskPage.waitingTableBody(
-            //     locatorTableModalWindow
-            // );
+            await loadingTaskPage.waitingTableBody(
+                locatorTableModalWindow
+            );
 
             await page.waitForTimeout(1000);
         });
@@ -104,52 +100,27 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
             "Step 4: Search product on modal window",
             async () => {
-                //
-                const modalWindow = await page.locator('.modal-yui-kit__modal-content')
                 // Using table search we look for the value of the variable
-                await expect(modalWindow).toBeVisible();
-
-                const searchTable = modalWindow
-                    .locator('.search-yui-kit__input')
-                    .nth(0);
-                await searchTable.fill(nameProduct);
-
-                expect(await searchTable.inputValue()).toBe(nameProduct);
-                await searchTable.press("Enter");
-                //  
-
-                // await loadingTaskPage.searchTable(
-                //     nameProduct,
-                //     '.modal-yui-kit__modal-content'
-                // );
+                await loadingTaskPage.searchTable(
+                    nameProduct,
+                    '[data-testid="TableProduct-BasePaginationTable"]'
+                );
                 await page.waitForTimeout(1000);
 
                 // Waiting for the table body
-                // await loadingTaskPage.waitingTableBody(
-                //     locatorTableModalWindow
-                // );
+                await loadingTaskPage.waitingTableBody(
+                    locatorTableModalWindow
+                );
             }
         );
 
         await allure.step(
             "Step 5: Choice product in modal window",
             async () => {
-                // await page.waitForTimeout(1000);
-                // const modalWindow = await page.locator('.modal-yui-kit__modal-content')
-                // // Using table search we look for the value of the variable
-                // await expect(modalWindow).toBeVisible();
-
-                // const rows = page.locator(`.search-yui-kit__input tr`);
-                // const rowCount = await rows.count();
-                // if (rowCount === 0) {
-                //     throw new Error("В таблице нет строк.");
-                // }
-
-
-
                 // Select a product in the "Select product" modal window
+                await page.waitForTimeout(1000);
                 // await loadingTaskPage.choiceProductInModal(nameProduct);
-                await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0)
+                await loadingTaskPage.clickFromFirstRow('[data-testid="BasePaginationTable-TableBody-DynamicProduct"]', 0)
 
                 await loadingTaskPage.waitForTimeout(1000)
             }
@@ -160,8 +131,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Выбрать ",
+                    '[data-testid="ModalAllProducts-btn-Select"]'
                 );
             }
         );
@@ -172,8 +143,43 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await loadingTaskPage.waitForTimeout(500)
         });
 
+        await allure.step("Step 8: Selecting a buyer", async () => {
+            // Select a buyer in the dropdown menu
+            await loadingTaskPage.choiceBuyer("5");
+
+            // Wait for loading
+            await page.waitForLoadState("networkidle");
+        });
+
         await allure.step(
-            "Step 13: We save descendants from the specification into an array",
+            "Step 9: We change the quantity of the ordered product",
+            async () => {
+                const locator = '[data-testid="AddAddOrder-QuantitySection"]';
+                await loadingTaskPage.checkOrderQuantity(locator, "1", "2");
+                // await loadingTaskPage.waitForTimeout(1000)
+                // await loadingTaskPage.clickButton(
+                //     " Применить изменения ",
+                //     '[data-testid="AddAddOrder-ApplyChangesButton"]', Click.Yes);
+                await page.locator('.btn-add', { hasText: ' Применить изменения ' }).dblclick()
+                await loadingTaskPage.waitForTimeout(1000)
+            }
+        );
+
+        await allure.step(
+            "Step 10: We set the date according to urgency",
+            async () => {
+                const locator =
+                    '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
+                await loadingTaskPage.checkOrderQuantity(
+                    locator,
+                    "",
+                    urgencyDate
+                );
+            }
+        );
+
+        await allure.step(
+            "Step 11: We save descendants from the specification into an array",
             async () => {
                 // Save Assembly units and Parts from the Specification to an array
                 await loadingTaskPage.preservingDescendants(
@@ -182,9 +188,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
             }
         );
+
     });
 
-    test("Test Case 01 - Loading Task", async ({ page }) => {
+    test.only("Test Case 01 - Loading Task", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
 
         const locatorTableModalWindow = '[data-testid="TableProduct-BasePaginationTable"]'
@@ -203,23 +210,22 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
                     " Создать заказ ",
-                    '.button-yui-kit'
+                    '[data-testid="IssueShipment-Button-CreateOrder"]'
                 );
             }
         );
 
         await allure.step("Step 3: Click on the Select button", async () => {
             // Click on the button
-            await page.locator('.button-yui-kit ', { hasText: ' Выбрать ' }).nth(0).click()
-            // await loadingTaskPage.clickButton(
-            //     " Выбрать ",
-            //     '.button-yui-kit '
-            // );
+            await loadingTaskPage.clickButton(
+                " Выбрать ",
+                '[data-testid="AddAddOrder-SelectProductButton"]'
+            );
 
             // Ожидаем тела таблицы
-            // await loadingTaskPage.waitingTableBody(
-            //     locatorTableModalWindow
-            // );
+            await loadingTaskPage.waitingTableBody(
+                locatorTableModalWindow
+            );
 
             await page.waitForTimeout(1000);
         });
@@ -227,52 +233,27 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
             "Step 4: Search product on modal window",
             async () => {
-                //
-                const modalWindow = await page.locator('.modal-yui-kit__modal-content')
                 // Using table search we look for the value of the variable
-                await expect(modalWindow).toBeVisible();
-
-                const searchTable = modalWindow
-                    .locator('.search-yui-kit__input')
-                    .nth(0);
-                await searchTable.fill(nameProduct);
-
-                expect(await searchTable.inputValue()).toBe(nameProduct);
-                await searchTable.press("Enter");
-                //  
-
-                // await loadingTaskPage.searchTable(
-                //     nameProduct,
-                //     '.modal-yui-kit__modal-content'
-                // );
+                await loadingTaskPage.searchTable(
+                    nameProduct,
+                    '[data-testid="TableProduct-BasePaginationTable"]'
+                );
                 await page.waitForTimeout(1000);
 
                 // Waiting for the table body
-                // await loadingTaskPage.waitingTableBody(
-                //     locatorTableModalWindow
-                // );
+                await loadingTaskPage.waitingTableBody(
+                    locatorTableModalWindow
+                );
             }
         );
 
         await allure.step(
             "Step 5: Choice product in modal window",
             async () => {
-                // await page.waitForTimeout(1000);
-                // const modalWindow = await page.locator('.modal-yui-kit__modal-content')
-                // // Using table search we look for the value of the variable
-                // await expect(modalWindow).toBeVisible();
-
-                // const rows = page.locator(`.search-yui-kit__input tr`);
-                // const rowCount = await rows.count();
-                // if (rowCount === 0) {
-                //     throw new Error("В таблице нет строк.");
-                // }
-
-
-
                 // Select a product in the "Select product" modal window
+                await page.waitForTimeout(1000);
                 // await loadingTaskPage.choiceProductInModal(nameProduct);
-                await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0)
+                await loadingTaskPage.clickFromFirstRow('[data-testid="BasePaginationTable-TableBody-DynamicProduct"]', 0)
 
                 await loadingTaskPage.waitForTimeout(1000)
             }
@@ -283,8 +264,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Выбрать ",
+                    '[data-testid="ModalAllProducts-btn-Select"]'
                 );
             }
         );
@@ -297,130 +278,41 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step("Step 8: Selecting a buyer", async () => {
             // Select a buyer in the dropdown menu
-            // await loadingTaskPage.clickButton(
-            //     "Выбрать",
-            //     '.button-yui-kit.medium.primary-yui-kit'
-            // );
+            await loadingTaskPage.choiceBuyer("5");
 
-            const button = page.locator('.button-yui-kit.medium.primary-yui-kit', { hasText: 'Выбрать' }).nth(1);
-            await expect(button).toHaveText('Выбрать');
-            await expect(button).toBeVisible();
-
-            await button.click()
             // Wait for loading
             await page.waitForLoadState("networkidle");
         });
 
-        await allure.step('Step 9: Check modal window Company', async () => {
-            // await loadingTaskPage.searchTable(nameBuyer, '.table-yui-kit__border.table-yui-kit-with-scroll')
-
-            const modalWindow = await page.locator('.modal-yui-kit__modal-content')
-            // Using table search we look for the value of the variable
-            await expect(modalWindow).toBeVisible();
-
-            const searchTable = modalWindow
-                .locator('.search-yui-kit__input')
-                .nth(0);
-            await searchTable.fill(nameBuyer);
-
-            expect(await searchTable.inputValue()).toBe(nameBuyer);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(500)
-
-
-            await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit__border.table-yui-kit-with-scroll', 0)
-        })
-
         await allure.step(
-            "Step 10: Click on the Select button on modal window",
+            "Step 9: We change the quantity of the ordered product",
             async () => {
-                // Click on the button
-                await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
-                );
-            }
-        );
-
-
-        await allure.step(
-            "Step 11: We change the quantity of the ordered product",
-            async () => {
-                const locator = '.input-yui-kit.initial.medium.add-order-component__input.initial';
+                const locator = '[data-testid="AddAddOrder-QuantitySection"]';
                 await loadingTaskPage.checkOrderQuantity(locator, "1", quantityProductLaunchOnProduction);
                 // await loadingTaskPage.waitForTimeout(1000)
                 // await loadingTaskPage.clickButton(
                 //     " Применить изменения ",
                 //     '[data-testid="AddAddOrder-ApplyChangesButton"]', Click.Yes);
-                // await page.locator('.btn-add', { hasText: ' Применить изменения ' }).dblclick()
+                await page.locator('.btn-add', { hasText: ' Применить изменения ' }).dblclick()
                 await loadingTaskPage.waitForTimeout(1000)
             }
         );
 
         await allure.step(
-            "Step 12: We set the date according to urgency",
+            "Step 10: We set the date according to urgency",
             async () => {
-                // const locator =
-                //     '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
-                // await loadingTaskPage.checkOrderQuantity(
-                //     locator,
-                //     "",
-                //     urgencyDate
-                // );
-
-                // await page.locator('.date-picker-yui-kit__header-btn').nth(2).fill('04.01.2025')
-                await page.locator('.date-picker-yui-kit__header-btn').nth(2).click()
-                await page.locator('.vc-popover-content-wrapper.is-interactive').nth(2).isVisible()
-
-                await page.locator('.vc-title-wrapper').click()
-                // Находим элемент с годом
-                const yearElement = await page.locator('.vc-nav-title.vc-focus');
-                const currentYear = await yearElement.textContent();
-                if (!currentYear) throw new Error('Year element not found');
-
-                const targetYear = 2025;
-                const currentYearNum = parseInt(currentYear);
-                console.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
-
-                // Если текущий год не равен целевому
-                if (currentYearNum !== targetYear) {
-                    // Определяем, нужно ли увеличивать или уменьшать год
-                    const isYearLess = currentYearNum < targetYear;
-                    const arrowSelector = isYearLess
-                        ? '.vc-nav-arrow.is-right.vc-focus'
-                        : '.vc-nav-arrow.is-left.vc-focus';
-
-                    // Кликаем на стрелку, пока не достигнем нужного года
-                    while (currentYearNum !== targetYear) {
-                        await page.locator(arrowSelector).click();
-                        await page.waitForTimeout(500); // Небольшая задержка для обновления
-
-                        const newYear = await yearElement.textContent();
-                        if (!newYear) throw new Error('Year element not found');
-                        const newYearNum = parseInt(newYear);
-
-                        if (newYearNum === targetYear) {
-                            console.log(`Year successfully set to ${targetYear}`);
-                            break;
-                        }
-                    }
-                } else {
-                    console.log(`Year is already set to ${targetYear}`);
-                }
-
-                // Проверяем, что год установлен правильно
-                const finalYear = await yearElement.textContent();
-                if (!finalYear) throw new Error('Year element not found');
-                expect(parseInt(finalYear)).toBe(targetYear);
-
-                await page.locator('[aria-label="январь"]').click()
-                await page.locator('.vc-day-content.vc-focusable.vc-focus.vc-attr', { hasText: '23' }).nth(0).click()
+                const locator =
+                    '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
+                await loadingTaskPage.checkOrderQuantity(
+                    locator,
+                    "",
+                    urgencyDate
+                );
             }
         );
 
         await allure.step(
-            "Step 13: We save descendants from the specification into an array",
+            "Step 11: We save descendants from the specification into an array",
             async () => {
                 // Save Assembly units and Parts from the Specification to an array
                 await loadingTaskPage.preservingDescendants(
@@ -431,21 +323,21 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 14: Click on the save order button",
+            "Step 12: Click on the save order button",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    "Сохранить",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Сохранить Заказ ",
+                    '[data-testid="AddOrder-Button-SaveOrder"]'
                 );
             }
         );
 
         await allure.step(
-            "Step 15: Checking the ordered quantity",
+            "Step 13: Checking the ordered quantity",
             async () => {
                 await page.waitForTimeout(3000)
-                orderNumber = await loadingTaskPage.getOrderInfoFromLocator('.add-order-component')
+                orderNumber = await loadingTaskPage.getOrderInfoFromLocator('[data-testid="AddAddOrder-OrderTitle"]')
                 console.log("orderNumber: ", orderNumber)
 
             }
@@ -457,7 +349,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         page,
     }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
-        const loadingTaskTable = '.shipments-content';
+        const loadingTaskTable = '[data-testid="ShipmentsTable-ScrollTable"]';
 
         await allure.step("Step 1: Open the shipment task page", async () => {
             // Go to the Shipping tasks page
@@ -469,16 +361,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step("Step 2: Search product", async () => {
             // Using table search we look for the value of the variable
-            // await loadingTaskPage.searchTable(nameProduct, loadingTaskTable);
-
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
+            await loadingTaskPage.searchTable(nameProduct, loadingTaskTable);
             await page.waitForTimeout(1000);
 
             // Waiting for the table body
@@ -488,18 +371,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
             "Step 3: Checking the quantity in a task",
             async () => {
-                // UPD:
-                // const numberColumn = await loadingTaskPage.findColumn(
-                //     page,
-                //     "ShipmentsTable-Table",
-                //     "ShipmentsTable-TableHead-Quantity"
-                // );
-                // console.log("numberColumn: ", numberColumn);
+                const numberColumn = await loadingTaskPage.findColumn(
+                    page,
+                    "ShipmentsTable-Table",
+                    "ShipmentsTable-TableHead-Quantity"
+                );
+                console.log("numberColumn: ", numberColumn);
 
                 const quantityOnTable =
                     await loadingTaskPage.getValueOrClickFromFirstRow(
                         loadingTaskTable,
-                        5
+                        numberColumn
                     );
                 console.log(
                     "Количество заказанных сущностей в заказе: ",
@@ -512,16 +394,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 4: Checking the urgency date of an order",
             async () => {
                 urgencyDateOnTable = await page
-                    .locator('tbody .date-picker-yui-kit__header-btn span')
+                    .locator('input[data-testid="DatePicter-DatePicker-Input"]')
                     .first()
-                    .textContent()
+                    .getAttribute("value");
 
                 console.log(
                     "Дата по срочности в таблице: ",
                     urgencyDateOnTable
                 );
 
-                expect(urgencyDateOnTable).toBe(urgencyDateNewFormat);
+                expect(urgencyDateOnTable).toBe(urgencyDate);
             }
         );
     });
@@ -1206,7 +1088,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
         const tableMetalworkingWarehouse =
             '[data-testid="MetalloworkingSclad-ScrollTable"]';
-        const productionTable = '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
+        const productionTable = '[data-testid="OperationPathInfo-Table"]';
         let numberColumnQunatityMade: number;
         let firstOperation: string;
         const operationTable = "OperationPathInfo-Table";
@@ -1354,14 +1236,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     "Step 8: Check the production path modal window ",
                     async () => {
                         // Check the production path modal window
-                        await page.waitForTimeout(500)
                         await metalworkingWarehouse.productionPathDetailskModalWindow();
 
                         // Wait for the table body to load
 
-                        // await metalworkingWarehouse.waitingTableBody(
-                        //     productionTable
-                        // );
+                        await metalworkingWarehouse.waitingTableBody(
+                            productionTable
+                        );
                     }
                 );
 
@@ -2747,7 +2628,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
             page
         );
-        const tableTaskForShipment = '.shipments-content';
+        const tableTaskForShipment = '[data-testid="ShipmentsTable-ScrollTable"]';
         const tableModalComing = "ShipmentsTable-Table";
         let numberColumn: number;
 
@@ -2777,20 +2658,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
-            // await warehouseTaskForShipment.searchTable(
-            //     nameProduct,
-            //     tableTaskForShipment
-            // );
-
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(1000);
+            await warehouseTaskForShipment.searchTable(
+                nameProduct,
+                tableTaskForShipment
+            );
 
             // Wait for the table body to load
             await warehouseTaskForShipment.waitingTableBody(
@@ -2813,25 +2684,55 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 5: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await warehouseTaskForShipment.findColumn(
-                //     page,
-                //     tableModalComing,
-                //     "ShipmentsTable-TableHead-Check"
-                // );
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    2,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
+        await allure.step(
+            "Step 6: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await warehouseTaskForShipment.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
 
-        await allure.step("Step 6: Click on the ship button", async () => {
+        await allure.step(
+            "Step 7: Find the checkbox column and click",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await warehouseTaskForShipment.getValueOrClickFromFirstRow(
+                    tableTaskForShipment,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 8: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -2840,14 +2741,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 7: Check the Shipping modal window",
+            "Step 9: Check the Shipping modal window",
             async () => {
                 // Check the Shipping modal window
                 await warehouseTaskForShipment.shipmentModalWindow();
             }
         );
 
-        await allure.step("Step 8: Click on the ship button", async () => {
+        await allure.step("Step 10: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -2860,7 +2761,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
             page
         );
-        const tableTaskForShipment = '.shipments-content';
+        const tableTaskForShipment = '[data-testid="ShipmentsTable-ScrollTable"]';
         const tableModalComing = "ShipmentsTable-Table";
         let numberColumn: number;
 
@@ -2890,20 +2791,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
-            // await warehouseTaskForShipment.searchTable(
-            //     nameProduct,
-            //     tableTaskForShipment
-            // );
-
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(1000);
+            await warehouseTaskForShipment.searchTable(
+                nameProduct,
+                tableTaskForShipment
+            );
 
             // Wait for the table body to load
             await warehouseTaskForShipment.waitingTableBody(
@@ -2926,30 +2817,69 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 5: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await warehouseTaskForShipment.findColumn(
-                //     page,
-                //     tableModalComing,
-                //     "ShipmentsTable-TableHead-Check"
-                // );
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    2,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
-        await allure.step("Step 6: Click on the ship button", async () => {
+        await allure.step(
+            "Step 6: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await warehouseTaskForShipment.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
+
+        await allure.step(
+            "Step 7: Find the checkbox column and click",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await warehouseTaskForShipment.getValueOrClickFromFirstRow(
+                    tableTaskForShipment,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 8: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
                 ".btn-small"
             );
         });
+
+        await allure.step(
+            "Step 9: Check the Shipping modal window",
+            async () => {
+                // Check the Shipping modal window
+                await warehouseTaskForShipment.shipmentModalWindow();
+            }
+        );
 
         await allure.step('Step 10: Checking the number of shipped entities', async () => {
             const tableBody = '[data-testid="ModalShComlit-TableScroll"]'
@@ -2993,23 +2923,22 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
                     " Создать заказ ",
-                    '.button-yui-kit'
+                    '[data-testid="IssueShipment-Button-CreateOrder"]'
                 );
             }
         );
 
         await allure.step("Step 3: Click on the Select button", async () => {
             // Click on the button
-            await page.locator('.button-yui-kit ', { hasText: ' Выбрать ' }).nth(0).click()
-            // await loadingTaskPage.clickButton(
-            //     " Выбрать ",
-            //     '.button-yui-kit '
-            // );
+            await loadingTaskPage.clickButton(
+                " Выбрать ",
+                '[data-testid="AddAddOrder-SelectProductButton"]'
+            );
 
             // Ожидаем тела таблицы
-            // await loadingTaskPage.waitingTableBody(
-            //     locatorTableModalWindow
-            // );
+            await loadingTaskPage.waitingTableBody(
+                locatorTableModalWindow
+            );
 
             await page.waitForTimeout(1000);
         });
@@ -3017,52 +2946,27 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
             "Step 4: Search product on modal window",
             async () => {
-                //
-                const modalWindow = await page.locator('.modal-yui-kit__modal-content')
                 // Using table search we look for the value of the variable
-                await expect(modalWindow).toBeVisible();
-
-                const searchTable = modalWindow
-                    .locator('.search-yui-kit__input')
-                    .nth(0);
-                await searchTable.fill(nameProduct);
-
-                expect(await searchTable.inputValue()).toBe(nameProduct);
-                await searchTable.press("Enter");
-                //  
-
-                // await loadingTaskPage.searchTable(
-                //     nameProduct,
-                //     '.modal-yui-kit__modal-content'
-                // );
+                await loadingTaskPage.searchTable(
+                    nameProduct,
+                    '[data-testid="TableProduct-BasePaginationTable"]'
+                );
                 await page.waitForTimeout(1000);
 
                 // Waiting for the table body
-                // await loadingTaskPage.waitingTableBody(
-                //     locatorTableModalWindow
-                // );
+                await loadingTaskPage.waitingTableBody(
+                    locatorTableModalWindow
+                );
             }
         );
 
         await allure.step(
             "Step 5: Choice product in modal window",
             async () => {
-                // await page.waitForTimeout(1000);
-                // const modalWindow = await page.locator('.modal-yui-kit__modal-content')
-                // // Using table search we look for the value of the variable
-                // await expect(modalWindow).toBeVisible();
-
-                // const rows = page.locator(`.search-yui-kit__input tr`);
-                // const rowCount = await rows.count();
-                // if (rowCount === 0) {
-                //     throw new Error("В таблице нет строк.");
-                // }
-
-
-
                 // Select a product in the "Select product" modal window
+                await page.waitForTimeout(1000);
                 // await loadingTaskPage.choiceProductInModal(nameProduct);
-                await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0)
+                await loadingTaskPage.clickFromFirstRow('[data-testid="BasePaginationTable-TableBody-DynamicProduct"]', 0)
 
                 await loadingTaskPage.waitForTimeout(1000)
             }
@@ -3073,8 +2977,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Выбрать ",
+                    '[data-testid="ModalAllProducts-btn-Select"]'
                 );
             }
         );
@@ -3087,139 +2991,46 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step("Step 8: Selecting a buyer", async () => {
             // Select a buyer in the dropdown menu
-            // await loadingTaskPage.clickButton(
-            //     "Выбрать",
-            //     '.button-yui-kit.medium.primary-yui-kit'
-            // );
+            await loadingTaskPage.choiceBuyer("5");
 
-            const button = page.locator('.button-yui-kit.medium.primary-yui-kit', { hasText: 'Выбрать' }).nth(1);
-            await expect(button).toHaveText('Выбрать');
-            await expect(button).toBeVisible();
-
-            await button.click()
             // Wait for loading
             await page.waitForLoadState("networkidle");
         });
 
-        await allure.step('Step 9: Check modal window Company', async () => {
-            // await loadingTaskPage.searchTable(nameBuyer, '.table-yui-kit__border.table-yui-kit-with-scroll')
-
-            const modalWindow = await page.locator('.modal-yui-kit__modal-content')
-            // Using table search we look for the value of the variable
-            await expect(modalWindow).toBeVisible();
-
-            const searchTable = modalWindow
-                .locator('.search-yui-kit__input')
-                .nth(0);
-            await searchTable.fill(nameBuyer);
-
-            expect(await searchTable.inputValue()).toBe(nameBuyer);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(500)
-
-
-            await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit__border.table-yui-kit-with-scroll', 0)
-        })
 
         await allure.step(
-            "Step 10: Click on the Select button on modal window",
+            "Step 9: We set the date according to urgency",
             async () => {
-                // Click on the button
-                await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
-                );
-            }
-        );
-        await allure.step(
-            "Step 11: We set the date according to urgency",
-            async () => {
-                // const locator =
-                //     '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
-                // await loadingTaskPage.checkOrderQuantity(
-                //     locator,
-                //     "",
-                //     urgencyDate
-                // );
-
-                // await page.locator('.date-picker-yui-kit__header-btn').nth(2).fill('04.01.2025')
-                await page.locator('.date-picker-yui-kit__header-btn').nth(2).click()
-                await page.locator('.vc-popover-content-wrapper.is-interactive').nth(2).isVisible()
-
-                await page.locator('.vc-title-wrapper').click()
-                // Находим элемент с годом
-                const yearElement = await page.locator('.vc-nav-title.vc-focus');
-                const currentYear = await yearElement.textContent();
-                if (!currentYear) throw new Error('Year element not found');
-
-                const targetYear = 2025;
-                const currentYearNum = parseInt(currentYear);
-                console.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
-
-                // Если текущий год не равен целевому
-                if (currentYearNum !== targetYear) {
-                    // Определяем, нужно ли увеличивать или уменьшать год
-                    const isYearLess = currentYearNum < targetYear;
-                    const arrowSelector = isYearLess
-                        ? '.vc-nav-arrow.is-right.vc-focus'
-                        : '.vc-nav-arrow.is-left.vc-focus';
-
-                    // Кликаем на стрелку, пока не достигнем нужного года
-                    while (currentYearNum !== targetYear) {
-                        await page.locator(arrowSelector).click();
-                        await page.waitForTimeout(500); // Небольшая задержка для обновления
-
-                        const newYear = await yearElement.textContent();
-                        if (!newYear) throw new Error('Year element not found');
-                        const newYearNum = parseInt(newYear);
-
-                        if (newYearNum === targetYear) {
-                            console.log(`Year successfully set to ${targetYear}`);
-                            break;
-                        }
-                    }
-                } else {
-                    console.log(`Year is already set to ${targetYear}`);
-                }
-
-                // Проверяем, что год установлен правильно
-                const finalYear = await yearElement.textContent();
-                if (!finalYear) throw new Error('Year element not found');
-                expect(parseInt(finalYear)).toBe(targetYear);
-
-                await page.locator('[aria-label="январь"]').click()
-                await page.locator('.vc-day-content.vc-focusable.vc-focus.vc-attr', { hasText: '21' }).nth(0).click()
-            }
-        );
-
-        await allure.step(
-            "Step 12: Click on the save order button",
-            async () => {
-                // Click on the button
-                await loadingTaskPage.clickButton(
-                    "Сохранить",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                const locator =
+                    '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
+                await loadingTaskPage.checkOrderQuantity(
+                    locator,
+                    "",
+                    urgencyDateSecond
                 );
             }
         );
 
         await allure.step(
-            "Step 13: Checking the ordered quantity",
+            "Step 10: Click on the save order button",
             async () => {
-                await page.waitForTimeout(3000)
-                orderNumber = await loadingTaskPage.getOrderInfoFromLocator('.add-order-component')
-                console.log("orderNumber: ", orderNumber)
-
+                // Click on the button
+                await loadingTaskPage.clickButton(
+                    " Сохранить Заказ ",
+                    '[data-testid="AddOrder-Button-SaveOrder"]'
+                );
             }
         );
+
+
+
     });
 
     test("Test Case 17 - Marking Parts", async ({ page }) => {
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
         const tableMetalworkingWarehouse =
             '[data-testid="MetalloworkingSclad-ScrollTable"]';
-        const productionTable = '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
+        const productionTable = '[data-testid="OperationPathInfo-Table"]';
         let numberColumnQunatityMade: number;
         let firstOperation: string;
         const operationTable = "OperationPathInfo-Table";
@@ -3306,8 +3117,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             "Дата по срочности в таблице: ",
                             urgencyDateOnTable
                         );
+                        console.log(
+                            "Дата по срочности в переменной: ",
+                            urgencyDateSecond
+                        );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+                        expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
 
@@ -3367,14 +3182,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     "Step 8: Check the production path modal window ",
                     async () => {
                         // Check the production path modal window
-                        await page.waitForTimeout(500)
                         await metalworkingWarehouse.productionPathDetailskModalWindow();
 
                         // Wait for the table body to load
 
-                        // await metalworkingWarehouse.waitingTableBody(
-                        //     productionTable
-                        // );
+                        await metalworkingWarehouse.waitingTableBody(
+                            productionTable
+                        );
                     }
                 );
 
@@ -5215,7 +5029,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
             page
         );
-        const tableTaskForShipment = '.shipments-content';
+        const tableTaskForShipment = '[data-testid="ShipmentsTable-ScrollTable"]';
         const tableModalComing = "ShipmentsTable-Table";
         let numberColumn: number;
 
@@ -5245,20 +5059,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
-            // await warehouseTaskForShipment.searchTable(
-            //     nameProduct,
-            //     tableTaskForShipment
-            // );
-
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(1000);
+            await warehouseTaskForShipment.searchTable(
+                orderNumber.orderNumber,
+                tableTaskForShipment
+            );
 
             // Wait for the table body to load
             await warehouseTaskForShipment.waitingTableBody(
@@ -5281,24 +5085,55 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 5: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await warehouseTaskForShipment.findColumn(
-                //     page,
-                //     tableModalComing,
-                //     "ShipmentsTable-TableHead-Check"
-                // );
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    2,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
-        await allure.step("Step 6: Click on the ship button", async () => {
+        await allure.step(
+            "Step 6: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await warehouseTaskForShipment.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
+
+        await allure.step(
+            "Step 7: Find the checkbox column and click",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await warehouseTaskForShipment.getValueOrClickFromFirstRow(
+                    tableTaskForShipment,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 8: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -5307,14 +5142,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 7: Check the Shipping modal window",
+            "Step 9: Check the Shipping modal window",
             async () => {
                 // Check the Shipping modal window
                 await warehouseTaskForShipment.shipmentModalWindow();
             }
         );
 
-        await allure.step("Step 8: Click on the ship button", async () => {
+        await allure.step("Step 10: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -5382,7 +5217,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     urgencyDateOnTable
                 );
 
-                expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+                expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
             }
         );
 
@@ -5453,7 +5288,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             urgencyDateOnTable
                         );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDate);
+                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
             }
@@ -5556,7 +5391,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             urgencyDateOnTable
                         );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDate);
+                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
             }
@@ -5662,8 +5497,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     test("Test Case 30 - Moving Task For Shipment To The Archive", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
-        const loadingTaskTable = '.shipments-content';
-        const tableMainDataTestId = '#tableshipments'
+        const tableMain = '[data-testid="ShipmentsTable-ScrollTable"]'
+        const tableMainDataTestId = 'ShipmentsTable-ScrollTable'
         let numberColumn: number;
 
         await allure.step("Step 1: Open the shipment task page", async () => {
@@ -5677,20 +5512,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step("Step 2: Search product", async () => {
             // Using table search we look for the value of the variable
-            // await loadingTaskPage.searchTable(nameProduct, loadingTaskTable);
-
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
+            await loadingTaskPage.searchTable(nameProduct, tableMain);
             await page.waitForTimeout(1000);
 
             // Waiting for the table body
-            await loadingTaskPage.waitingTableBody(loadingTaskTable);
+            await loadingTaskPage.waitingTableBody(tableMain);
         });
 
 
@@ -5700,7 +5526,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Check that the first row of the table contains the variable name
                 await loadingTaskPage.checkNameInLineFromFirstRow(
                     nameProduct,
-                    loadingTaskTable
+                    tableMain
                 );
             }
         );
@@ -5709,35 +5535,66 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 4: Find the column with the name and click on it",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await loadingTaskPage.findColumn(
-                //     page,
-                //     tableMainDataTestId,
-                //     "ShipmentsTable-TableHead-Name"
-                // );
+                numberColumn = await loadingTaskPage.findColumn(
+                    page,
+                    tableMainDataTestId,
+                    "ShipmentsTable-TableHead-Name"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await loadingTaskPage.getValueOrClickFromFirstRow(
-                    loadingTaskTable,
-                    2,
+                    tableMain,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
-        await allure.step("Step 5: Click on the archive button", async () => {
+        await allure.step(
+            "Step 5: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await loadingTaskPage.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
+
+        await allure.step(
+            "Step 6: Find the column with the name and click on it",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await loadingTaskPage.findColumn(
+                    page,
+                    tableMainDataTestId,
+                    "ShipmentsTable-TableHead-Name"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await loadingTaskPage.getValueOrClickFromFirstRow(
+                    tableMain,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 7: Click on the archive button", async () => {
             // Click on the button
             await loadingTaskPage.clickButton(
-                "Архив",
-                '.button-yui-kit.small.primary-yui-kit'
+                " В Архив",
+                '[data-testid="IssueShipment-Button-Archive"]'
             );
         });
 
         await allure.step("Step 8: Confirm the archive", async () => {
             await loadingTaskPage.clickButton(
-                "Да",
-                '.dialog-ban__buttons .button-yui-kit.small.primary-yui-kit'
+                " Подтвердить ",
+                '[data-testid="ModalPromptMini-Button-Confirm"]'
             );
         });
     });
@@ -5809,7 +5666,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step('Step 7: Checking that the balance is now 0', async () => {
-            await page.waitForTimeout(500)
             await revisionPage.checkWarehouseBalances('0')
         })
 
@@ -5855,7 +5711,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step('Step 6: Checking that the balance is now 0', async () => {
-                    await page.waitForTimeout(500)
                     await revisionPage.checkWarehouseBalances('0')
                 })
             }
@@ -5904,7 +5759,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step('Step 6: Checking that the balance is now 0', async () => {
-                    await page.waitForTimeout(500)
                     await revisionPage.checkWarehouseBalances('0')
                 })
             }

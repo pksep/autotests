@@ -16,4 +16,9 @@ export class CreateRevisionPage extends PageObject {
         await this.page.locator('[data-testid="TableRevisionPagination-EditPen"]').fill(quantity)
         await this.page.locator('[data-testid="TableRevisionPagination-EditPen"]').press('Enter')
     }
+
+    async checkWarehouseBalances(quantity: string) {
+        const checkBalance = await this.page.locator('[data-testid="TableRevisionPagination-TableData-Current"]').textContent()
+        expect(checkBalance).toBe(quantity)
+    }
 }

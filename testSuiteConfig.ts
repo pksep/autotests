@@ -201,6 +201,16 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
+    // U003: {
+    //     description: "New.",
+    //     tests: [
+    //         {
+    //             test: runU003,
+    //             description: "new test.",
+    //         },
+    //         // Add more test cases as needed
+    //     ],
+    // },
     suite01: {
         description: "This is a group of full page tests p02 - P04",
         tests: [

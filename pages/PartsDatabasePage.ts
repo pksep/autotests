@@ -1,5 +1,5 @@
 import { Page, Locator, expect } from "@playwright/test";
-import { PageObject } from "../lib/Page";
+import { Click, PageObject } from "../lib/Page";
 import logger from "../lib/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
@@ -1466,6 +1466,55 @@ export class CreatePartsDatabasePage extends PageObject {
         }
     }
 
+    async checkingTheEditorPageDetails(typeOfOperation: TypeOfOperationMW) {
+        const headerMain = await this.page.locator('.editor__headings').nth(0).textContent()
+        const headerPackage = await this.page.locator('[data-testid="Spectification-Heading"]').textContent()
+        const headerPartParameters = await this.page.locator('.editor__specification-headings').nth(0).textContent()
+        const headerPartCharecteristics = await this.page.locator('.editor__specification-headings').nth(1).textContent()
+        const headerCharacteristicsWorkpiece = await this.page.locator('.editor__specification-headings').nth(2).textContent()
+        const headerDescription = await this.page.locator('.editor__specification-headings').nth(3).textContent()
+        const headerPhotosAndVideos = await this.page.locator('.editor__specification-headings').nth(4).textContent()
 
 
+        const buttonTechnologicalProcess = await this.checkButtonState('Технологический процесс', '.button-yui-kit', 'active');
+        const buttonCost = await this.checkButtonState('Себестоимость', '.button-yui-kit', 'inactive');
+        const buttonChangeHistory = await this.checkButtonState('Принадлежность', '.button-yui-kit', 'active');
+        const buttonAffiliation = await this.checkButtonState('История изменений', '.button-yui-kit', 'active');
+
+        expect(buttonTechnologicalProcess).toBe(true);
+        expect(buttonCost).toBe(true);
+        expect(buttonChangeHistory).toBe(true);
+        expect(buttonAffiliation).toBe(true);
+
+        await this.clickButton('Добавить', '[data-testid="Spectification-Buttons-addingSpecification"]', Click.No)
+        await this.clickButton(' Добавить из базы ', '.attach-file-component__btn', Click.No)
+        await this.clickButton('Добавить', '[data-testid="Spectification-Buttons-addingSpecification"]', Click.No)
+        await this.clickButton('Добавить', '[data-testid="Spectification-Buttons-addingSpecification"]', Click.No)
+        await this.clickButton('Добавить', '[data-testid="Spectification-Buttons-addingSpecification"]', Click.No)
+        await this.clickButton('Добавить', '[data-testid="Spectification-Buttons-addingSpecification"]', Click.No)
+
+        const expectHeaderPackage = 'Спецификация'
+        const expectHeaderPartParameters = 'Параметры детали'
+        const expectHeaderPartCharecteristics = 'Характеристики детали'
+        const expectHeaderCharacteristicsWorkpiece = 'Характеристики заготовки'
+        const expectHeaderDescription = 'Описание / Примечание'
+        const expectHeaderPhotosAndVideos = 'Медиа файлы'
+
+        if (typeOfOperation = TypeOfOperationMW.edit) {
+            const headerMainEdit = 'Редактирование детали'
+            expect(headerMain).toContain(headerMainEdit)
+        }
+        if (typeOfOperation = TypeOfOperationMW.create) {
+            const headerMainEdit = 'Создать деталь'
+            expect(headerMain).toContain(headerMainEdit)
+        }
+
+
+    }
+
+}
+
+export enum TypeOfOperationMW {
+    edit = 'Редактирование',
+    create = 'Создание'
 }
