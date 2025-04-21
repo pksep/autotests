@@ -1176,6 +1176,84 @@ export class PageObject extends AbstractPage {
       }
     }
 
+
+    /**
+     * Verify the success message contains the specified order number.
+     * @param orderNumber - The order number to check within the success message.
+     * @returns A promise that resolves when the message is verified.
+     */
+    async getMessage(orderNumber?: string) {
+        const successMessageLocator = this.page.locator(
+            '.notification-yui-kit'
+        ).last();
+        await expect(successMessageLocator).toBeVisible();
+        if (orderNumber) {
+            const successMessageText =
+                (await successMessageLocator.textContent()) || "";
+            expect(successMessageText).toContain(orderNumber);
+        }
+    }
+
+    /**
+     * Perform a search in the main table using the specified search term.
+     * @param nameSearch - The search term to fill in the search input.
+     * @param locator - The selector to locate the table element.
+     * @returns A promise that resolves when the search is performed.
+     */
+    async closeSuccessMessage() {
+        const successMessageLocator = this.page.locator(
+            '.button-yui-kit.medium.ghost-yui-kit.notification-yui-kit__exit'
+        ).last();
+        await expect(successMessageLocator).toBeVisible();
+        await successMessageLocator.click();
+        await this.page.waitForTimeout(50)
+    }
+
+    /**
+     * Search in the main table
+     * @param nameSearch - the name entered in the table search to perform the search
+     * @param locator - the full locator of the table
+     */
+    async searchTable(nameSearch: string, locator: string) {
+        const table = this.page.locator(locator);
+        const searchTable = table
+            .locator('[data-testid="Search-Cover-Input"]')
+            .nth(0);
+        await searchTable.fill(nameSearch);
+
+        expect(await searchTable.inputValue()).toBe(nameSearch);
+        await searchTable.press("Enter");
+    }
+
+    /**
+     * Поиск в основой таблице
+     * @param nameSearch - имя которое вводим в поиск таблицы и осуществляем поиск but my clickign search icon
+     * @param locator - локатор селектора [data-testid=**]
+     */
+    async searchTableByIcon(nameSearch: string, locator: string) {
+        const table = this.page.locator(locator);
+        const searchTable = table
+            .locator('[data-testid="Search-Cover-Input"]')
+            .nth(0);
+        await searchTable.fill(nameSearch);
+
+        expect(await searchTable.inputValue()).toBe(nameSearch);
+        const searchIcon = table.locator('[data-testid="Search-Cover-Icon"]');
+        await searchIcon.click();
+    }
+
+    /**
+     * Wait for the table body to become visible.
+     * @param locator - the full locator of the table
+     * @returns A promise that resolves when the table body is visible.
+     */
+    async waitingTableBody(locator: string) {
+        const locatorTable = this.page.locator(locator);
+
+        await this.page.waitForSelector(`${locator} tbody tr`, {
+            state: "visible",
+        });
+
     return { success: true };
   }
 
@@ -1212,6 +1290,7 @@ export class PageObject extends AbstractPage {
         success: false,
         message: `Table with id "${tableId}" not found`,
       };
+
     }
 
     // Step 2: Get all rows in the table
@@ -1319,37 +1398,6 @@ export class PageObject extends AbstractPage {
     if (click === Click.Yes) {
       await button.click();
     }
-  }
-
-  /**
-   * Verify the success message contains the specified order number.
-   * @param orderNumber - The order number to check within the success message.
-   * @returns A promise that resolves when the message is verified.
-   */
-  async getMessage(orderNumber?: string) {
-    const successMessageLocator = this.page.locator(
-      '[data-testid="InformFolder-MessageType-Paragraph"]'
-    );
-    await expect(successMessageLocator).toBeVisible();
-    if (orderNumber) {
-      const successMessageText =
-        (await successMessageLocator.textContent()) || "";
-      expect(successMessageText).toContain(orderNumber);
-    }
-  }
-
-  /**
-   * Perform a search in the main table using the specified search term.
-   * @param nameSearch - The search term to fill in the search input.
-   * @param locator - The selector to locate the table element.
-   * @returns A promise that resolves when the search is performed.
-   */
-  async closeSuccessMessage() {
-    const successMessageLocator = this.page.locator(
-      '[data-testid="InformFolder-MessageType-DestroyDiv"] .unicon'
-    );
-    await expect(successMessageLocator).toBeVisible();
-    await successMessageLocator.click();
   }
 
   /**
@@ -2382,6 +2430,144 @@ export class PageObject extends AbstractPage {
       return validRows;
     }
 
+
+    /**
+     * Retrieve descendants from the entity specification
+     * Iterate through the entity specification table and save to separate arrays
+     * @param descendantsCbedArray - the array where we plan to save the assemblies
+     * @param descendantsDetailArray - the array where we plan to save the details
+     */
+    async preservingDescendants(
+        descendantsCbedArray: ISpetificationData[],
+        descendantsDetailArray: ISpetificationData[]
+    ) {
+        const table = this.page.locator(".table-yui-kit:nth-child(1)");
+        const rowCount = await table.locator("tbody tr").count();
+
+        expect(rowCount).toBeGreaterThan(0); // Проверка на наличие строк
+
+        if (rowCount === 0) {
+            throw new Error("Нет строк в таблице");
+        }
+
+        const { cbeds, detals, materialList, listPokDet } =
+            await extractDataSpetification(table);
+
+        descendantsCbedArray.push(...cbeds);
+        descendantsDetailArray.push(...detals);
+
+        logger.info(`cbeds: `, descendantsCbedArray);
+        logger.info(`detals: `, descendantsDetailArray);
+        logger.info("materialList: ", materialList);
+        logger.info("listPokDet: ", listPokDet);
+    }
+
+    /**
+     * Check the modal window for completion status
+     * @param nameOperation - Pass the name of the operation for verification
+     * @param nameProduct - Pass the name of the entity for verification
+     * @param designationProduct - Pass the designation of the entity for verification
+     */
+    async completionMarkModalWindow(
+        nameOperation: string,
+        nameProduct: string,
+        designationProduct: string
+    ) {
+        const modalWindow = this.page.locator(
+            '[data-testid="ModalMark-Content"]'
+        );
+        await expect(modalWindow).toBeVisible();
+        await expect(
+            modalWindow.locator("h3", { hasText: "Отметка о выполнении" })
+        ).toBeVisible();
+        await expect(
+            modalWindow.locator("h3", { hasText: "Поля для заполнения" })
+        ).toBeVisible();
+        await expect(
+            modalWindow.locator("h3", { hasText: "Примечание" })
+        ).toBeVisible();
+        await this.page.waitForTimeout(500);
+
+        // Check the operation in the completion status with the selected operation of the production path
+        const operation = await modalWindow
+            .locator('[data-testid="ModalMark-Operation-Current"] span')
+            .textContent();
+        logger.info(`Тип операции: ${operation}`);
+
+        if (!operation || !operation.includes(nameOperation)) {
+            throw new Error(
+                `Ожидаемое значение "${nameOperation}" не найдено в тексте операции: "${operation}"`
+            );
+        }
+
+        // Check for name match in the modal window for completion status
+        const checkDesignation = await modalWindow
+            .locator('[data-testid="ModalMark-ObjName-Name"]')
+            .textContent();
+        expect(await checkDesignation?.includes(nameProduct)).toBeTruthy();
+
+        // Check for designation match in the modal window for completion status
+        const checkName = await modalWindow
+            .locator('[data-testid="ModalMark-ObjName-Designation"]')
+            .textContent();
+        expect(await checkName?.includes(designationProduct)).toBeTruthy();
+
+        // Check that the current date is displayed in the text of the element
+        await this.checkCurrentDate('[data-testid="ModalMark-Date"]');
+
+        // Check that the "Due Date" input contains the current date
+        const dateToday = await this.checkCurrentDate(
+            '[data-testid="ModalMark-Date"]'
+        );
+
+        const dateInput = await modalWindow
+            .locator('[data-testid="DatePicter-DatePicker-Input"]')
+            .inputValue();
+        expect(await dateInput).toBe(dateToday);
+
+        // Check the number of completed marks
+        const numberOfCompletedParts = await modalWindow
+            .locator('[type="number"]')
+            .nth(0);
+        expect(await numberOfCompletedParts.getAttribute("value")).toBe("1");
+
+        // Checking the checkbox
+        const checkboxMarriage = await modalWindow.locator('[type="checkbox"]');
+        await expect(checkboxMarriage).not.toBeChecked();
+
+        // Actual execution time
+        const actualExecutionTime = await modalWindow
+            .locator('[type="number"]')
+            .nth(1);
+        expect(await actualExecutionTime.inputValue()).toBe("0");
+
+        // Checking the display of textarea
+        await expect(modalWindow.locator("textarea")).toBeVisible();
+
+        // Checking a button in a modal window
+        await this.clickButton(" Сохранить Отметку ", ".btn-status", Click.No);
+    }
+
+    // Checking the modal window to send to archive
+    async checkModalWindowForTransferringToArchive(locator: string) {
+        const modalWindow = this.page.locator(`[data-testid^=${locator}]`);
+        await expect(modalWindow).toBeVisible();
+        await expect(modalWindow.locator(".unicon")).toBeVisible();
+        await expect(
+            modalWindow.locator("button", { hasText: " Отмена " })
+        ).toBeVisible();
+        await expect(
+            modalWindow.locator("button", { hasText: " Подтвердить " })
+        ).toBeVisible();
+
+        const modalText = await modalWindow
+            .locator('[data-testid="ModalPromptMini-Cross-Container"]')
+            .textContent();
+
+        const regex = /Перенести \d+ в архив\?/;
+
+        if (!modalText || !regex.test(modalText)) {
+
     // Perform a search with an empty input and verify no results
     await searchTable.fill("");
     await searchTable.press("Enter");
@@ -2467,6 +2653,7 @@ export class PageObject extends AbstractPage {
             }
             return;
           } else {
+
             throw new Error(
               `Целевая ячейка с индексом ${targetCellIndex} не найдена.`
             );
@@ -2475,6 +2662,54 @@ export class PageObject extends AbstractPage {
       }
     }
 
+    // Check the modal window for the Production Path of the part
+    async productionPathDetailskModalWindow() {
+        const modalWindow = this.page.locator(
+            '.modal-yui-kit__modal-content'
+        );
+        await expect(modalWindow).toBeVisible();
+        await expect(
+            modalWindow.locator("h3", {
+                hasText: " Производственный путь Детали ",
+            })
+        ).toBeVisible();
+        await expect(
+            modalWindow.locator("h3", { hasText: "Детали операций" })
+        ).toBeVisible();
+
+        await expect(
+            modalWindow.locator(".btn-status", {
+                hasText: " Актуализировать ",
+            })
+        ).toBeVisible();
+        await expect(
+            modalWindow.locator(".btn-status", { hasText: " Печать " })
+        ).toBeVisible();
+    }
+
+    // Check the modal window "Completed Sets"
+    async completesSetsModalWindow() {
+        const locatorModalWindow = '[data-testid="ModalKitsList-RightContent"]';
+        const modalWindow = this.page.locator(locatorModalWindow);
+
+
+        await expect(modalWindow).toBeVisible();
+        await this.waitingTableBody(locatorModalWindow);
+
+        await expect(
+            modalWindow.locator("h3", { hasText: "Скомплектованные наборы" })
+        ).toBeVisible();
+
+        await this.clickButton(
+            " Выбрать ",
+            '[data-testid="ModalKitsList-SelectButton"]',
+            Click.No
+        );
+        await this.clickButton(
+            " Отменить ",
+            '[data-testid="ModalKitsList-CancelButton"]',
+            Click.No
+        );
     throw new Error(`Переменная "${variableName}" не найдена в таблице.`);
   }
 
@@ -2765,8 +3000,270 @@ export class PageObject extends AbstractPage {
     };
   }
 
+    /** Checks if a button is visible and active/inactive
+     * @param selector - selector for the button
+     * @param expectedState - expected state of the button ('active' or 'inactive')
+     * @returns Promise<boolean> - true if button state matches expected, false otherwise
+     */
+    async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
+        const button = this.page.locator(selector, { hasText: name });
+
+        await expect(button).toBeVisible();
+
+        const classes = await button.getAttribute('class');
+
+        if (expectedState === 'active') {
+
+            return !classes?.includes('disabled-yui-kit');
+        } else {
+
+            return classes?.includes('disabled-yui-kit') ?? false;
+        }
+    }
 
 
+
+    async newFillLoginForm(
+        page: Page,
+        tabel: string,
+        login: string,
+        password: string
+    ): Promise<void> {
+        const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        try {
+            // Step 1: Fill "Табельный номер" field
+            await page.waitForSelector('#tabel .combobox__input', { state: 'visible', timeout: 10000 });
+            console.log('Табельный номер field is visible.');
+            await page.click('#tabel .combobox__input'); // Open dropdown
+            await page.waitForSelector('.select-list-yui-kit__list', { state: 'visible' });
+            await page.click(`.select-list-yui-kit__item:has-text("${tabel}")`);
+            console.log(`Табельный номер set to: ${tabel}`);
+            //await delay(1000); // Allow dynamic "Логин" field to load
+
+            // Step 2: Fill "Логин" field
+            await page.waitForSelector('#initial .combobox__input', { state: 'visible', timeout: 10000 });
+            console.log('Логин field is visible.');
+            await page.fill('#initial .combobox__input', login); // Type the login
+            //await delay(500); // Allow list of logins to appear
+
+            // Select the correct login option from the dropdown
+            await page.waitForSelector(`.select-list-yui-kit__item:has-text("${login}")`, { state: 'visible' });
+            await page.click(`.select-list-yui-kit__item:has-text("${login}")`);
+            console.log(`Логин set to: ${login}`);
+            //await delay(500); // Ensure proper state update before proceeding
+
+            // Step 3: Fill "Пароль" field
+            await page.waitForSelector('#password .input-yui-kit__input', { state: 'visible', timeout: 10000 });
+            console.log('Пароль field is visible.');
+            await page.fill('#password .input-yui-kit__input', password);
+            console.log('Пароль filled successfully.');
+
+            console.log('Form filled successfully!');
+        } catch (error) {
+            console.error('Error filling the login form:', error);
+            throw error;
+        }
+    }
+
+    /**
+   * Get all H3 tag values within a specific element by class name.
+   * Excludes H3 tags inside <dialog> or <dialogs> tags.
+   *
+   * @param {string} className - The class name of the container to scan.
+   * @returns {string[]} - Array of H3 text content.
+   */
+    async getAllH3TitlesInClass(page: Page, className: string): Promise<string[]> {
+        // Step 1: Collect all H3 titles inside dialogs
+        const allDialogs = await page.locator('dialog').elementHandles();
+        const dialogTitles: string[] = [];
+        for (const dialog of allDialogs) {
+            const h3Tags = await dialog.$$('h3');
+            for (const h3 of h3Tags) {
+                const title = await h3.textContent();
+                if (title) {
+                    dialogTitles.push(title.trim());
+                }
+            }
+        }
+        logger.info('H3 Titles Found Inside Dialogs:', dialogTitles);
+
+        // Step 2: Collect all H3 titles inside the specified class
+        const container = page.locator(`.${className}`);
+        const classTitles: string[] = [];
+        const h3Elements = await container.locator('h3').all();
+        for (const h3Tag of h3Elements) {
+            try {
+                const title = await h3Tag.textContent();
+                if (title) {
+                    classTitles.push(title.trim());
+                    await h3Tag.evaluate((row) => {
+                        row.style.backgroundColor = 'yellow';
+                        row.style.border = '2px solid red';
+                        row.style.color = 'blue';
+                    });
+                }
+            } catch (error) {
+                console.error('Error processing H3 tag:', error);
+            }
+        }
+        logger.info('H3 Titles Found Inside Class:', classTitles);
+
+        // Step 3: Remove dialog titles from class titles
+        const filteredTitles = classTitles.filter((title) => !dialogTitles.includes(title));
+        logger.info('Filtered H3 Titles (Excluding Dialogs):', filteredTitles);
+
+        return filteredTitles;
+    }
+
+
+    async isButtonVisible(
+        page: Page,
+        buttonSelector: string,
+        label: string,
+        Benabled: boolean = true, // Default is true
+        dialogContext: string = '' // Optional: Specify dialog context for scoping
+    ): Promise<boolean> {
+        try {
+            // Apply dialog context if provided
+            const scopedSelector = dialogContext
+                ? `${dialogContext} ${buttonSelector}`
+                : buttonSelector;
+
+            // Locate the button using the updated selector
+            const button = page.locator(scopedSelector, { hasText: new RegExp(`^\\s*${label.trim()}\\s*$`) });
+            console.log(`Found ${await button.count()} buttons matching selector "${scopedSelector}" and label "${label}".`);
+
+            // Debugging: Log initial info
+            console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}`);
+
+            // Highlight the button for debugging
+            await button.evaluate((row) => {
+                row.style.backgroundColor = 'yellow';
+                row.style.border = '2px solid red';
+                row.style.color = 'blue';
+            });
+
+            // Wait for the button to be attached to the DOM
+            await button.waitFor({ state: 'attached' });
+            console.log(`Button "${label}" is attached to the DOM.`);
+
+            // Verify visibility
+            const isVisible = await button.isVisible();
+            console.log(`Button "${label}" visibility: ${isVisible}`);
+            await expect(button).toBeVisible(); // Assert visibility explicitly
+
+            // Check for 'disabled-yui-kit' class
+            const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
+            console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+
+            if (Benabled) {
+                console.log(`Expecting button "${label}" to be enabled.`);
+                expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
+                const isDisabled = await button.evaluate((btn) => btn.hasAttribute('disabled'));
+                console.log(`Disabled attribute present for button "${label}": ${isDisabled}`);
+                expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
+            } else {
+                console.log(`Expecting button "${label}" to be disabled.`);
+                expect(hasDisabledClass).toBeTruthy(); // Button should be disabled
+            }
+
+            console.log(`Button "${label}" passed all checks.`);
+            return true; // If everything passes, the button is valid
+        } catch (error) {
+            console.error(`Error while checking button "${label}" state:`, error);
+            return false; // Return false on failure
+        }
+    }
+
+
+
+    async getAllH3TitlesInModalClass(page: Page, className: string): Promise<string[]> {
+        // Step 1: Locate the container by the specified class
+        const container = page.locator(`.${className}`);
+        const titles: string[] = [];
+
+        // Step 2: Find all <h3> elements within the container
+        const h3Elements = await container.locator('h3').all();
+        for (const h3Tag of h3Elements) {
+            try {
+                const title = await h3Tag.textContent();
+                if (title) {
+                    titles.push(title.trim()); // Trim to remove unnecessary whitespace
+                    await h3Tag.evaluate((row) => {
+                        row.style.backgroundColor = 'yellow';
+                        row.style.border = '2px solid red';
+                        row.style.color = 'blue';
+                    });
+                }
+            } catch (error) {
+                console.error('Error processing H3 tag:', error);
+            }
+        }
+
+        // Step 3: Log the collected titles
+        logger.info(`H3 Titles Found Inside Class '${className}':`, titles);
+
+        return titles;
+    }
+
+    async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
+        // Locate the dialog using the class and `open` attribute
+        const dialogLocator = page.locator(`dialog.${dialogClass}[open]`);
+
+        // Find all buttons inside the scoped dialog
+        return dialogLocator.locator(buttonSelector);
+    }
+    async arraysAreIdentical<T>(arr1: T[], arr2: T[]): Promise<boolean> {
+        if (arr1.length !== arr2.length) {
+            return false; // Arrays have different lengths
+        }
+
+        const areEqual = arr1.every((value, index) => {
+            const value2 = arr2[index];
+            if (Array.isArray(value) && Array.isArray(value2)) {
+                return this.arraysAreIdentical(value, value2); // Recursive call
+            }
+            return value === value2; // Compare primitives
+        });
+
+        return areEqual;
+    }
+
+    async getAllH3TitlesInModalClassNew(page: Page, className: string): Promise<string[]> {
+        // Step 1: Locate the container by the specified class
+        const container = page.locator(`${className}`);
+        const titles: string[] = [];
+
+        // Step 2: Find all <h3> elements within the container
+        const h3Elements = await container.locator('h3').all();
+        for (const h3Tag of h3Elements) {
+            try {
+                const title = await h3Tag.textContent();
+                if (title) {
+                    titles.push(title.trim()); // Trim to remove unnecessary whitespace
+                    await h3Tag.evaluate((row) => {
+                        row.style.backgroundColor = 'yellow';
+                        row.style.border = '2px solid red';
+                        row.style.color = 'blue';
+                    });
+                }
+            } catch (error) {
+                console.error('Error processing H3 tag:', error);
+            }
+        }
+
+        // Step 3: Log the collected titles
+        logger.info(`H3 Titles Found Inside Class '${className}':`, titles);
+
+        return titles;
+    }
+
+    async modalCompany() {
+        const modalWindow = '.modal-yui-kit__modal-content'
+        expect(await this.page.locator(modalWindow)).toBeVisible()
+
+    }
 }
 
 
@@ -2779,6 +3276,87 @@ export class PageObject extends AbstractPage {
  * @property quantity - The quantity of the specification item.
  */
 async function extractDataSpetification(
+    table: Locator
+): Promise<ISpetificationReturnData> {
+    const cbedListData: ISpetificationData[] = [];
+    const detalListData: ISpetificationData[] = [];
+    const listPokDetListData: ISpetificationData[] = [];
+    const materialListData: ISpetificationData[] = [];
+
+    // Get all tbody sections
+    const tbodySections = table.locator("tbody");
+    const tbodyCount = await tbodySections.count();
+    console.log(`Found ${tbodyCount} tbody sections`);
+
+    // Wait for the first row to be visible
+    await table.locator("tbody tr").first().waitFor({ state: 'visible' });
+
+    for (let tbodyIndex = 0; tbodyIndex < tbodyCount; tbodyIndex++) {
+        const tbody = tbodySections.nth(tbodyIndex);
+        const tbodyRows = tbody.locator("tr");
+        const rowCount = await tbodyRows.count();
+        console.log(`Section ${tbodyIndex} has ${rowCount} rows`);
+
+        if (rowCount === 0) {
+            console.log(`Section ${tbodyIndex} is empty, skipping`);
+            continue;
+        }
+
+        for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+            const row = tbodyRows.nth(rowIndex);
+            const rowData = row.locator("td");
+            const tdCount = await rowData.count();
+
+            if (tdCount === 0) {
+                console.log(`Row ${rowIndex} has no td elements, skipping`);
+                continue;
+            }
+
+            const cell2 = (await rowData.nth(1).textContent()) || "";
+            const cell3 = (await rowData.nth(2).textContent()) || "";
+            const cell5 = (await rowData.nth(4).textContent()) || "0";
+
+            const designation = cell2?.trim() || "";
+            const name = cell3?.trim() || "";
+            const quantity = Number(cell5?.trim()) || 0;
+
+            console.log(`Processing row ${rowIndex} in section ${tbodyIndex}:`, {
+                designation,
+                name,
+                quantity
+            });
+
+            // Determine which array to push based on tbody index
+            switch (tbodyIndex) {
+                case 0:
+                    cbedListData.push({ designation, name, quantity });
+                    break;
+                case 1:
+                    detalListData.push({ designation, name, quantity });
+                    break;
+                case 2:
+                    listPokDetListData.push({ designation, name, quantity });
+                    break;
+                case 3:
+                    materialListData.push({ designation, name, quantity });
+                    break;
+            }
+        }
+    }
+
+    // Log the contents of each array
+    console.log("Сборки (cbeds):", JSON.stringify(cbedListData, null, 2));
+    console.log("Детали (detals):", JSON.stringify(detalListData, null, 2));
+    console.log("Покупные детали (listPokDet):", JSON.stringify(listPokDetListData, null, 2));
+    console.log("Материалы (materialList):", JSON.stringify(materialListData, null, 2));
+
+    return {
+        cbeds: cbedListData,
+        detals: detalListData,
+        listPokDet: listPokDetListData,
+        materialList: materialListData,
+    };
+
   rows: Locator
 ): Promise<ISpetificationReturnData> {
   const cbedListData: ISpetificationData[] = [];

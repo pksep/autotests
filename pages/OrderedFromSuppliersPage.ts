@@ -6,6 +6,7 @@ import { time } from "console";
 import { allure } from "allure-playwright";
 import { ENV, SELECTORS } from "../config";
 
+
 export enum Supplier {
     cbed = "Сборка",
     details = "Детали",
@@ -114,6 +115,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             async () => {
                 await this.findTable(selector);
                 await this.page.waitForLoadState("networkidle");
+
             }
         );
 
@@ -138,9 +140,11 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         );
 
         await allure.step("Step 5: Search product", async () => {
+            await this.waitForTimeout(500)
             await this.waitingTableBody(test);
             await this.searchTable(name, test);
             await this.page.waitForLoadState("networkidle");
+            await this.waitForTimeout(500)
             await this.waitingTableBody(test);
         });
 
@@ -212,7 +216,21 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             );
         });
 
-        await allure.step("Step 10: Check quantity on order", async () => {
+        await allure.step(
+            "Step 10: Check modal window launch in to production",
+            async () => {
+                await this.checkModalWindowLaunchIntoProduction();
+
+                await this.checkCurrentDate(
+                    '[data-testid="ModalStartProduction-OrderDateValue"]'
+                );
+
+                checkOrderNumber = await this.checkOrderNumber();
+                console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+            }
+        );
+
+        await allure.step("Step 11: Check quantity on order", async () => {
             const numberColumn = await this.findColumn(
                 this.page,
                 tableModalWindowLaunch,
@@ -226,31 +244,10 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 name,
                 numberColumn
             );
-            console.log("qunatityValue: ", qunatityValue);
+            expect.soft(qunatityValue).toBe(quantityOrder)
         });
 
-        await allure.step("Step 11: Click on the Order button", async () => {
-            await this.clickButton(
-                " Заказать ",
-                '[data-testid="ModalAddOrder-ProductionTable-OrderButton"]'
-            );
-        });
-
-        await allure.step(
-            "Step 12: Check modal window launch in to production",
-            async () => {
-                await this.checkModalWindowLaunchIntoProduction();
-
-                await this.checkCurrentDate(
-                    '[data-testid="ModalStartProduction-OrderDateValue"]'
-                );
-
-                checkOrderNumber = await this.checkOrderNumber();
-                console.log(`Полученный номер заказа: ${checkOrderNumber}`);
-            }
-        );
-
-        await allure.step("Step 13: Click on the Order button", async () => {
+        await allure.step("Step 12: Click on the Order button", async () => {
             await this.clickButton(" В производство ", ".btn-status");
 
             await this.getMessage(checkOrderNumber);
