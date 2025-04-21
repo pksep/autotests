@@ -10,21 +10,25 @@
         "buttons": [
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+            "datatestid": "BaseDetals-Button-Edit",
             "label": "Редактировать",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+            "datatestid": "BaseDetals-Button-Copy",
             "label": "Создать",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+            "datatestid": "BaseDetals-Button-CreateCopy",
             "label": "Создать копированием",
             "state": "true"
           } ,
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+            "datatestid": "BaseDetals-Button-Archive",
             "label": "Архив",
             "state": "true"
           }         

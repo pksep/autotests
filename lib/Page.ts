@@ -2550,6 +2550,44 @@ export class PageObject extends AbstractPage {
     return filteredTitles;
   }
 
+  async getAllH3TitlesInTestId(page: Page, testId: string): Promise<string[]> {
+    // Step 1: Collect all H3 titles inside dialogs
+    const allDialogs = await page.locator('dialog').elementHandles();
+    const dialogTitles: string[] = [];
+    for (const dialog of allDialogs) {
+      const h3Tags = await dialog.$$('h3');
+      for (const h3 of h3Tags) {
+        const title = await h3.textContent();
+        if (title) {
+          dialogTitles.push(title.trim());
+        }
+      }
+    }
+    logger.info('H3 Titles Found Inside Dialogs:', dialogTitles);
+
+    // Step 2: Collect all H3 titles inside the specified data-testid container
+    const container = page.locator(`[data-testid="${testId}"]`);
+    const testIdTitles: string[] = [];
+    const h3Elements = await container.locator('h3').elementHandles();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          testIdTitles.push(title.trim());
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+    logger.info('H3 Titles Found Inside TestId:', testIdTitles);
+
+    // Step 3: Remove dialog titles from testId titles
+    const filteredTitles = testIdTitles.filter((title) => !dialogTitles.includes(title));
+    logger.info('Filtered H3 Titles (Excluding Dialogs):', filteredTitles);
+
+    return filteredTitles;
+  }
+
 
   async isButtonVisible(
     page: Page,
@@ -2576,6 +2614,65 @@ export class PageObject extends AbstractPage {
         row.style.backgroundColor = 'yellow';
         row.style.border = '2px solid red';
         row.style.color = 'blue';
+      });
+
+      // Wait for the button to be attached to the DOM
+      await button.waitFor({ state: 'attached' });
+      console.log(`Button "${label}" is attached to the DOM.`);
+
+      // Verify visibility
+      const isVisible = await button.isVisible();
+      console.log(`Button "${label}" visibility: ${isVisible}`);
+      await expect(button).toBeVisible(); // Assert visibility explicitly
+
+      // Check for 'disabled-yui-kit' class
+      const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
+      console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+
+      if (Benabled) {
+        console.log(`Expecting button "${label}" to be enabled.`);
+        expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
+        const isDisabled = await button.evaluate((btn) => btn.hasAttribute('disabled'));
+        console.log(`Disabled attribute present for button "${label}": ${isDisabled}`);
+        expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
+      } else {
+        console.log(`Expecting button "${label}" to be disabled.`);
+        expect(hasDisabledClass).toBeTruthy(); // Button should be disabled
+      }
+
+      console.log(`Button "${label}" passed all checks.`);
+      return true; // If everything passes, the button is valid
+    } catch (error) {
+      console.error(`Error while checking button "${label}" state:`, error);
+      return false; // Return false on failure
+    }
+  }
+
+  async isButtonVisibleTestId(
+    page: Page,
+    testId: string,
+    label: string,
+    Benabled: boolean = true, // Default is true
+    dialogContextTestId: string = '' // Optional: Specify dialog context testId for scoping
+  ): Promise<boolean> {
+    try {
+      // Apply dialog context if provided
+      const scopedSelector = dialogContextTestId
+        ? `[data-testid="${dialogContextTestId}"] [data-testid="${testId}"]`
+        : `[data-testid="${testId}"]`;
+
+      // Locate the button using the updated testId-based selector
+      const button = page.locator(scopedSelector, { hasText: new RegExp(`^\\s*${label.trim()}\\s*$`) });
+      console.log(`Found ${await button.count()} buttons matching testId "${testId}" and label "${label}".`);
+
+      // Debugging: Log initial info
+      console.log(`Starting isButtonVisibleTestId for label: "${label}" with Benabled: ${Benabled}`);
+
+      // Highlight the button for debugging
+      await button.evaluate((btn) => {
+        btn.style.backgroundColor = 'yellow';
+        btn.style.border = '2px solid red';
+        btn.style.color = 'blue';
       });
 
       // Wait for the button to be attached to the DOM

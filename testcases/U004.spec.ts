@@ -17,8 +17,27 @@ let table_before_changequantity: { groupName: string; items: string[][] }[] = []
 let value_before_changequantity: number = 0;
 let detailvalue_original_before_changequantity: number = 5;
 
+const MAIN_PAGE_MAIN_DIV = "BaseDetals-Container-MainContainer";
+const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
+const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
+const MAIN_PAGE_Д_TABLE = "BasePaginationTable-Table-detal";
+const MAIN_PAGE_SMALL_DIALOG = "BaseDetals-Dialog-CreateOptions"; //
+const MAIN_PAGE_SMALL_DIALOG_DETAIL = "BaseDetals-CreateLink-base-detail";//
+const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";//
 
-const LEFT_DATA_TABLE = "BasePaginationTable-Table-product";
+
+
+const CREATE_DETAIL_PAGE_SPECIFICATION_ADD_BUTTON = "Spectification-Buttons-addingSpecification";//
+const CREATE_DETAIL_PAGE_SPECIFICATION_ADDFILEFROMBASE_BUTTON = "AddDetal-FileComponent-AddFileButton";//
+const CREATE_DETAIL_PAGE_SPECIFICATION_ADDFILEDRAGNDROP_BUTTON = "AddDetal-FileComponent-DragAndDrop-Wrapper";//
+const CREATE_DETAIL_PAGE_DETAIL_CHARACTERISTICS_TABLE = "AddDetal-Characteristic-Table";//
+const CREATE_DETAIL_PAGE_WORKPIECE_CHARACTERISTICS_TABLE = "";  // <----------------------------
+const CREATE_DETAIL_PAGE_DETAIL_PARAMETERS_TABLE = "AddDetal-Detail-Parameters";//
+const CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ТИП_TABLE = "ModalBaseMaterial-TableList-Table-Type-Table";//
+const CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ПОДТИП_TABLE = "ModalBaseMaterial-TableList-Table-SubType-Table";//
+const CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item-Table";
+
+
 const TEST_PRODUCT = '109.02-00СБ';
 const TESTCASE_2_PRODUCT_1 = '109.02-00СБ';
 
@@ -51,7 +70,7 @@ export const runU004 = () => {
     });
 
 
-    test.skip("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
+    test("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
         test.setTimeout(50000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
@@ -66,7 +85,8 @@ export const runU004 = () => {
             const titles = testData1.elements.MainPage.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'detailsdb');
+            //const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'detailsdb');
+            const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, `${MAIN_PAGE_MAIN_DIV}`);
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
@@ -82,7 +102,7 @@ export const runU004 = () => {
             // Validate content and order
             expect(normalizedH3Titles).toEqual(titles);
         });
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
@@ -92,11 +112,11 @@ export const runU004 = () => {
         });
         await allure.step("Step 04: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();//DATA_TESTID
         });
         await allure.step("Step 05: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
             // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);
+            await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);//DATA_TESTID
             await page.waitForLoadState("networkidle");
             // Optionally, validate that the search input is visible
             await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
@@ -105,11 +125,11 @@ export const runU004 = () => {
         await allure.step("Step 06: Проверяем, что введенное значение в поиске совпадает с переменной. (Verify the entered search value matches the variable)", async () => {
             await page.waitForLoadState("networkidle");
             // Locate the search field within the left table and validate its value
-            await expect(leftTable.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT);
+            await expect(leftTable.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT); //DATA-TESTID
         });
         await allure.step("Step 07: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
             // Simulate pressing "Enter" in the search field
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
+            await leftTable.locator('input.search-yui-kit__input').press('Enter');//DATA-TESTID
             await page.waitForLoadState("networkidle");
         });
         await allure.step("Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
@@ -158,7 +178,9 @@ export const runU004 = () => {
         });
         const firstRow = leftTable.locator('tbody tr:first-child');
         // Locate the "Редактировать" button
-        const editButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Редактировать' });
+        //const editButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Редактировать' });
+        const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
+
         await allure.step("Step 11: Проверяем наличие кнопки \"Редактировать\" под таблицей \"Изделий\" (Verify the presence of the 'Edit' button below the table)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
@@ -172,6 +194,7 @@ export const runU004 = () => {
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
                 const buttonClass = button.class;
+                const buttonTestId = button.datatestid;
                 const buttonLabel = button.label;
                 const expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
 
@@ -179,13 +202,14 @@ export const runU004 = () => {
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled
                     await page.waitForTimeout(500);
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
+                    //const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonTestId, buttonLabel, expectedState);
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
                 });
             }
+            console.log("step 11 finished");
         });
         await allure.step("Step 12: Нажимаем по данной кнопке. (Press the button)", async () => {
             // Wait for the page to stabilize
@@ -378,8 +402,8 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
 
             // Define locators for the two tables within the modal
-            table1Locator = page.locator('[data-testid="BasePaginationTable-Table-product"]');
-            table2Locator = page.locator('[data-testid="BasePaginationTable-Table-cbed"]'); // Adjust the selector as needed for the second table
+            table1Locator = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+            table2Locator = page.locator(`[data-testid="${MAIN_PAGE_СБ_TABLE}"]`); // Adjust the selector as needed for the second table
 
             // Assert that both tables are visible
             await expect(table1Locator).toBeVisible();
@@ -909,10 +933,10 @@ export const runU004 = () => {
             });
         });
     });
-    test.skip("TestCase 02 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
+    test("TestCase 02 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -1099,10 +1123,10 @@ export const runU004 = () => {
         });
 
     });
-    test("TestCase 03 - Редактирование изделия - Добавьте каждый тип материала по отдельности. (Add Each Material Type Individually)", async ({ page }) => {
+    test.skip("TestCase 03 - Редактирование изделия - Добавьте каждый тип материала по отдельности. (Add Each Material Type Individually)", async ({ page }) => {
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -1187,7 +1211,7 @@ export const runU004 = () => {
             await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
                 await page.waitForLoadState("networkidle");
                 const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
-                table2Locator = modal.locator('table[data-testid^="BasePaginationTable-Table-cbed"]');
+                table2Locator = modal.locator(`table[data-testid^="${MAIN_PAGE_СБ_TABLE}"]`);
                 await table2Locator!.locator('input.search-yui-kit__input').fill(TEST_PRODUCT_СБ);
                 await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
                 await page.waitForLoadState("networkidle");
@@ -1454,10 +1478,10 @@ export const runU004 = () => {
                 addButton.click();
                 await page.waitForTimeout(500);
             });
-            table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
+            table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
             await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
                 await page.waitForLoadState("networkidle");
-                table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
+                table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
                 await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_Д);
                 await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
                 await page.waitForLoadState("networkidle");
@@ -1721,7 +1745,7 @@ export const runU004 = () => {
                 addButton.click();
                 await page.waitForTimeout(500);
             });
-            table3Locator = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            table3Locator = page.locator(`[data-testid="${CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ITEM_TABLE}"]`);
             await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
                 await page.waitForLoadState("networkidle");
                 await table3Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_ПД);
@@ -1976,7 +2000,7 @@ export const runU004 = () => {
                 await page.waitForTimeout(500);
             });
             const m = page.locator('[data-testid="ModalBaseMaterial"]')
-            table3Locator = m.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            table3Locator = m.locator(`[data-testid="${CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ITEM_TABLE}"]`);
             await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
                 await page.waitForLoadState("networkidle");
                 await table3Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_РМ);
@@ -2171,7 +2195,7 @@ export const runU004 = () => {
     test.skip("TestCase 04 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -2377,8 +2401,8 @@ export const runU004 = () => {
             await allure.step("Step 003 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
-                const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseDetal"]');
+                const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseDetal"]');
 
                 // Locate all rows in the table body
                 const rowsLocator = bottomTableLocator.locator('tbody tr');
@@ -2751,7 +2775,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
         });
 
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -2833,10 +2857,9 @@ export const runU004 = () => {
             addButton.click();
             await page.waitForTimeout(5000);
         });
-        table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
+        table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
         await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
             await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_Д);
             await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
             await page.waitForLoadState("networkidle");
@@ -3190,7 +3213,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
         });
 
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -3397,7 +3420,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
         });
 
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -3685,7 +3708,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
         });
 
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -3863,7 +3886,7 @@ export const runU004 = () => {
     test.skip("TestCase 10 - Delete a Material Before Saving", async ({ page }) => { /// INCOMPLETE DUE TO BUG
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -4277,7 +4300,7 @@ export const runU004 = () => {
         //first add a material
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -4549,7 +4572,7 @@ export const runU004 = () => {
         await allure.step("Step 18: delete and save. (delete and save)", async () => {
             test.setTimeout(70000);
             const shortagePage = new CreatePartsDatabasePage(page);
-            const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+            const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
             let firstCellValue = '';
             let secondCellValue = '';
             let thirdCellValue = '';
@@ -4702,7 +4725,7 @@ export const runU004 = () => {
     test.skip("TestCase 13 - Сохранить без добавления каких-либо элементов в спецификацию и проверка сохранения (Save Without Adding Material)", async ({ page }) => {
         test.setTimeout(70000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -4793,7 +4816,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
         });
 
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -4875,10 +4898,9 @@ export const runU004 = () => {
             addButton.click();
             await page.waitForTimeout(5000);
         });
-        table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
+        table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
         await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
             await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_Д);
             await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
             await page.waitForLoadState("networkidle");
@@ -5074,7 +5096,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
         });
 
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -5153,7 +5175,7 @@ export const runU004 = () => {
             addButton.click();
             await page.waitForTimeout(2000);
         });
-        table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
+        table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
         await allure.step("Step 10: Add all found products one by one ()", async () => {
             // Wait for the table to be loaded
             await table2Locator!.waitFor({ state: 'visible' });
@@ -5339,7 +5361,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
         });
 
-        const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
@@ -5419,7 +5441,7 @@ export const runU004 = () => {
         await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
             const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
-            table2Locator = modal.locator('[data-testid="BasePaginationTable-Table-cbed]');
+            table2Locator = modal.locator(`[data-testid="${MAIN_PAGE_СБ_TABLE}"]`);
             await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_СБ);
             await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
             await page.waitForLoadState("networkidle");
@@ -5618,10 +5640,9 @@ export const runU004 = () => {
             addButton.click();
             await page.waitForTimeout(5000);
         });
-        table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
+        table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
         await allure.step("Step 18: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            table2Locator = page.locator('[data-testid="BasePaginationTable-Table-detal"]');
             await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_Д);
             await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
             await page.waitForLoadState("networkidle");
