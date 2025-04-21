@@ -181,16 +181,6 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
-    U004: {
-        description: "verify changes to full specifications after adding items to the product",
-        tests: [
-            {
-                test: runU004,
-                description: "verify changes to full specifications after adding items to the product",
-            },
-            // Add more test cases as needed
-        ],
-    },
     U002: {
         description: "Launch into production.",
         tests: [
@@ -201,32 +191,25 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
-    // U003: {
-    //     description: "New.",
-    //     tests: [
-    //         {
-    //             test: runU003,
-    //             description: "new test.",
-    //         },
-    //         // Add more test cases as needed
-    //     ],
-    // },
-    suite01: {
-        description: "This is a group of full page tests p02 - P04",
+    U004: {
+        description: "verify changes to full specifications after adding items to the product",
         tests: [
             {
-                test: runP002,
-                description: "This test checks the responsiveness of Page 002.",
-            },
-            {
-                test: runP003,
-                description: "This test checks the responsiveness of Page 003.",
-            },
-            {
-                test: runP004,
-                description: "This test checks the responsiveness of Page 004.",
+                test: runU004,
+                description: "verify changes to full specifications after adding items to the product",
             },
             // Add more test cases as needed
         ],
     },
+    U005: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU005,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    }
+
 };

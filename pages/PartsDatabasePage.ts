@@ -1475,6 +1475,323 @@ export class CreatePartsDatabasePage extends PageObject {
         const headerDescription = await this.page.locator('.editor__specification-headings').nth(3).textContent()
         const headerPhotosAndVideos = await this.page.locator('.editor__specification-headings').nth(4).textContent()
 
+    async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
+        // Locate the table using its data-testid
+        const table = page.locator(`[data-testid="${tableTestId}"]`);
+
+        // Wait for the first row of the table to be visible
+        await table.locator('tr').first().waitFor({ state: 'visible' });
+
+        // Fetch all rows inside tbody
+        const rows = await table.locator('tbody tr').elementHandles();
+        console.log(`Total rows in tbody: ${rows.length}`);
+
+        // Return error if no rows are found
+        if (rows.length === 0) {
+            throw new Error('No rows found in the table.');
+        }
+
+        // Initialize groups array
+        const groups: { groupName: string; items: string[][] }[] = [];
+        let currentGroup: { groupName: string; items: string[][] } | null = null;
+
+        // Iterate over each row
+        for (const row of rows) {
+            try {
+                // Check if the row is a group header
+                const groupHeaderCell = await row.$eval('td[colspan]', (cell) => cell?.textContent?.trim()).catch(() => null);
+                if (groupHeaderCell) {
+                    // Create a new group with group name
+                    currentGroup = { groupName: groupHeaderCell, items: [] };
+                    groups.push(currentGroup);
+                    console.log(`Group header detected: "${currentGroup.groupName}"`);
+                } else if (currentGroup) {
+                    // Add data rows under the current group
+                    const rowData = await row.$$eval('td', (cells) =>
+                        cells.map((cell) => cell.textContent?.trim() || '')
+                    );
+                    currentGroup.items.push(rowData);
+                    console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+                }
+            } catch (error) {
+                console.error(`Error processing row: ${error}`);
+            }
+        }
+
+        // Debug final parsed result
+        logger.info(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
+        return groups;
+    }
+    async compareTableData<T>(
+        data1: { groupName: string; items: T[][] }[],
+        data2: { groupName: string; items: T[][] }[]
+    ): Promise<boolean> {
+        if (data1.length !== data2.length) {
+            console.error("Data length mismatch");
+            return false; // Arrays are different lengths
+        }
+
+        return data1.every((group1, index) => {
+            const group2 = data2[index];
+
+            // Compare group names
+            if (group1.groupName !== group2.groupName) {
+                console.error(`Group name mismatch: "${group1.groupName}" !== "${group2.groupName}"`);
+                return false;
+            }
+
+            // Compare group items
+            if (group1.items.length !== group2.items.length) {
+                console.error(`Item count mismatch in group "${group1.groupName}"`);
+                return false;
+            }
+
+            // Compare each item row
+            return group1.items.every((row1, rowIndex) => {
+                const row2 = group2.items[rowIndex];
+
+                // Check if rows have the same length
+                if (row1.length !== row2.length) {
+                    console.error(
+                        `Row length mismatch in group "${group1.groupName}", row ${rowIndex + 1}`
+                    );
+                    return false;
+                }
+
+                // Compare individual cells
+                return row1.every((cell1, cellIndex) => {
+                    const cell2 = row2[cellIndex];
+                    if (cell1 !== cell2) {
+                        console.error(
+                            `Mismatch in group "${group1.groupName}", row ${rowIndex + 1}, cell ${cellIndex + 1}: "${cell1}" !== "${cell2}"`
+                        );
+                        return false;
+                    }
+                    return true;
+                });
+            });
+        });
+
+    }
+    async isStringInNestedArray(nestedArray: string[][], searchString: string): Promise<boolean> {
+        return nestedArray.some(innerArray => innerArray.includes(searchString));
+    }
+    async getQuantityByLineItem(
+        data: { groupName: string; items: string[][] }[],
+        searchString: string
+    ): Promise<number> {
+        for (const group of data) {
+            for (const lineItem of group.items) {
+                if (lineItem.includes(searchString)) {
+                    // Return the quantity (assuming the quantity is in the last position of the line item array)
+                    return Promise.resolve(parseInt(lineItem[lineItem.length - 1], 10));
+                }
+            }
+        }
+        return Promise.resolve(0); // Return 0 if the string is not found
+    }
+    async validateTable(
+        page: Page,
+        tableTitle: string,
+        expectedRows: { [key: string]: string }[]
+    ): Promise<boolean> {
+        try {
+            // Locate the section containing the table (using its h3 heading)
+            const tableSection = page.locator(`h3:has-text("${tableTitle}")`).locator('..');
+            // Debug: highlight the table section
+            await tableSection.evaluate((el) => { el.style.border = '2px solid red'; });
+
+            // ----- Validate Column Headers Order ----- //
+            const headerCells = tableSection.locator('table thead tr th');
+            const headerCount = await headerCells.count();
+            // Expected column order is derived from the keys of the first expected row.
+            // For a 3-col table, the keys might be: [ "Наименование", "ЕИ", "Значение" ]
+            // For a 4-col table, they might be: [ "Наименование", "ЕИ", "Значение", "" ]
+            const expectedColOrder = Object.keys(expectedRows[0]);
+            if (headerCount !== expectedColOrder.length) {
+                console.error(
+                    `Header column count mismatch for "${tableTitle}": expected ${expectedColOrder.length}, found ${headerCount}`
+                );
+                return false;
+            }
+            for (let i = 0; i < headerCount; i++) {
+                const headerText = (await headerCells.nth(i).textContent())?.trim();
+                if (headerText !== expectedColOrder[i]) {
+                    console.error(
+                        `Column header mismatch in table "${tableTitle}" at index ${i}: expected "${expectedColOrder[i]}", got "${headerText}"`
+                    );
+                    return false;
+                }
+            }
+
+            // ----- Validate Table Rows ----- //
+            const tableRows = tableSection.locator('table tbody tr');
+            // Wait for the first row to be visible before proceeding.
+            await tableRows.first().waitFor({ timeout: 10000 });
+
+            // Handle the two different table structures based on headerCount
+            if (headerCount === 3) {
+                // For tables with 3 columns (e.g., "Параметры детали")
+                for (let i = 0; i < expectedRows.length; i++) {
+                    const expectedRow = expectedRows[i];
+                    const row = tableRows.nth(i);
+                    // Debug: highlight each row
+                    await row.evaluate((el) => { el.style.backgroundColor = 'yellow'; });
+
+                    const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                    const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+                    const actualValue = (await row.locator('td').nth(2).textContent())?.trim();
+
+                    if (
+                        actualName !== expectedRow['Наименование'] ||
+                        actualUnit !== expectedRow['ЕИ'] ||
+                        actualValue !== expectedRow['Значение']
+                    ) {
+                        console.error(
+                            `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
+                            `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                        );
+                        return false;
+                    }
+                }
+            } else if (headerCount === 4) {
+                // For tables with 4 columns (e.g., "Характеристики детали")
+                for (let i = 0; i < expectedRows.length; i++) {
+                    const expectedRow = expectedRows[i];
+                    const row = tableRows.nth(i);
+                    // Debug: highlight each row
+                    await row.evaluate((el) => { el.style.backgroundColor = 'yellow'; });
+
+                    const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                    const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+
+                    // Third column: attempt to read an input inside the cell first;
+                    // if no input exists, fallback to reading the cell text.
+                    const cellThird = row.locator('td').nth(2);
+                    let actualValue = "";
+                    if (await cellThird.locator('input').count() > 0) {
+                        actualValue = (await cellThird.locator('input').inputValue()).trim();
+                    } else {
+                        actualValue = ((await cellThird.textContent()) || "").trim();
+                    }
+
+                    // Fourth column: confirms that a button is visible.
+                    const isButtonVisible = await row.locator('td').nth(3).locator('button').isVisible();
+
+                    if (
+                        actualName !== expectedRow['Наименование'] ||
+                        actualUnit !== expectedRow['ЕИ'] ||
+                        actualValue !== expectedRow['Значение']
+                    ) {
+                        console.error(
+                            `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
+                            `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                        );
+                        return false;
+                    }
+                    if (!isButtonVisible) {
+                        console.error(`Button in the fourth column is not visible in row ${i + 1} of table "${tableTitle}".`);
+                        return false;
+                    }
+                }
+            } else {
+                console.error(`Unexpected header count (${headerCount}) for table "${tableTitle}".`);
+                return false;
+            }
+
+            console.log(`Table "${tableTitle}" validation passed.`);
+            return true;
+        } catch (error) {
+            console.error(`Error validating table "${tableTitle}":`, error);
+            return false;
+        }
+    }
+
+
+
+
+
+    /**
+     * Validates an array of input field definitions.
+     * For each field defined in the JSON, it:
+     * • Uses a switch based on field type (and a special case for "Медиа файлы")
+     * • Locates the element on the page
+     * • Verifies that it is visible
+     * • For text fields, fills in a test value and checks if the value was set correctly
+     *
+     * @param page - The Playwright page instance.
+     * @param fields - An array of field definitions (each with title and type).
+     * @returns A Promise that resolves to true if all fields validate correctly.
+     */
+    async validateInputFields(page: Page, fields: { title: string; type: string }[]): Promise<boolean> {
+        try {
+            for (const field of fields) {
+                let fieldLocator;
+                switch (field.type) {
+                    case "input":
+                        if (field.title === "Медиа файлы") {
+                            // For file inputs, use the visible label (assuming it contains "Прикрепить документ")
+                            fieldLocator = page.locator('label.dnd-yui-kit__label:has-text("Прикрепить документ")');
+                            await fieldLocator.evaluate((row) => {
+                                row.style.backgroundColor = 'yellow';
+                                row.style.border = '2px solid red';
+                                row.style.color = 'blue';
+                            });
+                        } else {
+                            // For normal text input fields (e.g. "Обозначение", "Наименование")
+                            fieldLocator = page.locator(`div.editor__information-inputs:has-text("${field.title}") input`);
+                            await fieldLocator.evaluate((row) => {
+                                row.style.backgroundColor = 'yellow';
+                                row.style.border = '2px solid red';
+                                row.style.color = 'blue';
+                            });
+                        }
+                        break;
+                    case "textarea":
+                        // For "Описание / Примечание", look inside the description section
+                        fieldLocator = page.locator(`section.editor__description:has(h3:has-text("${field.title}")) textarea`);
+                        await fieldLocator.evaluate((row) => {
+                            row.style.backgroundColor = 'yellow';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'blue';
+                        });
+                        break;
+                    default:
+                        console.error(`Unsupported field type: ${field.type} for field "${field.title}"`);
+                        return false;
+                }
+
+                // Check that the field (or its visible label for file inputs) is visible.
+                if (!(await fieldLocator.isVisible())) {
+                    console.error(`Field "${field.title}" is not visible.`);
+                    return false;
+                }
+
+                // Verify writability if it’s a text field.
+                if (!(field.type === "input" && field.title === "Медиа файлы")) {
+                    const testValue = "Test Value";
+                    await fieldLocator.fill(testValue);
+                    const currentValue = await fieldLocator.inputValue();
+                    if (currentValue !== testValue) {
+                        console.error(`Field "${field.title}" is not writable. Expected "${testValue}", but got "${currentValue}".`);
+                        return false;
+                    }
+                }
+
+                console.log(`Field "${field.title}" is visible and ${(field.type === "input" && field.title === "Медиа файлы") ? "present" : "writable"}.`);
+            }
+            console.log("All input fields validated successfully.");
+            return true;
+        } catch (error) {
+            console.error("Error during input field validation:", error);
+            return false;
+        }
+    }
+
+
+
+
+
 
         const buttonTechnologicalProcess = await this.checkButtonState('Технологический процесс', '.button-yui-kit', 'active');
         const buttonCost = await this.checkButtonState('Себестоимость', '.button-yui-kit', 'inactive');

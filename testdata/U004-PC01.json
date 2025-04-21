@@ -1,0 +1,217 @@
+{
+    "elements": {
+      "MainPage": {
+        "titles": [
+          "База изделий, сборок и деталей",
+          "Изделие",
+          "Сборочная единица (Тип СБ)",
+          "Деталь (Тип Д)"
+        ],
+        "tables": [
+          {
+            "title": "Изделие",
+            "id": "BasePaginationTable-Table-product",            
+            "cols": [
+                "Обозначение",
+                "Артикул",
+                "Наименование"
+            ]
+          },
+          {
+            "title": "Сборочная единица (Тип СБ)",
+            "id": "BasePaginationTable-Table-cbed",
+            "cols": [
+              "Обозначение",
+              "Наименование"
+            ]
+          },
+          {
+            "title": "Деталь (Тип Д)",
+            "id": "BasePaginationTable-Table-detal",            
+            "cols": [
+              "Обозначение",
+              "Наименование"
+            ]
+          }
+        ],
+        "buttons": [
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
+            "label": "Редактировать",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
+            "label": "Создать",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
+            "label": "Создать копированием",
+            "state": "true"
+          } ,
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "id": "",
+            "label": "Архив",
+            "state": "true"
+          }               
+        ],
+        "buttonsBefore": [
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Редактировать",
+            "state": "false"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Создать",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Создать копированием",
+            "state": "false"
+          } ,
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit",
+            "label": "Архив",
+            "state": "false"
+          }               
+        ],
+        "filters": [
+          {
+            "class": "button.filters__btn",
+            "label": "Сортировать по отметке",
+            "state": "true"
+          },
+          {
+            "class": "button.filters__btn",
+            "label": "Сортировать по дате создания",
+            "state": "true"
+          },
+          {
+            "class": "button.filters__btn",
+            "label": "Показать мои",
+            "state": "false"
+          }
+        ]
+      },
+      "EditPage": {
+        "titles": [
+          "Редактирование изделия",
+          "Спецификация",
+          "Характеристики",
+          "Параметры",
+          "Описание / Примечание",
+          "Медиа файлы"
+        ],
+        "buttons": [
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "Технологический процесс",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "label": "Себестоимость",
+            "state": "false"
+          },
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "История изменений",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "label": "Публикация",
+            "state": "false"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit.specification__btns-adding",
+            "label": "Добавить",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+            "label": "Добавить из базы",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "Отменить",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "label": "Сохранить",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "Архив",
+            "state": "true"
+          },
+          {
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "label": "Создать копированием",
+            "state": "true"
+          }         
+
+        ],
+        "modalAddButtonsPopup": [
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Сборочную\u00A0единицу",
+            "state": "true"
+          },
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Деталь",
+            "state": "true"
+          },
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Cтандартную\u00A0или покупную\u00A0деталь",
+            "state": "true"
+          },
+          {
+            "class": "div.card-yui-kit.specification-dialog__card",
+            "label": "Расходный\u00A0материал",
+            "state": "true"
+          }
+        ],
+        "modalAddСБ": {
+          "titles":[
+            "База сборочных единиц",
+            "Изделие",
+            "Сборочная единица (Тип СБ)"            
+          ],
+          "buttons":[
+            {
+              "class": "button-yui-kit.medium.outline-yui-kit",
+              "label": "Отменить",
+              "state": "true"
+            },
+            {
+              "class": "button-yui-kit.medium.primary-yui-kit",
+              "label": "Добавить",
+              "state": "true"
+            },
+            {
+              "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button",
+              "label": "Добавить",
+              "state": "false"
+            }            
+          ]
+        }
+      },
+      "Modals": {
+        "titles": []
+      }
+    }
+  }
+  
