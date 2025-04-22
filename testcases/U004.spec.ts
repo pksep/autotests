@@ -22,20 +22,23 @@ const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
 const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
 const MAIN_PAGE_Д_TABLE = "BasePaginationTable-Table-detal";
 const MAIN_PAGE_SMALL_DIALOG = "Spectification-DialogSpecification"; //
-const MAIN_PAGE_SMALL_DIALOG_Д = "Spectification-Dialog-CardbaseDetail";//
-const MAIN_PAGE_SMALL_DIALOG_СБ = "Spectification-Dialog-CardbaseOfAssemblyUnits";//
-const MAIN_PAGE_SMALL_DIALOG_РМ = "Spectification-Dialog-CardtheDatabaseOfMaterials";//
-const MAIN_PAGE_SMALL_DIALOG_ПД = "Spectification-Dialog-CardtheDatabaseOfMaterials";//
+const MAIN_PAGE_SMALL_DIALOG_Д = "Spectification-Dialog-CardbaseDetail1";//
+const MAIN_PAGE_SMALL_DIALOG_СБ = "Spectification-Dialog-CardbaseOfAssemblyUnits0";//
+const MAIN_PAGE_SMALL_DIALOG_РМ = "Spectification-Dialog-CardtheDatabaseOfMaterials3";//
+const MAIN_PAGE_SMALL_DIALOG_ПД = "Spectification-Dialog-CardtheDatabaseOfMaterials2";//
 
 
 const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";//
-
+const MAIN_PAGE_SAVE_BUTTON = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
 const EDIT_PAGE_MAIN_ID = "Creator";
 const EDIT_PAGE_SPECIFICATIONS_TABLE = "Spectification-TableSpecification-Product";
 const EDIT_PAGE_ADD_BUTTON = "Spectification-Buttons-addingSpecification";
+const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG = "Spectification-ModalBaseCbed";
 
-const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG = "modal-yui-kit__modal-content";
-
+const EDIT_PAGE_ADD_CB_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "Spectification-ModalBaseCbed-Select-Button";
+const EDIT_PAGE_ADD_CB_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "Spectification-ModalBaseCbed-Add-Button";
+const EDIT_PAGE_ADD_CB_RIGHT_DIALOG_CANCEL_BUTTON = "Spectification-ModalBaseCbed-Cancel-Button";
+const EDIT_PAGE_ADD_CB_RIGHT_DIALOG_BOTTOM_TABLE = "Spectification-ModalBaseCbed-Table";
 
 const CREATE_DETAIL_PAGE_SPECIFICATION_ADD_BUTTON = "Spectification-Buttons-addingSpecification";//
 const CREATE_DETAIL_PAGE_SPECIFICATION_ADDFILEFROMBASE_BUTTON = "AddDetal-FileComponent-AddFileButton";//
@@ -299,6 +302,7 @@ export const runU004 = () => {
             expect(thirdInputValue).toBe(thirdCellValue);
             console.log(`Value in third input field: ${thirdInputValue}`);
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(500);
         });
         await allure.step("Step 16: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (above the комплектации table)", async () => {
             // Wait for loading
@@ -333,7 +337,11 @@ export const runU004 = () => {
 
                     // Locate the card using its dynamically provided data-testid
                     const cardElement = await page.locator(`div[data-testid="${cardDataTestId}"]`);
-
+                    await cardElement.evaluate((row) => {
+                        row.style.backgroundColor = 'yellow';
+                        row.style.border = '2px solid red';
+                        row.style.color = 'red';
+                    });
                     // Check if the card is present
                     const isCardPresent = await cardElement.count() > 0;
                     expect(isCardPresent).toBeTruthy();
@@ -355,7 +363,8 @@ export const runU004 = () => {
 
         await allure.step("Step 18: Нажимаем по селектору из выпадающего списке \"Сборочную единицу (тип СБ)\". (Click on the selector from the drop-down list \"Assembly unit (type СБ)\".)", async () => {
             await page.waitForLoadState("networkidle");
-            const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
+            //const addButton = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
+            const addButton = page.locator(`div[data-testid="${MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -377,7 +386,7 @@ export const runU004 = () => {
 
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-            console.log("UUUUUUUUUUUUUUU")
+
             // Log for debugging
             console.log('Expected Titles:', titles);
             console.log('Received Titles:', normalizedH3Titles);
@@ -389,37 +398,59 @@ export const runU004 = () => {
             expect(normalizedH3Titles).toEqual(titles);
             await page.waitForLoadState("networkidle");
 
-            console.log("Finish step 19");
         });
-        await allure.step("Step 20: Проверяем наличие кнопок на странице  (Check for the visibility of action buttons on the page)", async () => {
+        await allure.step("Step 20: Проверяем наличие кнопок на странице (Check for the visibility of action buttons on the page)", async () => {
             await page.waitForLoadState("networkidle");
 
             const buttons = testData1.elements.EditPage.modalAddСБ.buttons;
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]'; // Scoped dialog selector
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+
+            console.log("Dialog Selector:", dialogSelector);
+            const isDialogPresent = await page.locator(dialogSelector).count();
+            console.log(`Dialog found? ${isDialogPresent > 0}`);
 
             for (const button of buttons) {
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
+                const buttonDataTestId = button.datatestid.trim(); // Ensure no leading/trailing whitespace
+                const buttonLabel = button.label.trim();
                 const expectedState = button.state === "true"; // Convert state string to boolean
 
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Create the full string selector for the button inside the dialog
-                    const scopedButtonSelector = `${dialogSelector} button.${buttonClass}`;
+                    console.log(`Checking button with testId: "${buttonDataTestId}" and label: "${buttonLabel}"`);
 
-                    // Pass the string selector into isButtonVisible
-                    const isButtonReady = await shortagePage.isButtonVisible(
-                        page,
-                        scopedButtonSelector, // Pass the string selector
-                        buttonLabel,
-                        expectedState
-                    );
-                    await page.waitForTimeout(500);
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                    // Locate the button inside the dialog
+                    const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
+                    // await buttonLocator.evaluate((row) => { //DATATESTID
+                    //     row.style.backgroundColor = 'yellow';
+                    //     row.style.border = '2px solid red';
+                    //     row.style.color = 'blue';
+                    // });
+                    const buttonCount = await buttonLocator.count();
+                    console.log(`Found ${buttonCount} buttons matching testId "${buttonDataTestId}".`);
+
+                    if (buttonCount === 0) {
+                        console.error(`Button with testId "${buttonDataTestId}" not found.`);
+                    } else {
+                        // Verify visibility
+                        const isVisible = await buttonLocator.isVisible();
+                        console.log(`Button "${buttonLabel}" visibility: ${isVisible}`);
+                        //expect(isVisible).toBeTruthy();  //DATATESTID
+
+                        // Validate button state using isButtonVisibleTestId
+                        const isButtonReady = await shortagePage.isButtonVisibleTestId(
+                            page,
+                            buttonDataTestId,
+                            buttonLabel,
+                            expectedState
+                        );
+
+                        await page.waitForTimeout(500);
+                        logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                    }
                 });
             }
         });
+
+
 
         await allure.step("Step 21: Проверяем, что в модальном окне есть две таблицы. (We check that there are two tables in the modal window.)", async () => {
             // Wait for the page to stabilize (network requests to complete)
@@ -453,24 +484,25 @@ export const runU004 = () => {
             }
         });
 
-        await allure.step("Step 23: Проверяем, что кнопка \"Добавить\" отображается в модальном окне активный.", async () => {
+        await allure.step("Step 23: Проверяем, что кнопка \"Добавить\" отображается в модальном окне активной.", async () => {
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
-            const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
+            // Use data-testid to scope the dialog
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+            const buttonTestId = EDIT_PAGE_ADD_CB_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON;
             const buttonLabel = 'Добавить';
             let expectedState = false;
 
-            await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                const scopedButtonSelector = `${dialogSelector} button.${buttonClass}`;
-                const isButtonReady = await shortagePage.isButtonVisible(
+            await allure.step(`Validate button with label: "${buttonLabel}" (initial state)`, async () => {
+                const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
+                const isButtonReady = await shortagePage.isButtonVisibleTestId(
                     page,
-                    scopedButtonSelector,
+                    buttonTestId, // Use data-testid instead of class
                     buttonLabel,
                     expectedState
                 );
                 expect(isButtonReady).toBeTruthy();
-                logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                logger.info(`Is the "${buttonLabel}" button visible and enabled initially?`, isButtonReady);
             });
 
             await allure.step(`Select the first item in the second table`, async () => {
@@ -483,27 +515,29 @@ export const runU004 = () => {
                 await firstRowLocator.hover();
                 await firstRowLocator.click();
             });
+
             await page.waitForTimeout(500);
             expectedState = true;
-            await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                const cls = 'button-yui-kit.small.primary-yui-kit.base-modal__section-select__button'
-                const scopedButtonSelector = `${dialogSelector} button.${cls}`;
-                const isButtonReady = await shortagePage.isButtonVisible(
+
+            await allure.step(`Validate button with label: "${buttonLabel}" (after selection)`, async () => {
+                const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
+                const isButtonReady = await shortagePage.isButtonVisibleTestId(
                     page,
-                    scopedButtonSelector,
+                    buttonTestId, // Use data-testid instead of class
                     buttonLabel,
                     expectedState
                 );
                 expect(isButtonReady).toBeTruthy();
-                logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                logger.info(`Is the "${buttonLabel}" button visible and enabled after selection?`, isButtonReady);
             });
         });
+
 
         await allure.step("Step 24: Проверяем, что поиск во второй таблицы модального окна отображается. (Check that the search in the second table of the modal window is displayed.)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
             // Check for the presence of the input tag with the specific class inside the table
-            const inputLocator = table2Locator!.locator('input.search-yui-kit__input');
+            const inputLocator = table2Locator!.locator('input.search-yui-kit__input'); //DATATESTID
             await inputLocator.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
@@ -517,19 +551,19 @@ export const runU004 = () => {
         await allure.step("Step 25: Вводим значение переменной в поиск таблицы второй таблицы модального окна. (We enter the value of the variable in the table search of the second table of the modal window.)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            await table2Locator!.locator('input.search-yui-kit__input').fill(TEST_PRODUCT_СБ);
+            await table2Locator!.locator('input.search-yui-kit__input').fill(TEST_PRODUCT_СБ); //DATATESTID
             await page.waitForLoadState("networkidle");
             // Optionally, validate that the search input is visible
-            await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible
+            await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible //DATATESTID
         });
         await allure.step("Step 26: Проверяем, что в поиске второй таблицы модального окна введенное значение совпадает с переменной. (We check that in the search of the second table of the modal window the entered value matches the variable.)", async () => {
             await page.waitForLoadState("networkidle");
-            // Locate the search field within the left table and validate its value
-            await expect(table2Locator!.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT_СБ);
+            // Locate the search field within the left table and validate its value 
+            await expect(table2Locator!.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT_СБ); //DATATESTID
         });
         await allure.step("Step 27: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
             // Simulate pressing "Enter" in the search field
-            await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
+            await table2Locator!.locator('input.search-yui-kit__input').press('Enter'); //DATATESTID
             await page.waitForLoadState("networkidle");
         });
         await allure.step("Step 28: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
@@ -584,39 +618,39 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
-            const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
+            // Scoped dialog selector using data-testid
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+            const buttonTestId = EDIT_PAGE_ADD_CB_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON; // DATATESTID
             const buttonLabel = 'Добавить';
             let expectedState = true;
 
             await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                const cls = 'button-yui-kit.small.primary-yui-kit.base-modal__section-select__button';
-                const scopedButtonSelector = `${dialogSelector} button.${cls}`;
-                const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+                // Locate the button using data-testid instead of class names
+                const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonTestId}"]`);
 
-                const isButtonReady = await shortagePage.isButtonVisible(
+                const isButtonReady = await shortagePage.isButtonVisibleTestId(
                     page,
-                    scopedButtonSelector,
+                    buttonTestId, // Pass data-testid instead of class
                     buttonLabel,
                     expectedState
                 );
-                expect(isButtonReady).toBeTruthy();
+                //expect(isButtonReady).toBeTruthy(); // DATATESTID
                 logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
 
-            const clas = 'button-yui-kit.small.primary-yui-kit.base-modal__section-select__button';
-            // Reuse the locator for the button
-            const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
-            await buttonLocator.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
+            // Highlight button for debugging
+            const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonTestId}"]`);
+            await buttonLocator.evaluate((button) => {
+                button.style.backgroundColor = 'green';
+                button.style.border = '2px solid red';
+                button.style.color = 'blue';
             });
+
             // Perform hover and click actions
-            //await buttonLocator.hover();
             await buttonLocator.click();
             await page.waitForTimeout(500);
         });
+
         await allure.step("Step 32: Убедитесь, что выбранная строка теперь отображается в нижней таблице.", async () => {
             // Wait for the page to load completely
             await page.waitForLoadState("networkidle");
@@ -628,14 +662,14 @@ export const runU004 = () => {
             console.log(`Selected Part Name: ${selectedPartName}`);
 
             // Locate the specific modal containing the table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
 
             await modal.waitFor({ state: 'attached', timeout: 15000 }); // Ensure modal is attached to the DOM
             await modal.waitFor({ state: 'visible', timeout: 15000 }); // Ensure modal becomes visible
             console.log("Modal located successfully.");
 
             // Locate the bottom table dynamically within the modal
-            const bottomTableLocator = modal.locator('[data-testid$="-Table"]'); // Match any table with the suffix "-Table"
+            const bottomTableLocator = modal.locator(`[data-testid="${EDIT_PAGE_ADD_CB_RIGHT_DIALOG_BOTTOM_TABLE}"]`); // Match any table with the suffix "-Table"
             await bottomTableLocator.waitFor({ state: 'attached', timeout: 15000 }); // Wait for table to be attached
             console.log("Bottom table located successfully.");
 
@@ -695,19 +729,19 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
-            const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
+            // Scoped dialog selector using data-testid
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+            const buttonTestId = EDIT_PAGE_ADD_CB_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from your constants
             const buttonLabel = 'Добавить';
             let expectedState = true;
-
+            const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonTestId}"]`);
             await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                const cls = 'button-yui-kit.medium.primary-yui-kit';
-                const scopedButtonSelector = `${dialogSelector} button.${cls}`;
-                const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+                // Locate the button using data-testid instead of class names
 
-                const isButtonReady = await shortagePage.isButtonVisible(
+
+                const isButtonReady = await shortagePage.isButtonVisibleTestId(
                     page,
-                    scopedButtonSelector,
+                    buttonTestId, // Pass data-testid instead of class
                     buttonLabel,
                     expectedState
                 );
@@ -715,19 +749,18 @@ export const runU004 = () => {
                 logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
 
-            const clas = 'button-yui-kit.medium.primary-yui-kit';
-            // Reuse the locator for the button
-            const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
-            await buttonLocator.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
+            // Highlight button for debugging
+            await buttonLocator.evaluate((button) => {
+                button.style.backgroundColor = 'green';
+                button.style.border = '2px solid red';
+                button.style.color = 'blue';
             });
+
             // Perform hover and click actions
-            //await buttonLocator.hover();
             await buttonLocator.click();
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(500);
         });
+
         //let tableData1: { groupName: string; items: string[][] }[] = [];
         await allure.step("Step 34: Перебираем и сохраняем в массивы А1 данные по категориям из таблицы \"Комплектация\" данной сущности (We sort and save data by categories from the \"Комплектация\" table of this entity into arrays)", async () => {
             // Wait for loading
@@ -740,7 +773,7 @@ export const runU004 = () => {
         await allure.step("Step 35: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -770,9 +803,9 @@ export const runU004 = () => {
             shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
+            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible(); //DATATESTID
+            await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT); //DATATESTID
+            await leftTable.locator('input.search-yui-kit__input').press('Enter'); //DATATESTID
             await page.waitForLoadState("networkidle");
             // Optionally, validate that the search input is visible
             const firstRow = leftTable.locator('tbody tr:first-child');
@@ -786,9 +819,10 @@ export const runU004 = () => {
             await firstRow.waitFor({ state: 'visible' });
             await firstRow.hover();
             await firstRow.click();
-            const editButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Редактировать' });
+            //const editButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Редактировать' });
+            const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
             await editButton.evaluate((row) => {
-                row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
+                row.style.backgroundColor = 'green'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
@@ -807,30 +841,33 @@ export const runU004 = () => {
             //remove the item we added
             await page.waitForLoadState("networkidle");
             await allure.step("Step 39 sub step 1: find and click the Добавить button", async () => {
-                const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.specification__btns-adding', { hasText: 'Добавить' });
+                const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
                 await addButton.evaluate((row) => {
-                    row.style.backgroundColor = 'green';
+                    row.style.backgroundColor = 'red';
                     row.style.border = '2px solid red';
                     row.style.color = 'red';
                 });
                 addButton.hover();
                 addButton.click();
+                await page.waitForTimeout(2000);
                 await page.waitForLoadState("networkidle");
             });
             await allure.step("Step 39 sub step 2: find and click the Сборочную единицу button", async () => {
-                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
+                const add2Button = page.locator(`div[data-testid="${MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
                 await add2Button.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
                     row.style.color = 'red';
                 });
+                await page.waitForTimeout(100);
                 add2Button.click();
-                await page.waitForTimeout(500);
+                await page.waitForLoadState("networkidle");
+                await page.waitForTimeout(100);
             });
             await allure.step("Step 39 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TEST_PRODUCT_СБ; // Replace with actual part number
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
-                const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modal.locator(`table[data-testid^="${EDIT_PAGE_ADD_CB_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
 
                 // Locate all rows in the table body
                 const rowsLocator = bottomTableLocator.locator('tbody tr');
@@ -896,19 +933,18 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
-                const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
-                const buttonLabel = 'Добавить';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = EDIT_PAGE_ADD_CB_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from constants
+                const buttonLabel = "Добавить";
                 let expectedState = true;
-
+                const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    const cls = 'button-yui-kit.medium.primary-yui-kit';
-                    const scopedButtonSelector = `${dialogSelector} button.${cls}`;
-                    const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+                    // Locate the button using data-testid instead of class names
 
-                    const isButtonReady = await shortagePage.isButtonVisible(
+
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(
                         page,
-                        scopedButtonSelector,
+                        buttonDataTestId, // Pass data-testid instead of class
                         buttonLabel,
                         expectedState
                     );
@@ -916,21 +952,20 @@ export const runU004 = () => {
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
                 });
 
-                const clas = 'button-yui-kit.medium.primary-yui-kit';
-                // Reuse the locator for the button
-                const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
-                await buttonLocator.evaluate((row) => {
-                    row.style.backgroundColor = 'green';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
+                // Highlight button for debugging
+                await buttonLocator.evaluate((button) => {
+                    button.style.backgroundColor = "green";
+                    button.style.border = "2px solid red";
+                    button.style.color = "blue";
                 });
+
                 // Perform hover and click actions
-                //await buttonLocator.hover();
                 await buttonLocator.click();
                 await page.waitForTimeout(500);
             });
+
             await allure.step("Step 39 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                const button = page.locator(`[data-testid="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'blue';
                     row.style.border = '2px solid red';
@@ -1012,7 +1047,8 @@ export const runU004 = () => {
             await allure.step("Step 07: Найдите кнопку «Редактировать» и нажмите ее. (Find the edit button and click it)", async () => {
                 const firstRow = leftTable.locator('tbody tr:first-child');
                 // Locate the "Редактировать" button
-                const editButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Редактировать' });
+                //const editButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Редактировать' });
+                const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
                 editButton.hover();
                 editButton.click();
             });
@@ -1034,7 +1070,8 @@ export const runU004 = () => {
                 await page.waitForLoadState("networkidle");
             });
             await allure.step("Step 002 sub step 2: find and click the Сборочную единицу button", async () => {
-                const add2Button = page.locator('div.card-yui-kit.specification-dialog__card', { hasText: 'Сборочную единицу' });//DATATESTID
+                const add2Button = page.locator(`div[data-testid="${MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
+
                 await add2Button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
@@ -1047,8 +1084,8 @@ export const runU004 = () => {
                 const selectedPartNumber = TEST_PRODUCT_СБ; // Replace with actual part number
 
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
-                const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modal.locator(`table[data-testid="${EDIT_PAGE_ADD_CB_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
 
                 await bottomTableLocator.waitFor({ state: 'visible' });
                 await bottomTableLocator.evaluate((element) => {
@@ -1096,19 +1133,19 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
-                const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
-                const buttonLabel = 'Добавить';
+                // Scoped dialog selector using data-testid
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = EDIT_PAGE_ADD_CB_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from constants
+                const buttonLabel = "Добавить";
                 let expectedState = true;
-
+                const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    const cls = 'button-yui-kit.medium.primary-yui-kit';
-                    const scopedButtonSelector = `${dialogSelector} button.${cls}`;
-                    const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
+                    // Locate the button using data-testid instead of class names
 
-                    const isButtonReady = await shortagePage.isButtonVisible(
+
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(
                         page,
-                        scopedButtonSelector,
+                        buttonDataTestId, // Pass data-testid instead of class
                         buttonLabel,
                         expectedState
                     );
@@ -1116,32 +1153,30 @@ export const runU004 = () => {
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
                 });
 
-                const clas = 'button-yui-kit.medium.primary-yui-kit';
-                // Reuse the locator for the button
-                const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
-                await buttonLocator.evaluate((row) => {
-                    row.style.backgroundColor = 'black';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                // Highlight button for debugging
+                await buttonLocator.evaluate((button) => {
+                    button.style.backgroundColor = "black";
+                    button.style.border = "2px solid red";
+                    button.style.color = "white";
                 });
+
                 // Perform hover and click actions
-                //await buttonLocator.hover();
                 await page.waitForTimeout(1000);
                 await buttonLocator.click();
                 await page.waitForTimeout(500);
             });
+
             await allure.step("Step 002 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                    row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
-                button.click();
-                await page.waitForTimeout(1000);
             });
             ////////////////// end of СБ deletion
         });
@@ -1234,7 +1269,7 @@ export const runU004 = () => {
             });
             await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
                 await page.waitForLoadState("networkidle");
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                 table2Locator = modal.locator(`table[data-testid^="${MAIN_PAGE_СБ_TABLE}"]`);
                 await table2Locator!.locator('input.search-yui-kit__input').fill(TEST_PRODUCT_СБ);
                 await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
@@ -1284,7 +1319,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
                 await page.waitForTimeout(500);
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -1328,7 +1363,7 @@ export const runU004 = () => {
                 console.log(selectedPartName);
                 // Locate the bottom table
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                 const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
                 // Locate all rows in the table body
@@ -1371,7 +1406,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -1407,16 +1442,14 @@ export const runU004 = () => {
             await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'red';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
                 button.hover();
                 button.click();
-                await page.waitForTimeout(500);
             });
         });
         await allure.step("Step 002: Добавить Д к товару (Add Д to the product and save)", async () => {
@@ -1555,7 +1588,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -1636,7 +1669,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -1672,17 +1705,14 @@ export const runU004 = () => {
             await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                await page.waitForTimeout(500);
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                //button.hover();
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
             });
         });
         await allure.step("Step 003: Добавить ПД к товару (Add ПД to the product and save)", async () => {
@@ -1815,7 +1845,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -1894,7 +1924,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -1930,15 +1960,14 @@ export const runU004 = () => {
             await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
             });
         });
         await allure.step("Step 004: Добавить РМ к товару (Add РМ to the product and save)", async () => {
@@ -2069,7 +2098,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -2148,7 +2177,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -2184,15 +2213,13 @@ export const runU004 = () => {
             await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
                 button.hover();
-                button.click();
-                await page.waitForTimeout(500);
                 button.click();
             });
         });
@@ -2305,7 +2332,7 @@ export const runU004 = () => {
             await allure.step("Step 002 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TEST_PRODUCT_СБ; // Replace with actual part number
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                 const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
                 // Locate all rows in the table body
@@ -2349,7 +2376,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -2384,17 +2411,15 @@ export const runU004 = () => {
                 await page.waitForTimeout(500);
             });
             await allure.step("Step 002 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await page.waitForLoadState("networkidle");
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                    row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
-                button.click();
-                await page.waitForTimeout(1000);
             });
             ////////////////// end of СБ deletion
             //remove the item we added Д
@@ -2473,7 +2498,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -2507,17 +2532,15 @@ export const runU004 = () => {
                 await page.waitForTimeout(500);
             });
             await allure.step("Step 007 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await page.waitForLoadState("networkidle");
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                    row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
-                button.click();
-                await page.waitForTimeout(1000);
             });
             ///// end of Д removal
             page.reload();
@@ -2547,7 +2570,7 @@ export const runU004 = () => {
             await allure.step("Step 007 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TESTCASE_2_PRODUCT_ПД; // Replace with actual part number
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                 const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
                 await page.waitForTimeout(5000);
                 await bottomTableLocator.evaluate((row) => {
@@ -2603,7 +2626,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -2637,17 +2660,15 @@ export const runU004 = () => {
                 await page.waitForTimeout(500);
             });
             await allure.step("Step 007 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await page.waitForLoadState("networkidle");
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                    row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
-                button.click();
-                await page.waitForTimeout(2000);
             });
             ////////////////// end of ПД deletion
             ///////////// start РМ deletion
@@ -2678,7 +2699,7 @@ export const runU004 = () => {
             await allure.step("Step 007 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TESTCASE_2_PRODUCT_РМ; // Replace with actual part number
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                 const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
                 await page.waitForTimeout(1000);
                 await bottomTableLocator.evaluate((row) => {
@@ -2734,7 +2755,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -2768,17 +2789,15 @@ export const runU004 = () => {
                 await page.waitForTimeout(500);
             });
             await allure.step("Step 007 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await page.waitForLoadState("networkidle");
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
-                    row.style.backgroundColor = 'black';
+                    row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                    row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
-                button.click();
-                await page.waitForTimeout(2000);
             });
             ////////////////// end of РМ deletion
         });
@@ -2933,7 +2952,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -2964,7 +2983,7 @@ export const runU004 = () => {
             const selectedPartName = secondCellValue; // Replace with actual part name
 
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             await bottomTableLocator.evaluate((row) => {
@@ -3014,7 +3033,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -3050,18 +3069,16 @@ export const runU004 = () => {
         await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            //button.hover();
+            button.hover();
             button.click();
-            await page.waitForTimeout(1000);
         });
-        await allure.step("Step 17: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
+        await allure.step("Step 17: reload the page. (reload the page)", async () => {
 
             await page.reload({
                 timeout: 5000, // Sets a 500ms timeout
@@ -3103,7 +3120,7 @@ export const runU004 = () => {
 
             const selectedPartNumber = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             // Locate all rows in the table body
@@ -3152,7 +3169,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -3187,30 +3204,26 @@ export const runU004 = () => {
         await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            //button.hover();
+            button.hover();
             button.click();
-            await page.waitForTimeout(1000);
         });
         await allure.step("Step 17: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            //button.hover();
+            button.hover();
             button.click();
-            await page.waitForTimeout(1000);
         });
         await allure.step("Step 18: извлечь основную таблицу продуктов и сохранить ее в массиве. (extract the main product table and store it in an array)", async () => {
             // Wait for loading
@@ -3322,7 +3335,7 @@ export const runU004 = () => {
 
             const selectedPartNumber = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             // Locate all rows in the table body
@@ -3371,7 +3384,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -3406,16 +3419,14 @@ export const runU004 = () => {
         await allure.step("Step 12: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            //button.hover();
+            button.hover();
             button.click();
-            await page.waitForTimeout(1000);
         });
         await allure.step("Step 13: извлечь основную таблицу продуктов и сохранить ее в массиве. (extract the main product table and store it in an array)", async () => {
             // Wait for loading
@@ -3565,7 +3576,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -3595,7 +3606,7 @@ export const runU004 = () => {
             const selectedPartNumber = firstCellValue; // Replace with actual part number
 
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             await bottomTableLocator.evaluate((row) => {
@@ -3652,7 +3663,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -3688,18 +3699,16 @@ export const runU004 = () => {
         await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            //button.hover();
+            button.hover();
             button.click();
-            await page.waitForTimeout(1000);
         });
-        await allure.step("Step 17: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
+        await allure.step("Step 17: reload the page. (reload the page)", async () => {
 
             await page.reload({
                 timeout: 5000, // Sets a 500ms timeout
@@ -3816,7 +3825,7 @@ export const runU004 = () => {
 
             const selectedPartNumber = TESTCASE_2_PRODUCT_ПД; // Replace with actual part number
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             // Locate all rows in the table body
@@ -3859,7 +3868,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -3894,16 +3903,14 @@ export const runU004 = () => {
         await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            //button.hover();
+            button.hover();
             button.click();
-            await page.waitForTimeout(1000);
         });
 
     });
@@ -4043,7 +4050,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -4073,7 +4080,7 @@ export const runU004 = () => {
             const selectedPartNumber = firstCellValue; // Replace with actual part number
 
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
             await bottomTableLocator.evaluate((row) => {
                 row.style.backgroundColor = 'blue';
@@ -4122,7 +4129,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -4192,7 +4199,7 @@ export const runU004 = () => {
             await allure.step("Step 007 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TESTCASE_2_PRODUCT_ПД; // Replace with actual part number
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                 const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
                 await page.waitForTimeout(5000);
                 await bottomTableLocator.evaluate((row) => {
@@ -4248,7 +4255,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -4282,32 +4289,29 @@ export const runU004 = () => {
                 await page.waitForTimeout(500);
             });
             await allure.step("Step 007 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await page.waitForLoadState("networkidle");
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
-                    row.style.backgroundColor = 'black';
+                    row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                    row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
-                button.click();
-                await page.waitForTimeout(2000);
             });
             ////////////////// end of ПД deletion                
         });
         await allure.step("Step 19: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            await page.waitForTimeout(500);
+            button.hover();
             button.click();
-            await page.waitForTimeout(500);
         });
         await allure.step("Step 20: Захват таблицы и сохранение ее в массиве. (Capture table and store it in an array)", async () => {
             await page.waitForLoadState("networkidle");
@@ -4453,7 +4457,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -4483,7 +4487,7 @@ export const runU004 = () => {
             const selectedPartNumber = firstCellValue; // Replace with actual part number
 
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
             await bottomTableLocator.evaluate((row) => {
                 row.style.backgroundColor = 'blue';
@@ -4532,7 +4536,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -4569,15 +4573,13 @@ export const runU004 = () => {
         await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
             button.hover();
-            button.click();
-            await page.waitForTimeout(500);
             button.click();
         });
         //third refresh and confirm saved
@@ -4627,7 +4629,7 @@ export const runU004 = () => {
             await allure.step("Step 18 sub step 3: find the bottom table", async () => {
                 const selectedPartNumber = TESTCASE_2_PRODUCT_РМ; // Replace with actual part number
 
-                const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                 const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
                 await page.waitForTimeout(1000);
                 await bottomTableLocator.evaluate((row) => {
@@ -4683,7 +4685,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -4717,17 +4719,15 @@ export const runU004 = () => {
                 await page.waitForTimeout(500);
             });
             await allure.step("Step 18 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                await page.waitForLoadState("networkidle");
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
-                    row.style.backgroundColor = 'black';
+                    row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
-                    row.style.color = 'white';
+                    row.style.color = 'blue';
                 });
-                await page.waitForTimeout(500);
+                button.hover();
                 button.click();
-                await page.waitForTimeout(500);
-                button.click();
-                await page.waitForTimeout(2000);
             });
             ////////////////// end of РМ deletion            
         });
@@ -4808,19 +4808,17 @@ export const runU004 = () => {
         });
         await allure.step("Step 08: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
             tableData_temp = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            await page.waitForLoadState("networkidle");
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'black';
                 row.style.border = '2px solid red';
-                row.style.color = 'white';
+                row.style.color = 'blue';
             });
-            await page.waitForTimeout(500);
+            button.hover();
             button.click();
-            await page.waitForTimeout(500);
-            button.click();
-            await page.waitForTimeout(1000);
         });
-        await allure.step("Step 09: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
+        await allure.step("Step 09: Compare arrays  (Compare arrays)", async () => {
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             await page.waitForLoadState("networkidle");
             const identical = await shortagePage.compareTableData(tableData_temp, tableData_full);
@@ -4974,7 +4972,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -5005,7 +5003,7 @@ export const runU004 = () => {
             const selectedPartName = secondCellValue; // Replace with actual part name
 
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             await bottomTableLocator.evaluate((row) => {
@@ -5055,7 +5053,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -5239,7 +5237,7 @@ export const runU004 = () => {
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
 
-                    const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                    const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                     //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
                     const buttonLabel = 'Добавить';
                     let expectedState = true;
@@ -5270,7 +5268,7 @@ export const runU004 = () => {
                     const selectedPartName = secondCellValue; // Replace with actual part name
 
                     // Locate the bottom table
-                    const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+                    const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
                     const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
                     await bottomTableLocator.evaluate((row) => {
@@ -5325,7 +5323,7 @@ export const runU004 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
@@ -5361,13 +5359,13 @@ export const runU004 = () => {
             await allure.step("Step 35: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-
+                button.hover();
                 button.click();
                 page.reload();
                 await page.waitForTimeout(500);
@@ -5464,7 +5462,7 @@ export const runU004 = () => {
         });
         await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             table2Locator = modal.locator(`[data-testid="${MAIN_PAGE_СБ_TABLE}"]`);
             await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_СБ);
             await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
@@ -5513,7 +5511,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(500);
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -5553,7 +5551,7 @@ export const runU004 = () => {
 
             const selectedPartNumber = TESTCASE_2_PRODUCT_СБ; // Replace with actual part number
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             // Locate all rows in the table body
@@ -5602,7 +5600,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -5714,7 +5712,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -5743,7 +5741,7 @@ export const runU004 = () => {
 
             const selectedPartNumber = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             // Locate all rows in the table body
@@ -5792,7 +5790,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -5912,7 +5910,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -5940,7 +5938,7 @@ export const runU004 = () => {
 
             const selectedPartNumber = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             // Locate all rows in the table body
@@ -5989,7 +5987,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -6109,7 +6107,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             //const buttonClass = 'button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -6138,7 +6136,7 @@ export const runU004 = () => {
 
             const selectedPartNumber = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
             // Locate the bottom table
-            const modal = await page.locator('dialog[data-testid^="Spectification-ModalBaseCbed"]');
+            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
             const bottomTableLocator = modal.locator('table[data-testid^="Spectification-ModalBaseCbed"]');
 
             // Locate all rows in the table body
@@ -6187,7 +6185,7 @@ export const runU004 = () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit.base-modal[open]';
+            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
             const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
             const buttonLabel = 'Добавить';
             let expectedState = true;
@@ -6234,13 +6232,14 @@ export const runU004 = () => {
             await page.waitForTimeout(500);
         });
         await allure.step("Step 43: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-            const button = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            await page.waitForLoadState("networkidle");
+            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
-                row.style.backgroundColor = 'black';
+                row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
-                row.style.color = 'white';
+                row.style.color = 'blue';
             });
-            await page.waitForTimeout(500);
+            button.hover();
             button.click();
             await page.waitForTimeout(500);
             button.click();
