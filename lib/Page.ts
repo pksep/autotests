@@ -2560,6 +2560,13 @@ export class PageObject extends AbstractPage {
         const title = await h3.textContent();
         if (title) {
           dialogTitles.push(title.trim());
+
+          // Highlight the element in the dialog
+          await h3.evaluate((el) => {
+            (el as HTMLElement).style.backgroundColor = 'yellow';
+            (el as HTMLElement).style.border = '2px solid red';
+            (el as HTMLElement).style.color = 'blue';
+          });
         }
       }
     }
@@ -2574,6 +2581,13 @@ export class PageObject extends AbstractPage {
         const title = await h3Tag.textContent();
         if (title) {
           testIdTitles.push(title.trim());
+
+          // Highlight the element inside the given data-testid container
+          await h3Tag.evaluate((el) => {
+            (el as HTMLElement).style.backgroundColor = 'yellow';
+            (el as HTMLElement).style.border = '2px solid red';
+            (el as HTMLElement).style.color = 'blue';
+          });
         }
       } catch (error) {
         console.error('Error processing H3 tag:', error);
@@ -2587,6 +2601,7 @@ export class PageObject extends AbstractPage {
 
     return filteredTitles;
   }
+
 
 
   async isButtonVisible(
