@@ -2807,6 +2807,79 @@ export class PageObject extends AbstractPage {
     return areEqual;
   }
 
+  /**
+ * Navigate to the element with the specified data-testid and log the details.
+ * @param url - The URL of the page to navigate to.
+ * @param dataTestId - The data-testid of the element to validate after navigation.
+ * @returns Promise<void> - Logs navigation status and validates the presence of the specified element.
+ */
+  async navigateToPage(url: string, dataTestId: string): Promise<void> {
+    await this.page.goto(url);
+    await this.page.waitForTimeout(500);
+    await this.page.waitForLoadState("networkidle");
+
+    // Validate the presence of an element using data-testid
+    const locator = this.page.locator(`[data-testid="${dataTestId}"]`);
+    await locator.waitFor({ state: 'visible' });
+    const isVisible = await locator.isVisible();
+    expect(isVisible).toBeTruthy();
+
+    console.log(`Navigation to ${url} and validation of element with data-testid: "${dataTestId}" completed.`);
+  }
+  /**
+ * Validate page titles by checking the H3 elements within a given section, and apply styling for debugging.
+ * @param testId - The data-testid attribute of the section containing the titles.
+ * @param expectedTitles - An array of expected titles to validate against.
+ * @returns Promise<void> - Validates the content and order of titles, applies styling, or throws an error if validation fails.
+ */
+  async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
+    const locator = this.page.locator(`[data-testid="${testId}"] h3`); // Locate H3 elements within the section
+    const actualTitles = await locator.allTextContents();
+    const normalizedTitles = actualTitles.map((title) => title.trim());
+
+    // Log expected and received titles for debugging
+    logger.info('Expected Titles:', expectedTitles);
+    logger.info('Received Titles:', normalizedTitles);
+
+    // Apply styling for debugging
+    await locator.evaluateAll((elements) => {
+      elements.forEach((el) => {
+        el.style.backgroundColor = 'yellow';
+        el.style.border = '2px solid red';
+        el.style.color = 'blue';
+      });
+    });
+
+    // Validate length and content/order of titles
+    expect(normalizedTitles.length).toBe(expectedTitles.length);
+    expect(normalizedTitles).toEqual(expectedTitles);
+
+    console.log("Page titles validated successfully with styling applied.");
+  }
+  /**
+   * Validate that a table is displayed and has rows.
+   * @param tableTestId - The data-testid of the table to validate.
+   * @returns Promise<void> - Validates the presence and non-emptiness of the table.
+   */
+  async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
+    await this.page.waitForTimeout(500);
+    const tableLocator = this.page.locator(`[data-testid="${tableTestId}"] tbody tr`);
+    const rowCount = await tableLocator.count();
+
+    // Highlight the table for debugging
+    await this.page.locator(`[data-testid="${tableTestId}"]`).evaluate((table) => {
+      table.style.border = "2px solid green";
+      table.style.backgroundColor = "lightyellow";
+    });
+
+    // Ensure the table has rows
+    expect(rowCount).toBeGreaterThan(0);
+
+    console.log(`Table with data-testid "${tableTestId}" has ${rowCount} rows.`);
+  }
+
+
+
 
 
 

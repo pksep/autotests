@@ -17,7 +17,7 @@ let table_before_changequantity: { groupName: string; items: string[][] }[] = []
 let value_before_changequantity: number = 0;
 let detailvalue_original_before_changequantity: number = 5;
 
-
+const MAIN_PAGE_TITLE_ID = "BaseDetals-Header-Title";
 const MAIN_PAGE_MAIN_DIV = "BaseDetals-Container-MainContainer";
 const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
 const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
@@ -105,46 +105,30 @@ export const runU004 = () => {
     });
 
 
-    test.skip("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
+    test("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
         test.setTimeout(50000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
-        await allure.step("Step 02: Проверяем наличия заголовка на странице \"База деталей\" (Check for the presence of the title on the 'Parts Database' page)", async () => {
-            // Wait for loading
-            const titles = testData1.elements.MainPage.titles.map((title) => title.trim());
-
-            // Retrieve all H3 titles from the specified class
-            //const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'detailsdb');
-            const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, `${MAIN_PAGE_MAIN_DIV}`);
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            logger.info('Expected Titles:', titles);
-            logger.info('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
+        await allure.step("Step 02: Проверяем наличие заголовка на странице (Check for the presence of the title)", async () => {
+            const expectedTitles = testData1.elements.MainPage.titles.map((title) => title.trim());
+            await shortagePage.validatePageTitlesWithStyling(MAIN_PAGE_MAIN_DIV, expectedTitles);
         });
+
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
-        await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
+
         await allure.step("Step 04: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
             await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();//DATA_TESTID
@@ -167,13 +151,16 @@ export const runU004 = () => {
             await leftTable.locator('input.search-yui-kit__input').press('Enter');//DATA-TESTID
             await page.waitForLoadState("networkidle");
         });
+        // await allure.step("Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
+        //     // Wait for the page to become idle (ensuring data loading is complete)
+        //     await page.waitForLoadState("networkidle");
+        //     // Assert that the table body has rows
+        //     await page.waitForTimeout(500);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0); // Asserts that the row count is greater than 1
+        // });
         await allure.step("Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
-            // Wait for the page to become idle (ensuring data loading is complete)
-            await page.waitForLoadState("networkidle");
-            // Assert that the table body has rows
-            await page.waitForTimeout(500);
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0); // Asserts that the row count is greater than 1
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         let firstCellValue = '';
         let secondCellValue = '';
@@ -1028,17 +1015,17 @@ export const runU004 = () => {
         let thirdCellValue = '';
         await allure.step("Step 001: Find СБ к товару (find СБ product)", async () => {
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                // Wait for loading
-                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-                await page.waitForTimeout(500);
-                await page.waitForLoadState("networkidle");
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
             });
-            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
+            // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            //     // Wait for loading
+            //     await page.waitForLoadState("networkidle");
 
-                const rowCount = await leftTable.locator('tbody tr').count();
-                expect(rowCount).toBeGreaterThan(0);
+            //     const rowCount = await leftTable.locator('tbody tr').count();
+            //     expect(rowCount).toBeGreaterThan(0);
+            // });
+            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+                await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
             });
             await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
                 await page.waitForLoadState("networkidle");
@@ -1221,17 +1208,17 @@ export const runU004 = () => {
         let thirdCellValue = '';
         await allure.step("Step 001: Добавить СБ к товару (Add СБ to the product and save)", async () => {
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                // Wait for loading
-                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-                await page.waitForTimeout(500);
-                await page.waitForLoadState("networkidle");
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
             });
-            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
+            // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            //     // Wait for loading
+            //     await page.waitForLoadState("networkidle");
 
-                const rowCount = await leftTable.locator('tbody tr').count();
-                expect(rowCount).toBeGreaterThan(0);
+            //     const rowCount = await leftTable.locator('tbody tr').count();
+            //     expect(rowCount).toBeGreaterThan(0);
+            // });
+            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+                await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
             });
             await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
                 await page.waitForLoadState("networkidle");
@@ -1487,17 +1474,17 @@ export const runU004 = () => {
         });
         await allure.step("Step 002: Добавить Д к товару (Add Д to the product and save)", async () => {
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                // Wait for loading
-                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-                await page.waitForTimeout(500);
-                await page.waitForLoadState("networkidle");
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
             });
-            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
+            // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            //     // Wait for loading
+            //     await page.waitForLoadState("networkidle");
 
-                const rowCount = await leftTable.locator('tbody tr').count();
-                expect(rowCount).toBeGreaterThan(0);
+            //     const rowCount = await leftTable.locator('tbody tr').count();
+            //     expect(rowCount).toBeGreaterThan(0);
+            // });
+            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+                await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
             });
             await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
                 await page.waitForLoadState("networkidle");
@@ -1763,17 +1750,17 @@ export const runU004 = () => {
         });
         await allure.step("Step 003: Добавить ПД к товару (Add ПД to the product and save)", async () => {
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                // Wait for loading
-                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-                await page.waitForTimeout(500);
-                await page.waitForLoadState("networkidle");
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
             });
-            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
+            // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            //     // Wait for loading
+            //     await page.waitForLoadState("networkidle");
 
-                const rowCount = await leftTable.locator('tbody tr').count();
-                expect(rowCount).toBeGreaterThan(0);
+            //     const rowCount = await leftTable.locator('tbody tr').count();
+            //     expect(rowCount).toBeGreaterThan(0);
+            // });
+            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+                await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
             });
             await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
                 await page.waitForLoadState("networkidle");
@@ -2032,17 +2019,17 @@ export const runU004 = () => {
         });
         await allure.step("Step 004: Добавить РМ к товару (Add РМ to the product and save)", async () => {
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                // Wait for loading
-                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-                await page.waitForTimeout(500);
-                await page.waitForLoadState("networkidle");
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
             });
-            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
+            // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            //     // Wait for loading
+            //     await page.waitForLoadState("networkidle");
 
-                const rowCount = await leftTable.locator('tbody tr').count();
-                expect(rowCount).toBeGreaterThan(0);
+            //     const rowCount = await leftTable.locator('tbody tr').count();
+            //     expect(rowCount).toBeGreaterThan(0);
+            // });
+            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+                await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
             });
             await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
                 await page.waitForLoadState("networkidle");
@@ -2324,17 +2311,17 @@ export const runU004 = () => {
         let thirdCellValue = '';
         await allure.step("Step 001: Find СБ к товару (find СБ product)", async () => {
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                // Wait for loading
-                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-                await page.waitForTimeout(500);
-                await page.waitForLoadState("networkidle");
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
             });
-            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
+            // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            //     // Wait for loading
+            //     await page.waitForLoadState("networkidle");
 
-                const rowCount = await leftTable.locator('tbody tr').count();
-                expect(rowCount).toBeGreaterThan(0);
+            //     const rowCount = await leftTable.locator('tbody tr').count();
+            //     expect(rowCount).toBeGreaterThan(0);
+            // });
+            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+                await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
             });
             await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
                 await page.waitForLoadState("networkidle");
@@ -2894,10 +2881,7 @@ export const runU004 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -2905,12 +2889,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -3341,10 +3328,7 @@ export const runU004 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -3352,12 +3336,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -3662,10 +3649,7 @@ export const runU004 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -3673,12 +3657,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -3960,10 +3947,7 @@ export const runU004 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -3971,12 +3955,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -4148,17 +4135,17 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -4573,17 +4560,17 @@ export const runU004 = () => {
         let thirdCellValue = '';
 
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -5008,17 +4995,17 @@ export const runU004 = () => {
         let thirdCellValue = '';
 
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -5087,10 +5074,7 @@ export const runU004 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -5098,12 +5082,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -5371,17 +5358,12 @@ export const runU004 = () => {
         });
 
     });
-    test("TestCase 15 - Добавление недействительных материалов в спецификацию и проверка сохранения (Add Invalid Material)", async ({ page }) => {
-    });
-    test.skip("TestCase 16 - Добавьте больше материалов, чем ограниченное количество в спецификацию и проверка сохранения (Exceed Allowed Materials)", async ({ page }) => {
+    test.skip("TestCase 15 - Добавьте больше материалов, чем ограниченное количество в спецификацию и проверка сохранения (Exceed Allowed Materials)", async ({ page }) => {
         test.setTimeout(500000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -5389,12 +5371,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -5648,16 +5633,13 @@ export const runU004 = () => {
             });
         });
     });
-    test.skip("TestCase 17 - cleanup delete all added details (cleanup delete all added details)", async ({ page }) => {
+    test.skip("TestCase 16 - cleanup delete all added details (cleanup delete all added details)", async ({ page }) => {
         // Placeholder for test logic: Open the parts database page      
         test.setTimeout(50000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -5665,12 +5647,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -5816,15 +5801,12 @@ export const runU004 = () => {
         button.click();
         await page.waitForTimeout(500);
     });
-    test("TestCase 18 - Добавить, изменить и удалить несколько элементов одновременно в спецификацию и проверка сохранения (Add, Modify, and Delete in One Session)", async ({ page }) => {
+    test("TestCase 17 - Добавить, изменить и удалить несколько элементов одновременно в спецификацию и проверка сохранения (Add, Modify, and Delete in One Session)", async ({ page }) => {
         test.setTimeout(50000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
 
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -5832,12 +5814,15 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -6712,30 +6697,31 @@ export const runU004 = () => {
             expect(result1 && result2 && result3 && result4 && quantity).toBeTruthy();
         });
     });
-    test("TestCase 19 - cleanup (Return to original state)", async ({ page }) => {
+    test("TestCase 18 - cleanup (Return to original state)", async ({ page }) => {
         await allure.step("Step 01: Navigate (Navigation)", async () => {
             // Placeholder for test logic: Open the parts database page      
             test.setTimeout(50000);
             const shortagePage = new CreatePartsDatabasePage(page);
             // Placeholder for test logic: Open the parts database page
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                // Wait for loading
-                shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-                await page.waitForTimeout(500);
-                await page.waitForLoadState("networkidle");
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
             });
         });
+        const shortagePage = new CreatePartsDatabasePage(page);
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
+        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        //     // Wait for loading
+        //     await page.waitForLoadState("networkidle");
 
-            const rowCount = await leftTable.locator('tbody tr').count();
-            expect(rowCount).toBeGreaterThan(0);
+        //     const rowCount = await leftTable.locator('tbody tr').count();
+        //     expect(rowCount).toBeGreaterThan(0);
+        // });
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
@@ -7225,7 +7211,7 @@ export const runU004 = () => {
             await page.waitForTimeout(500);
         });
     });
-    test.skip("TestCase 20 - Совместные изменения (Collaborative Changes)", async ({ browser }) => {
+    test.skip("TestCase 19 - Совместные изменения (Collaborative Changes)", async ({ browser }) => {
         const page1 = await browser.newPage();
         const page2 = await browser.newPage();
         await page1.goto('http://example.com');
