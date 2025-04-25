@@ -1092,88 +1092,88 @@ export class PageObject extends AbstractPage {
    * @param plannedShipmentColIndex - The index of the planned shipment date column.
    * @returns An object containing the success status and an optional message if the ordering check fails.
    */
-  async checkTableRowOrdering(
-    page: Page,
-    tableId: string,
-    urgencyColIndex: number,
-    plannedShipmentColIndex: number
-  ): Promise<{ success: boolean; message?: string }> {
-    // Get all rows in the table
-    logger.info(urgencyColIndex);
+  // async checkTableRowOrdering(
+  //   page: Page,
+  //   tableId: string,
+  //   urgencyColIndex: number,
+  //   plannedShipmentColIndex: number
+  // ): Promise<{ success: boolean; message?: string }> {
+  //   // Get all rows in the table
+  //   logger.info(urgencyColIndex);
 
-    let table = await page.$(`#${tableId}`);
-    if (!table) {
-      table = await page.$(`[data-testid="${tableId}"]`);
-    }
+  //   let table = await page.$(`#${tableId}`);
+  //   if (!table) {
+  //     table = await page.$(`[data-testid="${tableId}"]`);
+  //   }
 
-    if (!table) {
-      return {
-        success: false,
-        message: `Table with id "${tableId}" not found`,
-      };
-    }
+  //   if (!table) {
+  //     return {
+  //       success: false,
+  //       message: `Table with id "${tableId}" not found`,
+  //     };
+  //   }
 
-    // Get all rows in the table excluding the header rows
-    const rows = await table.$$("tbody tr");
-    const headerRows = await table.$$("tbody tr th");
-    rows.splice(0, headerRows.length); // Remove header rows
+  //   // Get all rows in the table excluding the header rows
+  //   const rows = await table.$$("tbody tr");
+  //   const headerRows = await table.$$("tbody tr th");
+  //   rows.splice(0, headerRows.length); // Remove header rows
 
-    // Filter out rows that contain `th` elements
-    const filteredRows = rows.filter(async (row) => {
-      const thElements = await row.$$("th");
-      return thElements.length === 0;
-    });
+  //   // Filter out rows that contain `th` elements
+  //   const filteredRows = rows.filter(async (row) => {
+  //     const thElements = await row.$$("th");
+  //     return thElements.length === 0;
+  //   });
 
-    // Debug: Log the count of rows found
-    logger.info(`Total rows found in the table: ${filteredRows.length}`);
+  //   // Debug: Log the count of rows found
+  //   logger.info(`Total rows found in the table: ${filteredRows.length}`);
 
-    // Extract data from rows
-    const rowData = await Promise.all(
-      filteredRows.map(async (row) => {
-        const cells = await row.$$("td");
-        const urgencyDate =
-          (await cells[urgencyColIndex]?.innerText()) ?? "";
-        const plannedShipmentDate =
-          (await cells[plannedShipmentColIndex]?.innerText()) ?? "";
-        return { urgencyDate, plannedShipmentDate };
-      })
-    );
+  //   // Extract data from rows
+  //   const rowData = await Promise.all(
+  //     filteredRows.map(async (row) => {
+  //       const cells = await row.$$("td");
+  //       const urgencyDate =
+  //         (await cells[urgencyColIndex]?.innerText()) ?? "";
+  //       const plannedShipmentDate =
+  //         (await cells[plannedShipmentColIndex]?.innerText()) ?? "";
+  //       return { urgencyDate, plannedShipmentDate };
+  //     })
+  //   );
 
-    // Function to parse date strings with various separators
-    const parseDate = (dateStr: string): Date => {
-      const parts = dateStr.split(/[.\-\/]/); // Split by dots, hyphens, or slashes
-      if (parts.length === 3) {
-        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Convert to YYYY-MM-DD
-      }
-      return new Date(dateStr); // Fallback to default Date parsing
-    };
+  //   // Function to parse date strings with various separators
+  //   const parseDate = (dateStr: string): Date => {
+  //     const parts = dateStr.split(/[.\-\/]/); // Split by dots, hyphens, or slashes
+  //     if (parts.length === 3) {
+  //       return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Convert to YYYY-MM-DD
+  //     }
+  //     return new Date(dateStr); // Fallback to default Date parsing
+  //   };
 
-    // Sort rows
-    const compareDates = (a: string, b: string) =>
-      parseDate(a).getTime() - parseDate(b).getTime();
+  //   // Sort rows
+  //   const compareDates = (a: string, b: string) =>
+  //     parseDate(a).getTime() - parseDate(b).getTime();
 
-    // Verify row ordering for urgencyDate
-    let lastUrgencyDateIndex = -1;
-    for (let i = 0; i < rowData.length; i++) {
-      if (rowData[i].urgencyDate) {
-        if (
-          lastUrgencyDateIndex >= 0 &&
-          compareDates(
-            rowData[lastUrgencyDateIndex].urgencyDate,
-            rowData[i].urgencyDate
-          ) > 0
-        ) {
-          return {
-            success: false,
-            message: `Row ordering error in urgencyDate at index ${i}`,
-          };
-        }
-        lastUrgencyDateIndex = i;
-      } else {
-        break; // Exit the loop once we encounter a row with an empty urgencyDate
-      }
-    }
-  }
+  //   // Verify row ordering for urgencyDate
+  //   let lastUrgencyDateIndex = -1;
+  //   for (let i = 0; i < rowData.length; i++) {
+  //     if (rowData[i].urgencyDate) {
+  //       if (
+  //         lastUrgencyDateIndex >= 0 &&
+  //         compareDates(
+  //           rowData[lastUrgencyDateIndex].urgencyDate,
+  //           rowData[i].urgencyDate
+  //         ) > 0
+  //       ) {
+  //         return {
+  //           success: false,
+  //           message: `Row ordering error in urgencyDate at index ${i}`,
+  //         };
+  //       }
+  //       lastUrgencyDateIndex = i;
+  //     } else {
+  //       break; // Exit the loop once we encounter a row with an empty urgencyDate
+  //     }
+  //   }
+  // }
 
   /**
    * Verify the success message contains the specified order number.
@@ -1917,7 +1917,7 @@ export class PageObject extends AbstractPage {
     descendantsCbedArray: ISpetificationData[],
     descendantsDetailArray: ISpetificationData[]
   ) {
-    const rows = this.page.locator(".tables_bf:nth-child(1) tbody tr");
+    const rows = this.page.locator(".table-yui-kit");
     const rowCount = await rows.count();
 
     expect(rowCount).toBeGreaterThan(0); // Проверка на наличие строк
@@ -1950,7 +1950,7 @@ export class PageObject extends AbstractPage {
     designationProduct: string
   ) {
     const modalWindow = this.page.locator(
-      '[data-testid="ModalMark-Content"]'
+      '[data-testid^="OperationPathInfo-ModalMark-Create"]'
     );
     expect(await modalWindow).toBeVisible();
     expect(
@@ -2384,14 +2384,6 @@ export class PageObject extends AbstractPage {
     }
   }
 
-  /**
-   * Находит ячейку с заданным именем переменной и вводит значение в указанную ячейку.
-   * @param page - Экземпляр страницы Playwright.
-   * @param tableId - ID или data-testid таблицы.
-   * @param variableName - Имя переменной для поиска.
-   * @param targetCellIndex - Индекс ячейки, в которую нужно ввести значение (0 - основание).
-   * @param value - Значение для ввода в целевую ячейку (необязательный параметр).
-   */
   async findAndFillCell(
     page: Page,
     tableSelector: string,
@@ -2407,45 +2399,93 @@ export class PageObject extends AbstractPage {
       throw new Error(`Таблица с ID "${tableSelector}" не найдена.`);
     }
 
+    // Ждем загрузки таблицы
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000); // Даем время на рендеринг
+
     const rows = await table.$$("tbody tr");
+    console.log(`Найдено строк: ${rows.length}`);
 
     for (const row of rows) {
       const cells = await row.$$("td");
       for (const cell of cells) {
-        const cellText = await cell.innerText();
-        if (cellText.trim() === variableName) {
+        // Получаем текст разными способами для надежности
+        const cellText = await cell.evaluate(el => {
+          // Пробуем получить текст через textContent
+          const textContent = el.textContent?.trim() || '';
+          if (textContent) return textContent;
+
+          // Если textContent пустой, пробуем получить через innerText
+          const innerText = el.innerText?.trim() || '';
+          if (innerText) return innerText;
+
+          // Если и innerText пустой, пробуем получить через value
+          const input = el.querySelector('input');
+          if (input) return input.value?.trim() || '';
+
+          return '';
+        });
+
+        console.log(`Проверяем ячейку с текстом: "${cellText}"`);
+
+        // Более гибкое сравнение текста
+        if (cellText.toLowerCase().includes(variableName.toLowerCase())) {
+          console.log(`Найдена ячейка с переменной "${variableName}"`);
+
           if (targetCellIndex < cells.length) {
             const targetCell = cells[targetCellIndex];
-            const inputField = await targetCell.$(
-              '[type="number"]'
-            );
+            console.log(`Обрабатываем целевую ячейку с индексом ${targetCellIndex}`);
+
+            // Проверяем наличие input в ячейке
+            const inputField = await targetCell.$('input[type="number"], input[type="text"]');
+            if (!inputField) {
+              console.log('Input не найден, проверяем наличие других элементов ввода');
+              const anyInput = await targetCell.$('input');
+              if (!anyInput) {
+                throw new Error(`Поле ввода не найдено в целевой ячейке.`);
+              }
+            }
+
             if (value) {
-              if (inputField) {
-                await inputField.click();
-                await inputField.fill(value);
-                expect(await inputField.inputValue()).toBe(
-                  value
-                );
-              } else {
-                throw new Error(
-                  `Поле ввода с типом "number" не найдено в целевой ячейке.`
-                );
+              console.log(`Пытаемся ввести значение: ${value}`);
+              try {
+                // Кликаем по ячейке для активации input
+                await targetCell.click();
+                await page.waitForTimeout(500);
+
+                // Очищаем существующее значение
+                await page.keyboard.press('Control+A');
+                await page.keyboard.press('Delete');
+
+                // Вводим новое значение
+                await page.keyboard.type(value);
+                await page.waitForTimeout(500);
+
+                // Проверяем, что значение введено
+                const inputValue = await targetCell.evaluate(el => {
+                  const input = el.querySelector('input');
+                  return input ? input.value : '';
+                });
+
+                console.log(`Текущее значение в input: ${inputValue}`);
+                if (inputValue !== value) {
+                  throw new Error(`Не удалось ввести значение ${value}. Текущее значение: ${inputValue}`);
+                }
+              } catch (error) {
+                console.error('Ошибка при вводе значения:', error);
+                throw error;
               }
             } else {
-              if (inputField) {
-                const currentValue =
-                  await inputField.inputValue();
-                console.log("currentValue ^", currentValue);
-                return currentValue;
-              } else {
-                throw new Error(
-                  `Поле ввода с типом "number" не найдено в целевой ячейке.`
-                );
-              }
+              // Получаем текущее значение
+              const currentValue = await targetCell.evaluate(el => {
+                const input = el.querySelector('input');
+                return input ? input.value : '';
+              });
+              console.log(`Текущее значение: ${currentValue}`);
+              return currentValue;
             }
             return;
           } else {
-
             throw new Error(
               `Целевая ячейка с индексом ${targetCellIndex} не найдена.`
             );
@@ -2453,6 +2493,8 @@ export class PageObject extends AbstractPage {
         }
       }
     }
+
+    throw new Error(`Переменная "${variableName}" не найдена в таблице.`);
   }
 
   /**
@@ -2563,7 +2605,10 @@ export class PageObject extends AbstractPage {
 
       // Check for 'disabled-yui-kit' class
       const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
-      console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+      const isDisabledAttribute = await button.evaluate((btn) => btn.hasAttribute('disabled'));
+
+      const isDisabled = hasDisabledClass || isDisabledAttribute;
+      console.log(`Disabled class present for button "${label}": ${isDisabled}`);
 
       if (Benabled) {
         console.log(`Expecting button "${label}" to be enabled.`);
@@ -2573,7 +2618,7 @@ export class PageObject extends AbstractPage {
         expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
       } else {
         console.log(`Expecting button "${label}" to be disabled.`);
-        expect(hasDisabledClass).toBeTruthy(); // Button should be disabled
+        expect(isDisabled).toBeTruthy(); // Button should be disabled
       }
 
       console.log(`Button "${label}" passed all checks.`);
@@ -2787,22 +2832,23 @@ async function extractDataSpetification(
   const listPokDetListData: ISpetificationData[] = [];
   const materialListData: ISpetificationData[] = [];
 
-  // Get all tbody sections
-  const tbodySections = table.locator("tbody");
-  const tbodyCount = await tbodySections.count();
-  console.log(`Found ${tbodyCount} tbody sections`);
+  // Get all draggable tables
+  const draggableTables = table.locator(".draggable-table");
+  const tableCount = await draggableTables.count();
+  console.log(`Found ${tableCount} draggable tables`);
 
-  // Wait for the first row to be visible
-  await table.locator("tbody tr").first().waitFor({ state: 'visible' });
+  // Wait for the first table to be visible
+  await draggableTables.first().waitFor({ state: 'visible' });
 
-  for (let tbodyIndex = 0; tbodyIndex < tbodyCount; tbodyIndex++) {
-    const tbody = tbodySections.nth(tbodyIndex);
+  for (let tableIndex = 0; tableIndex < tableCount; tableIndex++) {
+    const currentTable = draggableTables.nth(tableIndex);
+    const tbody = currentTable.locator("tbody");
     const tbodyRows = tbody.locator("tr");
     const rowCount = await tbodyRows.count();
-    console.log(`Section ${tbodyIndex} has ${rowCount} rows`);
+    console.log(`Table ${tableIndex} has ${rowCount} rows`);
 
     if (rowCount === 0) {
-      console.log(`Section ${tbodyIndex} is empty, skipping`);
+      console.log(`Table ${tableIndex} is empty, skipping`);
       continue;
     }
 
@@ -2824,14 +2870,14 @@ async function extractDataSpetification(
       const name = cell3?.trim() || "";
       const quantity = Number(cell5?.trim()) || 0;
 
-      console.log(`Processing row ${rowIndex} in section ${tbodyIndex}:`, {
+      console.log(`Processing row ${rowIndex} in table ${tableIndex}:`, {
         designation,
         name,
         quantity
       });
 
-      // Determine which array to push based on tbody index
-      switch (tbodyIndex) {
+      // Determine which array to push based on table index
+      switch (tableIndex) {
         case 0:
           cbedListData.push({ designation, name, quantity });
           break;

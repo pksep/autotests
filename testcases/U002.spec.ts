@@ -51,7 +51,6 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 await orderedFromSuppliersPage.findTable(selector);
                 await page.waitForLoadState("networkidle");
-
             }
         );
 
@@ -78,7 +77,6 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         await allure.step("Step 04: Проверяем наличие кнопок на странице Заказано у поставщиков", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-
 
             const buttons = testData1.elements.MainPage.buttons;
             // Iterate over each button in the array
@@ -133,7 +131,6 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         await allure.step("Step 07: Проверяем модальное окно на наличие всех кнопок с поставщиками", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-
 
             const buttons = testData1.elements.ModalSelectSupplier.buttons;
             // Iterate over each button in the array
@@ -419,7 +416,6 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
                 });
             }
-
         });
     })
 
