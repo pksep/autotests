@@ -183,7 +183,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                         numberColumn
                     );
                 console.log(
-                    "quantityLaunchInProduct :",
+                    "Ordered for production :",
                     quantityLaunchInProduct
                 );
             }
@@ -198,13 +198,14 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                     tableModalWindowDataTestId,
                     tableYourQunatityCell
                 );
-
+                console.log('Номер ячейки с инпутом :', numberColumn)
+                console.log('Количество запускаемых в производство сущности :', quantityOrder)
                 await this.findAndFillCell(
                     this.page,
                     tableModalWindowDataTestId,
                     name,
-                    numberColumn,
-                    quantityOrder
+                    8,
+                    '2'
                 );
             }
         );
@@ -244,7 +245,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 name,
                 numberColumn
             );
-            expect.soft(qunatityValue).toBe(quantityOrder)
+            expect(qunatityValue).toBe(quantityOrder)
         });
 
         await allure.step("Step 12: Click on the Order button", async () => {
