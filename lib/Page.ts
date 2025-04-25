@@ -2880,6 +2880,60 @@ export class PageObject extends AbstractPage {
 
 
 
+  /**
+ * Validate a button's visibility and state using its data-testid.
+ * Checks if the button is disabled either by attribute or CSS class.
+ * @param page - The Playwright page object.
+ * @param buttons - Array of button configurations including data-testid, label, and expected state.
+ * @param dialogSelector - Optional scoped selector for the dialog or container.
+ */
+  async validateButtons(
+    page: Page,
+    buttons: Array<{ datatestid: string; label: string; state: string }>,
+    dialogSelector?: string
+  ): Promise<void> {
+    for (const button of buttons) {
+      const buttonTestId = button.datatestid.trim();
+      const buttonLabel = button.label.trim();
+      const expectedState = button.state === "true"; // Convert state string to boolean
+
+      const scopedButtonSelector = dialogSelector
+        ? `${dialogSelector} [data-testid="${buttonTestId}"]`
+        : `[data-testid="${buttonTestId}"]`;
+
+      const buttonLocator = page.locator(scopedButtonSelector);
+
+      // Validate button visibility
+      const isButtonVisible = await buttonLocator.isVisible();
+
+      // Validate button enabled state (via attribute or CSS class)
+      const hasDisabledAttribute = await buttonLocator.evaluate(
+        (btn) => btn.hasAttribute('disabled')
+      );
+      const hasDisabledCSSClass = await buttonLocator.evaluate(
+        (btn) => btn.classList.contains('disabled-yui-kit')
+      );
+      const isButtonEnabled = !hasDisabledAttribute && !hasDisabledCSSClass;
+
+      // Assertions for visibility and state
+      expect(isButtonVisible).toBeTruthy();
+      expect(isButtonEnabled).toBe(expectedState);
+
+      // Highlight button for debugging
+      await buttonLocator.evaluate((btn) => {
+        btn.style.backgroundColor = 'yellow';
+        btn.style.border = '2px solid red';
+        btn.style.color = 'blue';
+      });
+
+      logger.info(`Button "${buttonLabel}" - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
+    }
+  }
+
+
+
+
+
 
 
 

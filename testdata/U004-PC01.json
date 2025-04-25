@@ -52,7 +52,7 @@
             "state": "true"
           },
           {
-            "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
             "datatestid": "Creator-Buttons-CostPrice",
             "label": "Себестоимость",
             "state": "false"
@@ -64,7 +64,7 @@
             "state": "true"
           },
           {
-            "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+            "class": "button.button-yui-kit.medium.outline-yui-kit",
             "datatestid": "Creator-Buttons-Publication",
             "label": "Публикация",
             "state": "false"

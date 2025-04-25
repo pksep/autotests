@@ -5,6 +5,8 @@ import { title } from "process";
 import { toNamespacedPath } from "path";
 import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
+const EDIT_PAGE_ADD_BUTTON = "Spectification-Buttons-addingSpecification";
+const MAIN_TABLE_TEST_ID = "Spectification-TableSpecification-Product";
 
 export type Item = {
     id: string;
@@ -1466,54 +1468,396 @@ export class CreatePartsDatabasePage extends PageObject {
         }
     }
 
-
     async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
-        // Locate the table using its data-testid
         const table = page.locator(`[data-testid="${tableTestId}"]`);
-
-        // Wait for the first row of the table to be visible
         await table.locator('tr').first().waitFor({ state: 'visible' });
 
-        // Fetch all rows inside tbody
-        const rows = await table.locator('tbody tr').elementHandles();
+        const rows = await table.locator('tbody > tr').elementHandles();
         console.log(`Total rows in tbody: ${rows.length}`);
 
-        // Return error if no rows are found
         if (rows.length === 0) {
             throw new Error('No rows found in the table.');
         }
 
-        // Initialize groups array
         const groups: { groupName: string; items: string[][] }[] = [];
         let currentGroup: { groupName: string; items: string[][] } | null = null;
 
-        // Iterate over each row
-        for (const row of rows) {
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+
             try {
-                // Check if the row is a group header
-                const groupHeaderCell = await row.$eval('td[colspan]', (cell) => cell?.textContent?.trim()).catch(() => null);
-                if (groupHeaderCell) {
-                    // Create a new group with group name
-                    currentGroup = { groupName: groupHeaderCell, items: [] };
+                // Detect group header rows
+                const isGroupHeader = await row.evaluate((node) => {
+                    const element = node as Element; // Cast Node to Element
+                    return element.getAttribute('data-testid')?.startsWith('TableSpecification-Tbody-TableRowHead');
+                });
+
+                if (isGroupHeader) {
+                    const groupName = await row.$eval('td[colspan="5"]', (cell) => cell.textContent?.trim() || '');
+                    currentGroup = { groupName, items: [] };
                     groups.push(currentGroup);
-                    console.log(`Group header detected: "${currentGroup.groupName}"`);
-                } else if (currentGroup) {
-                    // Add data rows under the current group
-                    const rowData = await row.$$eval('td', (cells) =>
-                        cells.map((cell) => cell.textContent?.trim() || '')
-                    );
-                    currentGroup.items.push(rowData);
-                    console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+                    console.log(`Group header detected: "${groupName}"`);
+                    continue;
+                }
+
+                // Detect item rows for the current group
+                const isDataRow = await row.evaluate((node) => {
+                    const element = node as Element; // Cast Node to Element
+                    return element.getAttribute('data-testid')?.startsWith('TableSpecification-DraggableTableRow');
+                });
+
+                if (isDataRow && currentGroup) {
+                    const itemTable = await row.$('table[data-testid^="TableSpecification-DraggableTable"]');
+                    const itemRows = await itemTable?.$$('tbody > tr') || [];
+
+                    for (const itemRow of itemRows) {
+                        const rowData = await itemRow.$$eval('td', (cells) =>
+                            cells.map((cell) => cell.textContent?.trim() || '')
+                        );
+
+                        if (rowData.length > 0) {
+                            currentGroup.items.push(rowData);
+                            console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error(`Error processing row: ${error}`);
             }
         }
 
-        // Debug final parsed result
-        logger.info(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
+        console.log(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
         return groups;
     }
+
+    /**
+   * Add an item to the specification based on the type.
+   * Handles varying table structures for different types (e.g., РМ, ПД, Д, СБ).
+   * Includes expect() validations for each step.
+   * @param page - The Playwright page object.
+   * @param smallDialogButtonId - The data-testid for the small dialog button to select.
+   * @param dialogTestId - The data-testid of the dialog to select.
+   * @param searchTableTestId - The data-testid of the table to search within.
+   * @param searchValue - The value to search for in the table.
+   * @param bottomTableTestId - The data-testid of the bottom table for confirmation.
+   * @param addToBottomButtonTestId - The data-testid of the button to add to the bottom table.
+   * @param addToMainButtonTestId - The data-testid of the button to add to the main table.
+   * @param itemType - The type of the item being added (e.g., "РМ", "ПД", "Д", "СБ").
+   * @returns Promise<void>
+   */
+    async addItemToSpecification(
+        page: Page,
+        smallDialogButtonId: string,
+        dialogTestId: string,
+        searchTableTestId: string,
+        searchValue: string,
+        bottomTableTestId: string,
+        addToBottomButtonTestId: string,
+        addToMainButtonTestId: string,
+        itemType?: string
+    ): Promise<void> {
+        // Determine column index based on item type
+        const columnIndex = itemType === "РМ" || itemType === "ПД" ? 0 : 1;
+
+        // Step 1: Wait for the page to stabilize, then click the "Добавить" button
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(1000);
+        const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+        await addButton.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.backgroundColor = 'yellow';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+        });
+        await addButton.click();
+        await page.waitForTimeout(500);
+
+        // Step 2: Click the small dialog button
+        const dialogButton = page.locator(`div[data-testid="${smallDialogButtonId}"]`);
+        await dialogButton.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.backgroundColor = 'green';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+        });
+        await dialogButton.click();
+        await page.waitForTimeout(500);
+
+        // Step 3: Wait for the modal/dialog to load
+        const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
+        await modal.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.border = '2px solid red';
+            });
+        });
+        await expect(modal).toBeVisible(); // Validate modal is visible
+
+        // Step 4: Search for the item in the search table
+        const itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+        await itemTableLocator.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.border = '2px solid red';
+            });
+        });
+        await itemTableLocator.locator("input.search-yui-kit__input").fill(searchValue);
+        await itemTableLocator.locator("input.search-yui-kit__input").press("Enter");
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(2000);
+        const firstRow = itemTableLocator.locator("tbody tr").first();
+        await firstRow.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.border = '2px solid red';
+            });
+        });
+        const firstRowText = await firstRow.locator("td").nth(columnIndex).textContent();
+
+        // Step 5: Validate search result
+        expect(firstRowText).toContain(searchValue);
+        await firstRow.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.backgroundColor = 'green';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+        });
+        // Step 6: Click the first row
+        await firstRow.click();
+        await page.waitForTimeout(500);
+
+        // Step 7: Add the item to the bottom table
+        const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
+        await addToBottomButton.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.backgroundColor = 'green';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+        });
+        await addToBottomButton.click();
+        await page.waitForTimeout(100);
+
+        // Step 8: Validate the item in the bottom table
+        const bottomTableLocator = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
+        await bottomTableLocator.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.border = '2px solid red';
+            });
+        });
+        const rows = bottomTableLocator.locator("tbody tr");
+        const rowCount = await rows.count();
+        expect(rowCount).toBeGreaterThan(0); // Ensure the bottom table is not empty
+
+        let isItemFound = false;
+        for (let i = 0; i < rowCount; i++) {
+            const row = rows.nth(i);
+            const partName = await row.locator("td").nth(1).textContent();
+
+            if (partName?.trim() === searchValue.trim()) {
+                const partNameCell = await row.locator("td").nth(1);
+                await partNameCell.evaluateAll((elements) => {
+                    elements.forEach((el) => {
+                        el.style.backgroundColor = 'green';
+                        el.style.border = '2px solid red';
+                        el.style.color = 'blue';
+                    });
+                });
+                isItemFound = true;
+                break;
+            }
+        }
+        expect(isItemFound).toBeTruthy(); // Ensure the item is found in the bottom table
+
+        // Step 9: Add the item to the main table
+        const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
+        await addToMainButton.evaluateAll((elements) => {
+            elements.forEach((el) => {
+                el.style.backgroundColor = 'green';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+        });
+        await addToMainButton.click();
+        await page.waitForTimeout(500);
+
+        const parsedTableArray = await this.parseStructuredTable(page, MAIN_TABLE_TEST_ID); // Parse the table
+
+        // Iterate through each group in the parsed table
+        let isMainItemFound = false;
+        for (const group of parsedTableArray) {
+            if (group.items.some(row => row.some(cell => cell.trim() === searchValue.trim()))) {
+                isMainItemFound = true;
+                break;
+            }
+        }
+
+        expect(isMainItemFound).toBeTruthy(); // Ensure the item exists in the main table
+
+    }
+
+    async removeItemFromSpecification(
+        page: Page,
+        smallDialogButtonId: string,
+        dialogTestId: string,
+        bottomTableTestId: string,
+        removeButtonColumnIndex: number,
+        searchValue: string,
+        returnButtonTestId: string,
+        itemType?: string
+    ): Promise<void> {
+        // Determine column index based on item type
+        //const columnIndex = itemType === "РМ" || itemType === "ПД" ? 0 : 1;
+        const columnIndex = 1;
+        // Step 1: Wait for the page to stabilize, then click the "Добавить" button
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(1000);
+        const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+        await addButton.evaluate((el) => {
+            el.style.backgroundColor = "black";
+            el.style.border = "2px solid red";
+            el.style.color = "white";
+        });
+        await addButton.click();
+        await page.waitForTimeout(500);
+
+        // Step 2: Click the small dialog button
+        const dialogButton = page.locator(`div[data-testid="${smallDialogButtonId}"]`);
+        await dialogButton.evaluate((el) => {
+            el.style.backgroundColor = "black";
+            el.style.border = "2px solid red";
+            el.style.color = "white";
+        });
+        await dialogButton.click();
+        await page.waitForTimeout(1000);
+
+        // Step 3: Highlight the modal and bottom table locator
+        const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
+        await modal.evaluate((dialog) => {
+            dialog.style.border = "2px solid red"; // Highlight the modal
+        });
+        const bottomTableLocator = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
+        await bottomTableLocator.evaluate((table) => {
+            table.style.border = "2px solid red"; // Highlight the bottom table
+        });
+
+        const rowsLocator = bottomTableLocator.locator("tbody tr");
+
+        const rowCount = await rowsLocator.count();
+        expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+
+        let isRowFound = false;
+
+        // Step 4: Iterate through the rows to find the matching item
+        for (let i = 0; i < rowCount; i++) {
+            const row = rowsLocator.nth(i);
+            await row.evaluate((table) => {
+                table.style.border = "2px solid red"; // Highlight the bottom table
+            });
+            await page.waitForTimeout(1000);
+            const partNumber = await row.locator("td").nth(columnIndex).textContent();
+
+            if (partNumber?.trim() === searchValue.trim()) {
+                isRowFound = true;
+                // Highlight the row with a red border (locating the item)
+                const partNumberCell = await row.locator("td").nth(columnIndex);
+                await partNumberCell.evaluate((el) => {
+                    el.style.border = "2px solid red";
+                });
+                await page.waitForTimeout(1000);
+                // Click the remove button and fully style the row
+                const removeCell = row.locator("td").nth(removeButtonColumnIndex);
+                await row.evaluate((el) => {
+                    el.style.backgroundColor = "black";
+                    el.style.border = "2px solid red";
+                    el.style.color = "white";
+                });
+
+                await page.waitForTimeout(50); // Wait for the page to update
+                await removeCell.click();
+                await page.waitForTimeout(1000);
+                break;
+            }
+        }
+        expect(isRowFound).toBeTruthy(); // Validate that the row was found and removed
+
+        // Step 5: Validate item removal from the table
+        const remainingRowsCount = await rowsLocator.count();
+        expect(remainingRowsCount).toBe(rowCount - 1); // Ensure one row was removed
+
+        // Step 6: Click the button to return to the main page
+        const returnButton = page.locator(`[data-testid="${returnButtonTestId}"]`);
+        await returnButton.evaluate((button) => {
+            button.style.backgroundColor = "black";
+            button.style.border = "2px solid green";
+            button.style.color = "white";
+        });
+        await page.waitForTimeout(500);
+        await returnButton.click();
+        await page.waitForLoadState("networkidle");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
+    //     // Locate the table using its data-testid
+    //     const table = page.locator(`[data-testid="${tableTestId}"]`);
+
+    //     // Wait for the first row of the table to be visible
+    //     await table.locator('tr').first().waitFor({ state: 'visible' });
+
+    //     // Fetch all rows inside tbody
+    //     const rows = await table.locator('tbody tr').elementHandles();
+    //     console.log(`Total rows in tbody: ${rows.length}`);
+
+    //     // Return error if no rows are found
+    //     if (rows.length === 0) {
+    //         throw new Error('No rows found in the table.');
+    //     }
+
+    //     // Initialize groups array
+    //     const groups: { groupName: string; items: string[][] }[] = [];
+    //     let currentGroup: { groupName: string; items: string[][] } | null = null;
+
+    //     // Iterate over each row
+    //     for (const row of rows) {
+    //         try {
+    //             // Check if the row is a group header
+    //             const groupHeaderCell = await row.$eval('td[colspan]', (cell) => cell?.textContent?.trim()).catch(() => null);
+    //             if (groupHeaderCell) {
+    //                 // Create a new group with group name
+    //                 currentGroup = { groupName: groupHeaderCell, items: [] };
+    //                 groups.push(currentGroup);
+    //                 console.log(`Group header detected: "${currentGroup.groupName}"`);
+    //             } else if (currentGroup) {
+    //                 // Add data rows under the current group
+    //                 const rowData = await row.$$eval('td', (cells) =>
+    //                     cells.map((cell) => cell.textContent?.trim() || '')
+    //                 );
+    //                 currentGroup.items.push(rowData);
+    //                 console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+    //             }
+    //         } catch (error) {
+    //             console.error(`Error processing row: ${error}`);
+    //         }
+    //     }
+
+    //     // Debug final parsed result
+    //     logger.info(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
+    //     return groups;
+    // }
     async compareTableData<T>(
         data1: { groupName: string; items: T[][] }[],
         data2: { groupName: string; items: T[][] }[]
