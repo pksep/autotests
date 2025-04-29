@@ -4710,7 +4710,7 @@ export const runU004 = () => {
             let expectedState = true;
             const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
             await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(1000);
 
                 // Locate the button using data-testid instead of class selectors
 
@@ -4855,18 +4855,18 @@ export const runU004 = () => {
         table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
         await allure.step("Step 18: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(2000);
             await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_Д);
             await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(2000);
             // Optionally, validate that the search input is visible
             await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible();
         });
         await allure.step("Step 19: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-
+            await page.waitForTimeout(1000);
             // Get the value of the first cell in the first row
             firstCellValue = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)').innerText();
             firstCell = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)');
