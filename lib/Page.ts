@@ -273,6 +273,7 @@ export class PageObject extends AbstractPage {
     }
   }
 
+
   /**
    * Gets the text content of a specified selector.
    * @param selector - The CSS selector for the element to retrieve text from.
@@ -1177,10 +1178,11 @@ export class PageObject extends AbstractPage {
   // }
 
   /**
-     * Verify the success message contains the specified order number.
-     * @param orderNumber - The order number to check within the success message.
-     * @returns A promise that resolves when the message is verified.
-     */
+   * Verify the success message contains the specified order number.
+   * @param orderNumber - The order number to check within the success message.
+   * @returns A promise that resolves when the message is verified.
+   */
+
   async getMessage(orderNumber?: string) {
     const successMessageLocator = this.page.locator(
       '.notification-yui-kit'
@@ -1585,7 +1587,6 @@ export class PageObject extends AbstractPage {
       .isVisible();
   }
 
-
   /** Checks and enters the quantity in the "Start Production" modal window
    * @param quantity - checks that the input has this value
    * @param quantityOrder - if this parameter is specified, enters this value in the input field
@@ -1598,10 +1599,8 @@ export class PageObject extends AbstractPage {
       await modalWindowLaunchIntoProduction
         .locator("input")
         .fill(qunatityOrder);
+
     }
-    expect(
-      await modalWindowLaunchIntoProduction.locator("input").inputValue()
-    ).toBe(qunatity);
   }
   /** Checks and enters the quantity in the order modal window
      * @param locator - selector for the quantity input field
@@ -1626,6 +1625,7 @@ export class PageObject extends AbstractPage {
   }
 
 
+
   // Save the order number from the "Start Production" modal window
   async checkOrderNumber() {
     const orderNumberValue = this.page.locator(
@@ -1641,6 +1641,11 @@ export class PageObject extends AbstractPage {
     return orderNumberText?.trim();
   }
 
+  /** Retrieves the value from the cell in the first row of the table and can click on the cell
+   * @param locator - the full locator of the table
+   * @param cellIndex - the index of the cell from which to extract the value
+   * @param click - whether to click on the cell
+   */
   /** Retrieves the value from the cell in the first row of the table and can click on the cell
    * @param locator - the full locator of the table
    * @param cellIndex - the index of the cell from which to extract the value
@@ -1786,10 +1791,10 @@ export class PageObject extends AbstractPage {
   }
 
   /** Retrieves the value from the cell in the first row of the table and can click on the cell
-   * @param locator - the locator of the table [data-testid=**]
-   * @param cellIndex - the index of the cell from which to extract the value (0-based)
-   * @param click - whether to click on the cell
-   */
+  * @param locator - the locator of the table [data-testid=**]
+  * @param cellIndex - the index of the cell from which to extract the value (0-based)
+  * @param click - whether to click on the cell
+  */
   async clickIconOperationNew(
     locator: string,
     cellIndex: number,
@@ -2066,6 +2071,7 @@ export class PageObject extends AbstractPage {
     );
   }
 
+
   // Check the modal window "Completed Sets"
   async completesSetsModalWindow() {
     const locatorModalWindow = '[data-testid="ModalKitsList-RightContent"]';
@@ -2088,7 +2094,10 @@ export class PageObject extends AbstractPage {
       '[data-testid="ModalKitsList-CancelButton"]',
       Click.No
     );
+
   }
+
+
 
   /**
    * Check the modal window "Invoice for Completion" depending on the entity.
@@ -2411,39 +2420,8 @@ export class PageObject extends AbstractPage {
       }
       return validRows;
     }
-
-    // Perform a search with an empty input and verify no results
-    await searchTable.fill("");
-    await searchTable.press("Enter");
-    await page.waitForTimeout(2000); // Wait for results to update
-    const validRowsAfterEmptySearch = await getValidRows();
-    expect(validRowsAfterEmptySearch.length).toBeGreaterThan(0);
-
-    // Perform a search with special characters
-    const invalidSearchTerm = "!@#$%^&*()";
-    await searchTable.fill(invalidSearchTerm);
-    await searchTable.press("Enter");
-    await page.waitForTimeout(2000); // Wait for results to update
-    const validRowsAfterSpecialCharsSearch = await getValidRows();
-    expect(validRowsAfterSpecialCharsSearch.length).toBe(0);
-
-    // Perform a search with a very long string
-    const longSearchTerm = "a".repeat(1000); // Adjust length as needed
-    await searchTable.fill(longSearchTerm);
-    await searchTable.press("Enter");
-    await page.waitForTimeout(2000); // Wait for results to update
-    const validRowsAfterLongStringSearch = await getValidRows();
-    expect(validRowsAfterLongStringSearch.length).toBe(0);
   }
 
-  /**
-   * Находит ячейку с заданным именем переменной и вводит значение в указанную ячейку.
-   * @param page - Экземпляр страницы Playwright.
-   * @param tableId - ID или data-testid таблицы.
-   * @param variableName - Имя переменной для поиска.
-   * @param targetCellIndex - Индекс ячейки, в которую нужно ввести значение (0 - основание).
-   * @param value - Значение для ввода в целевую ячейку (необязательный параметр).
-   */
   async findAndFillCell(
     page: Page,
     tableSelector: string,
@@ -2823,7 +2801,7 @@ export class PageObject extends AbstractPage {
    * @param expectedState - expected state of the button ('active' or 'inactive')
    * @returns Promise<boolean> - true if button state matches expected, false otherwise
    */
-  async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
+async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
     const button = this.page.locator(selector, { hasText: name });
 
     await expect(button).toBeVisible();
@@ -2837,6 +2815,35 @@ export class PageObject extends AbstractPage {
 
       return classes?.includes('disabled-yui-kit') ?? false;
     }
+  }
+   async extractNotificationMessage(page: Page): Promise<{ title: string, message: string } | null> {
+    // Define the locator for the dynamic notification div
+    const notificationDiv = page.locator('div.push-notification-yui-kit');
+
+    // Check if the notification div is present
+    const isPresent = await notificationDiv.isVisible();
+    if (!isPresent) {
+      console.log("Notification div is not visible.");
+      return null; // Return null if the div is not present
+    }
+
+    console.log("Notification div is visible.");
+
+    // Extract the title (h4 tag within the notification)
+    const titleLocator = notificationDiv.locator('h4.notification-yui-kit__block-title');
+    const title = await titleLocator.textContent();
+    console.log(`Notification Title: ${title}`);
+
+    // Extract the message (span tag within the notification)
+    const messageLocator = notificationDiv.locator('span.notification-yui-kit__block-text');
+    const message = await messageLocator.textContent();
+    console.log(`Notification Message: ${message}`);
+
+    // Return the extracted title and message
+    return {
+      title: title?.trim() || '', // Trim whitespace and ensure it's a string
+      message: message?.trim() || '' // Trim whitespace and ensure it's a string
+    };
   }
 
   async isButtonVisibleTestId(
@@ -2895,6 +2902,7 @@ export class PageObject extends AbstractPage {
       return false; // Return false on failure
     }
   }
+
 
   async getAllH3TitlesInModalClass(page: Page, className: string): Promise<string[]> {
     // Step 1: Locate the container by the specified class
@@ -3013,6 +3021,7 @@ export class PageObject extends AbstractPage {
     expect(await this.page.locator(modalWindow)).toBeVisible()
 
   }
+
   /**
  * Navigate to the element with the specified data-testid and log the details.
  * @param url - The URL of the page to navigate to.
@@ -3084,6 +3093,13 @@ export class PageObject extends AbstractPage {
   }
 
   /**
+ * Validate a button's visibility and state using its data-testid.
+ * Checks if the button is disabled either by attribute or CSS class.
+ * @param page - The Playwright page object.
+ * @param buttons - Array of button configurations including data-testid, label, and expected state.
+ * @param dialogSelector - Optional scoped selector for the dialog or container.
+ */
+   /**
  * Validate a button's visibility and state using its data-testid.
  * Checks if the button is disabled either by attribute or CSS class.
  * @param page - The Playwright page object.

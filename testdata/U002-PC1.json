@@ -1,0 +1,176 @@
+{
+    "elements": {
+        "MainPage": {
+            "titles": [
+                "Заказано у поставщиков"
+            ],
+            "buttons": [
+                {
+                    "class": "button.btn-small.btn-add",
+                    "label": "Создать заказ"
+                },
+                {
+                    "class": "[data-testid=\"DatePicterRange-BlockPicter-PeriodButton\"]",
+                    "label": "Сбросить"
+                }
+            ],
+            "switcher": [
+                {
+                    "class": "span.td-row.td-row-all",
+                    "label": "Все",
+                    "state": "false"
+                },
+                {
+                    "class": "span.td-row",
+                    "label": "От Поставщика",
+                    "state": "false"
+                },
+                {
+                    "class": "span.td-row",
+                    "label": "Только Сборки",
+                    "state": "false"
+                },
+                {
+                    "class": "span.td-row",
+                    "label": "Только Металлообработка",
+                    "state": "false"
+                },
+                {
+                    "class": "span.td-row",
+                    "label": "Архив",
+                    "state": "false"
+                }
+            ]
+        },
+        "ModalSelectSupplier": {
+            "buttons": [
+                {
+                    "class": ".type-operation",
+                    "label": "Поставщик",
+                    "state": "true"
+                },
+                {
+                    "class": ".type-operation",
+                    "label": "Детали",
+                    "state": "true"
+                },
+                {
+                    "class": ".type-operation",
+                    "label": "Сборка",
+                    "state": "true"
+                },
+                {
+                    "class": ".type-operation",
+                    "label": "Изделии",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalCreateOrderSupplier": {
+            "titles": [
+                "Создание заказа поставщика"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"ModalAddOrder-SupplierOrderDetails-ChangeSelectionButton\"]",
+                    "label": "Изменить выбор",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalAddOrder-ProductionTable-CancelButton\"]",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalAddOrder-ProductionTable-OrderButton\"]",
+                    "label": "Заказать",
+                    "state": "true"
+                }
+            ]
+        },
+        "LaunchOnProdictuion": {
+            "titles": [
+                "Запустить в производство",
+                "Примечание",
+                "Комплектация"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
+                    "label": "Отмена",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
+                    "label": "В производство",
+                    "state": "true"
+                }
+            ]
+        },
+        "MetalworkingWarhouse": {
+            "titles": [
+                "Металлообработка склад"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"MetalloworkingSclad-PrintControls-SelectColumnsButton\"]",
+                    "label": "Выбрать столбцы для печати",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"MetalloworkingSclad-PrintControls-ExportExcelButton\"]",
+                    "label": "Экспорт в EXCEL",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"MetalloworkingSclad-PrintControls-ArchiveButton\"]",
+                    "label": "Переместить в архив",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"MetalloworkingSclad-FiltersSection-PlanHidden\"]",
+                    "label": "Показать Задачи на отгрузку",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"MetalloworkingSclad-FiltersSection-ClearFilters\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                }
+            ]
+        },
+        "AssemblyWarehouse": {
+            "titles": [
+                "Сборка Склад"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"AssemblySclad-PrintControls-SelectColumnsButton\"]",
+                    "label": "Выбрать столбцы для печати",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"AssemblySclad-PrintControls-ExportExcelButton\"]",
+                    "label": "Экспорт в EXCEL",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"AssemblySclad-PrintControls-ArchiveButton\"]",
+                    "label": "Переместить в архив",
+                    "state": "true"
+                },
+
+                {
+                    "class": "[data-testid=\"AssemblySclad-ShipmentsOrder-ButtonHidden\"]",
+                    "label": "Показать Задачи на отгрузку",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"AssemblySclad-ShipmentsOrder-ButtonClear\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                }
+            ]
+        }
+}
+}

@@ -1930,6 +1930,201 @@ export class CreatePartsDatabasePage extends PageObject {
         }
         return Promise.resolve(0); // Return 0 if the string is not found
     }
+    async validateTable(
+        page: Page,
+        tableTitle: string,
+        expectedRows: { [key: string]: string }[]
+    ): Promise<boolean> {
+        try {
+            // Locate the section containing the table (using its h3 heading)
+            const tableSection = page.locator(`h3:has-text("${tableTitle}")`).locator('..');
+            // Debug: highlight the table section
+            await tableSection.evaluate((el) => { el.style.border = '2px solid red'; });
+
+            // ----- Validate Column Headers Order ----- //
+            const headerCells = tableSection.locator('table thead tr th');
+            const headerCount = await headerCells.count();
+            // Expected column order is derived from the keys of the first expected row.
+            // For a 3-col table, the keys might be: [ "Наименование", "ЕИ", "Значение" ]
+            // For a 4-col table, they might be: [ "Наименование", "ЕИ", "Значение", "" ]
+            const expectedColOrder = Object.keys(expectedRows[0]);
+            if (headerCount !== expectedColOrder.length) {
+                console.error(
+                    `Header column count mismatch for "${tableTitle}": expected ${expectedColOrder.length}, found ${headerCount}`
+                );
+                return false;
+            }
+            for (let i = 0; i < headerCount; i++) {
+                const headerText = (await headerCells.nth(i).textContent())?.trim();
+                if (headerText !== expectedColOrder[i]) {
+                    console.error(
+                        `Column header mismatch in table "${tableTitle}" at index ${i}: expected "${expectedColOrder[i]}", got "${headerText}"`
+                    );
+                    return false;
+                }
+            }
+
+            // ----- Validate Table Rows ----- //
+            const tableRows = tableSection.locator('table tbody tr');
+            // Wait for the first row to be visible before proceeding.
+            await tableRows.first().waitFor({ timeout: 10000 });
+
+            // Handle the two different table structures based on headerCount
+            if (headerCount === 3) {
+                // For tables with 3 columns (e.g., "Параметры детали")
+                for (let i = 0; i < expectedRows.length; i++) {
+                    const expectedRow = expectedRows[i];
+                    const row = tableRows.nth(i);
+                    // Debug: highlight each row
+                    await row.evaluate((el) => { el.style.backgroundColor = 'yellow'; });
+
+                    const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                    const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+                    const actualValue = (await row.locator('td').nth(2).textContent())?.trim();
+
+                    if (
+                        actualName !== expectedRow['Наименование'] ||
+                        actualUnit !== expectedRow['ЕИ'] ||
+                        actualValue !== expectedRow['Значение']
+                    ) {
+                        console.error(
+                            `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
+                            `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                        );
+                        return false;
+                    }
+                }
+            } else if (headerCount === 4) {
+                // For tables with 4 columns (e.g., "Характеристики детали")
+                for (let i = 0; i < expectedRows.length; i++) {
+                    const expectedRow = expectedRows[i];
+                    const row = tableRows.nth(i);
+                    // Debug: highlight each row
+                    await row.evaluate((el) => { el.style.backgroundColor = 'yellow'; });
+
+                    const actualName = (await row.locator('td').nth(0).textContent())?.trim();
+                    const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
+
+                    // Third column: attempt to read an input inside the cell first;
+                    // if no input exists, fallback to reading the cell text.
+                    const cellThird = row.locator('td').nth(2);
+                    let actualValue = "";
+                    if (await cellThird.locator('input').count() > 0) {
+                        actualValue = (await cellThird.locator('input').inputValue()).trim();
+                    } else {
+                        actualValue = ((await cellThird.textContent()) || "").trim();
+                    }
+
+                    // Fourth column: confirms that a button is visible.
+                    const isButtonVisible = await row.locator('td').nth(3).locator('button').isVisible();
+
+                    if (
+                        actualName !== expectedRow['Наименование'] ||
+                        actualUnit !== expectedRow['ЕИ'] ||
+                        actualValue !== expectedRow['Значение']
+                    ) {
+                        console.error(
+                            `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
+                            `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                        );
+                        return false;
+                    }
+                    if (!isButtonVisible) {
+                        console.error(`Button in the fourth column is not visible in row ${i + 1} of table "${tableTitle}".`);
+                        return false;
+                    }
+                }
+            } else {
+                console.error(`Unexpected header count (${headerCount}) for table "${tableTitle}".`);
+                return false;
+            }
+
+            console.log(`Table "${tableTitle}" validation passed.`);
+            return true;
+        } catch (error) {
+            console.error(`Error validating table "${tableTitle}":`, error);
+            return false;
+        }
+    }
 
 
+
+
+
+    /**
+     * Validates an array of input field definitions.
+     * For each field defined in the JSON, it:
+     * • Uses a switch based on field type (and a special case for "Медиа файлы")
+     * • Locates the element on the page
+     * • Verifies that it is visible
+     * • For text fields, fills in a test value and checks if the value was set correctly
+     *
+     * @param page - The Playwright page instance.
+     * @param fields - An array of field definitions (each with title and type).
+     * @returns A Promise that resolves to true if all fields validate correctly.
+     */
+    async validateInputFields(page: Page, fields: { title: string; type: string }[]): Promise<boolean> {
+        try {
+            for (const field of fields) {
+                let fieldLocator;
+                switch (field.type) {
+                    case "input":
+                        if (field.title === "Медиа файлы") {
+                            // For file inputs, use the visible label (assuming it contains "Прикрепить документ")
+                            fieldLocator = page.locator('label.dnd-yui-kit__label:has-text("Прикрепить документ")');
+                            await fieldLocator.evaluate((row) => {
+                                row.style.backgroundColor = 'yellow';
+                                row.style.border = '2px solid red';
+                                row.style.color = 'blue';
+                            });
+                        } else {
+                            // For normal text input fields (e.g. "Обозначение", "Наименование")
+                            fieldLocator = page.locator(`div.editor__information-inputs:has-text("${field.title}") input`);
+                            await fieldLocator.evaluate((row) => {
+                                row.style.backgroundColor = 'yellow';
+                                row.style.border = '2px solid red';
+                                row.style.color = 'blue';
+                            });
+                        }
+                        break;
+                    case "textarea":
+                        // For "Описание / Примечание", look inside the description section
+                        fieldLocator = page.locator(`section.editor__description:has(h3:has-text("${field.title}")) textarea`);
+                        await fieldLocator.evaluate((row) => {
+                            row.style.backgroundColor = 'yellow';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'blue';
+                        });
+                        break;
+                    default:
+                        console.error(`Unsupported field type: ${field.type} for field "${field.title}"`);
+                        return false;
+                }
+
+                // Check that the field (or its visible label for file inputs) is visible.
+                if (!(await fieldLocator.isVisible())) {
+                    console.error(`Field "${field.title}" is not visible.`);
+                    return false;
+                }
+
+                // Verify writability if it’s a text field.
+                if (!(field.type === "input" && field.title === "Медиа файлы")) {
+                    const testValue = "Test Value";
+                    await fieldLocator.fill(testValue);
+                    const currentValue = await fieldLocator.inputValue();
+                    if (currentValue !== testValue) {
+                        console.error(`Field "${field.title}" is not writable. Expected "${testValue}", but got "${currentValue}".`);
+                        return false;
+                    }
+                }
+
+                console.log(`Field "${field.title}" is visible and ${(field.type === "input" && field.title === "Медиа файлы") ? "present" : "writable"}.`);
+            }
+            console.log("All input fields validated successfully.");
+            return true;
+        } catch (error) {
+            console.error("Error during input field validation:", error);
+            return false;
+        }
+    }
 }
