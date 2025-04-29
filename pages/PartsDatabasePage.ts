@@ -205,7 +205,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
     async getProductSpecificationsTable(row: Locator, shortagePage: any, page: any, title: string): Promise<void> {
-        console.log("Started getProductSpecificationsTable function")
+        logger.info("Started getProductSpecificationsTable function")
         const ASSEMBLY_UNIT_TOTAL_LINE = "ModalComplect-CbedsTitle";
         const ASSEMBLY_UNIT_TABLE_ID = "ModalComplect-CbedsTable";
         const ASSEMBLY_UNIT_TABLE_PARTNO_ID = "ModalComplect-CbedsTableHead-Designation";
@@ -263,7 +263,7 @@ export class CreatePartsDatabasePage extends PageObject {
             partNumberId: string | null,
             nameId: string
         ): Promise<void> => {
-            console.log(`Started checkForDuplicates function for ${tableName}`);
+            logger.info(`Started checkForDuplicates function for ${tableName}`);
             /**
              * Step 1: Locate the table on the web page and ensure it is attached to the DOM.
              */
@@ -280,12 +280,12 @@ export class CreatePartsDatabasePage extends PageObject {
             const nameColumnIndex = await shortagePage.findColumn(page, tableId, nameId);
 
             if ((partNumberId && designationColumnIndex === -1)) {
-                console.log(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
+                logger.info(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
                 console.error(`Could not find partNumber column ${nameId} in ${tableName}`);
                 return; // Exit if required columns cannot be found
             }
             if (nameColumnIndex === -1) {
-                console.log(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
+                logger.info(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
                 console.error(`Could not find 'name' column ${nameId} in ${tableName}`);
                 return; // Exit if required columns cannot be found
             }
@@ -297,7 +297,7 @@ export class CreatePartsDatabasePage extends PageObject {
             const filteredRows = [];
             for (const row of rows) {
                 const isNested = await row.evaluate((node: Element) => {
-                    //console.log(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
+                    //logger.info(`%c❌ Completed checkForDuplicates function for table ${tableName}', 'color: red; font-weight: bold;`);
                     // Check if the <tr> is a descendant of a <td>
                     return node.closest('td') !== null;
                 });
@@ -314,7 +314,7 @@ export class CreatePartsDatabasePage extends PageObject {
             rows = filteredRows;
 
             if (rows.length === 0) {
-                console.log(`No rows found in table ${tableName} with Id ${tableId}`);
+                logger.info(`No rows found in table ${tableName} with Id ${tableId}`);
                 return; // Exit if there are no valid rows to process
             }
             logger.info(`Processing ${rows.length} rows in table: ${tableName}`);
@@ -346,7 +346,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     if (!designation && !name) {
                         logger.warn(`Empty designation and name in row. Skipping...`);
                         const rowHtml = await row.evaluate((el: Element) => el.outerHTML);
-                        console.log(`Problematic row HTML: ${rowHtml}`);
+                        logger.info(`Problematic row HTML: ${rowHtml}`);
                         continue;
                     }
 
@@ -373,7 +373,7 @@ export class CreatePartsDatabasePage extends PageObject {
              * Step 7: Log duplicate entries and their counts.
              */
             if (duplicates.length > 0) {
-                console.log(`%c❌ Completed checkForDuplicates function for ${tableName} table`, 'color: red; font-weight: bold;');
+                logger.info(`%c❌ Completed checkForDuplicates function for ${tableName} table`, 'color: red; font-weight: bold;');
                 console.error(`Duplicates found in ${tableName}: ${duplicates}`);
                 console.error(
                     `Duplicate counts: ${Array.from(seen.entries()).filter(([key, count]) => count > 1)}`
@@ -382,7 +382,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 logger.info(`No duplicates found in ${tableName}`);
             }
 
-            console.log(`%c✔️  Completed checkForDuplicates function for ${tableName} table`, 'color: green; font-weight: bold;');
+            logger.info(`%c✔️  Completed checkForDuplicates function for ${tableName} table`, 'color: green; font-weight: bold;');
 
         };
 
@@ -404,7 +404,7 @@ export class CreatePartsDatabasePage extends PageObject {
             testId: string,
             globalKey: keyof typeof CreatePartsDatabasePage.globalTableData
         ): Promise<void> => {
-            console.log(`Started compareTotals function for group ${globalKey}`);
+            logger.info(`Started compareTotals function for group ${globalKey}`);
             /**
              * Step 1: Locate the specific element within the modal.
              * Wait for it to be attached to the DOM to ensure it's ready for interaction.
@@ -444,13 +444,13 @@ export class CreatePartsDatabasePage extends PageObject {
              */
             logger.info(`${globalKey}: extracted value = ${extractedValue}, global value = ${globalValue}`);
             if (extractedValue !== globalValue) {
-                console.log(`%c❌ Completed compareTotals function for group ${globalKey}`, 'color: red; font-weight: bold;');
+                logger.info(`%c❌ Completed compareTotals function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 // Log an error if there is a mismatch
                 logger.error(`Mismatch for ${globalKey}: expected ${globalValue}, got ${extractedValue}`);
             } else {
                 // Log success if the values match
                 logger.info(`Matched for ${globalKey}: ${extractedValue}`);
-                console.log(`%c✔️  Completed compareTotals function for group ${globalKey}`, 'color: green; font-weight: bold;');
+                logger.info(`%c✔️  Completed compareTotals function for group ${globalKey}`, 'color: green; font-weight: bold;');
             }
         };
 
@@ -470,7 +470,7 @@ export class CreatePartsDatabasePage extends PageObject {
             modalLocator: Locator,
             tableId: string
         ): Promise<void> => {
-            console.log("Started compareItemsCB function");
+            logger.info("Started compareItemsCB function");
             const globalKey = 'СБ'; // Define the global key for the CB group
 
             // Locate the table inside the modal
@@ -549,7 +549,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 for (const arrayItem of arrayData) {
                     const matchingTableItem = tableData[arrayItem.partNumber];
                     if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
-                        console.log(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
+                        logger.info(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
                         // Log mismatch details
                         console.error(
                             `Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
@@ -559,14 +559,14 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                 }
             } else {
-                console.log(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
+                logger.info(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 // Log error if the global array data is not an array
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             // Log completion of comparison
-            console.log(`Comparison for ${globalKey} complete.`);
-            console.log(`%c✔️  Completed compareItemsCB function for group ${globalKey}`, 'color: green; font-weight: bold;');
+            logger.info(`Comparison for ${globalKey} complete.`);
+            logger.info(`%c✔️  Completed compareItemsCB function for group ${globalKey}`, 'color: green; font-weight: bold;');
         };
 
 
@@ -586,7 +586,7 @@ export class CreatePartsDatabasePage extends PageObject {
             modalLocator: Locator,
             tableId: string
         ): Promise<void> => {
-            console.log("Started compareItemsД function");
+            logger.info("Started compareItemsД function");
             const globalKey = 'Д'; // Define the global key for the D group
 
             // Locate the table inside the modal
@@ -720,19 +720,19 @@ export class CreatePartsDatabasePage extends PageObject {
                         matchingTableItem.partMaterial !== arrayItem.material ||
                         matchingTableItem.quantity !== arrayItem.quantity
                     ) {
-                        console.log(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
+                        logger.info(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
                         console.error(
                             `Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
                         );
                     }
                 }
             } else {
-                console.log(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
+                logger.info(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             logger.info(`Comparison for ${globalKey} complete.`);
-            console.log(`%c✔️  Completed compareItemsD function for group ${globalKey}`, 'color: green; font-weight: bold;');
+            logger.info(`%c✔️  Completed compareItemsD function for group ${globalKey}`, 'color: green; font-weight: bold;');
         };
 
         /**
@@ -749,7 +749,7 @@ export class CreatePartsDatabasePage extends PageObject {
             modalLocator: Locator,
             tableId: string
         ): Promise<void> => {
-            console.log("Started compareItemsРМ function");
+            logger.info("Started compareItemsРМ function");
             const globalKey = 'РМ'; // Define the global key for the consumable materials group
 
             // Locate the table inside the modal
@@ -833,7 +833,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 for (const arrayItem of arrayData) {
                     const matchingTableItem = tableData[arrayItem.name];
                     if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
-                        console.log(`%c❌ Completed compareItemsCon function for group ${globalKey}`, 'color: red; font-weight: bold;');
+                        logger.info(`%c❌ Completed compareItemsCon function for group ${globalKey}`, 'color: red; font-weight: bold;');
                         // Log mismatch details
                         console.error(
                             `Mismatch found: Name '${arrayItem.name}' and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
@@ -841,14 +841,14 @@ export class CreatePartsDatabasePage extends PageObject {
                     }
                 }
             } else {
-                console.log(`%c❌ Completed compareItemsCon function for group ${globalKey}`, 'color: red; font-weight: bold;');
+                logger.info(`%c❌ Completed compareItemsCon function for group ${globalKey}`, 'color: red; font-weight: bold;');
                 // Log error if the global array data is not an array
                 console.error(`Unsupported data type for globalKey: ${globalKey}`);
             }
 
             // Log completion of comparison
-            console.log(`Comparison for ${globalKey} complete.`);
-            console.log(`%c✔️  Completed compareItemsCon function for group ${globalKey}`, 'color: green; font-weight: bold;');
+            logger.info(`Comparison for ${globalKey} complete.`);
+            logger.info(`%c✔️  Completed compareItemsCon function for group ${globalKey}`, 'color: green; font-weight: bold;');
         };
 
         /**
@@ -869,7 +869,7 @@ export class CreatePartsDatabasePage extends PageObject {
             materialsTableId: string
         ): Promise<void> => {
             try {
-                console.log("Started validateMaterialExistence function");
+                logger.info("Started validateMaterialExistence function");
                 /**
                  * Step 1: Locate the Детали table, ensure readiness, and extract materials.
                  */
@@ -950,7 +950,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 let hasMismatch = false;
                 for (const material of materialsList) {
                     if (!detailsMaterials.has(material)) {
-                        console.log('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
+                        logger.info('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
                         console.error(`Material '${material}' from Материалы для деталей table is not found in the Детали table.`);
                         hasMismatch = true;
                     }
@@ -960,14 +960,14 @@ export class CreatePartsDatabasePage extends PageObject {
                  * Step 4: Log the final result of the validation.
                  */
                 if (!hasMismatch) {
-                    console.log('%c✔️  Completed validateMaterialExistence function for group Д', 'color: green; font-weight: bold;');
-                    console.log('All materials in Материалы для деталей exist in the Детали table.');
+                    logger.info('%c✔️  Completed validateMaterialExistence function for group Д', 'color: green; font-weight: bold;');
+                    logger.info('All materials in Материалы для деталей exist in the Детали table.');
                 } else {
-                    console.log('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
+                    logger.info('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
                     console.error('Some materials in Материалы для деталей are missing in the Детали table.');
                 }
             } catch (error) {
-                console.log('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
+                logger.info('%c❌ Completed validateMaterialExistence function for group Д', 'color: red; font-weight: bold;');
                 console.error('An error occurred during material validation:', error);
             }
         };
@@ -1060,7 +1060,7 @@ export class CreatePartsDatabasePage extends PageObject {
         orderedKeys.forEach((key) => {
             if (key === 'ALL') {
                 const totalCount = CreatePartsDatabasePage.globalTableData.ALL.size; // Count items in ALL (Map)
-                console.log(`\nALL (Consolidated Items: ${totalCount}):`);
+                logger.info(`\nALL (Consolidated Items: ${totalCount}):`);
                 console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
             } else if (key === 'ПМ') {
                 // Merge ПМ and ПД groups
@@ -1068,12 +1068,12 @@ export class CreatePartsDatabasePage extends PageObject {
                 const pdItems = CreatePartsDatabasePage.globalTableData['ПД'] || [];
                 const combinedItems = [...pmItems, ...pdItems];
                 const totalCount = combinedItems.length; // Count items in ПМ + ПД
-                console.log(`\nПМ (Includes Items from ПД, Total: ${totalCount}):`);
+                logger.info(`\nПМ (Includes Items from ПД, Total: ${totalCount}):`);
                 console.table(combinedItems);
             } else {
                 const groupItems = CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData];
                 const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Safely count items in the group
-                console.log(`\n${key} (Items in this Group: ${totalCount}):`);
+                logger.info(`\n${key} (Items in this Group: ${totalCount}):`);
                 console.table(groupItems);
             }
         });
@@ -1222,7 +1222,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                 const existingMaterial = existingItem.material.trim().toLowerCase();
                                 const newMaterial = item.material.trim().toLowerCase();
 
-                                console.log(`Comparing: "${existingMaterial}" with "${newMaterial}"`);
+                                logger.info(`Comparing: "${existingMaterial}" with "${newMaterial}"`);
                                 return existingMaterial === newMaterial;
                             });
 
@@ -1473,7 +1473,7 @@ export class CreatePartsDatabasePage extends PageObject {
         await table.locator('tr').first().waitFor({ state: 'visible' });
 
         const rows = await table.locator('tbody > tr').elementHandles();
-        console.log(`Total rows in tbody: ${rows.length}`);
+        logger.info(`Total rows in tbody: ${rows.length}`);
 
         if (rows.length === 0) {
             throw new Error('No rows found in the table.');
@@ -1496,7 +1496,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     const groupName = await row.$eval('td[colspan="5"]', (cell) => cell.textContent?.trim() || '');
                     currentGroup = { groupName, items: [] };
                     groups.push(currentGroup);
-                    console.log(`Group header detected: "${groupName}"`);
+                    logger.info(`Group header detected: "${groupName}"`);
                     continue;
                 }
 
@@ -1517,7 +1517,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
                         if (rowData.length > 0) {
                             currentGroup.items.push(rowData);
-                            console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+                            logger.info(`Added row to group "${currentGroup.groupName}": ${rowData}`);
                         }
                     }
                 }
@@ -1526,7 +1526,7 @@ export class CreatePartsDatabasePage extends PageObject {
             }
         }
 
-        console.log(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
+        logger.info(`Parsed groups: ${JSON.stringify(groups, null, 2)}`);
         return groups;
     }
 
@@ -1593,14 +1593,16 @@ export class CreatePartsDatabasePage extends PageObject {
             });
         });
         await expect(modal).toBeVisible(); // Validate modal is visible
-
+        await page.waitForTimeout(1000);
         // Step 4: Search for the item in the search table
+        await modal.locator(`table[data-testid="${searchTableTestId}"]`).waitFor({ state: 'visible' });
         const itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
         await itemTableLocator.evaluateAll((elements) => {
             elements.forEach((el) => {
                 el.style.border = '2px solid red';
             });
         });
+        await page.waitForTimeout(1000);
         await itemTableLocator.locator("input.search-yui-kit__input").fill(searchValue);
         await itemTableLocator.locator("input.search-yui-kit__input").press("Enter");
         await page.waitForLoadState("networkidle");
@@ -1611,6 +1613,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 el.style.border = '2px solid red';
             });
         });
+        await page.waitForTimeout(1500);
         const firstRowText = await firstRow.locator("td").nth(columnIndex).textContent();
 
         // Step 5: Validate search result
@@ -1729,7 +1732,7 @@ export class CreatePartsDatabasePage extends PageObject {
             el.style.color = "white";
         });
         await dialogButton.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(1500);
 
         // Step 3: Highlight the modal and bottom table locator
         const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
@@ -1754,8 +1757,9 @@ export class CreatePartsDatabasePage extends PageObject {
             await row.evaluate((table) => {
                 table.style.border = "2px solid red"; // Highlight the bottom table
             });
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(1500);
             const partNumber = await row.locator("td").nth(columnIndex).textContent();
+
 
             if (partNumber?.trim() === searchValue.trim()) {
                 isRowFound = true;
@@ -1820,7 +1824,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
     //     // Fetch all rows inside tbody
     //     const rows = await table.locator('tbody tr').elementHandles();
-    //     console.log(`Total rows in tbody: ${rows.length}`);
+    //     logger.info(`Total rows in tbody: ${rows.length}`);
 
     //     // Return error if no rows are found
     //     if (rows.length === 0) {
@@ -1840,14 +1844,14 @@ export class CreatePartsDatabasePage extends PageObject {
     //                 // Create a new group with group name
     //                 currentGroup = { groupName: groupHeaderCell, items: [] };
     //                 groups.push(currentGroup);
-    //                 console.log(`Group header detected: "${currentGroup.groupName}"`);
+    //                 logger.info(`Group header detected: "${currentGroup.groupName}"`);
     //             } else if (currentGroup) {
     //                 // Add data rows under the current group
     //                 const rowData = await row.$$eval('td', (cells) =>
     //                     cells.map((cell) => cell.textContent?.trim() || '')
     //                 );
     //                 currentGroup.items.push(rowData);
-    //                 console.log(`Added row to group "${currentGroup.groupName}": ${rowData}`);
+    //                 logger.info(`Added row to group "${currentGroup.groupName}": ${rowData}`);
     //             }
     //         } catch (error) {
     //             console.error(`Error processing row: ${error}`);
