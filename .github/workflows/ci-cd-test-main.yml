@@ -58,7 +58,7 @@ jobs:
       - name: Run Playwright tests with xvfb
         env:
           TEST_DIR: '.'
-          BASE_URL: 'http://dev.npoamotiv.ru'
+          BASE_URL: 'http://dev.pksep.ru/'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
       - name: Upload Allure results
