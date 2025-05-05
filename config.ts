@@ -171,4 +171,12 @@ export const SELECTORS = {
             DATA_TESTID: "menu-archive",
         },
     },
+    SUBPAGES: {
+        CREATEDETAIL: {
+            URL: "archive",
+            TEXT_RUS: "Архив",
+            TEXT_ENG: "Archive",
+            DATA_TESTID: "menu-archive",
+        },
+    },
 };
