@@ -173,10 +173,10 @@ export const SELECTORS = {
     },
     SUBPAGES: {
         CREATEDETAIL: {
-            URL: "archive",
-            TEXT_RUS: "Архив",
-            TEXT_ENG: "Archive",
-            DATA_TESTID: "menu-archive",
+            URL: "detal/add",
+            TEXT_RUS: "Создать деталь",
+            TEXT_ENG: "Create Part",
+            DATA_TESTID: "BaseDetals-Button-Create",
         },
     },
 };
