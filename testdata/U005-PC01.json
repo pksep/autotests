@@ -75,46 +75,55 @@
       "buttons": [
         {
           "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+          "datatestid": "AddDetal-Buttons-TechProcess",
           "label": "Технологический процесс",
           "state": "false"
         },
         {
           "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+          "datatestid": "AddDetal-Buttons-CostPrice",
           "label": "Себестоимость",
           "state": "false"
         },
         {
           "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+          "datatestid": "AddDetal-Buttons-Accessory",
           "label": "Принадлежность",
           "state": "false"
         },
         {
           "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+          "datatestid": "AddDetal-Buttons-ChangeHistory",
           "label": "История изменений",
           "state": "false"
         },
         {
           "class": "button.button-yui-kit.small.primary-yui-kit.specification__btns-adding",
+          "datatestid": "Spectification-Buttons-addingSpecification",
           "label": "Добавить",
           "state": "true"
         },
         {
           "class": "button.button-yui-kit.small.ghost-yui-kit",
+          "datatestid": "AddDetal-Characteristic-AddButton",
           "label": "Добавить",
           "state": "true"
         },
         {
           "class": "button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+          "datatestid": "AddDetal-FileComponent-AddFileButton",
           "label": "Добавить из базы",
           "state": "true"
         },
         {
           "class": "button.button-yui-kit.medium.outline-yui-kit",
+          "datatestid": "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel",
           "label": "Отменить",
           "state": "true"
         },
         {
           "class": "button.button-yui-kit.medium.primary-yui-kit",
+          "datatestid": "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save",
           "label": "Сохранить",
           "state": "true"
         }
@@ -122,18 +131,22 @@
       "InputFields": [
         {
           "title": "Обозначение",
+          "datatestid": "AddDetal-Designation-Input-Input",
           "type": "input"
         },
         {
           "title": "Наименование",
+          "datatestid": "AddDetal-Information-Input-Input",
           "type": "input"
         },
         {
           "title": "Описание / Примечание",
+          "datatestid": "AddDetal-Description-Textarea-Textarea",
           "type": "textarea"
         },
         {
           "title": "Медиа файлы",
+          "datatestid": "DragAndDrop-Input",
           "type": "input"
         }
       ],
@@ -142,17 +155,19 @@
           "Добавление документа"
         ],
         "titlesh4": [
-          "Файл № 1",
-          "Файл № 2"
+          "Файл №1",
+          "Файл №2"
         ],
         "buttons": [
         {
           "class": "button.button-yui-kit.medium.outline-yui-kit.cancel-btn",
+          "datatestid": "",
           "label": "Отменить",
           "state": "true"
         },
         {
           "class": "button.button-yui-kit.medium.primary-yui-kit.upload-btn",
+          "datatestid": "",
           "label": "Загрузить все файлы",
           "state": "true"
         }
@@ -161,16 +176,19 @@
       "modalAddButtonsPopup": [
         {
           "class": "div.card-yui-kit.detailsdb-dialog__card",
+          "datatestid": "BaseDetals-CreatLink-Cardthe-base-of-the-tool",
           "label": "Изделие",
           "state": "true"
         },
         {
           "class": "div.card-yui-kit.detailsdb-dialog__card",
+          "datatestid": "BaseDetals-CreatLink-Cardbase-of-assembly-units",
           "label": "Сборочную единицу",
           "state": "true"
         },
         {
           "class": "div.card-yui-kit.detailsdb-dialog__card",
+          "datatestid": "BaseDetals-CreatLink-Cardbase-detail",
           "label": "Деталь",
           "state": "true"
         }
@@ -183,71 +201,99 @@
           "tablesВсе": [
             {
               "title": "Тип (Тип профиля заготовки)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
+
             },
             {
               "title": "Подтип (Материал заготовки)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ],
           "tablesМатериалыДляДеталей": [
             {
               "title": "Тип (Тип профиля заготовки)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
             },
             {
               "title": "Подтип (Материал заготовки)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ],
           "tablesПокупныеДетали": [
             {
               "title": "Тип (Категория)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
             },
             {
               "title": "Подтип (Материал)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ],
           "tablesРасходныеМатериалы": [
             {
               "title": "Тип (Категория)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Type-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
             },
             {
               "title": "Подтип (Материал)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-SubType-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "data-testid": "ModalBaseMaterial-TableList-Table-Item-Table"
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ]
         },
         "buttons": [
           {
             "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "datatestid": "ModalBaseMaterial-Cancel-Button",
             "label": "Отменить",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "datatestid": "ModalBaseMaterial-Add-Button",
             "label": "Добавить",
-            "state": "true"
+            "state": "false"
           }
+
         ]
       },
       "modalArchive": {
@@ -257,11 +303,13 @@
         "buttons": [
           {
             "class": "button.button-yui-kit.small.secondary-yui-kit",
+            "datatestid": "AddDetal-CharacteristicBlanks-BanDialog-Buttons-Cancel",
             "label": "Нет",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+            "datatestid": "AddDetal-CharacteristicBlanks-BanDialog-Buttons-Ban",
             "label": "Да",
             "state": "true"
           }
@@ -274,52 +322,65 @@
         "buttons": [
           {
             "class": "button.button-yui-kit.medium.outline-yui-kit",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FooterButtons-CancelButton",
             "label": "Отменить",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.medium.primary-yui-kit",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton",
             "label": "Добавить",
             "state": "false"
           },
           {
             "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit.add_button",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton",
             "label": "Добавить",
             "state": "false"
           }
         ],
         "switcher": [
           {
-            "label": "Все"
+            "label": "Все",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"
           },
           {
-            "label": "Архив"
+            "label": "Архив",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item1"
           },
           {
-            "label": "Без связи"
+            "label": "Без связи",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item2"
           },
           {
-            "label": "Без типа"
+            "label": "Без типа",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item3"
           }
         ],
         "filter": [
           {
-            "label": "Фильтрация по типу"
+            "label": "Фильтрация по типу",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-0"
           },
           {
-            "label": "Медиа (тип МД)"
+            "label": "Медиа (тип МД)",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-1"
           },
           {
-            "label": "Конструкторская документация (тип КД)"
+            "label": "Конструкторская документация (тип КД)",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-2"
           },
           {
-            "label": "Чертежи (тип ЧЖ)"
+            "label": "Чертежи (тип ЧЖ)",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-3"
           },
           {
-            "label": "DXF"
+            "label": "DXF",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-4"
           },
           {
-            "label": "Сопутствующие документы (тип СД)"
+            "label": "Сопутствующие документы (тип СД)",
+            "datatestid": "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-5"
           }
         ],
         "tables": [

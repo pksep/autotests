@@ -19,9 +19,9 @@ export const runP001 = (isSingleTest: boolean, iterations: number) => {
         console.log('fillLoginForm called');
 
         // Execute navigation to the page
-        console.log('Calling navigateToPage');
-        await createPartsPage.navigateToPage();
-        console.log('navigateToPage called');
+        // console.log('Calling navigateToPage');
+        // await createPartsPage.navigateToPage();
+        // console.log('navigateToPage called');
 
         // Placeholder for future detail page verification
         //await createPartsPage.verifyDetailPage();

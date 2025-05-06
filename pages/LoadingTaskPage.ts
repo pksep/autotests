@@ -88,7 +88,7 @@ export class CreateLoadingTaskPage extends PageObject {
     // Проверить, что выбранное изделие отображается
     async checkProduct(nameProduct: string) {
         const product = this.page
-            .locator('[data-testid="AddAddOrder-SelectProductLink"]')
+            .locator('.attachments-value .link').first()
             .textContent();
         expect(await product).toBe(nameProduct);
     }
@@ -130,7 +130,7 @@ export class CreateLoadingTaskPage extends PageObject {
     async getOrderInfoFromLocator(locator: string) {
         const text = await this.page.locator(locator).innerText();
 
-        const regex = /Изменить заказ № (\d+-\d+) от (\d{2}\.\d{2}\.\d{4})/;
+        const regex = /Редактирование заказа № (\d+-\d+) от (\d{2}\.\d{2}\.\d{4})/;
         const matches = text.match(regex);
 
         if (matches) {
@@ -163,5 +163,60 @@ export class CreateLoadingTaskPage extends PageObject {
             const currentValue = await input.inputValue();
             expect(currentValue).toBe(quantity);
         }
+    }
+
+    /** Checks if a button is visible and active/inactive
+     * @param selector - selector for the button
+     * @param expectedState - expected state of the button ('active' or 'inactive')
+     * @returns Promise<boolean> - true if button state matches expected, false otherwise
+     */
+    async checkButtonState(selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
+        const button = this.page.locator(selector);
+
+        // Проверяем, что кнопка видима
+        await expect(button).toBeVisible();
+
+        // Получаем классы кнопки
+        const classes = await button.getAttribute('class');
+
+        if (expectedState === 'active') {
+            // Проверяем, что кнопка активна (нет класса disabled-yui-kit)
+            return !classes?.includes('disabled-yui-kit');
+        } else {
+            // Проверяем, что кнопка неактивна (есть класс disabled-yui-kit)
+            return classes?.includes('disabled-yui-kit') ?? false;
+        }
+    }
+
+    async clickFromFirstRowBug(
+        locator: string,
+        cellIndex: number
+    ) {
+        const modalWindow = await this.page.locator('.modal-yui-kit__modal-content')
+        const rows = await modalWindow.locator(`${locator} tbody tr`);
+
+        const rowCount = await rows.count();
+        if (rowCount === 0) {
+            throw new Error("В таблице нет строк.");
+        }
+
+        const firstRow = rows.nth(0);
+
+        const cells = await firstRow.locator("td").allInnerTexts();
+
+        if (cellIndex < 0 || cellIndex > cells.length) {
+            throw new Error(
+                `Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 0-${cells.length}.`
+            );
+        }
+
+        const valueInCell = cells[cellIndex];
+
+        logger.info(
+            `Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`
+        );
+        await firstRow.locator("td").nth(cellIndex).click();
+        logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
+        return valueInCell;
     }
 }

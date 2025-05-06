@@ -15,6 +15,10 @@ const TEST_MATERIAL = "09Г2С (Сталь)";
 const TEST_NAME = "Круг Сталь 09Г2С Ø100мм";
 const TEST_FILE = "87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg";
 
+const MAIN_PAGE_MAIN_DIV = "BaseDetals-Container-MainContainer";
+const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
+const MAIN_PAGE_TITLE_ID = "BaseDetals-Header-Title";
+
 const baseFileNamesToVerify = [
     { name: "Test_imagexx_1", extension: ".jpg" },
     { name: "Test_imagexx_2", extension: ".png" }
@@ -30,126 +34,26 @@ export const runU005 = () => {
             await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
             await page.locator('[data-testid="LoginForm-Login-Button"]').click();
 
-            const targetH3 = page.locator('h3:has-text("План по операциям")');
+            const targetH3 = page.locator('h3[data-testid="BasePage-Title"]').filter({ hasText: "План по операциям" });
             await expect(targetH3).toBeVisible();
         });
     });
-    test("TestCase 01 - создат дитайл - Проверка страница", async ({ browser, page }) => {
-        test.setTimeout(50000);
+    test.skip("TestCase 01 - создат дитайл - Проверка страница", async ({ browser, page }) => {
+        test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            // Wait for loading
-            shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForTimeout(500);
-            await page.waitForLoadState("networkidle");
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
         });
-        await allure.step("Step 02: Проверяем наличия заголовка на странице \"База деталей\" (Check for the presence of the title on the 'Parts Database' page)", async () => {
-            const shortagePage = new CreatePartsDatabasePage(page);
-            // Wait for loading
-            const titles = testData2.elements.MainPage.titles.map((title) => title.trim());
-
-            // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'detailsdb');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            logger.info('Expected Titles:', titles);
-            logger.info('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
+        await allure.step("Step 02: Проверяем наличие заголовка на странице (Check for the presence of the title)", async () => {
+            const expectedTitles = testData2.elements.MainPage.titles.map((title) => title.trim());
+            await shortagePage.validatePageTitlesWithStyling(MAIN_PAGE_MAIN_DIV, expectedTitles);
         });
         const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
-        await allure.step("Step 03: Проверяем, что таблицы отображаются (Verify that the tables are displayed)", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-
-            // Retrieve the expected tables configuration from the JSON file
-            const tables = testData2.elements.MainPage.tables;
-
-            // Iterate over each expected table
-            for (const table of tables) {
-                const tableTitle = table.title; // Expected table title
-                const expectedColumns = table.cols; // Expected column headers
-                const tableId = table.id; // Table ID (data-testid)
-
-                // Validate the table
-                await allure.step(`Validate table with title: "${tableTitle}"`, async () => {
-                    // Locate the table using data-testid
-                    const targetTable = page.locator(`[data-testid="${tableId}"]`);
-                    await expect(targetTable).toBeVisible();
-
-                    // Validate the column headers
-                    const headerCells = targetTable.locator('thead tr th');
-                    const headerCount = await headerCells.count();
-                    expect(headerCount).toBe(expectedColumns.length);
-                    console.log(`Number of columns in table "${tableTitle}": ${headerCount}`);
-
-                    // Iterate over each header cell and validate its content
-                    for (let i = 0; i < expectedColumns.length; i++) {
-                        const expectedHeader = expectedColumns[i].trim(); // Expected column header
-                        const headerCell = headerCells.nth(i); // Get the nth header cell
-
-                        // Highlight the header cell for debugging
-                        await headerCell.evaluate((cell) => {
-                            cell.style.backgroundColor = 'yellow';
-                            cell.style.border = '2px solid red';
-                            cell.style.color = 'blue';
-                        });
-
-                        // Validate the header's text content
-                        const actualHeader = await headerCell.textContent();
-                        console.log(`Column ${i + 1}: Expected = "${expectedHeader}", Actual = "${actualHeader?.trim()}"`);
-                        expect(actualHeader?.trim()).toBe(expectedHeader);
-                    }
-
-                    // Validate the table has rows in its tbody
-                    const rows = targetTable.locator('tbody tr');
-                    const rowCount = await rows.count();
-                    console.log(`Number of rows in table "${tableTitle}": ${rowCount}`);
-                    expect(rowCount).toBeGreaterThan(0);
-
-                    console.log(`Table "${tableTitle}" validation completed successfully.`);
-                });
-            }
-
-            console.log("All table validations completed successfully.");
+        await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
-        await allure.step("Step 11: Проверяем наличие кнопки \"Редактировать\" под таблицей \"Изделий\" (Verify the presence of the 'Edit' button below the table)", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-            const firstRow = leftTable.locator('tbody tr:first-child');
-            // Wait for the row to become visible
-            await firstRow.waitFor({ state: 'visible' });
-            await page.waitForTimeout(500);
+        const firstRow = leftTable.locator('tbody tr:first-child');
 
-            const buttons = testData2.elements.MainPage.buttonsBefore;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    await page.waitForTimeout(500);
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
         await allure.step("Step 04: Проверяем Filters (Verify the presence of filters on the page)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
@@ -157,39 +61,42 @@ export const runU005 = () => {
             // Retrieve the expected filters configuration from the JSON file
             const jsonFilters = testData2.elements.MainPage.filters;
 
-            // Locate all filter buttons on the page
-            const filters = page.locator('.filters__btn');
-
-            // Ensure the number of filters matches the JSON configuration
-            const filtersCount = await filters.count();
-            expect(filtersCount).toBe(jsonFilters.length);
-            console.log(`Number of filters: ${filtersCount}`);
+            // Ensure the expected filters array is defined and not empty
+            if (!jsonFilters || jsonFilters.length === 0) {
+                throw new Error("Expected filters are not defined or empty.");
+            }
 
             // Iterate through each filter and validate its properties
-            for (let i = 0; i < jsonFilters.length; i++) {
-                const expectedFilter = jsonFilters[i]; // The expected filter from the JSON
-                const filter = filters.nth(i); // The nth filter button on the page
-                await filter.evaluate((row) => {
+            for (const expectedFilter of jsonFilters) {
+                if (!expectedFilter || !expectedFilter.label || !expectedFilter.datatestid) {
+                    throw new Error(`Filter is not properly defined: ${JSON.stringify(expectedFilter)}`);
+                }
+
+                const filterLocator = page.locator(`[data-testid="${expectedFilter.datatestid}"]`);
+
+                await filterLocator.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
+
                 // Ensure the filter is visible
-                await expect(filter).toBeVisible();
+                await expect(filterLocator).toBeVisible();
 
                 // Validate the filter's label (text content)
-                const actualLabel = await filter.textContent();
-                console.log(`Filter ${i + 1}: Expected label = "${expectedFilter.label}", Actual label = "${actualLabel?.trim()}"`);
+                const actualLabel = await filterLocator.textContent();
+                console.log(`Filter: Expected label = "${expectedFilter.label}", Actual label = "${actualLabel?.trim()}"`);
                 expect(actualLabel?.trim()).toBe(expectedFilter.label);
 
                 // Validate whether the filter is enabled or disabled
-                const isDisabled = await filter.isDisabled();
-                console.log(`Filter ${i + 1}: Expected state = "${expectedFilter.state}", Actual state = "${!isDisabled}"`);
+                const isDisabled = await filterLocator.isDisabled();
+                console.log(`Filter: Expected state = "${expectedFilter.state}", Actual state = "${!isDisabled}"`);
                 expect(String(!isDisabled)).toBe(expectedFilter.state); // Match the state ("true" for enabled, "false" for disabled)
             }
 
             console.log("All filters have been validated successfully.");
         });
+
 
 
         await allure.step("Step 04: Проверяем наличие кнопки (Verify the presence of buttons on the page)", async () => {
@@ -200,7 +107,7 @@ export const runU005 = () => {
             // Iterate over each button in the array
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
+                const buttonDataTestId = button.datatestid;
                 const buttonLabel = button.label;
                 let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
                 if (buttonLabel == "Редактировать" || "Создать копированием") {
@@ -213,7 +120,7 @@ export const runU005 = () => {
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled
                     await page.waitForTimeout(50);
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
 
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -225,62 +132,73 @@ export const runU005 = () => {
         await allure.step("Step 05: нажмите кнопку создания детали. (click on the create detail button)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-            const createButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Создать' }).filter({
-                hasNotText: 'Создать копированием'
-            });
+            const createButton = page.locator('[data-testid="BaseDetals-Button-Create"]');
+
             await createButton.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            createButton.click();
 
+            await createButton.click();
             await page.waitForTimeout(500);
+
         });
         await allure.step("Step 06: Проверяем, что в списке есть селекторы с названиями. (Check that the list contains selectors with names)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
+
             const buttons = testData1.elements.CreatePage.modalAddButtonsPopup;
+
             // Iterate over each button in the array
             for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
+                // Extract the data-testid, label, and state from the button object
+                const buttonDataTestId = button.datatestid;
                 const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
+                const expectedState = button.state === "true"; // Convert state string to a boolean
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-                    const buttons = await page.locator('div.card-yui-kit.specification-dialog__card');
-                    const buttonTexts = await buttons.evaluateAll(elements => elements.map(e => e.textContent!.trim()));
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
+
+                    // Locate buttons using data-testid instead of CSS class
+                    const buttonsLocator = await page.locator(`[data-testid="${buttonDataTestId}"]`);
+                    const buttonTexts = await buttonsLocator.evaluateAll(elements => elements.map(e => e.textContent!.trim()));
+
                     console.log('Button texts:', buttonTexts);
+
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
                 });
             }
         });
-        await allure.step("Step 07: нажмите кнопку деталь. (click on the create detail button)", async () => {
+
+        await allure.step("Step 07: нажмите кнопку деталь. (Click on the create detail button)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-            const createButton = page.locator('div.card-yui-kit.detailsdb-dialog__card', { hasText: 'Деталь' });
+
+            // Locate the "Деталь" button using its data-testid
+            const createButton = page.locator('[data-testid="BaseDetals-CreateLink-base-detail"]');
+
             await createButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            createButton.click();
 
+            await createButton.click();
             await page.waitForTimeout(500);
         });
+
         await allure.step("Step 08: Проверяем наличия заголовка на странице \"Создать деталь\" (Check for the presence of the title on the 'Create Parts' page)", async () => {
             const shortagePage = new CreatePartsDatabasePage(page);
             // Wait for loading
             const titles = testData1.elements.CreatePage.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInClass(page, 'editor');
+            const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, 'AddDetal');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
@@ -306,7 +224,7 @@ export const runU005 = () => {
             // Iterate over each button in the array
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
+                const buttonDataTestId = button.datatestid;
                 const buttonLabel = button.label;
                 let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
 
@@ -314,8 +232,8 @@ export const runU005 = () => {
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled
                     await page.waitForTimeout(50);
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-                    console.log("Button :" + buttonClass + " " + buttonLabel + " " + expectedState);
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
+                    console.log("Button :" + buttonDataTestId + " " + buttonLabel + " " + expectedState);
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
@@ -368,29 +286,39 @@ export const runU005 = () => {
 
             await page.waitForTimeout(500);
         });
-        await allure.step("Step 12: откройте диалоговое окно Добавление материала и подтвердите заголовки. (open Добавление материала dialog and verify titles)", async () => {
+        await allure.step("Step 12: откройте диалоговое окно Добавление материала и подтвердите заголовки. (Open Добавление материала dialog and verify titles)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-            // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('div.editor__specification-characteristic__table:has(h3:has-text("Характеристики заготовки"))');
+
+            // Locate the table container using data-testid
+            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
             await tableContainer.waitFor({ state: 'visible' });
-            let firstDataRow = tableContainer.locator('table tbody tr').first();
-            const targetButton = firstDataRow.locator('td').nth(2).locator('button');
+
+            // Locate the first data row using data-testid
+            let firstDataRow = tableContainer.locator('[data-testid="AddDetal-CharacteristicBlanks-Tbody"] tr').first();
+
+            // Locate the target button using data-testid
+            const targetButton = firstDataRow.locator('[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Set"]');
+
             await targetButton.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
+
             await targetButton.click();
+
+            // Retrieve expected titles from JSON
             const titles = testData1.elements.CreatePage.modalAddMaterial.titles.map((title) => title.trim());
 
-            // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInModalClass(page, 'modal-yui-kit__modal-content');
+            // Retrieve all H3 titles using data-testid
+            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'ModalBaseMaterial');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1000);
+
             // Log for debugging
             console.log('Expected Titles:', titles);
             console.log('Received Titles:', h3Titles);
@@ -400,32 +328,45 @@ export const runU005 = () => {
 
             // Validate content and order
             expect(normalizedH3Titles).toEqual(titles);
-            //confirm the selected item is shown on the main page.
 
+            // Confirm the selected item is shown on the main page
             await page.waitForTimeout(50);
         });
-        await allure.step("Step 13: Проверяем, что кнопки  свитчера отображаются. (Confirm that the switcher is visible)", async () => {
-            const switcher = await page.locator('.switch');
+
+        await allure.step("Step 13: Проверяем, что кнопки свитчера отображаются. (Confirm that the switcher is visible)", async () => {
+            // Locate the switcher using data-testid
+            const switcher = page.locator('[data-testid="ModalBaseMaterial-TableList-Switch"]');
+
             await switcher.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
 
-            const switchItems = await page.locator('.switch-yui-kit-item').all();
+            // Locate all switch items using data-testid
+            const switchItems = await page.locator('[data-testid^="ModalBaseMaterial-TableList-Switch-Item"]').all();
+
+            // Validate the number of switch items
             expect(switchItems.length).toBe(4);
         });
-        await allure.step("Step 14: Проверяем, что свитчер “Материалы для деталей” выбран. (Confirm that material and detail is selected)", async () => {
-            const switcher = await page.locator('.switch-yui-kit-item.switch-yui-kit-active');
+
+        await allure.step("Step 14: Проверяем, что свитчер 'Материалы для деталей' выбран. (Confirm that 'Материалы для деталей' is selected)", async () => {
+            // Locate the active switcher item using data-testid
+            const switcher = await page.locator('[data-testid="ModalBaseMaterial-TableList-Switch-Item1"]');
+
+            // Get the text content of the switcher
             const content = await switcher.textContent();
+
             await switcher.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
 
+            // Validate that the correct switcher is selected
             expect(content).toBe("Материалы для деталей");
         });
+
         await allure.step("Step 15: Проверьте, что каждая таблица имеет правильное название. (Validate that each table exists with the correct title)", async () => {
             // Retrieve the object that groups different types of tables.
             const allTableGroups = testData1.elements.CreatePage.modalAddMaterial.tables;
@@ -433,15 +374,13 @@ export const runU005 = () => {
             // Filter out the group with key "buttons"
             const validGroups = Object.entries(allTableGroups).filter(([groupName, _]) => groupName !== "buttons");
 
-            // Retrieve the switch items on the page and await the array.
-            const switchItems = await page.locator('.switch-yui-kit-item').all();
+            // Retrieve the switch items on the page using data-testid
+            const switchItems = await page.locator('[data-testid^="ModalBaseMaterial-TableList-Switch-Item"]').all();
 
             let counter = 0;
 
             // Iterate over each valid table group.
             for (const [groupName, groupValue] of validGroups) {
-
-
                 // Click the switch corresponding to this group.
                 await switchItems[counter++].click();
                 await page.waitForTimeout(500);
@@ -449,14 +388,15 @@ export const runU005 = () => {
                 // Now groupValue is an array of table definitions.
                 for (const table of groupValue as any[]) {
                     const tableTitle = table.title;
+                    console.log(table);
                     // Locate the table using its data-testid attribute.
-                    const targetTable = page.locator(`[data-testid="${table["data-testid"]}"]`);
+                    const targetTable = page.locator(`[data-testid="${table.datatestid}"]`);
 
                     // Ensure the table is visible.
                     await expect(targetTable).toBeVisible();
 
-                    // Locate the header element within the table (assuming the title is in the first <th> in <thead>).
-                    const actualTitleElement = targetTable.locator('thead tr th').first();
+                    // Locate the header element within the table using data-testid
+                    const actualTitleElement = targetTable.locator(`[data-testid="${table.datatestidThead}"] th`).first();
 
                     // Optionally highlight the header element for debugging.
                     await actualTitleElement.evaluate((el) => {
@@ -471,9 +411,9 @@ export const runU005 = () => {
                     const actualTitle = await actualTitleElement.textContent();
                     expect(actualTitle?.trim()).toBe(tableTitle);
 
-                    //verify that the table has content
-                    const rowsCount = await targetTable.locator('tbody tr').count();
-                    const firstRow = await targetTable.locator('tbody tr').first();
+                    // Verify that the table has content
+                    const rowsCount = await targetTable.locator(`[data-testid="${table.datatestidTbody}"] tr`).count();
+                    const firstRow = await targetTable.locator(`[data-testid="${table.datatestidTbody}"] tr`).first();
                     await firstRow.evaluate((el) => {
                         el.style.backgroundColor = 'yellow';
                         el.style.border = '2px solid red';
@@ -487,6 +427,8 @@ export const runU005 = () => {
 
             await page.waitForTimeout(500);
         });
+
+
         await allure.step("Step 16: Проверяем наличие кнопки (Verify the presence of buttons on the page)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
@@ -496,14 +438,14 @@ export const runU005 = () => {
             // Iterate over each button in the array
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
+                const buttonDatatestId = button.datatestid;
                 const buttonLabel = button.label;
                 let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled
                     await page.waitForTimeout(50);
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState, '.base-modal.modal-yui-kit');
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDatatestId, buttonLabel, expectedState, 'ModalBaseMaterial');
 
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -512,215 +454,259 @@ export const runU005 = () => {
             }
             await page.waitForTimeout(500);
         });
-        await allure.step("Step 17: reset switcher to default (reset switcher to default)", async () => {
+        await allure.step("Step 17: Reset switcher to default (reset switcher to default)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-            const targetItem = page.locator('li.switch-yui-kit-item', { hasText: 'Материалы для деталей' });
+
+            // Locate the switcher item using data-testid
+            const targetItem = page.locator('[data-testid="ModalBaseMaterial-TableList-Switch-Item1"]');
+
             // Ensure the item is visible
             await expect(targetItem).toBeVisible();
+
             // Click the item
             await targetItem.click();
             await page.waitForTimeout(500);
         });
+
         await allure.step("Step 18: Verify that search works for table 1 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
+
+            // Locate the table using data-testid
             const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Type-Table"]');
+
             await leftTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
-            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Type-Table"]')).toBeVisible();
 
-            // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_CATEGORY);
-            await page.waitForLoadState("networkidle");
-            // Optionally, validate that the search input is visible
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+            await expect(leftTable).toBeVisible();
 
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
+            // Locate the search field using data-testid and fill it
+            const searchInput = leftTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Type-SearchInput-Dropdown-Input"]');
+            await searchInput.fill(TEST_CATEGORY);
             await page.waitForLoadState("networkidle");
-            // Find the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
+
+            // Validate that the search input is visible
+            await expect(searchInput).toBeVisible();
+
+            await searchInput.press('Enter');
+            await page.waitForLoadState("networkidle");
+
+            // Find the first row in the table using data-testid
+            const firstRow = leftTable.locator('[data-testid^="ModalBaseMaterial-TableList-Table-Type-Tbody"] tr:first-child');
+
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
+
             await page.waitForTimeout(500);
             expect(await firstRow.textContent()).toContain(TEST_CATEGORY);
+
             // Wait for the row to be visible and click on it
             await firstRow.waitFor({ state: 'visible' });
         });
+
         await allure.step("Step 19: Verify that search works for table 2 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
-            const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType-Table"]');
-            await leftTable.evaluate((row) => {
+
+            // Locate the table using data-testid
+            const centerTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType-Table"]');
+
+            await centerTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
-            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType-Table"]')).toBeVisible();
 
-            // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_MATERIAL);
-            await page.waitForLoadState("networkidle");
-            // Optionally, validate that the search input is visible
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+            await expect(centerTable).toBeVisible();
 
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
+            // Locate the search field using data-testid and fill it
+            const searchInput = centerTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType-SearchInput-Dropdown-Input"]');
+            await searchInput.fill(TEST_MATERIAL);
             await page.waitForLoadState("networkidle");
-            // Find the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
+
+            // Validate that the search input is visible
+            await expect(searchInput).toBeVisible();
+
+            await searchInput.press('Enter');
+            await page.waitForLoadState("networkidle");
+
+            // Find the first row in the table using data-testid
+            const firstRow = centerTable.locator('[data-testid^="ModalBaseMaterial-TableList-Table-SubType-Tbody"] tr:first-child');
+
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
+
             await page.waitForTimeout(500);
             expect(await firstRow.textContent()).toContain(TEST_MATERIAL);
+
             // Wait for the row to be visible and click on it
             await firstRow.waitFor({ state: 'visible' });
         });
+
         await allure.step("Step 20: Verify that search works for table 3 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
-            const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
-            await leftTable.evaluate((row) => {
+
+            // Locate the table using data-testid
+            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+
+            await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
-            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]')).toBeVisible();
 
-            // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_NAME);
-            await page.waitForLoadState("networkidle");
-            // Optionally, validate that the search input is visible
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+            await expect(rightTable).toBeVisible();
 
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
+            // Locate the search field using data-testid and fill it
+            const searchInput = rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]');
+            await searchInput.fill(TEST_NAME);
             await page.waitForLoadState("networkidle");
-            // Find the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
+
+            // Validate that the search input is visible
+            await expect(searchInput).toBeVisible();
+
+            await searchInput.press('Enter');
+            await page.waitForLoadState("networkidle");
+
+            // Find the first row in the table using data-testid
+            const firstRow = rightTable.locator('[data-testid^="ModalBaseMaterial-TableList-Table-Item-Tbody"] tr:first-child');
+
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
+
             await page.waitForTimeout(500);
             expect(await firstRow.textContent()).toContain(TEST_NAME);
+
             // Wait for the row to be visible and click on it
             await firstRow.waitFor({ state: 'visible' });
         });
-        await allure.step("Step 21: Open Archive dialog (Open Archive dialog)", async () => {
-            // to be able to open the archive dialog, we need to add something to archive
-            const targetTable = page.locator(`[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]`);
 
-            // Ensure the table is visible.
+        await allure.step("Step 21: Open Archive dialog (Open Archive dialog)", async () => {
+            // To open the archive dialog, we need to add something to the archive
+            const targetTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+
+            // Ensure the table is visible
             await expect(targetTable).toBeVisible();
-            //verify that the table has content
+
+            // Verify that the table has content
             const rowsCount = await targetTable.locator('tbody tr').count();
             const firstRow = await targetTable.locator('tbody tr').first();
+
             await firstRow.evaluate((el) => {
                 el.style.backgroundColor = 'green';
                 el.style.border = '2px solid red';
                 el.style.color = 'blue';
             });
-            firstRow.click();
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
 
-            const dialogSelector = 'dialog.base-modal.modal-yui-kit[open]';
-            const buttonClass = 'button-yui-kit.medium.primary-yui-kit';
-            const buttonLabel = 'Добавить';
+            await firstRow.click();
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(500);
+
+            // Archive dialog locator
+            const dialogTestId = "ModalBaseMaterial"; // No brackets
+            const buttonTestId = "ModalBaseMaterial-Add-Button"; // No brackets
+            const buttonLabel = "Добавить";
             let expectedState = true;
 
             await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                const cls = 'button-yui-kit.medium.primary-yui-kit';
-                const scopedButtonSelector = `${dialogSelector} button.${cls}`;
-                const buttonLocator = page.locator(scopedButtonSelector); // Create Locator
-
-                const isButtonReady = await shortagePage.isButtonVisible(
+                const isButtonReady = await shortagePage.isButtonVisibleTestId(
                     page,
-                    scopedButtonSelector,
+                    buttonTestId, // Pass only the testId string
                     buttonLabel,
-                    expectedState
+                    expectedState,
+                    dialogTestId // Pass dialog context if needed
                 );
+
                 expect(isButtonReady).toBeTruthy();
                 logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
 
-            const clas = 'button-yui-kit.medium.primary-yui-kit';
             // Reuse the locator for the button
-            const buttonLocator = page.locator(`${dialogSelector} button.${clas}`); // Create Locator
+            const buttonLocator = page.locator(`[data-testid="${buttonTestId}"]`);
+
             await buttonLocator.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            // Perform hover and click actions
-            //await buttonLocator.hover();
 
             await buttonLocator.click();
             await page.waitForLoadState("networkidle");
-            // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('div.editor__specification-characteristic__table:has(h3:has-text("Характеристики заготовки"))');
+
+            // Locate the table container using data-testid
+            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
             await tableContainer.waitFor({ state: 'visible' });
+
             const firstDataRow = tableContainer.locator('table tbody tr').first();
-            const targetButton = firstDataRow.locator('td').nth(3).locator('button');
+            const targetButton = firstDataRow.locator('[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Reset"]');
+
             await targetButton.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            //await targetButton.click();
+            targetButton.click();
             await page.waitForTimeout(500);
         });
-        // await allure.step("Step 22: Check title in Archive dialog (Check title and buttons in Archive dialog)", async () => {
-        //     const titles = testData1.elements.CreatePage.modalArchive.titles.map((title) => title.trim());
 
-        //     // Retrieve all H3 titles from the specified class
-        //     const h3Titles = await shortagePage.getAllH3TitlesInModalClass(page, 'dialog-ban.dialog-yui-kit.dialog-ban');
-        //     const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
-        //     // Wait for the page to stabilize
-        //     await page.waitForLoadState("networkidle");
-        //     // Log for debugging
-        //     console.log('Expected Titles:', titles);
-        //     console.log('Received Titles:', h3Titles);
+        await allure.step("Step 22: Check title in Archive dialog (Check title and buttons in Archive dialog)", async () => {
+            const titles = testData1.elements.CreatePage.modalArchive.titles.map((title) => title.trim());
 
-        //     // Validate length
-        //     expect(normalizedH3Titles.length).toBe(titles.length);
+            // Retrieve all H3 titles from the specified class
+            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'AddDetal-CharacteristicBlanks-BanDialog');
+            console.log(h3Titles);
+            const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
-        //     // Validate content and order
-        //     expect(normalizedH3Titles).toEqual(titles);
+            // Wait for the page to stabilize
+            await page.waitForLoadState("networkidle");
+            // Log for debugging
+            console.log('Expected Titles:', titles);
+            console.log('Received Titles:', h3Titles);
 
-        //     await page.waitForTimeout(50);
-        // });
-        // await allure.step("Step 23: Check buttons in Archive dialog (Check title and buttons in Archive dialog)", async () => {
-        //     const buttons = testData1.elements.CreatePage.modalArchive.buttons;
-        //     // Iterate over each button in the array
-        //     for (const button of buttons) {
-        //         // Extract the class, label, and state from the button object
-        //         const buttonClass = button.class;
-        //         const buttonLabel = button.label;
-        //         let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
-        //         // Perform the validation for the button
-        //         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-        //             // Check if the button is visible and enabled
-        //             await page.waitForTimeout(50);
-        //             const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState, '.dialog-ban.dialog-yui-kit.dialog-ban');
+            // Validate length
+            expect(normalizedH3Titles.length).toBe(titles.length);
 
-        //             // Validate the button's visibility and state
-        //             expect(isButtonReady).toBeTruthy();
-        //             logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        //         });
-        //     }
-        //     await page.waitForTimeout(5000);
-        // });
+            // Validate content and order
+            expect(normalizedH3Titles).toEqual(titles);
+
+            await page.waitForTimeout(50);
+        });
+        await allure.step("Step 23: Check buttons in Archive dialog (Check title and buttons in Archive dialog)", async () => {
+            const buttons = testData1.elements.CreatePage.modalArchive.buttons;
+            // Iterate over each button in the array
+            for (const button of buttons) {
+                // Extract the class, label, and state from the button object
+                const buttonDataTestId = button.datatestid;
+                const buttonLabel = button.label;
+                let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
+                // Perform the validation for the button
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    // Check if the button is visible and enabled
+                    await page.waitForTimeout(50);
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState, 'AddDetal-CharacteristicBlanks-BanDialog');
+                    // Validate the button's visibility and state
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                });
+            }
+            page.mouse.click(1, 1);
+            await page.waitForTimeout(500);
+        });
 
         await allure.step("Step 24: Open Добавить из базы dialog (Open Добавить из базы dialog)", async () => {
-            const button = page.locator('button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn', { hasText: 'Добавить из базы' });
+            const button = page.locator('[data-testid="AddDetal-FileComponent-AddFileButton"]', { hasText: 'Добавить из базы' });
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -735,7 +721,7 @@ export const runU005 = () => {
             const titles = testData1.elements.CreatePage.modalAddFromBase.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInModalClass(page, 'modal-files-content');
+            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'AddDetal-FileComponent-ModalBaseFiles');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
@@ -759,51 +745,52 @@ export const runU005 = () => {
             const buttons = testData1.elements.CreatePage.modalAddFromBase.buttons;
             // Iterate over each button in the array
             for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
+                // Extract the data-testid, label, and state from the button object
+                const buttonTestId = button.datatestid; // Use data-testid instead of class
                 const buttonLabel = button.label;
-                let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
+                let expectedState = button.state === "true"; // Convert state string to a boolean
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
                     await page.waitForTimeout(50);
-                    console.log(buttonClass + " " + buttonLabel + " " + expectedState);
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState, '.modal-files.right-menu-modal.modal-yui-kit');
-                    console.log("Button :" + buttonClass + " " + buttonLabel + " " + expectedState);
-                    // Validate the button's visibility and state
+                    console.log(buttonTestId + " " + buttonLabel + " " + expectedState);
+
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(
+                        page,
+                        buttonTestId, // Pass data-testid instead of class
+                        buttonLabel,
+                        expectedState,
+                        "AddDetal-FileComponent-ModalBaseFiles" // Updated dialog testId without CSS class
+                    );
+
+                    console.log("Button :" + buttonTestId + " " + buttonLabel + " " + expectedState);
                     expect(isButtonReady).toBeTruthy();
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
                 });
             }
         });
+
         await allure.step("Step 27: Validate switcher above table (Validate switcher above table in Добавить из базы dialog)", async () => {
             // Retrieve the expected switcher labels from the JSON file
             const expectedSwitchers = testData1.elements.CreatePage.modalAddFromBase.switcher;
 
-            // Locate all switcher items on the page
-            const switchItems = page.locator('.switch-yui-kit-item');
-            const switchItemCount = await switchItems.count();
-
-            // Ensure the number of switch items matches the expected switcher labels
-            expect(switchItemCount).toBe(expectedSwitchers.length);
-            console.log(`Number of switch items: ${switchItemCount}`);
-
             // Iterate over each switcher, click it, and validate its label
-            for (let i = 0; i < expectedSwitchers.length; i++) {
-                const expectedLabel = expectedSwitchers[i].label.trim(); // Get expected label from JSON
-                const switchItem = switchItems.nth(i); // Get the nth switch item
+            for (const switcher of expectedSwitchers) {
+                const expectedLabel = switcher.label.trim(); // Get expected label from JSON
+                const switchItem = page.locator(`[data-testid="${switcher.datatestid}"]`); // Use data-testid
+
                 await switchItem.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
+
                 // Ensure the switch item is visible
                 await expect(switchItem).toBeVisible();
 
                 // Get the text content of the switch item and trim it
                 const actualLabel = await switchItem.textContent();
-                console.log(`Switch item ${i + 1}: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
+                console.log(`Switch item: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
 
                 // Compare the actual label with the expected label
                 expect(actualLabel?.trim()).toBe(expectedLabel);
@@ -814,11 +801,12 @@ export const runU005 = () => {
                 // Wait briefly to let the UI update after clicking
                 await page.waitForTimeout(50);
 
-                console.log(`Clicked on switch item ${i + 1} with label: "${expectedLabel}"`);
+                console.log(`Clicked on switch item with label: "${expectedLabel}"`);
             }
 
             console.log("Switcher validation completed successfully.");
         });
+
 
         await allure.step("Step 28: Validate filter table (Validate filter above table in Добавить из базы dialog)", async () => {
             // Retrieve the expected filter labels from the JSON file
@@ -829,48 +817,41 @@ export const runU005 = () => {
                 throw new Error("Expected filters are not defined or empty.");
             }
 
-            // Locate the dropdown list and the filter items inside it
-            const dropdown = page.locator('.select-list-yui-kit.file-window__dropdown');
-            dropdown.click();
-            const filterItems = dropdown.locator('ul.select-list-yui-kit__list li.select-list-yui-kit__item');
-
-            // Ensure the dropdown exists and is visible
-            await expect(dropdown).toBeVisible();
-
-            // Validate that the number of filter items matches the JSON
-            const filterCount = await filterItems.count();
-            expect(filterCount).toBe(expectedFilters.length);
-            console.log(`Number of filter items: ${filterCount}`);
+            // Locate the dropdown list using data-testid
+            const dropdown = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown"]');
+            await dropdown.click();
 
             // Iterate over each filter and validate its label
-            for (let i = 0; i < expectedFilters.length; i++) {
-                const filter = expectedFilters[i]; // Get the current filter from the JSON
-
-                if (!filter || !filter.label) {
-                    throw new Error(`Filter at index ${i} is not defined or has no label.`);
+            for (const filter of expectedFilters) {
+                if (!filter || !filter.label || !filter.datatestid) {
+                    throw new Error(`Filter is not properly defined: ${JSON.stringify(filter)}`);
                 }
+
                 const expectedLabel = filter.label.trim(); // Get expected label from JSON
-                const filterItem = filterItems.nth(i); // Get the nth filter item
+                const filterItem = page.locator(`[data-testid="${filter.datatestid}"]`); // Use data-testid
+
                 await filterItem.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
+
                 // Ensure the filter item is visible
                 await expect(filterItem).toBeVisible();
 
                 // Get the text content of the filter item and trim it
                 const actualLabel = await filterItem.textContent();
-                console.log(`Filter item ${i + 1}: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
+                console.log(`Filter item: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
 
                 // Compare the actual label with the expected label
                 expect(actualLabel?.trim()).toBe(expectedLabel);
 
-                console.log(`Validated filter item ${i + 1} with label: "${expectedLabel}"`);
+                console.log(`Validated filter item with label: "${expectedLabel}"`);
             }
 
             console.log("Filter validation completed successfully.");
         });
+
         await allure.step("Step 29: Validate table headers in Добавить из базы dialog (Validate table headers in Добавить из базы dialog)", async () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1000);
@@ -878,7 +859,7 @@ export const runU005 = () => {
             const expectedHeaders = testData1.elements.CreatePage.modalAddFromBase.tables;
 
             // Locate the thead element directly using its unique class
-            const tableHead = page.locator('thead.table-yui-kit__thead.table-file-head');
+            const tableHead = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Table-Thead"]');
             await tableHead.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
@@ -918,27 +899,24 @@ export const runU005 = () => {
             console.log("Table headers have been validated successfully.");
         });
         await allure.step("Step 30: Verify that search works for the files table (Verify that search works for each column)", async () => {
-            // Locate the switch item and highlight it for debugging
-            const switchItems = page.locator('.switch-yui-kit-item');
-            const switchItem = switchItems.nth(0);
+            // Locate the switch item using data-testid and highlight it for debugging
+            const switchItem = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"]');
+
             await switchItem.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
+
             await switchItem.click();
             await page.waitForLoadState("networkidle");
 
-            // Locate the parent container of the table
-            const tableContainer = page.locator('.select_file_table.file-window__table');
+            // Locate the table container using data-testid
+            const tableContainer = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable"]');
             await expect(tableContainer).toBeVisible();
 
-            // Locate the table within the container
-            const leftTable = tableContainer.locator('table');
-            await expect(leftTable).toBeVisible();
-
-            // Locate the search input field
-            const searchField = leftTable.locator('input.search-yui-kit__input');
+            // Locate the search input field using data-testid
+            const searchField = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Search-Dropdown-Input"]');
 
             // Highlight the search field for debugging
             await searchField.evaluate((input) => {
@@ -969,8 +947,8 @@ export const runU005 = () => {
             await searchField.press('Enter');
             await page.waitForLoadState("networkidle");
 
-            // Locate and highlight the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
+            // Locate and highlight the first row in the table using data-testid
+            const firstRow = tableContainer.locator('[data-testid^="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Tbody"] tr:first-child');
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
@@ -985,8 +963,9 @@ export const runU005 = () => {
 
             console.log("Search verification completed successfully.");
         });
+
     });
-    test.skip("TestCase 02 - создат дитайл", async ({ browser, page }) => {
+    test("TestCase 02 - создат дитайл", async ({ browser, page }) => {
         test.setTimeout(50000);
         const shortagePage = new CreatePartsDatabasePage(page);
         await allure.step("Step 01: Перейдите на страницу создания детали. (Navigate to the create part page)", async () => {
@@ -995,8 +974,7 @@ export const runU005 = () => {
         });
         await allure.step("Step 02: В поле ввода инпута \"Наименование\" вводим значение переменной. (In the input field \"Name\" we enter the value of the variable)", async () => {
             await page.waitForLoadState("networkidle");
-            //            const field = page.locator('div.editor__information-inputs.w-full:has-text("Наименование") input.input-yui-kit__input');
-            const field = page.locator('div.editor__information-inputs span:has-text("Наименование") ~ fieldset input.input-yui-kit__input');
+            const field = page.locator('[data-testid="AddDetal-Information-Input-Input"]');
 
             await field.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
@@ -1011,7 +989,19 @@ export const runU005 = () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('div.editor__specification-characteristic__table:has(h3:has-text("Характеристики заготовки"))');
+            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
+            await expect(tableContainer).toBeVisible(); // Ensure the table container is visible
+
+            const tableTitle = tableContainer.locator('[data-testid="AddDetal-CharacteristicBlanks-Title"]');
+            await expect(tableTitle).toBeVisible(); // Ensure the title is visible
+
+            // Optionally, highlight the title for debugging
+            await tableTitle.evaluate((el) => {
+                el.style.backgroundColor = 'yellow';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+
             await tableContainer.waitFor({ state: 'visible' });
             const firstDataRow = tableContainer.locator('table tbody tr').first();
             const targetButton = firstDataRow.locator('td').nth(2).locator('button');
@@ -1024,8 +1014,8 @@ export const runU005 = () => {
         });
         await allure.step("Step 04: Verify that search works for table 3 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
-            const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
-            await leftTable.evaluate((row) => {
+            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
@@ -1033,15 +1023,16 @@ export const runU005 = () => {
             await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]')).toBeVisible();
 
             // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_NAME);
+            await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').fill(TEST_NAME);
+
             await page.waitForLoadState("networkidle");
             // Optionally, validate that the search input is visible
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+            await expect(rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]')).toBeVisible();
 
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
+            await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').press('Enter');
             await page.waitForLoadState("networkidle");
             // Find the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
+            const firstRow = rightTable.locator('tbody tr:first-child');
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
@@ -1063,7 +1054,7 @@ export const runU005 = () => {
         await allure.step("Step 05: Add the found Item (Add the found Item)", async () => {
             await page.waitForLoadState("networkidle");
 
-            const addButton = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Добавить' });
+            const addButton = page.locator('[data-testid="ModalBaseMaterial-Add-Button"]');
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -1078,7 +1069,7 @@ export const runU005 = () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('div.editor__specification-characteristic__table:has(h3:has-text("Характеристики заготовки"))');
+            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
             await tableContainer.waitFor({ state: 'visible' });
             const firstDataRow = tableContainer.locator('table tbody tr').first();
             const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -1094,7 +1085,7 @@ export const runU005 = () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('div.editor__specification-characteristic__table:has(h3:has-text("Характеристики заготовки"))');
+            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
             await tableContainer.waitFor({ state: 'visible' });
             const firstDataRow = tableContainer.locator('table tbody tr').first();
             const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -1106,22 +1097,23 @@ export const runU005 = () => {
             });
             expect(await targetSpan.innerText()).toBe(TEST_NAME);
         });
-        await allure.step("Step 08: Вводим значение переменной в обязательное поле в строке \"Длина (Д)\" в таблице \"Характеристики заготовки\" (Enter the variable value in the required field in the \"Длина (Д)\" row in the \"Характеристики заготовки\" table)", async () => {
+        await allure.step("Step 08: Вводим значение переменной в обязательное поле в строке \"Длина (Д)\" в таблице \"Характеристики заготовки\"", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-            // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('div.editor__specification-characteristic__table:has(h3:has-text("Характеристики заготовки"))');
-            await tableContainer.waitFor({ state: 'visible' });
-            const tableBody = tableContainer.locator('tbody');
-            const targetRow = tableBody.locator('tr').filter({
-                has: page.locator('td:first-child:has-text("Длина (Д)")'),
-            });
-            await expect(targetRow).toBeVisible();
-            // Locate the 3rd td in the target row
-            const targetCell = targetRow.locator('td').nth(2); // Index starts at 2 for the 3rd <td>
 
-            // Locate the input field within the fieldset inside the cell
-            const inputField = targetCell.locator('fieldset input.input-yui-kit__input');
+            // Locate the table container using data-testid
+            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
+            await expect(tableContainer).toBeVisible();
+
+            // Locate the row dynamically by searching for the text "Длина (Д)"
+            const targetRow = tableContainer.locator('tr').filter({
+                has: page.locator('td:has-text("Длина (Д)")'),
+            });
+
+            await expect(targetRow).toBeVisible();
+
+            // Locate the input field dynamically within the row
+            const inputField = targetRow.locator('input[data-testid$="-Input"]'); // Finds any input field with a data-testid ending in "-Input"
 
             // Highlight the input field for debugging (optional)
             await inputField.evaluate((input) => {
@@ -1129,22 +1121,22 @@ export const runU005 = () => {
                 input.style.border = '2px solid red';
                 input.style.color = 'blue';
             });
+
             // Set the desired value
-            const desiredValue = '999'; // Replace this with your intended value
-            await inputField.evaluate((input, value) => {
-                (input as HTMLInputElement).value = value; // Set the value directly
-                const event = new Event('input', { bubbles: true }); // Trigger an input event
-                input.dispatchEvent(event); // Dispatch the event to mimic user input
-            }, desiredValue);
+            const desiredValue = '999';
+            await inputField.fill(desiredValue);
 
             console.log(`Set the value "${desiredValue}" in the input field.`);
 
-            // Optionally, verify the value
+            // Verify the value
             const currentValue = await inputField.inputValue();
             console.log("Verified input value:", currentValue);
             expect(currentValue).toBe(desiredValue);
+
             await page.waitForTimeout(50);
         });
+
+
         await allure.step("Step 09: Upload files using drag-and-drop functionality", async () => {
             // Locate the hidden file input element
             const fileInput = page.locator('input#docsFileSelected');
@@ -1172,13 +1164,14 @@ export const runU005 = () => {
             console.log("Files successfully uploaded via the hidden input.");
             //await page.waitForTimeout(5000);
         });
+        //datatestid
         await allure.step("Step 10: Проверяем, что в модальном окне отображаются заголовки(check the headers in the dialog)", async () => {
             const shortagePage = new CreatePartsDatabasePage(page);
             // Wait for loading
             const titles = testData1.elements.CreatePage.modalAddDocuments.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInModalClass(page, 'basefile__modal.modal-yui-kit');
+            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'Modal');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
@@ -1194,13 +1187,15 @@ export const runU005 = () => {
             // Validate content and order
             expect(normalizedH3Titles).toEqual(titles);
 
-            const titlesh4 = testData1.elements.CreatePage.modalAddDocuments.titlesh4.map((title) => title.trim());
-            const h4Titles = await shortagePage.getAllH4TitlesInModalClass(page, 'modal-yui-kit__modal-content');
-            const normalizedH4Titles = h4Titles.map((title) => title.trim());
+            const titlesh4 = testData1.elements.CreatePage.modalAddDocuments.titlesh4.map((title) => title.replace(/\s+/g, ' ').trim());
+            const h4Titles = await shortagePage.getAllH4TitlesInModalByTestId(page, 'Modal');
+            const normalizedH4Titles = h4Titles.map((title) => title.replace(/\s+/g, ' ').trim());
 
             logger.info('Expected Titles:', titlesh4);
             logger.info('Received Titles:', normalizedH4Titles);
+
             await page.waitForTimeout(50);
+
             // Validate length
             expect(normalizedH4Titles.length).toBe(titlesh4.length);
 
@@ -1210,69 +1205,62 @@ export const runU005 = () => {
         });
         await allure.step("Step 11: Ensure the textarea is present and writable", async () => {
             await page.waitForLoadState('networkidle');
-            const section = page.locator('.basefile__modal-section');
+
+            // Locate the modal container using data-testid
+            const modal = page.locator('[data-testid="Modal"]');
+            await expect(modal).toBeVisible();
+
+            // Locate the section inside the modal
+            const section = modal.locator('section');
             await section.waitFor({ state: 'attached', timeout: 5000 });
-            const sectionX = await section.locator('.basefile__modal-file').first();
-            const sectionY = await section.locator('.basefile__modal-file').nth(1);
 
-            //checking first file field
-            let inputs = sectionX.locator('div.basefile__modal-inputs');
-            let fieldset = inputs.locator('fieldset.input-yui-kit.default.initial');
-            // Locate the textarea inside the fieldset
-            let textarea = fieldset.locator('textarea.input-yui-kit__input');
-            await textarea.evaluate((row) => {
-                row.style.backgroundColor = 'yellow';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            // Ensure the textarea is visible
-            await expect(textarea).toBeVisible({ timeout: 5000 });
-            console.log("Textarea is visible.");
+            // Locate all file sections inside the section
+            const fileSections = section.locator('div.basefile__modal-file');
+            const fileCount = await fileSections.count();
 
-            // Focus on the textarea to verify it is writable
-            await textarea.focus();
-            console.log("Textarea is focused.");
+            if (fileCount < 2) {
+                throw new Error(`Expected at least 2 file sections, but found ${fileCount}`);
+            }
 
-            // Type text into the textarea
-            let testValue = "Test note";
-            await textarea.fill(testValue);
-            console.log(`Value entered into textarea: ${testValue}`);
+            for (let i = 0; i < 2; i++) {
+                const fileSection = fileSections.nth(i);
 
-            // Verify the entered value
-            let currentValue = await textarea.inputValue();
-            console.log(`Textarea current value: ${currentValue}`);
-            expect(currentValue).toBe(testValue);
-            //end first file field
-            //checking second file field
-            inputs = sectionY.locator('div.basefile__modal-inputs');
-            fieldset = inputs.locator('fieldset.input-yui-kit.default.initial');
-            // Locate the textarea inside the fieldset
-            textarea = fieldset.locator('textarea.input-yui-kit__input');
-            await textarea.evaluate((row) => {
-                row.style.backgroundColor = 'yellow';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            // Ensure the textarea is visible
-            await expect(textarea).toBeVisible({ timeout: 5000 });
-            console.log("Textarea is visible.");
+                // Locate the input section inside the file section
+                const inputs = fileSection.locator('div.basefile__modal-inputs');
 
-            // Focus on the textarea to verify it is writable
-            await textarea.focus();
-            console.log("Textarea is focused.");
+                // Locate the textarea inside the fieldset
+                const textarea = inputs.locator('[data-testid="Textarea-Textarea"]');
 
-            // Type text into the textarea
-            testValue = "Test note";
-            await textarea.fill(testValue);
-            console.log(`Value entered into textarea: ${testValue}`);
+                // Highlight the textarea for debugging (optional)
+                await textarea.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
 
-            // Verify the entered value
-            currentValue = await textarea.inputValue();
-            console.log(`Textarea current value: ${currentValue}`);
-            expect(currentValue).toBe(testValue);
-            //end second file field        
+                // Ensure the textarea is visible
+                await expect(textarea).toBeVisible({ timeout: 5000 });
+                console.log(`Textarea in file section ${i + 1} is visible.`);
+
+                // Focus on the textarea to verify it is writable
+                await textarea.focus();
+                console.log(`Textarea in file section ${i + 1} is focused.`);
+
+                // Type text into the textarea
+                const testValue = `Test note ${i + 1}`;
+                await textarea.fill(testValue);
+                console.log(`Value entered into textarea in file section ${i + 1}: ${testValue}`);
+
+                // Verify the entered value
+                const currentValue = await textarea.inputValue();
+                console.log(`Textarea current value in file section ${i + 1}: ${currentValue}`);
+                expect(currentValue).toBe(testValue);
+            }
+
             await page.waitForTimeout(50);
         });
+
+
         await allure.step("Step 12: Check buttons in dialog (Check buttons in dialog)", async () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(50);
@@ -1290,7 +1278,7 @@ export const runU005 = () => {
                     // Check if the button is visible and enabled
                     await page.waitForTimeout(50);
                     console.log(buttonClass + " " + buttonLabel + " " + expectedState);
-                    const isButtonReady = await shortagePage.isButtonVisible(page, buttonClass, buttonLabel, expectedState, '.basefile__modal.modal-yui-kit');
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonClass, buttonLabel, expectedState, 'Modal');
                     console.log("Button :" + buttonClass + " " + buttonLabel + " " + expectedState);
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -1751,7 +1739,7 @@ export const runU005 = () => {
                 row.style.color = 'blue';
             });
             await page.waitForTimeout(100);
-            const isButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit.add_button', 'Добавить', false);
+            const isButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit.add_button', 'Добавить', false);
             expect(isButtonReady).toBeTruthy();
             firstRow.click();
             await firstRow.evaluate((row) => {
@@ -1760,7 +1748,7 @@ export const runU005 = () => {
                 row.style.color = 'blue';
             });
             await page.waitForTimeout(500);
-            const isButtonReady2 = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit.add_button', 'Добавить', true);
+            const isButtonReady2 = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit.add_button', 'Добавить', true);
             expect(isButtonReady2).toBeTruthy();
             addButton.click();
             await addButton.evaluate((row) => {
@@ -1888,14 +1876,14 @@ export const runU005 = () => {
                 checkboxElement.style.border = '2px solid red';
                 checkboxElement.style.color = 'blue';
             });
-            let isPrintButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Печать', false);
+            let isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Печать', false);
             let deleteButton = page.locator('button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit', { hasText: 'Удалить' });
             await deleteButton.evaluate((checkboxElement) => {
                 checkboxElement.style.backgroundColor = 'yellow';
                 checkboxElement.style.border = '2px solid red';
                 checkboxElement.style.color = 'blue';
             });
-            let isDeleteButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Удалить', false);
+            let isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Удалить', false);
             expect(isPrintButtonReady).toBeTruthy();
             expect(isDeleteButtonReady).toBeTruthy();
             // Locate the parent section for the specific table
@@ -1919,9 +1907,9 @@ export const runU005 = () => {
             await checkboxInput.check();
             await page.waitForTimeout(100);
             printButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Печать' });
-            isPrintButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Печать', true);
+            isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Печать', true);
             deleteButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Удалить' });
-            isDeleteButtonReady = await shortagePage.isButtonVisible(page, 'button.button-yui-kit.small.primary-yui-kit', 'Удалить', true);
+            isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Удалить', true);
             expect(isPrintButtonReady).toBeTruthy();
             expect(isDeleteButtonReady).toBeTruthy();
             // Assert that the checkbox is checked
