@@ -2715,13 +2715,6 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-        //     // Wait for loading
-        //     await page.waitForLoadState("networkidle");
-
-        //     const rowCount = await leftTable.locator('tbody tr').count();
-        //     expect(rowCount).toBeGreaterThan(0);
-        // });
         await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
             await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
@@ -2918,9 +2911,11 @@ export const runU004 = () => {
                     logger.info(`Selected row found in row ${i + 1}`);
                     //change the value in the Обозначение column
 
-                    const assignmentCell = row.locator(
-                        'td.table-yui-kit__td fieldset input.input-yui-kit__input[type="text"]'
-                    );
+                    // const assignmentCell = row.locator(
+                    //     'td.table-yui-kit__td fieldset input.input-yui-kit__input[type="text"]'
+                    // );
+                    const assignmentCell = row.locator('[data-testid="ModalBaseMaterial-Designation-Input-Input"]');
+
                     assignmentCell.fill(TESTCASE_2_PRODUCT_ASSIGNEMENT);
                     await page.waitForTimeout(1000);
                     break;
