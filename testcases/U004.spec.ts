@@ -5979,6 +5979,4 @@ export const runU004 = () => {
         const material = await page1.textContent(`[data-testid='material-entry']`);
         expect(material).toContain('Modified Расходные материалы');
     });
-
-
 }
