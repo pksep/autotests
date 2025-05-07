@@ -147,16 +147,20 @@ export const testSuites = {
         description: 'This is a group of full page tests p02 - P04',
         tests: [
             {
-                test: runP002,
-                description: 'This test checks the responsiveness of Page 002.',
+                test: runU005,
+                description: 'This test checks the User Scenario series of tests U005.',
             },
             {
-                test: runP003,
-                description: 'This test checks the responsiveness of Page 003.',
+                test: runU004,
+                description: 'This test checks the User Scenario series of tests U004',
             },
             {
-                test: runP004,
-                description: 'This test checks the responsiveness of Page 004.',
+                test: runU002,
+                description: 'This test checks the User Scenario series of tests U002',
+            },
+            {
+                test: runU001,
+                description: 'This test checks the User Scenario series of tests U001',
             },
             // Add more test cases as needed
         ],
