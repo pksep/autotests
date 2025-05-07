@@ -53,7 +53,6 @@ export const runU005 = () => {
             await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         const firstRow = leftTable.locator('tbody tr:first-child');
-
         await allure.step("Step 04: Проверяем Filters (Verify the presence of filters on the page)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
@@ -96,9 +95,6 @@ export const runU005 = () => {
 
             console.log("All filters have been validated successfully.");
         });
-
-
-
         await allure.step("Step 04: Проверяем наличие кнопки (Verify the presence of buttons on the page)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
@@ -174,7 +170,6 @@ export const runU005 = () => {
                 });
             }
         });
-
         await allure.step("Step 07: нажмите кнопку деталь. (Click on the create detail button)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
@@ -191,7 +186,6 @@ export const runU005 = () => {
             await createButton.click();
             await page.waitForTimeout(500);
         });
-
         await allure.step("Step 08: Проверяем наличия заголовка на странице \"Создать деталь\" (Check for the presence of the title on the 'Create Parts' page)", async () => {
             const shortagePage = new CreatePartsDatabasePage(page);
             // Wait for loading
@@ -332,7 +326,6 @@ export const runU005 = () => {
             // Confirm the selected item is shown on the main page
             await page.waitForTimeout(50);
         });
-
         await allure.step("Step 13: Проверяем, что кнопки свитчера отображаются. (Confirm that the switcher is visible)", async () => {
             // Locate the switcher using data-testid
             const switcher = page.locator('[data-testid="ModalBaseMaterial-TableList-Switch"]');
@@ -349,7 +342,6 @@ export const runU005 = () => {
             // Validate the number of switch items
             expect(switchItems.length).toBe(4);
         });
-
         await allure.step("Step 14: Проверяем, что свитчер 'Материалы для деталей' выбран. (Confirm that 'Материалы для деталей' is selected)", async () => {
             // Locate the active switcher item using data-testid
             const switcher = await page.locator('[data-testid="ModalBaseMaterial-TableList-Switch-Item1"]');
@@ -366,7 +358,6 @@ export const runU005 = () => {
             // Validate that the correct switcher is selected
             expect(content).toBe("Материалы для деталей");
         });
-
         await allure.step("Step 15: Проверьте, что каждая таблица имеет правильное название. (Validate that each table exists with the correct title)", async () => {
             // Retrieve the object that groups different types of tables.
             const allTableGroups = testData1.elements.CreatePage.modalAddMaterial.tables;
@@ -427,8 +418,6 @@ export const runU005 = () => {
 
             await page.waitForTimeout(500);
         });
-
-
         await allure.step("Step 16: Проверяем наличие кнопки (Verify the presence of buttons on the page)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
@@ -468,7 +457,6 @@ export const runU005 = () => {
             await targetItem.click();
             await page.waitForTimeout(500);
         });
-
         await allure.step("Step 18: Verify that search works for table 1 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
 
@@ -509,7 +497,6 @@ export const runU005 = () => {
             // Wait for the row to be visible and click on it
             await firstRow.waitFor({ state: 'visible' });
         });
-
         await allure.step("Step 19: Verify that search works for table 2 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
 
@@ -550,7 +537,6 @@ export const runU005 = () => {
             // Wait for the row to be visible and click on it
             await firstRow.waitFor({ state: 'visible' });
         });
-
         await allure.step("Step 20: Verify that search works for table 3 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
 
@@ -591,7 +577,6 @@ export const runU005 = () => {
             // Wait for the row to be visible and click on it
             await firstRow.waitFor({ state: 'visible' });
         });
-
         await allure.step("Step 21: Open Archive dialog (Open Archive dialog)", async () => {
             // To open the archive dialog, we need to add something to the archive
             const targetTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
@@ -659,8 +644,6 @@ export const runU005 = () => {
             targetButton.click();
             await page.waitForTimeout(500);
         });
-
-
         await allure.step("Step 22: Check title in Archive dialog (Check title and buttons in Archive dialog)", async () => {
             const titles = testData1.elements.CreatePage.modalArchive.titles.map((title) => title.trim());
 
@@ -704,7 +687,6 @@ export const runU005 = () => {
             page.mouse.click(1, 1);
             await page.waitForTimeout(500);
         });
-
         await allure.step("Step 24: Open Добавить из базы dialog (Open Добавить из базы dialog)", async () => {
             const button = page.locator('[data-testid="AddDetal-FileComponent-AddFileButton"]', { hasText: 'Добавить из базы' });
             await button.evaluate((row) => {
@@ -769,7 +751,6 @@ export const runU005 = () => {
                 });
             }
         });
-
         await allure.step("Step 27: Validate switcher above table (Validate switcher above table in Добавить из базы dialog)", async () => {
             // Retrieve the expected switcher labels from the JSON file
             const expectedSwitchers = testData1.elements.CreatePage.modalAddFromBase.switcher;
@@ -806,8 +787,6 @@ export const runU005 = () => {
 
             console.log("Switcher validation completed successfully.");
         });
-
-
         await allure.step("Step 28: Validate filter table (Validate filter above table in Добавить из базы dialog)", async () => {
             // Retrieve the expected filter labels from the JSON file
             const expectedFilters = testData1.elements.CreatePage.modalAddFromBase.filter;
@@ -851,7 +830,6 @@ export const runU005 = () => {
 
             console.log("Filter validation completed successfully.");
         });
-
         await allure.step("Step 29: Validate table headers in Добавить из базы dialog (Validate table headers in Добавить из базы dialog)", async () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1000);
@@ -963,7 +941,6 @@ export const runU005 = () => {
 
             console.log("Search verification completed successfully.");
         });
-
     });
     test("TestCase 02 - создат дитайл", async ({ browser, page }) => {
         test.setTimeout(50000);
@@ -974,7 +951,7 @@ export const runU005 = () => {
         });
         await allure.step("Step 02: В поле ввода инпута \"Наименование\" вводим значение переменной. (In the input field \"Name\" we enter the value of the variable)", async () => {
             await page.waitForLoadState("networkidle");
-            const field = page.locator('[data-testid="AddDetal-Information-Input-Input"]');
+            const field = page.locator('[data-testid="AddDetal-Information-Input"]');
 
             await field.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
@@ -1164,16 +1141,16 @@ export const runU005 = () => {
             console.log("Files successfully uploaded via the hidden input.");
             //await page.waitForTimeout(5000);
         });
-        //datatestid
+
         await allure.step("Step 10: Проверяем, что в модальном окне отображаются заголовки(check the headers in the dialog)", async () => {
             const shortagePage = new CreatePartsDatabasePage(page);
             // Wait for loading
             const titles = testData1.elements.CreatePage.modalAddDocuments.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'Modal');
+            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
+            await page.waitForTimeout(5000);
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
@@ -1188,7 +1165,7 @@ export const runU005 = () => {
             expect(normalizedH3Titles).toEqual(titles);
 
             const titlesh4 = testData1.elements.CreatePage.modalAddDocuments.titlesh4.map((title) => title.replace(/\s+/g, ' ').trim());
-            const h4Titles = await shortagePage.getAllH4TitlesInModalByTestId(page, 'Modal');
+            const h4Titles = await shortagePage.getAllH4TitlesInModalByTestId(page, 'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal');
             const normalizedH4Titles = h4Titles.map((title) => title.replace(/\s+/g, ' ').trim());
 
             logger.info('Expected Titles:', titlesh4);
@@ -1203,19 +1180,19 @@ export const runU005 = () => {
             expect(normalizedH4Titles).toEqual(titlesh4);
             await page.waitForTimeout(50);
         });
-        await allure.step("Step 11: Ensure the textarea is present and writable", async () => {
+        await allure.step("Step 11: Ensure the textarea is present and writable in each file uploaded section", async () => {
             await page.waitForLoadState('networkidle');
 
             // Locate the modal container using data-testid
-            const modal = page.locator('[data-testid="Modal"]');
+            const modal = page.locator('[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
             await expect(modal).toBeVisible();
 
-            // Locate the section inside the modal
-            const section = modal.locator('section');
+            // Locate the SECTION inside the modal (wildcard for '-Section')
+            const section = modal.locator('[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Section"]');
             await section.waitFor({ state: 'attached', timeout: 5000 });
 
-            // Locate all file sections inside the section
-            const fileSections = section.locator('div.basefile__modal-file');
+            // Locate ALL FILE SECTIONS inside the section (wildcard for '-File')
+            const fileSections = section.locator('[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-File"]');
             const fileCount = await fileSections.count();
 
             if (fileCount < 2) {
@@ -1225,14 +1202,32 @@ export const runU005 = () => {
             for (let i = 0; i < 2; i++) {
                 const fileSection = fileSections.nth(i);
 
-                // Locate the input section inside the file section
-                const inputs = fileSection.locator('div.basefile__modal-inputs');
+                // Locate the input section inside the file section (common pattern)
 
-                // Locate the textarea inside the fieldset
-                const textarea = inputs.locator('[data-testid="Textarea-Textarea"]');
+
+                // Locate the textarea inside the fieldset (specific textarea)
+                const textarea = fileSection.locator('textarea[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea"]');
+                await textarea.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+                const checkbox = fileSection.locator('input[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+                await checkbox.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+                const version = fileSection.locator('input[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]');
+                await version.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+                const fileName = fileSection.locator('input[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]');
 
                 // Highlight the textarea for debugging (optional)
-                await textarea.evaluate((row) => {
+                await fileName.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
@@ -1266,26 +1261,36 @@ export const runU005 = () => {
             await page.waitForTimeout(50);
 
             const buttons = testData1.elements.CreatePage.modalAddDocuments.buttons;
+
             // Iterate over each button in the array
             for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
+                const buttonTestId = button.datatestid; // Assuming testData1 contains data-testid for each button
                 const buttonLabel = button.label;
-                let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
+                const expectedState = button.state === "true"; // Convert state string to a boolean
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
                     await page.waitForTimeout(50);
-                    console.log(buttonClass + " " + buttonLabel + " " + expectedState);
-                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonClass, buttonLabel, expectedState, 'Modal');
-                    console.log("Button :" + buttonClass + " " + buttonLabel + " " + expectedState);
+                    console.log(`Checking button: ${buttonTestId} - ${buttonLabel} - Expected State: ${expectedState}`);
+
+                    // Locate the button using data-testid
+                    const buttonLocator = page.locator(`[data-testid="${buttonTestId}"]`);
+
+                    // Check if the button is visible and enabled
+                    const isButtonVisible = await buttonLocator.isVisible();
+                    const isButtonEnabled = await buttonLocator.isEnabled();
+
+                    console.log(`Button: ${buttonTestId} - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
+
                     // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                    expect(isButtonVisible).toBeTruthy();
+                    expect(isButtonEnabled).toBe(expectedState);
+
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonVisible && isButtonEnabled);
                 });
             }
         });
+
         await allure.step("Step 13: Проверяем, что в модальном окне есть не отмеченный чекбокс в строке \"Главный:\" (Check that the checkbox is not selected in the MAIN row)", async () => {
             await page.waitForLoadState('networkidle');
             const section = page.locator('.basefile__modal-section');

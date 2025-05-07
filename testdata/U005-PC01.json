@@ -161,13 +161,13 @@
         "buttons": [
         {
           "class": "button.button-yui-kit.medium.outline-yui-kit.cancel-btn",
-          "datatestid": "",
+          "datatestid": "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Cancel",
           "label": "Отменить",
           "state": "true"
         },
         {
           "class": "button.button-yui-kit.medium.primary-yui-kit.upload-btn",
-          "datatestid": "",
+          "datatestid": "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload",
           "label": "Загрузить все файлы",
           "state": "true"
         }
