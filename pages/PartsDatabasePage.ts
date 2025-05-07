@@ -2106,5 +2106,4 @@ export class CreatePartsDatabasePage extends PageObject {
             return false;
         }
     }
-
 }
