@@ -2076,7 +2076,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 });
 
                 // Check that the field is visible
-                if (field.datatestid !== "DragAndDrop-Input" && !(await fieldLocator.isVisible())) {
+                if (field.datatestid !== "AddDetal-FileComponent-DragAndDrop-Input" && !(await fieldLocator.isVisible())) {
                     console.error(`Field "${field.title}" is not visible.`);
                     return false;
                 }
@@ -2084,7 +2084,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
                 // Verify writability if it’s a text field
                 if (field.type === "input" || field.type === "textarea") {
-                    if (field.datatestid !== "DragAndDrop-Input") { // Exclude file upload input field
+                    if (field.datatestid !== "AddDetal-FileComponent-DragAndDrop-Input") { // Exclude file upload input field
                         const testValue = "Test Value";
                         await fieldLocator.fill(testValue);
                         const currentValue = await fieldLocator.inputValue();

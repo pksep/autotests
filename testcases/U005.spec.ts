@@ -38,7 +38,7 @@ export const runU005 = () => {
             await expect(targetH3).toBeVisible();
         });
     });
-    test.skip("TestCase 01 - создат дитайл - Проверка страница", async ({ browser, page }) => {
+    test("TestCase 01 - создат дитайл - Проверка страница", async ({ browser, page }) => {
         test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
@@ -951,7 +951,7 @@ export const runU005 = () => {
         });
         await allure.step("Step 02: В поле ввода инпута \"Наименование\" вводим значение переменной. (In the input field \"Name\" we enter the value of the variable)", async () => {
             await page.waitForLoadState("networkidle");
-            const field = page.locator('[data-testid="AddDetal-Information-Input"]');
+            const field = page.locator('[data-testid="AddDetal-Information-Input-Input"]');
 
             await field.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
@@ -1139,7 +1139,7 @@ export const runU005 = () => {
             await page.waitForLoadState('networkidle');
 
             console.log("Files successfully uploaded via the hidden input.");
-            //await page.waitForTimeout(5000);
+
         });
 
         await allure.step("Step 10: Проверяем, что в модальном окне отображаются заголовки(check the headers in the dialog)", async () => {
@@ -1150,7 +1150,7 @@ export const runU005 = () => {
             // Retrieve all H3 titles from the specified class
             const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(50);
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
@@ -1184,15 +1184,15 @@ export const runU005 = () => {
             await page.waitForLoadState('networkidle');
 
             // Locate the modal container using data-testid
-            const modal = page.locator('[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
+            const modal = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
             await expect(modal).toBeVisible();
 
             // Locate the SECTION inside the modal (wildcard for '-Section')
-            const section = modal.locator('[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Section"]');
-            await section.waitFor({ state: 'attached', timeout: 5000 });
+            const section = await modal.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            await section.waitFor({ state: 'attached', timeout: 50 });
 
             // Locate ALL FILE SECTIONS inside the section (wildcard for '-File')
-            const fileSections = section.locator('[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-File"]');
+            const fileSections = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]');
             const fileCount = await fileSections.count();
 
             if (fileCount < 2) {
@@ -1206,25 +1206,25 @@ export const runU005 = () => {
 
 
                 // Locate the textarea inside the fieldset (specific textarea)
-                const textarea = fileSection.locator('textarea[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea"]');
+                const textarea = fileSection.locator('textarea[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea"]');
                 await textarea.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                const checkbox = fileSection.locator('input[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+                const checkbox = fileSection.locator('input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
                 await checkbox.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                const version = fileSection.locator('input[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]');
+                const version = fileSection.locator('input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]');
                 await version.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                const fileName = fileSection.locator('input[data-testid="Creator-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]');
+                const fileName = fileSection.locator('input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]');
 
                 // Highlight the textarea for debugging (optional)
                 await fileName.evaluate((row) => {
@@ -1293,202 +1293,67 @@ export const runU005 = () => {
 
         await allure.step("Step 13: Проверяем, что в модальном окне есть не отмеченный чекбокс в строке \"Главный:\" (Check that the checkbox is not selected in the MAIN row)", async () => {
             await page.waitForLoadState('networkidle');
-            const section = page.locator('.basefile__modal-section');
-            await section.waitFor({ state: 'attached', timeout: 5000 });
-            const sectionX = await section.locator('.basefile__modal-file').first();
-            const sectionY = await section.locator('.basefile__modal-file').nth(1);
 
-            //checking first file field
-            const row = sectionX.locator('.basefile__modal-inputs__span').filter({
-                has: page.locator('label.basefile__modal-inputs__label:has-text("Главный:")'),
-            });
+            const modal = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
+            await expect(modal).toBeVisible();
 
-            // Ensure the row is visible
-            await expect(row).toBeVisible();
+            const section = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            await section.waitFor({ state: 'attached', timeout: 50 });
 
-            console.log("Row containing label 'Главный:' is visible.");
+            const sectionX = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').first();
+            const sectionY = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').nth(1);
 
-            // Locate the checkbox in the second column of the row
-            const checkbox = row.locator('input[type="checkbox"]');
-            await checkbox.evaluate((row) => {
-                row.style.backgroundColor = 'yellow';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            // Ensure the checkbox is visible
-            await expect(checkbox).toBeVisible();
-            console.log("Checkbox in 'Главный:' row is visible.");
+            // Validate checkboxes and assert their state
+            expect(await shortagePage.validateCheckbox(page, sectionX, 1)).toBeFalsy();
+            expect(await shortagePage.validateCheckbox(page, sectionY, 2)).toBeFalsy();
 
-            // Confirm that the checkbox is not selected
-            const isChecked = await checkbox.isChecked();
-            console.log(`Checkbox state: ${isChecked ? "Checked" : "Not Checked"}`);
-            expect(isChecked).toBeFalsy();
-            // end checking the firsrt file field
-            //start checking the second file field.
-            const row2 = sectionY.locator('.basefile__modal-inputs__span').filter({
-                has: page.locator('label.basefile__modal-inputs__label:has-text("Главный:")'),
-            });
-
-            // Ensure the row is visible
-            await expect(row2).toBeVisible();
-
-            console.log("Row containing label 'Главный:' is visible.");
-
-            // Locate the checkbox in the second column of the row
-            const checkbox2 = row2.locator('input[type="checkbox"]');
-            await checkbox2.evaluate((row) => {
-                row.style.backgroundColor = 'yellow';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            // Ensure the checkbox is visible
-            await expect(checkbox2).toBeVisible();
-            console.log("Checkbox in 'Главный:' row is visible.");
-
-            // Confirm that the checkbox is not selected
-            const isChecked2 = await checkbox2.isChecked();
-            console.log(`Checkbox state: ${isChecked2 ? "Checked" : "Not Checked"}`);
-            expect(isChecked2).toBeFalsy();
             await page.waitForTimeout(50);
         });
+
         await allure.step("Step 14: Чек чекбокс в строке \"Главный:\" (Check the checkbox in the \"Главный:\" row)", async () => {
             await page.waitForLoadState('networkidle');
-            const section = page.locator('.basefile__modal-section');
-            await section.waitFor({ state: 'attached', timeout: 5000 });
-            const sectionX = await section.locator('.basefile__modal-file').first();
-            const sectionY = await section.locator('.basefile__modal-file').nth(1);
 
-            //checking first file field
-            const row = sectionX.locator('.basefile__modal-inputs__span').filter({
-                has: page.locator('label.basefile__modal-inputs__label:has-text("Главный:")'),
-            });
+            const section = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            await section.waitFor({ state: 'attached', timeout: 50 });
 
-            // Ensure the row is visible
-            await expect(row).toBeVisible();
+            const sectionX = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').first();
+            const sectionY = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').nth(1);
 
-            console.log("Row containing label 'Главный:' is visible.");
+            // Validate checkboxes and assert their state
+            expect(await shortagePage.checkCheckbox(page, sectionX, 1)).toBeTruthy();
+            expect(await shortagePage.checkCheckbox(page, sectionY, 2)).toBeTruthy();
 
-            // Locate the checkbox in the second column of the row
-            const checkbox = row.locator('input[type="checkbox"]');
-            await checkbox.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            // Ensure the checkbox is visible
-            await expect(checkbox).toBeVisible();
-            console.log("Checkbox in 'Главный:' row is visible.");
-            await checkbox.check();
-            // Confirm that the checkbox is not selected
-            const isChecked = await checkbox.isChecked();
-            console.log(`Checkbox state: ${isChecked ? "Checked" : "Not Checked"}`);
-            expect(isChecked).toBeTruthy();
-            // end checking the firsrt file field
-            //start checking the second file field.
-            const row2 = sectionY.locator('.basefile__modal-inputs__span').filter({
-                has: page.locator('label.basefile__modal-inputs__label:has-text("Главный:")'),
-            });
-
-            // Ensure the row is visible
-            await expect(row2).toBeVisible();
-
-            console.log("Row containing label 'Главный:' is visible.");
-
-            // Locate the checkbox in the second column of the row
-            const checkbox2 = row2.locator('input[type="checkbox"]');
-            await checkbox2.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            // Ensure the checkbox is visible
-            await expect(checkbox2).toBeVisible();
-            console.log("Checkbox in 'Главный:' row is visible.");
-            await checkbox2.check();
-            // Confirm that the checkbox is not selected
-            const isChecked2 = await checkbox2.isChecked();
-            console.log(`Checkbox state: ${isChecked2 ? "Checked" : "Not Checked"}`);
-            expect(isChecked2).toBeTruthy();
             await page.waitForTimeout(500);
         });
         await allure.step("Step 15: Проверяем, that in the file field is the name of the file uploaded without its file extension", async () => {
             await page.waitForLoadState('networkidle');
-            const section = page.locator('.basefile__modal-section');
-            await section.waitFor({ state: 'attached', timeout: 5000 });
+
+            const section = await page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            await section.waitFor({ state: 'attached', timeout: 50 });
             console.log("Dynamic content in modal section loaded.");
 
-            // File names uploaded
-            //const uploadedFiles = ["Test_imagexx_1.jpg", "Test_imagexx_2.png"];
-            const uploadedFiles = baseFileNamesToVerify.map(file => `${file.name}${file.extension}`);
+            // Extract individual file sections from the main section
+            const fileSections = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').all();
 
-            // First File: Check the 'Файл' field
-            const sectionX = await section.locator('.basefile__modal-file').first();
-            const rowX = sectionX.locator('.basefile__modal-inputs__span').filter({
-                has: page.locator('label.basefile__modal-inputs__label:has-text("Файл:")'),
-            });
+            // Convert { name, extension } objects to filename strings without extension
+            const filenamesWithoutExtension = baseFileNamesToVerify.map(file => file.name);
 
-            // Ensure the row is visible
-            await expect(rowX).toBeVisible();
-            console.log("Row for first file containing label 'Файл:' is visible.");
+            // Call the function from shortagePage class, passing extracted filenames
+            await shortagePage.validateFileNames(page, fileSections, filenamesWithoutExtension);
 
-            // Locate the input field in the second column of the row
-            const inputX = rowX.locator('input[type="text"]');
-            await expect(inputX).toBeVisible();
-            console.log("Input field for first file is visible.");
-
-            // Extract filename without extension and verify
-            const filenameX = uploadedFiles[0].split('.')[0];
-            const inputValueX = await inputX.inputValue();
-            console.log(`Expected filename: ${filenameX}, Actual input value: ${inputValueX}`);
-            expect(inputValueX).toBe(filenameX);
-
-            // Highlight for debugging
-            await inputX.evaluate((element) => {
-                element.style.backgroundColor = 'green';
-                element.style.border = '2px solid red';
-                element.style.color = 'blue';
-            });
-
-            // Second File: Check the 'Файл' field
-            const sectionY = await section.locator('.basefile__modal-file').nth(1);
-            const rowY = sectionY.locator('.basefile__modal-inputs__span').filter({
-                has: page.locator('label.basefile__modal-inputs__label:has-text("Файл:")'),
-            });
-
-            // Ensure the row is visible
-            await expect(rowY).toBeVisible();
-            console.log("Row for second file containing label 'Файл:' is visible.");
-
-            // Locate the input field in the second column of the row
-            const inputY = rowY.locator('input[type="text"]');
-            await expect(inputY).toBeVisible();
-            console.log("Input field for second file is visible.");
-
-            // Extract filename without extension and verify
-            const filenameY = uploadedFiles[1].split('.')[0];
-            const inputValueY = await inputY.inputValue();
-            console.log(`Expected filename: ${filenameY}, Actual input value: ${inputValueY}`);
-            expect(inputValueY).toBe(filenameY);
-
-            // Highlight for debugging
-            await inputY.evaluate((element) => {
-                element.style.backgroundColor = 'green';
-                element.style.border = '2px solid red';
-                element.style.color = 'blue';
-            });
-
-            console.log("Both file fields validated successfully.");
+            console.log("All file fields validated successfully.");
             await page.waitForTimeout(100);
         });
+
         await allure.step("Step 16: Click the Загрузить все файлы button and confirm modal closure", async () => {
             console.log("Starting file upload process...");
 
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
-            // Locate the upload button
-            const uploadButton = page.locator('button.button-yui-kit.medium.primary-yui-kit.upload-btn', { hasText: 'Загрузить все файлы' });
-            const modalLocator = page.locator('.modal-yui-kit__modal-content'); // Replace with actual modal class/ID
+            // Locate the upload button using data-testid
+            const uploadButton = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload"]');
+            const modalLocator = page.locator('dialog[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
             console.log("Upload button and modal located.");
 
             const maxRetries = 5;
@@ -1532,7 +1397,7 @@ export const runU005 = () => {
                     console.log("Duplicate filename detected. Updating all filenames.");
                     retryCounter++;
 
-                    const sectionsCount = await page.locator('.basefile__modal-file').count();
+                    const sectionsCount = await page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]').count();
                     console.log(`Found ${sectionsCount} file sections to update filenames.`);
 
                     for (let i = 0; i < sectionsCount; i++) {
@@ -1542,7 +1407,7 @@ export const runU005 = () => {
                             break;
                         }
 
-                        const fileInput = page.locator('.basefile__modal-file').nth(i).locator('input[type="text"]');
+                        const fileInput = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]').nth(i);
 
                         try {
                             // Check if field is visible before interaction
@@ -1589,6 +1454,7 @@ export const runU005 = () => {
 
             console.log("File upload process completed successfully.");
         });
+
         await allure.step("Step 17: Verify uploaded file names with wildcard matching and extension validation", async () => {
             console.log("Starting file verification process...");
             await page.waitForLoadState("networkidle");
@@ -1639,7 +1505,7 @@ export const runU005 = () => {
         });
         await allure.step("Step 18: Open Добавить из базы dialog (Open Добавить из базы dialog)", async () => {
             await page.waitForLoadState("networkidle");
-            const button = page.locator('button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn', { hasText: 'Добавить из базы' });
+            const button = page.locator('[data-testid="AddDetal-FileComponent-AddFileButton"]', { hasText: 'Добавить из базы' });
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -1647,14 +1513,14 @@ export const runU005 = () => {
             });
             await page.waitForTimeout(500);
             button.click();
-            // await page.waitForTimeout(5000);
+
         });
         await allure.step("Step 19: Verify that search works for the files table (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(500);
-            // Locate the switch item and highlight it for debugging
-            const switchItems = page.locator('.switch-yui-kit-item');
-            const switchItem = switchItems.nth(0);
+
+            // Locate the switch item using data-testid and highlight it for debugging
+            const switchItem = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"]');
             await switchItem.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -1663,16 +1529,16 @@ export const runU005 = () => {
             await switchItem.click();
             await page.waitForLoadState("networkidle");
 
-            // Locate the parent container of the table
-            const tableContainer = page.locator('.select_file_table.file-window__table');
+            // Locate the parent container of the table using data-testid
+            const tableContainer = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable"]');
             await expect(tableContainer).toBeVisible();
 
             // Locate the table within the container
             const leftTable = tableContainer.locator('table');
             await expect(leftTable).toBeVisible();
 
-            // Locate the search input field
-            const searchField = leftTable.locator('input.search-yui-kit__input');
+            // Locate the search input field using data-testid
+            const searchField = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Search-Dropdown-Input"]');
 
             // Highlight the search field for debugging
             await searchField.evaluate((input) => {
@@ -1720,13 +1586,14 @@ export const runU005 = () => {
 
             console.log("Search verification completed successfully.");
         });
+
         let selectedFileType: string = '';
         let selectedFileName: string = '';
         await allure.step("Step 20: Add the file to the attach list in bottom table (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the parent container of the table
-            const tableContainer = page.locator('.select_file_table.file-window__table');
+            const tableContainer = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Table"]');
             const firstRow = tableContainer.locator('tbody tr:first-child');
             let fileType: string = '';
             selectedFileType = (await firstRow.locator('td').nth(2).textContent()) ?? '';
@@ -1737,14 +1604,15 @@ export const runU005 = () => {
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            const addButton = page.locator('button.button-yui-kit.small.primary-yui-kit.add_button', { hasText: 'Добавить' });
+            const addButton = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton"]', { hasText: 'Добавить' });
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
             await page.waitForTimeout(100);
-            const isButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit.add_button', 'Добавить', false);
+            const isButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton', 'Добавить', false, 'AddDetal-FileComponent-ModalBaseFiles');
+
             expect(isButtonReady).toBeTruthy();
             firstRow.click();
             await firstRow.evaluate((row) => {
@@ -1753,7 +1621,7 @@ export const runU005 = () => {
                 row.style.color = 'blue';
             });
             await page.waitForTimeout(500);
-            const isButtonReady2 = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit.add_button', 'Добавить', true);
+            const isButtonReady2 = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton', 'Добавить', true, 'AddDetal-FileComponent-ModalBaseFiles');
             expect(isButtonReady2).toBeTruthy();
             addButton.click();
             await addButton.evaluate((row) => {
@@ -1762,14 +1630,13 @@ export const runU005 = () => {
                 row.style.color = 'blue';
             });
 
-            //await page.waitForTimeout(5000);
         });
         await allure.step("Step 21: Confirm the file is listed in the bottom table", async () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1000);
             const selectedPartNumber = TEST_FILE; // Replace with actual part number
 
-            const bottomTableLocator = page.locator('[data-testid="table-bottom"]'); // Adjust 'xxxxx' as per actual table id
+            const bottomTableLocator = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-Table"]'); // Adjust 'xxxxx' as per actual table id
             await bottomTableLocator.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -1814,12 +1681,13 @@ export const runU005 = () => {
                 }
             }
             expect(isRowFound).toBeTruthy();
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(500);
         });
         await allure.step("Step 22: Click bottom Add button", async () => {
             await page.waitForLoadState("networkidle");
 
-            const addButton = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Добавить' }).last();
+            const addButton = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton"]', { hasText: 'Добавить' }).last();
+
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -1875,32 +1743,32 @@ export const runU005 = () => {
         });
         await allure.step("Step 24: Удалите первый файл из списка медиафайлов.(Remove the first file from the list of attached media files.)", async () => {
             await page.waitForLoadState("networkidle");
-            let printButton = page.locator('button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit', { hasText: 'Печать' });
+            let printButton = page.locator('[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint"]', { hasText: 'Печать' });
             await printButton.evaluate((checkboxElement) => {
                 checkboxElement.style.backgroundColor = 'yellow';
                 checkboxElement.style.border = '2px solid red';
                 checkboxElement.style.color = 'blue';
             });
-            let isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Печать', false);
+            let isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint', 'Печать', false);
             let deleteButton = page.locator('button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit', { hasText: 'Удалить' });
             await deleteButton.evaluate((checkboxElement) => {
                 checkboxElement.style.backgroundColor = 'yellow';
                 checkboxElement.style.border = '2px solid red';
                 checkboxElement.style.color = 'blue';
             });
-            let isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Удалить', false);
+            let isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc', 'Удалить', false);
             expect(isPrintButtonReady).toBeTruthy();
             expect(isDeleteButtonReady).toBeTruthy();
             // Locate the parent section for the specific table
-            const parentSection = page.locator('section.attach-file-component');
-            console.log("Located parent section for the file tableXXX.");
+            const parentSection = page.locator('[data-testid="AddDetal-FileComponent"]');
+            console.log("Located parent section for the file table.");
 
             // Locate all visible table rows within the scoped section
-            const tableRows = parentSection.locator('tbody .table-yui-kit__tr');
+            const tableRows = parentSection.locator('[data-testid^="AddDetal-FileComponent-DocumentTable-Tbody-TableRow"]');
             const row = tableRows.first();
 
             // Refine the locator to target the checkbox input inside the third column
-            const checkboxInput = row.locator('.table-yui-kit__td:nth-child(3) input[type="checkbox"]');
+            const checkboxInput = row.locator('[data-testid^="AddDetal-FileComponent-DocumentTable-Checkbox"]');
             await checkboxInput.evaluate((checkboxElement) => {
                 checkboxElement.style.backgroundColor = 'green';
                 checkboxElement.style.border = '2px solid red';
@@ -1911,10 +1779,20 @@ export const runU005 = () => {
             // Check the checkbox
             await checkboxInput.check();
             await page.waitForTimeout(100);
-            printButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Печать' });
-            isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Печать', true);
-            deleteButton = page.locator('button.button-yui-kit.small.primary-yui-kit', { hasText: 'Удалить' });
-            isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'button.button-yui-kit.small.primary-yui-kit', 'Удалить', true);
+            printButton = page.locator('[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint"]', { hasText: 'Печать' });
+            await printButton.evaluate((checkboxElement) => {
+                checkboxElement.style.backgroundColor = 'green';
+                checkboxElement.style.border = '2px solid red';
+                checkboxElement.style.color = 'blue';
+            });
+            isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint', 'Печать', true);
+            deleteButton = page.locator('[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc"]', { hasText: 'Удалить' });
+            await deleteButton.evaluate((checkboxElement) => {
+                checkboxElement.style.backgroundColor = 'green';
+                checkboxElement.style.border = '2px solid red';
+                checkboxElement.style.color = 'blue';
+            });
+            isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc', 'Удалить', true);
             expect(isPrintButtonReady).toBeTruthy();
             expect(isDeleteButtonReady).toBeTruthy();
             // Assert that the checkbox is checked
@@ -1927,11 +1805,11 @@ export const runU005 = () => {
                 checkboxElement.style.border = '2px solid red';
                 checkboxElement.style.color = 'blue';
             });
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(500);
         });
 
         await allure.step("Step 25: Save the detail", async () => {
-            const saveButton = page.locator('button.button-yui-kit.medium.primary-yui-kit', { hasText: 'Сохранить' });
+            const saveButton = page.locator('[data-testid="AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save"]', { hasText: 'Сохранить' });
             await saveButton.evaluate((rowElement) => {
                 rowElement.style.backgroundColor = 'green';
                 rowElement.style.border = '2px solid red';

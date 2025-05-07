@@ -131,7 +131,7 @@
       "InputFields": [
         {
           "title": "Обозначение",
-          "datatestid": "AddDetal-Designation-Input-Input",
+          "datatestid": "AddDetal-Information-Input-Input",
           "type": "input"
         },
         {
@@ -146,7 +146,7 @@
         },
         {
           "title": "Медиа файлы",
-          "datatestid": "DragAndDrop-Input",
+          "datatestid": "AddDetal-FileComponent-DragAndDrop-Input",
           "type": "input"
         }
       ],

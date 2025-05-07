@@ -2854,38 +2854,6 @@ export class PageObject extends AbstractPage {
     return titles;
   }
 
-
-
-  async extractNotificationMessage(page: Page): Promise<{ title: string, message: string } | null> {
-    // Define the locator for the dynamic notification div
-    const notificationDiv = page.locator('div.push-notification-yui-kit');
-
-    // Check if the notification div is present
-    const isPresent = await notificationDiv.isVisible();
-    if (!isPresent) {
-      console.log("Notification div is not visible.");
-      return null; // Return null if the div is not present
-    }
-
-    console.log("Notification div is visible.");
-
-    // Extract the title (h4 tag within the notification)
-    const titleLocator = notificationDiv.locator('h4.notification-yui-kit__block-title');
-    const title = await titleLocator.textContent();
-    console.log(`Notification Title: ${title}`);
-
-    // Extract the message (span tag within the notification)
-    const messageLocator = notificationDiv.locator('span.notification-yui-kit__block-text');
-    const message = await messageLocator.textContent();
-    console.log(`Notification Message: ${message}`);
-
-    // Return the extracted title and message
-    return {
-      title: title?.trim() || '', // Trim whitespace and ensure it's a string
-      message: message?.trim() || '' // Trim whitespace and ensure it's a string
-    };
-  }
-
   /** Checks if a button is visible and active/inactive
    * @param selector - selector for the button
    * @param expectedState - expected state of the button ('active' or 'inactive')
@@ -3183,13 +3151,6 @@ export class PageObject extends AbstractPage {
   }
 
   /**
- * Validate a button's visibility and state using its data-testid.
- * Checks if the button is disabled either by attribute or CSS class.
- * @param page - The Playwright page object.
- * @param buttons - Array of button configurations including data-testid, label, and expected state.
- * @param dialogSelector - Optional scoped selector for the dialog or container.
- */
-  /**
 * Validate a button's visibility and state using its data-testid.
 * Checks if the button is disabled either by attribute or CSS class.
 * @param page - The Playwright page object.
@@ -3236,6 +3197,113 @@ export class PageObject extends AbstractPage {
       });
 
       logger.info(`Button "${buttonLabel}" - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
+    }
+  }
+  /**
+     * Validates that the checkbox in the "Главный:" row is not checked.
+     * @param {import('@playwright/test').Page} page - Playwright page object.
+     * @param {import('@playwright/test').Locator} section - Locator for the file section.
+     * @param {number} sectionIndex - Index of the section being checked.
+     * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
+     */
+  async validateCheckbox(page: Page, section: Locator, sectionIndex: number) {
+    const row = section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-Main"]').filter({
+      has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-Main"]:has-text("Главный:")'),
+    });
+
+    await expect(row).toBeVisible();
+    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
+
+    const checkbox = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+    await checkbox.evaluate((el) => {
+      el.style.backgroundColor = 'yellow';
+      el.style.border = '2px solid red';
+      el.style.color = 'blue';
+    });
+
+    await expect(checkbox).toBeVisible();
+    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
+
+    const isChecked = await checkbox.isChecked();
+    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? "Checked" : "Not Checked"}`);
+
+    return isChecked; // Return the checkbox state
+  }
+  /**
+     * Checks the checkbox in the "Главный:" row and applies styling.
+     * @param {import('@playwright/test').Page} page - Playwright page object.
+     * @param {import('@playwright/test').Locator} section - Locator for the file section.
+     * @param {number} sectionIndex - Index of the section being checked.
+     * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
+     */
+  async checkCheckbox(page: Page, section: Locator, sectionIndex: number) {
+    const row = section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-Main"]').filter({
+      has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-Main"]:has-text("Главный:")'),
+    });
+
+    await expect(row).toBeVisible();
+    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
+
+    const checkbox = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+
+    // Restore the styling
+    await checkbox.evaluate((el) => {
+      el.style.backgroundColor = 'green';
+      el.style.border = '2px solid red';
+      el.style.color = 'blue';
+    });
+
+    await expect(checkbox).toBeVisible();
+    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
+
+    await checkbox.check();
+    const isChecked = await checkbox.isChecked();
+    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? "Checked" : "Not Checked"}`);
+
+    return isChecked; // Return the checkbox state for validation
+  }
+
+  /**
+     * Validates that all uploaded file fields contain the correct filename without extension.
+     * @param {Page} page - Playwright page object.
+     * @param {Locator[]} fileSections - Array of file section locators.
+     * @param {string[]} uploadedFiles - Array of uploaded file names.
+     */
+  async validateFileNames(page: Page, fileSections: Locator[], uploadedFiles: string[]): Promise<void> {
+    if (fileSections.length !== uploadedFiles.length) {
+      throw new Error(`Mismatch: Expected ${uploadedFiles.length} files, but found ${fileSections.length} sections.`);
+    }
+
+    for (let i = 0; i < fileSections.length; i++) {
+      const fileSection = fileSections[i]; // Extract each file section dynamically
+
+      const row = fileSection.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-FileName"]').filter({
+        has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-FileName"]:has-text("Файл:")'),
+      });
+      await row.evaluate((element: HTMLElement) => {
+        element.style.backgroundColor = 'yellow';
+        element.style.border = '2px solid red';
+        element.style.color = 'blue';
+      });
+
+      await expect(row).toBeVisible();
+      console.log(`Row for file ${i + 1} containing label 'Файл:' is visible.`);
+
+      const input = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]');
+      await expect(input).toBeVisible();
+      console.log(`Input field for file ${i + 1} is visible.`);
+
+      const expectedFilename = uploadedFiles[i].split('.')[0];
+      const actualInputValue = await input.inputValue();
+      console.log(`Expected filename: ${expectedFilename}, Actual input value: ${actualInputValue}`);
+      expect(actualInputValue).toBe(expectedFilename);
+
+      // Highlight for debugging
+      await input.evaluate((element: HTMLElement) => {
+        element.style.backgroundColor = 'green';
+        element.style.border = '2px solid red';
+        element.style.color = 'blue';
+      });
     }
   }
 }
