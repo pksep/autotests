@@ -58,4 +58,3 @@ test.skip("Test Case 01 - Changing the material of the workpiece", async ({ page
         await partsDatabase.checkingTheEditorPageDetails(TypeOfOperationMW.edit)
     })
 })
-

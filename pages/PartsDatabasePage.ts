@@ -2063,63 +2063,42 @@ export class CreatePartsDatabasePage extends PageObject {
      * @param fields - An array of field definitions (each with title and type).
      * @returns A Promise that resolves to true if all fields validate correctly.
      */
-    async validateInputFields(page: Page, fields: { title: string; type: string }[]): Promise<boolean> {
+    async validateInputFields(page: Page, fields: { title: string; datatestid: string; type: string }[]): Promise<boolean> {
         try {
             for (const field of fields) {
-                let fieldLocator;
-                switch (field.type) {
-                    case "input":
-                        if (field.title === "Медиа файлы") {
-                            // For file inputs, use the visible label (assuming it contains "Прикрепить документ")
-                            fieldLocator = page.locator('label.dnd-yui-kit__label:has-text("Прикрепить документ")');
-                            await fieldLocator.evaluate((row) => {
-                                row.style.backgroundColor = 'yellow';
-                                row.style.border = '2px solid red';
-                                row.style.color = 'blue';
-                            });
-                        } else {
-                            // For normal text input fields (e.g. "Обозначение", "Наименование")
-                            fieldLocator = page.locator(`div.editor__information-inputs:has-text("${field.title}") input`);
-                            await fieldLocator.evaluate((row) => {
-                                row.style.backgroundColor = 'yellow';
-                                row.style.border = '2px solid red';
-                                row.style.color = 'blue';
-                            });
-                        }
-                        break;
-                    case "textarea":
-                        // For "Описание / Примечание", look inside the description section
-                        fieldLocator = page.locator(`section.editor__description:has(h3:has-text("${field.title}")) textarea`);
-                        await fieldLocator.evaluate((row) => {
-                            row.style.backgroundColor = 'yellow';
-                            row.style.border = '2px solid red';
-                            row.style.color = 'blue';
-                        });
-                        break;
-                    default:
-                        console.error(`Unsupported field type: ${field.type} for field "${field.title}"`);
-                        return false;
-                }
+                // Locate the field using data-testid
+                const fieldLocator = page.locator(`[data-testid="${field.datatestid}"]`);
 
-                // Check that the field (or its visible label for file inputs) is visible.
-                if (!(await fieldLocator.isVisible())) {
+                await fieldLocator.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+
+                // Check that the field is visible
+                if (field.datatestid !== "AddDetal-FileComponent-DragAndDrop-Input" && !(await fieldLocator.isVisible())) {
                     console.error(`Field "${field.title}" is not visible.`);
                     return false;
                 }
 
-                // Verify writability if it’s a text field.
-                if (!(field.type === "input" && field.title === "Медиа файлы")) {
-                    const testValue = "Test Value";
-                    await fieldLocator.fill(testValue);
-                    const currentValue = await fieldLocator.inputValue();
-                    if (currentValue !== testValue) {
-                        console.error(`Field "${field.title}" is not writable. Expected "${testValue}", but got "${currentValue}".`);
-                        return false;
+
+                // Verify writability if it’s a text field
+                if (field.type === "input" || field.type === "textarea") {
+                    if (field.datatestid !== "AddDetal-FileComponent-DragAndDrop-Input") { // Exclude file upload input field
+                        const testValue = "Test Value";
+                        await fieldLocator.fill(testValue);
+                        const currentValue = await fieldLocator.inputValue();
+                        if (currentValue !== testValue) {
+                            console.error(`Field "${field.title}" is not writable. Expected "${testValue}", but got "${currentValue}".`);
+                            return false;
+                        }
                     }
                 }
 
+
                 console.log(`Field "${field.title}" is visible and ${(field.type === "input" && field.title === "Медиа файлы") ? "present" : "writable"}.`);
             }
+
             console.log("All input fields validated successfully.");
             return true;
         } catch (error) {

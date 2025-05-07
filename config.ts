@@ -175,8 +175,9 @@ export const SELECTORS = {
         CREATEDETAIL: {
             URL: "detal/add",
             TEXT_RUS: "Создать деталь",
-            TEXT_ENG: "Create a part",
-            DATA_TESTID: "",
+            TEXT_ENG: "Create Part",
+            DATA_TESTID: "BaseDetals-Button-Create",
         },
-    }
+    },
+
 };

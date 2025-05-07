@@ -63,21 +63,25 @@
         "buttonsBefore": [
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+			"datatestid": "BaseDetals-Button-Edit",												 
             "label": "Редактировать",
             "state": "false"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+			"datatestid": "BaseDetals-Button-Create",									   
             "label": "Создать",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+			"datatestid": "BaseDetals-Button-CreateCopy",										   
             "label": "Создать копированием",
             "state": "false"
           } ,
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
+			"datatestid": "BaseDetals-Button-Archive",										
             "label": "Архив",
             "state": "false"
           }               
@@ -85,16 +89,19 @@
         "filters": [
           {
             "class": "button.filters__btn",
+			"datatestid": "BaseDetals-Filter-Component-SortByAttention",									 
             "label": "Сортировать по отметке",
             "state": "true"
           },
           {
             "class": "button.filters__btn",
+			"datatestid": "BaseDetals-Filter-Component-SortByDate",							 
             "label": "Сортировать по дате создания",
             "state": "true"
           },
           {
             "class": "button.filters__btn",
+			"datatestid": "BaseDetals-Filter-Component-SortByOwn",
             "label": "Показать мои",
             "state": "false"
           }
@@ -231,4 +238,3 @@
       }
     }
   }
-  
