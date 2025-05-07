@@ -99,19 +99,19 @@ export const runU005 = () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
-            const buttons = testData2.elements.MainPage.buttons;
+            const buttons = testData2.elements.MainPage.buttonsBefore;
             // Iterate over each button in the array
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
                 const buttonDataTestId = button.datatestid;
                 const buttonLabel = button.label;
                 let expectedState = button.state === "true" ? true : false; // Convert state string to a boolean
-                if (buttonLabel == "Редактировать" || "Создать копированием") {
+                /*if (buttonLabel == "Редактировать" || "Создать копированием") {
                     expectedState = false
                 }
                 if (buttonLabel == "Создать") {
                     expectedState = true
-                }
+                }*/
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled

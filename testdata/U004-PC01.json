@@ -45,7 +45,33 @@
           "class": "button.button-yui-kit.small.primary-yui-kit",
           "datatestid": "BaseDetals-Button-Create",
           "label": "Создать",
+          "state": "true"
+        },
+        {
+          "class": "button.button-yui-kit.small.primary-yui-kit",
+          "datatestid": "BaseDetals-Button-CreateCopy",
+          "label": "Создать копированием",
+          "state": "true"
+        } ,
+        {
+          "class": "button.button-yui-kit.small.primary-yui-kit",
+          "datatestid": "BaseDetals-Button-Archive",
+          "label": "Архив",
+          "state": "true"
+        }               
+      ],
+      "buttonsBefore": [
+        {
+          "class": "button.button-yui-kit.small.primary-yui-kit",
+          "datatestid": "BaseDetals-Button-Edit",
+          "label": "Редактировать",
           "state": "false"
+        },
+        {
+          "class": "button.button-yui-kit.small.primary-yui-kit",
+          "datatestid": "BaseDetals-Button-Create",
+          "label": "Создать",
+          "state": "true"
         },
         {
           "class": "button.button-yui-kit.small.primary-yui-kit",
@@ -56,28 +82,6 @@
         {
           "class": "button.button-yui-kit.small.primary-yui-kit",
           "datatestid": "BaseDetals-Button-Archive",
-          "label": "Архив",
-          "state": "false"
-        }               
-      ],
-      "buttonsBefore": [
-        {
-          "class": "button.button-yui-kit.small.primary-yui-kit",
-          "label": "Редактировать",
-          "state": "false"
-        },
-        {
-          "class": "button.button-yui-kit.small.primary-yui-kit",
-          "label": "Создать",
-          "state": "true"
-        },
-        {
-          "class": "button.button-yui-kit.small.primary-yui-kit",
-          "label": "Создать копированием",
-          "state": "false"
-        } ,
-        {
-          "class": "button.button-yui-kit.small.primary-yui-kit",
           "label": "Архив",
           "state": "false"
         }               
