@@ -2715,13 +2715,6 @@ export const runU004 = () => {
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        // await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-        //     // Wait for loading
-        //     await page.waitForLoadState("networkidle");
-
-        //     const rowCount = await leftTable.locator('tbody tr').count();
-        //     expect(rowCount).toBeGreaterThan(0);
-        // });
         await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
             await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
@@ -2918,9 +2911,11 @@ export const runU004 = () => {
                     logger.info(`Selected row found in row ${i + 1}`);
                     //change the value in the Обозначение column
 
-                    const assignmentCell = row.locator(
-                        'td.table-yui-kit__td fieldset input.input-yui-kit__input[type="text"]'
-                    );
+                    // const assignmentCell = row.locator(
+                    //     'td.table-yui-kit__td fieldset input.input-yui-kit__input[type="text"]'
+                    // );
+                    const assignmentCell = row.locator('[data-testid="ModalBaseMaterial-Designation-Input-Input"]');
+
                     assignmentCell.fill(TESTCASE_2_PRODUCT_ASSIGNEMENT);
                     await page.waitForTimeout(1000);
                     break;
@@ -4710,7 +4705,7 @@ export const runU004 = () => {
             let expectedState = true;
             const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
             await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(1000);
 
                 // Locate the button using data-testid instead of class selectors
 
@@ -4855,18 +4850,18 @@ export const runU004 = () => {
         table2Locator = page.locator(`[data-testid="${MAIN_PAGE_Д_TABLE}"]`);
         await allure.step("Step 18: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(2000);
             await table2Locator!.locator('input.search-yui-kit__input').fill(TESTCASE_2_PRODUCT_Д);
             await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(2000);
             // Optionally, validate that the search input is visible
             await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible();
         });
         await allure.step("Step 19: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-
+            await page.waitForTimeout(1000);
             // Get the value of the first cell in the first row
             firstCellValue = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)').innerText();
             firstCell = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)');
@@ -5984,6 +5979,4 @@ export const runU004 = () => {
         const material = await page1.textContent(`[data-testid='material-entry']`);
         expect(material).toContain('Modified Расходные материалы');
     });
-
-
 }
