@@ -27,17 +27,7 @@ const baseFileNamesToVerify = [
 
 export const runU005 = () => {
 
-    test.beforeEach("Test Case 00 - Authorization", async ({ page }) => {
-        await allure.step("Step 00: Authentication", async () => {
-            // Perform login directly on the provided page fixture
-            await performLogin(page, "001", "Перов Д.А.", "54321");
-            await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
-            await page.locator('[data-testid="LoginForm-Login-Button"]').click();
 
-            const targetH3 = page.locator('h3[data-testid="BasePage-Title"]').filter({ hasText: "План по операциям" });
-            await expect(targetH3).toBeVisible();
-        });
-    });
     test("TestCase 01 - создат дитайл - Проверка страница", async ({ browser, page }) => {
         test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);

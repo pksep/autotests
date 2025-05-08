@@ -155,13 +155,13 @@ export const testSuites = {
                 description: 'This test checks the User Scenario series of tests U004',
             },
             {
-                test: runU002,
-                description: 'This test checks the User Scenario series of tests U002',
-            },
-            {
                 test: runU001,
                 description: 'This test checks the User Scenario series of tests U001',
             },
+            {
+                test: runU002,
+                description: 'This test checks the User Scenario series of tests U002',
+            }
             // Add more test cases as needed
         ],
     },

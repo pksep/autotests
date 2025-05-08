@@ -52,18 +52,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         `Starting test: Verify Order From Suppliers Page Functionality`
     );
 
-    test.beforeEach("Test Case 55 - Authorization", async ({ page }) => {
-        await allure.step("Step 088: Authentication", async () => {
-            // Perform login directly on the provided page fixture
-            await performLogin(page, "001", "Перов Д.А.", "54321");
-            await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
-            await page.locator('[data-testid="LoginForm-Login-Button"]').click();
-
-            const targetH3 = page.locator('h3:has-text("План по операциям")');
-            await expect(targetH3).toBeVisible();
-        });
-    });
-
     test.skip("Спецификация", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
 

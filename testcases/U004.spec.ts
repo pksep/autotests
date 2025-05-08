@@ -98,20 +98,6 @@ export const runU004 = () => {
     logger.info(`Starting test U004`);
 
 
-    test.beforeEach("Test Case 00 - Authorization", async ({ page }) => {
-        await allure.step("Step 00: Authentication", async () => {
-            // Perform login directly on the provided page fixture
-            await performLogin(page, "001", "Перов Д.А.", "54321");
-            await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
-            await page.locator('[data-testid="LoginForm-Login-Button"]').click();
-            await page.waitForTimeout(500);
-
-            const targetH3 = page.locator('h3:has-text("План по операциям")');
-            await expect(targetH3).toBeVisible();
-        });
-    });
-
-
     test("TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))", async ({ browser, page }) => {
         test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);
@@ -4908,7 +4894,7 @@ export const runU004 = () => {
             const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
             await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                 // Locate the button using data-testid instead of class selectors
-
+                await page.waitForTimeout(500);
                 const isButtonReady = await shortagePage.isButtonVisibleTestId(
                     page,
                     buttonDataTestId, // Use data-testid instead of class
