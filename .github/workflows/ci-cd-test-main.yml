@@ -53,7 +53,9 @@ jobs:
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           cd ~
-          rm -rf sep_erp_server sep_erp_client
+          rm -rf sep_erp_server_ sep_erp_client_
+          mv sep_erp_server sep_erp_server_
+          mv sep_erp_client sep_erp_client_
           git clone git@github.com:your-org/sep_erp_server.git
           git clone git@github.com:your-org/sep_erp_client.git
           EOF
