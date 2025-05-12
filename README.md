@@ -4,7 +4,7 @@ English
 
 ### Introduction
 
-In this tutorial, we will explore different approaches to structuring your Playwright test classes using TypeScript. We'll start by understanding your initial code structure, then dive into two scenarios: extending abstract classes and extending the Playwright `Page` class directly. Finally, we'll list the advantages and disadvantages of each approach and provide a recommendation based on the needs of your project.
+In this tutorial, we will explore different approaches to structuring your Playwright test classes using TypeScript. We'll start by understanding your initial code structure, then dive into two scenarios: extending abstract classes and extending the Playwright `Page` class directly. Finally, we'll list the advantages and disadvantages of each approach and provide a recommendation based on the needs of your project.   
 
 ### Initial Code Structure
 
