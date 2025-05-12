@@ -42,7 +42,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.AUTOTEST_ACTIONS }}" | tr -d '\r' > ~/.ssh/id_rsa
+          echo "${{ secrets.AUTOTEST_ACTIONS }}" | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
 
