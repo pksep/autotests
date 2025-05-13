@@ -46,9 +46,6 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
 
-      - name: Test SSH Connection
-        run: ssh -vvv -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 "echo Connected successfully!"
-        
       - name: Connect to Server and Clone Repositories
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
@@ -56,8 +53,8 @@ jobs:
           rm -rf sep_erp_server_ sep_erp_client_
           mv sep_erp_server sep_erp_server_
           mv sep_erp_client sep_erp_client_
-          git clone git@github.com:your-org/sep_erp_server.git
-          git clone git@github.com:your-org/sep_erp_client.git
+          git clone git@github.com:NPO-Automotive/sep_erp_server.git
+          git clone git@github.com:NPO-Automotive/sep_erp_client.git
           EOF
 
       - name: Push Target Branch to Server and Start Server
