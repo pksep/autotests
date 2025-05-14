@@ -9,7 +9,8 @@ import testData1 from '../testdata/PD18-T1.json'; // Import your test data
 import testData2 from '../testdata/PD18-T2.json'; // Import your test data
 import testData3 from '../testdata/PD18-T3.json'; // Import your test data
 
-
+const TEST_PRODUCT = 'Т15';
+const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";
 const LEFT_DATA_TABLE = "BasePaginationTable-Table-Component-product";
 const LEFT_DATA_TABLE_URGENCY_DATA_COL = "ShipmentsListTable-TableRow-HeaderDateByUrgency";
 const LEFT_DATA_TABLE_PLANNED_DATA_COL = "ShipmentsListTable-TableRow-HeaderDateShipmentPlan";
@@ -32,41 +33,35 @@ const RIGHT_MODAL_TABLE_COL3 = "ModalShipmentsToIzed-thead-th3-buyers";
 const RIGHT_MODAL_TABLE_COL4 = "ModalShipmentsToIzed-thead-th4-buyers";
 const RIGHT_DATA_TABLE_CELL_X = "AssemblySclad-PrintTableBody-";
 const LEFT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
+const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
+
+const EDIT_PAGE_SPECIFICATIONS_TABLE = "Spectification-TableSpecification-Product";
+
 // Страница: База деталей
 export const runTC100 = () => {
     logger.info(`Starting test: Validating full specifications ( Полная спецификация ) for an item on parts database Page`);
     ;
 
-    // Use a separate step to initialize the База деталей
-    test.beforeEach(async ({ page }) => {
-        const shortagePage = new CreatePartsDatabasePage(page);
 
-        await allure.step('Step 1: Open the login page and login', async () => {
-            await performLogin(page, '001', 'Перов Д.А.', '54321');
-        });
 
-        await allure.step('Step 2: Navigate to Склад', async () => {
-            await page.waitForTimeout(5000);
-            await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-        });
 
-    });
-    test.skip('Test Case 0: База деталей Page - Scan tables within a specific element', async ({ page }) => {
-        test.setTimeout(0);
-        allure.label('severity', 'normal');
-        allure.label('epic', 'База деталей');
-        allure.label('feature', 'База деталей');
-        allure.label('story', 'Verify table structures');
-        allure.description('Verify  База деталей Page - Scan tables within a specific element.');
+    // test.skip('Test Case 0: База деталей Page - Scan tables within a specific element', async ({ page }) => {
+    //     test.setTimeout(0);
+    //     allure.label('severity', 'normal');
+    //     allure.label('epic', 'База деталей');
+    //     allure.label('feature', 'База деталей');
+    //     allure.label('story', 'Verify table structures');
+    //     allure.description('Verify  База деталей Page - Scan tables within a specific element.');
 
-        await allure.step('Step 1: Validate the structure of the tables on the page', async () => {
-            const shortagePage = new CreatePartsDatabasePage(page);
-            await page.waitForLoadState('networkidle');
-            const result = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
-            expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
-        });
-    });
+    //     await allure.step('Step 1: Validate the structure of the tables on the page', async () => {
+    //         const shortagePage = new CreatePartsDatabasePage(page);
+    //         await page.waitForLoadState('networkidle');
+    //         const result = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
+    //         expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
+    //     });
+    // });
     test('Test Case 1: База деталей Page - process all products with recursive logic', async ({ page }) => {
+
         test.setTimeout(2147483);
         allure.label('severity', 'normal');
         allure.label('epic', 'База деталей');
@@ -77,57 +72,97 @@ export const runTC100 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         let dataRows: Locator[]; // Holds rows of all products
 
-        await allure.step('Step 1: Get a list of all products in the first table', async () => {
-            await page.waitForLoadState('networkidle');
-            const table = page.locator(`[data-testid="BasePaginationTable-Table-Product"]`);
-            dataRows = await shortagePage.getAllDataRows(table);
-            logger.info(`Found ${dataRows.length} products.`);
+        await allure.step('Step 0: Navigate to Parts Database', async () => {
+            await page.waitForTimeout(5000);
+            await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+        });
+        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+        await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+        });
+        await allure.step("Step 04: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
+            await page.waitForLoadState("networkidle");
+            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();//DATA_TESTID
+        });
+        await allure.step("Step 05: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
+            // Locate the search field within the left table and fill it
+            await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);//DATA_TESTID
+            await page.waitForLoadState("networkidle");
+            // Optionally, validate that the search input is visible
+            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+
+        });
+        await allure.step("Step 06: Проверяем, что введенное значение в поиске совпадает с переменной. (Verify the entered search value matches the variable)", async () => {
+            await page.waitForLoadState("networkidle");
+            // Locate the search field within the left table and validate its value
+            await expect(leftTable.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT); //DATA-TESTID
+        });
+        await allure.step("Step 07: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
+            // Simulate pressing "Enter" in the search field
+            await leftTable.locator('input.search-yui-kit__input').press('Enter');//DATA-TESTID
+            await page.waitForLoadState("networkidle");
+        });
+        await allure.step("Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
+            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+        });
+        let firstCellValue = '';
+        let secondCellValue = '';
+        let thirdCellValue = '';
+
+        await allure.step("Step 09: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable.)", async () => {
+            // Wait for the page to stabilize
+            await page.waitForLoadState("networkidle");
+
+            // Get the value of the first cell in the first row
+            firstCellValue = await leftTable.locator('tbody tr:first-child td:nth-child(1)').innerText();
+            firstCellValue = firstCellValue.trim();
+            // Get the value of the second cell in the first row
+            secondCellValue = await leftTable.locator('tbody tr:first-child td:nth-child(2)').innerText();
+            secondCellValue = secondCellValue.trim();
+            // Get the value of the third cell in the first row
+            thirdCellValue = await leftTable.locator('tbody tr:first-child td:nth-child(3)').innerText();
+            thirdCellValue = thirdCellValue.trim();
+
+            // Confirm that the first cell contains the search term
+            expect(secondCellValue).toContain(TEST_PRODUCT); // Validate that the value matches the search term
+        });
+        await allure.step("Step 10: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
+            // Wait for loading
+            await page.waitForLoadState("networkidle");
+            // Find the first row in the table
+            const firstRow = leftTable.locator('tbody tr:first-child');
+            await firstRow.evaluate((row) => {
+                row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
+                row.style.border = '2px solid red';  // Add a red border for extra visibility
+                row.style.color = 'blue'; // Change text color to blue
+            });
+            // Wait for the row to be visible and click on it
+            await firstRow.waitFor({ state: 'visible' });
+            await firstRow.hover();
+            await firstRow.click();
+            await page.waitForTimeout(500);
+        });
+        const firstRow = leftTable.locator('tbody tr:first-child');
+        // Locate the "Редактировать" button
+        const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
+
+
+        await allure.step("Step 12: Нажимаем по данной кнопке. (Press the button)", async () => {
+            // Wait for the page to stabilize
+            await page.waitForLoadState("networkidle");
+
+            await editButton.click();
+            // Debugging pause to verify visually in the browser
+            await page.waitForTimeout(500);
         });
 
-        await allure.step('Step 2: Process each product row and its tables', async () => {
-            //dataRows.shift();
-            dataRows.shift();
-            //dataRows.shift();
-            for (const row of dataRows) {
-                const rowHtml = await row.evaluate((el: Element) => el.outerHTML);
-                const articleLocator = row.locator('[data-testid="TableProduct-TableArticle"]');
-                const nameLocator = row.locator('[data-testid="TableProduct-TableName"]');
+        await allure.step('Step 1: Parse the Product Specifications Table', async () => {
 
-                // Extract the text content of the article and name
-                const article = await articleLocator.textContent();
-                const name = await nameLocator.textContent();
-
-                // Log the output in the required format
-                if (article && name) {
-                    console.log(`Processing product: ${article.trim()} - ${name.trim()}`);
-                } else {
-                    console.error('Failed to extract product information from the row.');
-                }
-                const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
-
-                // Extract the text content of the designation field
-                const designation = await designationLocator.textContent() ?? '';
-
-                await shortagePage.processProduct(row, shortagePage, page, designation);
-
-                await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500); // Clicked the в база button
-
-                shortagePage.printGlobalTableData();
-
-                await allure.step('Step 2.1: Compare the full specifications page results with the previous scan results', async () => {
-                    //row.click();
-                    //await shortagePage.findAndClickElement(page, 'BaseDetals-Button-EditProduct', 500);
-                    const designationLocator = row.locator('[data-testid="TableProduct-TableDesignation"]');
-                    // Extract the text content of the designation field
-                    const designation = await designationLocator.textContent() ?? '';
-                    await shortagePage.getProductSpecificationsTable(row, shortagePage, page, designation);
-                    await page.mouse.click(1, 1);
-                    await shortagePage.findAndClickElement(page, 'EditProduct-ButtonControl-Status', 500);
-                    //await page.pause();
-                });
-                break;
-            }
+            const parsedData = await shortagePage.parseRecursiveStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
+            console.log('Parsed Table Data:', JSON.stringify(parsedData, null, 2));
         });
+
+
 
     });
 

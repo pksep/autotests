@@ -12,19 +12,13 @@
  *     npm install winston-daily-rotate-file
  */
 
-
 export const ENV = {
-    BASE_URL: process.env.BASE_URL || "http://dev.npoamotiv.ru/",
-    HEADLESS: false,
+    BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
+    HEADLESS: process.env.HEADLESS === "true",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    DEBUG: false,
-    TEST_SUITE: 'page002',
+    TEST_SUITE: 'TC100',
     TEST_DIR: '.',
-
-    //TEST_SUITE: 'pageCreatePart'
-    //TEST_SUITE: 'pageProductShortage'
-    // TEST_SUITE: 'pageOrderedFromSuppliers',
-    //TEST_SUITE: "U001",
+    DEBUG: false,
 };
 
 export const SELECTORS = {
@@ -177,4 +171,13 @@ export const SELECTORS = {
             DATA_TESTID: "menu-archive",
         },
     },
+    SUBPAGES: {
+        CREATEDETAIL: {
+            URL: "detal/add",
+            TEXT_RUS: "Создать деталь",
+            TEXT_ENG: "Create Part",
+            DATA_TESTID: "BaseDetals-Button-Create",
+        },
+    },
+
 };

@@ -4,9 +4,11 @@ on:
   pull_request:
     branches:
       - main
+      - canary
   push:
     branches:
       - main
+      - canary
 
 permissions:
   contents: write
@@ -32,8 +34,78 @@ jobs:
           fetch-depth: 0
           submodules: false
 
+      - name: Get Branch Name and Target Branch
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "TARGET_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUTOTEST_ACTIONS }}" | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
+
+      - name: Update Existing Repositories
+        run: |
+          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          cd ~/sep_erp_server/sep_erp_server  # Corrected path
+          git fetch --all
+          git pull origin main
+
+          cd ~/sep_erp_client
+          git fetch --all
+          git pull origin main
+          EOF
+
+      - name: Push Target Branch to Server and Start Server
+        run: |
+          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          cd ~/sep_erp_server/sep_erp_server  # Corrected path
+          git fetch --all
+          git checkout $TARGET_BRANCH
+          git pull origin $TARGET_BRANCH
+          pnpm i
+          nohup pnpm run start:dev > server.log 2>&1 &
+
+          cd ~/sep_erp_client
+          git fetch --all
+          git checkout $TARGET_BRANCH
+          git pull origin $TARGET_BRANCH
+          pnpm i
+          nohup pnpm run serve > client.log 2>&1 &
+          EOF
+
+      - name: Wait for Server and Client to Start
+        run: sleep 30  # Adjust based on startup time
+
+      - name: Merge Branch into Target Without Committing
+        run: |
+          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          cd ~/sep_erp_server/sep_erp_server  # Corrected path
+          git fetch --all
+          git checkout $TARGET_BRANCH
+          git pull origin $TARGET_BRANCH
+          git merge --no-commit --no-ff $BRANCH_NAME
+
+          cd ~/sep_erp_client
+          git fetch --all
+          git checkout $TARGET_BRANCH
+          git pull origin $TARGET_BRANCH
+          git merge --no-commit --no-ff $BRANCH_NAME
+          EOF
+
+      - name: Verify Merge Status
+        run: |
+          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          cd ~/sep_erp_server/sep_erp_server  # Corrected path
+          git status
+          cd ~/sep_erp_client
+          git status
+          EOF
+
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '22.13.1'
           cache: 'npm'
@@ -42,8 +114,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ hashFiles('**/package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
+            playwright-${{ runner.os }}-
             playwright-
 
       - name: Install dependencies
@@ -58,7 +131,7 @@ jobs:
       - name: Run Playwright tests with xvfb
         env:
           TEST_DIR: '.'
-          BASE_URL: 'http://dev.npoamotiv.ru'
+          BASE_URL: 'http://dev.pksep.ru/'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
       - name: Upload Allure results
@@ -102,7 +175,7 @@ jobs:
           publish_branch: gh-pages
           publish_dir: allure-history
           force_orphan: true
-          
+
       - name: Cleanup
         if: always()
         run: |
