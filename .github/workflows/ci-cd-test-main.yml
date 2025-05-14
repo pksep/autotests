@@ -39,8 +39,8 @@ jobs:
           echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           echo "TARGET_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
 
-      - name: Set up SSH
-        run: |
+      #- name: Set up SSH
+      #  run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.AUTOTEST_ACTIONS }}" | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
