@@ -2142,8 +2142,12 @@ export class CreatePartsDatabasePage extends PageObject {
  * @param tableTestId - The data-testid of the table to parse.
  * @returns A Promise that resolves to an object containing categorized groups (СБ, Д, ПД, РМ).
  */
-
-    async parseRecursiveStructuredTable(page: Page, tableTestId: string, multiplier: number = 1): Promise<{ [key: string]: any[] }> {
+    parsedData: { [key: string]: any[] } = { СБ: [], Д: [], ПД: [], РМ: [] };
+    async parseRecursiveStructuredTable(
+        page: Page,
+        tableTestId: string,
+        multiplier: number = 1
+    ): Promise<void> {
         const table = page.locator(`[data-testid="${tableTestId}"]`);
         await table.locator('tr').first().waitFor({ state: 'visible' });
 
@@ -2152,41 +2156,38 @@ export class CreatePartsDatabasePage extends PageObject {
             throw new Error('No rows found in the table.');
         }
 
-        // Initialize groups
-        let parsedData: { [key: string]: any[] } = {
-            СБ: [],
-            Д: [],
-            ПД: [],
-            РМ: []
-        };
-
         let currentGroup: 'СБ' | 'Д' | 'ПД' | 'РМ' | null = null;
         const groupOrder: ('СБ' | 'Д' | 'ПД' | 'РМ')[] = ['СБ', 'Д', 'ПД', 'РМ'];
+        let groupDetected = new Set<string>(); // **Track detected groups**
 
         for (const row of rows) {
             try {
                 // Extract row's cell data
                 const headerCell = await row.$('td[colspan="5"]:not(:has(table))');
 
-                // **Check if this row is a Group Header**
+                // **Detect group headers (only if not already set in this section)**
                 if (headerCell) {
                     const text = await headerCell.textContent();
                     if (text) {
                         for (const group of groupOrder) {
                             if (text.includes(group) || (group === "СБ" && text.includes("Сборочная единица"))) {
-                                currentGroup = group;
-                                console.log(`Detected group header: ${currentGroup}`);
+                                if (!groupDetected.has(group)) {
+                                    currentGroup = group;
+                                    groupDetected.add(group); // **Mark this group as detected**
+                                    console.log(`Detected group header: ${currentGroup}`);
+                                }
                                 continue; // Move to the next row
                             }
                         }
                     }
                 }
 
-                // **Process only rows after detecting a valid group header**
-                if (currentGroup) {
+                // **Process rows after detecting a valid group header**
+                if (currentGroup && groupDetected.has(currentGroup)) {
                     const nestedTableCell = await row.$('td[colspan="5"]:has(table)');
                     if (nestedTableCell) {
                         const nestedRows = await nestedTableCell.$$('table tbody > tr');
+
                         for (const nestedRow of nestedRows) {
                             const rowData: string[] = [];
                             const cells = await nestedRow.$$('td');
@@ -2197,43 +2198,14 @@ export class CreatePartsDatabasePage extends PageObject {
                             }
 
                             if (rowData.length === 5) {
-                                const item: { designation: string; name: string; unit: string; quantity: number; nestedGroups: any[] } = {
+                                const item = {
                                     designation: rowData[1], // Обозначение
                                     name: rowData[2], // Наименование
                                     unit: rowData[3], // Ед.
-                                    quantity: parseInt(rowData[4], 10) * multiplier, // Кол-во, multiplied by parent quantity
-                                    nestedGroups: [] // Placeholder for recursive expansion
+                                    quantity: parseInt(rowData[4], 10) * multiplier, // Кол-во
                                 };
 
-                                parsedData[currentGroup].push(item);
-
-                                // **Check for a modal trigger inside the row (for СБ items)**
-                                if (currentGroup === 'СБ') {
-                                    const modalTrigger = await nestedRow.$('a[data-testid*="OpenModal"]');
-                                    if (modalTrigger) {
-                                        console.log(`Opening modal for СБ item: ${rowData[1]} with quantity ${item.quantity}`);
-
-                                        await modalTrigger.click();
-
-                                        // Wait for the modal’s table to appear.
-                                        const modalTableTestId = "ModalTableTestId"; // Adjust this value as needed.
-                                        const modalTable = page.locator(`[data-testid="${modalTableTestId}"]`);
-                                        await modalTable.waitFor({ state: 'visible' });
-
-                                        console.log(`Navigating to modal table: ${modalTableTestId}`);
-                                        const nestedItems = await parseRecursiveStructuredTable(page, modalTableTestId, item.quantity);
-
-                                        // Extend the original item with the new nested groups
-                                        item.nestedGroups.push(...nestedItems["СБ"]);
-
-                                        // Close the modal (assuming a close button exists).
-                                        const closeModalBtn = page.locator('[data-testid*="CloseModal"]');
-                                        if (await closeModalBtn.count() > 0) {
-                                            await closeModalBtn.first().click();
-                                            await modalTable.waitFor({ state: 'hidden' });
-                                        }
-                                    }
-                                }
+                                this.parsedData[currentGroup].push(item);
                             }
                         }
                     }
@@ -2242,9 +2214,11 @@ export class CreatePartsDatabasePage extends PageObject {
                 console.error(`Error processing row: ${error}`);
             }
         }
-
-        return parsedData;
     }
+
+
+
+
 
 
 
