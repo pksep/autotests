@@ -2142,7 +2142,7 @@ export class CreatePartsDatabasePage extends PageObject {
  * @param tableTestId - The data-testid of the table to parse.
  * @returns A Promise that resolves to an object containing categorized groups (СБ, Д, ПД, РМ).
  */
-    parsedData: { [key: string]: any[] } = { СБ: [], Д: [], ПД: [], РМ: [] };
+    parsedData: { [key: string]: any[] } = { СБ: [], Д: [], ПД: [], МД: [], РМ: [] };
     async parseRecursiveStructuredTable(
         page: Page,
         tableTestId: string,
@@ -2156,8 +2156,8 @@ export class CreatePartsDatabasePage extends PageObject {
             throw new Error('No rows found in the table.');
         }
 
-        let currentGroup: 'СБ' | 'Д' | 'ПД' | 'РМ' | null = null;
-        const groupOrder: ('СБ' | 'Д' | 'ПД' | 'РМ')[] = ['СБ', 'Д', 'ПД', 'РМ'];
+        let currentGroup: 'СБ' | 'Д' | 'ПД' | 'МД' | 'РМ' | null = null;
+        const groupOrder: ('СБ' | 'Д' | 'ПД' | 'МД' | 'РМ')[] = ['СБ', 'Д', 'ПД', 'МД', 'РМ'];
         let groupDetected = new Set<string>(); // **Track detected groups**
 
         for (const row of rows) {
@@ -2206,6 +2206,36 @@ export class CreatePartsDatabasePage extends PageObject {
                                 };
 
                                 this.parsedData[currentGroup].push(item);
+
+                                // **Click on `Д` items to extract material characteristics**
+                                if (currentGroup === "Д") {
+                                    console.log(`Opening material modal for Д item: ${rowData[1]}`);
+
+                                    await nestedRow.click(); // **Click to open modal**
+
+                                    // **Find material characteristics in the modal**
+                                    const materialTestIdPattern = `Spectification-ModalDetal*CharacteristicsMaterial-Items`;
+                                    const materialElement = page.locator(`[data-testid^="Spectification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
+
+                                    await materialElement.waitFor({ state: 'visible' });
+
+                                    const materialText = await materialElement.textContent();
+
+                                    if (materialText) {
+                                        console.log(`Extracted material characteristics for ${rowData[1]}: ${materialText}`);
+                                        this.parsedData["МД"].push({
+                                            designation: rowData[1],
+                                            material: materialText.trim(),
+                                        });
+                                    }
+
+                                    // **Close the modal**
+                                    const closeModalBtn = page.locator('[data-testid*="CloseModal"]');
+                                    if (await closeModalBtn.count() > 0) {
+                                        await closeModalBtn.first().click();
+                                        await materialElement.waitFor({ state: 'hidden' });
+                                    }
+                                }
                             }
                         }
                     }
@@ -2215,6 +2245,7 @@ export class CreatePartsDatabasePage extends PageObject {
             }
         }
     }
+
 
 
 
