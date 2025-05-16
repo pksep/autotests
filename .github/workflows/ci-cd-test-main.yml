@@ -72,6 +72,16 @@ jobs:
           rsync -av build/ dist/
           EOF
 
+       - name: Set up SSH in Server Container
+        run: |
+          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          docker exec sep-erp-test_app_test_1 bash -c "
+          mkdir -p ~/.ssh
+          echo '${{ secrets.AUTOTEST_ACTIONS }}' | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts"
+          EOF
+    
       - name: Fetch All Branches for server
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
