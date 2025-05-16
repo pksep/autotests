@@ -69,17 +69,18 @@ jobs:
       - name: Fetch All Branches for server
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          docker exec -it sep-erp-test_app_test_1 /bin/bash << 'IN_CONTAINER'
-          git fetch --all
-          git switch $TARGET_BRANCH
-          git pull origin $TARGET_BRANCH
-          git pull origin $SERVER_BRANCH
-          git merge --no-commit --no-ff $SERVER_BRANCH
-          pnpm i
-          pnpm run build
-          rsync -av build/ dist/
-          exit
-          IN_CONTAINER
+          docker exec sep-erp-test_app_test_1 bash -c "
+          export TARGET_BRANCH=${TARGET_BRANCH}
+          export SERVER_BRANCH=${SERVER_BRANCH}
+
+          git fetch --all &&
+          git switch $TARGET_BRANCH &&
+          git pull origin $TARGET_BRANCH &&
+          git pull origin $SERVER_BRANCH &&
+          git merge --no-commit --no-ff $SERVER_BRANCH &&
+          pnpm i &&
+          pnpm run build &&
+          rsync -av build/ dist/"
           docker restart sep-erp-test_app_test_1
           EOF
 
