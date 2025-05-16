@@ -59,7 +59,7 @@ jobs:
           git fetch --all
           git switch $TARGET_BRANCH
           git pull origin $TARGET_BRANCH
-          git pull origin $CLIENT_BRANCHE
+          git pull origin $CLIENT_BRANCH
           git merge --no-commit --no-ff $CLIENT_BRANCH
           pnpm i
           pnpm run build
