@@ -36,7 +36,7 @@ jobs:
 
       - name: Get Branch Names and Target Branch
         run: |
-          echo "CLIENT_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "CLIENT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
           echo "TARGET_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
 
           # Extract Server Branch Name from PR description
