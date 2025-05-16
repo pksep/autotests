@@ -56,11 +56,11 @@ jobs:
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           cd ~/autodeploy-test/sep_erp_client
-          git fetch --all
+          git fetch origin $CLIENT_BRANCH
           git switch $TARGET_BRANCH
           git pull origin $TARGET_BRANCH
           git pull origin $CLIENT_BRANCH
-          git merge --no-commit --no-ff $CLIENT_BRANCH
+          git merge --no-commit --no-ff origin/$CLIENT_BRANCH
           pnpm i
           pnpm run build
           rsync -av  build/ dist/
