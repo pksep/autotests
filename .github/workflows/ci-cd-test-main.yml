@@ -36,7 +36,8 @@ jobs:
 
       - name: Get Branch Name and Target Branch
         run: |
-          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "CLIENT_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "SERVER_BRANCH=${{ github.event.pull_request.body }}" >> $GITHUB_ENV  # Read from PR description if available
           echo "TARGET_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
 
       - name: Set up SSH
