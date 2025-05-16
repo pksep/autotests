@@ -7,7 +7,13 @@ import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
 const EDIT_PAGE_ADD_BUTTON = "Spectification-Buttons-addingSpecification";
 const MAIN_TABLE_TEST_ID = "Spectification-TableSpecification-Product";
-
+const TABLE_TEST_IDS = [
+    "Spectification-ModalCbed-AccordionCbed-Table",
+    "Spectification-ModalCbed-AccordionDetalContent-Table",
+    "Spectification-ModalCbed-AccordionBuyersMaterial-Table",
+    "Spectification-ModalCbed-ModalComplect-MateriaDetalTable",
+    "Spectification-ModalCbed-Accordion-MaterialRashod-Table"
+];
 export type Item = {
     id: string;
     parentPartNumber: string;
@@ -2279,10 +2285,98 @@ export class CreatePartsDatabasePage extends PageObject {
         }
     }
 
+    async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {
+        const TABLE_SELECTORS = {
+            "СБ": "[data-testid='Spectification-ModalCbed-AccordionCbed-Table']",
+            "Д": "[data-testid='Spectification-ModalCbed-AccordionDetalContent-Table']",
+            "ПД": "[data-testid='Spectification-ModalCbed-AccordionBuyersMaterial-Table']",
+            "МД": "[data-testid='Spectification-ModalCbed-ModalComplect-MateriaDetalTable']",
+            "РМ": "[data-testid='Spectification-ModalCbed-Accordion-MaterialRashod-Table']"
+        };
 
+        const structuredData: { [key: string]: any[] } = {
+            "СБ": [],
+            "Д": [],
+            "ПД": [],
+            "МД": [],
+            "РМ": []
+        };
 
+        const dialog = page.locator(`[data-testid="${dialogTestId}"]`);
+        await dialog.waitFor({ state: "visible" });
+        await page.waitForTimeout(1000);
+        for (const [group, selector] of Object.entries(TABLE_SELECTORS)) {
+            const table = dialog.locator(selector);
 
+            // Ensure table exists before proceeding
+            const tableExists = await table.count();
+            if (tableExists === 0) {
+                console.log(`Skipping ${group}: Table does not exist.`);
+                continue;
+            }
 
+            try {
+                await table.waitFor({ state: "attached", timeout: 3000 });
+            } catch {
+                console.log(`Skipping ${group}: Table is not attached.`);
+                continue;
+            }
+
+            // Ensure buffer time for rendering
+            await page.waitForTimeout(500);
+
+            // Check if rows exist before proceeding
+            const rowCount = await table.locator("tbody > tr").count();
+
+            if (rowCount === 0) {
+                console.log(`Skipping ${group}: Table is empty.`);
+                continue;
+            }
+
+            const rows = await table.locator("tbody > tr").elementHandles();
+
+            for (const row of rows) {
+                // Highlight row while processing
+                await row.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+
+                const cells = await row.$$("td");
+                const rowData = await Promise.all(cells.map(async (cell) => {
+                    const text = await cell.textContent();
+                    return text?.trim() || "";
+                }));
+
+                if ((group === "ПД" && rowData.length === 3) || rowData.length >= 4) {
+                    if (group === "МД") {
+                        const materialName = rowData[1];
+
+                        // Ensure material quantities are updated correctly
+                        const existingMaterial = structuredData["МД"].find(mat => mat.material === materialName);
+                        if (existingMaterial) {
+                            existingMaterial.quantity += 1;
+                        } else {
+                            structuredData["МД"].push({
+                                material: materialName,
+                                quantity: 1
+                            });
+                        }
+                    } else {
+                        structuredData[group].push({
+                            designation: rowData[1],
+                            name: rowData[2],
+                            unit: rowData[3],
+                            quantity: parseInt(rowData[4], 10)
+                        });
+                    }
+                }
+            }
+        }
+
+        return structuredData;
+    }
 
 
 

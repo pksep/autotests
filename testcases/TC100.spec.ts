@@ -156,11 +156,18 @@ export const runTC100 = () => {
             await page.waitForTimeout(500);
         });
 
-        await allure.step('Step 1: Parse the Product Specifications Table', async () => {
+        await allure.step('Step 1: Parse the Product Specifications recursively and build an array', async () => {
 
             await shortagePage.parseRecursiveStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             await shortagePage.printParsedTableData();
-            //console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
+
+            console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
+        });
+        await allure.step('Step 2: Parse the Product Specifications Table', async () => {
+            const openSpecificationButton = page.locator('[data-testid="Spectification-Buttons-openSpecification"]');
+            openSpecificationButton.click();
+            const specs = await shortagePage.extractAllTableData(page, 'Spectification-ModalCbed');
+            console.log(specs);
         });
 
 
