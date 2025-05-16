@@ -56,14 +56,20 @@ jobs:
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           cd ~/autodeploy-test/sep_erp_client
+
+          # Fetch and list branches to debug
           git fetch origin $CLIENT_BRANCH
+          git branch -a | grep "$CLIENT_BRANCH"
+
+          # Ensure we have the correct branch before merging
           git switch $TARGET_BRANCH
           git pull origin $TARGET_BRANCH
           git pull origin $CLIENT_BRANCH
-          git merge --no-commit --no-ff origin/$CLIENT_BRANCH
+          git merge --no-commit --no-ff $CLIENT_BRANCH
+
           pnpm i
           pnpm run build
-          rsync -av  build/ dist/
+          rsync -av build/ dist/
           EOF
 
       - name: Fetch All Branches for server
