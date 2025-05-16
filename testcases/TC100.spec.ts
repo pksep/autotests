@@ -159,7 +159,8 @@ export const runTC100 = () => {
         await allure.step('Step 1: Parse the Product Specifications Table', async () => {
 
             await shortagePage.parseRecursiveStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
-            console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
+            await shortagePage.printParsedTableData();
+            //console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
         });
 
 

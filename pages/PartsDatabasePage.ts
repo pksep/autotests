@@ -1050,36 +1050,24 @@ export class CreatePartsDatabasePage extends PageObject {
         logger.info(groups);
         return
     }
-    printGlobalTableData(): void {
-        logger.info("Global Table Data Overview:");
+    async printParsedTableData(): Promise<void> {
+        console.log("Parsed Table Data Overview:");
 
-        // Define the updated order including МД
-        const orderedKeys = ['СБ', 'Д', 'ПМ', 'МД', 'РМ', 'ALL'];
+        // Define the ordered keys for structured output
+        const orderedKeys = ['СБ', 'Д', 'ПД', 'МД', 'РМ'];
 
-        // Iterate through each group in the specific order
+        // Iterate through each group in the specified order
         orderedKeys.forEach((key) => {
-            if (key === 'ALL') {
-                const totalCount = CreatePartsDatabasePage.globalTableData.ALL.size; // Count items in ALL (Map)
-                logger.info(`\nALL (Consolidated Items: ${totalCount}):`);
-                console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
-            } else if (key === 'ПМ') {
-                // Merge ПМ and ПД groups
-                const pmItems = CreatePartsDatabasePage.globalTableData['ПМ'] || [];
-                const pdItems = CreatePartsDatabasePage.globalTableData['ПД'] || [];
-                const combinedItems = [...pmItems, ...pdItems];
-                const totalCount = combinedItems.length; // Count items in ПМ + ПД
-                logger.info(`\nПМ (Includes Items from ПД, Total: ${totalCount}):`);
-                console.table(combinedItems);
-            } else {
-                const groupItems = CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData];
-                const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Safely count items in the group
-                logger.info(`\n${key} (Items in this Group: ${totalCount}):`);
-                console.table(groupItems);
-            }
+            const groupItems = this.parsedData[key] || [];
+            const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Count items in the group safely
+
+            console.log(`\n${key} (Items in this Group: ${totalCount}):`);
+            console.table(groupItems);
         });
 
-        logger.info("\nEnd of Global Table Data.");
+        console.log("\nEnd of Parsed Table Data.");
     }
+
 
 
 
@@ -2232,8 +2220,10 @@ export class CreatePartsDatabasePage extends PageObject {
                                         element.style.border = "2px solid red";
                                         element.style.backgroundColor = "yellow";
                                     });
+                                    await page.waitForTimeout(1000);
                                     if (await specTable.count() > 0) {
                                         console.log("FOUND");
+                                        await this.parseRecursiveStructuredTable(page, "Spectification-TableSpecification-Cbed", item.quantity);
                                     }
 
                                     // **Close the modal by pressing `Escape`**
@@ -2244,6 +2234,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
                                 // **Click `Д` items to extract material characteristics**
                                 if (currentGroup === "Д") {
+                                    //const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalDetal"]`);
                                     console.log(`Opening material modal for Д item: ${rowData[1]}`);
                                     await nestedRow.click(); // Open the modal
 
@@ -2255,21 +2246,28 @@ export class CreatePartsDatabasePage extends PageObject {
                                     });
                                     await materialElement.evaluate((el) => el.scrollIntoView());
                                     await materialElement.waitFor({ state: 'visible' });
-                                    await page.waitForTimeout(5000);
+                                    await page.waitForTimeout(1000);
                                     const materialText = await materialElement.textContent();
-
                                     if (materialText) {
                                         console.log(`Extracted material characteristics for ${rowData[1]}: ${materialText}`);
-                                        this.parsedData["МД"].push({
-                                            designation: rowData[1],
-                                            material: materialText.trim(),
-                                        });
+                                        // **Check if material exists, increase quantity if so**
+                                        const existingMaterial = this.parsedData["МД"].find(
+                                            (mat) => mat.material === materialText.trim()
+                                        );
+                                        if (existingMaterial) {
+                                            existingMaterial.quantity += item.quantity;
+                                        } else {
+                                            this.parsedData["МД"].push({
+                                                //designation: rowData[1],
+                                                material: materialText.trim(),
+                                                quantity: item.quantity
+                                            });
+                                        }
                                     }
 
-                                    // **Close the material modal**
-                                    await page.keyboard.press('Escape');
-                                    await page.waitForTimeout(500);
-                                    console.log(`Closed material modal for ${rowData[1]}`);
+                                    page.mouse.click(1, 1);
+                                    await page.waitForTimeout(1000);
+
                                 }
                             }
                         }
