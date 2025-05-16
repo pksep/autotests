@@ -2189,6 +2189,11 @@ export class CreatePartsDatabasePage extends PageObject {
                         const nestedRows = await nestedTableCell.$$('table tbody > tr');
 
                         for (const nestedRow of nestedRows) {
+                            await nestedRow.evaluate((element) => {
+                                element.style.border = "2px solid red";
+                                element.style.backgroundColor = "yellow";
+                            });
+
                             const rowData: string[] = [];
                             const cells = await nestedRow.$$('td');
 
@@ -2207,18 +2212,50 @@ export class CreatePartsDatabasePage extends PageObject {
 
                                 this.parsedData[currentGroup].push(item);
 
-                                // **Click on `Д` items to extract material characteristics**
+                                // **Click `СБ` items during parsing**
+                                if (currentGroup === "СБ") {
+                                    console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
+                                    await nestedRow.click();
+                                    await page.waitForTimeout(1000);
+                                    // **Find and detect the modal dialog**
+                                    const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalCbed"]`);
+                                    await modalDialog.waitFor({ state: 'visible' });
+                                    await modalDialog.evaluate((element) => {
+                                        element.style.border = "2px solid red";
+                                        element.style.backgroundColor = "yellow";
+                                    });
+
+                                    // **Find the next specifications table inside the dialog**
+                                    const specTable = modalDialog.locator(`[data-testid="Spectification-TableSpecification-Cbed"]`);
+                                    await specTable.evaluate((el) => el.scrollIntoView());
+                                    await specTable.evaluate((element) => {
+                                        element.style.border = "2px solid red";
+                                        element.style.backgroundColor = "yellow";
+                                    });
+                                    if (await specTable.count() > 0) {
+                                        console.log("FOUND");
+                                    }
+
+                                    // **Close the modal by pressing `Escape`**
+                                    await page.keyboard.press('Escape');
+                                    await page.waitForTimeout(1000);
+                                    console.log(`Closed modal for ${rowData[1]}`);
+                                }
+
+                                // **Click `Д` items to extract material characteristics**
                                 if (currentGroup === "Д") {
                                     console.log(`Opening material modal for Д item: ${rowData[1]}`);
-
-                                    await nestedRow.click(); // **Click to open modal**
+                                    await nestedRow.click(); // Open the modal
 
                                     // **Find material characteristics in the modal**
-                                    const materialTestIdPattern = `Spectification-ModalDetal*CharacteristicsMaterial-Items`;
                                     const materialElement = page.locator(`[data-testid^="Spectification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
-
+                                    await materialElement.evaluate((element) => {
+                                        element.style.border = "2px solid red";
+                                        element.style.backgroundColor = "yellow";
+                                    });
+                                    await materialElement.evaluate((el) => el.scrollIntoView());
                                     await materialElement.waitFor({ state: 'visible' });
-
+                                    await page.waitForTimeout(5000);
                                     const materialText = await materialElement.textContent();
 
                                     if (materialText) {
@@ -2229,12 +2266,10 @@ export class CreatePartsDatabasePage extends PageObject {
                                         });
                                     }
 
-                                    // **Close the modal**
-                                    const closeModalBtn = page.locator('[data-testid*="CloseModal"]');
-                                    if (await closeModalBtn.count() > 0) {
-                                        await closeModalBtn.first().click();
-                                        await materialElement.waitFor({ state: 'hidden' });
-                                    }
+                                    // **Close the material modal**
+                                    await page.keyboard.press('Escape');
+                                    await page.waitForTimeout(500);
+                                    console.log(`Closed material modal for ${rowData[1]}`);
                                 }
                             }
                         }
@@ -2245,6 +2280,9 @@ export class CreatePartsDatabasePage extends PageObject {
             }
         }
     }
+
+
+
 
 
 
