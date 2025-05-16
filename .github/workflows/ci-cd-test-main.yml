@@ -39,69 +39,25 @@ jobs:
           echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           echo "TARGET_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
 
-      #- name: Set up SSH
-      #  run: |
+      - name: Set up SSH
+        run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.AUTOTEST_ACTIONS }}" | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
 
-      - name: Update Existing Repositories
+      - name: Fetch All Branches
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          cd ~/sep_erp_server/sep_erp_server  # Corrected path
+          cd ~/autodeploy-test/sep_erp_client
           git fetch --all
-          git pull origin main
-
-          cd ~/sep_erp_client
-          git fetch --all
-          git pull origin main
-          EOF
-
-      - name: Push Target Branch to Server and Start Server
-        run: |
-          ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          cd ~/sep_erp_server/sep_erp_server  # Corrected path
-          git fetch --all
-          git checkout $TARGET_BRANCH
+          git switch $TARGET_BRANCH
           git pull origin $TARGET_BRANCH
-          pnpm i
-          nohup pnpm run start:dev > server.log 2>&1 &
-
-          cd ~/sep_erp_client
-          git fetch --all
-          git checkout $TARGET_BRANCH
-          git pull origin $TARGET_BRANCH
-          pnpm i
-          nohup pnpm run serve > client.log 2>&1 &
-          EOF
-
-      - name: Wait for Server and Client to Start
-        run: sleep 30  # Adjust based on startup time
-
-      - name: Merge Branch into Target Without Committing
-        run: |
-          ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          cd ~/sep_erp_server/sep_erp_server  # Corrected path
-          git fetch --all
-          git checkout $TARGET_BRANCH
-          git pull origin $TARGET_BRANCH
+          git pull origin $BRANCH_NAME
           git merge --no-commit --no-ff $BRANCH_NAME
-
-          cd ~/sep_erp_client
-          git fetch --all
-          git checkout $TARGET_BRANCH
-          git pull origin $TARGET_BRANCH
-          git merge --no-commit --no-ff $BRANCH_NAME
-          EOF
-
-      - name: Verify Merge Status
-        run: |
-          ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          cd ~/sep_erp_server/sep_erp_server  # Corrected path
-          git status
-          cd ~/sep_erp_client
-          git status
+          pnpm i
+          pnpm run build
+          rsync -av  build/ dist/
           EOF
 
       - name: Set up Node.js
