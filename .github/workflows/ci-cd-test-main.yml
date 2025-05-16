@@ -46,18 +46,35 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
 
-      - name: Fetch All Branches
+      - name: Fetch All Branches for client
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           cd ~/autodeploy-test/sep_erp_client
           git fetch --all
           git switch $TARGET_BRANCH
           git pull origin $TARGET_BRANCH
-          git pull origin $BRANCH_NAME
-          git merge --no-commit --no-ff $BRANCH_NAME
+          git pull origin $CLIENT_BRANCHE
+          git merge --no-commit --no-ff $CLIENT_BRANCH
           pnpm i
           pnpm run build
           rsync -av  build/ dist/
+          EOF
+
+      - name: Fetch All Branches for server
+        run: |
+          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          docker exec -it sep-erp-test_app_test_1 /bin/bash << 'IN_CONTAINER'
+          git fetch --all
+          git switch $TARGET_BRANCH
+          git pull origin $TARGET_BRANCH
+          git pull origin $SERVER_BRANCH
+          git merge --no-commit --no-ff $SERVER_BRANCH
+          pnpm i
+          pnpm run build
+          rsync -av build/ dist/
+          exit
+          IN_CONTAINER
+          docker restart sep-erp-test_app_test_1
           EOF
 
       - name: Set up Node.js
