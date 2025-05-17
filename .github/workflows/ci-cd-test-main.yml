@@ -1,3 +1,4 @@
+
 name: CI/CD for Main Branch
 
 on:
@@ -22,10 +23,6 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
 
     steps:
       - name: Checkout code
@@ -52,13 +49,14 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
 
-      - name: connect to server
+      - name: Connect to server
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           cd ~/autodeploy-test/sep_erp_client
+          # Ensure to close the SSH session properly
+          EOF
 
- 
-      - name: fetch all
+      - name: Fetch all branches
         run: git fetch --all
 
       - name: Switch to main/canary branch
@@ -80,15 +78,15 @@ jobs:
         run: git checkout ${TARGET_BRANCH}
 
       - name: Merge ${CLIENT_BRANCH} into ${TARGET_BRANCH} without committing
-        run: git ${CLIENT_BRANCH} --no-commit
+        run: git merge ${CLIENT_BRANCH} --no-commit
 
       - name: Build site
-        run: pnpm i
+        run: |
+          pnpm i
           pnpm run build
           rsync -av build/ dist/
-          EOF
 
-       - name: Set up SSH in Server Container
+      - name: Set up SSH in Server Container
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           docker exec sep-erp-test_app_test_1 bash -c "
