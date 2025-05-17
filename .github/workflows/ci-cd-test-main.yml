@@ -85,6 +85,18 @@ jobs:
       - name: Merge ${CLIENT_BRANCH} into ${TARGET_BRANCH} without committing
         run: git merge ${CLIENT_BRANCH} --no-commit
 
+      - name: Check current directory
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+
+      - name: Check pnpm installation
+        run: |
+          echo "Checking pnpm version:"
+          pnpm --version
+
       - name: Build site
         run: |
           pnpm i
