@@ -52,22 +52,38 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
 
-      - name: Fetch All Branches for client
+      - name: connect to server
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           cd ~/autodeploy-test/sep_erp_client
 
-          # Fetch and list branches to debug
-          git fetch origin $CLIENT_BRANCH
-          git branch -a | grep "$CLIENT_BRANCH"
+ 
+      - name: fetch all
+        run: git fetch --all
 
-          # Ensure we have the correct branch before merging
-          git switch $TARGET_BRANCH
-          git pull origin $TARGET_BRANCH
-          git pull origin $CLIENT_BRANCH
-          git merge --no-commit --no-ff $CLIENT_BRANCH
+      - name: Switch to main/canary branch
+        run: git checkout ${TARGET_BRANCH}
 
-          pnpm i
+      - name: Switch to mybranch or create from remote
+        run: |
+          if git checkout ${CLIENT_BRANCH}; then
+            echo "Switched to existing branch '${CLIENT_BRANCH}'."
+          else
+            echo "'${CLIENT_BRANCH}' does not exist locally. Creating from remote."
+            git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH}
+          fi
+
+      - name: Pull latest changes into ${CLIENT_BRANCH}
+        run: git pull origin ${CLIENT_BRANCH}
+
+      - name: Switch back to main/canary branch
+        run: git checkout ${TARGET_BRANCH}
+
+      - name: Merge ${CLIENT_BRANCH} into ${TARGET_BRANCH} without committing
+        run: git ${CLIENT_BRANCH} --no-commit
+
+      - name: Build site
+        run: pnpm i
           pnpm run build
           rsync -av build/ dist/
           EOF
