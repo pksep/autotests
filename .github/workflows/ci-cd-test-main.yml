@@ -109,27 +109,34 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts"
           EOF
     
+
       - name: Fetch All Branches for server
         run: |
-          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          ssh -p 2222 npo@89.23.4.133 << "EOF"
           set -x  # Enable debugging
           docker exec -e TARGET_BRANCH=${TARGET_BRANCH} -e SERVER_BRANCH=${SERVER_BRANCH} sep-erp-test_app_test_1 bash -c "
           set -e  # Exit immediately if a command exits with a non-zero status
+
+          # Ensure SSH key is set up
+          mkdir -p ~/.ssh
+          echo '${{ secrets.AUTOTEST_ACTIONS }}' | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
           # Fetch all branches
           git fetch --all || { echo 'Failed to fetch branches'; exit 1; }
 
           # Switch to TARGET_BRANCH
-          git switch $TARGET_BRANCH || { echo 'Failed to switch to TARGET_BRANCH'; exit 1; }
+          git switch \$TARGET_BRANCH || { echo 'Failed to switch to TARGET_BRANCH'; exit 1; }
 
           # Pull latest changes into TARGET_BRANCH
-          git pull origin $TARGET_BRANCH || { echo 'Failed to pull TARGET_BRANCH'; exit 1; }
+          git pull origin \$TARGET_BRANCH || { echo 'Failed to pull TARGET_BRANCH'; exit 1; }
 
           # Pull latest changes into SERVER_BRANCH
-          git pull origin $SERVER_BRANCH || { echo 'Failed to pull SERVER_BRANCH'; exit 1; }
+          git pull origin \$SERVER_BRANCH || { echo 'Failed to pull SERVER_BRANCH'; exit 1; }
 
           # Merge SERVER_BRANCH into TARGET_BRANCH without committing
-          git merge --no-commit --no-ff $SERVER_BRANCH || { echo 'Failed to merge SERVER_BRANCH into TARGET_BRANCH'; exit 1; }
+          git merge --no-commit --no-ff \$SERVER_BRANCH || { echo 'Failed to merge SERVER_BRANCH into TARGET_BRANCH'; exit 1; }
 
           # Install dependencies and build
           pnpm i || { echo 'Failed to install dependencies'; exit 1; }
@@ -142,7 +149,6 @@ jobs:
           # Restart the Docker container
           docker restart sep-erp-test_app_test_1 || { echo 'Failed to restart Docker container'; exit 1; }
           EOF
-
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
