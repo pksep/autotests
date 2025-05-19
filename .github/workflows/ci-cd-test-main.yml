@@ -50,15 +50,6 @@ jobs:
 
       - name: Client Connect to server and perform Git operations
         run: |
-          echo "CLIENT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
-          echo "TARGET_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
-
-          # Extract Server Branch Name from PR description
-          SERVER_BRANCH=$(echo "${{ github.event.pull_request.body }}" | grep -oP '(?<=Server branch: )[^ ]+' || echo "default-branch")
-
-          echo "Extracted SERVER_BRANCH: $SERVER_BRANCH"  # Debugging output
-          echo "SERVER_BRANCH=${SERVER_BRANCH:-$CLIENT_BRANCH}" >> $GITHUB_ENV
-          
           mkdir -p ~/.ssh
           echo "${{ secrets.AUTOTEST_ACTIONS }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -70,7 +61,8 @@ jobs:
           export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa"
 
           # Attempt SSH connection with debugging enabled
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -t -p 2222 npo@89.23.4.133 TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH} << "EOF"
+
           set -x  # Enable debugging
 
           cd ~/autodeploy-test/sep_erp_client || { echo "Failed to change directory"; exit 1; }
