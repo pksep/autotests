@@ -66,21 +66,18 @@ jobs:
 
       - name: Client Connect to server and perform Git operations
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AUTOTEST_ACTIONS }}" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          #ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
+          #chmod 644 ~/.ssh/known_hosts
 
-          ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa"
+          #export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa"
 
           # Attempt SSH connection with debugging enabled
-          ssh -o StrictHostKeyChecking=no -t -p 2222 npo@89.23.4.133 TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH} << "EOF"
+          ssh -o StrictHostKeyChecking=no -t -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH} << "EOF"
           set -x  # Enable debugging
 
           cd ~/autodeploy-test/sep_erp_client || { echo "Failed to change directory"; exit 1; }
-
+          pwd
+          ls -la
           # Fetch all branches
           git fetch --all || { echo "Failed to fetch branches"; exit 1; }
 
