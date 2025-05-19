@@ -112,13 +112,17 @@ jobs:
 
       - name: Fetch All Branches for server
         run: |
-          ssh -t -p 2222 npo@89.23.4.133 << "EOF"
+          ssh -t -p 2222 npo@89.23.4.133 TARGET_BRANCH=${TARGET_BRANCH} SERVER_BRANCH=${SERVER_BRANCH} << "EOF"
           set -x  # Enable debugging
-          docker exec -e TARGET_BRANCH=${TARGET_BRANCH} -e SERVER_BRANCH=${SERVER_BRANCH} sep-erp-test_app_test_1 bash -c "
+
+          docker exec -e TARGET_BRANCH=$TARGET_BRANCH -e SERVER_BRANCH=$SERVER_BRANCH sep-erp-test_app_test_1 bash -c "
           set -e  # Exit immediately if a command exits with a non-zero status
 
+          # Debug variable values
+          echo 'TARGET_BRANCH is:' \$TARGET_BRANCH
+          echo 'SERVER_BRANCH is:' \$SERVER_BRANCH
+
           # Fetch all branches
-          # git fetch --all || { echo 'Failed to fetch branches'; exit 1; }
           git fetch --all 2>&1 | tee /tmp/git_fetch.log || { echo '❌ Failed to fetch branches'; cat /tmp/git_fetch.log; exit 1; }
 
           # Switch to TARGET_BRANCH
