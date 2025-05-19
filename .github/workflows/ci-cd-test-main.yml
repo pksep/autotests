@@ -119,12 +119,28 @@ jobs:
           # Ensure the local SERVER_BRANCH is deleted before pulling from remote
           git branch -D \$SERVER_BRANCH || echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
 
-          git pull origin \$TARGET_BRANCH || { echo \\\"❌ Failed to pull TARGET_BRANCH\\\"; exit 1; }
+          # Check if TARGET_BRANCH has divergence before pulling
+          if git rev-list --left-right origin/\$TARGET_BRANCH...\$TARGET_BRANCH | grep -q '>'; then
+            echo \\\"⚠️ Divergence detected in TARGET_BRANCH (\$TARGET_BRANCH). Resetting to match remote...\\\"
+            git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
+            git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
+          else
+            echo \\\"✅ No divergence detected, performing normal pull.\\\"
+            git pull origin \$TARGET_BRANCH || { echo \\\"❌ Failed to pull TARGET_BRANCH\\\"; exit 1; }
+          fi
 
-          # Force reset instead of pull to avoid fast-forward issues
-          git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
-          git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+          # Check if SERVER_BRANCH has divergence before pulling
+          if git rev-list --left-right origin/\$SERVER_BRANCH...\$SERVER_BRANCH | grep -q '>'; then
+            echo \\\"⚠️ Divergence detected in SERVER_BRANCH (\$SERVER_BRANCH). Resetting to match remote...\\\"
+            git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
+            git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+          else
+            echo \\\"✅ No divergence detected, performing normal pull.\\\"
+            git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
+            git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+          fi
 
+          # Merge SERVER_BRANCH into TARGET_BRANCH
           git merge --no-commit --no-ff origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH\\\"; exit 1; }
 
           pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
