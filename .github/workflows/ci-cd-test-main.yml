@@ -66,10 +66,6 @@ jobs:
 
           # Navigate to project directory
           cd ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to change directory"; exit 1; }
-
-          # Fetch all branches
-          git fetch --all 2>&1 | tee /tmp/git_fetch.log || { echo "❌ Failed to fetch branches"; cat /tmp/git_fetch.log; exit 1; }
-
           EOF
 
       - name: Server Fetch All Branches for server
