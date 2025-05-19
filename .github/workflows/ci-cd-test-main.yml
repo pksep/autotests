@@ -133,7 +133,7 @@ jobs:
 
           pnpm run build || { echo \\\"❌ Failed to build site\\\"; exit 1; }
 
-          rsync -av build/ dist/ || { echo \\\"❌ Failed to sync build to dist\\\"; exit 1; }
+          
 
           echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
           \" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
