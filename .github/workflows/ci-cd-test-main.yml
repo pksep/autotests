@@ -129,15 +129,20 @@ jobs:
             git pull origin \$TARGET_BRANCH || { echo \\\"❌ Failed to pull TARGET_BRANCH\\\"; exit 1; }
           fi
 
-          # Check if SERVER_BRANCH has divergence before pulling
-          if git rev-list --left-right origin/\$SERVER_BRANCH...\$SERVER_BRANCH | grep -q '>'; then
-            echo \\\"⚠️ Divergence detected in SERVER_BRANCH (\$SERVER_BRANCH). Resetting to match remote...\\\"
-            git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
-            git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+          # Validate SERVER_BRANCH before checking for divergence
+          if git ls-remote --exit-code origin \$SERVER_BRANCH > /dev/null 2>&1; then
+            # Check if SERVER_BRANCH has divergence before pulling
+            if git rev-list --left-right origin/\$SERVER_BRANCH...\$SERVER_BRANCH | grep -q '>'; then
+              echo \\\"⚠️ Divergence detected in SERVER_BRANCH (\$SERVER_BRANCH). Resetting to match remote...\\\"
+              git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
+              git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+            else
+              echo \\\"✅ No divergence detected, performing normal pull.\\\"
+              git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
+              git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+            fi
           else
-            echo \\\"✅ No divergence detected, performing normal pull.\\\"
-            git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
-            git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+            echo \\\"❌ SERVER_BRANCH (\$SERVER_BRANCH) does not exist remotely. Skipping.\\\"
           fi
 
           # Merge SERVER_BRANCH into TARGET_BRANCH
