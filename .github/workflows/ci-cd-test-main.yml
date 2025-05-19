@@ -55,7 +55,7 @@ jobs:
       - name: Client Connect to server and perform Git operations
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.AUTOTEST_ACTIONS }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
           # Add server fingerprint to known_hosts
