@@ -50,7 +50,8 @@ jobs:
 
       - name: Debug SSH Connection
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 "echo 'SSH connection successful!'"
+          ssh -p 2222 npo@89.23.4.133 << 'EOF'
+          #ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 "echo 'SSH connection successful!'"
 
 
       - name: Client Connect to server and perform Git operations
