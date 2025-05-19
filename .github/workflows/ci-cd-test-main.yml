@@ -70,42 +70,6 @@ jobs:
           # Fetch all branches
           git fetch --all 2>&1 | tee /tmp/git_fetch.log || { echo "❌ Failed to fetch branches"; cat /tmp/git_fetch.log; exit 1; }
 
-          # Switch to TARGET_BRANCH
-          git checkout ${TARGET_BRANCH} 2>&1 | tee /tmp/git_checkout_target.log || { echo "❌ Failed to checkout ${TARGET_BRANCH}"; cat /tmp/git_checkout_target.log; exit 1; }
-
-          # Switch to CLIENT_BRANCH or create from remote
-          if git checkout ${CLIENT_BRANCH}; then
-            echo "✅ Switched to existing branch '${CLIENT_BRANCH}'."
-          else
-            echo "⚠️ '${CLIENT_BRANCH}' does not exist locally. Creating from remote."
-            git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH} 2>&1 | tee /tmp/git_checkout_client.log || { echo "❌ Failed to create branch ${CLIENT_BRANCH}"; cat /tmp/git_checkout_client.log; exit 1; }
-          fi
-
-          # Pull latest changes into CLIENT_BRANCH
-          git pull origin ${CLIENT_BRANCH} 2>&1 | tee /tmp/git_pull_client.log || { echo "❌ Failed to pull ${CLIENT_BRANCH}"; cat /tmp/git_pull_client.log; exit 1; }
-
-          # Switch back to TARGET_BRANCH
-          git checkout ${TARGET_BRANCH} 2>&1 | tee /tmp/git_checkout_target.log || { echo "❌ Failed to checkout ${TARGET_BRANCH}"; cat /tmp/git_checkout_target.log; exit 1; }
-
-          # Set Git User
-          git config --global user.email "rgjoyce111@gmail.com"
-          git config --global user.name "atomant1969"
-
-          # Merge CLIENT_BRANCH into TARGET_BRANCH without committing
-          git merge ${CLIENT_BRANCH} --no-commit 2>&1 | tee /tmp/git_merge.log || { echo "❌ Failed to merge ${CLIENT_BRANCH} into ${TARGET_BRANCH}"; cat /tmp/git_merge.log; exit 1; }
-
-          # Check current directory and contents
-          echo "📌 Current directory:" && pwd
-          echo "📌 Directory contents:" && ls -la
-
-          # Check pnpm installation
-          echo "🔹 Checking pnpm version:"
-          pnpm --version || { echo "❌ pnpm is not installed"; exit 1; }
-
-          # Build site
-          pnpm i 2>&1 | tee /tmp/pnpm_install.log || { echo "❌ Failed to install dependencies"; cat /tmp/pnpm_install.log; exit 1; }
-          pnpm run build 2>&1 | tee /tmp/pnpm_build.log || { echo "❌ Failed to build site"; cat /tmp/pnpm_build.log; exit 1; }
-          rsync -av build/ dist/ 2>&1 | tee /tmp/rsync.log || { echo "❌ Failed to sync build to dist"; cat /tmp/rsync.log; exit 1; }
           EOF
 
       - name: Server Fetch All Branches for server
