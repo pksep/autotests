@@ -48,12 +48,6 @@ jobs:
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts
 
-      - name: Debug SSH Connection
-        run: |
-          ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          #ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 "echo 'SSH connection successful!'"
-
-
       - name: Client Connect to server and perform Git operations
         run: |
           mkdir -p ~/.ssh
@@ -68,7 +62,6 @@ jobs:
 
           # Attempt SSH connection with debugging enabled
           ssh -o StrictHostKeyChecking=no -t -p 2222 npo@89.23.4.133 TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH} << "EOF"
-
           set -x  # Enable debugging
 
           cd ~/autodeploy-test/sep_erp_client || { echo "Failed to change directory"; exit 1; }
