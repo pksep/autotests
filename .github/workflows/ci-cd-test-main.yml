@@ -67,6 +67,16 @@ jobs:
           # Attempt SSH connection with debugging enabled
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 << 'EOF'
           set -x  # Enable debugging
+
+          cd ~/autodeploy-test/sep_erp_client || { echo "Failed to change directory"; exit 1; }
+
+          # Fetch all branches
+          git fetch --all || { echo "Failed to fetch branches"; exit 1; }
+
+          # Switch to main/canary branch
+          git checkout ${TARGET_BRANCH} || { echo "Failed to checkout ${TARGET_BRANCH}"; exit 1; }
+
+          
           EOF
 
 
