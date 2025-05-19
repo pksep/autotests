@@ -47,25 +47,6 @@ jobs:
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           set -x  # Enable debugging
-
-          # Ensure .ssh directory exists
-          mkdir -p ~/.ssh
-
-          # Remove any outdated host key for GitHub
-          ssh-keygen -R github.com || true
-
-          # Add GitHub SSH fingerprint to known_hosts inside the remote machine
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-          # Explicitly set SSH key for this session
-          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/githubactions_id_rsa"
-
-          # Verify SSH authentication to GitHub using your key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/githubactions_id_rsa -T git@github.com || { echo "❌ SSH authentication failed!"; exit 1; }
-
-          # Navigate to project directory
-          cd ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to change directory"; exit 1; }
           EOF
 
       - name: Server Fetch All Branches for server
