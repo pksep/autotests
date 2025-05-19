@@ -42,12 +42,18 @@ jobs:
           echo "Extracted SERVER_BRANCH: $SERVER_BRANCH"  # Debugging output
           echo "SERVER_BRANCH=${SERVER_BRANCH:-$CLIENT_BRANCH}" >> $GITHUB_ENV
 
-      - name: Add SSH host key
+      #- name: Add SSH host key
+      #  run: |
+      #    mkdir -p ~/.ssh
+      #    ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
+      #    cat ~/.ssh/known_hosts
+      - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
+          echo "${{ secrets.AUTOTEST_ACTIONS }}" | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
-          cat ~/.ssh/known_hosts
-
+          
       - name: Client Connect to Server
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 << 'EOF'
