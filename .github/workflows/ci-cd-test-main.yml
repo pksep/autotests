@@ -131,22 +131,27 @@ jobs:
 
           # Validate SERVER_BRANCH before checking for divergence
           if git ls-remote --exit-code origin \$SERVER_BRANCH > /dev/null 2>&1; then
+            # Ensure we're working with a clean remote state
+            git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
+
+            # Delete any existing local SERVER_BRANCH to avoid conflicts
+            git branch -D \$SERVER_BRANCH || echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
+
             # Check if SERVER_BRANCH has divergence before pulling
             if git rev-list --left-right origin/\$SERVER_BRANCH...\$SERVER_BRANCH | grep -q '>'; then
               echo \\\"⚠️ Divergence detected in SERVER_BRANCH (\$SERVER_BRANCH). Resetting to match remote...\\\"
-              git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
               git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
             else
               echo \\\"✅ No divergence detected, performing normal pull.\\\"
-              git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
-              git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+              git checkout -b \$SERVER_BRANCH origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to create SERVER_BRANCH\\\"; exit 1; }
             fi
+
+            # Merge SERVER_BRANCH into TARGET_BRANCH
+            git checkout \$TARGET_BRANCH || { echo \\\"❌ Failed to switch back to TARGET_BRANCH\\\"; exit 1; }
+            git merge --no-commit --no-ff \$SERVER_BRANCH || { echo \\\"❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH\\\"; exit 1; }
           else
             echo \\\"❌ SERVER_BRANCH (\$SERVER_BRANCH) does not exist remotely. Skipping.\\\"
           fi
-
-          # Merge SERVER_BRANCH into TARGET_BRANCH
-          git merge --no-commit --no-ff origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH\\\"; exit 1; }
 
           pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
 
