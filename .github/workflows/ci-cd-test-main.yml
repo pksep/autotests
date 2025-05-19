@@ -42,11 +42,6 @@ jobs:
           echo "Extracted SERVER_BRANCH: $SERVER_BRANCH"  # Debugging output
           echo "SERVER_BRANCH=${SERVER_BRANCH:-$CLIENT_BRANCH}" >> $GITHUB_ENV
 
-      #- name: Add SSH host key
-      #  run: |
-      #    mkdir -p ~/.ssh
-      #    ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
-      #    cat ~/.ssh/known_hosts
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
@@ -54,16 +49,6 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
           
-      - name: Client Connect to Server
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 << 'EOF'
-          set -x  # Enable debugging
-          echo "✅ SSH session is running successfully!"
-          pwd
-          ls -la
-          EOF
-
-
       - name: Client Connect to server and perform Git operations
         run: |
           #ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
@@ -115,9 +100,6 @@ jobs:
           pnpm run build || { echo "Failed to build site"; exit 1; }
           rsync -av build/ dist/ || { echo "Failed to sync build to dist"; exit 1; }
           '"
-          EOF
-
-
 
       - name: Server Fetch All Branches for server
         run: |
