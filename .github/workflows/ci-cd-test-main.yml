@@ -72,18 +72,20 @@ jobs:
           #export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa"
 
           # Attempt SSH connection with debugging enabled
-          #ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 << "EOF"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 << "EOF"
           #ssh -o StrictHostKeyChecking=no  -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH} << "EOF"
-          ssh -t -o StrictHostKeyChecking=no -p 2222 npo@89.23.4.133 "TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH}" << "EOF"
+          #ssh -t -o StrictHostKeyChecking=no -p 2222 npo@89.23.4.133 "TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH}" << "EOF"
           
           set -x  # Enable debugging
-          env
-          # Manually export variables inside the SSH session
-          export TARGET_BRANCH="${TARGET_BRANCH}"
-          export CLIENT_BRANCH="${CLIENT_BRANCH}"
+          TARGET_BRANCH="${TARGET_BRANCH}"
+          CLIENT_BRANCH="${CLIENT_BRANCH}"
+
+          export TARGET_BRANCH
+          export CLIENT_BRANCH
 
           echo "✅ TARGET_BRANCH is: $TARGET_BRANCH"
           echo "✅ CLIENT_BRANCH is: $CLIENT_BRANCH"
+          
           cd ~/autodeploy-test/sep_erp_client || { echo "Failed to change directory"; exit 1; }
           pwd
           ls -la
