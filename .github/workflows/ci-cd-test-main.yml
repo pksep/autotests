@@ -102,7 +102,7 @@ jobs:
       - name: Set up SSH in Server Container
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          docker exec sep-erp-test_app_test_1 bash -c "
+          docker exec -it sep-erp-test_app_test_1 /bin/bash -c "
           mkdir -p ~/.ssh
           echo '${{ secrets.AUTOTEST_ACTIONS }}' | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -117,14 +117,9 @@ jobs:
           docker exec -e TARGET_BRANCH=${TARGET_BRANCH} -e SERVER_BRANCH=${SERVER_BRANCH} sep-erp-test_app_test_1 bash -c "
           set -e  # Exit immediately if a command exits with a non-zero status
 
-          # Ensure SSH key is set up
-          mkdir -p ~/.ssh
-          echo '${{ secrets.AUTOTEST_ACTIONS }}' | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
           # Fetch all branches
-          git fetch --all || { echo 'Failed to fetch branches'; exit 1; }
+          # git fetch --all || { echo 'Failed to fetch branches'; exit 1; }
+          git fetch --all 2>&1 | tee /tmp/git_fetch.log || { echo '❌ Failed to fetch branches'; cat /tmp/git_fetch.log; exit 1; }
 
           # Switch to TARGET_BRANCH
           git switch \$TARGET_BRANCH || { echo 'Failed to switch to TARGET_BRANCH'; exit 1; }
