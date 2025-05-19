@@ -42,14 +42,7 @@ jobs:
           echo "Extracted SERVER_BRANCH: $SERVER_BRANCH"  # Debugging output
           echo "SERVER_BRANCH=${SERVER_BRANCH:-$CLIENT_BRANCH}" >> $GITHUB_ENV
 
-      - name: Client Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AUTOTEST_ACTIONS }}" | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
-
-      
+     
       - name: Client Connect to server and perform Git operations
         run: |
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
@@ -97,19 +90,6 @@ jobs:
           pnpm i || { echo "Failed to install dependencies"; exit 1; }
           pnpm run build || { echo "Failed to build site"; exit 1; }
           rsync -av build/ dist/ || { echo "Failed to sync build to dist"; exit 1; }
-          EOF
-
-      - name: Server Set up SSH in Server Container
-        run: |
-          ssh -p 2222 npo@89.23.4.133 << 'EOF'
-          docker exec sep-erp-test_app_test_1 /bin/bash -c "
-          echo '🔹 Setting up SSH keys...'
-          mkdir -p ~/.ssh
-          echo '${{ secrets.AUTOTEST_ACTIONS }}' | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          echo '✅ SSH setup complete.'
-          "
           EOF
 
       - name: Server Fetch All Branches for server
