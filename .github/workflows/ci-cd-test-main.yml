@@ -115,7 +115,8 @@ jobs:
           git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
 
           git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }
-
+          # Ensure the local SERVER_BRANCH is deleted before pulling from remote
+          git branch -D \$SERVER_BRANCH || echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
           git pull origin \$TARGET_BRANCH || { echo \\\"❌ Failed to pull TARGET_BRANCH\\\"; exit 1; }
 
           git pull origin \$SERVER_BRANCH || { echo \\\"❌ Failed to pull SERVER_BRANCH\\\"; exit 1; }
