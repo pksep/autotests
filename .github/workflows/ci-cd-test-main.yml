@@ -45,18 +45,22 @@ jobs:
      
       - name: Client Connect to server and perform Git operations
         run: |
-          # Remove existing host key to avoid verification issues
-          ssh-keygen -R 89.23.4.133 || true
-
-          # Add the SSH fingerprint of the server to known_hosts
-          ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
-
-          # Test SSH connection before running Git operations
-          ssh -p 2222 npo@89.23.4.133 "echo '✅ SSH connection successful!'"
-
-          # Run Git operations inside SSH session
           ssh -p 2222 npo@89.23.4.133 << 'EOF'
           set -x  # Enable debugging
+
+          # Ensure .ssh directory exists
+          mkdir -p ~/.ssh
+
+          # Remove any outdated host key for GitHub
+          ssh-keygen -R github.com || true
+
+          # Add GitHub SSH fingerprint to known_hosts inside the remote machine
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+          # Verify SSH authentication to GitHub
+          ssh -T git@github.com || { echo "❌ SSH authentication failed!"; exit 1; }
+
+          # Navigate to project directory
           cd ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to change directory"; exit 1; }
 
           # Fetch all branches
@@ -99,6 +103,7 @@ jobs:
           pnpm run build 2>&1 | tee /tmp/pnpm_build.log || { echo "❌ Failed to build site"; cat /tmp/pnpm_build.log; exit 1; }
           rsync -av build/ dist/ 2>&1 | tee /tmp/rsync.log || { echo "❌ Failed to sync build to dist"; cat /tmp/rsync.log; exit 1; }
           EOF
+
 
 
       - name: Server Fetch All Branches for server
