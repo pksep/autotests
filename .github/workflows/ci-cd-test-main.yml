@@ -73,7 +73,7 @@ jobs:
           # Switch to main/canary branch
           git checkout ${TARGET_BRANCH} || { echo "Failed to checkout ${TARGET_BRANCH}"; exit 1; }
           echo 'ss'
-          echo ${TARGET_BRANCH}
+          echo "${TARGET_BRANCH}"
           echo 'ss'
           
           EOF
