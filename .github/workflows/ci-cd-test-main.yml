@@ -48,6 +48,11 @@ jobs:
           ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts
 
+      - name: Debug SSH Connection
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 "echo 'SSH connection successful!'"
+
+
       - name: Client Connect to server and perform Git operations
         run: |
           mkdir -p ~/.ssh
