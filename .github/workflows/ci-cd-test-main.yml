@@ -51,11 +51,6 @@ jobs:
           
       - name: Client Connect to server and perform Git operations
         run: |
-          #ssh-keyscan -p 2222 89.23.4.133 >> ~/.ssh/known_hosts
-          #chmod 644 ~/.ssh/known_hosts
-
-          #export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa"
-
           # Attempt SSH connection with debugging enabled
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 \
           "TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH} bash -c ' 
@@ -101,19 +96,23 @@ jobs:
           rsync -av build/ dist/ || { echo "Failed to sync build to dist"; exit 1; }
           '"
 
-      - name: Server Fetch All Branches for server
+      - name: Server Connect and Perform Git Operations
         run: |
-          ssh -t -p 2222 npo@89.23.4.133 TARGET_BRANCH=${TARGET_BRANCH} SERVER_BRANCH=${SERVER_BRANCH} << "EOF"
-          set -x  # Enable debugging
+          # Attempt SSH connection with debugging enabled
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 \
+          "TARGET_BRANCH=${TARGET_BRANCH} SERVER_BRANCH=${SERVER_BRANCH} bash -c ' 
+          set -x  
+          echo \"✅ TARGET_BRANCH is: $TARGET_BRANCH\"
+          echo \"✅ SERVER_BRANCH is: $SERVER_BRANCH\"
 
-          docker exec -e TARGET_BRANCH=$TARGET_BRANCH -e SERVER_BRANCH=$SERVER_BRANCH sep-erp-test_app_test_1 bash -c "
+          docker exec -e TARGET_BRANCH=$TARGET_BRANCH -e SERVER_BRANCH=$SERVER_BRANCH sep-erp-test_app_test_1 bash -c \"
           set -e  # Exit on error
 
           echo '📌 [START] Fetching branches for SERVER_BRANCH: \$SERVER_BRANCH on TARGET_BRANCH: \$TARGET_BRANCH'
-    
+
           # Debug variable values
           echo '🔹 TARGET_BRANCH is:' \$TARGET_BRANCH
-          echo '🔹 SERVER_BRANCH is:' \$SERVER_BRANCH
+          echo '🔹 SERVER_BRANCH is:' \$SERVER_BRANCH   
 
           echo '🔹 Fetching all branches...'
           git fetch --all 2>&1 | tee /tmp/git_fetch.log || { echo '❌ Failed to fetch branches'; cat /tmp/git_fetch.log; exit 1; }
@@ -141,11 +140,11 @@ jobs:
 
           echo '📌 [COMPLETE] Server operations finished successfully!'
 
-          " || { echo '❌ Docker exec command failed'; exit 1; }
+          \" || { echo '❌ Docker exec command failed'; exit 1; }
 
           echo '🔄 Restarting Docker container...'
           docker restart sep-erp-test_app_test_1 2>&1 | tee /tmp/docker_restart.log || { echo '❌ Failed to restart Docker container'; cat /tmp/docker_restart.log; exit 1; }
-          EOF
+          '"
 
 
       - name: Set up Node.js
