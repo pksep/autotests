@@ -56,9 +56,13 @@ jobs:
 
           # Add GitHub SSH fingerprint to known_hosts inside the remote machine
           ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-          # Verify SSH authentication to GitHub
-          ssh -T git@github.com || { echo "❌ SSH authentication failed!"; exit 1; }
+          # Explicitly set SSH key for this session
+          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/githubactions_id_rsa"
+
+          # Verify SSH authentication to GitHub using your key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/githubactions_id_rsa -T git@github.com || { echo "❌ SSH authentication failed!"; exit 1; }
 
           # Navigate to project directory
           cd ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to change directory"; exit 1; }
@@ -103,8 +107,6 @@ jobs:
           pnpm run build 2>&1 | tee /tmp/pnpm_build.log || { echo "❌ Failed to build site"; cat /tmp/pnpm_build.log; exit 1; }
           rsync -av build/ dist/ 2>&1 | tee /tmp/rsync.log || { echo "❌ Failed to sync build to dist"; cat /tmp/rsync.log; exit 1; }
           EOF
-
-
 
       - name: Server Fetch All Branches for server
         run: |
