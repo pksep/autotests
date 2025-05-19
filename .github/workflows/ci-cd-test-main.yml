@@ -105,47 +105,45 @@ jobs:
           echo \"✅ TARGET_BRANCH is: $TARGET_BRANCH\"
           echo \"✅ SERVER_BRANCH is: $SERVER_BRANCH\"
 
-          docker exec -e TARGET_BRANCH=$TARGET_BRANCH -e SERVER_BRANCH=$SERVER_BRANCH sep-erp-test_app_test_1 bash -c \"
+          docker exec -e TARGET_BRANCH=$TARGET_BRANCH -e SERVER_BRANCH=$SERVER_BRANCH sep-erp-test_app_test_1 bash -c '
           set -e  # Exit on error
 
-          echo '📌 [START] Fetching branches for SERVER_BRANCH: \$SERVER_BRANCH on TARGET_BRANCH: \$TARGET_BRANCH'
+          echo \"📌 [START] Fetching branches for SERVER_BRANCH: \$SERVER_BRANCH on TARGET_BRANCH: \$TARGET_BRANCH\"
 
           # Debug variable values
-          echo '🔹 TARGET_BRANCH is:' \$TARGET_BRANCH
-          echo '🔹 SERVER_BRANCH is:' \$SERVER_BRANCH   
+          echo \"🔹 TARGET_BRANCH is: \$TARGET_BRANCH\"
+          echo \"🔹 SERVER_BRANCH is: \$SERVER_BRANCH\"   
 
-          echo '🔹 Fetching all branches...'
-          git fetch --all 2>&1 | tee /tmp/git_fetch.log || { echo '❌ Failed to fetch branches'; cat /tmp/git_fetch.log; exit 1; }
+          echo \"🔹 Fetching all branches...\"
+          git fetch --all 2>&1 | tee /tmp/git_fetch.log || { echo \"❌ Failed to fetch branches\"; cat /tmp/git_fetch.log; exit 1; }
 
-          echo '🔹 Switching to TARGET_BRANCH: \$TARGET_BRANCH...'
-          git switch \$TARGET_BRANCH 2>&1 | tee /tmp/git_switch.log || { echo '❌ Failed to switch to TARGET_BRANCH'; cat /tmp/git_switch.log; exit 1; }
+          echo \"🔹 Switching to TARGET_BRANCH: \$TARGET_BRANCH...\"
+          git switch \$TARGET_BRANCH 2>&1 | tee /tmp/git_switch.log || { echo \"❌ Failed to switch to TARGET_BRANCH\"; cat /tmp/git_switch.log; exit 1; }
 
-          echo '🔹 Pulling latest changes for TARGET_BRANCH...'
-          git pull origin \$TARGET_BRANCH 2>&1 | tee /tmp/git_pull_target.log || { echo '❌ Failed to pull TARGET_BRANCH'; cat /tmp/git_pull_target.log; exit 1; }
+          echo \"🔹 Pulling latest changes for TARGET_BRANCH...\"
+          git pull origin \$TARGET_BRANCH 2>&1 | tee /tmp/git_pull_target.log || { echo \"❌ Failed to pull TARGET_BRANCH\"; cat /tmp/git_pull_target.log; exit 1; }
 
-          echo '🔹 Pulling latest changes for SERVER_BRANCH...'
-          git pull origin \$SERVER_BRANCH 2>&1 | tee /tmp/git_pull_server.log || { echo '❌ Failed to pull SERVER_BRANCH'; cat /tmp/git_pull_server.log; exit 1; }
+          echo \"🔹 Pulling latest changes for SERVER_BRANCH...\"
+          git pull origin \$SERVER_BRANCH 2>&1 | tee /tmp/git_pull_server.log || { echo \"❌ Failed to pull SERVER_BRANCH\"; cat /tmp/git_pull_server.log; exit 1; }
 
-          echo '🔹 Merging SERVER_BRANCH into TARGET_BRANCH...'
-          git merge --no-commit --no-ff \$SERVER_BRANCH 2>&1 | tee /tmp/git_merge.log || { echo '❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH'; cat /tmp/git_merge.log; exit 1; }
+          echo \"🔹 Merging SERVER_BRANCH into TARGET_BRANCH...\"
+          git merge --no-commit --no-ff \$SERVER_BRANCH 2>&1 | tee /tmp/git_merge.log || { echo \"❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH\"; cat /tmp/git_merge.log; exit 1; }
 
-          echo '🔹 Installing dependencies...'
-          pnpm i 2>&1 | tee /tmp/pnpm_install.log || { echo '❌ Failed to install dependencies'; cat /tmp/pnpm_install.log; exit 1; }
+          echo \"🔹 Installing dependencies...\"
+          pnpm i 2>&1 | tee /tmp/pnpm_install.log || { echo \"❌ Failed to install dependencies\"; cat /tmp/pnpm_install.log; exit 1; }
 
-          echo '🔹 Building application...'
-          pnpm run build 2>&1 | tee /tmp/pnpm_build.log || { echo '❌ Failed to build site'; cat /tmp/pnpm_build.log; exit 1; }
+          echo \"🔹 Building application...\"
+          pnpm run build 2>&1 | tee /tmp/pnpm_build.log || { echo \"❌ Failed to build site\"; cat /tmp/pnpm_build.log; exit 1; }
 
-          echo '🔹 Syncing build files...'
-          rsync -av build/ dist/ 2>&1 | tee /tmp/rsync.log || { echo '❌ Failed to sync build to dist'; cat /tmp/rsync.log; exit 1; }
+          echo \"🔹 Syncing build files...\"
+          rsync -av build/ dist/ 2>&1 | tee /tmp/rsync.log || { echo \"❌ Failed to sync build to dist\"; cat /tmp/rsync.log; exit 1; }
 
-          echo '📌 [COMPLETE] Server operations finished successfully!'
+          echo \"📌 [COMPLETE] Server operations finished successfully!\"
+          ' || { echo \"❌ Docker exec command failed\"; exit 1; }
 
-          \" || { echo '❌ Docker exec command failed'; exit 1; }
-
-          echo '🔄 Restarting Docker container...'
-          docker restart sep-erp-test_app_test_1 2>&1 | tee /tmp/docker_restart.log || { echo '❌ Failed to restart Docker container'; cat /tmp/docker_restart.log; exit 1; }
+          echo \"🔄 Restarting Docker container...\"
+          docker restart sep-erp-test_app_test_1 2>&1 | tee /tmp/docker_restart.log || { echo \"❌ Failed to restart Docker container\"; cat /tmp/docker_restart.log; exit 1; }
           '"
-
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
