@@ -128,7 +128,9 @@ jobs:
           git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
           git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
 
-
+          pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
+          pnpm run build || { echo \\\"❌ Failed to build site\\\"; exit 1; }
+          echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
           
           \"
 
