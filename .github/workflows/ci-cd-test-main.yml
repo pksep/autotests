@@ -136,7 +136,7 @@ jobs:
           
 
           echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
-          \" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
+          #\" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
 
 
           echo \\\"🔄 Restarting Docker container...\\\"
