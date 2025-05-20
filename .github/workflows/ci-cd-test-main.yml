@@ -115,11 +115,8 @@ jobs:
           else
             echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
           fi
-
-          git pull origin \$TARGET_BRANCH || { echo \\\"❌ Failed to pull TARGET_BRANCH\\\"; exit 1; }
           \" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
 
-          docker restart sep-erp-test_app_test_1 2>&1 | tee /tmp/docker_restart.log || { echo \"❌ Failed to restart Docker container\"; cat /tmp/docker_restart.log; exit 1; }
           '"
 
       - name: Set up Node.js
