@@ -128,6 +128,10 @@ jobs:
           git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
           git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
 
+          # Merge SERVER_BRANCH into TARGET_BRANCH
+          git checkout \$TARGET_BRANCH || { echo \\\"❌ Failed to switch back to TARGET_BRANCH\\\"; exit 1; }
+          git merge --no-commit --no-ff origin\$SERVER_BRANCH || { echo \\\"❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH\\\"; exit 1; }
+          
           pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
           pnpm run build || { echo \\\"❌ Failed to build site\\\"; exit 1; }
           echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
