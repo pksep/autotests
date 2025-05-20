@@ -100,13 +100,10 @@ jobs:
         run: |
           # Attempt SSH connection with debugging enabled
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 \
-          "TARGET_BRANCH=${TARGET_BRANCH} SERVER_BRANCH=${SERVER_BRANCH} bash -c \" ' 
+          "TARGET_BRANCH=${TARGET_BRANCH} SERVER_BRANCH=${SERVER_BRANCH} bash -c ' 
           set -x  
 
-          docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
 
-
-          \" ' 
 
           '"
 
