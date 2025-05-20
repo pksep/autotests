@@ -109,12 +109,6 @@ jobs:
           git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
           git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }
 
-          # Ensure the local SERVER_BRANCH is deleted before pulling from remote
-          if git show-ref --verify --quiet refs/heads/\$SERVER_BRANCH; then
-            git branch -D \$SERVER_BRANCH || echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
-          else
-            echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
-          fi
           \" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
 
           '"
