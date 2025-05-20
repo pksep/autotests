@@ -102,12 +102,46 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 \
           "TARGET_BRANCH=${TARGET_BRANCH} SERVER_BRANCH=${SERVER_BRANCH} bash -c ' 
           set -x  
+          echo \"✅ TARGET_BRANCH is: $TARGET_BRANCH\"
+          echo \"✅ SERVER_BRANCH is: $SERVER_BRANCH\"
+
+          docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
+
+          echo \\\"📌 [START] Fetching branches for SERVER_BRANCH: \$SERVER_BRANCH on TARGET_BRANCH: \$TARGET_BRANCH\\\";
+
+          echo \\\"🔹 TARGET_BRANCH is: \$TARGET_BRANCH\\\";
+          echo \\\"🔹 SERVER_BRANCH is: \$SERVER_BRANCH\\\";
+
+          git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
+          git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
+          git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }
+
+          # Ensure the local SERVER_BRANCH is deleted before pulling from remote
+          if git show-ref --verify --quiet refs/heads/\$SERVER_BRANCH; then
+            git branch -D \$SERVER_BRANCH || echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
+          else
+            echo \\\"✅ No existing local branch \$SERVER_BRANCH, skipping deletion.\\\"
+          fi
+
+          git pull origin \$TARGET_BRANCH || { echo \\\"❌ Failed to pull TARGET_BRANCH\\\"; exit 1; }
+
+          # Force reset instead of pull to avoid fast-forward issues
+          git fetch origin \$SERVER_BRANCH || { echo \\\"❌ Failed to fetch SERVER_BRANCH\\\"; exit 1; }
+          git reset --hard origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to reset SERVER_BRANCH\\\"; exit 1; }
+
+          pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
+
+          pnpm run build || { echo \\\"❌ Failed to build site\\\"; exit 1; }
+
+          
+
+          echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
+          \" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
 
 
-
+          echo \\\"🔄 Restarting Docker container...\\\"
+          docker restart sep-erp-test_app_test_1 2>&1 | tee /tmp/docker_restart.log || { echo \"❌ Failed to restart Docker container\"; cat /tmp/docker_restart.log; exit 1; }
           '"
-
-
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
