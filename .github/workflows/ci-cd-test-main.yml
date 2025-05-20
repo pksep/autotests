@@ -99,10 +99,10 @@ jobs:
       - name: Server Connect and Perform Git Operations
         run: |
           # Attempt SSH connection with debugging enabled
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 \
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 
           "TARGET_BRANCH=${TARGET_BRANCH} SERVER_BRANCH=${SERVER_BRANCH} bash -c ' 
 
-          ' \"
+          ' "
 
 
       - name: Set up Node.js
