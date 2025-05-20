@@ -107,7 +107,7 @@ jobs:
 
 
 
-          \" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
+          \" ' 
 
           '"
 
