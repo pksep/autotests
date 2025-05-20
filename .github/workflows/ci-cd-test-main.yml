@@ -105,6 +105,19 @@ jobs:
           echo \"✅ TARGET_BRANCH is: $TARGET_BRANCH\"
           echo \"✅ SERVER_BRANCH is: $SERVER_BRANCH\"
           docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
+
+          echo \\\"📌 [START] Fetching branches for SERVER_BRANCH: \$SERVER_BRANCH on TARGET_BRANCH: \$TARGET_BRANCH\\\";
+
+          echo \\\"🔹 TARGET_BRANCH is: \$TARGET_BRANCH\\\";
+          echo \\\"🔹 SERVER_BRANCH is: \$SERVER_BRANCH\\\";
+
+          git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
+          git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
+          git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }
+
+
+
+          
           \"
 
           '"
