@@ -3,6 +3,7 @@ import { performLogin } from './testcases/TC000.spec';
 
 export function runSetup() { // ✅ Use function declaration instead of arrow function
     test.beforeEach("Test Case 00 - Authorization", async ({ page }) => {
+        console.log("Performing Login");
         await performLogin(page, "001", "Перов Д.А.", "54321");
         await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
         await page.locator('[data-testid="LoginForm-Login-Button"]').click();
