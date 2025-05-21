@@ -62,6 +62,7 @@ jobs:
           # Fetch all branches
           git fetch --all || { echo "Failed to fetch branches"; exit 1; }
           git switch ${TARGET_BRANCH}
+          git pull
           git branch -D ${CLIENT_BRANCH}
           # Switch to main/canary branch
           git checkout ${TARGET_BRANCH} || { echo "Failed to checkout ${TARGET_BRANCH}"; exit 1; }
