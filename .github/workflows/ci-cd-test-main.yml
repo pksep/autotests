@@ -114,7 +114,7 @@ jobs:
           git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
           git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
           export BRANCH_TEST="default-branch"
-          #if [ \$SERVER_BRANCH != \$BRANCH_TEST ]; then
+
           git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }
 
           # Ensure the local SERVER_BRANCH is deleted before pulling from remote
@@ -133,9 +133,7 @@ jobs:
           # Merge SERVER_BRANCH into TARGET_BRANCH
           git checkout \$TARGET_BRANCH || { echo \\\"❌ Failed to switch back to TARGET_BRANCH\\\"; exit 1; }
           git merge --no-commit --no-ff origin/\$SERVER_BRANCH || { echo \\\"❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH\\\"; exit 1; }
-          #else
-          #  echo \\\"⚠️ SERVER_BRANCH is empty, skipping related operations.\\\";
-          #fi
+
           pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
           pnpm run build || { echo \\\"❌ Failed to build site\\\"; exit 1; }
           echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
