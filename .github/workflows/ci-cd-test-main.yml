@@ -113,7 +113,6 @@ jobs:
 
           git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
           git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
-          export BRANCH_TEST="default-branch"
 
           git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }
 
