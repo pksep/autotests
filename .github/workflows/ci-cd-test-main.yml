@@ -113,7 +113,7 @@ jobs:
 
           git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
           git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
-          if [ \"\\$SERVER_BRANCH\" != \"default-branch\" ]; then
+          if [ \"\$SERVER_BRANCH\" != \"default-branch\" ]; then
             git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }
 
             # Ensure the local SERVER_BRANCH is deleted before pulling from remote
