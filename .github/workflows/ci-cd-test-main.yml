@@ -60,47 +60,33 @@ jobs:
 
             cd ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to change directory"; exit 1; }
 
-            # Fetch branches with retry logic
-            retries=3
-            for i in $(seq 1 $retries); do
-              git fetch --all && break || echo "⚠️ Fetch attempt $i failed. Retrying..."
-              sleep 2
-            done
+            # **Delete existing CLIENT_BRANCH and reset everything**
+            echo "⚠️ Removing any existing local CLIENT_BRANCH..."
+            git branch -D ${CLIENT_BRANCH} || echo "✅ No existing local branch ${CLIENT_BRANCH}, skipping deletion."
 
-            # Ensure latest version of TARGET_BRANCH
+            echo "⚠️ Resetting repository to latest state..."
+            git fetch --all
+            git reset --hard origin/${TARGET_BRANCH} || { echo "❌ Failed to reset TARGET_BRANCH"; exit 1; }
+
+            # **Fresh checkout of CLIENT_BRANCH**
+            echo "⚠️ Creating fresh CLIENT_BRANCH from remote..."
+            git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH} || { echo "❌ Failed to create fresh branch ${CLIENT_BRANCH}"; exit 1; }
+
+            # **Ensure we have the latest version**
+            git pull --force origin ${CLIENT_BRANCH} || { echo "❌ Failed to pull latest CLIENT_BRANCH"; exit 1; }
+
+            # **Merge CLIENT_BRANCH into TARGET_BRANCH safely**
             git checkout ${TARGET_BRANCH} || { echo "❌ Failed to checkout ${TARGET_BRANCH}"; exit 1; }
-            git pull origin ${TARGET_BRANCH} || { echo "❌ Failed to update ${TARGET_BRANCH}"; exit 1; }
+            git merge --no-commit --no-ff ${CLIENT_BRANCH} || { echo "❌ Failed to merge ${CLIENT_BRANCH} into ${TARGET_BRANCH}"; exit 1; }
 
-            # Ensure CLIENT_BRANCH exists
-            if git checkout ${CLIENT_BRANCH}; then
-              echo "✅ Switched to existing branch '${CLIENT_BRANCH}'."
-            else
-              echo "⚠️ '${CLIENT_BRANCH}' does not exist locally. Creating from remote."
-              git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH} || { echo "❌ Failed to create branch ${CLIENT_BRANCH}"; exit 1; }
-            fi
-
-            # Handle diverging branches safely
-            git pull --rebase origin ${CLIENT_BRANCH} || { 
-              echo "⚠️ Pull rebase failed, attempting merge strategy..."
-              git pull --no-rebase origin ${CLIENT_BRANCH} || exit 1;
-            }
-
-            # Merge CLIENT_BRANCH into TARGET_BRANCH safely
-            git checkout ${TARGET_BRANCH} || { echo "❌ Failed to checkout ${TARGET_BRANCH}"; exit 1; }
-            git merge ${CLIENT_BRANCH} --no-commit || { echo "❌ Failed to merge ${CLIENT_BRANCH} into ${TARGET_BRANCH}"; exit 1; }
-
-            # Verify pnpm installation
+            # **Verify pnpm installation**
             command -v pnpm || { echo "❌ pnpm missing! Attempting installation..."; npm install -g pnpm; }
 
-            # Build site
+            # **Build site**
             pnpm i || { echo "❌ Failed to install dependencies"; exit 1; }
             pnpm run build || { echo "❌ Failed to build site"; exit 1; }
             rsync -av build/ dist/ || { echo "❌ Failed to sync build to dist"; exit 1; }
           EOF
-        env:
-          CLIENT_BRANCH: ${{ env.CLIENT_BRANCH }}
-          TARGET_BRANCH: ${{ env.TARGET_BRANCH }}
-          SERVER_BRANCH: ${{ env.SERVER_BRANCH }}
 
       - name: Server Connect and Perform Git Operations
         run: |
