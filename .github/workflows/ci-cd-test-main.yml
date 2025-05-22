@@ -60,23 +60,23 @@ jobs:
 
             cd ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to change directory"; exit 1; }
 
-            # **Delete existing CLIENT_BRANCH and reset everything**
-            echo "⚠️ Removing any existing local CLIENT_BRANCH..."
-            git branch -D ${CLIENT_BRANCH} || echo "✅ No existing local branch ${CLIENT_BRANCH}, skipping deletion."
+            # **Wipe and reset the repository**
+            echo "⚠️ Removing all local branches and resetting repository..."
+            rm -rf .git || { echo "❌ Failed to remove .git directory"; exit 1; }
+            git init || { echo "❌ Failed to reinitialize repository"; exit 1; }
+            git remote add origin git@github.com:NPO-Automotive/sep_erp_client.git || { echo "❌ Failed to add remote"; exit 1; }
+            git fetch --all || { echo "❌ Failed to fetch remote branches"; exit 1; }
 
-            echo "⚠️ Resetting repository to latest state..."
-            git fetch --all
+            # **Ensure latest TARGET_BRANCH**
+            git checkout -b ${TARGET_BRANCH} origin/${TARGET_BRANCH} || { echo "❌ Failed to checkout TARGET_BRANCH"; exit 1; }
             git reset --hard origin/${TARGET_BRANCH} || { echo "❌ Failed to reset TARGET_BRANCH"; exit 1; }
 
-            # **Fresh checkout of CLIENT_BRANCH**
-            echo "⚠️ Creating fresh CLIENT_BRANCH from remote..."
-            git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH} || { echo "❌ Failed to create fresh branch ${CLIENT_BRANCH}"; exit 1; }
-
-            # **Ensure we have the latest version**
-            git pull --force origin ${CLIENT_BRANCH} || { echo "❌ Failed to pull latest CLIENT_BRANCH"; exit 1; }
-
+            # **Create and switch to CLIENT_BRANCH**
+            git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH} || { echo "❌ Failed to create fresh CLIENT_BRANCH"; exit 1; }
+            git reset --hard origin/${CLIENT_BRANCH} || { echo "❌ Failed to reset CLIENT_BRANCH"; exit 1; }
+      
             # **Merge CLIENT_BRANCH into TARGET_BRANCH safely**
-            git checkout ${TARGET_BRANCH} || { echo "❌ Failed to checkout ${TARGET_BRANCH}"; exit 1; }
+            git checkout ${TARGET_BRANCH} || { echo "❌ Failed to switch back to TARGET_BRANCH"; exit 1; }
             git merge --no-commit --no-ff ${CLIENT_BRANCH} || { echo "❌ Failed to merge ${CLIENT_BRANCH} into ${TARGET_BRANCH}"; exit 1; }
 
             # **Verify pnpm installation**
@@ -87,6 +87,7 @@ jobs:
             pnpm run build || { echo "❌ Failed to build site"; exit 1; }
             rsync -av build/ dist/ || { echo "❌ Failed to sync build to dist"; exit 1; }
           EOF
+
 
       - name: Server Connect and Perform Git Operations
         run: |
