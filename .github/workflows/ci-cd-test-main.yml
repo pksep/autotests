@@ -22,7 +22,7 @@ defaults:
 
 jobs:
   build:
-    runs-on: ubuntu-22.03
+    runs-on: ubuntu-22.05
 
     steps:
       - name: Checkout code
@@ -31,6 +31,12 @@ jobs:
           fetch-depth: 0
           submodules: false
 
+      - name: Check directory contents
+        run: |
+          ls -l  # Shows file sizes and permissions
+          ls -a  # Lists hidden files as well
+
+          
       - name: Get Branch Names and Target Branch
         run: |
           echo "CLIENT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
