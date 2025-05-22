@@ -50,41 +50,50 @@ jobs:
           
       - name: Client Connect to server and perform Git operations
         run: |
-          echo "Initializing SSH connection..."
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 << 'EOF'
-            set -euxo pipefail  # Enable strict error handling
+          # Attempt SSH connection with debugging enabled
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p 2222 npo@89.23.4.133 \
+          "TARGET_BRANCH=${TARGET_BRANCH} CLIENT_BRANCH=${CLIENT_BRANCH} bash -c ' 
+          set -x  
+          echo \"✅ TARGET_BRANCH is: $TARGET_BRANCH\"
+          echo \"✅ CLIENT_BRANCH is: $CLIENT_BRANCH\"
+          cd ~/autodeploy-test/sep_erp_client || { echo \"❌ Failed to change directory\"; exit 1; }
 
-            echo "✅ TARGET_BRANCH is: ${TARGET_BRANCH}"
-            echo "✅ CLIENT_BRANCH is: ${CLIENT_BRANCH}"
+          # Fetch all branches
+          git fetch --all || { echo "Failed to fetch branches"; exit 1; }
 
-            # **Remove everything in the repo directory**
-            echo "⚠️ Removing all existing repo files..."
-            rm -rf ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to remove old repo"; exit 1; }
+          # Switch to main/canary branch
+          git checkout ${TARGET_BRANCH} || { echo "Failed to checkout ${TARGET_BRANCH}"; exit 1; }
 
-            # **Clone a fresh copy**
-            echo "⚠️ Cloning a fresh repository..."
-            git clone git@github.com:NPO-Automotive/sep_erp_client.git ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to clone fresh repo"; exit 1; }
-            cd ~/autodeploy-test/sep_erp_client || { echo "❌ Failed to change directory"; exit 1; }
+          # Switch to CLIENT_BRANCH or create from remote
+          if git checkout ${CLIENT_BRANCH}; then
+            echo "Switched to existing branch '${CLIENT_BRANCH}'."
+          else
+            echo "'${CLIENT_BRANCH}' does not exist locally. Creating from remote."
+            git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH} || { echo "Failed to create branch ${CLIENT_BRANCH}"; exit 1; }
+          fi
 
-            # **Checkout CLIENT_BRANCH**
-            echo "⚠️ Checking out CLIENT_BRANCH fresh..."
-            git checkout ${CLIENT_BRANCH} || git checkout -b ${CLIENT_BRANCH} origin/${CLIENT_BRANCH} || { echo "❌ Failed to create fresh CLIENT_BRANCH"; exit 1; }
-      
-            # **Ensure latest CLIENT_BRANCH version**
-            git pull --force origin ${CLIENT_BRANCH} || { echo "❌ Failed to pull latest CLIENT_BRANCH"; exit 1; }
+          # Pull latest changes into CLIENT_BRANCH
+          git pull origin ${CLIENT_BRANCH} || { echo "Failed to pull ${CLIENT_BRANCH}"; exit 1; }
 
-            # **Merge CLIENT_BRANCH into TARGET_BRANCH safely**
-            git checkout ${TARGET_BRANCH} || { echo "❌ Failed to switch back to TARGET_BRANCH"; exit 1; }
-            git merge --no-commit --no-ff ${CLIENT_BRANCH} || { echo "❌ Failed to merge ${CLIENT_BRANCH} into ${TARGET_BRANCH}"; exit 1; }
+          # Switch back to TARGET_BRANCH
+          git checkout ${TARGET_BRANCH} || { echo "Failed to checkout ${TARGET_BRANCH}"; exit 1; }
 
-            # **Verify pnpm installation**
-            command -v pnpm || { echo "❌ pnpm missing! Attempting installation..."; npm install -g pnpm; }
+          # Set Git User
+          git config --global user.email "rgjoyce111@gmail.com"
+          git config --global user.name "atomant1969"
 
-            # **Build site**
-            pnpm i || { echo "❌ Failed to install dependencies"; exit 1; }
-            pnpm run build || { echo "❌ Failed to build site"; exit 1; }
-            rsync -av build/ dist/ || { echo "❌ Failed to sync build to dist"; exit 1; }
-          EOF
+          # Merge CLIENT_BRANCH into TARGET_BRANCH without committing
+          git merge ${CLIENT_BRANCH} --no-commit || { echo "Failed to merge ${CLIENT_BRANCH} into ${TARGET_BRANCH}"; exit 1; }
+
+          # Check pnpm installation
+          echo "Checking pnpm version:"
+          pnpm --version
+
+          # Build site
+          pnpm i || { echo "Failed to install dependencies"; exit 1; }
+          pnpm run build || { echo "Failed to build site"; exit 1; }
+          rsync -av build/ dist/ || { echo "Failed to sync build to dist"; exit 1; }
+          '"
 
       - name: Server Connect and Perform Git Operations
         run: |
