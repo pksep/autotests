@@ -147,12 +147,12 @@ export const testSuites = {
         description: 'This is a group of full page tests p02 - P04',
         tests: [
             {
-                test: runU005,
-                description: 'This test checks the User Scenario series of tests U005.',
+                test: runU004,
+                description: 'This test checks the User Scenario series of tests U004.',
             },
             {
-                test: runU004,
-                description: 'This test checks the User Scenario series of tests U004',
+                test: runU005,
+                description: 'This test checks the User Scenario series of tests U005',
             },
             {
                 test: runU001,
