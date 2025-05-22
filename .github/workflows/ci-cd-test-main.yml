@@ -113,14 +113,14 @@ jobs:
           set -x  
           echo \"✅ TARGET_BRANCH is: $TARGET_BRANCH\"
           echo \"✅ SERVER_BRANCH is: $SERVER_BRANCH\"
+          
+          docker cp /home/npo/.ssh/id_rsa sep-erp-test_app_test_1:/root/.ssh/id_rsa
+          docker cp /home/npo/.ssh/id_rsa.pub sep-erp-test_app_test_1:/root/.ssh/id_rsa.pub
 
           docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
 
-          # Ensure ~/.ssh exists
-          mkdir -p ~/.ssh
-          # Install SSH Key
-          echo \\\"${{ secrets.AUTOTEST_ACTIONS }}\\\" | sed 's/\\\\n/\\n/g' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          chmod 600 /root/.ssh/id_rsa
+          chmod 644 /root/.ssh/id_rsa.pub
 
           # Add GitHub to known hosts
           ssh-keyscan github.com >> ~/.ssh/known_hosts
