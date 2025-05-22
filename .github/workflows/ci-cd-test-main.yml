@@ -157,12 +157,12 @@ jobs:
           pnpm run build || { echo \\\"❌ Failed to build site\\\"; exit 1; }
 
           echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
-          \" ' || { echo \"❌ Docker exec command failed\"; exit 1; }
+          \"
 
 
           echo \\\"🔄 Restarting Docker container...\\\"
           docker restart sep-erp-test_app_test_1 2>&1 | tee /tmp/docker_restart.log || { echo \"❌ Failed to restart Docker container\"; cat /tmp/docker_restart.log; exit 1; }
-          '"
+          \""
 
 
       - name: Set up Node.js
