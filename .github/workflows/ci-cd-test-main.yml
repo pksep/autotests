@@ -116,6 +116,16 @@ jobs:
 
           docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
 
+          # Ensure ~/.ssh exists
+          mkdir -p ~/.ssh
+          # Install SSH Key
+          echo \\\"${{ secrets.AUTOTEST_ACTIONS }}\\\" | sed 's/\\\\n/\\n/g' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          # Add GitHub to known hosts
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          echo \\\"✅ SSH Key Setup Complete Inside Docker!\\\";
+         
           echo \\\"📌 [START] Fetching branches for SERVER_BRANCH: \$SERVER_BRANCH on TARGET_BRANCH: \$TARGET_BRANCH\\\";
 
           echo \\\"🔹 TARGET_BRANCH is: \$TARGET_BRANCH\\\";
