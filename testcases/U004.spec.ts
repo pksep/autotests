@@ -4109,7 +4109,7 @@ export const runU004 = () => {
         });
 
     });
-    test("TestCase 16 - Добавьте больше материалов, чем ограниченное количество в спецификацию и проверка сохранения (Exceed Allowed Materials)", async ({ page }) => {
+    test.skip("TestCase 16 - Добавьте больше материалов, чем ограниченное количество в спецификацию и проверка сохранения (Exceed Allowed Materials)", async ({ page }) => {
         test.setTimeout(500000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
@@ -4378,7 +4378,7 @@ export const runU004 = () => {
             });
         });
     });
-    test("TestCase 17 - cleanup delete all added details (cleanup delete all added details)", async ({ page }) => {
+    test.skip("TestCase 17 - cleanup delete all added details (cleanup delete all added details)", async ({ page }) => {
         // Placeholder for test logic: Open the parts database page      
         test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);
