@@ -5242,7 +5242,7 @@ export const runU004 = () => {
         await allure.step("Step 36: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
-
+            await page.waitForTimeout(500);
             // Get the value of the second cell in the first row
             secondCellValue = await table3Locator!.locator('tbody tr:first-child td:nth-child(1)').innerText();
             const secondCell = await table3Locator!.locator('tbody tr:first-child td:nth-child(1)');
