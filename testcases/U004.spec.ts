@@ -2015,6 +2015,7 @@ export const runU004 = () => {
                 ];
 
                 for (const item of itemsToRemove) {
+                    await page.waitForTimeout(500);
                     const shortagePage = new CreatePartsDatabasePage(page);
                     await shortagePage.removeItemFromSpecification(
                         page,
