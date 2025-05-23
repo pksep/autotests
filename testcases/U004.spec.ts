@@ -203,7 +203,7 @@ export const runU004 = () => {
             await page.waitForLoadState("networkidle");
             // Expected titles in the correct order
             const titles = testData1.elements.EditPage.titles.map((title) => title.trim());
-
+            await page.waitForTimeout(1000);
             // Retrieve all H3 titles from the specified class
             const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, EDIT_PAGE_MAIN_ID);
             console.log(h3Titles);
