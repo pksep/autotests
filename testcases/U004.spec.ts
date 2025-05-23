@@ -206,6 +206,7 @@ export const runU004 = () => {
 
             // Retrieve all H3 titles from the specified class
             const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, EDIT_PAGE_MAIN_ID);
+            console.log(h3Titles);
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
