@@ -159,6 +159,7 @@ jobs:
           fi
           
           pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
+          pnpm run build:lib || { echo \\\"❌ Failed to build site libraries\\\"; exit 1; }
           pnpm run build || { echo \\\"❌ Failed to build site\\\"; exit 1; }
           
           echo \\\"📌 [COMPLETE] Server operations finished successfully!\\\";
