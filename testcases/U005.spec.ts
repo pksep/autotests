@@ -988,7 +988,8 @@ export const runU005 = () => {
                 row.style.color = 'blue'; // Change text color to blue
             });
             await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]')).toBeVisible();
-
+            await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').fill('');
+            await page.waitForTimeout(1000);
             // Locate the search field within the left table and fill it
             await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').fill(TEST_NAME);
 
