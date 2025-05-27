@@ -231,6 +231,7 @@ jobs:
       - name: Create index.html
         if: always()
         run: |
+          ls -al
           mkdir -p allure-history
           chmod -R 777 allure-history  # Give full read/write permissions
           echo '<meta http-equiv="refresh" content="0; URL=./latest/index.html">' > allure-history/index.html
