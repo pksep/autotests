@@ -118,7 +118,8 @@ jobs:
           docker cp /home/npo/.ssh/id_rsa.pub sep-erp-test_app_test_1:/root/.ssh/id_rsa.pub
 
           docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
-
+          
+          apt-get update && apt-get install -y openssh-client
           chmod 600 /root/.ssh/id_rsa
           chmod 644 /root/.ssh/id_rsa.pub
 
@@ -157,6 +158,14 @@ jobs:
             git pull
             git merge --no-commit --no-ff origin/\\$SERVER_BRANCH || { echo \\\"❌ Failed to merge SERVER_BRANCH into TARGET_BRANCH\\\"; exit 1; }
           fi
+          # Install TypeScript globally
+          #npm install -g typescript
+          
+          # Install dependencies before building
+          #pnpm add sequelize @types/sequelize --filter ./packages/zod-shared || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
+
+          # Verify TypeScript availability
+          #tsc -v || { echo \\\"❌ TypeScript is still missing!\\\"; exit 1; }
           
           pnpm i || { echo \\\"❌ Failed to install dependencies\\\"; exit 1; }
           pnpm run build:lib || { echo \\\"❌ Failed to build site libraries\\\"; exit 1; }
@@ -231,19 +240,41 @@ jobs:
       - name: Create index.html
         if: always()
         run: |
-          ls -al
-          mkdir -p allure-history
-          chmod -R 777 allure-history  # Give full read/write permissions
+          sudo chown -R $(whoami) allure-history
+          sudo chmod -R 777 allure-history
           echo '<meta http-equiv="refresh" content="0; URL=./latest/index.html">' > allure-history/index.html
-    
-      - name: Deploy report to Github Pages
+
+      - name: Setup Git remote before deployment
         if: always()
+        continue-on-error: true
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          # Check if 'origin' already exists
+          if git remote | grep -q "origin"; then
+            echo "✅ Remote 'origin' already exists, skipping addition."
+          else
+            git remote add origin https://github.com/NPO-Automotive/autotests.git
+            echo "✅ Added Git remote 'origin'."
+          fi
+
+      - name: Deploy report to GitHub Pages
+        if: always()
+        continue-on-error: true
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.AUTOTEST_ACTIONS }}
           publish_branch: gh-pages
           publish_dir: allure-history
           force_orphan: true
+          user_name: "github-actions"
+          user_email: "github-actions@github.com"
+
+      - name: Verify Allure History Exists
+        if: always()
+        continue-on-error: true
+        run: |
+          ls -lah allure-history || { echo "❌ allure-history is missing!"; exit 1; }
 
       - name: Cleanup
         if: always()
