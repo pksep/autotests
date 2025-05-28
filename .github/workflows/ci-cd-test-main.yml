@@ -283,7 +283,7 @@ jobs:
 
       - name: Display Report URL
         if: always()
-        run: npx playwright open --headless https://NPO-Automotive.github.io/autotests/
+        run: npx playwright open https://NPO-Automotive.github.io/autotests/
 
       - name: Cleanup
         if: always()
