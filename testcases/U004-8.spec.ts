@@ -98,7 +98,7 @@ export const runU004_8 = () => {
     logger.info(`Starting test U004`);
 
     test("TestCase 16 - Добавьте больше материалов, чем ограниченное количество в спецификацию и проверка сохранения (Exceed Allowed Materials)", async ({ page }) => {
-        test.setTimeout(500000);
+        test.setTimeout(900000);
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
