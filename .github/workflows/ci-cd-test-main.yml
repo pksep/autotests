@@ -104,6 +104,11 @@ jobs:
           pnpm run build || { echo "Failed to build site"; exit 1; }
           rsync -av build/ dist/ || { echo "Failed to sync build to dist"; exit 1; }
           '"
+      - name: Clean Allure reports (Uncomment to enable cleanup)
+        run: |
+          echo "⚠️ Cleaning existing Allure reports..."
+          sudo rm -rf allure-results || echo "✅ allure-results cleaned"
+          sudo rm -rf allure-history || echo "✅ allure-history cleaned"
 
       - name: Server Connect and Perform Git Operations
         run: |
