@@ -283,7 +283,7 @@ jobs:
 
       - name: Display Report URL
         if: always()
-        run: npx playwright open https://NPO-Automotive.github.io/autotests/
+        run: echo "open https://NPO-Automotive.github.io/autotests/ to see the report"
 
       - name: Cleanup
         if: always()
