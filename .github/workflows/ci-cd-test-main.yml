@@ -215,8 +215,15 @@ jobs:
         run: ls -lah allure-results
 
       - name: Clean old reports
-        run: rm -rf allure-history/*
-  
+        if: always()
+        run: |
+          echo "Cleaning old reports..."
+          rm -rf allure-history/*
+
+      - name: Check old reports
+        if: always()
+        run: ls -lah allure-history
+
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@master
