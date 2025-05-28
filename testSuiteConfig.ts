@@ -197,7 +197,7 @@ export const testSuites = {
             {
                 test: runU004_9,
                 description: 'This test checks the User Scenario series of tests U004_9',
-            }
+            },
             {
                 test: runU005,
                 description: 'This test checks the User Scenario series of tests U005',
