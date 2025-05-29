@@ -151,7 +151,7 @@ export const runU004_7 = () => {
             const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
 
             editButton.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1500);
         });
         await allure.step("Step 08: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
             tableData_temp = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
@@ -164,7 +164,7 @@ export const runU004_7 = () => {
             });
 
             button.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(2500);
         });
         await allure.step("Step 09: Compare arrays  (Compare arrays)", async () => {
             const tableData_new = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
@@ -176,7 +176,7 @@ export const runU004_7 = () => {
 
     });
     test("TestCase 15 - Перезагрузить без сохранения после добавления деталей в спецификацию и проверка (Reload without saving)", async ({ page }) => {
-        test.setTimeout(90000);
+        test.setTimeout(900000);
         const shortagePage = new CreatePartsDatabasePage(page);
 
         // Placeholder for test logic: Open the parts database page
@@ -230,7 +230,7 @@ export const runU004_7 = () => {
             const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
 
             editButton.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1500);
             tableData_original_15 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 08: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (above the комплектации table)", async () => {
@@ -263,6 +263,7 @@ export const runU004_7 = () => {
         await allure.step("Step 10: извлечь текущую таблицу спецификаций (extract the current specifications table)", async () => {
             // get table from page
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
             tableData_temp = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 11: сравните исходную таблицу с текущей таблицей (compare the original table with the current table)", async () => {

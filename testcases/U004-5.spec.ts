@@ -380,7 +380,7 @@ export const runU004_5 = () => {
 
         await allure.step("Step 18: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)", async () => {
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             logger.info(tableData_full);
             await page.waitForTimeout(1000);

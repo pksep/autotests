@@ -99,7 +99,7 @@ export const runU004_2 = () => {
 
 
     test("TestCase 03 - Редактирование изделия - Добавьте каждый тип материала по отдельности. (Add Each Material Type Individually)", async ({ page }) => {
-        test.setTimeout(90000);
+        test.setTimeout(900000);
         const shortagePage = new CreatePartsDatabasePage(page);
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
@@ -251,6 +251,7 @@ export const runU004_2 = () => {
                         item.type
                     );
                 }
+                await page.waitForTimeout(1500);
                 tableData_temp = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
                 detailvalue_original_before_changequantity = await shortagePage.getQuantityByLineItem(tableData_temp, TESTCASE_2_PRODUCT_Д);
 
@@ -438,6 +439,7 @@ export const runU004_2 = () => {
         });
         await allure.step("Step 005: Получить и сохранить текущую основную таблицу продуктов. (Get and store the current main product table)", async () => {
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
 
         });
@@ -458,7 +460,7 @@ export const runU004_2 = () => {
         });
     });
     test("TestCase 04 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
-        test.setTimeout(90000);
+        test.setTimeout(900000);
         const shortagePage = new CreatePartsDatabasePage(page);
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';

@@ -256,10 +256,11 @@ export const runU004_3 = () => {
             });
 
             button.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1500);
         });
         await allure.step("Step 006: Получить и сохранить текущую основную таблицу продуктов. (Get and store the current main product table)", async () => {
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
 
         });

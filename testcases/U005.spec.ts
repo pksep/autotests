@@ -180,7 +180,7 @@ export const runU005 = () => {
             const shortagePage = new CreatePartsDatabasePage(page);
             // Wait for loading
             const titles = testData1.elements.CreatePage.titles.map((title) => title.trim());
-
+            await page.waitForTimeout(2000);
             // Retrieve all H3 titles from the specified class
             const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, 'AddDetal');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());

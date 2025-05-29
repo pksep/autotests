@@ -180,6 +180,7 @@ export const runU004_4 = () => {
         await allure.step("Step 09: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
             table_before_changequantity = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             value_before_changequantity = await shortagePage.getQuantityByLineItem(table_before_changequantity, TESTCASE_2_PRODUCT_Д);
             logger.info(value_before_changequantity);
@@ -348,6 +349,7 @@ export const runU004_4 = () => {
         await allure.step("Step 17: извлечь основную таблицу продуктов и сохранить ее в массиве. (extract the main product table and store it in an array)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(2500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 18: проверьте, что количество обновлено. (check that the quantity has been updated)", async () => {
@@ -549,6 +551,7 @@ export const runU004_4 = () => {
         await allure.step("Step 13: извлечь основную таблицу продуктов и сохранить ее в массиве. (extract the main product table and store it in an array)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 14: проверьте, что количество обновлено. (check that the quantity has been updated)", async () => {

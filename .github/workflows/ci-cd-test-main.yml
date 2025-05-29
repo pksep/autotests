@@ -104,11 +104,6 @@ jobs:
           pnpm run build || { echo "Failed to build site"; exit 1; }
           rsync -av build/ dist/ || { echo "Failed to sync build to dist"; exit 1; }
           '"
-      - name: Clean Allure reports (Uncomment to enable cleanup)
-        run: |
-          echo "⚠️ Cleaning existing Allure reports..."
-          sudo rm -rf allure-results || echo "✅ allure-results cleaned"
-          sudo rm -rf allure-history || echo "✅ allure-history cleaned"
 
       - name: Server Connect and Perform Git Operations
         run: |
@@ -212,8 +207,18 @@ jobs:
       - name: Run Playwright tests with xvfb
         env:
           TEST_DIR: '.'
-          BASE_URL: 'http://dev.pksep.ru/'
+          BASE_URL: 'http://test.pksep.ru/'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
+
+      - name: Debug Allure results
+        if: always()
+        run: ls -lah allure-results
+
+      - name: Clean Allure reports (Uncomment to enable cleanup)
+        run: |
+          echo "⚠️ Cleaning existing Allure reports..."
+          rm -rf allure-history
+          mkdir -p allure-history
 
       - name: Upload Allure results
         if: always()
@@ -242,6 +247,16 @@ jobs:
           allure_history: allure-history
           keep_reports: 20
 
+      - name: Set Permissions for Allure History
+        run: sudo chown -R $(whoami) allure-history && sudo chmod -R 777 allure-history
+
+      - name: Force GitHub Pages Refresh
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git commit --allow-empty -m "Trigger GitHub Pages rebuild"
+          git push
+    
       - name: Create index.html
         if: always()
         run: |
@@ -255,13 +270,17 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          # Check if 'origin' already exists
-          if git remote | grep -q "origin"; then
-            echo "✅ Remote 'origin' already exists, skipping addition."
+    
+          # ✅ Check if 'origin' exists before removing
+          if git remote get-url origin; then
+            echo "✅ Remote 'origin' already exists."
+            git remote rm origin
           else
-            git remote add origin https://github.com/NPO-Automotive/autotests.git
-            echo "✅ Added Git remote 'origin'."
+            echo "⚠️ Remote 'origin' is missing, adding it now..."
           fi
+    
+          git remote add origin https://github.com/NPO-Automotive/autotests.git
+
 
       - name: Deploy report to GitHub Pages
         if: always()
@@ -279,7 +298,12 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          git log --oneline --graph --decorate --all
           ls -lah allure-history || { echo "❌ allure-history is missing!"; exit 1; }
+
+      - name: Display Report URL
+        if: always()
+        run: echo "open https://NPO-Automotive.github.io/autotests/ to see the report"
 
       - name: Cleanup
         if: always()
