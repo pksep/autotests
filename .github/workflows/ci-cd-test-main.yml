@@ -215,7 +215,17 @@ jobs:
           BASE_URL: 'http://test.pksep.ru/'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
-      
+      - name: Add environment details to allure results directory 🧳 🧳 🧳
+        id: add-environment-details
+        if: always()
+        run: |
+          echo "Environment=${TEST_ENV}" >> allure-results/environment.properties
+          echo "BuildTime=${NOW}" >> allure-results/environment.properties
+          echo "Run=${{ github.run_number }}" >> allure-results/environment.properties
+          echo "Branch=refs/heads/main" >> allure-results/environment.properties
+          cat allure-results/environment.properties
+          cp allure-config/categories.json allure-results/categories.json
+          
       - name: Get Allure History from gh-pages branch 🛎️ 🛎️ 🛎️
         uses: actions/checkout@v4.1.0
         if: always()
