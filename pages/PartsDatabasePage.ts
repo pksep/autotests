@@ -1471,7 +1471,8 @@ export class CreatePartsDatabasePage extends PageObject {
     async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
         const table = page.locator(`[data-testid="${tableTestId}"]`);
         await table.locator('tr').first().waitFor({ state: 'visible' });
-
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(1000);
         const rows = await table.locator('tbody > tr').elementHandles();
         logger.info(`Total rows in tbody: ${rows.length}`);
 

@@ -353,6 +353,7 @@ export const runU004_6 = () => {
         });
         await allure.step("Step 16: Захват таблицы и сохранение ее в массиве. (Capture table and store it in an array)", async () => {
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 17: Подтвердите, что элемент теперь находится в массиве. (Confirm that the item is now in the array)", async () => {
@@ -502,10 +503,11 @@ export const runU004_6 = () => {
             });
 
             button.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1500);
         });
         await allure.step("Step 20: Захват таблицы и сохранение ее в массиве. (Capture table and store it in an array)", async () => {
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
         });
         await allure.step("Step 21: Подтвердите, что элемент теперь НЕ находится в массиве. (Confirm that the item is now NOT in the array)", async () => {
@@ -778,7 +780,7 @@ export const runU004_6 = () => {
             });
 
             button.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1500);
         });
         //third refresh and confirm saved
         await allure.step("Step 17: refresh and confirm saved. (refresh and confirm saved)", async () => {
@@ -786,6 +788,7 @@ export const runU004_6 = () => {
                 timeout: 5000, // Sets a 500ms timeout
                 waitUntil: 'networkidle', // Waits until the page reaches network idle state
             });
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             await page.waitForLoadState("networkidle");
             const nestedArray = tableData_full.map(group => group.items).flat();
@@ -926,7 +929,7 @@ export const runU004_6 = () => {
                 });
 
                 button.click();
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(1500);
             });
             ////////////////// end of РМ deletion            
         });
@@ -936,6 +939,7 @@ export const runU004_6 = () => {
                 timeout: 5000, // Sets a 500ms timeout
                 waitUntil: 'networkidle', // Waits until the page reaches network idle state
             });
+            await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
             await page.waitForLoadState("networkidle");
             const nestedArray = tableData_full.map(group => group.items).flat();
