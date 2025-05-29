@@ -270,13 +270,17 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+    
           # ✅ Check if 'origin' exists before removing
           if git remote get-url origin; then
             echo "✅ Remote 'origin' already exists."
+            git remote rm origin
           else
             echo "⚠️ Remote 'origin' is missing, adding it now..."
-            git remote add origin https://github.com/NPO-Automotive/autotests.git
           fi
+    
+          git remote add origin https://github.com/NPO-Automotive/autotests.git
+
 
       - name: Deploy report to GitHub Pages
         if: always()
