@@ -260,6 +260,10 @@ jobs:
           rm -rf allure-history/latest
           cp -r $LATEST_DIR allure-history/latest
 
+      - name: Debug Allure History
+        run: ls -lah allure-history/latest
+
+
       - name: Set Permissions for Allure History
         run: sudo chown -R $(whoami) allure-history && sudo chmod -R 777 allure-history
 
