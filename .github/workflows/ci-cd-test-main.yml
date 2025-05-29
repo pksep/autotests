@@ -294,6 +294,7 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          git log --oneline --graph --decorate --all
           ls -lah allure-history || { echo "❌ allure-history is missing!"; exit 1; }
 
       - name: Display Report URL
