@@ -300,7 +300,8 @@ jobs:
         run: |
           git log --oneline --graph --decorate --all
           ls -lah allure-history || { echo "❌ allure-history is missing!"; exit 1; }
-
+          ls -lah allure-history/684
+          
       - name: Display Report URL
         if: always()
         run: echo "open https://NPO-Automotive.github.io/autotests/ to see the report"
