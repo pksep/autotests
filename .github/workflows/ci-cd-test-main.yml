@@ -226,12 +226,47 @@ jobs:
           cat allure-results/environment.properties
           cp allure-config/categories.json allure-results/categories.json
           
-      - name: Get Allure History from gh-pages branch 🛎️ 🛎️ 🛎️
-        uses: actions/checkout@v4.1.0
+      - name: Allure Report Action from Marketplace 📚 📚 📚
+        uses: simple-elf/allure-report-action@v1.7
         if: always()
-        continue-on-error: true
         with:
-          ref: gh-pages
-          path: gh-pages
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 5
+
+      - name: Upload allure report   🔺 🔺 🔺
+        uses: actions/upload-artifact@v4.0.0
+        with:
+          name: allure-history
+          path: allure-history
+
+  deploy_allure_reports:
+        needs: [run_tests]
+        timeout-minutes: 60
+        runs-on: ubuntu-latest
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        steps:
+            - name: Checkout 🛎️
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Download Artifacts 🔻
+              uses: actions/download-artifact@v4.1.0
+              with:
+                  name: allure-history
+                  path: allure-history
+
+            - name: Deploy report to Github Pages 🚀 🚀 🚀
+              if: always()
+              uses: JamesIves/github-pages-deploy-action@v4.5.0
+              with:
+                  folder: allure-history
+                  branch: gh-pages
+                  commit-message: Deploy report to Github Pages
+                  single-commit: true
 
                   
