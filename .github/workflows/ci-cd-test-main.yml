@@ -255,6 +255,8 @@ jobs:
 
       - name: Move Latest Report to `latest`
         run: |
+          LATEST_DIR=$(ls -td allure-history/* | head -n 1)
+          echo "Latest report directory: $LATEST_DIR"
           rm -rf allure-history/latest
           cp -r $LATEST_DIR allure-history/latest
 
