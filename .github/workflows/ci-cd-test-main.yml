@@ -203,7 +203,12 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install
-
+        
+      - name: Get timestamps clock 🕒 🕒 🕒
+        run: |
+            echo "NOW=$(date +'%H:%M:%S %m-%d-%Y')" >> $GITHUB_ENV
+            echo "BST_NOW=$(TZ=Europe/London date +'%H:%M:%S %d-%m-%Y')" >> $GITHUB_ENV
+                  
       - name: Run Playwright tests with xvfb
         env:
           TEST_DIR: '.'
