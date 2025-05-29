@@ -214,7 +214,9 @@ jobs:
       - name: Get Allure History from gh-pages branch 🛎️ 🛎️ 🛎️
         uses: actions/checkout@v4.1.0
         if: always()
-          continue-on-error: true
+        continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
+
+                  
