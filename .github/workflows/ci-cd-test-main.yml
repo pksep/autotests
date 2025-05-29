@@ -212,5 +212,28 @@ jobs:
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
       
+      - name: Upload Allure Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Generate Allure Report
+        run: |
+          allure generate allure-results --clean -o allure-report
+          mv allure-report allure-history/latest
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+          user_name: "github-actions"
+          user_email: "github-actions@github.com"
+
+      - name: Display Report URL
+        run: echo "View the report at: https://<your-username>.github.io/<your-repo>/"
+
 
                   
