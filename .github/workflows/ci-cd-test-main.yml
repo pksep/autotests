@@ -247,6 +247,17 @@ jobs:
           allure_history: allure-history
           keep_reports: 2
 
+      - name: Find Latest Report Directory
+        run: |
+          LATEST_DIR=$(ls -td allure-history/* | head -n 1)
+          echo "Latest report directory: $LATEST_DIR"
+          echo "LATEST_DIR=$LATEST_DIR" >> $GITHUB_ENV
+
+      - name: Move Latest Report to `latest`
+        run: |
+          rm -rf allure-history/latest
+          cp -r $LATEST_DIR allure-history/latest
+
       - name: Set Permissions for Allure History
         run: sudo chown -R $(whoami) allure-history && sudo chmod -R 777 allure-history
 
