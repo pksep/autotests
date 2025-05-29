@@ -214,15 +214,11 @@ jobs:
         if: always()
         run: ls -lah allure-results
 
-      - name: Clean old reports
-        if: always()
+      - name: Clean Allure reports (Uncomment to enable cleanup)
         run: |
-          echo "Cleaning old reports..."
-          rm -rf allure-history/*
-
-      - name: Check old reports
-        if: always()
-        run: ls -lah allure-history
+          echo "⚠️ Cleaning existing Allure reports..."
+          rm -rf allure-history
+          mkdir -p allure-history
 
       - name: Upload Allure results
         if: always()
