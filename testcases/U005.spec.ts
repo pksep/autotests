@@ -1561,7 +1561,7 @@ export const runU005 = () => {
             // Trigger the search by pressing 'Enter'
             await searchField.press('Enter');
             await page.waitForLoadState("networkidle");
-
+            await page.waitForTimeout(500);
             // Locate and highlight the first row in the table
             const firstRow = leftTable.locator('tbody tr:first-child');
             await firstRow.evaluate((row) => {
