@@ -935,7 +935,8 @@ export const runU004_1 = () => {
             await allure.step("Step 39 sub step 7: сравнить его с оригиналом (compare it to the original)", async () => {
                 await page.waitForLoadState("networkidle");
                 const identical = await shortagePage.compareTableData(tableData_original, tableData4);
-
+                console.log(tableData_original);
+                console.log(tableData4);
                 logger.info(`Are tableData1 and tableData2 identical: Item deleted? ${identical}`);
 
                 expect(identical).toBe(true); // Assertion
