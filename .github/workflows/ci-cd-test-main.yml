@@ -240,6 +240,11 @@ jobs:
       - name: Debug Allure History Before Publishing
         run: ls -lah allure-history || echo "⚠️ No reports found in allure-history"
 
+      - name: Update index.html to point to latest report
+        run: |
+          LATEST_DIR=$(ls -td allure-history/* | head -n 1)
+          echo "<meta http-equiv='refresh' content='0; URL=${LATEST_DIR}/index.html'>" > allure-history/index.html
+
       - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         if: always()
