@@ -260,7 +260,7 @@ jobs:
           gh_pages: gh-pages
           allure_results: build/allure-results
           allure_history: allure-reports
-          keep_reports: 20  # Keeps the last 20 test runs in history
+          keep_reports: 2  # Keeps the last 20 test runs in history
 
       - name: Debug Allure Reports Before Publishing
         if: always()      
@@ -276,13 +276,13 @@ jobs:
           echo "<meta http-equiv='Pragma' content='no-cache'>" >> allure-reports/index.html
           echo "<meta http-equiv='Expires' content='0'>" >> allure-reports/index.html
 
-      - name: Force GitHub Pages Refresh
-        if: always()      
-        run: |
-          git config --global user.email "rgjoyce111@gmail.com"
-          git config --global user.name "atomant1969"
-          git commit --allow-empty -m "Trigger GitHub Pages rebuild"
-          git push gh-pages
+     # - name: Force GitHub Pages Refresh
+     #   if: always()      
+      #  run: |
+       #   git config --global user.email "rgjoyce111@gmail.com"
+       #   git config --global user.name "atomant1969"
+        #  git commit --allow-empty -m "Trigger GitHub Pages rebuild"
+       #   git push gh-pages
 
       - name: Debug index.html Before Publishing
         if: always()      
