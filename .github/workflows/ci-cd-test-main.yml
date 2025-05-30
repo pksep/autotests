@@ -219,6 +219,16 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
+      - name: Ensure allure-history exists
+        run: |
+          mkdir -p gh-pages/allure-history
+
+      - name: Copy Previous Reports to Allure History
+        run: |
+          if [ -d gh-pages/allure-history ]; then
+            cp -r gh-pages/allure-history/* allure-history/ || echo "No previous reports found"
+          fi
+
       - name: Build test report
         uses: simple-elf/allure-report-action@v1.7
         if: always()
@@ -227,6 +237,9 @@ jobs:
           allure_history: allure-history
           allure_results: build/allure-results
 
+      - name: Debug Allure History Before Publishing
+        run: ls -lah allure-history || echo "⚠️ No reports found in allure-history"
+
       - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         if: always()
@@ -234,3 +247,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
+          force_orphan: true
