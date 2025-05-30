@@ -224,6 +224,13 @@ jobs:
         run: |
           ls -al gh-pages
 
+      - name: Cerate allure reports folder if not exist
+        if: always()
+        run: |
+          mkdir -p gh-pages
+          mkdir -p gh-pages/allure-reports
+          ls -al gh-pages
+
       - name: Ensure allure-reports exists
         if: always()
         run: |
