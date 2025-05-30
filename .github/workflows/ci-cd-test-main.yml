@@ -233,7 +233,7 @@ jobs:
           user_email: "github-actions@github.com"
 
       - name: Display Report URL
-        run: echo "View the report at: https://<your-username>.github.io/<your-repo>/"
+        run: echo "View the report at: https://NPO-Automotive.github.io/autotests/"
 
 
                   
