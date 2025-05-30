@@ -1558,13 +1558,14 @@ export const runU005 = () => {
             console.log("Verified input value:", fieldValue);
             expect(fieldValue).toBe(TEST_FILE);
             const firstRow1 = leftTable.locator('tbody tr:first-child');
-            console.log(await firstRow1.textContent())
+            console.log("First Row:", await firstRow1.textContent());
             // Trigger the search by pressing 'Enter'
             await searchField.press('Enter');
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1500);
             // Locate and highlight the first row in the table
             const firstRow = leftTable.locator('tbody tr:first-child');
+            console.log("First Row 2:", await firstRow.textContent());
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
