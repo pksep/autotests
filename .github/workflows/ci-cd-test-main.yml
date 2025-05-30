@@ -270,6 +270,7 @@ jobs:
         if: always()      
         run: |
           LATEST_DIR=$(ls -td allure-reports/* | head -n 1)
+          sudo chmod -R 777 /home/runner/work/autotests/autotests/allure-reports/index.html || echo "⚠️ Failed to change permissions"
           echo "<meta http-equiv='refresh' content='0; URL=${LATEST_DIR}/index.html'>" > allure-reports/index.html
           echo "<meta http-equiv='Cache-Control' content='no-cache, no-store, must-revalidate'>" >> allure-reports/index.html
           echo "<meta http-equiv='Pragma' content='no-cache'>" >> allure-reports/index.html
