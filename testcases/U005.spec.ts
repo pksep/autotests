@@ -1119,10 +1119,11 @@ export const runU005 = () => {
             //     'testdata/1.3.1.1 Клапан М6х10.PNG__+__c3a2fced-9b03-461b-a596-ef3808d8a475.png',
             // ]);
             // Verify the files were successfully uploaded
-            const uploadedFiles = await fileInput.evaluate((element) => {
-                const input = element as HTMLInputElement; // Explicitly cast the element as HTMLInputElement
-                return input.files?.length || 0; // Return the number of files uploaded
+            await page.waitForTimeout(1000); // Wait before execution
+            const uploadedFiles = await fileInput.evaluate((element: HTMLInputElement) => {
+                return element.files?.length || 0;
             });
+
             console.log(`Number of files uploaded: ${uploadedFiles}`);
             expect(uploadedFiles).toBe(2); // Ensure 2 files were uploaded
 
