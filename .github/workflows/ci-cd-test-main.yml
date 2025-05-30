@@ -229,6 +229,9 @@ jobs:
             cp -r gh-pages/allure-history/* allure-history/ || echo "No previous reports found"
           fi
 
+      - name: Debug Test Results Directory
+        run: ls -lah build/allure-results || echo "⚠️ No test results found"
+
       - name: Build test report
         uses: simple-elf/allure-report-action@v1.7
         if: always()
@@ -248,7 +251,6 @@ jobs:
           echo "<meta http-equiv='Pragma' content='no-cache'>" >> allure-history/index.html
           echo "<meta http-equiv='Expires' content='0'>" >> allure-history/index.html
 
-
       - name: Force GitHub Pages Refresh
         run: |
           git commit --allow-empty -m "Trigger GitHub Pages rebuild"
@@ -257,7 +259,12 @@ jobs:
       - name: Debug index.html Before Publishing
         run: cat allure-history/index.html
 
-      - name: Publish test report
+      - name: Fix Permissions Before Cleanup
+        run: |
+          sudo chmod -R 777 /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to change permissions"
+          rm -rf /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to remove .git directory"
+
+      - name: Publish Test Report
         uses: peaceiris/actions-gh-pages@v3
         if: always()
         with:
@@ -265,3 +272,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: allure-history
           force_orphan: true
+
