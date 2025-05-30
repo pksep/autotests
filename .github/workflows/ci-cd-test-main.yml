@@ -220,30 +220,35 @@ jobs:
           path: gh-pages
 
       - name: Ensure allure-history exists
+        if: always()      
         run: |
           mkdir -p gh-pages/allure-history
 
       - name: Copy Previous Reports to Allure History
+        if: always()      
         run: |
           if [ -d gh-pages/allure-history ]; then
             cp -r gh-pages/allure-history/* allure-history/ || echo "No previous reports found"
           fi
 
       - name: Debug Test Results Directory
+        if: always()      
         run: ls -lah build/allure-results || echo "⚠️ No test results found"
 
       - name: Build test report
+        if: always()      
         uses: simple-elf/allure-report-action@v1.7
-        if: always()
         with:
           gh_pages: gh-pages
           allure_history: allure-history
           allure_results: build/allure-results
 
       - name: Debug Allure History Before Publishing
+        if: always()      
         run: ls -lah allure-history || echo "⚠️ No reports found in allure-history"
 
       - name: Update index.html to point to latest report
+        if: always()      
         run: |
           LATEST_DIR=$(ls -td allure-history/* | head -n 1)
           echo "<meta http-equiv='refresh' content='0; URL=${LATEST_DIR}/index.html'>" > allure-history/index.html
@@ -252,21 +257,24 @@ jobs:
           echo "<meta http-equiv='Expires' content='0'>" >> allure-history/index.html
 
       - name: Force GitHub Pages Refresh
+        if: always()      
         run: |
           git commit --allow-empty -m "Trigger GitHub Pages rebuild"
           git push
           
       - name: Debug index.html Before Publishing
+        if: always()      
         run: cat allure-history/index.html
 
       - name: Fix Permissions Before Cleanup
+        if: always()
         run: |
           sudo chmod -R 777 /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to change permissions"
           rm -rf /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to remove .git directory"
 
       - name: Publish Test Report
-        uses: peaceiris/actions-gh-pages@v3
         if: always()
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
