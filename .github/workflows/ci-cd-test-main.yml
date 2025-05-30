@@ -203,110 +203,96 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install
-
+        
+      
       - name: Run Playwright tests with xvfb
         env:
           TEST_DIR: '.'
           BASE_URL: 'http://test.pksep.ru/'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
-      - name: Debug Allure results
-        if: always()
-        run: ls -lah allure-results
-
-      - name: Clean Allure reports (Uncomment to enable cleanup)
-        run: |
-          echo "⚠️ Cleaning existing Allure reports..."
-          rm -rf allure-history
-          mkdir -p allure-history
-
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@master
-        with:
-          name: allure-results
-          path: allure-results
-          retention-days: 20
-
-      - name: Get Allure history
-        uses: actions/checkout@v2
+      - name: Load test report history
+        uses: actions/checkout@v3
         if: always()
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
 
-      - name: Generate Allure report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        id: allure-report
-        with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          allure_history: allure-history
-          keep_reports: 20
+      - name: Ensure allure-history exists
+        if: always()      
+        run: |
+          mkdir -p gh-pages/allure-history
 
-      - name: Set Permissions for Allure History
-        run: sudo chown -R $(whoami) allure-history && sudo chmod -R 777 allure-history
+      - name: Copy Previous Reports to Allure History
+        if: always()      
+        run: |
+          if [ -d gh-pages/allure-history ]; then
+            cp -r gh-pages/allure-history/* allure-history/ || echo "No previous reports found"
+          fi
+
+      - name: Debug Test Results Directory
+        if: always()      
+        run: ls -lah build/allure-results || echo "⚠️ No test results found"
+
+      - name: Clean Previous Reports Before Generating New One
+        run: |
+          rm -rf allure-history/*
+          mkdir -p allure-history
+
+      - name: Merge Historical Reports Before Generating New One
+        run: |
+          mkdir -p gh-pages/allure-history
+          cp -r gh-pages/allure-history/* allure-history/ || echo "⚠️ No previous reports found, starting fresh"
+
+
+      - name: Build test report
+        if: always()
+        uses: simple-elf/allure-report-action@v1.7
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: build/allure-results
+          keep_reports: 20  # Keeps the last 20 test runs in history
+
+
+      - name: Debug Allure History Before Publishing
+        if: always()      
+        run: ls -lah allure-history || echo "⚠️ No reports found in allure-history"
+
+      - name: Update index.html to point to latest report
+        if: always()      
+        run: |
+          LATEST_DIR=$(ls -td allure-history/* | head -n 1)
+          echo "<meta http-equiv='refresh' content='0; URL=${LATEST_DIR}/index.html'>" > allure-history/index.html
+          echo "<meta http-equiv='Cache-Control' content='no-cache, no-store, must-revalidate'>" >> allure-history/index.html
+          echo "<meta http-equiv='Pragma' content='no-cache'>" >> allure-history/index.html
+          echo "<meta http-equiv='Expires' content='0'>" >> allure-history/index.html
 
       - name: Force GitHub Pages Refresh
+        if: always()      
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
           git commit --allow-empty -m "Trigger GitHub Pages rebuild"
           git push
-    
-      - name: Create index.html
+          
+      - name: Debug index.html Before Publishing
+        if: always()      
+        run: cat allure-history/index.html
+
+      - name: Fix Permissions Before Cleanup
         if: always()
         run: |
-          sudo chown -R $(whoami) allure-history
-          sudo chmod -R 777 allure-history
-          echo '<meta http-equiv="refresh" content="0; URL=./latest/index.html">' > allure-history/index.html
+          sudo chmod -R 777 /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to change permissions"
+          rm -rf /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to remove .git directory"
 
-      - name: Setup Git remote before deployment
-        if: always()
-        continue-on-error: true
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-    
-          # ✅ Check if 'origin' exists before removing
-          if git remote get-url origin; then
-            echo "✅ Remote 'origin' already exists."
-            git remote rm origin
-          else
-            echo "⚠️ Remote 'origin' is missing, adding it now..."
-          fi
-    
-          git remote add origin https://github.com/NPO-Automotive/autotests.git
+      - name: Debug Allure History Before Publishing
+        run: ls -lah allure-history
 
-
-      - name: Deploy report to GitHub Pages
-        if: always()
-        continue-on-error: true
+      - name: Publish Test Report
         uses: peaceiris/actions-gh-pages@v3
+        if: always()
         with:
-          github_token: ${{ secrets.AUTOTEST_ACTIONS }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
-          force_orphan: true
-          user_name: "github-actions"
-          user_email: "github-actions@github.com"
-
-      - name: Verify Allure History Exists
-        if: always()
-        continue-on-error: true
-        run: |
-          git log --oneline --graph --decorate --all
-          ls -lah allure-history || { echo "❌ allure-history is missing!"; exit 1; }
-
-      - name: Display Report URL
-        if: always()
-        run: echo "open https://NPO-Automotive.github.io/autotests/ to see the report"
-
-      - name: Cleanup
-        if: always()
-        run: |
-          git config --global --unset safe.directory || true
-          rm -rf .git/modules/* || true
+          force_orphan: false  # Keeps previous data instead of wiping history
