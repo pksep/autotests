@@ -279,6 +279,8 @@ jobs:
       - name: Force GitHub Pages Refresh
         if: always()      
         run: |
+          git config --global user.email "rgjoyce111@gmail.com"
+          git config --global user.name "atomant1969"
           git commit --allow-empty -m "Trigger GitHub Pages rebuild"
           git push
 
