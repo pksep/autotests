@@ -1557,7 +1557,8 @@ export const runU005 = () => {
             const fieldValue = await searchField.inputValue();
             console.log("Verified input value:", fieldValue);
             expect(fieldValue).toBe(TEST_FILE);
-
+            const firstRow1 = leftTable.locator('tbody tr:first-child');
+            console.log(await firstRow1.textContent())
             // Trigger the search by pressing 'Enter'
             await searchField.press('Enter');
             await page.waitForLoadState("networkidle");
