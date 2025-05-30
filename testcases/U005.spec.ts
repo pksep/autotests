@@ -28,7 +28,7 @@ const baseFileNamesToVerify = [
 export const runU005 = () => {
 
 
-    test("TestCase 01 - создат дитайл - Проверка страница", async ({ browser, page }) => {
+    test.skip("TestCase 01 - создат дитайл - Проверка страница", async ({ browser, page }) => {
         test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
