@@ -240,13 +240,21 @@ jobs:
           rm -rf allure-history/*
           mkdir -p allure-history
 
+      - name: Merge Historical Reports Before Generating New One
+        run: |
+          mkdir -p gh-pages/allure-history
+          cp -r gh-pages/allure-history/* allure-history/ || echo "⚠️ No previous reports found, starting fresh"
+
+
       - name: Build test report
-        if: always()      
+        if: always()
         uses: simple-elf/allure-report-action@v1.7
         with:
           gh_pages: gh-pages
           allure_history: allure-history
           allure_results: build/allure-results
+          keep_reports: 20  # Keeps the last 20 test runs in history
+
 
       - name: Debug Allure History Before Publishing
         if: always()      
@@ -286,7 +294,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history/latest
-          force_orphan: true
-
-
+          publish_dir: allure-history
+          force_orphan: false  # Keeps previous data instead of wiping history
