@@ -1544,6 +1544,9 @@ export const runU005 = () => {
             await page.waitForTimeout(500);
             await searchField.focus(); // Focus on the input field
             await searchField.fill(''); // Clear any existing content
+            await searchField.press('Enter');
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
 
             // Programmatically set the value using JavaScript
             await searchField.evaluate((element, value) => {
