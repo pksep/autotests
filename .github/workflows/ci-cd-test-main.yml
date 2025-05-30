@@ -219,6 +219,11 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
+      - name: list the gh-pages directory
+        if: always()      
+        run: |
+          ls -al gh-pages
+          
       - name: Ensure allure-history exists
         if: always()      
         run: |
