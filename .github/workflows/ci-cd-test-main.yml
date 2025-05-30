@@ -211,122 +211,14 @@ jobs:
           BASE_URL: 'http://test.pksep.ru/'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
-      - name: Debug Allure results
-        if: always()
-        run: ls -lah allure-results
-
-      - name: Clean Allure reports (Uncomment to enable cleanup)
-        run: |
-          echo "⚠️ Cleaning existing Allure reports..."
-          rm -rf allure-history
-          mkdir -p allure-history
-
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@master
-        with:
-          name: allure-results
-          path: allure-results
-          retention-days: 20
-
-      - name: Get Allure history
-        uses: actions/checkout@v2
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Generate Allure report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        id: allure-report
-        with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          allure_history: allure-history
-          keep_reports: 2
-
-      - name: Find Latest Report Directory
-        run: |
-          LATEST_DIR=$(ls -td allure-history/* | head -n 1)
-          echo "Latest report directory: $LATEST_DIR"
-          echo "LATEST_DIR=$LATEST_DIR" >> $GITHUB_ENV
-
-      - name: Move Latest Report to latest
-        run: |
-          LATEST_DIR=$(ls -td allure-history/* | head -n 1)
-          echo "Latest report directory: $LATEST_DIR"
-          rm -rf allure-history/latest
-          cp -r $LATEST_DIR allure-history/latest
-
-      - name: Debug Allure History
-        run: ls -lah allure-history/latest
-
-
-      - name: Set Permissions for Allure History
-        run: sudo chown -R $(whoami) allure-history && sudo chmod -R 777 allure-history
-
-      - name: Force GitHub Pages Refresh
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git commit --allow-empty -m "Trigger GitHub Pages rebuild"
-          git push
-    
-      - name: Create index.html
-        if: always()
-        run: |
-          sudo chown -R $(whoami) allure-history
-          sudo chmod -R 777 allure-history
-          echo '<meta http-equiv="refresh" content="0; URL=./latest/index.html">' > allure-history/index.html
-
-      - name: Setup Git remote before deployment
-        if: always()
-        continue-on-error: true
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-    
-          # ✅ Check if 'origin' exists before removing
-          if git remote get-url origin; then
-            echo "✅ Remote 'origin' already exists."
-            git remote rm origin
-          else
-            echo "⚠️ Remote 'origin' is missing, adding it now..."
-          fi
-    
-          git remote add origin https://github.com/NPO-Automotive/autotests.git
-
-
-      - name: Deploy report to GitHub Pages
-        if: always()
-        continue-on-error: true
+      - name: Deploy Test Results to GitHub Pages
+        if: always()  # Ensures this runs even if tests fail
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.AUTOTEST_ACTIONS }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: test-results  # Update this if your results are stored elsewhere
           force_orphan: true
           user_name: "github-actions"
           user_email: "github-actions@github.com"
 
-      - name: Verify Allure History Exists
-        if: always()
-        continue-on-error: true
-        run: |
-          git log --oneline --graph --decorate --all
-          ls -lah allure-history || { echo "❌ allure-history is missing!"; exit 1; }
-          ls -lah allure-history/684
-          
-      - name: Display Report URL
-        if: always()
-        run: echo "open https://NPO-Automotive.github.io/autotests/ to see the report"
-
-      - name: Cleanup
-        if: always()
-        run: |
-          git config --global --unset safe.directory || true
-          rm -rf .git/modules/* || true
-                  
