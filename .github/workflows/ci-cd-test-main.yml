@@ -282,7 +282,7 @@ jobs:
           git config --global user.email "rgjoyce111@gmail.com"
           git config --global user.name "atomant1969"
           git commit --allow-empty -m "Trigger GitHub Pages rebuild"
-          git push
+          git push gh-pages
 
       - name: Debug index.html Before Publishing
         if: always()      
