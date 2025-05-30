@@ -235,6 +235,11 @@ jobs:
         if: always()      
         run: ls -lah build/allure-results || echo "⚠️ No test results found"
 
+      - name: Clean Previous Reports Before Generating New One
+        run: |
+          rm -rf allure-history/*
+          mkdir -p allure-history
+
       - name: Build test report
         if: always()      
         uses: simple-elf/allure-report-action@v1.7
@@ -272,12 +277,16 @@ jobs:
           sudo chmod -R 777 /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to change permissions"
           rm -rf /home/runner/work/autotests/autotests/allure-history/.git || echo "⚠️ Failed to remove .git directory"
 
+      - name: Debug Allure History Before Publishing
+        run: ls -lah allure-history
+
       - name: Publish Test Report
-        if: always()
         uses: peaceiris/actions-gh-pages@v3
+        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: allure-history/latest
           force_orphan: true
+
 
