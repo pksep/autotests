@@ -245,6 +245,14 @@ jobs:
           LATEST_DIR=$(ls -td allure-history/* | head -n 1)
           echo "<meta http-equiv='refresh' content='0; URL=${LATEST_DIR}/index.html'>" > allure-history/index.html
 
+      - name: Force GitHub Pages Refresh
+        run: |
+          git commit --allow-empty -m "Trigger GitHub Pages rebuild"
+          git push
+          
+      - name: Debug index.html Before Publishing
+        run: cat allure-history/index.html
+
       - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         if: always()
