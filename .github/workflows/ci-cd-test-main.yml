@@ -212,98 +212,36 @@ jobs:
           BASE_URL: 'http://test.pksep.ru/'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npm run test
 
-      - name: Load test report history
-        uses: actions/checkout@v3
+      - uses: actions/upload-artifact@master
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 20
+        
+      - name: Get Allure history
+        uses: actions/checkout@v2
         if: always()
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
-
-      - name: List the gh-pages directory
-        if: always()      
-        run: |
-          ls -al gh-pages
-
-      - name: Cerate allure reports folder if not exist
+    
+      - name: Test marketplace action
+        uses: simple-elf/allure-report-action@master
         if: always()
-        run: |
-          mkdir -p gh-pages
-          mkdir -p gh-pages/allure-reports
-          ls -al gh-pages
-
-      - name: Ensure allure-reports exists
-        if: always()
-        run: |
-          [ -d gh-pages/allure-reports ] || mkdir -p gh-pages/allure-reports
-
-      - name: Copy Previous Reports to Allure Reports
-        if: always()      
-        run: |
-          if [ -d gh-pages/allure-reports ]; then
-            cp -r gh-pages/allure-reports/* allure-reports/ || echo "No previous reports found"
-          fi
-
-      - name: Debug Test Results Directory
-        if: always()      
-        run: ls -lah build/allure-results || echo "⚠️ No test results found"
-
-      - name: Merge Historical Reports Before Generating New One
-        if: always()
-        run: |
-          mkdir -p allure-reports
-          cp -r build/allure-results/* allure-reports/ || echo "⚠️ No new test results found to append"
-
-      - name: Build test report
-        if: always()
-        uses: simple-elf/allure-report-action@v1.7
+        id: allure-report
         with:
+          allure_results: allure-results
           gh_pages: gh-pages
-          allure_results: build/allure-results
-          allure_history: allure-reports
-          keep_reports: 2  # Keeps the last 20 test runs in history
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
 
-      - name: Debug Allure Reports Before Publishing
-        if: always()      
-        run: ls -lah allure-reports || echo "⚠️ No reports found in allure-reports"
-
-      #- name: Update index.html to point to latest report
-       # if: always()      
-       # run: |
-       #   LATEST_DIR=$(ls -td allure-reports/* | head -n 1)
-         # sudo chmod -R 777 /home/runner/work/autotests/autotests/allure-reports/index.html || echo "⚠️ Failed to change permissions"
-         # echo "<meta http-equiv='refresh' content='0; URL=/index.html'>" > allure-reports/index.html
-        #  echo "<meta http-equiv='Cache-Control' content='no-cache, no-store, must-revalidate'>" >> allure-reports/index.html
-        #  echo "<meta http-equiv='Pragma' content='no-cache'>" >> allure-reports/index.html
-        #  echo "<meta http-equiv='Expires' content='0'>" >> allure-reports/index.html
-
-     # - name: Force GitHub Pages Refresh
-     #   if: always()      
-      #  run: |
-       #   git config --global user.email "rgjoyce111@gmail.com"
-       #   git config --global user.name "atomant1969"
-        #  git commit --allow-empty -m "Trigger GitHub Pages rebuild"
-       #   git push gh-pages
-
-      - name: Debug index.html Before Publishing
-        if: always()      
-        run: cat allure-reports/index.html
-
-      - name: Fix Permissions Before Cleanup
+      - name: Deploy report to Github Pages
         if: always()
-        run: |
-          sudo chmod -R 777 /home/runner/work/autotests/autotests/allure-reports/.git || echo "⚠️ Failed to change permissions"
-          rm -rf /home/runner/work/autotests/autotests/allure-reports/.git || echo "⚠️ Failed to remove .git directory"
-
-      - name: Debug Allure Reports Before Publishing
-        run: ls -lah allure-reports
-
-      - name: Publish Test Report
-        uses: peaceiris/actions-gh-pages@v3
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-reports
-          force_orphan: false  # Keeps previous data instead of wiping history
+        uses: peaceiris/actions-gh-pages@v2
+        env:
+          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_BRANCH: gh-pages
+          PUBLISH_DIR: allure-history
 
