@@ -9,7 +9,9 @@ import testData1 from '../testdata/PD18-T1.json'; // Import your test data
 import testData2 from '../testdata/PD18-T2.json'; // Import your test data
 import testData3 from '../testdata/PD18-T3.json'; // Import your test data
 
-const TEST_PRODUCT = 'Т15';
+//const TEST_PRODUCT = 'Т15';
+const TEST_PRODUCT = 'СС7500';
+
 const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";
 const LEFT_DATA_TABLE = "BasePaginationTable-Table-Component-product";
 const LEFT_DATA_TABLE_URGENCY_DATA_COL = "ShipmentsListTable-TableRow-HeaderDateByUrgency";
@@ -157,8 +159,17 @@ export const runTC100 = () => {
         });
 
         await allure.step('Step 1: Parse the Product Specifications recursively and build an array', async () => {
+            // Fetch the product designation at the start
+            const productDesignationElement = page.locator('[data-testid="Creator-Designation-Input-Input"]');
+            await productDesignationElement.evaluate((row) => {
+                row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
+                row.style.border = '2px solid red';  // Add a red border for extra visibility
+                row.style.color = 'blue'; // Change text color to blue
+            });
+            await productDesignationElement.waitFor({ state: 'visible' });
+            const productDesignation = await productDesignationElement.inputValue() || ''; // This should be the main product ID
 
-            await shortagePage.parseRecursiveStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
+            await shortagePage.parseRecursiveStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE, productDesignation);
             await shortagePage.printParsedTableData();
 
             console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
@@ -167,7 +178,8 @@ export const runTC100 = () => {
             const openSpecificationButton = page.locator('[data-testid="Spectification-Buttons-openSpecification"]');
             openSpecificationButton.click();
             const specs = await shortagePage.extractAllTableData(page, 'Spectification-ModalCbed');
-            console.log(specs);
+            console.log(JSON.stringify(specs, null, 2));
+
         });
 
 

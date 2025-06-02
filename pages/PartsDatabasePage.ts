@@ -2140,8 +2140,10 @@ export class CreatePartsDatabasePage extends PageObject {
     async parseRecursiveStructuredTable(
         page: Page,
         tableTestId: string,
+        parentId: string, // Pass product designation from detail page  
         multiplier: number = 1
     ): Promise<void> {
+
         const table = page.locator(`[data-testid="${tableTestId}"]`);
         await table.locator('tr').first().waitFor({ state: 'visible' });
 
@@ -2212,7 +2214,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                     await nestedRow.click();
                                     await page.waitForTimeout(1000);
                                     // **Find and detect the modal dialog**
-                                    const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalCbed"]`);
+                                    const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalCbed"]`).last();
                                     await modalDialog.waitFor({ state: 'visible' });
                                     await modalDialog.evaluate((element) => {
                                         element.style.border = "2px solid red";
@@ -2229,7 +2231,18 @@ export class CreatePartsDatabasePage extends PageObject {
                                     await page.waitForTimeout(1000);
                                     if (await specTable.count() > 0) {
                                         console.log("FOUND");
-                                        await this.parseRecursiveStructuredTable(page, "Spectification-TableSpecification-Cbed", item.quantity);
+                                        const designationElement = page.locator('[data-testid^="Spectification-ModalCbed"][data-testid$="Designation-Text"] span');
+                                        await designationElement.evaluate((element) => {
+                                            element.style.border = "2px solid red";
+                                            element.style.backgroundColor = "red";
+                                        });
+                                        await designationElement.waitFor({ state: 'visible' });
+
+                                        const parentDesignation = await designationElement.textContent() || '';
+
+                                        console.log(`Extracted ParentDesignation: ${parentDesignation}`);
+
+                                        await this.parseRecursiveStructuredTable(page, "Spectification-TableSpecification-Cbed", parentDesignation, item.quantity);
                                     }
 
                                     // **Close the modal by pressing `Escape`**
@@ -2285,6 +2298,9 @@ export class CreatePartsDatabasePage extends PageObject {
         }
     }
 
+
+
+
     async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {
         const TABLE_SELECTORS = {
             "СБ": "[data-testid='Spectification-ModalCbed-AccordionCbed-Table']",
@@ -2305,12 +2321,11 @@ export class CreatePartsDatabasePage extends PageObject {
         const dialog = page.locator(`[data-testid="${dialogTestId}"]`);
         await dialog.waitFor({ state: "visible" });
         await page.waitForTimeout(1000);
+
         for (const [group, selector] of Object.entries(TABLE_SELECTORS)) {
             const table = dialog.locator(selector);
 
-            // Ensure table exists before proceeding
-            const tableExists = await table.count();
-            if (tableExists === 0) {
+            if (await table.count() === 0) {
                 console.log(`Skipping ${group}: Table does not exist.`);
                 continue;
             }
@@ -2322,13 +2337,9 @@ export class CreatePartsDatabasePage extends PageObject {
                 continue;
             }
 
-            // Ensure buffer time for rendering
             await page.waitForTimeout(500);
 
-            // Check if rows exist before proceeding
-            const rowCount = await table.locator("tbody > tr").count();
-
-            if (rowCount === 0) {
+            if (await table.locator("tbody > tr").count() === 0) {
                 console.log(`Skipping ${group}: Table is empty.`);
                 continue;
             }
@@ -2336,11 +2347,10 @@ export class CreatePartsDatabasePage extends PageObject {
             const rows = await table.locator("tbody > tr").elementHandles();
 
             for (const row of rows) {
-                // Highlight row while processing
-                await row.evaluate((row) => {
-                    row.style.backgroundColor = 'yellow';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
+                await row.evaluate((node) => {
+                    (node as HTMLElement).style.backgroundColor = "yellow"; // Cast `node` to `HTMLElement`
+                    (node as HTMLElement).style.border = "2px solid red";
+                    (node as HTMLElement).style.color = "blue";
                 });
 
                 const cells = await row.$$("td");
@@ -2349,34 +2359,42 @@ export class CreatePartsDatabasePage extends PageObject {
                     return text?.trim() || "";
                 }));
 
-                if ((group === "ПД" && rowData.length === 3) || rowData.length >= 4) {
+                // Handle different groups with a standard format
+                if (rowData.length >= 4 || (group === "ПД" && rowData.length === 3)) {
+                    let quantity = parseInt(rowData[4], 10);
+                    if (isNaN(quantity)) quantity = 1; // Default fallback for missing values
+
                     if (group === "МД") {
                         const materialName = rowData[1];
-
-                        // Ensure material quantities are updated correctly
                         const existingMaterial = structuredData["МД"].find(mat => mat.material === materialName);
                         if (existingMaterial) {
-                            existingMaterial.quantity += 1;
+                            existingMaterial.quantity += quantity;
                         } else {
-                            structuredData["МД"].push({
-                                material: materialName,
-                                quantity: 1
-                            });
+                            structuredData["МД"].push({ material: materialName, quantity });
                         }
                     } else {
                         structuredData[group].push({
-                            designation: rowData[1],
-                            name: rowData[2],
-                            unit: rowData[3],
-                            quantity: parseInt(rowData[4], 10)
+                            designation: rowData[6] || "-",
+                            name: rowData[7] || "",
+                            unit: rowData[3] || "шт",
+                            quantity
                         });
                     }
                 }
             }
         }
 
+        // Ensure consistency with recursive format (sorting, structuring)
+        for (const group of Object.keys(structuredData)) {
+            if (structuredData[group]?.length > 0) { // Check if group is not empty
+                structuredData[group].sort((a, b) => (a.designation || "").localeCompare(b.designation || ""));
+            }
+        }
+
+
         return structuredData;
     }
+
 
 
 
