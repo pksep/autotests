@@ -981,6 +981,7 @@ export const runU005 = () => {
         });
         await allure.step("Step 04: Verify that search works for table 3 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(500);
             const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
             await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
