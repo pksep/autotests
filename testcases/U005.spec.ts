@@ -1458,6 +1458,11 @@ export const runU005 = () => {
             // Locate the table rows within the scoped section
             const tableRows = parentSection.locator('.table-yui-kit__tr'); // Only rows inside the specific section
 
+            // Debug: Print all row texts
+            tableRows.evaluateAll(rows => rows.map(row => row.textContent)).then(texts => {
+                console.log("Table Rows Content:", texts);
+            });
+
             for (const { name, extension } of baseFileNamesToVerify) {
                 console.log(`Verifying presence of file with base name: ${name} and extension: ${extension}`);
 
