@@ -1450,7 +1450,7 @@ export const runU005 = () => {
         await allure.step("Step 17: Verify uploaded file names with wildcard matching and extension validation", async () => {
             console.log("Starting file verification process...");
             await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(2500);
             // Locate the parent section for the specific table
             const parentSection = page.locator('section.attach-file-component');
             console.log("Located parent section for the file table.");
