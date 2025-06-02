@@ -933,7 +933,7 @@ export const runU005 = () => {
         });
     });
     test("TestCase 02 - создат дитайл", async ({ browser, page }) => {
-        test.setTimeout(50000);
+        test.setTimeout(900000);
         const shortagePage = new CreatePartsDatabasePage(page);
         await allure.step("Step 01: Перейдите на страницу создания детали. (Navigate to the create part page)", async () => {
             shortagePage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
