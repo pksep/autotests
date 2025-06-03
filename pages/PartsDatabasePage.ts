@@ -2144,7 +2144,7 @@ export class CreatePartsDatabasePage extends PageObject {
         multiplier: number = 1
     ): Promise<void> {
 
-        const table = page.locator(`[data-testid="${tableTestId}"]`);
+        const table = page.locator(`[data-testid="${tableTestId}"]`).last();
         await table.locator('tr').first().waitFor({ state: 'visible' });
 
         const rows = await table.locator('tbody > tr').elementHandles();
@@ -2198,13 +2198,14 @@ export class CreatePartsDatabasePage extends PageObject {
                                 rowData.push(text?.trim() || '');
                             }
 
-                            if (rowData.length === 5) {
+                            if (rowData.length === 5) { //this is for the specifications table rows
                                 const item = {
                                     designation: rowData[1], // Обозначение
                                     name: rowData[2], // Наименование
-                                    unit: rowData[3], // Ед.
-                                    quantity: parseInt(rowData[4], 10) * multiplier, // Кол-во
+                                    unit: currentGroup === "СБ" ? parentId : rowData[3], // ✅ FIX: Use parent designation for СБ items
+                                    quantity: parseInt(rowData[4], 10) * multiplier // Кол-во
                                 };
+
 
                                 this.parsedData[currentGroup].push(item);
 
@@ -2212,7 +2213,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                 if (currentGroup === "СБ") {
                                     console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
                                     await nestedRow.click();
-                                    await page.waitForTimeout(1000);
+                                    await page.waitForTimeout(500);
                                     // **Find and detect the modal dialog**
                                     const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalCbed"]`).last();
                                     await modalDialog.waitFor({ state: 'visible' });
@@ -2222,16 +2223,16 @@ export class CreatePartsDatabasePage extends PageObject {
                                     });
 
                                     // **Find the next specifications table inside the dialog**
-                                    const specTable = modalDialog.locator(`[data-testid="Spectification-TableSpecification-Cbed"]`);
+                                    const specTable = modalDialog.locator(`[data-testid="Spectification-TableSpecification-Cbed"]`).last();
                                     await specTable.evaluate((el) => el.scrollIntoView());
                                     await specTable.evaluate((element) => {
                                         element.style.border = "2px solid red";
                                         element.style.backgroundColor = "yellow";
                                     });
-                                    await page.waitForTimeout(1000);
+                                    await page.waitForTimeout(2000);
                                     if (await specTable.count() > 0) {
                                         console.log("FOUND");
-                                        const designationElement = page.locator('[data-testid^="Spectification-ModalCbed"][data-testid$="Designation-Text"] span');
+                                        const designationElement = modalDialog.locator('[data-testid^="Spectification-ModalCbed"][data-testid$="Designation-Text"] span').last();
                                         await designationElement.evaluate((element) => {
                                             element.style.border = "2px solid red";
                                             element.style.backgroundColor = "red";
@@ -2246,7 +2247,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                     }
 
                                     // **Close the modal by pressing `Escape`**
-                                    await page.keyboard.press('Escape');
+                                    await page.mouse.click(1, 1);
                                     await page.waitForTimeout(1000);
                                     console.log(`Closed modal for ${rowData[1]}`);
                                 }
@@ -2265,7 +2266,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                     });
                                     await materialElement.evaluate((el) => el.scrollIntoView());
                                     await materialElement.waitFor({ state: 'visible' });
-                                    await page.waitForTimeout(1000);
+                                    await page.waitForTimeout(500);
                                     const materialText = await materialElement.textContent();
                                     if (materialText) {
                                         console.log(`Extracted material characteristics for ${rowData[1]}: ${materialText}`);
@@ -2285,7 +2286,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                     }
 
                                     page.mouse.click(1, 1);
-                                    await page.waitForTimeout(1000);
+                                    await page.waitForTimeout(500);
 
                                 }
                             }
