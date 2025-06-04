@@ -371,7 +371,7 @@ export const runU005 = () => {
                     const tableTitle = table.title;
                     console.log(table);
                     // Locate the table using its data-testid attribute.
-                    const targetTable = page.locator(`[data-testid="${table.datatestid}"]`);
+                    const targetTable = page.locator(`table[data-testid="${table.datatestid}"]`);
 
                     // Ensure the table is visible.
                     await expect(targetTable).toBeVisible();
@@ -451,7 +451,7 @@ export const runU005 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the table using data-testid
-            const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Type-Table"]');
+            const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Type"]');
 
             await leftTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -491,7 +491,7 @@ export const runU005 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the table using data-testid
-            const centerTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType-Table"]');
+            const centerTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType"]');
 
             await centerTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -531,7 +531,7 @@ export const runU005 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the table using data-testid
-            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
 
             await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -569,7 +569,7 @@ export const runU005 = () => {
         });
         await allure.step("Step 21: Open Archive dialog (Open Archive dialog)", async () => {
             // To open the archive dialog, we need to add something to the archive
-            const targetTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            const targetTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
 
             // Ensure the table is visible
             await expect(targetTable).toBeVisible();
@@ -982,13 +982,13 @@ export const runU005 = () => {
         await allure.step("Step 04: Verify that search works for table 3 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(500);
-            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
             await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
-            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]')).toBeVisible();
+            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]')).toBeVisible();
             await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').fill('');
             await page.waitForTimeout(1000);
             // Locate the search field within the left table and fill it
