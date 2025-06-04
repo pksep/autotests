@@ -2224,7 +2224,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                     await modalDialog.waitFor({ state: 'visible' });
                                     const specTable = modalDialog.locator(`[data-testid="Spectification-TableSpecification-Cbed"]`).last();
                                     await specTable.evaluate((el) => el.scrollIntoView());
-                                    await page.waitForTimeout(2000);
+                                    await page.waitForTimeout(500);
                                     if (await specTable.count() > 0) {
                                         const designationElement = modalDialog.locator('[data-testid^="Spectification-ModalCbed"][data-testid$="Designation-Text"] span').last();
                                         await designationElement.waitFor({ state: 'visible' });
@@ -2241,8 +2241,14 @@ export class CreatePartsDatabasePage extends PageObject {
                                     console.log(`Opening material modal for Д item: ${rowData[1]}`);
                                     await nestedRow.click();
                                     const materialElement = page.locator(`[data-testid^="Spectification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
+                                    await materialElement.evaluate((row) => {
+                                        row.style.backgroundColor = 'yellow';
+                                        row.style.border = '2px solid red';
+                                        row.style.color = 'blue';
+                                    });
+                                    await materialElement.evaluate((el) => el.scrollIntoView());
                                     await materialElement.waitFor({ state: 'visible' });
-                                    await page.waitForTimeout(500);
+                                    await page.waitForTimeout(2000);
                                     const materialText = await materialElement.textContent();
                                     if (materialText) {
                                         const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
