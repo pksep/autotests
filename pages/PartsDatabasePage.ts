@@ -2158,10 +2158,8 @@ export class CreatePartsDatabasePage extends PageObject {
 
         for (const row of rows) {
             try {
-                // Extract row's cell data
                 const headerCell = await row.$('td[colspan="5"]:not(:has(table))');
 
-                // **Detect group headers (only if not already set in this section)**
                 if (headerCell) {
                     const text = await headerCell.textContent();
                     if (text) {
@@ -2169,16 +2167,15 @@ export class CreatePartsDatabasePage extends PageObject {
                             if (text.includes(group) || (group === "СБ" && text.includes("Сборочная единица"))) {
                                 if (!groupDetected.has(group)) {
                                     currentGroup = group;
-                                    groupDetected.add(group); // **Mark this group as detected**
+                                    groupDetected.add(group);
                                     console.log(`Detected group header: ${currentGroup}`);
                                 }
-                                continue; // Move to the next row
+                                continue;
                             }
                         }
                     }
                 }
 
-                // **Process rows after detecting a valid group header**
                 if (currentGroup && groupDetected.has(currentGroup)) {
                     const nestedTableCell = await row.$('td[colspan="5"]:has(table)');
                     if (nestedTableCell) {
@@ -2198,96 +2195,68 @@ export class CreatePartsDatabasePage extends PageObject {
                                 rowData.push(text?.trim() || '');
                             }
 
-                            if (rowData.length === 5) { //this is for the specifications table rows
+                            if (rowData.length === 5) {
                                 const item = {
-                                    designation: rowData[1], // Обозначение
-                                    name: rowData[2], // Наименование
-                                    unit: currentGroup === "СБ" ? parentId : rowData[3], // ✅ FIX: Use parent designation for СБ items
-                                    quantity: parseInt(rowData[4], 10) * multiplier // Кол-во
+                                    designation: rowData[1],
+                                    name: rowData[2],
+                                    unit: currentGroup === "СБ" || currentGroup === "Д" ? parentId : rowData[3],
+                                    quantity: currentGroup === "ПД" ? 0 : parseInt(rowData[4], 10) * multiplier // ✅ Fix: Set quantity to 0 for ПД
                                 };
 
+                                if (currentGroup === "ПД") {
+                                    // ✅ Check if item already exists in `ПД`
+                                    const existingIndex = this.parsedData["ПД"].findIndex(existingItem => existingItem.name === item.name);
 
-                                this.parsedData[currentGroup].push(item);
+                                    if (existingIndex !== -1) {
+                                        this.parsedData["ПД"][existingIndex] = item; // ✅ Overwrite existing item
+                                    } else {
+                                        this.parsedData["ПД"].push(item); // ✅ Add new item if not found
+                                    }
+                                } else {
+                                    this.parsedData[currentGroup].push(item);
+                                }
 
-                                // **Click `СБ` items during parsing**
                                 if (currentGroup === "СБ") {
                                     console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
                                     await nestedRow.click();
                                     await page.waitForTimeout(500);
-                                    // **Find and detect the modal dialog**
                                     const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalCbed"]`).last();
                                     await modalDialog.waitFor({ state: 'visible' });
-                                    await modalDialog.evaluate((element) => {
-                                        element.style.border = "2px solid red";
-                                        element.style.backgroundColor = "yellow";
-                                    });
-
-                                    // **Find the next specifications table inside the dialog**
                                     const specTable = modalDialog.locator(`[data-testid="Spectification-TableSpecification-Cbed"]`).last();
                                     await specTable.evaluate((el) => el.scrollIntoView());
-                                    await specTable.evaluate((element) => {
-                                        element.style.border = "2px solid red";
-                                        element.style.backgroundColor = "yellow";
-                                    });
                                     await page.waitForTimeout(2000);
                                     if (await specTable.count() > 0) {
-                                        console.log("FOUND");
                                         const designationElement = modalDialog.locator('[data-testid^="Spectification-ModalCbed"][data-testid$="Designation-Text"] span').last();
-                                        await designationElement.evaluate((element) => {
-                                            element.style.border = "2px solid red";
-                                            element.style.backgroundColor = "red";
-                                        });
                                         await designationElement.waitFor({ state: 'visible' });
-
                                         const parentDesignation = await designationElement.textContent() || '';
-
                                         console.log(`Extracted ParentDesignation: ${parentDesignation}`);
-
                                         await this.parseRecursiveStructuredTable(page, "Spectification-TableSpecification-Cbed", parentDesignation, item.quantity);
                                     }
-
-                                    // **Close the modal by pressing `Escape`**
                                     await page.mouse.click(1, 1);
                                     await page.waitForTimeout(1000);
                                     console.log(`Closed modal for ${rowData[1]}`);
                                 }
 
-                                // **Click `Д` items to extract material characteristics**
                                 if (currentGroup === "Д") {
-                                    //const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalDetal"]`);
                                     console.log(`Opening material modal for Д item: ${rowData[1]}`);
-                                    await nestedRow.click(); // Open the modal
-
-                                    // **Find material characteristics in the modal**
+                                    await nestedRow.click();
                                     const materialElement = page.locator(`[data-testid^="Spectification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
-                                    await materialElement.evaluate((element) => {
-                                        element.style.border = "2px solid red";
-                                        element.style.backgroundColor = "yellow";
-                                    });
-                                    await materialElement.evaluate((el) => el.scrollIntoView());
                                     await materialElement.waitFor({ state: 'visible' });
                                     await page.waitForTimeout(500);
                                     const materialText = await materialElement.textContent();
                                     if (materialText) {
-                                        console.log(`Extracted material characteristics for ${rowData[1]}: ${materialText}`);
-                                        // **Check if material exists, increase quantity if so**
-                                        const existingMaterial = this.parsedData["МД"].find(
-                                            (mat) => mat.material === materialText.trim()
-                                        );
+                                        const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
                                         if (existingMaterial) {
                                             existingMaterial.quantity += item.quantity;
                                         } else {
                                             this.parsedData["МД"].push({
-                                                //designation: rowData[1],
                                                 material: materialText.trim(),
                                                 quantity: item.quantity
                                             });
                                         }
                                     }
-
                                     page.mouse.click(1, 1);
                                     await page.waitForTimeout(500);
-
                                 }
                             }
                         }
@@ -2297,7 +2266,16 @@ export class CreatePartsDatabasePage extends PageObject {
                 console.error(`Error processing row: ${error}`);
             }
         }
+        // ✅ Sort items within each group alphabetically by name
+        for (const group of Object.keys(this.parsedData)) {
+            if (this.parsedData[group]?.length > 0) { // Ensure group has items
+                this.parsedData[group].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+            }
+        }
+
     }
+
+
 
 
 
@@ -2359,7 +2337,9 @@ export class CreatePartsDatabasePage extends PageObject {
                     const text = await cell.textContent();
                     return text?.trim() || "";
                 }));
-
+                if (group === "ПД") {
+                    console.log(rowData);
+                }
                 // Handle different groups with a standard format
                 if (rowData.length >= 4 || (group === "ПД" && rowData.length === 3)) {
                     let quantity = parseInt(rowData[4], 10);
@@ -2374,12 +2354,22 @@ export class CreatePartsDatabasePage extends PageObject {
                             structuredData["МД"].push({ material: materialName, quantity });
                         }
                     } else {
-                        structuredData[group].push({
-                            designation: rowData[6] || "-",
-                            name: rowData[7] || "",
-                            unit: rowData[3] || "шт",
-                            quantity
-                        });
+                        if (group === "ПД") {
+                            structuredData[group].push({
+                                designation: rowData[6] || "-",
+                                name: rowData[1] || "",
+                                unit: rowData[3] || "шт",
+                                quantity: 0
+                            });
+                        }
+                        else {
+                            structuredData[group].push({
+                                designation: rowData[6] || "-",
+                                name: rowData[7] || "",
+                                unit: rowData[3] || "шт",
+                                quantity
+                            });
+                        }
                     }
                 }
             }
@@ -2388,9 +2378,10 @@ export class CreatePartsDatabasePage extends PageObject {
         // Ensure consistency with recursive format (sorting, structuring)
         for (const group of Object.keys(structuredData)) {
             if (structuredData[group]?.length > 0) { // Check if group is not empty
-                structuredData[group].sort((a, b) => (a.designation || "").localeCompare(b.designation || ""));
+                structuredData[group].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
             }
         }
+
 
 
         return structuredData;
