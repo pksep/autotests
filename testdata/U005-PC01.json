@@ -99,7 +99,7 @@
         },
         {
           "class": "button.button-yui-kit.small.primary-yui-kit.specification__btns-adding",
-          "datatestid": "Spectification-Buttons-addingSpecification",
+          "datatestid": "Specification-Buttons-addingSpecification",
           "label": "Добавить",
           "state": "true"
         },
