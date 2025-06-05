@@ -1,6 +1,9 @@
 import { test, expect, ElementHandle, Locator } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec'; // Adjust the import path as necessary
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
+
+
+
 import { ENV, SELECTORS } from '../config'; // Import the configuration
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
@@ -37,7 +40,7 @@ const RIGHT_DATA_TABLE_CELL_X = "AssemblySclad-PrintTableBody-";
 const LEFT_DATA_TABLE_CELL_X = "ShipmentsListTable-orderRow";
 const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
 
-const EDIT_PAGE_SPECIFICATIONS_TABLE = "Spectification-TableSpecification-Product";
+const EDIT_PAGE_SPECIFICATIONS_TABLE = "Editor-TableSpecification-Product";
 
 // Страница: База деталей
 export const runTC100 = () => {
@@ -176,9 +179,9 @@ export const runTC100 = () => {
             console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
         });
         await allure.step('Step 2: Parse the Product Specifications Table', async () => {
-            const openSpecificationButton = page.locator('[data-testid="Spectification-Buttons-openSpecification"]');
+            const openSpecificationButton = page.locator('[data-testid="Specification-Buttons-openSpecification"]').last();
             openSpecificationButton.click();
-            const specs = await shortagePage.extractAllTableData(page, 'Spectification-ModalCbed');
+            const specs = await shortagePage.extractAllTableData(page, 'Specification-ModalCbed');
             console.log(JSON.stringify(specs, null, 2));
 
         });

@@ -1,18 +1,20 @@
 import { Page, Locator, expect } from "@playwright/test";
+import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { PageObject } from "../lib/Page";
 import logger from "../lib/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
 import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
-const EDIT_PAGE_ADD_BUTTON = "Spectification-Buttons-addingSpecification";
-const MAIN_TABLE_TEST_ID = "Spectification-TableSpecification-Product";
+const EDIT_PAGE_ADD_BUTTON = "Specification-Buttons-addingSpecification";
+const MAIN_TABLE_TEST_ID = "Editor-TableSpecification-Product";
+
 const TABLE_TEST_IDS = [
-    "Spectification-ModalCbed-AccordionCbed-Table",
-    "Spectification-ModalCbed-AccordionDetalContent-Table",
-    "Spectification-ModalCbed-AccordionBuyersMaterial-Table",
-    "Spectification-ModalCbed-ModalComplect-MateriaDetalTable",
-    "Spectification-ModalCbed-Accordion-MaterialRashod-Table"
+    "Specification-ModalCbed-AccordionCbed-Table",
+    "Specification-ModalCbed-AccordionDetalContent-Table",
+    "Specification-ModalCbed-AccordionBuyersMaterial-Table",
+    "Specification-ModalCbed-ModalComplect-MateriaDetalTable",
+    "Specification-ModalCbed-Accordion-MaterialRashod-Table"
 ];
 export type Item = {
     id: string;
@@ -2144,7 +2146,7 @@ export class CreatePartsDatabasePage extends PageObject {
         multiplier: number = 1
     ): Promise<void> {
 
-        const table = page.locator(`[data-testid="${tableTestId}"]`).last();
+        const table = page.locator(`[data-testid^="${tableTestId}"]`).last();
         await table.locator('tr').first().waitFor({ state: 'visible' });
 
         const rows = await table.locator('tbody > tr').elementHandles();
@@ -2220,17 +2222,17 @@ export class CreatePartsDatabasePage extends PageObject {
                                     console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
                                     await nestedRow.click();
                                     await page.waitForTimeout(500);
-                                    const modalDialog = page.locator(`dialog[data-testid^="Spectification-ModalCbed"]`).last();
+                                    const modalDialog = page.locator(`dialog[data-testid^="Specification-ModalCbed"]`).last();
                                     await modalDialog.waitFor({ state: 'visible' });
-                                    const specTable = modalDialog.locator(`[data-testid="Spectification-TableSpecification-Cbed"]`).last();
+                                    const specTable = modalDialog.locator(`[data-testid^="Specification-ModalCbed"][data-testid$="-TableSpecification-Cbed"]`).last();
                                     await specTable.evaluate((el) => el.scrollIntoView());
                                     await page.waitForTimeout(500);
                                     if (await specTable.count() > 0) {
-                                        const designationElement = modalDialog.locator('[data-testid^="Spectification-ModalCbed"][data-testid$="Designation-Text"] span').last();
+                                        const designationElement = modalDialog.locator('[data-testid^="Specification-ModalCbed"][data-testid$="Designation-Text"] span').last();
                                         await designationElement.waitFor({ state: 'visible' });
                                         const parentDesignation = await designationElement.textContent() || '';
                                         console.log(`Extracted ParentDesignation: ${parentDesignation}`);
-                                        await this.parseRecursiveStructuredTable(page, "Spectification-TableSpecification-Cbed", parentDesignation, item.quantity);
+                                        await this.parseRecursiveStructuredTable(page, "Specification-TableSpecification-Cbed", parentDesignation, item.quantity);
                                     }
                                     await page.mouse.click(1, 1);
                                     await page.waitForTimeout(1000);
@@ -2240,7 +2242,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                 if (currentGroup === "Д") {
                                     console.log(`Opening material modal for Д item: ${rowData[1]}`);
                                     await nestedRow.click();
-                                    const materialElement = page.locator(`[data-testid^="Spectification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
+                                    const materialElement = page.locator(`[data-testid^="Specification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
                                     await materialElement.evaluate((row) => {
                                         row.style.backgroundColor = 'yellow';
                                         row.style.border = '2px solid red';
@@ -2288,11 +2290,11 @@ export class CreatePartsDatabasePage extends PageObject {
 
     async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {
         const TABLE_SELECTORS = {
-            "СБ": "[data-testid='Spectification-ModalCbed-AccordionCbed-Table']",
-            "Д": "[data-testid='Spectification-ModalCbed-AccordionDetalContent-Table']",
-            "ПД": "[data-testid='Spectification-ModalCbed-AccordionBuyersMaterial-Table']",
-            "МД": "[data-testid='Spectification-ModalCbed-ModalComplect-MateriaDetalTable']",
-            "РМ": "[data-testid='Spectification-ModalCbed-Accordion-MaterialRashod-Table']"
+            "СБ": "[data-testid='Specification-ModalCbed-AccordionCbed-Table']",
+            "Д": "[data-testid='Specification-ModalCbed-AccordionDetalContent-Table']",
+            "ПД": "[data-testid='Specification-ModalCbed-AccordionBuyersMaterial-Table']",
+            "МД": "[data-testid='Specification-ModalCbed-ModalComplect-MateriaDetalTable']",
+            "РМ": "[data-testid='Specification-ModalCbed-Accordion-MaterialRashod-Table']"
         };
 
         const structuredData: { [key: string]: any[] } = {
