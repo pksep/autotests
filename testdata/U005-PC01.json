@@ -201,81 +201,81 @@
           "tablesВсе": [
             {
               "title": "Тип (Тип профиля заготовки)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
 
             },
             {
               "title": "Подтип (Материал заготовки)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ],
           "tablesМатериалыДляДеталей": [
             {
               "title": "Тип (Тип профиля заготовки)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
             },
             {
               "title": "Подтип (Материал заготовки)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ],
           "tablesПокупныеДетали": [
             {
               "title": "Тип (Категория)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
             },
             {
               "title": "Подтип (Материал)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ],
           "tablesРасходныеМатериалы": [
             {
               "title": "Тип (Категория)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Type-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Type",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Type-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Type-Tbody"
             },
             {
               "title": "Подтип (Материал)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-SubType-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-SubType",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-SubType-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-SubType-Tbody"
             },
             {
               "title": "Наименование (Марка / типоразмер)",
-              "datatestid": "ModalBaseMaterial-TableList-Table-Item-Table",
-              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Table-Thead",
+              "datatestid": "ModalBaseMaterial-TableList-Table-Item",
+              "datatestidThead": "ModalBaseMaterial-TableList-Table-Item-Thead",
               "datatestidTbody": "ModalBaseMaterial-TableList-Table-Item-Tbody"
             }
           ]
