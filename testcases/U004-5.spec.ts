@@ -40,7 +40,7 @@ const RESET_ПД_2 = "Болт с полной резьбой DIN933 М8х40";
 const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";
 const MAIN_PAGE_SAVE_BUTTON = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
 const EDIT_PAGE_MAIN_ID = "Creator";
-const EDIT_PAGE_SPECIFICATIONS_TABLE = "Specification-TableSpecification-Product";
+const EDIT_PAGE_SPECIFICATIONS_TABLE = "Editor-TableSpecification-Product";
 const EDIT_PAGE_ADD_BUTTON = "Specification-Buttons-addingSpecification";
 const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG = "Specification-ModalBaseCbed";
 const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "Specification-ModalBaseCbed-Select-Button";
@@ -56,13 +56,13 @@ const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE = "BasePaginationTable-Table-de
 const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE = "Specification-ModalBaseDetal-Table";
 
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG = "ModalBaseMaterial";
-const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item-Table";
+const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item";
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE = "ModalBaseMaterial-Table";
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "ModalBaseMaterial-Select-Button";
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "ModalBaseMaterial-Add-Button";
 
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG = "ModalBaseMaterial";
-const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item-Table";
+const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item";
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE = "ModalBaseMaterial-Table";
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "ModalBaseMaterial-Select-Button";
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "ModalBaseMaterial-Add-Button";
@@ -385,6 +385,7 @@ export const runU004_5 = () => {
             logger.info(tableData_full);
             await page.waitForTimeout(1000);
             const nestedArray = await tableData_full.map(group => group.items).flat();
+            nestedArray.forEach((item, index) => console.log(`Index ${index}: ${typeof item} - ${JSON.stringify(item)}`));
 
             const result = await shortagePage.isStringInNestedArray(nestedArray, TESTCASE_2_PRODUCT_ASSIGNEMENT); // Output: true
 

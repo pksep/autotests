@@ -1,13 +1,23 @@
 import { Page, Locator, expect } from "@playwright/test";
+
 import { PageObject } from "../lib/Page";
+import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
+
 import logger from "../lib/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
 import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
-const EDIT_PAGE_ADD_BUTTON = "Spectification-Buttons-addingSpecification";
-const MAIN_TABLE_TEST_ID = "Spectification-TableSpecification-Product";
+const EDIT_PAGE_ADD_BUTTON = "Specification-Buttons-addingSpecification";
+const MAIN_TABLE_TEST_ID = "Editor-TableSpecification-Product";
 
+const TABLE_TEST_IDS = [
+    "Specification-ModalCbed-AccordionCbed-Table",
+    "Specification-ModalCbed-AccordionDetalContent-Table",
+    "Specification-ModalCbed-AccordionBuyersMaterial-Table",
+    "Specification-ModalCbed-ModalComplect-MateriaDetalTable",
+    "Specification-ModalCbed-Accordion-MaterialRashod-Table"
+];
 export type Item = {
     id: string;
     parentPartNumber: string;
@@ -1050,36 +1060,24 @@ export class CreatePartsDatabasePage extends PageObject {
         logger.info(groups);
         return
     }
-    printGlobalTableData(): void {
-        logger.info("Global Table Data Overview:");
+    async printParsedTableData(): Promise<void> {
+        console.log("Parsed Table Data Overview:");
 
-        // Define the updated order including МД
-        const orderedKeys = ['СБ', 'Д', 'ПМ', 'МД', 'РМ', 'ALL'];
+        // Define the ordered keys for structured output
+        const orderedKeys = ['СБ', 'Д', 'ПД', 'МД', 'РМ'];
 
-        // Iterate through each group in the specific order
+        // Iterate through each group in the specified order
         orderedKeys.forEach((key) => {
-            if (key === 'ALL') {
-                const totalCount = CreatePartsDatabasePage.globalTableData.ALL.size; // Count items in ALL (Map)
-                logger.info(`\nALL (Consolidated Items: ${totalCount}):`);
-                console.table(Array.from(CreatePartsDatabasePage.globalTableData.ALL.values()));
-            } else if (key === 'ПМ') {
-                // Merge ПМ and ПД groups
-                const pmItems = CreatePartsDatabasePage.globalTableData['ПМ'] || [];
-                const pdItems = CreatePartsDatabasePage.globalTableData['ПД'] || [];
-                const combinedItems = [...pmItems, ...pdItems];
-                const totalCount = combinedItems.length; // Count items in ПМ + ПД
-                logger.info(`\nПМ (Includes Items from ПД, Total: ${totalCount}):`);
-                console.table(combinedItems);
-            } else {
-                const groupItems = CreatePartsDatabasePage.globalTableData[key as keyof typeof CreatePartsDatabasePage.globalTableData];
-                const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Safely count items in the group
-                logger.info(`\n${key} (Items in this Group: ${totalCount}):`);
-                console.table(groupItems);
-            }
+            const groupItems = this.parsedData[key] || [];
+            const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Count items in the group safely
+
+            console.log(`\n${key} (Items in this Group: ${totalCount}):`);
+            console.table(groupItems);
         });
 
-        logger.info("\nEnd of Global Table Data.");
+        console.log("\nEnd of Parsed Table Data.");
     }
+
 
 
 
@@ -1471,8 +1469,7 @@ export class CreatePartsDatabasePage extends PageObject {
     async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
         const table = page.locator(`[data-testid="${tableTestId}"]`);
         await table.locator('tr').first().waitFor({ state: 'visible' });
-        await page.waitForLoadState("networkidle");
-        await page.waitForTimeout(1000);
+
         const rows = await table.locator('tbody > tr').elementHandles();
         logger.info(`Total rows in tbody: ${rows.length}`);
 
@@ -1560,134 +1557,87 @@ export class CreatePartsDatabasePage extends PageObject {
         // Determine column index based on item type
         const columnIndex = itemType === "РМ" || itemType === "ПД" ? 0 : 1;
 
-        // Step 1: Wait for the page to stabilize, then click the "Добавить" button
+        // Step 1: Click the "Добавить" button
         await page.waitForLoadState("networkidle");
         await page.waitForTimeout(1000);
         const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
-        await addButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
         await addButton.click();
         await page.waitForTimeout(500);
 
         // Step 2: Click the small dialog button
         const dialogButton = page.locator(`div[data-testid="${smallDialogButtonId}"]`);
-        await dialogButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
         await dialogButton.click();
         await page.waitForTimeout(500);
 
-        // Step 3: Wait for the modal/dialog to load
+        // Step 3: Wait for the modal/dialog to load **before checking item existence**
         const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
-        await modal.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
         await expect(modal).toBeVisible(); // Validate modal is visible
         await page.waitForTimeout(1000);
-        // Step 4: Search for the item in the search table
-        await modal.locator(`table[data-testid="${searchTableTestId}"]`).waitFor({ state: 'visible' });
-        const itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
-        await itemTableLocator.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
-        await page.waitForTimeout(1000);
-        await itemTableLocator.locator("input.search-yui-kit__input").fill(searchValue);
-        await itemTableLocator.locator("input.search-yui-kit__input").press("Enter");
-        await page.waitForLoadState("networkidle");
-        await page.waitForTimeout(2000);
-        const firstRow = itemTableLocator.locator("tbody tr").first();
-        await firstRow.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
-        await page.waitForTimeout(1500);
-        const firstRowText = await firstRow.locator("td").nth(columnIndex).textContent();
 
-        // Step 5: Validate search result
-        expect(firstRowText).toContain(searchValue);
-        await firstRow.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
+        // Step 4: Check if the item already exists in the bottom table **inside the modal**
+        const itemExists = await this.checkItemExistsInBottomTable(page, searchValue, dialogTestId, bottomTableTestId);
+
+        if (!itemExists) {
+            //     console.log(`Skipping addition: '${searchValue}' already exists in the bottom table.`);
+            //     return; // ✅ Skip the addition process
+            // }
+
+            // Step 5: Search for the item in the search table
+            await modal.locator(`table[data-testid="${searchTableTestId}"]`).waitFor({ state: "visible" });
+            const itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+            await itemTableLocator.evaluate((element: HTMLElement) => {
+                element.style.border = "3px solid red"; // Highlight
+                element.style.backgroundColor = "yellow";
             });
-        });
-        // Step 6: Click the first row
-        await firstRow.click();
-        await page.waitForTimeout(500);
+            await page.waitForTimeout(1000);
+            await itemTableLocator.locator("input.search-yui-kit__input").fill(searchValue);
+            await itemTableLocator.locator("input.search-yui-kit__input").press("Enter");
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(2000);
 
-        // Step 7: Add the item to the bottom table
-        const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
-        await addToBottomButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
-        await addToBottomButton.click();
-        await page.waitForTimeout(100);
+            const firstRow = itemTableLocator.locator("tbody tr").first();
+            await page.waitForTimeout(1500);
+            const firstRowText = await firstRow.locator("td").nth(columnIndex).textContent();
 
-        // Step 8: Validate the item in the bottom table
-        const bottomTableLocator = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
-        await bottomTableLocator.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
-        const rows = bottomTableLocator.locator("tbody tr");
-        const rowCount = await rows.count();
-        expect(rowCount).toBeGreaterThan(0); // Ensure the bottom table is not empty
+            // Step 6: Validate search result
+            expect(firstRowText?.trim()).toBe(searchValue.trim()); // ✅ Ensure exact match
+            await firstRow.click();
+            await page.waitForTimeout(500);
 
-        let isItemFound = false;
-        for (let i = 0; i < rowCount; i++) {
-            const row = rows.nth(i);
-            const partName = await row.locator("td").nth(1).textContent();
+            // Step 7: Add the item to the bottom table
+            const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
+            await addToBottomButton.click();
+            await page.waitForTimeout(100);
 
-            if (partName?.trim() === searchValue.trim()) {
-                const partNameCell = await row.locator("td").nth(1);
-                await partNameCell.evaluateAll((elements) => {
-                    elements.forEach((el) => {
-                        el.style.backgroundColor = 'green';
-                        el.style.border = '2px solid red';
-                        el.style.color = 'blue';
-                    });
-                });
-                isItemFound = true;
-                break;
+            // Step 8: Validate the item in the bottom table
+            const bottomTableLocator = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
+            const rows = bottomTableLocator.locator("tbody tr");
+            const rowCount = await rows.count();
+            expect(rowCount).toBeGreaterThan(0); // Ensure the bottom table is not empty
+
+            let isItemFound = false;
+            for (let i = 0; i < rowCount; i++) {
+                const row = rows.nth(i);
+                const partName = await row.locator("td").nth(1).textContent();
+
+                if (partName?.trim() === searchValue.trim()) {
+                    isItemFound = true;
+                    break;
+                }
             }
+            expect(isItemFound).toBeTruthy(); // Ensure the item is found in the bottom table
         }
-        expect(isItemFound).toBeTruthy(); // Ensure the item is found in the bottom table
-
         // Step 9: Add the item to the main table
         const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
-        await addToMainButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
         await addToMainButton.click();
         await page.waitForTimeout(500);
 
+        // Step 10: Ensure modal is closed before checking the main table
+        await modal.waitFor({ state: "hidden", timeout: 5000 });
+
         const parsedTableArray = await this.parseStructuredTable(page, MAIN_TABLE_TEST_ID); // Parse the table
 
-        // Iterate through each group in the parsed table
+        // Step 11: Ensure item exists in the main table
         let isMainItemFound = false;
         for (const group of parsedTableArray) {
             if (group.items.some(row => row.some(cell => cell.trim() === searchValue.trim()))) {
@@ -1697,8 +1647,9 @@ export class CreatePartsDatabasePage extends PageObject {
         }
 
         expect(isMainItemFound).toBeTruthy(); // Ensure the item exists in the main table
-
     }
+
+
 
     async removeItemFromSpecification(
         page: Page,
@@ -2064,42 +2015,63 @@ export class CreatePartsDatabasePage extends PageObject {
      * @param fields - An array of field definitions (each with title and type).
      * @returns A Promise that resolves to true if all fields validate correctly.
      */
-    async validateInputFields(page: Page, fields: { title: string; datatestid: string; type: string }[]): Promise<boolean> {
+    async validateInputFields(page: Page, fields: { title: string; type: string }[]): Promise<boolean> {
         try {
             for (const field of fields) {
-                // Locate the field using data-testid
-                const fieldLocator = page.locator(`[data-testid="${field.datatestid}"]`);
+                let fieldLocator;
+                switch (field.type) {
+                    case "input":
+                        if (field.title === "Медиа файлы") {
+                            // For file inputs, use the visible label (assuming it contains "Прикрепить документ")
+                            fieldLocator = page.locator('label.dnd-yui-kit__label:has-text("Прикрепить документ")');
+                            await fieldLocator.evaluate((row) => {
+                                row.style.backgroundColor = 'yellow';
+                                row.style.border = '2px solid red';
+                                row.style.color = 'blue';
+                            });
+                        } else {
+                            // For normal text input fields (e.g. "Обозначение", "Наименование")
+                            fieldLocator = page.locator(`div.editor__information-inputs:has-text("${field.title}") input`);
+                            await fieldLocator.evaluate((row) => {
+                                row.style.backgroundColor = 'yellow';
+                                row.style.border = '2px solid red';
+                                row.style.color = 'blue';
+                            });
+                        }
+                        break;
+                    case "textarea":
+                        // For "Описание / Примечание", look inside the description section
+                        fieldLocator = page.locator(`section.editor__description:has(h3:has-text("${field.title}")) textarea`);
+                        await fieldLocator.evaluate((row) => {
+                            row.style.backgroundColor = 'yellow';
+                            row.style.border = '2px solid red';
+                            row.style.color = 'blue';
+                        });
+                        break;
+                    default:
+                        console.error(`Unsupported field type: ${field.type} for field "${field.title}"`);
+                        return false;
+                }
 
-                await fieldLocator.evaluate((row) => {
-                    row.style.backgroundColor = 'yellow';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
-                });
-
-                // Check that the field is visible
-                if (field.datatestid !== "AddDetal-FileComponent-DragAndDrop-Input" && !(await fieldLocator.isVisible())) {
+                // Check that the field (or its visible label for file inputs) is visible.
+                if (!(await fieldLocator.isVisible())) {
                     console.error(`Field "${field.title}" is not visible.`);
                     return false;
                 }
 
-
-                // Verify writability if it’s a text field
-                if (field.type === "input" || field.type === "textarea") {
-                    if (field.datatestid !== "AddDetal-FileComponent-DragAndDrop-Input") { // Exclude file upload input field
-                        const testValue = "Test Value";
-                        await fieldLocator.fill(testValue);
-                        const currentValue = await fieldLocator.inputValue();
-                        if (currentValue !== testValue) {
-                            console.error(`Field "${field.title}" is not writable. Expected "${testValue}", but got "${currentValue}".`);
-                            return false;
-                        }
+                // Verify writability if it’s a text field.
+                if (!(field.type === "input" && field.title === "Медиа файлы")) {
+                    const testValue = "Test Value";
+                    await fieldLocator.fill(testValue);
+                    const currentValue = await fieldLocator.inputValue();
+                    if (currentValue !== testValue) {
+                        console.error(`Field "${field.title}" is not writable. Expected "${testValue}", but got "${currentValue}".`);
+                        return false;
                     }
                 }
 
-
                 console.log(`Field "${field.title}" is visible and ${(field.type === "input" && field.title === "Медиа файлы") ? "present" : "writable"}.`);
             }
-
             console.log("All input fields validated successfully.");
             return true;
         } catch (error) {
@@ -2107,4 +2079,350 @@ export class CreatePartsDatabasePage extends PageObject {
             return false;
         }
     }
-}
+
+    /**
+ * Recursively parses a structured table for product specifications.
+ * The function starts from the given table's data-testid and dynamically extracts group information and item rows.
+ * It:
+ * • Identifies group headers (СБ, Д, ПД, РМ) and categorizes items accordingly.
+ * • Extracts structured data from each row, ensuring correct parsing of №, Обозначение, Наименование, Ед., Кол-во.
+ * • Detects nested tables inside rows and processes them recursively.
+ * • Detects modal links inside rows (for СБ items) and processes them recursively.
+ * • Highlights rows while processing and resets styles afterward.
+ *
+ * @param page - The Playwright page instance.
+ * @param tableTestId - The data-testid of the table to parse.
+ * @returns A Promise that resolves to an object containing categorized groups (СБ, Д, ПД, РМ).
+ */
+    parsedData: { [key: string]: any[] } = { СБ: [], Д: [], ПД: [], МД: [], РМ: [] };
+    async parseRecursiveStructuredTable(
+        page: Page,
+        tableTestId: string,
+        parentId: string, // Pass product designation from detail page  
+        multiplier: number = 1
+    ): Promise<void> {
+
+        const table = page.locator(`[data-testid^="${tableTestId}"]`).last();
+        await table.locator('tr').first().waitFor({ state: 'visible' });
+
+        const rows = await table.locator('tbody > tr').elementHandles();
+        if (rows.length === 0) {
+            throw new Error('No rows found in the table.');
+        }
+
+        let currentGroup: 'СБ' | 'Д' | 'ПД' | 'МД' | 'РМ' | null = null;
+        const groupOrder: ('СБ' | 'Д' | 'ПД' | 'МД' | 'РМ')[] = ['СБ', 'Д', 'ПД', 'МД', 'РМ'];
+        let groupDetected = new Set<string>(); // **Track detected groups**
+
+        for (const row of rows) {
+            try {
+                const headerCell = await row.$('td[colspan="5"]:not(:has(table))');
+
+                if (headerCell) {
+                    const text = await headerCell.textContent();
+                    if (text) {
+                        for (const group of groupOrder) {
+                            if (text.includes(group) || (group === "СБ" && text.includes("Сборочная единица"))) {
+                                if (!groupDetected.has(group)) {
+                                    currentGroup = group;
+                                    groupDetected.add(group);
+                                    console.log(`Detected group header: ${currentGroup}`);
+                                }
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                if (currentGroup && groupDetected.has(currentGroup)) {
+                    const nestedTableCell = await row.$('td[colspan="5"]:has(table)');
+                    if (nestedTableCell) {
+                        const nestedRows = await nestedTableCell.$$('table tbody > tr');
+
+                        for (const nestedRow of nestedRows) {
+                            await nestedRow.evaluate((element) => {
+                                element.style.border = "2px solid red";
+                                element.style.backgroundColor = "yellow";
+                            });
+
+                            const rowData: string[] = [];
+                            const cells = await nestedRow.$$('td');
+
+                            for (const cell of cells) {
+                                const text = await cell.textContent();
+                                rowData.push(text?.trim() || '');
+                            }
+
+                            if (rowData.length === 5) {
+                                const item = {
+                                    designation: rowData[1],
+                                    name: rowData[2],
+                                    unit: currentGroup === "СБ" || currentGroup === "Д" ? parentId : rowData[3],
+                                    quantity: currentGroup === "ПД" ? 0 : parseInt(rowData[4], 10) * multiplier // ✅ Fix: Set quantity to 0 for ПД
+                                };
+
+                                if (currentGroup === "ПД") {
+                                    // ✅ Check if item already exists in `ПД`
+                                    const existingIndex = this.parsedData["ПД"].findIndex(existingItem => existingItem.name === item.name);
+
+                                    if (existingIndex !== -1) {
+                                        this.parsedData["ПД"][existingIndex] = item; // ✅ Overwrite existing item
+                                    } else {
+                                        this.parsedData["ПД"].push(item); // ✅ Add new item if not found
+                                    }
+                                } else {
+                                    this.parsedData[currentGroup].push(item);
+                                }
+
+                                if (currentGroup === "СБ") {
+                                    console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
+                                    await nestedRow.click();
+                                    await page.waitForTimeout(500);
+                                    const modalDialog = page.locator(`dialog[data-testid^="Specification-ModalCbed"]`).last();
+                                    await modalDialog.waitFor({ state: 'visible' });
+                                    const specTable = modalDialog.locator(`[data-testid^="Specification-ModalCbed"][data-testid$="-TableSpecification-Cbed"]`).last();
+                                    await specTable.evaluate((el) => el.scrollIntoView());
+                                    await page.waitForTimeout(500);
+                                    if (await specTable.count() > 0) {
+                                        const designationElement = modalDialog.locator('[data-testid^="Specification-ModalCbed"][data-testid$="Designation-Text"] span').last();
+                                        await designationElement.waitFor({ state: 'visible' });
+                                        const parentDesignation = await designationElement.textContent() || '';
+                                        console.log(`Extracted ParentDesignation: ${parentDesignation}`);
+                                        await this.parseRecursiveStructuredTable(page, "Specification-TableSpecification-Cbed", parentDesignation, item.quantity);
+                                    }
+                                    await page.mouse.click(1, 1);
+                                    await page.waitForTimeout(1000);
+                                    console.log(`Closed modal for ${rowData[1]}`);
+                                }
+
+                                if (currentGroup === "Д") {
+                                    console.log(`Opening material modal for Д item: ${rowData[1]}`);
+                                    await nestedRow.click();
+                                    const materialElement = page.locator(`[data-testid^="Specification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
+                                    await materialElement.evaluate((row) => {
+                                        row.style.backgroundColor = 'yellow';
+                                        row.style.border = '2px solid red';
+                                        row.style.color = 'blue';
+                                    });
+                                    await materialElement.evaluate((el) => el.scrollIntoView());
+                                    await materialElement.waitFor({ state: 'visible' });
+                                    await page.waitForTimeout(2000);
+                                    const materialText = await materialElement.textContent();
+                                    if (materialText) {
+                                        const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
+                                        if (existingMaterial) {
+                                            existingMaterial.quantity += item.quantity;
+                                        } else {
+                                            this.parsedData["МД"].push({
+                                                material: materialText.trim(),
+                                                quantity: item.quantity
+                                            });
+                                        }
+                                    }
+                                    page.mouse.click(1, 1);
+                                    await page.waitForTimeout(500);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`Error processing row: ${error}`);
+            }
+        }
+        // ✅ Sort items within each group alphabetically by name
+        for (const group of Object.keys(this.parsedData)) {
+            if (this.parsedData[group]?.length > 0) { // Ensure group has items
+                this.parsedData[group].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+            }
+        }
+
+    }
+
+
+
+
+
+
+    async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {
+        const TABLE_SELECTORS = {
+            "СБ": "[data-testid='Specification-ModalCbed-AccordionCbed-Table']",
+            "Д": "[data-testid='Specification-ModalCbed-AccordionDetalContent-Table']",
+            "ПД": "[data-testid='Specification-ModalCbed-AccordionBuyersMaterial-Table']",
+            "МД": "[data-testid='Specification-ModalCbed-ModalComplect-MateriaDetalTable']",
+            "РМ": "[data-testid='Specification-ModalCbed-Accordion-MaterialRashod-Table']"
+        };
+
+        const structuredData: { [key: string]: any[] } = {
+            "СБ": [],
+            "Д": [],
+            "ПД": [],
+            "МД": [],
+            "РМ": []
+        };
+
+        const dialog = page.locator(`[data-testid="${dialogTestId}"]`);
+        await dialog.waitFor({ state: "visible" });
+        await page.waitForTimeout(1000);
+
+        for (const [group, selector] of Object.entries(TABLE_SELECTORS)) {
+            const table = dialog.locator(selector);
+
+            if (await table.count() === 0) {
+                console.log(`Skipping ${group}: Table does not exist.`);
+                continue;
+            }
+
+            try {
+                await table.waitFor({ state: "attached", timeout: 3000 });
+            } catch {
+                console.log(`Skipping ${group}: Table is not attached.`);
+                continue;
+            }
+
+            await page.waitForTimeout(500);
+
+            if (await table.locator("tbody > tr").count() === 0) {
+                console.log(`Skipping ${group}: Table is empty.`);
+                continue;
+            }
+
+            const rows = await table.locator("tbody > tr").elementHandles();
+
+            for (const row of rows) {
+                await row.evaluate((node) => {
+                    (node as HTMLElement).style.backgroundColor = "yellow"; // Cast `node` to `HTMLElement`
+                    (node as HTMLElement).style.border = "2px solid red";
+                    (node as HTMLElement).style.color = "blue";
+                });
+
+                const cells = await row.$$("td");
+                const rowData = await Promise.all(cells.map(async (cell) => {
+                    const text = await cell.textContent();
+                    return text?.trim() || "";
+                }));
+                if (group === "ПД") {
+                    console.log(rowData);
+                }
+                // Handle different groups with a standard format
+                if (rowData.length >= 4 || (group === "ПД" && rowData.length === 3)) {
+                    let quantity = parseInt(rowData[4], 10);
+                    if (isNaN(quantity)) quantity = 1; // Default fallback for missing values
+
+                    if (group === "МД") {
+                        const materialName = rowData[1];
+                        const existingMaterial = structuredData["МД"].find(mat => mat.material === materialName);
+                        if (existingMaterial) {
+                            existingMaterial.quantity += quantity;
+                        } else {
+                            structuredData["МД"].push({ material: materialName, quantity });
+                        }
+                    } else {
+                        if (group === "ПД") {
+                            structuredData[group].push({
+                                designation: rowData[6] || "-",
+                                name: rowData[1] || "",
+                                unit: rowData[3] || "шт",
+                                quantity: 0
+                            });
+                        }
+                        else {
+                            structuredData[group].push({
+                                designation: rowData[6] || "-",
+                                name: rowData[7] || "",
+                                unit: rowData[3] || "шт",
+                                quantity
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Ensure consistency with recursive format (sorting, structuring)
+        for (const group of Object.keys(structuredData)) {
+            if (structuredData[group]?.length > 0) { // Check if group is not empty
+                structuredData[group].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+            }
+        }
+
+
+
+        return structuredData;
+    }
+
+    async checkItemExistsInBottomTable(
+        page: Page,
+        selectedPartName: string,
+        modalTestId: string,
+        bottomTableTestId: string
+    ): Promise<boolean> {
+        await page.waitForLoadState("networkidle");
+
+        // Locate the specific modal containing the table
+        const modal = page.locator(`dialog[data-testid^="${modalTestId}"]`);
+        await modal.waitFor({ state: "attached", timeout: 15000 });
+        await modal.waitFor({ state: "visible", timeout: 15000 });
+        logger.info("Modal located successfully.");
+
+        await page.waitForTimeout(1500);
+
+        // Locate the bottom table dynamically within the modal
+        const bottomTableLocator = modal.locator(`[data-testid="${bottomTableTestId}"]`);
+
+        // **Check if the bottom table exists**
+        const isTableVisible = await bottomTableLocator.isVisible();
+        if (!isTableVisible) {
+            logger.info(`Bottom table '${bottomTableTestId}' does not exist. Returning false.`);
+            return false; // ✅ Table doesn't exist, meaning the item isn't there
+        }
+
+        await bottomTableLocator.waitFor({ state: "attached", timeout: 15000 });
+        logger.info("Bottom table located successfully.");
+
+        await page.waitForTimeout(1000);
+
+        // Locate all rows in the table body
+        const rowsLocator = bottomTableLocator.locator("tbody tr");
+        const rowCount = await rowsLocator.count();
+        logger.info(`Found ${rowCount} rows in the bottom table.`);
+
+        for (let i = 0; i < rowCount; i++) {
+            const row = rowsLocator.nth(i);
+
+            // Wait for the row to become visible
+            await row.waitFor({ state: "visible", timeout: 5000 });
+
+            // Extract part name from the second column (index 1)
+            const partNameCell = row.locator("td").nth(1);
+            const partName = (await partNameCell.textContent())?.trim();
+
+            logger.info(`Row ${i + 1}: PartName=${partName}`);
+
+            // Check if the current row matches the selected part name
+            if (partName === selectedPartName) {
+                // Highlight the matching row for debugging
+                await row.evaluate((rowElement) => {
+                    rowElement.style.backgroundColor = "yellow";
+                    rowElement.style.border = "2px solid green";
+                    rowElement.style.color = "blue";
+                });
+
+                logger.info(`Selected part name found in row ${i + 1}`);
+                return true; // ✅ Item exists in the bottom table
+            }
+        }
+
+        logger.info("Item not found in the bottom table.");
+        return false; // ✅ Item does NOT exist in the bottom table
+    }
+
+
+
+
+
+
+
+
+
+} 

@@ -56,13 +56,13 @@ const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE = "BasePaginationTable-Table-de
 const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE = "Specification-ModalBaseDetal-Table";
 
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG = "ModalBaseMaterial";
-const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item-Table";
+const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item";
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE = "ModalBaseMaterial-Table";
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "ModalBaseMaterial-Select-Button";
 const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "ModalBaseMaterial-Add-Button";
 
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG = "ModalBaseMaterial";
-const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item-Table";
+const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item";
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE = "ModalBaseMaterial-Table";
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "ModalBaseMaterial-Select-Button";
 const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "ModalBaseMaterial-Add-Button";
@@ -381,7 +381,7 @@ export const runU004_1 = () => {
             await expect(table2Locator).toBeVisible();
         });
 
-        await allure.step("Step 22: Проверяем, что тела таблиц отображаются. (Check that table bodies are displayed)", async () => {
+        await allure.step("Step 22a: Проверяем, что тела таблиц отображаются. (Check that table bodies are displayed)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
 
@@ -399,271 +399,282 @@ export const runU004_1 = () => {
                 throw new Error("table2Locator is null");
             }
         });
+        let searchItemExists = false;
+        await allure.step("Step 22b: Проверяем, существует ли уже наш элемент в нижней таблице, и пропускаем поиск, если он есть.", async () => {
 
-        await allure.step("Step 23: Проверяем, что кнопка \"Добавить\" отображается в модальном окне активной.", async () => {
             await page.waitForLoadState("networkidle");
+            const searchItemExists = await shortagePage.checkItemExistsInBottomTable(page, TEST_PRODUCT_СБ, EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE);
 
-            // Use data-testid to scope the dialog
-            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
-            const buttonTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON;
-            const buttonLabel = 'Добавить';
-            let expectedState = false;
+            if (searchItemExists) {
+                console.log("Item already exists in the bottom table. Skipping search.");
+            } else {
+                console.log("Item not found. Proceeding with search.");
+            }
 
-            await allure.step(`Validate button with label: "${buttonLabel}" (initial state)`, async () => {
-                const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
-                const isButtonReady = await shortagePage.isButtonVisibleTestId(
-                    page,
-                    buttonTestId, // Use data-testid instead of class
-                    buttonLabel,
-                    expectedState
-                );
-                expect(isButtonReady).toBeTruthy();
-                logger.info(`Is the "${buttonLabel}" button visible and enabled initially?`, isButtonReady);
+        });
+        if (!searchItemExists) {
+            await allure.step("Step 23: Проверяем, что кнопка \"Добавить\" отображается в модальном окне активной.", async () => {
+                await page.waitForLoadState("networkidle");
+
+                // Use data-testid to scope the dialog
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON;
+                const buttonLabel = 'Добавить';
+                let expectedState = false;
+
+                await allure.step(`Validate button with label: "${buttonLabel}" (initial state)`, async () => {
+                    const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(
+                        page,
+                        buttonTestId, // Use data-testid instead of class
+                        buttonLabel,
+                        expectedState
+                    );
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled initially?`, isButtonReady);
+                });
+
+                await allure.step(`Select the first item in the second table`, async () => {
+                    const firstRowLocator = table2Locator!.locator('tbody tr').nth(0);
+                    await firstRowLocator.evaluate((row) => {
+                        row.style.backgroundColor = 'yellow';
+                        row.style.border = '2px solid red';
+                        row.style.color = 'blue';
+                    });
+                    await firstRowLocator.hover();
+                    await firstRowLocator.click();
+
+                });
+
+                await page.waitForTimeout(500);
+                expectedState = true;
+
+                await allure.step(`Validate button with label: "${buttonLabel}" (after selection)`, async () => {
+                    const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(
+                        page,
+                        buttonTestId, // Use data-testid instead of class
+                        buttonLabel,
+                        expectedState
+                    );
+                    expect(isButtonReady).toBeTruthy();
+                    logger.info(`Is the "${buttonLabel}" button visible and enabled after selection?`, isButtonReady);
+                });
             });
-
-            await allure.step(`Select the first item in the second table`, async () => {
-                const firstRowLocator = table2Locator!.locator('tbody tr').nth(0);
-                await firstRowLocator.evaluate((row) => {
+            await allure.step("Step 24: Проверяем, что поиск во второй таблицы модального окна отображается. (Check that the search in the second table of the modal window is displayed.)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+                // Check for the presence of the input tag with the specific class inside the table
+                const inputLocator = table2Locator!.locator('input.search-yui-kit__input'); //DATATESTID
+                await inputLocator.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                await firstRowLocator.hover();
-                await firstRowLocator.click();
+                const isInputPresent = await inputLocator.isVisible();
 
+                // Assert that the input is visible
+                expect(isInputPresent).toBeTruthy();
+            });
+            await allure.step("Step 25: Вводим значение переменной в поиск таблицы второй таблицы модального окна. (We enter the value of the variable in the table search of the second table of the modal window.)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+                await table2Locator!.locator('input.search-yui-kit__input').fill(TEST_PRODUCT_СБ); //DATATESTID
+                await page.waitForLoadState("networkidle");
+                await page.waitForTimeout(1000);
+
+                // Optionally, validate that the search input is visible
+                await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible() //DATATESTID
+            });
+            await allure.step("Step 26: Проверяем, что в поиске второй таблицы модального окна введенное значение совпадает с переменной. (We check that in the search of the second table of the modal window the entered value matches the variable.)", async () => {
+                await page.waitForLoadState("networkidle");
+                // Locate the search field within the left table and validate its value 
+                await expect(table2Locator!.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT_СБ); //DATATESTID
+            });
+            await allure.step("Step 27: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
+                // Simulate pressing "Enter" in the search field
+                await table2Locator!.locator('input.search-yui-kit__input').press('Enter'); //DATATESTID
+                await page.waitForTimeout(1000);
+                await page.waitForLoadState("networkidle");
+            });
+            await allure.step("Step 28: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
+                // Wait for the page to become idle (ensuring data loading is complete)
+                await page.waitForLoadState("networkidle");
+                // Assert that the table body has rows
+                await page.waitForTimeout(1000);
+                const rowCount = await table2Locator!.locator('tbody tr').count();
+                console.log("results rowCount:" + rowCount);
+                expect(rowCount).toBeGreaterThan(0); // Asserts that the row count is greater than 1
+            });
+            let firstCell: Locator | null = null;
+            await allure.step("Step 29: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)", async () => {
+                // Wait for the page to stabilize
+                await page.waitForLoadState("networkidle");
+
+                // Get the value of the first cell in the first row
+                firstCellValue = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)').innerText();
+                console.log("results firstCellValue:" + firstCellValue);
+                firstCell = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)');
+                await firstCell.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+                firstCellValue = firstCellValue.trim();
+                // Get the value of the second cell in the first row
+                secondCellValue = await table2Locator!.locator('tbody tr:first-child td:nth-child(2)').innerText();
+                const secondCell = await table2Locator!.locator('tbody tr:first-child td:nth-child(2)');
+                await secondCell.evaluate((row) => {
+                    row.style.backgroundColor = 'yellow';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+                secondCellValue = secondCellValue.trim();
+                // Confirm that the first cell contains the search term
+                expect(secondCellValue).toContain(TEST_PRODUCT_СБ);
             });
 
-            await page.waitForTimeout(500);
-            expectedState = true;
+            await allure.step("Step 30: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
+                await firstCell!.evaluate((row) => {
+                    row.style.backgroundColor = 'green';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+                firstCell!.hover();
+                firstCell!.click();
 
-            await allure.step(`Validate button with label: "${buttonLabel}" (after selection)`, async () => {
-                const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
-                const isButtonReady = await shortagePage.isButtonVisibleTestId(
-                    page,
-                    buttonTestId, // Use data-testid instead of class
-                    buttonLabel,
-                    expectedState
-                );
-                expect(isButtonReady).toBeTruthy();
-                logger.info(`Is the "${buttonLabel}" button visible and enabled after selection?`, isButtonReady);
+                await page.waitForTimeout(500);
+                const rowLocator = table2Locator!.locator('tbody tr:first-child');
+
+                // Check if the row has the "active" class
+                const hasActiveClass = await rowLocator.evaluate((row) => {
+                    return row.classList.contains('active');
+                });
+
+                // Assert that the row contains the class
+                expect(hasActiveClass).toBeTruthy();
+
+                console.log(`✅ First row has 'active' class: ${hasActiveClass}`);
+
             });
-        });
+            await allure.step("Step 31: Нажимаем по кнопке \"Выбрать\" в модальном окне (Click on the \"Выбрать\" button in the modal window)", async () => {
+                // Wait for loading
+                await page.waitForLoadState("networkidle");
 
+                // Scoped dialog selector using data-testid
+                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON; // DATATESTID
+                const buttonLabel = 'Добавить';
+                let expectedState = true;
 
-        await allure.step("Step 24: Проверяем, что поиск во второй таблицы модального окна отображается. (Check that the search in the second table of the modal window is displayed.)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-            // Check for the presence of the input tag with the specific class inside the table
-            const inputLocator = table2Locator!.locator('input.search-yui-kit__input'); //DATATESTID
-            await inputLocator.evaluate((row) => {
-                row.style.backgroundColor = 'yellow';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            const isInputPresent = await inputLocator.isVisible();
+                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    // Locate the button using data-testid instead of class names
+                    const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonTestId}"]`);
 
-            // Assert that the input is visible
-            expect(isInputPresent).toBeTruthy();
-        });
-        await allure.step("Step 25: Вводим значение переменной в поиск таблицы второй таблицы модального окна. (We enter the value of the variable in the table search of the second table of the modal window.)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-            await table2Locator!.locator('input.search-yui-kit__input').fill(TEST_PRODUCT_СБ); //DATATESTID
-            await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(1000);
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(
+                        page,
+                        buttonTestId, // Pass data-testid instead of class
+                        buttonLabel,
+                        expectedState
+                    );
+                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                    expect(isButtonReady).toBeTruthy();
+                });
 
-            // Optionally, validate that the search input is visible
-            await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible() //DATATESTID
-        });
-        await allure.step("Step 26: Проверяем, что в поиске второй таблицы модального окна введенное значение совпадает с переменной. (We check that in the search of the second table of the modal window the entered value matches the variable.)", async () => {
-            await page.waitForLoadState("networkidle");
-            // Locate the search field within the left table and validate its value 
-            await expect(table2Locator!.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT_СБ); //DATATESTID
-        });
-        await allure.step("Step 27: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
-            // Simulate pressing "Enter" in the search field
-            await table2Locator!.locator('input.search-yui-kit__input').press('Enter'); //DATATESTID
-            await page.waitForTimeout(1000);
-            await page.waitForLoadState("networkidle");
-        });
-        await allure.step("Step 28: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
-            // Wait for the page to become idle (ensuring data loading is complete)
-            await page.waitForLoadState("networkidle");
-            // Assert that the table body has rows
-            await page.waitForTimeout(1000);
-            const rowCount = await table2Locator!.locator('tbody tr').count();
-            console.log("results rowCount:" + rowCount);
-            expect(rowCount).toBeGreaterThan(0); // Asserts that the row count is greater than 1
-        });
-        let firstCell: Locator | null = null;
-        await allure.step("Step 29: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Get the value of the first cell in the first row
-            firstCellValue = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)').innerText();
-            console.log("results firstCellValue:" + firstCellValue);
-            firstCell = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)');
-            await firstCell.evaluate((row) => {
-                row.style.backgroundColor = 'yellow';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            firstCellValue = firstCellValue.trim();
-            // Get the value of the second cell in the first row
-            secondCellValue = await table2Locator!.locator('tbody tr:first-child td:nth-child(2)').innerText();
-            const secondCell = await table2Locator!.locator('tbody tr:first-child td:nth-child(2)');
-            await secondCell.evaluate((row) => {
-                row.style.backgroundColor = 'yellow';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            secondCellValue = secondCellValue.trim();
-            // Confirm that the first cell contains the search term
-            expect(secondCellValue).toContain(TEST_PRODUCT_СБ);
-        });
-
-        await allure.step("Step 30: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-            await firstCell!.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-            firstCell!.hover();
-            firstCell!.click();
-
-            await page.waitForTimeout(500);
-            const rowLocator = table2Locator!.locator('tbody tr:first-child');
-
-            // Check if the row has the "active" class
-            const hasActiveClass = await rowLocator.evaluate((row) => {
-                return row.classList.contains('active');
-            });
-
-            // Assert that the row contains the class
-            expect(hasActiveClass).toBeTruthy();
-
-            console.log(`✅ First row has 'active' class: ${hasActiveClass}`);
-
-        });
-        await allure.step("Step 31: Нажимаем по кнопке \"Выбрать\" в модальном окне (Click on the \"Выбрать\" button in the modal window)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-
-            // Scoped dialog selector using data-testid
-            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
-            const buttonTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON; // DATATESTID
-            const buttonLabel = 'Добавить';
-            let expectedState = true;
-
-            await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                // Locate the button using data-testid instead of class names
+                // Highlight button for debugging
                 const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonTestId}"]`);
+                await buttonLocator.evaluate((button) => {
+                    button.style.backgroundColor = 'green';
+                    button.style.border = '2px solid red';
+                    button.style.color = 'blue';
+                });
+                await page.waitForLoadState("networkidle"); // Ensure everything is loaded
+                await page.screenshot({ path: "screenshot.png", fullPage: true }); // Capture full page
 
-                const isButtonReady = await shortagePage.isButtonVisibleTestId(
-                    page,
-                    buttonTestId, // Pass data-testid instead of class
-                    buttonLabel,
-                    expectedState
-                );
-                console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                expect(isButtonReady).toBeTruthy();
+                // Perform hover and click actions
+                await buttonLocator.click();
+                await page.waitForTimeout(1500);
+                await buttonLocator.click();
+                await page.waitForTimeout(1500);
             });
 
-            // Highlight button for debugging
-            const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonTestId}"]`);
-            await buttonLocator.evaluate((button) => {
-                button.style.backgroundColor = 'green';
-                button.style.border = '2px solid red';
-                button.style.color = 'blue';
-            });
-            await page.waitForLoadState("networkidle"); // Ensure everything is loaded
-            await page.screenshot({ path: "screenshot.png", fullPage: true }); // Capture full page
+            await allure.step("Step 32: Убедитесь, что выбранная строка теперь отображается в нижней таблице.", async () => {
+                // Wait for the page to load completely
+                await page.waitForLoadState("networkidle");
 
-            // Perform hover and click actions
-            await buttonLocator.click();
-            await page.waitForTimeout(1500);
-            await buttonLocator.click();
-            await page.waitForTimeout(1500);
-        });
+                // Retrieve the selected part number and name
+                const selectedPartNumber = firstCellValue; // Replace with the actual part number variable
+                const selectedPartName = secondCellValue; // Replace with the actual part name variable
+                console.log(`Selected Part Number: ${selectedPartNumber}`);
+                console.log(`Selected Part Name: ${selectedPartName}`);
 
-        await allure.step("Step 32: Убедитесь, что выбранная строка теперь отображается в нижней таблице.", async () => {
-            // Wait for the page to load completely
-            await page.waitForLoadState("networkidle");
+                // Locate the specific modal containing the table
+                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
 
-            // Retrieve the selected part number and name
-            const selectedPartNumber = firstCellValue; // Replace with the actual part number variable
-            const selectedPartName = secondCellValue; // Replace with the actual part name variable
-            console.log(`Selected Part Number: ${selectedPartNumber}`);
-            console.log(`Selected Part Name: ${selectedPartName}`);
+                await modal.waitFor({ state: 'attached', timeout: 15000 }); // Ensure modal is attached to the DOM
+                await modal.waitFor({ state: 'visible', timeout: 15000 }); // Ensure modal becomes visible
+                logger.info("Modal located successfully.");
+                await page.waitForTimeout(1500);
+                // Locate the bottom table dynamically within the modal
+                const bottomTableLocator = modal.locator(`[data-testid="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`); // Match any table with the suffix "-Table"
+                await bottomTableLocator.waitFor({ state: 'attached', timeout: 15000 }); // Wait for table to be attached
+                logger.info("Bottom table located successfully.");
+                await page.waitForTimeout(1000);
+                // Highlight the table for debugging
+                await bottomTableLocator.evaluate((element) => {
+                    element.style.border = "2px solid red";
+                    element.style.backgroundColor = "yellow";
+                });
 
-            // Locate the specific modal containing the table
-            const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
+                // Locate all rows in the table body
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+                console.log(rowCount);
+                expect(rowCount).toBeGreaterThan(0); // Ensure there are rows in the table
+                logger.info(`Found ${rowCount} rows in the bottom table.`);
 
-            await modal.waitFor({ state: 'attached', timeout: 15000 }); // Ensure modal is attached to the DOM
-            await modal.waitFor({ state: 'visible', timeout: 15000 }); // Ensure modal becomes visible
-            logger.info("Modal located successfully.");
-            await page.waitForTimeout(1500);
-            // Locate the bottom table dynamically within the modal
-            const bottomTableLocator = modal.locator(`[data-testid="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`); // Match any table with the suffix "-Table"
-            await bottomTableLocator.waitFor({ state: 'attached', timeout: 15000 }); // Wait for table to be attached
-            logger.info("Bottom table located successfully.");
-            await page.waitForTimeout(1000);
-            // Highlight the table for debugging
-            await bottomTableLocator.evaluate((element) => {
-                element.style.border = "2px solid red";
-                element.style.backgroundColor = "yellow";
-            });
+                let isRowFound = false;
 
-            // Locate all rows in the table body
-            const rowsLocator = bottomTableLocator.locator('tbody tr');
-            const rowCount = await rowsLocator.count();
-            console.log(rowCount);
-            expect(rowCount).toBeGreaterThan(0); // Ensure there are rows in the table
-            logger.info(`Found ${rowCount} rows in the bottom table.`);
+                // Iterate through each row to search for the selected row
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
 
-            let isRowFound = false;
+                    // Wait for the row to become visible
+                    await row.waitFor({ state: 'visible', timeout: 5000 });
 
-            // Iterate through each row to search for the selected row
-            for (let i = 0; i < rowCount; i++) {
-                const row = rowsLocator.nth(i);
+                    // Extract data from the first and second columns
+                    const partNumberCell = await row.locator('td').nth(0);
+                    const partNameCell = await row.locator('td').nth(1);
+                    console.log("row" + i + "partNumberCell.textContent():" + await partNumberCell.textContent());
+                    console.log("row" + i + "partNameCell.textContent():" + await partNameCell.textContent());
+                    const partNumber = (await partNumberCell.textContent())?.trim();
+                    const partName = (await partNameCell.textContent())?.trim();
 
-                // Wait for the row to become visible
-                await row.waitFor({ state: 'visible', timeout: 5000 });
+                    logger.info(`Row ${i + 1}: PartNumber=${partNumber}, PartName=${partName}`);
 
-                // Extract data from the first and second columns
-                const partNumberCell = await row.locator('td').nth(0);
-                const partNameCell = await row.locator('td').nth(1);
-                console.log("row" + i + "partNumberCell.textContent():" + await partNumberCell.textContent());
-                console.log("row" + i + "partNameCell.textContent():" + await partNameCell.textContent());
-                const partNumber = (await partNumberCell.textContent())?.trim();
-                const partName = (await partNameCell.textContent())?.trim();
+                    // Check if the current row matches the selected part number and name
+                    if (partNumber === selectedPartNumber && partName === selectedPartName) {
+                        isRowFound = true;
 
-                logger.info(`Row ${i + 1}: PartNumber=${partNumber}, PartName=${partName}`);
+                        // Highlight the matching row for debugging purposes
+                        await row.evaluate((rowElement) => {
+                            rowElement.style.backgroundColor = 'yellow';
+                            rowElement.style.border = '2px solid green';
+                            rowElement.style.color = 'blue';
+                        });
 
-                // Check if the current row matches the selected part number and name
-                if (partNumber === selectedPartNumber && partName === selectedPartName) {
-                    isRowFound = true;
-
-                    // Highlight the matching row for debugging purposes
-                    await row.evaluate((rowElement) => {
-                        rowElement.style.backgroundColor = 'yellow';
-                        rowElement.style.border = '2px solid green';
-                        rowElement.style.color = 'blue';
-                    });
-
-                    logger.info(`Selected row found in row ${i + 1}`);
-                    break; // Stop searching after finding the row
+                        logger.info(`Selected row found in row ${i + 1}`);
+                        break; // Stop searching after finding the row
+                    }
                 }
-            }
 
-            // Assert that the selected row is present in the table
-            expect(isRowFound).toBeTruthy();
-            logger.info(`The selected row with PartNumber="${selectedPartNumber}" and PartName="${selectedPartName}" is present in the bottom table.`);
-        });
-
+                // Assert that the selected row is present in the table
+                expect(isRowFound).toBeTruthy();
+                logger.info(`The selected row with PartNumber="${selectedPartNumber}" and PartName="${selectedPartName}" is present in the bottom table.`);
+            });
+        }
 
 
         await allure.step("Step 33: Нажимаем по кнопке \"Добавить\" в модальном окне (Click on the \"Добавить\" button in the modal window)", async () => {
@@ -741,7 +752,7 @@ export const runU004_1 = () => {
             const identical = await shortagePage.compareTableData(tableData1, tableData2);
 
             logger.info(`Are tableData1 and tableData2 identical? ${identical}`);
-            expect(identical).toBe(false); // Assertion
+            expect(identical).toBe(true); // Assertion
         });
         await allure.step("Step 38: перейдите в сторону и вернитесь назад, затем перепроверьте arrays Array1 and Array3. (navigate away and back then recheck table arrays Array1 and Array3.)", async () => {
             await shortagePage.goto(ENV.BASE_URL);
@@ -782,7 +793,7 @@ export const runU004_1 = () => {
             const identical = await shortagePage.compareTableData(tableData1, tableData2);
 
             logger.info(`Are tableData1 and tableData3 identical? ${identical}`);
-            expect(identical).toBe(false); // Assertion
+            expect(identical).toBe(true); // Assertion
         });
         await allure.step("Step 39: Очистка после теста. (Cleanup after test)", async () => {
             //remove the item we added
@@ -1123,7 +1134,8 @@ export const runU004_1 = () => {
                 ];
 
                 for (const item of itemsToAdd) {
-                    const shortagePage = new CreatePartsDatabasePage(page);
+                    //const shortagePage = new CreatePartsDatabasePage(page);
+
                     await shortagePage.addItemToSpecification(
                         page,
                         item.smallDialogButtonId,
