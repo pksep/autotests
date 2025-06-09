@@ -78,7 +78,7 @@ export const runTC100 = () => {
         let dataRows: Locator[]; // Holds rows of all products
 
         await allure.step('Step 0: Navigate to Parts Database', async () => {
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(2000);
             await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
         });
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
@@ -178,12 +178,47 @@ export const runTC100 = () => {
 
             console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
         });
+        let specs: Record<string, any[]> = {};
+
         await allure.step('Step 2: Parse the Product Specifications Table', async () => {
             const openSpecificationButton = page.locator('[data-testid="Specification-Buttons-openSpecification"]').last();
-            openSpecificationButton.click();
-            const specs = await shortagePage.extractAllTableData(page, 'Specification-ModalCbed');
+            await openSpecificationButton.click();
+            specs = await shortagePage.extractAllTableData(page, 'Specification-ModalCbed');
             console.log(JSON.stringify(specs, null, 2));
+        });
 
+        await allure.step('Step 3: Validate Parsed Data Against Specification Table', async () => {
+            console.log("Comparing parsed data with extracted specification table...");
+
+            // Convert parsed data to JSON for comparison
+            const parsedDataJSON = JSON.stringify(shortagePage.parsedData, null, 2);
+            const specsJSON = JSON.stringify(specs, null, 2);
+
+            // Perform comparison
+            if (parsedDataJSON === specsJSON) {
+                console.log("✅ Success: Parsed data matches the specification table.");
+            } else {
+                console.error("❌ Error: Parsed data does NOT match specification table.");
+                console.log("Differences detected:");
+
+                // Compare objects deeply and log mismatches
+                const parsedEntries = Object.entries(shortagePage.parsedData);
+                const specEntries = Object.entries(specs);
+
+                parsedEntries.forEach(([group, items]) => {
+                    if (!specs?.[group]) {
+                        console.error(`Group ${group} missing in specifications.`);
+                    } else {
+                        items.forEach((item, index) => {
+                            if (JSON.stringify(item) !== JSON.stringify(specs[group][index])) {
+                                console.error(`Mismatch in group ${group}, item ${index}:`);
+                                console.log("Parsed:", JSON.stringify(item, null, 2));
+                                console.log("Expected:", JSON.stringify(specs[group][index], null, 2));
+                            }
+                        });
+                    }
+                });
+            }
         });
 
 

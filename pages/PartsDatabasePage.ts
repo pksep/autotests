@@ -1,6 +1,8 @@
 import { Page, Locator, expect } from "@playwright/test";
-import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
+
 import { PageObject } from "../lib/Page";
+import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
+import { ENV, SELECTORS } from "../config";
 import logger from "../lib/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
@@ -8,6 +10,7 @@ import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
 const EDIT_PAGE_ADD_BUTTON = "Specification-Buttons-addingSpecification";
 const MAIN_TABLE_TEST_ID = "Editor-TableSpecification-Product";
+
 
 const TABLE_TEST_IDS = [
     "Specification-ModalCbed-AccordionCbed-Table",
@@ -1555,134 +1558,87 @@ export class CreatePartsDatabasePage extends PageObject {
         // Determine column index based on item type
         const columnIndex = itemType === "РМ" || itemType === "ПД" ? 0 : 1;
 
-        // Step 1: Wait for the page to stabilize, then click the "Добавить" button
+        // Step 1: Click the "Добавить" button
         await page.waitForLoadState("networkidle");
         await page.waitForTimeout(1000);
         const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
-        await addButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
         await addButton.click();
         await page.waitForTimeout(500);
 
         // Step 2: Click the small dialog button
         const dialogButton = page.locator(`div[data-testid="${smallDialogButtonId}"]`);
-        await dialogButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
         await dialogButton.click();
         await page.waitForTimeout(500);
 
-        // Step 3: Wait for the modal/dialog to load
+        // Step 3: Wait for the modal/dialog to load **before checking item existence**
         const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
-        await modal.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
         await expect(modal).toBeVisible(); // Validate modal is visible
         await page.waitForTimeout(1000);
-        // Step 4: Search for the item in the search table
-        await modal.locator(`table[data-testid="${searchTableTestId}"]`).waitFor({ state: 'visible' });
-        const itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
-        await itemTableLocator.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
-        await page.waitForTimeout(1000);
-        await itemTableLocator.locator("input.search-yui-kit__input").fill(searchValue);
-        await itemTableLocator.locator("input.search-yui-kit__input").press("Enter");
-        await page.waitForLoadState("networkidle");
-        await page.waitForTimeout(2000);
-        const firstRow = itemTableLocator.locator("tbody tr").first();
-        await firstRow.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
-        await page.waitForTimeout(1500);
-        const firstRowText = await firstRow.locator("td").nth(columnIndex).textContent();
 
-        // Step 5: Validate search result
-        expect(firstRowText).toContain(searchValue);
-        await firstRow.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
+        // Step 4: Check if the item already exists in the bottom table **inside the modal**
+        const itemExists = await this.checkItemExistsInBottomTable(page, searchValue, dialogTestId, bottomTableTestId);
+
+        if (!itemExists) {
+            //     console.log(`Skipping addition: '${searchValue}' already exists in the bottom table.`);
+            //     return; // ✅ Skip the addition process
+            // }
+
+            // Step 5: Search for the item in the search table
+            await modal.locator(`table[data-testid="${searchTableTestId}"]`).waitFor({ state: "visible" });
+            const itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+            await itemTableLocator.evaluate((element: HTMLElement) => {
+                element.style.border = "3px solid red"; // Highlight
+                element.style.backgroundColor = "yellow";
             });
-        });
-        // Step 6: Click the first row
-        await firstRow.click();
-        await page.waitForTimeout(500);
+            await page.waitForTimeout(1000);
+            await itemTableLocator.locator("input.search-yui-kit__input").fill(searchValue);
+            await itemTableLocator.locator("input.search-yui-kit__input").press("Enter");
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(2000);
 
-        // Step 7: Add the item to the bottom table
-        const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
-        await addToBottomButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
-        await addToBottomButton.click();
-        await page.waitForTimeout(100);
+            const firstRow = itemTableLocator.locator("tbody tr").first();
+            await page.waitForTimeout(1500);
+            const firstRowText = await firstRow.locator("td").nth(columnIndex).textContent();
 
-        // Step 8: Validate the item in the bottom table
-        const bottomTableLocator = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
-        await bottomTableLocator.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.border = '2px solid red';
-            });
-        });
-        const rows = bottomTableLocator.locator("tbody tr");
-        const rowCount = await rows.count();
-        expect(rowCount).toBeGreaterThan(0); // Ensure the bottom table is not empty
+            // Step 6: Validate search result
+            expect(firstRowText?.trim()).toBe(searchValue.trim()); // ✅ Ensure exact match
+            await firstRow.click();
+            await page.waitForTimeout(500);
 
-        let isItemFound = false;
-        for (let i = 0; i < rowCount; i++) {
-            const row = rows.nth(i);
-            const partName = await row.locator("td").nth(1).textContent();
+            // Step 7: Add the item to the bottom table
+            const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
+            await addToBottomButton.click();
+            await page.waitForTimeout(100);
 
-            if (partName?.trim() === searchValue.trim()) {
-                const partNameCell = await row.locator("td").nth(1);
-                await partNameCell.evaluateAll((elements) => {
-                    elements.forEach((el) => {
-                        el.style.backgroundColor = 'green';
-                        el.style.border = '2px solid red';
-                        el.style.color = 'blue';
-                    });
-                });
-                isItemFound = true;
-                break;
+            // Step 8: Validate the item in the bottom table
+            const bottomTableLocator = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
+            const rows = bottomTableLocator.locator("tbody tr");
+            const rowCount = await rows.count();
+            expect(rowCount).toBeGreaterThan(0); // Ensure the bottom table is not empty
+
+            let isItemFound = false;
+            for (let i = 0; i < rowCount; i++) {
+                const row = rows.nth(i);
+                const partName = await row.locator("td").nth(1).textContent();
+
+                if (partName?.trim() === searchValue.trim()) {
+                    isItemFound = true;
+                    break;
+                }
             }
+            expect(isItemFound).toBeTruthy(); // Ensure the item is found in the bottom table
         }
-        expect(isItemFound).toBeTruthy(); // Ensure the item is found in the bottom table
-
         // Step 9: Add the item to the main table
         const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
-        await addToMainButton.evaluateAll((elements) => {
-            elements.forEach((el) => {
-                el.style.backgroundColor = 'green';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-        });
         await addToMainButton.click();
         await page.waitForTimeout(500);
 
+        // Step 10: Ensure modal is closed before checking the main table
+        await modal.waitFor({ state: "hidden", timeout: 5000 });
+
         const parsedTableArray = await this.parseStructuredTable(page, MAIN_TABLE_TEST_ID); // Parse the table
 
-        // Iterate through each group in the parsed table
+        // Step 11: Ensure item exists in the main table
         let isMainItemFound = false;
         for (const group of parsedTableArray) {
             if (group.items.some(row => row.some(cell => cell.trim() === searchValue.trim()))) {
@@ -1692,8 +1648,9 @@ export class CreatePartsDatabasePage extends PageObject {
         }
 
         expect(isMainItemFound).toBeTruthy(); // Ensure the item exists in the main table
-
     }
+
+
 
     async removeItemFromSpecification(
         page: Page,
@@ -2222,50 +2179,112 @@ export class CreatePartsDatabasePage extends PageObject {
                                     console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
                                     await nestedRow.click();
                                     await page.waitForTimeout(500);
-                                    const modalDialog = page.locator(`dialog[data-testid^="Specification-ModalCbed"]`).last();
+
+                                    const modalDialog = page.locator(`dialog[data-testid^="ModalCbed"]`).nth(-1); // ✅ Get most recent modal
                                     await modalDialog.waitFor({ state: 'visible' });
-                                    const specTable = modalDialog.locator(`[data-testid^="Specification-ModalCbed"][data-testid$="-TableSpecification-Cbed"]`).last();
+                                    await modalDialog.evaluate((row) => {
+                                        row.style.border = '2px solid red';
+                                    });
+                                    const specTable = modalDialog.locator(`[data-testid^="ModalCbed"][data-testid$="-TableSpecification-Cbed"]`).nth(-1);
+                                    await specTable.waitFor({ state: 'visible' });
+                                    await specTable.evaluate((row) => {
+                                        row.style.border = '2px solid red';
+                                    });
                                     await specTable.evaluate((el) => el.scrollIntoView());
                                     await page.waitForTimeout(500);
+
                                     if (await specTable.count() > 0) {
-                                        const designationElement = modalDialog.locator('[data-testid^="Specification-ModalCbed"][data-testid$="Designation-Text"] span').last();
+                                        const designationElement = modalDialog.locator('[data-testid^="ModalCbed"][data-testid$="Designation-Text"] span').nth(-1);
                                         await designationElement.waitFor({ state: 'visible' });
-                                        const parentDesignation = await designationElement.textContent() || '';
+                                        await designationElement.evaluate((row) => {
+                                            row.style.border = '2px solid red';
+                                        });
+                                        const parentDesignation = await designationElement.textContent();
                                         console.log(`Extracted ParentDesignation: ${parentDesignation}`);
-                                        await this.parseRecursiveStructuredTable(page, "Specification-TableSpecification-Cbed", parentDesignation, item.quantity);
+
+                                        // ✅ Ensure recursion happens only if parentDesignation is valid
+                                        if (parentDesignation) {
+                                            await this.parseRecursiveStructuredTable(page, "ModalCbed-TableSpecification-Cbed", parentDesignation, item.quantity);
+                                        }
                                     }
+
                                     await page.mouse.click(1, 1);
                                     await page.waitForTimeout(1000);
                                     console.log(`Closed modal for ${rowData[1]}`);
                                 }
 
+
                                 if (currentGroup === "Д") {
                                     console.log(`Opening material modal for Д item: ${rowData[1]}`);
                                     await nestedRow.click();
-                                    const materialElement = page.locator(`[data-testid^="Specification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
+
+                                    const materialElement = page.locator(`[data-testid^="ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
                                     await materialElement.evaluate((row) => {
-                                        row.style.backgroundColor = 'yellow';
-                                        row.style.border = '2px solid red';
-                                        row.style.color = 'blue';
+                                        (row as HTMLElement).style.backgroundColor = 'yellow';
+                                        (row as HTMLElement).style.border = '2px solid red';
+                                        (row as HTMLElement).style.color = 'blue';
                                     });
                                     await materialElement.evaluate((el) => el.scrollIntoView());
                                     await materialElement.waitFor({ state: 'visible' });
                                     await page.waitForTimeout(2000);
-                                    const materialText = await materialElement.textContent();
+
+                                    let materialText = await materialElement.textContent();
+                                    let materialGroup = '';
+
+                                    // ✅ Call the helper function to find the correct material type
                                     if (materialText) {
-                                        const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
-                                        if (existingMaterial) {
-                                            existingMaterial.quantity += item.quantity;
+                                        materialGroup = await this.findMaterialType(page, materialText);
+                                        console.log("Searching for material: " + materialText);
+                                        console.log("Found in group: " + materialGroup);
+                                    } else {
+                                        console.warn("Material text is null, skipping material type lookup.");
+                                    }
+
+                                    if (materialText) {
+                                        if (materialGroup === "ПД") {
+                                            // ✅ Store ПД items in the required format
+                                            const existingMaterial = this.parsedData["ПД"].find(mat => mat.name === materialText.trim());
+                                            if (existingMaterial) {
+                                                existingMaterial.quantity = 0;//+= item.quantity;
+                                            } else {
+                                                this.parsedData["ПД"].push({
+                                                    designation: "-", // ✅ Required format for ПД
+                                                    name: materialText.trim(),
+                                                    unit: "шт", // ✅ Required format for ПД
+                                                    quantity: 0 // ✅ Fix: Set quantity to 1 for ПД
+                                                });
+                                            }
+                                        } else if (materialGroup === "МД") {
+                                            // ✅ Store МД items with quantity forced to 1
+                                            const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
+                                            if (existingMaterial) {
+                                                existingMaterial.quantity = 1; // ✅ Always set quantity to 1
+                                            } else {
+                                                this.parsedData["МД"].push({
+                                                    material: materialText.trim(),
+                                                    quantity: 1 // ✅ Ensure quantity is always 1
+                                                });
+                                            }
                                         } else {
-                                            this.parsedData["МД"].push({
-                                                material: materialText.trim(),
-                                                quantity: item.quantity
-                                            });
+                                            // ✅ Default behavior for other material groups
+                                            const existingMaterial = this.parsedData[materialGroup].find(mat => mat.material === materialText.trim());
+                                            if (existingMaterial) {
+                                                existingMaterial.quantity += item.quantity;
+                                            } else {
+                                                this.parsedData[materialGroup].push({
+                                                    material: materialText.trim(),
+                                                    quantity: item.quantity
+                                                });
+                                            }
                                         }
                                     }
+
+
                                     page.mouse.click(1, 1);
                                     await page.waitForTimeout(500);
                                 }
+
+
                             }
                         }
                     }
@@ -2282,6 +2301,80 @@ export class CreatePartsDatabasePage extends PageObject {
         }
 
     }
+
+    async findMaterialType(page: Page, materialName: string): Promise<string> {
+        // Open a new browser tab
+        const newContext = await page.context().newPage();
+        await newContext.goto(SELECTORS.MAINMENU.MATERIALS.URL);
+
+        // Define possible material types
+        const materialTypes = ['МД', 'ПД', 'РД'];
+        const switchItems = [
+            'MaterialTableList-Switch-Item1',
+            'MaterialTableList-Switch-Item2',
+            'MaterialTableList-Switch-Item3'
+        ];
+
+        for (let i = 0; i < switchItems.length; i++) {
+            const switchItem = newContext.locator(`[data-testid="${switchItems[i]}"]`);
+
+            // Click the selector item to switch the category
+            await switchItem.click();
+            await newContext.waitForTimeout(500); // Small delay to allow the switch
+
+            // Locate search input field
+            const searchInput = newContext.locator('[data-testid="MaterialTableList-Table-Item-SearchInput-Dropdown-Input"]');
+            await searchInput.fill(materialName);
+            await searchInput.press('Enter');
+            await searchInput.evaluate((row) => {
+                row.style.backgroundColor = 'yellow';
+                row.style.border = '2px solid red';
+                row.style.color = 'blue';
+            });
+            await newContext.waitForTimeout(1000); // Wait for results
+
+            // Locate the table
+            const materialTable = newContext.locator('[data-testid="MaterialTableList-Table-Item"]');
+            await materialTable.evaluate((row) => {
+                row.style.backgroundColor = 'yellow';
+                row.style.border = '2px solid red';
+                row.style.color = 'blue';
+            });
+            // Get number of rows
+            const rows = await materialTable.locator('tbody tr').count();
+
+            if (rows === 1) {
+                // Found exactly one match, return corresponding material type
+                await newContext.close();
+                return materialTypes[i];
+            } else if (rows > 1) {
+                // More than one match—search through each row for an exact match
+                const rowElements = await materialTable.locator('tbody tr').elementHandles();
+
+                for (const row of rowElements) {
+                    const rowText = await row.textContent();
+
+                    if (rowText?.trim() === materialName) { // ✅ Exact match
+                        await row.evaluate((el) => {
+                            (el as HTMLElement).style.backgroundColor = 'yellow'; // ✅ Cast `el` to HTMLElement
+                            (el as HTMLElement).style.border = '2px solid red';
+                            (el as HTMLElement).style.color = 'blue';
+                        });
+
+
+                        await newContext.close();
+                        return materialTypes[i];
+                    }
+                }
+
+            }
+        }
+
+        // No exact match found after checking all lists
+        await newContext.close();
+        throw new Error(`Material "${materialName}" not found in any category.`);
+    }
+
 
 
 
@@ -2393,6 +2486,72 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
         return structuredData;
+    }
+
+    async checkItemExistsInBottomTable(
+        page: Page,
+        selectedPartName: string,
+        modalTestId: string,
+        bottomTableTestId: string
+    ): Promise<boolean> {
+        await page.waitForLoadState("networkidle");
+
+        // Locate the specific modal containing the table
+        const modal = page.locator(`dialog[data-testid^="${modalTestId}"]`);
+        await modal.waitFor({ state: "attached", timeout: 15000 });
+        await modal.waitFor({ state: "visible", timeout: 15000 });
+        logger.info("Modal located successfully.");
+
+        await page.waitForTimeout(1500);
+
+        // Locate the bottom table dynamically within the modal
+        const bottomTableLocator = modal.locator(`[data-testid="${bottomTableTestId}"]`);
+
+        // **Check if the bottom table exists**
+        const isTableVisible = await bottomTableLocator.isVisible();
+        if (!isTableVisible) {
+            logger.info(`Bottom table '${bottomTableTestId}' does not exist. Returning false.`);
+            return false; // ✅ Table doesn't exist, meaning the item isn't there
+        }
+
+        await bottomTableLocator.waitFor({ state: "attached", timeout: 15000 });
+        logger.info("Bottom table located successfully.");
+
+        await page.waitForTimeout(1000);
+
+        // Locate all rows in the table body
+        const rowsLocator = bottomTableLocator.locator("tbody tr");
+        const rowCount = await rowsLocator.count();
+        logger.info(`Found ${rowCount} rows in the bottom table.`);
+
+        for (let i = 0; i < rowCount; i++) {
+            const row = rowsLocator.nth(i);
+
+            // Wait for the row to become visible
+            await row.waitFor({ state: "visible", timeout: 5000 });
+
+            // Extract part name from the second column (index 1)
+            const partNameCell = row.locator("td").nth(1);
+            const partName = (await partNameCell.textContent())?.trim();
+
+            logger.info(`Row ${i + 1}: PartName=${partName}`);
+
+            // Check if the current row matches the selected part name
+            if (partName === selectedPartName) {
+                // Highlight the matching row for debugging
+                await row.evaluate((rowElement) => {
+                    rowElement.style.backgroundColor = "yellow";
+                    rowElement.style.border = "2px solid green";
+                    rowElement.style.color = "blue";
+                });
+
+                logger.info(`Selected part name found in row ${i + 1}`);
+                return true; // ✅ Item exists in the bottom table
+            }
+        }
+
+        logger.info("Item not found in the bottom table.");
+        return false; // ✅ Item does NOT exist in the bottom table
     }
 
 
