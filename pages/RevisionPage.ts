@@ -22,3 +22,4 @@ export class CreateRevisionPage extends PageObject {
         expect(checkBalance).toBe(quantity)
     }
 }
+

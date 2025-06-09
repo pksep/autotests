@@ -219,7 +219,7 @@ export class CreateLoadingTaskPage extends PageObject {
         logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
         return valueInCell;
     }
-
+  
     async urgencyDate(month: Month, day: string) {
         await this.page.locator('.date-picker-yui-kit__header-btn').nth(2).click()
         await this.page.locator('.vc-popover-content-wrapper.is-interactive').nth(2).isVisible()

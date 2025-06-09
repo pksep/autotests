@@ -13,10 +13,10 @@
  */
 
 export const ENV = {
-    BASE_URL: process.env.BASE_URL || "http://dev.pksep.ru/",
+    BASE_URL: process.env.BASE_URL || "http://test.pksep.ru/",
     HEADLESS: process.env.HEADLESS === "true",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'page002',
+    TEST_SUITE: 'suite01',
     TEST_DIR: '.',
     DEBUG: false,
 };
@@ -171,4 +171,13 @@ export const SELECTORS = {
             DATA_TESTID: "menu-archive",
         },
     },
+    SUBPAGES: {
+        CREATEDETAIL: {
+            URL: "detal/add",
+            TEXT_RUS: "Создать деталь",
+            TEXT_ENG: "Create Part",
+            DATA_TESTID: "BaseDetals-Button-Create",
+        },
+    },
+
 };

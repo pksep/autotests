@@ -423,39 +423,40 @@ export class PageObject extends AbstractPage {
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     try {
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(500);
+      
       // Step 1: Fill "Табельный номер" field
-      await page.waitForSelector('#tabel .combobox__input', { state: 'visible', timeout: 10000 });
+      await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-Input"]', { state: 'visible', timeout: 10000 });
       console.log('Табельный номер field is visible.');
-      await page.click('#tabel .combobox__input'); // Open dropdown
-      await page.waitForSelector('.select-list-yui-kit__list', { state: 'visible' });
-      await page.click(`.select-list-yui-kit__item:has-text("${tabel}")`);
+      await page.click('[data-testid="LoginForm-TabelNumber-Combobox-Input"]'); // Open dropdown
+
+      await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"]', { state: 'visible' });
+      await page.click(`[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"] >> text="${tabel}"`);
       console.log(`Табельный номер set to: ${tabel}`);
-      //await delay(1000); // Allow dynamic "Логин" field to load
 
       // Step 2: Fill "Логин" field
-      await page.waitForSelector('#initial .combobox__input', { state: 'visible', timeout: 10000 });
+      await page.waitForSelector('[data-testid="LoginForm-Login-Combobox-Input"]', { state: 'visible', timeout: 10000 });
       console.log('Логин field is visible.');
-      await page.fill('#initial .combobox__input', login); // Type the login
-      //await delay(500); // Allow list of logins to appear
-
-      // Select the correct login option from the dropdown
-      await page.waitForSelector(`.select-list-yui-kit__item:has-text("${login}")`, { state: 'visible' });
-      await page.click(`.select-list-yui-kit__item:has-text("${login}")`);
+      await page.fill('[data-testid="LoginForm-Login-Combobox-Input"]', login);
       console.log(`Логин set to: ${login}`);
-      //await delay(500); // Ensure proper state update before proceeding
+
+      // Ensure login selection is applied
+      await page.waitForTimeout(500);
 
       // Step 3: Fill "Пароль" field
-      await page.waitForSelector('#password .input-yui-kit__input', { state: 'visible', timeout: 10000 });
-      console.log('Пароль field is visible.');
-      await page.fill('#password .input-yui-kit__input', password);
-      console.log('Пароль filled successfully.');
+      console.log('Waiting for password field...');
+      await page.waitForSelector('[data-testid="Password-Inputs-Input-Input"]', { state: 'visible', timeout: 10000 });
+      console.log('Password field is visible.');
+      await page.fill('[data-testid="Password-Inputs-Input-Input"]', password);
+      console.log('Password filled successfully.');
 
       console.log('Form filled successfully!');
     } catch (error) {
       console.error('Error filling the login form:', error);
       throw error;
     }
+
   }
 
   /**
@@ -1181,6 +1182,7 @@ export class PageObject extends AbstractPage {
    * @param orderNumber - The order number to check within the success message.
    * @returns A promise that resolves when the message is verified.
    */
+
   async getMessage(orderNumber?: string) {
     const successMessageLocator = this.page.locator(
       '[data-testid="Notification-Notification-Description"]'
@@ -1616,12 +1618,26 @@ export class PageObject extends AbstractPage {
       .isVisible();
   }
 
-
-  /** Checks and enters the quantity in the order modal window
-   * @param locator - selector for the quantity input field
-   * @param quantity - expected value in the input (checked only if quantityOrder is not provided)
-   * @param quantityOrder - if specified, enters this value in the input field
+  /** Checks and enters the quantity in the "Start Production" modal window
+   * @param quantity - checks that the input has this value
+   * @param quantityOrder - if this parameter is specified, enters this value in the input field
    */
+  async checkOrderQuantityNew(qunatity: string, qunatityOrder?: string) {
+    const modalWindowLaunchIntoProduction = this.page.locator(
+      '[data-testid="ModalStartProduction-ModalContent"]'
+    );
+    if (qunatityOrder) {
+      await modalWindowLaunchIntoProduction
+        .locator("input")
+        .fill(qunatityOrder);
+
+    }
+  }
+  /** Checks and enters the quantity in the order modal window
+     * @param locator - selector for the quantity input field
+     * @param quantity - expected value in the input (checked only if quantityOrder is not provided)
+     * @param quantityOrder - if specified, enters this value in the input field
+     */
   async checkOrderQuantity(
     locator: string,
     quantity: string,
@@ -1638,6 +1654,7 @@ export class PageObject extends AbstractPage {
       expect(currentValue).toBe(quantity);
     }
   }
+
 
 
   // Save the order number from the "Start Production" modal window
@@ -2106,7 +2123,6 @@ export class PageObject extends AbstractPage {
       Click.No
     );
   }
-
 
   /**
    * Check the modal window "Invoice for Completion" depending on the entity.
@@ -2614,6 +2630,58 @@ export class PageObject extends AbstractPage {
     return filteredTitles;
   }
 
+  async getAllH3TitlesInTestId(page: Page, testId: string): Promise<string[]> {
+    // Step 1: Collect all H3 titles inside dialogs
+    const allDialogs = await page.locator('dialog').elementHandles();
+    const dialogTitles: string[] = [];
+    for (const dialog of allDialogs) {
+      const h3Tags = await dialog.$$('h3');
+      for (const h3 of h3Tags) {
+        const title = await h3.textContent();
+        if (title) {
+          dialogTitles.push(title.trim());
+
+          // Highlight the element in the dialog
+          await h3.evaluate((el) => {
+            (el as HTMLElement).style.backgroundColor = 'yellow';
+            (el as HTMLElement).style.border = '2px solid red';
+            (el as HTMLElement).style.color = 'blue';
+          });
+        }
+      }
+    }
+    logger.info('H3 Titles Found Inside Dialogs:', dialogTitles);
+
+    // Step 2: Collect all H3 titles inside the specified data-testid container
+    const container = page.locator(`[data-testid="${testId}"]`);
+    const testIdTitles: string[] = [];
+    const h3Elements = await container.locator('h3').elementHandles();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          testIdTitles.push(title.trim());
+
+          // Highlight the element inside the given data-testid container
+          await h3Tag.evaluate((el) => {
+            (el as HTMLElement).style.backgroundColor = 'yellow';
+            (el as HTMLElement).style.border = '2px solid red';
+            (el as HTMLElement).style.color = 'blue';
+          });
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+    logger.info('H3 Titles Found Inside TestId:', testIdTitles);
+
+    // Step 3: Remove dialog titles from testId titles
+    const filteredTitles = testIdTitles.filter((title) => !dialogTitles.includes(title));
+    logger.info('Filtered H3 Titles (Excluding Dialogs):', filteredTitles);
+
+    return filteredTitles;
+  }
+
 
   async isButtonVisible(
     page: Page,
@@ -2723,7 +2791,71 @@ export class PageObject extends AbstractPage {
     return titles;
   }
 
+  async getAllH4TitlesInModalByTestId(page: Page, modalTestId: string): Promise<string[]> {
+    await page.waitForLoadState('networkidle');
 
+    // Locate the open modal container using data-testid
+    const container = page.locator(`[data-testid="${modalTestId}"][open]`);
+    await expect(container).toBeVisible({ timeout: 5000 });
+
+    logger.info("Container visibility confirmed.");
+
+    // Wait briefly to ensure all elements are loaded
+    await page.waitForTimeout(500);
+
+    // Locate all h4 elements inside the modal (without filtering by data-testid)
+    const h4Elements = container.locator('h4');
+
+    const h4Count = await h4Elements.count();
+    logger.info(`Number of <h4> elements found: ${h4Count}`);
+
+    if (h4Count === 0) {
+      logger.warn(`No <h4> elements found inside modal '${modalTestId}'.`);
+      return [];
+    }
+
+    const titles: string[] = [];
+    for (let i = 0; i < h4Count; i++) {
+      const h4Tag = h4Elements.nth(i);
+
+      await h4Tag.evaluate((row) => {
+        row.style.backgroundColor = 'yellow';
+        row.style.border = '2px solid red';
+        row.style.color = 'blue';
+      });
+
+      const title = await h4Tag.textContent();
+      console.log(`H4 Element ${i + 1}:`, title);
+
+      if (title) {
+        titles.push(title.trim());
+      }
+    }
+
+    logger.info(`Collected Titles:`, titles);
+    return titles;
+  }
+
+  /** Checks if a button is visible and active/inactive
+   * @param selector - selector for the button
+   * @param expectedState - expected state of the button ('active' or 'inactive')
+   * @returns Promise<boolean> - true if button state matches expected, false otherwise
+   */
+  async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
+    const button = this.page.locator(selector, { hasText: name });
+
+    await expect(button).toBeVisible();
+
+    const classes = await button.getAttribute('class');
+
+    if (expectedState === 'active') {
+
+      return !classes?.includes('disabled-yui-kit');
+    } else {
+
+      return classes?.includes('disabled-yui-kit') ?? false;
+    }
+  }
   async extractNotificationMessage(page: Page): Promise<{ title: string, message: string } | null> {
     // Define the locator for the dynamic notification div
     const notificationDiv = page.locator('div.push-notification-yui-kit');
@@ -2754,26 +2886,63 @@ export class PageObject extends AbstractPage {
     };
   }
 
-  /** Checks if a button is visible and active/inactive
-   * @param selector - selector for the button
-   * @param expectedState - expected state of the button ('active' or 'inactive')
-   * @returns Promise<boolean> - true if button state matches expected, false otherwise
-   */
-  async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
-    const button = this.page.locator(selector, { hasText: name });
+  async isButtonVisibleTestId(
+    page: Page,
+    testId: string,
+    label: string,
+    Benabled: boolean = true, // Default is true
+    dialogContextTestId: string = '' // Optional: Specify dialog context testId for scoping
+  ): Promise<boolean> {
+    try {
+      // Apply dialog context if provided
+      const scopedSelector = dialogContextTestId
+        ? `[data-testid="${dialogContextTestId}"] [data-testid="${testId}"]`
+        : `[data-testid="${testId}"]`;
 
-    await expect(button).toBeVisible();
+      // Locate the button using the updated testId-based selector
+      const button = page.locator(scopedSelector, { hasText: new RegExp(`^\\s*${label.trim()}\\s*$`) });
+      console.log(`Found ${await button.count()} buttons matching testId "${testId}" and label "${label}".`);
 
-    const classes = await button.getAttribute('class');
 
-    if (expectedState === 'active') {
+      // Debugging: Log initial info
+      console.log(`Starting isButtonVisibleTestId for label: "${label}" with Benabled: ${Benabled}`);
+      // Highlight the button for debugging
+      await button.evaluate((btn) => {
+        btn.style.backgroundColor = 'yellow';
+        btn.style.border = '2px solid red';
+        btn.style.color = 'blue';
+      });
+      // Wait for the button to be attached to the DOM
+      await button.waitFor({ state: 'attached' });
+      console.log(`Button "${label}" is attached to the DOM.`);
+      // Verify visibility
+      const isVisible = await button.isVisible();
 
-      return !classes?.includes('disabled-yui-kit');
-    } else {
+      console.log(`Button "${label}" visibility: ${isVisible}`);
+      await expect(button).toBeVisible(); // Assert visibility explicitly
+      await this.page.waitForTimeout(500);
+      // Check for 'disabled-yui-kit' class
+      const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
+      console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
 
-      return classes?.includes('disabled-yui-kit') ?? false;
+      if (Benabled) {
+        console.log(`Expecting button "${label}" to be enabled.`);
+        expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
+        const isDisabled = await button.evaluate((btn) => btn.hasAttribute('disabled'));
+        console.log(`Disabled attribute present for button "${label}": ${isDisabled}`);
+        expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
+      } else {
+        console.log(`Expecting button "${label}" to be disabled.`);
+        expect(hasDisabledClass).toBeTruthy(); // Button should be disabled
+      }
+      console.log(`Button "${label}" passed all checks.`);
+      return true; // If everything passes, the button is valid
+    } catch (error) {
+      console.error(`Error while checking button "${label}" state:`, error);
+      return false; // Return false on failure
     }
   }
+
 
   async getAllH3TitlesInModalClass(page: Page, className: string): Promise<string[]> {
     // Step 1: Locate the container by the specified class
@@ -2803,6 +2972,37 @@ export class PageObject extends AbstractPage {
 
     return titles;
   }
+
+  async getAllH3TitlesInModalTestId(page: Page, testId: string): Promise<string[]> {
+    // Step 1: Locate the container by the specified data-testid
+    const container = page.locator(`[data-testid^="${testId}"]`);
+    const titles: string[] = [];
+
+    // Step 2: Find all <h3> elements within the container
+    const h3Elements = await container.locator('h3').elementHandles();
+    for (const h3Tag of h3Elements) {
+      try {
+        const title = await h3Tag.textContent();
+        if (title) {
+          titles.push(title.trim()); // Trim to remove unnecessary whitespace
+          // Cast the element to HTMLElement before accessing style
+          await h3Tag.evaluate((row) => {
+            (row as HTMLElement).style.backgroundColor = 'yellow';
+            (row as HTMLElement).style.border = '2px solid red';
+            (row as HTMLElement).style.color = 'blue';
+          });
+        }
+      } catch (error) {
+        console.error('Error processing H3 tag:', error);
+      }
+    }
+
+    // Step 3: Log the collected titles
+    logger.info(`H3 Titles Found Inside TestId '${testId}':`, titles);
+
+    return titles;
+  }
+
 
   async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
     // Locate the dialog using the class and `open` attribute
@@ -2861,8 +3061,234 @@ export class PageObject extends AbstractPage {
     expect(await this.page.locator(modalWindow)).toBeVisible()
 
   }
-}
 
+  /**
+ * Navigate to the element with the specified data-testid and log the details.
+ * @param url - The URL of the page to navigate to.
+ * @param dataTestId - The data-testid of the element to validate after navigation.
+ * @returns Promise<void> - Logs navigation status and validates the presence of the specified element.
+ */
+  async navigateToPage(url: string, dataTestId: string): Promise<void> {
+    await this.page.goto(url);
+    await this.page.waitForTimeout(500);
+    await this.page.waitForLoadState("networkidle");
+
+    // Validate the presence of an element using data-testid
+    const locator = this.page.locator(`[data-testid="${dataTestId}"]`);
+    await locator.waitFor({ state: 'visible' });
+    const isVisible = await locator.isVisible();
+    expect(isVisible).toBeTruthy();
+    console.log(`Navigation to ${url} and validation of element with data-testid: "${dataTestId}" completed.`);
+  }
+  /**
+ * Validate page titles by checking the H3 elements within a given section, and apply styling for debugging.
+ * @param testId - The data-testid attribute of the section containing the titles.
+ * @param expectedTitles - An array of expected titles to validate against.
+ * @returns Promise<void> - Validates the content and order of titles, applies styling, or throws an error if validation fails.
+ */
+  async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
+    const locator = this.page.locator(`[data-testid="${testId}"] h3`); // Locate H3 elements within the section
+    const actualTitles = await locator.allTextContents();
+    const normalizedTitles = actualTitles.map((title) => title.trim());
+
+    // Log expected and received titles for debugging
+    logger.info('Expected Titles:', expectedTitles);
+    logger.info('Received Titles:', normalizedTitles);
+
+    // Apply styling for debugging
+    await locator.evaluateAll((elements) => {
+      elements.forEach((el) => {
+        el.style.backgroundColor = 'yellow';
+        el.style.border = '2px solid red';
+        el.style.color = 'blue';
+      });
+    });
+
+    // Validate length and content/order of titles
+    expect(normalizedTitles.length).toBe(expectedTitles.length);
+    expect(normalizedTitles).toEqual(expectedTitles);
+
+    console.log("Page titles validated successfully with styling applied.");
+  }
+  /**
+   * Validate that a table is displayed and has rows.
+   * @param tableTestId - The data-testid of the table to validate.
+   * @returns Promise<void> - Validates the presence and non-emptiness of the table.
+   */
+  async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
+    await this.page.waitForTimeout(500);
+    const tableLocator = this.page.locator(`[data-testid="${tableTestId}"] tbody tr`);
+    const rowCount = await tableLocator.count();
+
+    // Highlight the table for debugging
+    await this.page.locator(`[data-testid="${tableTestId}"]`).evaluate((table) => {
+      table.style.border = "2px solid green";
+      table.style.backgroundColor = "lightyellow";
+    });
+
+    // Ensure the table has rows
+    expect(rowCount).toBeGreaterThan(0);
+
+    console.log(`Table with data-testid "${tableTestId}" has ${rowCount} rows.`);
+  }
+
+  /**
+* Validate a button's visibility and state using its data-testid.
+* Checks if the button is disabled either by attribute or CSS class.
+* @param page - The Playwright page object.
+* @param buttons - Array of button configurations including data-testid, label, and expected state.
+* @param dialogSelector - Optional scoped selector for the dialog or container.
+*/
+  async validateButtons(
+    page: Page,
+    buttons: Array<{ datatestid: string; label: string; state: string }>,
+    dialogSelector?: string
+  ): Promise<void> {
+    for (const button of buttons) {
+      const buttonTestId = button.datatestid.trim();
+      const buttonLabel = button.label.trim();
+      const expectedState = button.state === "true"; // Convert state string to boolean
+
+      const scopedButtonSelector = dialogSelector
+        ? `${dialogSelector} [data-testid="${buttonTestId}"]`
+        : `[data-testid="${buttonTestId}"]`;
+
+      const buttonLocator = page.locator(scopedButtonSelector);
+
+      // Validate button visibility
+      const isButtonVisible = await buttonLocator.isVisible();
+
+      // Validate button enabled state (via attribute or CSS class)
+      const hasDisabledAttribute = await buttonLocator.evaluate(
+        (btn) => btn.hasAttribute('disabled')
+      );
+      const hasDisabledCSSClass = await buttonLocator.evaluate(
+        (btn) => btn.classList.contains('disabled-yui-kit')
+      );
+      const isButtonEnabled = !hasDisabledAttribute && !hasDisabledCSSClass;
+
+      // Assertions for visibility and state
+      expect(isButtonVisible).toBeTruthy();
+      expect(isButtonEnabled).toBe(expectedState);
+
+      // Highlight button for debugging
+      await buttonLocator.evaluate((btn) => {
+        btn.style.backgroundColor = 'yellow';
+        btn.style.border = '2px solid red';
+        btn.style.color = 'blue';
+      });
+
+      logger.info(`Button "${buttonLabel}" - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
+    }
+  }
+  /**
+     * Validates that the checkbox in the "Главный:" row is not checked.
+     * @param {import('@playwright/test').Page} page - Playwright page object.
+     * @param {import('@playwright/test').Locator} section - Locator for the file section.
+     * @param {number} sectionIndex - Index of the section being checked.
+     * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
+     */
+  async validateCheckbox(page: Page, section: Locator, sectionIndex: number) {
+    const row = section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-Main"]').filter({
+      has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-Main"]:has-text("Главный:")'),
+    });
+
+    await expect(row).toBeVisible();
+    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
+
+    const checkbox = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+    await checkbox.evaluate((el) => {
+      el.style.backgroundColor = 'yellow';
+      el.style.border = '2px solid red';
+      el.style.color = 'blue';
+    });
+
+    await expect(checkbox).toBeVisible();
+    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
+
+    const isChecked = await checkbox.isChecked();
+    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? "Checked" : "Not Checked"}`);
+
+    return isChecked; // Return the checkbox state
+  }
+  /**
+     * Checks the checkbox in the "Главный:" row and applies styling.
+     * @param {import('@playwright/test').Page} page - Playwright page object.
+     * @param {import('@playwright/test').Locator} section - Locator for the file section.
+     * @param {number} sectionIndex - Index of the section being checked.
+     * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
+     */
+  async checkCheckbox(page: Page, section: Locator, sectionIndex: number) {
+    const row = section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-Main"]').filter({
+      has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-Main"]:has-text("Главный:")'),
+    });
+
+    await expect(row).toBeVisible();
+    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
+
+    const checkbox = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+
+    // Restore the styling
+    await checkbox.evaluate((el) => {
+      el.style.backgroundColor = 'green';
+      el.style.border = '2px solid red';
+      el.style.color = 'blue';
+    });
+
+    await expect(checkbox).toBeVisible();
+    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
+
+    await checkbox.check();
+    const isChecked = await checkbox.isChecked();
+    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? "Checked" : "Not Checked"}`);
+
+    return isChecked; // Return the checkbox state for validation
+  }
+
+  /**
+     * Validates that all uploaded file fields contain the correct filename without extension.
+     * @param {Page} page - Playwright page object.
+     * @param {Locator[]} fileSections - Array of file section locators.
+     * @param {string[]} uploadedFiles - Array of uploaded file names.
+     */
+  async validateFileNames(page: Page, fileSections: Locator[], uploadedFiles: string[]): Promise<void> {
+    if (fileSections.length !== uploadedFiles.length) {
+      throw new Error(`Mismatch: Expected ${uploadedFiles.length} files, but found ${fileSections.length} sections.`);
+    }
+
+    for (let i = 0; i < fileSections.length; i++) {
+      const fileSection = fileSections[i]; // Extract each file section dynamically
+
+      const row = fileSection.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-FileName"]').filter({
+        has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-FileName"]:has-text("Файл:")'),
+      });
+      await row.evaluate((element: HTMLElement) => {
+        element.style.backgroundColor = 'yellow';
+        element.style.border = '2px solid red';
+        element.style.color = 'blue';
+      });
+
+      await expect(row).toBeVisible();
+      console.log(`Row for file ${i + 1} containing label 'Файл:' is visible.`);
+
+      const input = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]');
+      await expect(input).toBeVisible();
+      console.log(`Input field for file ${i + 1} is visible.`);
+
+      const expectedFilename = uploadedFiles[i].split('.')[0];
+      const actualInputValue = await input.inputValue();
+      console.log(`Expected filename: ${expectedFilename}, Actual input value: ${actualInputValue}`);
+      expect(actualInputValue).toBe(expectedFilename);
+
+      // Highlight for debugging
+      await input.evaluate((element: HTMLElement) => {
+        element.style.backgroundColor = 'green';
+        element.style.border = '2px solid red';
+        element.style.color = 'blue';
+      });
+    }
+  }
+}
 
 
 // Retrieving descendants from the entity specification
