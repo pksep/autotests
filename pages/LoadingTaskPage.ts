@@ -87,10 +87,10 @@ export class CreateLoadingTaskPage extends PageObject {
 
     // Проверить, что выбранное изделие отображается
     async checkProduct(nameProduct: string) {
-        const product = this.page
+        const product = await this.page
             .locator('.attachments-value .link').first()
             .textContent();
-        expect(await product).toBe(nameProduct);
+        expect(product?.trim()).toBe(nameProduct);
     }
 
     // Выбрать покупателя
@@ -130,13 +130,13 @@ export class CreateLoadingTaskPage extends PageObject {
     async getOrderInfoFromLocator(locator: string) {
         const text = await this.page.locator(locator).innerText();
 
-        const regex = /Редактирование заказа № (\d+-\d+) от (\d{2}\.\d{2}\.\d{4})/;
-        const matches = text.match(regex);
+        const regex = /(?:Редактирование заказа №| Добавить позицию к заказу №) (\d+-\d+)(?: \/(\d+))? от (\d{2}\.\d{2}\.\d{4})/; const matches = text.match(regex);
 
         if (matches) {
             return {
                 orderNumber: matches[1],
-                orderDate: matches[2]
+                version: matches[2] || null, // Если версия отсутствует, возвращаем null
+                orderDate: matches[3]
             };
         }
 
@@ -219,4 +219,68 @@ export class CreateLoadingTaskPage extends PageObject {
         logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
         return valueInCell;
     }
+
+    async urgencyDate(month: Month, day: string) {
+        await this.page.locator('.date-picker-yui-kit__header-btn').nth(2).click()
+        await this.page.locator('.vc-popover-content-wrapper.is-interactive').nth(2).isVisible()
+
+        await this.page.locator('.vc-title-wrapper').click()
+        // Находим элемент с годом
+        const yearElement = await this.page.locator('.vc-nav-title.vc-focus');
+        const currentYear = await yearElement.textContent();
+        if (!currentYear) throw new Error('Year element not found');
+
+        const targetYear = 2025;
+        const currentYearNum = parseInt(currentYear);
+        console.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
+
+        // Если текущий год не равен целевому
+        if (currentYearNum !== targetYear) {
+            // Определяем, нужно ли увеличивать или уменьшать год
+            const isYearLess = currentYearNum < targetYear;
+            const arrowSelector = isYearLess
+                ? '.vc-nav-arrow.is-right.vc-focus'
+                : '.vc-nav-arrow.is-left.vc-focus';
+
+            // Кликаем на стрелку, пока не достигнем нужного года
+            while (currentYearNum !== targetYear) {
+                await this.page.locator(arrowSelector).click();
+                await this.page.waitForTimeout(500); // Небольшая задержка для обновления
+
+                const newYear = await yearElement.textContent();
+                if (!newYear) throw new Error('Year element not found');
+                const newYearNum = parseInt(newYear);
+
+                if (newYearNum === targetYear) {
+                    console.log(`Year successfully set to ${targetYear}`);
+                    break;
+                }
+            }
+        } else {
+            console.log(`Year is already set to ${targetYear}`);
+        }
+
+        // Проверяем, что год установлен правильно
+        const finalYear = await yearElement.textContent();
+        if (!finalYear) throw new Error('Year element not found');
+        expect(parseInt(finalYear)).toBe(targetYear);
+
+        await this.page.locator(`[aria-label="${month}"]`).click()
+        await this.page.locator('.vc-day-content.vc-focusable.vc-focus.vc-attr', { hasText: day }).nth(0).click()
+    }
+}
+
+export enum Month {
+    Jan = 'январь',
+    Feb = 'февраль',
+    Mar = 'март',
+    Apr = 'апрель',
+    May = 'май',
+    Jun = 'июнь',
+    Jul = 'июль',
+    Aug = 'август',
+    Sep = 'сентябрь',
+    Oct = 'октябрь',
+    Nov = 'ноябрь',
+    Dec = 'декабрь'
 }

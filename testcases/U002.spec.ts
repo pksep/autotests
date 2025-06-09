@@ -15,7 +15,7 @@ import testData1 from '../testdata/U002-PC1.json';
 
 // Quantity launched into production
 let quantityOrder = "2";
-const nameDetail = "Адептус механикус";
+const nameDetail = "Деталь6Тест";
 const nameCbed = "СБ Маслобака 2 Литра";
 let checkOrderNumber: string;
 let quantityLaunchInProduct: string;
