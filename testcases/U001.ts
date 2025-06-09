@@ -7,17 +7,13 @@ let quantityProductLaunchOnProductionAfter;
 let quantitySumLaunchOnProduction: Number;
 let urgencyDateOnTable;
 let orderNumber: { orderNumber: string; orderDate: string };// variable declared in test case 2
-const urgencyDate = "23.01.2025";
-const urgencyDateNewFormat = 'Янв 23, 2025'
-const urgencyDateSecond = "21.01.2025";
-const urgencyDateSecondNewFormat = "Янв 21, 2025";
+const urgencyDate = "03.03.2024";
+const urgencyDateSecond = "02.02.2024";
 const nameProduct = "Император Человечества";
 const designationProduct = "0Т3.01";
 const designation = '0Т3'
-const nameBuyer = 'М10'
 const descendantsCbedArray: ISpetificationData[] = [];
 const descendantsDetailArray: ISpetificationData[] = [];
-
 
 import { test, expect } from "@playwright/test";
 import { runTC000, performLogin } from "./TC000.spec";
@@ -43,19 +39,31 @@ import { ENV, SELECTORS } from "../config";
 import logger from "../lib/logger";
 import { cli } from "winston/lib/winston/config";
 import { allure } from "allure-playwright";
-import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
-import testData1 from '../testdata/U001-PC1.json';
-import testData2 from '../testdata/U002-PC1.json';
+import { exec } from "child_process";
 
-export const runU001 = (isSingleTest: boolean, iterations: number) => {
+export const runU040 = (isSingleTest: boolean, iterations: number) => {
     console.log(
         `Starting test: Verify Order From Suppliers Page Functionality`
     );
 
+    // test.beforeEach("Test Case 00 - Authorization", async ({ page }) => {
+    //     await allure.step("Step 00: Authentication", async () => {
+    //         // Perform login directly on the provided page fixture
+    //         await performLogin(page, "001", "Перов Д.А.", "54321");
+    //         await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
+    //         await page.locator('[data-testid="LoginForm-Login-Button"]').click();
+
+    //         const targetH3 = page.locator('h3:has-text("План по операциям")');
+    //         await expect(targetH3).toBeVisible();
+    //     });
+    // });
+
     test.skip("Спецификация", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
 
-        await allure.step("Step 01: Open the shipment task page", async () => {
+        const locatorTableModalWindow = '[data-testid="TableProduct-BasePaginationTable"]'
+
+        await allure.step("Step 1: Open the shipment task page", async () => {
             // Go to the Shipping tasks page
             await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
 
@@ -64,71 +72,114 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Click on the Create order button",
+            "Step 2: Click on the Create order button",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
                     " Создать заказ ",
-                    '.button-yui-kit'
+                    '[data-testid="IssueShipment-Button-CreateOrder"]'
                 );
             }
         );
 
-        await allure.step("Step 03: Click on the Select button", async () => {
+        await allure.step("Step 3: Click on the Select button", async () => {
             // Click on the button
-            await page.locator('.button-yui-kit ', { hasText: ' Выбрать ' }).nth(0).click()
+            await loadingTaskPage.clickButton(
+                " Выбрать ",
+                '[data-testid="AddAddOrder-SelectProductButton"]'
+            );
+
+            // Ожидаем тела таблицы
+            await loadingTaskPage.waitingTableBody(
+                locatorTableModalWindow
+            );
 
             await page.waitForTimeout(1000);
         });
 
         await allure.step(
-            "Step 04: Search product on modal window",
+            "Step 4: Search product on modal window",
             async () => {
-                //
-                const modalWindow = await page.locator('.modal-yui-kit__modal-content')
                 // Using table search we look for the value of the variable
-                await expect(modalWindow).toBeVisible();
-
-                const searchTable = modalWindow
-                    .locator('.search-yui-kit__input')
-                    .nth(0);
-                await searchTable.fill(nameProduct);
-
-                expect(await searchTable.inputValue()).toBe(nameProduct);
-                await searchTable.press("Enter");
-
+                await loadingTaskPage.searchTable(
+                    nameProduct,
+                    '[data-testid="TableProduct-BasePaginationTable"]'
+                );
                 await page.waitForTimeout(1000);
+
+                // Waiting for the table body
+                await loadingTaskPage.waitingTableBody(
+                    locatorTableModalWindow
+                );
             }
         );
 
         await allure.step(
-            "Step 05: Choice product in modal window",
+            "Step 5: Choice product in modal window",
             async () => {
-                await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0)
+                // Select a product in the "Select product" modal window
+                await page.waitForTimeout(1000);
+                // await loadingTaskPage.choiceProductInModal(nameProduct);
+                await loadingTaskPage.clickFromFirstRow('[data-testid="BasePaginationTable-TableBody-DynamicProduct"]', 0)
 
                 await loadingTaskPage.waitForTimeout(1000)
             }
         );
 
         await allure.step(
-            "Step 06: Click on the Select button on modal window",
+            "Step 6: Click on the Select button on modal window",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Выбрать ",
+                    '[data-testid="ModalAllProducts-btn-Select"]'
                 );
             }
         );
 
-        await allure.step("Step 07: Checking the selected product", async () => {
+        await allure.step("Step 7: Checking the selected product", async () => {
             // Check that the selected product displays the expected product
             await loadingTaskPage.checkProduct(nameProduct);
             await loadingTaskPage.waitForTimeout(500)
         });
 
+        await allure.step("Step 8: Selecting a buyer", async () => {
+            // Select a buyer in the dropdown menu
+            await loadingTaskPage.choiceBuyer("5");
+
+            // Wait for loading
+            await page.waitForLoadState("networkidle");
+        });
+
         await allure.step(
-            "Step 08: We save descendants from the specification into an array",
+            "Step 9: We change the quantity of the ordered product",
+            async () => {
+                const locator = '[data-testid="AddAddOrder-QuantitySection"]';
+                await loadingTaskPage.checkOrderQuantity(locator, "1", "2");
+                // await loadingTaskPage.waitForTimeout(1000)
+                // await loadingTaskPage.clickButton(
+                //     " Применить изменения ",
+                //     '[data-testid="AddAddOrder-ApplyChangesButton"]', Click.Yes);
+                await page.locator('.btn-add', { hasText: ' Применить изменения ' }).dblclick()
+                await loadingTaskPage.waitForTimeout(1000)
+            }
+        );
+
+        await allure.step(
+            "Step 10: We set the date according to urgency",
+            async () => {
+                const locator =
+                    '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
+                await loadingTaskPage.checkOrderQuantity(
+                    locator,
+                    "",
+                    urgencyDate
+                );
+            }
+        );
+
+        await allure.step(
+            "Step 11: We save descendants from the specification into an array",
             async () => {
                 // Save Assembly units and Parts from the Specification to an array
                 await loadingTaskPage.preservingDescendants(
@@ -137,12 +188,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
             }
         );
+
     });
 
-    test("Test Case 01 - Loading Task", async ({ page }) => {
+    test.only("Test Case 01 - Loading Task", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
 
-        await allure.step("Step 01: Open the shipment task page", async () => {
+        const locatorTableModalWindow = '[data-testid="TableProduct-BasePaginationTable"]'
+
+        await allure.step("Step 1: Open the shipment task page", async () => {
             // Go to the Shipping tasks page
             await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
 
@@ -150,329 +204,115 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForLoadState("networkidle");
         });
 
-        await allure.step("Step 02: Checking the main page headings", async () => {
-            const titles = testData1.elements.LoadingPage.titles.map((title) => title.trim());
-            const h3Titles = await loadingTaskPage.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 03: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.LoadingPage.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await loadingTaskPage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
         await allure.step(
-            "Step 04: Click on the Create order button",
+            "Step 2: Click on the Create order button",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
                     " Создать заказ ",
-                    '.button-yui-kit'
+                    '[data-testid="IssueShipment-Button-CreateOrder"]'
                 );
             }
         );
 
-        await allure.step("Step 05: Checking the main page headings", async () => {
-            const titles = testData1.elements.CreateOrderPage.titles.map((title) => title.trim());
-            const h3Titles = await loadingTaskPage.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 06: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.CreateOrderPage.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await loadingTaskPage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
-
-        await allure.step("Step 07: Click on the Select button", async () => {
+        await allure.step("Step 3: Click on the Select button", async () => {
             // Click on the button
-            await page.locator('.button-yui-kit ', { hasText: ' Выбрать ' }).nth(0).click()
+            await loadingTaskPage.clickButton(
+                " Выбрать ",
+                '[data-testid="AddAddOrder-SelectProductButton"]'
+            );
+
+            // Ожидаем тела таблицы
+            await loadingTaskPage.waitingTableBody(
+                locatorTableModalWindow
+            );
 
             await page.waitForTimeout(1000);
         });
 
-        await allure.step("Step 08: Checking the main page headings", async () => {
-            const titles = testData1.elements.ModalWindowChoiceProduct.titles.map((title) => title.trim());
-            const h3Titles = await loadingTaskPage.getAllH3TitlesInModalClassNew(page, '.modal-yui-kit__modal-content');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 09: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.ModalWindowChoiceProduct.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await loadingTaskPage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
-        await allure.step("Step 10: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.ModalWindowChoiceProduct.filters;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await loadingTaskPage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
         await allure.step(
-            "Step 11: Search product on modal window",
+            "Step 4: Search product on modal window",
             async () => {
-                const modalWindow = await page.locator('.modal-yui-kit__modal-content')
                 // Using table search we look for the value of the variable
-                await expect(modalWindow).toBeVisible();
-
-                const searchTable = modalWindow
-                    .locator('.search-yui-kit__input')
-                    .nth(0);
-                await searchTable.fill(nameProduct);
-
-                expect(await searchTable.inputValue()).toBe(nameProduct);
-                await searchTable.press("Enter");
-
+                await loadingTaskPage.searchTable(
+                    nameProduct,
+                    '[data-testid="TableProduct-BasePaginationTable"]'
+                );
                 await page.waitForTimeout(1000);
+
+                // Waiting for the table body
+                await loadingTaskPage.waitingTableBody(
+                    locatorTableModalWindow
+                );
             }
         );
 
         await allure.step(
-            "Step 12: Choice product in modal window",
+            "Step 5: Choice product in modal window",
             async () => {
-                await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0)
+                // Select a product in the "Select product" modal window
+                await page.waitForTimeout(1000);
+                // await loadingTaskPage.choiceProductInModal(nameProduct);
+                await loadingTaskPage.clickFromFirstRow('[data-testid="BasePaginationTable-TableBody-DynamicProduct"]', 0)
 
                 await loadingTaskPage.waitForTimeout(1000)
             }
         );
 
         await allure.step(
-            "Step 13: Click on the Select button on modal window",
+            "Step 6: Click on the Select button on modal window",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Выбрать ",
+                    '[data-testid="ModalAllProducts-btn-Select"]'
                 );
             }
         );
 
-        await allure.step("Step 14: Checking the selected product", async () => {
+        await allure.step("Step 7: Checking the selected product", async () => {
             // Check that the selected product displays the expected product
             await loadingTaskPage.checkProduct(nameProduct);
             await loadingTaskPage.waitForTimeout(500)
         });
 
-        await allure.step("Step 15: Selecting a buyer", async () => {
-            const button = page.locator('.button-yui-kit.medium.primary-yui-kit', { hasText: 'Выбрать' }).nth(1);
-            await expect(button).toHaveText('Выбрать');
-            await expect(button).toBeVisible();
+        await allure.step("Step 8: Selecting a buyer", async () => {
+            // Select a buyer in the dropdown menu
+            await loadingTaskPage.choiceBuyer("5");
 
-            await button.click()
             // Wait for loading
             await page.waitForLoadState("networkidle");
         });
 
-        await allure.step('Step 16: Check modal window Company', async () => {
-            // await loadingTaskPage.searchTable(nameBuyer, '.table-yui-kit__border.table-yui-kit-with-scroll')
-
-            const modalWindow = await page.locator('.modal-yui-kit__modal-content')
-            // Using table search we look for the value of the variable
-            await expect(modalWindow).toBeVisible();
-
-            const searchTable = modalWindow
-                .locator('.search-yui-kit__input')
-                .nth(0);
-            await searchTable.fill(nameBuyer);
-
-            expect(await searchTable.inputValue()).toBe(nameBuyer);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(500)
-
-            await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit__border.table-yui-kit-with-scroll', 0)
-        })
-
         await allure.step(
-            "Step 17: Click on the Select button on modal window",
+            "Step 9: We change the quantity of the ordered product",
             async () => {
-                // Click on the button
-                await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
-                );
-            }
-        );
-
-
-        await allure.step(
-            "Step 18: We change the quantity of the ordered product",
-            async () => {
-                const locator = '.input-yui-kit.initial.medium.add-order-component__input.initial';
+                const locator = '[data-testid="AddAddOrder-QuantitySection"]';
                 await loadingTaskPage.checkOrderQuantity(locator, "1", quantityProductLaunchOnProduction);
-
+                // await loadingTaskPage.waitForTimeout(1000)
+                // await loadingTaskPage.clickButton(
+                //     " Применить изменения ",
+                //     '[data-testid="AddAddOrder-ApplyChangesButton"]', Click.Yes);
+                await page.locator('.btn-add', { hasText: ' Применить изменения ' }).dblclick()
                 await loadingTaskPage.waitForTimeout(1000)
             }
         );
 
         await allure.step(
-            "Step 19: We set the date according to urgency",
+            "Step 10: We set the date according to urgency",
             async () => {
-                await page.locator('.date-picker-yui-kit__header-btn').nth(2).click()
-                await page.locator('.vc-popover-content-wrapper.is-interactive').nth(2).isVisible()
-
-                await page.locator('.vc-title-wrapper').click()
-                // Находим элемент с годом
-                const yearElement = await page.locator('.vc-nav-title.vc-focus');
-                const currentYear = await yearElement.textContent();
-                if (!currentYear) throw new Error('Year element not found');
-
-                const targetYear = 2025;
-                const currentYearNum = parseInt(currentYear);
-                console.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
-
-                // Если текущий год не равен целевому
-                if (currentYearNum !== targetYear) {
-                    // Определяем, нужно ли увеличивать или уменьшать год
-                    const isYearLess = currentYearNum < targetYear;
-                    const arrowSelector = isYearLess
-                        ? '.vc-nav-arrow.is-right.vc-focus'
-                        : '.vc-nav-arrow.is-left.vc-focus';
-
-                    // Кликаем на стрелку, пока не достигнем нужного года
-                    while (currentYearNum !== targetYear) {
-                        await page.locator(arrowSelector).click();
-                        await page.waitForTimeout(500); // Небольшая задержка для обновления
-
-                        const newYear = await yearElement.textContent();
-                        if (!newYear) throw new Error('Year element not found');
-                        const newYearNum = parseInt(newYear);
-
-                        if (newYearNum === targetYear) {
-                            console.log(`Year successfully set to ${targetYear}`);
-                            break;
-                        }
-                    }
-                } else {
-                    console.log(`Year is already set to ${targetYear}`);
-                }
-
-                // Проверяем, что год установлен правильно
-                const finalYear = await yearElement.textContent();
-                if (!finalYear) throw new Error('Year element not found');
-                expect(parseInt(finalYear)).toBe(targetYear);
-
-                await page.locator('[aria-label="январь"]').click()
-                await page.locator('.vc-day-content.vc-focusable.vc-focus.vc-attr', { hasText: '23' }).nth(0).click()
+                const locator =
+                    '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
+                await loadingTaskPage.checkOrderQuantity(
+                    locator,
+                    "",
+                    urgencyDate
+                );
             }
         );
 
         await allure.step(
-            "Step 20: We save descendants from the specification into an array",
+            "Step 11: We save descendants from the specification into an array",
             async () => {
                 // Save Assembly units and Parts from the Specification to an array
                 await loadingTaskPage.preservingDescendants(
@@ -483,21 +323,21 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 21: Click on the save order button",
+            "Step 12: Click on the save order button",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    "Сохранить",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Сохранить Заказ ",
+                    '[data-testid="AddOrder-Button-SaveOrder"]'
                 );
             }
         );
 
         await allure.step(
-            "Step 22: Checking the ordered quantity",
+            "Step 13: Checking the ordered quantity",
             async () => {
                 await page.waitForTimeout(3000)
-                orderNumber = await loadingTaskPage.getOrderInfoFromLocator('.add-order-component')
+                orderNumber = await loadingTaskPage.getOrderInfoFromLocator('[data-testid="AddAddOrder-OrderTitle"]')
                 console.log("orderNumber: ", orderNumber)
 
             }
@@ -509,9 +349,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         page,
     }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
-        const loadingTaskTable = '.shipments-content';
+        const loadingTaskTable = '[data-testid="ShipmentsTable-ScrollTable"]';
 
-        await allure.step("Step 01: Open the shipment task page", async () => {
+        await allure.step("Step 1: Open the shipment task page", async () => {
             // Go to the Shipping tasks page
             await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
 
@@ -519,16 +359,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForLoadState("networkidle");
         });
 
-        await allure.step("Step 02: Search product", async () => {
+        await allure.step("Step 2: Search product", async () => {
             // Using table search we look for the value of the variable
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
+            await loadingTaskPage.searchTable(nameProduct, loadingTaskTable);
             await page.waitForTimeout(1000);
 
             // Waiting for the table body
@@ -536,20 +369,19 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 03: Checking the quantity in a task",
+            "Step 3: Checking the quantity in a task",
             async () => {
-                // UPD:
-                // const numberColumn = await loadingTaskPage.findColumn(
-                //     page,
-                //     "ShipmentsTable-Table",
-                //     "ShipmentsTable-TableHead-Quantity"
-                // );
-                // console.log("numberColumn: ", numberColumn);
+                const numberColumn = await loadingTaskPage.findColumn(
+                    page,
+                    "ShipmentsTable-Table",
+                    "ShipmentsTable-TableHead-Quantity"
+                );
+                console.log("numberColumn: ", numberColumn);
 
                 const quantityOnTable =
                     await loadingTaskPage.getValueOrClickFromFirstRow(
                         loadingTaskTable,
-                        5
+                        numberColumn
                     );
                 console.log(
                     "Количество заказанных сущностей в заказе: ",
@@ -559,19 +391,19 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 04: Checking the urgency date of an order",
+            "Step 4: Checking the urgency date of an order",
             async () => {
                 urgencyDateOnTable = await page
-                    .locator('tbody .date-picker-yui-kit__header-btn span')
+                    .locator('input[data-testid="DatePicter-DatePicker-Input"]')
                     .first()
-                    .textContent()
+                    .getAttribute("value");
 
                 console.log(
                     "Дата по срочности в таблице: ",
                     urgencyDateOnTable
                 );
 
-                expect(urgencyDateOnTable).toBe(urgencyDateNewFormat);
+                expect(urgencyDateOnTable).toBe(urgencyDate);
             }
         );
     });
@@ -584,13 +416,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         let checkOrderNumber: string;
         const tableMain = "DeficitIzd-ScrollTable";
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the shortage product page",
+            "Step 2: Open the shortage product page",
             async () => {
 
                 // Find and go to the page using the locator Shortage of Products
@@ -606,51 +438,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Checking the main page headings", async () => {
-            const titles = testData1.elements.ProductShortage.titles.map((title) => title.trim());
-            const h3Titles = await shortageProduct.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.ProductShortage.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await shortageProduct.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-
-        });
-
-        await allure.step("Step 05: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
             await shortageProduct.searchTable(nameProduct, deficitTable);
 
@@ -659,7 +447,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 06: Check the checkbox in the first column",
+            "Step 4: Check the checkbox in the first column",
             async () => {
                 // Find the variable name in the first line and check the checkbox
                 const tableMain = "DeficitIzd-ScrollTable-Table";
@@ -681,7 +469,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 07: Checking the urgency date of an order",
+            "Step 5: Checking the urgency date of an order",
             async () => {
                 const numberColumn = await shortageProduct.findColumn(
                     page,
@@ -706,7 +494,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 08: We check the number of those launched into production",
+            "Step 6: We check the number of those launched into production",
             async () => {
                 const numberColumn = await shortageProduct.findColumn(
                     page,
@@ -728,7 +516,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 09: Click on the Launch on production button",
+            "Step 7: Click on the Launch on production button",
             async () => {
                 // Click on the button
                 await shortageProduct.clickButton(
@@ -739,7 +527,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 10: Testing a modal window for production launch",
+            "Step 8: Testing a modal window for production launch",
             async () => {
                 // Check the modal window Launch into production
                 await shortageProduct.checkModalWindowLaunchIntoProduction();
@@ -751,51 +539,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 11: Checking the main page headings", async () => {
-            const titles = testData1.elements.ModalWindowLaunchOnProduction.titles.map((title) => title.trim());
-            const h3Titles = await shortageProduct.getAllH3TitlesInModalClass(page, 'content-modal-right-menu');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 12: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.ModalWindowLaunchOnProduction.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await shortageProduct.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-
-        });
-
-        await allure.step("Step 13: Enter a value into a cell", async () => {
+        await allure.step("Step 9: Enter a value into a cell", async () => {
             // Check the value in the Own quantity field and enter the value
             const locator = '[data-testid="ModalStartProduction-ModalContent"]';
             await shortageProduct.checkOrderQuantity(
@@ -805,14 +549,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
         });
 
-        await allure.step("Step 14: We save the order number", async () => {
+        await allure.step("Step 10: We save the order number", async () => {
             // Get the order number
             checkOrderNumber = await shortageProduct.checkOrderNumber();
             console.log(`Полученный номер заказа: ${checkOrderNumber}`);
         });
 
         await allure.step(
-            "Step 15: Click on the In launch button",
+            "Step 11: Click on the In launch button",
             async () => {
                 // Click on the button
                 await shortageProduct.clickButton(
@@ -823,7 +567,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 16: We check that the order number is displayed in the notification",
+            "Step 12: We check that the order number is displayed in the notification",
             async () => {
                 // Check the order number in the success notification
                 await shortageProduct.getMessage(checkOrderNumber);
@@ -831,7 +575,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 17: We check the number of those launched into production",
+            "Step 13: We check the number of those launched into production",
             async () => {
                 const numberColumn = await shortageProduct.findColumn(
                     page,
@@ -868,67 +612,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableMain = "DeficitCbed-Table";
         let checkOrderNumber: string;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the shortage assemblies page",
+            "Step 2: Open the shortage assemblies page",
             async () => {
                 // Find and go to the page using the locator shortage assemblies
                 const selector =
                     '[data-testid="Sclad-deficitCbed-deficitCbed"]';
                 await shortageAssemblies.findTable(selector);
-                // Wait for the page to stabilize
-                await page.waitForLoadState("networkidle");
             }
         );
-
-        await allure.step("Step 03: Checking the main page headings", async () => {
-            const titles = testData1.elements.CbedShortage.titles.map((title) => title.trim());
-            const h3Titles = await shortageAssemblies.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.CbedShortage.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await shortageAssemblies.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-
-        });
 
         // Check if the array is empty
         if (descendantsCbedArray.length === 0) {
@@ -936,7 +633,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 05: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageAssemblies.waitingTableBody(deficitTable);
 
@@ -951,7 +648,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 06: Check the checkbox in the first column",
+                    "Step 4: Check the checkbox in the first column",
                     async () => {
                         // Find the variable name in the first line and check the checkbox
                         const tableMain = "DeficitCbed-Table";
@@ -973,7 +670,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageAssemblies.findColumn(
@@ -1002,7 +699,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: We check the number of those launched into production",
+                    "Step 6: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await shortageAssemblies.findColumn(
@@ -1029,7 +726,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: Click on the Launch on production button",
+                    "Step 7: Click on the Launch on production button",
                     async () => {
                         // Click on the button
                         await shortageAssemblies.clickButton(
@@ -1040,7 +737,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 10: Testing a modal window for production launch",
+                    "Step 8: Testing a modal window for production launch",
                     async () => {
                         // Check the modal window Launch into production
                         await shortageAssemblies.checkModalWindowLaunchIntoProduction();
@@ -1053,7 +750,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 11: Enter a value into a cell",
+                    "Step 9: Enter a value into a cell",
                     async () => {
                         // Check the value in the Own quantity field and enter the value
                         const locator =
@@ -1067,7 +764,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 12: We save the order number",
+                    "Step 10: We save the order number",
                     async () => {
                         // Get the order number
                         checkOrderNumber =
@@ -1079,7 +776,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 13: Click on the In launch button",
+                    "Step 11: Click on the In launch button",
                     async () => {
                         // Click on the button
                         await shortageAssemblies.clickButton(
@@ -1090,7 +787,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 14: We check that the order number is displayed in the notification",
+                    "Step 12: We check that the order number is displayed in the notification",
                     async () => {
                         // Check the order number in the success notification
                         await shortageAssemblies.getMessage(checkOrderNumber);
@@ -1098,7 +795,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 15: Close success message",
+                    "Step 13: Close success message",
                     async () => {
                         // Close the success notification
                         await shortageAssemblies.closeSuccessMessage();
@@ -1106,7 +803,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 16: We check the number of those launched into production",
+                    "Step 14: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await shortageAssemblies.findColumn(
@@ -1146,63 +843,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableMain = "DeficitDetal-Table";
         let checkOrderNumber: string;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 02: Open the shortage parts page", async () => {
+        await allure.step("Step 2: Open the shortage parts page", async () => {
             // Find and go to the page using the locator Parts Shortage
             const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
             await shortageParts.findTable(selector);
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-        });
-
-        await allure.step("Step 03: Checking the main page headings", async () => {
-            const titles = testData1.elements.PartsShortage.titles.map((title) => title.trim());
-            const h3Titles = await shortageParts.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-
-            const buttons = testData1.elements.PartsShortage.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await shortageParts.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-
         });
 
         // Check if the array is empty
@@ -1211,7 +860,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Iterate through the array of parts
             for (const part of descendantsDetailArray) {
-                await allure.step("Step 05: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageParts.waitingTableBodyNoThead(deficitTable);
 
@@ -1234,9 +883,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 06: Check that the first row of the table contains the variable name",
+                    "Step 4: Check that the first row of the table contains the variable name",
                     async () => {
                         // Check that the first row of the table contains the variable name
+                        // await shortageParts.checkNameInLineFromFirstRowBUG(
+                        //     part.designation,
+                        //     deficitTable
+                        // );
                         const numberColumn = await shortageParts.findColumn(
                             page,
                             tableMain,
@@ -1256,7 +909,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageParts.findColumn(
@@ -1268,6 +921,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             "Number column urgency date: ",
                             numberColumn
                         );
+
 
                         urgencyDateOnTable =
                             await shortageParts.getValueOrClickFromFirstRowNoThead(
@@ -1285,7 +939,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: We check the number of those launched into production",
+                    "Step 6: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await shortageParts.findColumn(
@@ -1297,6 +951,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             "Number column launched into production: ",
                             numberColumn
                         );
+
 
                         quantityProductLaunchOnProductionBefore =
                             await shortageParts.getValueOrClickFromFirstRowNoThead(
@@ -1312,7 +967,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: Click on the Launch on production button ",
+                    "Step 7: Click on the Launch on production button ",
                     async () => {
                         // Click on the button
                         await shortageParts.clickButton(
@@ -1323,7 +978,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 10: Testing a modal window for production launch",
+                    "Step 8: Testing a modal window for production launch",
                     async () => {
                         // Check the modal window Launch into production
                         await shortageParts.checkModalWindowLaunchIntoProduction();
@@ -1336,7 +991,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 11: Enter a value into a cell",
+                    "Step 9: Enter a value into a cell",
                     async () => {
                         // Check the value in the Own quantity field and enter the value
                         const locator =
@@ -1350,7 +1005,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 12: We save the order number",
+                    "Step 10: We save the order number",
                     async () => {
                         // Get the order number
                         checkOrderNumber =
@@ -1362,7 +1017,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 13: Click on the In launch button",
+                    "Step 11: Click on the In launch button",
                     async () => {
                         // Click on the button
                         await shortageParts.clickButton(
@@ -1373,7 +1028,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 14: We check that the order number is displayed in the notification",
+                    "Step 12: We check that the order number is displayed in the notification",
                     async () => {
                         // Check the order number in the success notification
                         await shortageParts.getMessage(checkOrderNumber);
@@ -1381,7 +1036,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 15: Close success message",
+                    "Step 13: Close success message",
                     async () => {
                         // Close the success notification
                         await shortageParts.closeSuccessMessage();
@@ -1389,7 +1044,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 16: We check the number of those launched into production",
+                    "Step 14: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await shortageParts.findColumn(
@@ -1401,6 +1056,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             "Number column launched into production: ",
                             numberColumn
                         );
+
 
                         quantityProductLaunchOnProductionAfter =
                             await shortageParts.getValueOrClickFromFirstRowNoThead(
@@ -1432,71 +1088,25 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
         const tableMetalworkingWarehouse =
             '[data-testid="MetalloworkingSclad-ScrollTable"]';
-        const productionTable = '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
+        const productionTable = '[data-testid="OperationPathInfo-Table"]';
         let numberColumnQunatityMade: number;
         let firstOperation: string;
         const operationTable = "OperationPathInfo-Table";
         const tableMain = "#tablebody";
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the metalworking warehouse page",
+            "Step 2: Open the metalworking warehouse page",
             async () => {
                 // Find and go to the page using the locator Order a warehouse for Metalworking
                 const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
                 await metalworkingWarehouse.findTable(selector);
-                // Wait for the page to stabilize
-                await page.waitForLoadState("networkidle");
             }
         );
-
-        await allure.step('Step 03: Checking the main page headings', async () => {
-
-            const titles = testData2.elements.MetalworkingWarhouse.titles.map((title) => title.trim());
-            const h3Titles = await metalworkingWarehouse.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData2.elements.MetalworkingWarhouse.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await metalworkingWarehouse.isButtonVisible(page, buttonClass, buttonLabel);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-
-        });
 
         // Check if the array is empty
         if (descendantsDetailArray.length === 0) {
@@ -1504,7 +1114,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Iterate through the array of parts
             for (const part of descendantsDetailArray) {
-                await allure.step("Step 05: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await metalworkingWarehouse.waitingTableBody(
                         tableMetalworkingWarehouse
@@ -1526,7 +1136,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 06: Check the checkbox in the first column",
+                    "Step 4: Check the checkbox in the first column",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await metalworkingWarehouse.checkNameInLineFromFirstRow(
@@ -1542,7 +1152,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await metalworkingWarehouse.findColumn(
@@ -1571,7 +1181,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: We check the number of those launched into production",
+                    "Step 6: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await metalworkingWarehouse.findColumn(
@@ -1599,7 +1209,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: Find and click on the operation icon",
+                    "Step 7: Find and click on the operation icon",
                     async () => {
                         // Getting cell value by id
                         const numberColumn =
@@ -1622,68 +1232,29 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step('Step 10: Checking the modalwindow headings', async () => {
-                    await page.waitForTimeout(500)
-                    const titles = testData1.elements.ModalWindowPartsProductionPath.titles.map((title) => title.trim());
-                    const h3Titles = await metalworkingWarehouse.getAllH3TitlesInModalClass(page, 'modal-yui-kit__modal-content');
-                    const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    // Log for debugging
-                    console.log('Expected Titles:', titles);
-                    console.log('Received Titles:', normalizedH3Titles);
-
-                    // Validate length
-                    expect(normalizedH3Titles.length).toBe(titles.length);
-
-                    // Validate content and order
-                    expect(normalizedH3Titles).toEqual(titles);
-                })
-
-                await allure.step("Step 11: Checking the buttons on the modalwindow", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ModalWindowPartsProductionPath.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-
-                            const isButtonReady = await metalworkingWarehouse.isButtonVisible(page, buttonClass, buttonLabel);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
                 await allure.step(
-                    "Step 11: Check the production path modal window ",
+                    "Step 8: Check the production path modal window ",
                     async () => {
                         // Check the production path modal window
-                        await page.waitForTimeout(500)
                         await metalworkingWarehouse.productionPathDetailskModalWindow();
+
+                        // Wait for the table body to load
+
+                        await metalworkingWarehouse.waitingTableBody(
+                            productionTable
+                        );
                     }
                 );
 
                 await allure.step(
-                    "Step 12: We find, get the value and click on the cell done pcs",
+                    "Step 9: We find, get the value and click on the cell done pcs",
                     async () => {
                         // Getting cell value by id
                         numberColumnQunatityMade =
                             await metalworkingWarehouse.findColumn(
                                 page,
                                 operationTable,
-                                "OperationPathInfo-Thead-Maked"
+                                "OperationPathInfo-Thead-Make"
                             );
                         console.log(
                             "Column number pieces made: ",
@@ -1700,7 +1271,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 13: Find and get the value from the operation cell",
+                    "Step 10: Find and get the value from the operation cell",
                     async () => {
                         // Getting the value of the first operation
                         const numberColumnFirstOperation =
@@ -1725,7 +1296,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 14: Click on the add mark button",
+                    "Step 11: Click on the add mark button",
                     async () => {
                         // Click on the button
                         await metalworkingWarehouse.clickButton(
@@ -1738,51 +1309,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step('Step 15: Checking the modalwindow headings', async () => {
-                    const titles = testData1.elements.ModalWindowMarkOfCompletion.titles.map((title) => title.trim());
-                    const h3Titles = await metalworkingWarehouse.getAllH3TitlesInModalClassNew(page, '[data-testid^="OperationPathInfo-ModalMark-Create"]');
-                    const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    // Log for debugging
-                    console.log('Expected Titles:', titles);
-                    console.log('Received Titles:', normalizedH3Titles);
-
-                    // Validate length
-                    expect(normalizedH3Titles.length).toBe(titles.length);
-
-                    // Validate content and order
-                    expect(normalizedH3Titles).toEqual(titles);
-                })
-
-                await allure.step("Step 16: Checking the buttons on the modalwindow", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ModalWindowMarkOfCompletion.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-
-                            const isButtonReady = await metalworkingWarehouse.isButtonVisible(page, buttonClass, buttonLabel);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
                 await allure.step(
-                    "Step 17: Checking the modal window and marking completion",
+                    "Step 12: Checking the modal window and marking completion",
                     async () => {
                         // Check the progress check modal window
                         await metalworkingWarehouse.completionMarkModalWindow(
@@ -1794,7 +1322,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 18: Click on the Save order button",
+                    "Step 13: Click on the Save order button",
                     async () => {
                         // Click on the button
                         await metalworkingWarehouse.clickButton(
@@ -1805,7 +1333,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 19: Closing a modal window by clicking on the logo",
+                    "Step 14: Check the production path modal window",
+                    async () => {
+                        // Check the production path modal window
+                        await metalworkingWarehouse.productionPathDetailskModalWindow();
+
+                        // Wait for the table body to load
+                        // await metalworkingWarehouse.waitingTableBody(
+                        //     productionTable
+                        // );
+                    }
+                );
+
+                await allure.step(
+                    "Step 15: Closing a modal window by clicking on the logo",
                     async () => {
                         // Double click on the coordinates and close the modal window
                         await page.mouse.dblclick(1, 1);
@@ -1827,7 +1368,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             '[data-testid="TableComplect-TableComplect-Table"]';
         const tableMain = 'TableComplect-TableComplect-Table'
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await completingAssembliesToPlan.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -1835,58 +1376,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the completion cbed plan page",
+            "Step 2: Open the completion cbed plan page",
             async () => {
                 // Find and go to the page using the locator Completing assemblies to plan
                 const selector = '[data-testid="Sclad-completionCbedPlan"]';
                 await completingAssembliesToPlan.findTable(selector);
-                await page.waitForLoadState("networkidle");
             }
         );
-
-        await allure.step('Step 03: Checking the main page headings', async () => {
-
-            const titles = testData1.elements.AssemblyKittingOnThePlan.titles.map((title) => title.trim());
-            const h3Titles = await completingAssembliesToPlan.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.AssemblyKittingOnThePlan.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await completingAssembliesToPlan.isButtonVisible(page, buttonClass, buttonLabel);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-
-        });
 
         // Check if the array is empty
         if (descendantsCbedArray.length === 0) {
@@ -1894,7 +1390,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 05: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     await page.waitForLoadState("networkidle");
                     await page.waitForTimeout(1000);
                     // Using table search we look for the value of the variable
@@ -1907,7 +1403,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 06: Check the first line in the first row",
+                    "Step 4: Check the first line in the first row",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await completingAssembliesToPlan.checkNameInLineFromFirstRow(
@@ -1918,7 +1414,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await completingAssembliesToPlan.findColumn(
@@ -1951,7 +1447,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: Find the column designation and click",
+                    "Step 6: Find the column designation and click",
                     async () => {
                         // Find the column designation and click
                         const numberColumn =
@@ -1972,51 +1468,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                // await allure.step('Step 09: Проверяем  наличие заголовков на странице Заказано у поставщиков', async () => {
-                //     await page.waitForTimeout(1500)
-                //     const titles = testData1.elements.ModalWindowAssemblyInvoice.titles.map((title) => title.trim());
-                //     const h3Titles = await completingAssembliesToPlan.getAllH3TitlesInModalClassNew(page, '[data-testid="ModalAddWaybill-WaybillDetails-Right"]');
-                //     const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-                //     // Wait for the page to stabilize
-                //     await page.waitForLoadState("networkidle");
-
-                //     // Log for debugging
-                //     console.log('Expected Titles:', titles);
-                //     console.log('Received Titles:', normalizedH3Titles);
-
-                //     // Validate length
-                //     expect(normalizedH3Titles.length).toBe(titles.length);
-
-                //     // Validate content and order
-                //     expect(normalizedH3Titles).toEqual(titles);
-                // })
-
-                await allure.step("Step 10: Проверяем наличие кнопок на странице Заказано у поставщиков", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ModalWindowAssemblyInvoice.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-                            const isButtonReady = await completingAssembliesToPlan.isButtonVisible(page, buttonClass, buttonLabel);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
                 await allure.step(
-                    "Step 11: Check the modal window for the delivery note and check the checkbox",
+                    "Step 7: Check the modal window for the delivery note and check the checkbox",
                     async () => {
                         // Check the modal window for the delivery note and check the checkbox
                         await completingAssembliesToPlan.assemblyInvoiceModalWindow(
@@ -2030,7 +1483,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 12: Click on the button to assemble into a set",
+                    "Step 8: Click on the button to assemble into a set",
                     async () => {
                         // Click on the button
                         await completingAssembliesToPlan.clickButton(
@@ -2041,7 +1494,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 13: Check close modal window complete set",
+                    "Step 9: Check close modal window complete set",
                     async () => {
                         const modalWindow =
                             '[data-testid="ModalAddWaybill-WaybillDetails-Right"]';
@@ -2062,13 +1515,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const disassembly = '[data-testid^="ModalUncomplectKit-AssemblyBlock"]';
         let qunatityCompleteSet: string;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await completeSets.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the shortage product page",
+            "Step 2: Open the shortage product page",
             async () => {
                 // Find and go to the page using the locator Shortage of Products
                 const selector = '[data-testid="Sclad-completeSets"]';
@@ -2082,57 +1535,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step('Step 03: Checking the main page headings', async () => {
-
-            const titles = testData1.elements.DisassemblyPage.titles.map((title) => title.trim());
-            const h3Titles = await completeSets.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.DisassemblyPage.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await completeSets.isButtonVisible(page, buttonClass, buttonLabel);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
         // Check if the array is empty
         if (descendantsCbedArray.length === 0) {
             throw new Error("Массив пустой. Перебор невозможен.");
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 05: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     await completeSets.waitForTimeout(1000);
                     // Using table search we look for the value of the variable
                     await completeSets.searchTable(
@@ -2149,7 +1558,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 06: We check the number of those launched into production",
+                    "Step 4: We check the number of those launched into production",
                     async () => {
                         const tableTestId = "ComplectKit-Table-Main";
                         const numberColumn = await completeSets.findColumn(
@@ -2176,7 +1585,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Look for the column with the checkbox and click on it",
+                    "Step 5: Look for the column with the checkbox and click on it",
                     async () => {
                         const tableTestId = "ComplectKit-Table-Main";
                         const numberColumn = await completeSets.findColumn(
@@ -2195,64 +1604,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-
                 await allure.step(
-                    "Step 08: Click on the Submit for assembly button",
+                    "Step 6: Click on the Submit for assembly button",
                     async () => {
                         await completeSets.clickButton(
                             " Разкомплектовать ",
                             '[data-testid="ComplectKit-Button-Unassemble"]'
                         );
-                        // Wait for the page to stabilize
-                        await page.waitForLoadState("networkidle");
                     }
                 );
 
-                await allure.step('Step 09: Checking the modalwindow headings', async () => {
-
-                    const titles = testData1.elements.ModalWindowResetInSets.titles.map((title) => title.trim());
-                    const h3Titles = await completeSets.getAllH3TitlesInModalClassNew(page, '[data-testid="ModalUncomplectKit-RightContent"]');
-                    const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    // Log for debugging
-                    console.log('Expected Titles:', titles);
-                    console.log('Received Titles:', normalizedH3Titles);
-
-                    // Validate length
-                    expect(normalizedH3Titles.length).toBe(titles.length);
-
-                    // Validate content and order
-                    expect(normalizedH3Titles).toEqual(titles);
-                })
-
-                await allure.step("Step 10: Checking buttons on the modalwindow", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ModalWindowResetInSets.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-
-                            const isButtonReady = await completeSets.isButtonVisible(page, buttonClass, buttonLabel);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
-                await allure.step("Step 11: Check modal window ", async () => {
+                await allure.step("Step 7: Check modal window ", async () => {
                     await completeSets.disassemblyModalWindow(
                         cbed.name,
                         cbed.designation
@@ -2288,9 +1650,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 12: Enter quantity for disassembly",
+                    "Step 8: Enter quantity for disassembly",
                     async () => {
                         const locator = '[data-testid^="ModalUncomplectKit-AssemblyTableKitInput"] input'
+
+                        // await completeSets.checkOrderQuantity(
+                        //     locator,
+                        //     qunatityCompleteSet,
+                        //     "1"
+                        // );
                         const toDisassemble
                             = await page.locator(locator).getAttribute('value');
                         console.log("К разкомплектовке: ", toDisassemble)
@@ -2299,8 +1667,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 13: Click on the Disassembly button",
+                    "Step 9: Click on the Disassembly button",
                     async () => {
+                        // await completeSets.clickButton(
+                        //     " Разкомплектовать ",
+                        //     '[data-testid^="ModalUncomplectKit-UncomplectButton]'
+                        // );
+
                         await page.locator('.btn-add', { hasText: " Разкомплектовать " }).click()
                     }
                 );
@@ -2317,7 +1690,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             '[data-testid="TableComplect-TableComplect-Table"]';
         const tableMain = 'TableComplect-TableComplect-Table'
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await completingAssembliesToPlan.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -2325,7 +1698,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the completion cbed plan page",
+            "Step 2: Open the completion cbed plan page",
             async () => {
                 // Find and go to the page using the locator Completing assemblies to plan
                 const selector = '[data-testid="Sclad-completionCbedPlan"]';
@@ -2339,7 +1712,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 03: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     await page.waitForLoadState("networkidle");
                     await page.waitForTimeout(1000);
                     // Using table search we look for the value of the variable
@@ -2352,7 +1725,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 04: Check the first line in the first row",
+                    "Step 4: Check the first line in the first row",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await completingAssembliesToPlan.checkNameInLineFromFirstRow(
@@ -2363,7 +1736,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 05: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await completingAssembliesToPlan.findColumn(
@@ -2396,7 +1769,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 06: Find the column designation and click",
+                    "Step 6: Find the column designation and click",
                     async () => {
                         // Find the column designation and click
                         const numberColumn =
@@ -2418,7 +1791,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Check the modal window for the delivery note and check the checkbox",
+                    "Step 7: Check the modal window for the delivery note and check the checkbox",
                     async () => {
                         // Check the modal window for the delivery note and check the checkbox
                         await completingAssembliesToPlan.assemblyInvoiceModalWindow(
@@ -2432,7 +1805,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: Click on the button to assemble into a set",
+                    "Step 8: Click on the button to assemble into a set",
                     async () => {
                         // Click on the button
                         await completingAssembliesToPlan.clickButton(
@@ -2443,7 +1816,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: Check close modal window complete set",
+                    "Step 9: Check close modal window complete set",
                     async () => {
                         const modalWindow =
                             '[data-testid="ModalAddWaybill-WaybillDetails-Right"]';
@@ -2475,7 +1848,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             for (const detail of descendantsDetailArray) {
                 //  Check the number of parts in the warehouse before posting
                 await allure.step(
-                    "Step 01: Receiving quantities from balances",
+                    "Step 1: Receiving quantities from balances",
                     async () => {
                         // Receiving quantities from balances
                         remainingStockBefore =
@@ -2488,7 +1861,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
                 // Capitalization of the entity
                 await allure.step(
-                    "Step 02: Open the warehouse page",
+                    "Step 2: Open the warehouse page",
                     async () => {
                         // Go to the Warehouse page
                         await stockReceipt.goto(
@@ -2498,7 +1871,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 03: Open the stock receipt page",
+                    "Step 3: Open the stock receipt page",
                     async () => {
                         // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
                         const selectorstockReceipt =
@@ -2509,52 +1882,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step("Step 04: Checking the main page headings", async () => {
-                    const titles = testData1.elements.ArrivalAtTheWarehousePage.titles.map((title) => title.trim());
-                    const h3Titles = await stockReceipt.getAllH3TitlesInClass(page, 'container');
-                    const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    // Log for debugging
-                    console.log('Expected Titles:', titles);
-                    console.log('Received Titles:', normalizedH3Titles);
-
-                    // Validate length
-                    expect(normalizedH3Titles.length).toBe(titles.length);
-
-                    // Validate content and order
-                    expect(normalizedH3Titles).toEqual(titles);
-                })
-
-                await allure.step("Step 05: Checking the main buttons on the page", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ArrivalAtTheWarehousePage.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-                        const expectedState = button.state === "true" ? true : false;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-
-                            const isButtonReady = await stockReceipt.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
                 await allure.step(
-                    "Step 06: Click on the create receipt button",
+                    "Step 4: Click on the create receipt button",
                     async () => {
                         // Click on the button
                         await stockReceipt.clickButton(
@@ -2564,33 +1893,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step("Step 07: Checking buttons on the modalwindow", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ModalWindowSelectSupplier.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-                        const expectedState = button.state === "true" ? true : false;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-
-                            const isButtonReady = await stockReceipt.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
                 await allure.step(
-                    "Step 08: Select the selector in the modal window",
+                    "Step 5: Select the selector in the modal window",
                     async () => {
                         // Select the selector in the modal window
                         await stockReceipt.selectStockReceipt(
@@ -2606,32 +1910,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step("Step 09: Checking buttons on the modalwindow", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ModalWindowCreateReceiptParts.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-                        const expectedState = button.state === "true" ? true : false;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-
-                            const isButtonReady = await stockReceipt.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
-                await allure.step("Step 10: Search product", async () => {
+                await allure.step("Step 6: Search product", async () => {
                     // Using table search we look for the value of the variable
                     await stockReceipt.searchTable(
                         detail.designation,
@@ -2647,7 +1926,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 11: Enter the quantity in the cells",
+                    "Step 7: Enter the quantity in the cells",
                     async () => {
                         // Enter the quantity in the cells
                         await stockReceipt.inputQuantityInCell(
@@ -2657,7 +1936,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 12: Find the checkbox column and click",
+                    "Step 8: Find the checkbox column and click",
                     async () => {
                         // Find the checkbox column and click
                         const tableModalComing = "ModalComingTable-Table";
@@ -2677,7 +1956,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 13: Check that the first row of the table contains the variable name",
+                    "Step 9: Check that the first row of the table contains the variable name",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await stockReceipt.checkNameInLineFromFirstRow(
@@ -2689,7 +1968,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
 
                 await allure.step(
-                    "Step 14: Click on the create receipt button on the modal window",
+                    "Step 10: Click on the create receipt button on the modal window",
                     async () => {
                         // Click on the button
                         await stockReceipt.clickButton(
@@ -2700,7 +1979,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 15: Check the number of parts in the warehouse after posting",
+                    "Step 11: Check the number of parts in the warehouse after posting",
                     async () => {
                         // Check the number of parts in the warehouse after posting
                         remainingStockAfter =
@@ -2712,7 +1991,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 16: Compare the quantity in cells",
+                    "Step 12: Compare the quantity in cells",
                     async () => {
                         // Compare the quantity in cells
                         expect(Number(remainingStockAfter)).toBe(
@@ -2749,7 +2028,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
                 await allure.step(
-                    "Step 01: Receiving quantities from balances",
+                    "Step 1: Receiving quantities from balances",
                     async () => {
                         // Check the number of entities in the warehouse before posting
                         remainingStockBefore =
@@ -2762,7 +2041,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
                 // Capitalization of the entity
                 await allure.step(
-                    "Step 02: Open the warehouse page",
+                    "Step 2: Open the warehouse page",
                     async () => {
                         // Go to the Warehouse page
                         await stockReceipt.goto(
@@ -2772,7 +2051,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 03: Open the stock receipt page",
+                    "Step 3: Open the stock receipt page",
                     async () => {
                         // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
                         const selectorstockReceipt =
@@ -2785,7 +2064,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 04: Click on the create receipt button",
+                    "Step 4: Click on the create receipt button",
                     async () => {
                         // Click on the button
                         await stockReceipt.clickButton(
@@ -2796,7 +2075,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 05: Select the selector in the modal window",
+                    "Step 5: Select the selector in the modal window",
                     async () => {
                         // Select the selector in the modal window
                         await stockReceipt.selectStockReceipt(
@@ -2812,7 +2091,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step("Step 06: Search product", async () => {
+                await allure.step("Step 6: Search product", async () => {
                     // Using table search we look for the value of the variable
                     await stockReceipt.searchTable(
                         cbed.designation,
@@ -2829,7 +2108,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 07: Find the checkbox column and click",
+                    "Step 7: Find the checkbox column and click",
                     async () => {
                         // Find the checkbox column and click
                         const tableModalComing = "ModalComingTable-Table";
@@ -2848,52 +2127,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step("Step 08: Checking the main page headings", async () => {
-                    const titles = testData1.elements.ModalWindowCompletSets.titles.map((title) => title.trim());
-                    const h3Titles = await stockReceipt.getAllH3TitlesInModalClassNew(page, '[data-testid="ModalKitsList-RightContent"]');
-                    const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    // Log for debugging
-                    console.log('Expected Titles:', titles);
-                    console.log('Received Titles:', normalizedH3Titles);
-
-                    // Validate length
-                    expect(normalizedH3Titles.length).toBe(titles.length);
-
-                    // Validate content and order
-                    expect(normalizedH3Titles).toEqual(titles);
-                })
-
-                await allure.step("Step 09: Checking the main buttons on the page", async () => {
-                    // Wait for the page to stabilize
-                    await page.waitForLoadState("networkidle");
-
-                    const buttons = testData1.elements.ModalWindowCompletSets.buttons;
-                    // Iterate over each button in the array
-                    for (const button of buttons) {
-                        // Extract the class, label, and state from the button object
-                        const buttonClass = button.class;
-                        const buttonLabel = button.label;
-                        const expectedState = button.state === "true" ? true : false;
-
-                        // Perform the validation for the button
-                        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                            // Check if the button is visible and enabled
-
-                            const isButtonReady = await stockReceipt.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                            // Validate the button's visibility and state
-                            expect(isButtonReady).toBeTruthy();
-                            console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                        });
-                    }
-                });
-
                 await allure.step(
-                    "Step 10: Check the modal window Completed sets",
+                    "Step 8: Check the modal window Completed sets",
                     async () => {
                         // Check the modal window Completed sets
                         await stockReceipt.completesSetsModalWindow();
@@ -2902,7 +2137,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 11: We get the cell number with a checkmark",
+                    "Step 9: We get the cell number with a checkmark",
                     async () => {
                         // We get the cell number with a checkmark
                         const tableComplectsSetsDataTestId =
@@ -2913,7 +2148,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                                 tableComplectsSetsDataTestId,
                                 "ModalKitsList-TableHeader-SelectAll"
                             );
-
                         console.log("numberColumn: ", numberColumnCheckbox);
                         await stockReceipt.getValueOrClickFromFirstRow(
                             tableComplectsSets,
@@ -2925,13 +2159,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 12: Enter the quantity in the cells",
+                    "Step 10: Enter the quantity in the cells",
                     async () => {
                         // Enter the value into the input cell
-
+                        // await page.waitForTimeout(500)
                         const inputlocator =
                             '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
-
+                        // await stockReceipt.enterTheValueIntoTheLocatorInput(
+                        //     inputlocator,
+                        //     "1"
+                        // );
                         await page.locator(inputlocator).nth(0).waitFor({ state: 'visible' });
 
                         // Проверяем, что элемент не заблокирован
@@ -2948,7 +2185,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 13: Click on the choice button on the modal window",
+                    "Step 11: Click on the choice button on the modal window",
                     async () => {
                         // Click on the button
                         await stockReceipt.clickButton(
@@ -2959,7 +2196,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 14: Check that the first row of the table contains the variable name",
+                    "Step 12: Check that the first row of the table contains the variable name",
                     async () => {
                         // Wait for the table body to load
                         const tableSelectedItems =
@@ -2975,7 +2212,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 15: Click on the create receipt button on the modal window",
+                    "Step 13: Click on the create receipt button on the modal window",
                     async () => {
                         // Click on the button
                         await stockReceipt.clickButton(
@@ -2986,7 +2223,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 16: Check the number of parts in the warehouse after posting",
+                    "Step 14: Check the number of parts in the warehouse after posting",
                     async () => {
                         // Checking the remainder of the entity after capitalization
                         remainingStockAfter =
@@ -2998,7 +2235,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 17: Compare the quantity in cells",
+                    "Step 15: Compare the quantity in cells",
                     async () => {
                         // Compare the quantity in cells
                         expect(Number(remainingStockAfter)).toBe(
@@ -3026,7 +2263,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             '[data-testid="TableComplect-TableComplect-ScrollContainer"]';
         const tableMainTable = "TableComplect-TableComplect-Table";
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await completingProductsToPlan.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -3034,7 +2271,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the completion product plan page",
+            "Step 2: Open the completion product plan page",
             async () => {
                 // Find and go to the page using the locator Complete set of Products on the plan
                 const selector = '[data-testid="Sclad-completionProductPlan"]';
@@ -3045,51 +2282,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step('Step 03: Checking the main page headings', async () => {
-
-            const titles = testData1.elements.EquipmentOfProductsOnThePlan.titles.map((title) => title.trim());
-            const h3Titles = await completingProductsToPlan.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.EquipmentOfProductsOnThePlan.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await completingProductsToPlan.isButtonVisible(page, buttonClass, buttonLabel);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
-        await allure.step("Step 05: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
             await completingProductsToPlan.searchTable(
                 nameProduct,
@@ -3101,7 +2294,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 06: Check the first line in the first row",
+            "Step 4: Check the first line in the first row",
             async () => {
                 // Check that the first row of the table contains the variable name
                 await completingProductsToPlan.checkNameInLineFromFirstRow(
@@ -3112,7 +2305,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 07: Checking the urgency date of an order",
+            "Step 5: Checking the urgency date of an order",
             async () => {
                 const numberColumn =
                     await completingProductsToPlan.findColumn(
@@ -3145,9 +2338,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 08: Find the column designation and click",
+            "Step 6: Find the column designation and click",
             async () => {
                 // We get the cell number with the designation
+
                 const numberColumn = await completingProductsToPlan.findColumn(
                     page,
                     tableMainTable,
@@ -3177,7 +2371,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 09: Check the modal window for the delivery note and check the checkbox",
+            "Step 7: Check the modal window for the delivery note and check the checkbox",
             async () => {
                 // Check the modal window for the delivery note and check the checkbox
                 await completingProductsToPlan.assemblyInvoiceModalWindow(
@@ -3192,7 +2386,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 10: Click on the button to assemble into a set",
+            "Step 8: Click on the button to assemble into a set",
             async () => {
                 // Click on the button
                 await completingProductsToPlan.clickButton(
@@ -3220,7 +2414,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableComplectsSets = '[data-testid="ModalKitsList-Table"]';
 
         await allure.step(
-            "Step 01: Receiving quantities from balances",
+            "Step 1: Receiving quantities from balances",
             async () => {
                 // Check the number of entities in the warehouse before posting
                 remainingStockBefore = await stock.checkingTheQuantityInStock(
@@ -3231,12 +2425,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Capitalization of the entity
-        await allure.step("Step 02: Open the warehouse page", async () => {
+        await allure.step("Step 2: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await stockReceipt.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 03: Open the stock receipt page", async () => {
+        await allure.step("Step 3: Open the stock receipt page", async () => {
             // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
             const selector =
                 '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
@@ -3247,7 +2441,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 04: Click on the create receipt button",
+            "Step 4: Click on the create receipt button",
             async () => {
                 // Click on the button
                 await stockReceipt.clickButton(
@@ -3258,7 +2452,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 05: Select the selector in the modal window",
+            "Step 5: Select the selector in the modal window",
             async () => {
                 // Select the selector in the modal window
                 await stockReceipt.selectStockReceipt(StockReceipt.cbed);
@@ -3272,7 +2466,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 06: Search product", async () => {
+        await allure.step("Step 6: Search product", async () => {
             // Using table search we look for the value of the variable
             await stockReceipt.searchTable(
                 nameProduct,
@@ -3289,7 +2483,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 07: Find the checkbox column and click",
+            "Step 7: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
                 const tableModalComing = "ModalComingTable-Table";
@@ -3309,7 +2503,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 08: Check the modal window Completed sets",
+            "Step 8: Check the modal window Completed sets",
             async () => {
                 // Check the modal window Completed sets
                 await stockReceipt.completesSetsModalWindow();
@@ -3318,7 +2512,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 09: We get the cell number with a checkmark",
+            "Step 9: We get the cell number with a checkmark",
             async () => {
                 // We get the cell number with a checkmark
                 const tableComplectsSetsDataTestId = "ModalKitsList-Table";
@@ -3341,9 +2535,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 10: Enter the quantity in the cells",
             async () => {
                 // Enter the value into the input cell
+                // await page.waitForTimeout(500)
                 const inputlocator =
                     '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
-
+                // await stockReceipt.enterTheValueIntoTheLocatorInput(
+                //     inputlocator,
+                //     "1"
+                // );
                 await page.locator(inputlocator).nth(0).waitFor({ state: 'visible' });
 
                 // Проверяем, что элемент не заблокирован
@@ -3430,10 +2628,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
             page
         );
-        const tableTaskForShipment = '.shipments-content';
+        const tableTaskForShipment = '[data-testid="ShipmentsTable-ScrollTable"]';
+        const tableModalComing = "ShipmentsTable-Table";
         let numberColumn: number;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await warehouseTaskForShipment.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -3441,7 +2640,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the warehouse shipping task page",
+            "Step 2: Open the warehouse shipping task page",
             async () => {
                 // Find and go to the page using the locator Склад: Задачи на отгрузку
                 const selector = '[data-testid="Sclad-shippingTasks"]';
@@ -3457,61 +2656,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Checking the main page headings", async () => {
-            const titles = testData1.elements.WarehouseLoadingTasks.titles.map((title) => title.trim());
-            const h3Titles = await warehouseTaskForShipment.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.WarehouseLoadingTasks.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await warehouseTaskForShipment.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
-        await allure.step("Step 05: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(1000);
+            await warehouseTaskForShipment.searchTable(
+                nameProduct,
+                tableTaskForShipment
+            );
 
             // Wait for the table body to load
             await warehouseTaskForShipment.waitingTableBody(
@@ -3520,7 +2670,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 06: Check that the first row of the table contains the variable name",
+            "Step 4: Check that the first row of the table contains the variable name",
             async () => {
                 // Check that the first row of the table contains the variable name
                 await warehouseTaskForShipment.checkNameInLineFromFirstRow(
@@ -3531,28 +2681,58 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 07: Find the checkbox column and click",
+            "Step 5: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await warehouseTaskForShipment.findColumn(
-                //     page,
-                //     tableModalComing,
-                //     "ShipmentsTable-TableHead-Check"
-                // );
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    2,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
+        await allure.step(
+            "Step 6: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await warehouseTaskForShipment.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
 
-        await allure.step("Step 08: Click on the ship button", async () => {
+        await allure.step(
+            "Step 7: Find the checkbox column and click",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await warehouseTaskForShipment.getValueOrClickFromFirstRow(
+                    tableTaskForShipment,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 8: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -3560,59 +2740,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
         });
 
-        await allure.step("Step 09: Checking the modalwindow headings", async () => {
-            const titles = testData1.elements.ModalWindowUploadingTask.titles.map((title) => title.trim());
-            const h3Titles = await warehouseTaskForShipment.getAllH3TitlesInModalClassNew(page, '[data-testid="ModalShComlit-RightDestroyModal"]');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 10: Checking buttons on the modalwindow", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.ModalWindowUploadingTask.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await warehouseTaskForShipment.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-        });
-
         await allure.step(
-            "Step 11: Check the Shipping modal window",
+            "Step 9: Check the Shipping modal window",
             async () => {
                 // Check the Shipping modal window
                 await warehouseTaskForShipment.shipmentModalWindow();
             }
         );
 
-        await allure.step("Step 12: Click on the ship button", async () => {
+        await allure.step("Step 10: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -3625,10 +2761,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
             page
         );
-        const tableTaskForShipment = '.shipments-content';
+        const tableTaskForShipment = '[data-testid="ShipmentsTable-ScrollTable"]';
+        const tableModalComing = "ShipmentsTable-Table";
         let numberColumn: number;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await warehouseTaskForShipment.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -3636,7 +2773,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the warehouse shipping task page",
+            "Step 2: Open the warehouse shipping task page",
             async () => {
                 // Find and go to the page using the locator Склад: Задачи на отгрузку
                 const selector = '[data-testid="Sclad-shippingTasks"]';
@@ -3652,18 +2789,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
-
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(1000);
+            await warehouseTaskForShipment.searchTable(
+                nameProduct,
+                tableTaskForShipment
+            );
 
             // Wait for the table body to load
             await warehouseTaskForShipment.waitingTableBody(
@@ -3672,7 +2803,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 04: Check that the first row of the table contains the variable name",
+            "Step 4: Check that the first row of the table contains the variable name",
             async () => {
                 // Check that the first row of the table contains the variable name
                 await warehouseTaskForShipment.checkNameInLineFromFirstRow(
@@ -3683,27 +2814,58 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 05: Find the checkbox column and click",
+            "Step 5: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await warehouseTaskForShipment.findColumn(
-                //     page,
-                //     tableModalComing,
-                //     "ShipmentsTable-TableHead-Check"
-                // );
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    2,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
-        await allure.step("Step 06: Click on the ship button", async () => {
+        await allure.step(
+            "Step 6: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await warehouseTaskForShipment.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
+
+        await allure.step(
+            "Step 7: Find the checkbox column and click",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await warehouseTaskForShipment.getValueOrClickFromFirstRow(
+                    tableTaskForShipment,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 8: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -3711,7 +2873,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
         });
 
-        await allure.step('Step 07: Checking the number of shipped entities', async () => {
+        await allure.step(
+            "Step 9: Check the Shipping modal window",
+            async () => {
+                // Check the Shipping modal window
+                await warehouseTaskForShipment.shipmentModalWindow();
+            }
+        );
+
+        await allure.step('Step 10: Checking the number of shipped entities', async () => {
             const tableBody = '[data-testid="ModalShComlit-TableScroll"]'
             await warehouseTaskForShipment.waitingTableBody(tableBody)
 
@@ -3737,7 +2907,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     test("Test Case 16 - Loading The Second Task", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
 
-        await allure.step("Step 01: Open the shipment task page", async () => {
+        const locatorTableModalWindow = '[data-testid="TableProduct-BasePaginationTable"]'
+
+        await allure.step("Step 1: Open the shipment task page", async () => {
             // Go to the Shipping tasks page
             await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
 
@@ -3746,197 +2918,131 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Click on the Create order button",
+            "Step 2: Click on the Create order button",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
                     " Создать заказ ",
-                    '.button-yui-kit'
+                    '[data-testid="IssueShipment-Button-CreateOrder"]'
                 );
             }
         );
 
-        await allure.step("Step 03: Click on the Select button", async () => {
+        await allure.step("Step 3: Click on the Select button", async () => {
             // Click on the button
-            await page.locator('.button-yui-kit ', { hasText: ' Выбрать ' }).nth(0).click()
+            await loadingTaskPage.clickButton(
+                " Выбрать ",
+                '[data-testid="AddAddOrder-SelectProductButton"]'
+            );
+
+            // Ожидаем тела таблицы
+            await loadingTaskPage.waitingTableBody(
+                locatorTableModalWindow
+            );
 
             await page.waitForTimeout(1000);
         });
 
         await allure.step(
-            "Step 04: Search product on modal window",
+            "Step 4: Search product on modal window",
             async () => {
-                const modalWindow = await page.locator('.modal-yui-kit__modal-content')
                 // Using table search we look for the value of the variable
-                await expect(modalWindow).toBeVisible();
-
-                const searchTable = modalWindow
-                    .locator('.search-yui-kit__input')
-                    .nth(0);
-                await searchTable.fill(nameProduct);
-
-                expect(await searchTable.inputValue()).toBe(nameProduct);
-                await searchTable.press("Enter");
-
+                await loadingTaskPage.searchTable(
+                    nameProduct,
+                    '[data-testid="TableProduct-BasePaginationTable"]'
+                );
                 await page.waitForTimeout(1000);
+
+                // Waiting for the table body
+                await loadingTaskPage.waitingTableBody(
+                    locatorTableModalWindow
+                );
             }
         );
 
         await allure.step(
-            "Step 05: Choice product in modal window",
+            "Step 5: Choice product in modal window",
             async () => {
-                await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0)
+                // Select a product in the "Select product" modal window
+                await page.waitForTimeout(1000);
+                // await loadingTaskPage.choiceProductInModal(nameProduct);
+                await loadingTaskPage.clickFromFirstRow('[data-testid="BasePaginationTable-TableBody-DynamicProduct"]', 0)
 
                 await loadingTaskPage.waitForTimeout(1000)
             }
         );
 
         await allure.step(
-            "Step 06: Click on the Select button on modal window",
+            "Step 6: Click on the Select button on modal window",
             async () => {
                 // Click on the button
                 await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                    " Выбрать ",
+                    '[data-testid="ModalAllProducts-btn-Select"]'
                 );
             }
         );
 
-        await allure.step("Step 07: Checking the selected product", async () => {
+        await allure.step("Step 7: Checking the selected product", async () => {
             // Check that the selected product displays the expected product
             await loadingTaskPage.checkProduct(nameProduct);
             await loadingTaskPage.waitForTimeout(500)
         });
 
-        await allure.step("Step 08: Selecting a buyer", async () => {
-            const button = page.locator('.button-yui-kit.medium.primary-yui-kit', { hasText: 'Выбрать' }).nth(1);
-            await expect(button).toHaveText('Выбрать');
-            await expect(button).toBeVisible();
+        await allure.step("Step 8: Selecting a buyer", async () => {
+            // Select a buyer in the dropdown menu
+            await loadingTaskPage.choiceBuyer("5");
 
-            await button.click()
             // Wait for loading
             await page.waitForLoadState("networkidle");
         });
 
-        await allure.step('Step 09: Check modal window Company', async () => {
-            const modalWindow = await page.locator('.modal-yui-kit__modal-content')
-            // Using table search we look for the value of the variable
-            await expect(modalWindow).toBeVisible();
-
-            const searchTable = modalWindow
-                .locator('.search-yui-kit__input')
-                .nth(0);
-            await searchTable.fill(nameBuyer);
-
-            expect(await searchTable.inputValue()).toBe(nameBuyer);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(500)
-
-            await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit__border.table-yui-kit-with-scroll', 0)
-        })
 
         await allure.step(
-            "Step 10: Click on the Select button on modal window",
+            "Step 9: We set the date according to urgency",
             async () => {
-                // Click on the button
-                await loadingTaskPage.clickButton(
-                    " Добавить ",
-                    '.button-yui-kit.medium.primary-yui-kit'
-                );
-            }
-        );
-        await allure.step(
-            "Step 11: We set the date according to urgency",
-            async () => {
-                await page.locator('.date-picker-yui-kit__header-btn').nth(2).click()
-                await page.locator('.vc-popover-content-wrapper.is-interactive').nth(2).isVisible()
-
-                await page.locator('.vc-title-wrapper').click()
-
-                const yearElement = await page.locator('.vc-nav-title.vc-focus');
-                const currentYear = await yearElement.textContent();
-                if (!currentYear) throw new Error('Year element not found');
-
-                const targetYear = 2025;
-                const currentYearNum = parseInt(currentYear);
-                console.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
-
-                // Если текущий год не равен целевому
-                if (currentYearNum !== targetYear) {
-                    // Определяем, нужно ли увеличивать или уменьшать год
-                    const isYearLess = currentYearNum < targetYear;
-                    const arrowSelector = isYearLess
-                        ? '.vc-nav-arrow.is-right.vc-focus'
-                        : '.vc-nav-arrow.is-left.vc-focus';
-
-                    // Кликаем на стрелку, пока не достигнем нужного года
-                    while (currentYearNum !== targetYear) {
-                        await page.locator(arrowSelector).click();
-                        await page.waitForTimeout(500); // Небольшая задержка для обновления
-
-                        const newYear = await yearElement.textContent();
-                        if (!newYear) throw new Error('Year element not found');
-                        const newYearNum = parseInt(newYear);
-
-                        if (newYearNum === targetYear) {
-                            console.log(`Year successfully set to ${targetYear}`);
-                            break;
-                        }
-                    }
-                } else {
-                    console.log(`Year is already set to ${targetYear}`);
-                }
-
-                // Проверяем, что год установлен правильно
-                const finalYear = await yearElement.textContent();
-                if (!finalYear) throw new Error('Year element not found');
-                expect(parseInt(finalYear)).toBe(targetYear);
-
-                await page.locator('[aria-label="январь"]').click()
-                await page.locator('.vc-day-content.vc-focusable.vc-focus.vc-attr', { hasText: '21' }).nth(0).click()
-            }
-        );
-
-        await allure.step(
-            "Step 12: Click on the save order button",
-            async () => {
-                // Click on the button
-                await loadingTaskPage.clickButton(
-                    "Сохранить",
-                    '.button-yui-kit.medium.primary-yui-kit'
+                const locator =
+                    '[data-testid="AddAddOrder-ShipmentDateSection-DatePicterCustomShipment"]';
+                await loadingTaskPage.checkOrderQuantity(
+                    locator,
+                    "",
+                    urgencyDateSecond
                 );
             }
         );
 
         await allure.step(
-            "Step 13: Checking the ordered quantity",
+            "Step 10: Click on the save order button",
             async () => {
-                await page.waitForTimeout(3000)
-                orderNumber = await loadingTaskPage.getOrderInfoFromLocator('.add-order-component')
-                console.log("orderNumber: ", orderNumber)
-
+                // Click on the button
+                await loadingTaskPage.clickButton(
+                    " Сохранить Заказ ",
+                    '[data-testid="AddOrder-Button-SaveOrder"]'
+                );
             }
         );
+
+
+
     });
 
     test("Test Case 17 - Marking Parts", async ({ page }) => {
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
         const tableMetalworkingWarehouse =
             '[data-testid="MetalloworkingSclad-ScrollTable"]';
-        const productionTable = '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
+        const productionTable = '[data-testid="OperationPathInfo-Table"]';
         let numberColumnQunatityMade: number;
         let firstOperation: string;
         const operationTable = "OperationPathInfo-Table";
         const tableMain = "#tablebody";
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the metalworking warehouse page",
+            "Step 2: Open the metalworking warehouse page",
             async () => {
                 // Find and go to the page using the locator Order a warehouse for Metalworking
                 const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
@@ -3950,7 +3056,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Iterate through the array of parts
             for (const part of descendantsDetailArray) {
-                await allure.step("Step 03: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await metalworkingWarehouse.waitingTableBody(
                         tableMetalworkingWarehouse
@@ -3972,7 +3078,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 04: Check the checkbox in the first column",
+                    "Step 4: Check the checkbox in the first column",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await metalworkingWarehouse.checkNameInLineFromFirstRow(
@@ -3988,7 +3094,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 05: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await metalworkingWarehouse.findColumn(
@@ -4011,13 +3117,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             "Дата по срочности в таблице: ",
                             urgencyDateOnTable
                         );
+                        console.log(
+                            "Дата по срочности в переменной: ",
+                            urgencyDateSecond
+                        );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+                        expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
 
                 await allure.step(
-                    "Step 06: We check the number of those launched into production",
+                    "Step 6: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await metalworkingWarehouse.findColumn(
@@ -4045,7 +3155,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Find and click on the operation icon",
+                    "Step 7: Find and click on the operation icon",
                     async () => {
                         // Getting cell value by id
                         const numberColumn =
@@ -4069,29 +3179,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: Check the production path modal window ",
+                    "Step 8: Check the production path modal window ",
                     async () => {
                         // Check the production path modal window
-                        await page.waitForTimeout(500)
                         await metalworkingWarehouse.productionPathDetailskModalWindow();
 
                         // Wait for the table body to load
 
-                        // await metalworkingWarehouse.waitingTableBody(
-                        //     productionTable
-                        // );
+                        await metalworkingWarehouse.waitingTableBody(
+                            productionTable
+                        );
                     }
                 );
 
                 await allure.step(
-                    "Step 09: We find, get the value and click on the cell done pcs",
+                    "Step 9: We find, get the value and click on the cell done pcs",
                     async () => {
                         // Getting cell value by id
                         numberColumnQunatityMade =
                             await metalworkingWarehouse.findColumn(
                                 page,
                                 operationTable,
-                                "OperationPathInfo-Thead-Maked"
+                                "OperationPathInfo-Thead-Make"
                             );
                         console.log(
                             "Column number pieces made: ",
@@ -4170,7 +3279,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 14: Closing a modal window by clicking on the logo",
+                    "Step 14: Check the production path modal window",
+                    async () => {
+                        // Check the production path modal window
+                        await metalworkingWarehouse.productionPathDetailskModalWindow();
+
+                        // Wait for the table body to load
+                        // await metalworkingWarehouse.waitingTableBody(
+                        //     productionTable
+                        // );
+                    }
+                );
+
+                await allure.step(
+                    "Step 15: Closing a modal window by clicking on the logo",
                     async () => {
                         // Double click on the coordinates and close the modal window
                         await page.mouse.dblclick(1, 1);
@@ -4192,14 +3314,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         let checkOrderNumber: string;
         const tableMainIzd = "DeficitIzd-ScrollTable";
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the shortage product page",
+            "Step 2: Open the shortage product page",
             async () => {
+
                 // Find and go to the page using the locator Shortage of Products
                 const selector =
                     '[data-testid="Sclad-deficitProduction-deficitProduction"]';
@@ -4213,7 +3336,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
             await shortageProduct.searchTable(nameProduct, deficitTableIzd);
 
@@ -4222,7 +3345,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 04: Check the checkbox in the first column",
+            "Step 4: Check the checkbox in the first column",
             async () => {
                 // Check that the first row of the table contains the variable name
                 await shortageProduct.checkNameInLineFromFirstRow(
@@ -4237,8 +3360,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
+
         await allure.step(
-            "Step 05: Checking the urgency date of an order",
+            "Step 5: Checking the urgency date of an order",
             async () => {
                 const numberColumn = await shortageProduct.findColumn(
                     page,
@@ -4267,13 +3391,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const deficitTableCbed = '[data-testid="DeficitCbed-ScrollTable"]';
         const tableMainCbed = "DeficitCbed-Table";
 
-        await allure.step("Step 06: Open the warehouse page", async () => {
+
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 07: Open the shortage assemblies page",
+            "Step 2: Open the shortage assemblies page",
             async () => {
                 // Find and go to the page using the locator shortage assemblies
                 const selector =
@@ -4288,7 +3413,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 08: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
@@ -4303,7 +3428,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 09: Check the checkbox in the first column",
+                    "Step 4: Check the checkbox in the first column",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await shortageProduct.checkNameInLineFromFirstRow(
@@ -4319,7 +3444,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 10: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageAssemblies.findColumn(
@@ -4354,12 +3479,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const deficitTableDetal = '[data-testid="DeficitDetal-ScrollTable"]';
         const tableMainDetal = "DeficitDetal-Table";
 
-        await allure.step("Step 11: Open the warehouse page", async () => {
+
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 12: Open the shortage parts page", async () => {
+        await allure.step("Step 2: Open the shortage parts page", async () => {
             // Find and go to the page using the locator Parts Shortage
             const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
             await shortageParts.findTable(selector);
@@ -4371,7 +3497,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Iterate through the array of parts
             for (const part of descendantsDetailArray) {
-                await allure.step("Step 13: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageParts.waitingTableBodyNoThead(deficitTableDetal);
 
@@ -4394,7 +3520,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 14: Check the checkbox in the first column",
+                    "Step 4: Check the checkbox in the first column",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await shortageProduct.checkNameInLineFromFirstRow(
@@ -4410,8 +3536,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 15: Check that the first row of the table contains the variable name",
+                    "Step 5: Check that the first row of the table contains the variable name",
                     async () => {
+                        // Check that the first row of the table contains the variable name
+                        // await shortageParts.checkNameInLineFromFirstRowBUG(
+                        //     part.designation,
+                        //     deficitTable
+                        // );
                         const numberColumn = await shortageParts.findColumn(
                             page,
                             tableMainDetal,
@@ -4431,7 +3562,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 16: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageParts.findColumn(
@@ -4443,6 +3574,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             "Number column urgency date: ",
                             numberColumn
                         );
+
 
                         urgencyDateOnTable =
                             await shortageParts.getValueOrClickFromFirstRowNoThead(
@@ -4479,7 +3611,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             for (const detail of descendantsDetailArray) {
                 //  Check the number of parts in the warehouse before posting
                 await allure.step(
-                    "Step 01: Receiving quantities from balances",
+                    "Step 1: Receiving quantities from balances",
                     async () => {
                         // Receiving quantities from balances
                         remainingStockBefore =
@@ -4492,7 +3624,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
                 // Capitalization of the entity
                 await allure.step(
-                    "Step 02: Open the warehouse page",
+                    "Step 2: Open the warehouse page",
                     async () => {
                         // Go to the Warehouse page
                         await stockReceipt.goto(
@@ -4502,7 +3634,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 03: Open the stock receipt page",
+                    "Step 3: Open the stock receipt page",
                     async () => {
                         // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
                         const selectorstockReceipt =
@@ -4514,7 +3646,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 04: Click on the create receipt button",
+                    "Step 4: Click on the create receipt button",
                     async () => {
                         // Click on the button
                         await stockReceipt.clickButton(
@@ -4525,7 +3657,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 05: Select the selector in the modal window",
+                    "Step 5: Select the selector in the modal window",
                     async () => {
                         // Select the selector in the modal window
                         await stockReceipt.selectStockReceipt(
@@ -4541,7 +3673,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step("Step 06: Search product", async () => {
+                await allure.step("Step 6: Search product", async () => {
                     // Using table search we look for the value of the variable
                     await stockReceipt.searchTable(
                         detail.designation,
@@ -4557,7 +3689,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 07: Enter the quantity in the cells",
+                    "Step 7: Enter the quantity in the cells",
                     async () => {
                         // Enter the quantity in the cells
                         await stockReceipt.inputQuantityInCell(
@@ -4567,7 +3699,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: Find the checkbox column and click",
+                    "Step 8: Find the checkbox column and click",
                     async () => {
                         // Find the checkbox column and click
                         const tableModalComing = "ModalComingTable-Table";
@@ -4587,7 +3719,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: Check that the first row of the table contains the variable name",
+                    "Step 9: Check that the first row of the table contains the variable name",
                     async () => {
                         // Check that the first row of the table contains the variable name
                         await stockReceipt.checkNameInLineFromFirstRow(
@@ -4658,7 +3790,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
                 await allure.step(
-                    "Step 01: Receiving quantities from balances",
+                    "Step 1: Receiving quantities from balances",
                     async () => {
                         // Check the number of entities in the warehouse before posting
                         remainingStockBefore =
@@ -4671,7 +3803,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
                 // Capitalization of the entity
                 await allure.step(
-                    "Step 02: Open the warehouse page",
+                    "Step 2: Open the warehouse page",
                     async () => {
                         // Go to the Warehouse page
                         await stockReceipt.goto(
@@ -4681,7 +3813,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 03: Open the stock receipt page",
+                    "Step 3: Open the stock receipt page",
                     async () => {
                         // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
                         const selectorstockReceipt =
@@ -4694,7 +3826,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 04: Click on the create receipt button",
+                    "Step 4: Click on the create receipt button",
                     async () => {
                         // Click on the button
                         await stockReceipt.clickButton(
@@ -4705,7 +3837,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 05: Select the selector in the modal window",
+                    "Step 5: Select the selector in the modal window",
                     async () => {
                         // Select the selector in the modal window
                         await stockReceipt.selectStockReceipt(
@@ -4721,7 +3853,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     }
                 );
 
-                await allure.step("Step 06: Search product", async () => {
+                await allure.step("Step 6: Search product", async () => {
                     // Using table search we look for the value of the variable
                     await stockReceipt.searchTable(
                         cbed.designation,
@@ -4738,7 +3870,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 07: Find the checkbox column and click",
+                    "Step 7: Find the checkbox column and click",
                     async () => {
                         // Find the checkbox column and click
                         const tableModalComing = "ModalComingTable-Table";
@@ -4758,7 +3890,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: Check the modal window Completed sets",
+                    "Step 8: Check the modal window Completed sets",
                     async () => {
                         // Check the modal window Completed sets
                         await stockReceipt.completesSetsModalWindow();
@@ -4767,7 +3899,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: We get the cell number with a checkmark",
+                    "Step 9: We get the cell number with a checkmark",
                     async () => {
                         // We get the cell number with a checkmark
                         const tableComplectsSetsDataTestId =
@@ -4778,7 +3910,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                                 tableComplectsSetsDataTestId,
                                 "ModalKitsList-TableHeader-SelectAll"
                             );
-
                         console.log("numberColumn: ", numberColumnCheckbox);
                         await stockReceipt.getValueOrClickFromFirstRow(
                             tableComplectsSets,
@@ -4796,7 +3927,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                         await page.waitForTimeout(500)
                         const inputlocator =
                             '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
-
+                        // await stockReceipt.enterTheValueIntoTheLocatorInput(
+                        //     inputlocator,
+                        //     "1"
+                        // );
                         await page.locator(inputlocator).nth(0).waitFor({ state: 'visible' });
 
                         // Проверяем, что элемент не заблокирован
@@ -4890,7 +4024,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const TableComplect =
             '[data-testid="TableComplect-TableComplect-ScrollContainer"]';
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await completingProductsToPlan.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -4898,7 +4032,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the completion product plan page",
+            "Step 2: Open the completion product plan page",
             async () => {
                 // Find and go to the page using the locator Complete set of Products on the plan
                 const selector = '[data-testid="Sclad-completionProductPlan"]';
@@ -4909,7 +4043,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
             await completingProductsToPlan.searchTable(
                 nameProduct,
@@ -4921,7 +4055,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 04: Check the first line in the first row",
+            "Step 4: Check the first line in the first row",
             async () => {
                 // Check that the first row of the table contains the variable name
                 await completingProductsToPlan.checkNameInLineFromFirstRow(
@@ -4932,7 +4066,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 05: Find the column designation and click",
+            "Step 5: Find the column designation and click",
             async () => {
                 // We get the cell number with the designation
                 const tableModalComing = "TableComplect-TableComplect-Table";
@@ -4965,7 +4099,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 06: Check the modal window for the delivery note and check the checkbox",
+            "Step 6: Check the modal window for the delivery note and check the checkbox",
             async () => {
                 // Check the modal window for the delivery note and check the checkbox
                 await completingProductsToPlan.assemblyInvoiceModalWindow(
@@ -4980,7 +4114,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 07: Click on the button to assemble into a set",
+            "Step 7: Click on the button to assemble into a set",
             async () => {
                 // Click on the button
                 await completingProductsToPlan.clickButton(
@@ -5008,7 +4142,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableComplectsSets = '[data-testid="ModalKitsList-Table"]';
 
         await allure.step(
-            "Step 01: Receiving quantities from balances",
+            "Step 1: Receiving quantities from balances",
             async () => {
                 // Check the number of entities in the warehouse before posting
                 remainingStockBefore = await stock.checkingTheQuantityInStock(
@@ -5019,12 +4153,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Capitalization of the entity
-        await allure.step("Step 02: Open the warehouse page", async () => {
+        await allure.step("Step 2: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await stockReceipt.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 03: Open the stock receipt page", async () => {
+        await allure.step("Step 3: Open the stock receipt page", async () => {
             // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
             const selector =
                 '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
@@ -5035,7 +4169,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 04: Click on the create receipt button",
+            "Step 4: Click on the create receipt button",
             async () => {
                 // Click on the button
                 await stockReceipt.clickButton(
@@ -5046,7 +4180,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 05: Select the selector in the modal window",
+            "Step 5: Select the selector in the modal window",
             async () => {
                 // Select the selector in the modal window
                 await stockReceipt.selectStockReceipt(StockReceipt.cbed);
@@ -5060,7 +4194,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 06: Search product", async () => {
+        await allure.step("Step 6: Search product", async () => {
             // Using table search we look for the value of the variable
             await stockReceipt.searchTable(
                 nameProduct,
@@ -5077,7 +4211,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 07: Find the checkbox column and click",
+            "Step 7: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
                 const tableModalComing = "ModalComingTable-Table";
@@ -5097,7 +4231,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 08: Check the modal window Completed sets",
+            "Step 8: Check the modal window Completed sets",
             async () => {
                 // Check the modal window Completed sets
                 await stockReceipt.completesSetsModalWindow();
@@ -5106,7 +4240,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 09: We get the cell number with a checkmark",
+            "Step 9: We get the cell number with a checkmark",
             async () => {
                 // We get the cell number with a checkmark
                 const tableComplectsSetsDataTestId = "ModalKitsList-Table";
@@ -5129,9 +4263,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             "Step 10: Enter the quantity in the cells",
             async () => {
                 // Enter the value into the input cell
+                // await page.waitForTimeout(500)
                 const inputlocator =
                     '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
+                // await stockReceipt.enterTheValueIntoTheLocatorInput(
+                //     inputlocator,
+                //     "1"
+                // );
+                // await page.locator(inputlocator).nth(0).waitFor({ state: 'visible' });
 
+                // Проверяем, что элемент не заблокирован
+                // const isDisabled = await page.locator(inputlocator).nth(1).getAttribute('disabled');
+                // if (isDisabled) {
+                //     throw new Error("Элемент заблокирован для ввода.");
+                // }
                 const quantityPerShipment
                     = await page.locator(inputlocator).nth(0).getAttribute('value');
                 console.log("Кол-во на отгрузку: ", quantityPerShipment)
@@ -5215,13 +4360,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         let checkOrderNumber: string;
         const tableMain = "DeficitIzd-ScrollTable";
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the shortage product page",
+            "Step 2: Open the shortage product page",
             async () => {
 
                 // Find and go to the page using the locator Shortage of Products
@@ -5237,7 +4382,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
             await shortageProduct.searchTable(nameProduct, deficitTable);
 
@@ -5246,7 +4391,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 04: Check the checkbox in the first column",
+            "Step 4: Check the checkbox in the first column",
             async () => {
                 // Find the variable name in the first line and check the checkbox
                 const tableMain = "DeficitIzd-ScrollTable-Table";
@@ -5268,7 +4413,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 05: Checking the urgency date of an order",
+            "Step 5: Checking the urgency date of an order",
             async () => {
                 const numberColumn = await shortageProduct.findColumn(
                     page,
@@ -5293,7 +4438,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 06: We check the number of those launched into production",
+            "Step 6: We check the number of those launched into production",
             async () => {
                 const numberColumn = await shortageProduct.findColumn(
                     page,
@@ -5315,7 +4460,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 07: Click on the Launch on production button",
+            "Step 7: Click on the Launch on production button",
             async () => {
                 // Click on the button
                 await shortageProduct.clickButton(
@@ -5326,7 +4471,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 08: Testing a modal window for production launch",
+            "Step 8: Testing a modal window for production launch",
             async () => {
                 // Check the modal window Launch into production
                 await shortageProduct.checkModalWindowLaunchIntoProduction();
@@ -5338,7 +4483,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 09: Enter a value into a cell", async () => {
+        await allure.step("Step 9: Enter a value into a cell", async () => {
             // Check the value in the Own quantity field and enter the value
             const locator = '[data-testid="ModalStartProduction-ModalContent"]';
             await shortageProduct.checkOrderQuantity(
@@ -5410,13 +4555,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableMain = "DeficitCbed-Table";
         let checkOrderNumber: string;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the shortage assemblies page",
+            "Step 2: Open the shortage assemblies page",
             async () => {
                 // Find and go to the page using the locator shortage assemblies
                 const selector =
@@ -5431,7 +4576,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 03: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageAssemblies.waitingTableBody(deficitTable);
 
@@ -5446,7 +4591,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 04: Check the checkbox in the first column",
+                    "Step 4: Check the checkbox in the first column",
                     async () => {
                         // Find the variable name in the first line and check the checkbox
                         const tableMain = "DeficitCbed-Table";
@@ -5468,7 +4613,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 05: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageAssemblies.findColumn(
@@ -5497,7 +4642,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 06: We check the number of those launched into production",
+                    "Step 6: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await shortageAssemblies.findColumn(
@@ -5524,7 +4669,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Click on the Launch on production button",
+                    "Step 7: Click on the Launch on production button",
                     async () => {
                         // Click on the button
                         await shortageAssemblies.clickButton(
@@ -5535,7 +4680,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: Testing a modal window for production launch",
+                    "Step 8: Testing a modal window for production launch",
                     async () => {
                         // Check the modal window Launch into production
                         await shortageAssemblies.checkModalWindowLaunchIntoProduction();
@@ -5548,7 +4693,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: Enter a value into a cell",
+                    "Step 9: Enter a value into a cell",
                     async () => {
                         // Check the value in the Own quantity field and enter the value
                         const locator =
@@ -5641,12 +4786,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableMain = "DeficitDetal-Table";
         let checkOrderNumber: string;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 02: Open the shortage parts page", async () => {
+        await allure.step("Step 2: Open the shortage parts page", async () => {
             // Find and go to the page using the locator Parts Shortage
             const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
             await shortageParts.findTable(selector);
@@ -5658,7 +4803,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Iterate through the array of parts
             for (const part of descendantsDetailArray) {
-                await allure.step("Step 03: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageParts.waitingTableBodyNoThead(deficitTable);
 
@@ -5681,9 +4826,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 04: Check that the first row of the table contains the variable name",
+                    "Step 4: Check that the first row of the table contains the variable name",
                     async () => {
                         // Check that the first row of the table contains the variable name
+                        // await shortageParts.checkNameInLineFromFirstRowBUG(
+                        //     part.designation,
+                        //     deficitTable
+                        // );
                         const numberColumn = await shortageParts.findColumn(
                             page,
                             tableMain,
@@ -5696,13 +4845,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             numberColumn, Click.Yes
                         );
 
+
                         // Wait for the table body to load
                         await shortageParts.waitingTableBody(deficitTable);
                     }
                 );
 
                 await allure.step(
-                    "Step 05: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageParts.findColumn(
@@ -5714,6 +4864,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             "Number column urgency date: ",
                             numberColumn
                         );
+
 
                         urgencyDateOnTable =
                             await shortageParts.getValueOrClickFromFirstRowNoThead(
@@ -5731,7 +4882,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 06: We check the number of those launched into production",
+                    "Step 6: We check the number of those launched into production",
                     async () => {
                         const numberColumn =
                             await shortageParts.findColumn(
@@ -5759,7 +4910,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 07: Click on the Launch on production button ",
+                    "Step 7: Click on the Launch on production button ",
                     async () => {
                         // Click on the button
                         await shortageParts.clickButton(
@@ -5770,7 +4921,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 08: Testing a modal window for production launch",
+                    "Step 8: Testing a modal window for production launch",
                     async () => {
                         // Check the modal window Launch into production
                         await shortageParts.checkModalWindowLaunchIntoProduction();
@@ -5783,7 +4934,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 await allure.step(
-                    "Step 09: Enter a value into a cell",
+                    "Step 9: Enter a value into a cell",
                     async () => {
                         // Check the value in the Own quantity field and enter the value
                         const locator =
@@ -5849,6 +5000,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             numberColumn
                         );
 
+
                         quantityProductLaunchOnProductionAfter =
                             await shortageParts.getValueOrClickFromFirstRowNoThead(
                                 deficitTable,
@@ -5872,14 +5024,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         }
     });
 
+
     test("Test Case 26 - Uploading Second Shipment Task", async ({ page }) => {
         const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
             page
         );
-        const tableTaskForShipment = '.shipments-content';
+        const tableTaskForShipment = '[data-testid="ShipmentsTable-ScrollTable"]';
+        const tableModalComing = "ShipmentsTable-Table";
         let numberColumn: number;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await warehouseTaskForShipment.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -5887,7 +5041,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the warehouse shipping task page",
+            "Step 2: Open the warehouse shipping task page",
             async () => {
                 // Find and go to the page using the locator Склад: Задачи на отгрузку
                 const selector = '[data-testid="Sclad-shippingTasks"]';
@@ -5903,17 +5057,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
-            await page.waitForTimeout(1000);
+            await warehouseTaskForShipment.searchTable(
+                orderNumber.orderNumber,
+                tableTaskForShipment
+            );
 
             // Wait for the table body to load
             await warehouseTaskForShipment.waitingTableBody(
@@ -5922,7 +5071,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 04: Check that the first row of the table contains the variable name",
+            "Step 4: Check that the first row of the table contains the variable name",
             async () => {
                 // Check that the first row of the table contains the variable name
                 await warehouseTaskForShipment.checkNameInLineFromFirstRow(
@@ -5933,27 +5082,58 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await allure.step(
-            "Step 05: Find the checkbox column and click",
+            "Step 5: Find the checkbox column and click",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await warehouseTaskForShipment.findColumn(
-                //     page,
-                //     tableModalComing,
-                //     "ShipmentsTable-TableHead-Check"
-                // );
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await warehouseTaskForShipment.getValueOrClickFromFirstRow(
                     tableTaskForShipment,
-                    2,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
-        await allure.step("Step 06: Click on the ship button", async () => {
+        await allure.step(
+            "Step 6: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await warehouseTaskForShipment.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
+
+        await allure.step(
+            "Step 7: Find the checkbox column and click",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await warehouseTaskForShipment.findColumn(
+                    page,
+                    tableModalComing,
+                    "ShipmentsTable-TableHead-Check"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await warehouseTaskForShipment.getValueOrClickFromFirstRow(
+                    tableTaskForShipment,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 8: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -5962,14 +5142,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 07: Check the Shipping modal window",
+            "Step 9: Check the Shipping modal window",
             async () => {
                 // Check the Shipping modal window
                 await warehouseTaskForShipment.shipmentModalWindow();
             }
         );
 
-        await allure.step("Step 08: Click on the ship button", async () => {
+        await allure.step("Step 10: Click on the ship button", async () => {
             // Click on the button
             await warehouseTaskForShipment.clickButton(
                 " Отгрузить ",
@@ -5985,14 +5165,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         let checkOrderNumber: string;
         const tableMainIzd = "DeficitIzd-ScrollTable";
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 02: Open the shortage product page",
+            "Step 2: Open the shortage product page",
             async () => {
+
                 // Find and go to the page using the locator Shortage of Products
                 const selector =
                     '[data-testid="Sclad-deficitProduction-deficitProduction"]';
@@ -6006,7 +5187,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
             await shortageProduct.searchTable(nameProduct, deficitTableIzd);
 
@@ -6016,7 +5197,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
 
         await allure.step(
-            "Step 04: Checking the urgency date of an order",
+            "Step 4: Checking the urgency date of an order",
             async () => {
                 const numberColumn = await shortageProduct.findColumn(
                     page,
@@ -6036,7 +5217,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     urgencyDateOnTable
                 );
 
-                expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+                expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
             }
         );
 
@@ -6045,13 +5226,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const deficitTableCbed = '[data-testid="DeficitCbed-ScrollTable"]';
         const tableMainCbed = "DeficitCbed-Table";
 
-        await allure.step("Step 05: Open the warehouse page", async () => {
+
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
-            "Step 06: Open the shortage assemblies page",
+            "Step 2: Open the shortage assemblies page",
             async () => {
                 // Find and go to the page using the locator shortage assemblies
                 const selector =
@@ -6066,7 +5248,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 07: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
@@ -6082,7 +5264,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
 
                 await allure.step(
-                    "Step 08: Checking the urgency date of an order",
+                    "Step 4: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageAssemblies.findColumn(
@@ -6106,7 +5288,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             urgencyDateOnTable
                         );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDate);
+                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
             }
@@ -6118,12 +5300,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableMainDetal = "DeficitDetal-Table";
 
 
-        await allure.step("Step 09: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 10: Open the shortage parts page", async () => {
+        await allure.step("Step 2: Open the shortage parts page", async () => {
             // Find and go to the page using the locator Parts Shortage
             const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
             await shortageParts.findTable(selector);
@@ -6135,7 +5317,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Iterate through the array of parts
             for (const part of descendantsDetailArray) {
-                await allure.step("Step 11: Search product", async () => {
+                await allure.step("Step 3: Search product", async () => {
                     // Wait for the table body to load
                     await shortageParts.waitingTableBodyNoThead(deficitTableDetal);
 
@@ -6158,9 +5340,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 });
 
                 await allure.step(
-                    "Step 12: Check that the first row of the table contains the variable name",
+                    "Step 4: Check that the first row of the table contains the variable name",
                     async () => {
                         // Check that the first row of the table contains the variable name
+                        // await shortageParts.checkNameInLineFromFirstRowBUG(
+                        //     part.designation,
+                        //     deficitTable
+                        // );
                         const numberColumn = await shortageParts.findColumn(
                             page,
                             tableMainDetal,
@@ -6173,13 +5359,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             numberColumn, Click.Yes
                         );
 
+
                         // Wait for the table body to load
                         await shortageParts.waitingTableBody(deficitTableDetal);
                     }
                 );
 
                 await allure.step(
-                    "Step 13: Checking the urgency date of an order",
+                    "Step 5: Checking the urgency date of an order",
                     async () => {
                         const numberColumn =
                             await shortageParts.findColumn(
@@ -6192,6 +5379,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             numberColumn
                         );
 
+
                         urgencyDateOnTable =
                             await shortageParts.getValueOrClickFromFirstRowNoThead(
                                 deficitTableDetal,
@@ -6203,7 +5391,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                             urgencyDateOnTable
                         );
 
-                        expect(urgencyDateOnTable).toBe(urgencyDate);
+                        expect(urgencyDateOnTable).toBe(urgencyDateSecond);
                     }
                 );
             }
@@ -6214,12 +5402,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
         const warehouseTable = '[data-testid="MetalloworkingSclad-ScrollTable"]';
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 02: Open the metalworking warehouse page", async () => {
+        await allure.step("Step 2: Open the metalworking warehouse page", async () => {
             const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
             await metalworkingWarehouse.findTable(selector);
 
@@ -6229,20 +5417,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             await metalworkingWarehouse.searchTable(designation, warehouseTable);
 
             await metalworkingWarehouse.waitingTableBody(warehouseTable);
         });
 
-        await allure.step("Step 04: Check that the first row of the table contains the variable name", async () => {
+        await allure.step("Step 4: Check that the first row of the table contains the variable name", async () => {
             await metalworkingWarehouse.checkboxMarkNameInLineFromFirstRow(
                 designation,
                 warehouseTable
             );
         });
 
-        await allure.step("Step 05: Click on the archive button", async () => {
+        await allure.step("Step 5: Click on the archive button", async () => {
             await metalworkingWarehouse.clickOnTheTableHeaderCell(15, warehouseTable);
 
             await metalworkingWarehouse.clickButton(
@@ -6251,7 +5439,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
         });
 
-        await allure.step("Step 06: Confirm the archive", async () => {
+        await allure.step("Step 6: Confirm the archive", async () => {
             await metalworkingWarehouse.clickButton(
                 " Подтвердить ",
                 '[data-testid="ModalPromptMini-Button-Confirm"]'
@@ -6263,11 +5451,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
         const warehouseTable = '[data-testid="AssemblySclad-Table"]';
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
-        await allure.step("Step 02: Open the assembly warehouse page", async () => {
+        await allure.step("Step 2: Open the assembly warehouse page", async () => {
             const selector = '[data-testid="Sclad-stockOrderAssembly"]';
             await assemblyWarehouse.findTable(selector);
 
@@ -6277,20 +5465,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         });
 
-        await allure.step("Step 03: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             await assemblyWarehouse.searchTable(designation, warehouseTable);
 
             await assemblyWarehouse.waitingTableBody(warehouseTable);
         });
 
-        await allure.step("Step 04: Check that the first row of the table contains the variable name", async () => {
+        await allure.step("Step 4: Check that the first row of the table contains the variable name", async () => {
             await assemblyWarehouse.checkboxMarkNameInLineFromFirstRow(
                 designation,
                 warehouseTable
             );
         });
 
-        await allure.step("Step 05: Click on the archive button", async () => {
+        await allure.step("Step 5: Click on the archive button", async () => {
             await assemblyWarehouse.clickOnTheTableHeaderCell(16, warehouseTable);
 
             await assemblyWarehouse.clickButton(
@@ -6299,7 +5487,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
         });
 
-        await allure.step("Step 06: Confirm the archive", async () => {
+        await allure.step("Step 6: Confirm the archive", async () => {
             await assemblyWarehouse.clickButton(
                 " Подтвердить ",
                 '[data-testid="ModalPromptMini-Button-Confirm"]'
@@ -6309,10 +5497,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     test("Test Case 30 - Moving Task For Shipment To The Archive", async ({ page }) => {
         const loadingTaskPage = new CreateLoadingTaskPage(page);
-        const loadingTaskTable = '.shipments-content';
+        const tableMain = '[data-testid="ShipmentsTable-ScrollTable"]'
+        const tableMainDataTestId = 'ShipmentsTable-ScrollTable'
         let numberColumn: number;
 
-        await allure.step("Step 01: Open the shipment task page", async () => {
+        await allure.step("Step 1: Open the shipment task page", async () => {
             // Go to the Shipping tasks page
             await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
 
@@ -6321,67 +5510,91 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
 
-        await allure.step("Step 02: Search product", async () => {
+        await allure.step("Step 2: Search product", async () => {
             // Using table search we look for the value of the variable
-            const searchTable = page
-                .locator('.search-yui-kit__input')
-                .nth(1);
-            await searchTable.fill(nameProduct);
-
-            expect(await searchTable.inputValue()).toBe(nameProduct);
-            await searchTable.press("Enter");
-
+            await loadingTaskPage.searchTable(nameProduct, tableMain);
             await page.waitForTimeout(1000);
 
             // Waiting for the table body
-            await loadingTaskPage.waitingTableBody(loadingTaskTable);
+            await loadingTaskPage.waitingTableBody(tableMain);
         });
 
 
         await allure.step(
-            "Step 03: Check that the first row of the table contains the variable name",
+            "Step 3: Check that the first row of the table contains the variable name",
             async () => {
                 // Check that the first row of the table contains the variable name
                 await loadingTaskPage.checkNameInLineFromFirstRow(
                     nameProduct,
-                    loadingTaskTable
+                    tableMain
                 );
             }
         );
 
         await allure.step(
-            "Step 04: Find the column with the name and click on it",
+            "Step 4: Find the column with the name and click on it",
             async () => {
                 // Find the checkbox column and click
-                // UPD:
-                // numberColumn = await loadingTaskPage.findColumn(
-                //     page,
-                //     tableMainDataTestId,
-                //     "ShipmentsTable-TableHead-Name"
-                // );
+                numberColumn = await loadingTaskPage.findColumn(
+                    page,
+                    tableMainDataTestId,
+                    "ShipmentsTable-TableHead-Name"
+                );
 
-                // console.log("numberColumn: ", numberColumn);
+                console.log("numberColumn: ", numberColumn);
                 await loadingTaskPage.getValueOrClickFromFirstRow(
-                    loadingTaskTable,
-                    2,
+                    tableMain,
+                    numberColumn,
                     Click.Yes,
                     Click.No
                 );
             }
         );
 
-        await allure.step("Step 05: Click on the archive button", async () => {
+        await allure.step(
+            "Step 5: Closing a modal window by clicking on the logo",
+            async () => {
+                // Wait for the modal window to open BUG
+                await loadingTaskPage.waitForSelector(
+                    '[data-testid="ModalKomplect-destroyModalRight"]'
+                );
+                // Close the modal window
+                await page.mouse.click(1, 1);
+            }
+        );
+
+        await allure.step(
+            "Step 6: Find the column with the name and click on it",
+            async () => {
+                // Find the checkbox column and click
+                numberColumn = await loadingTaskPage.findColumn(
+                    page,
+                    tableMainDataTestId,
+                    "ShipmentsTable-TableHead-Name"
+                );
+
+                console.log("numberColumn: ", numberColumn);
+                await loadingTaskPage.getValueOrClickFromFirstRow(
+                    tableMain,
+                    numberColumn,
+                    Click.Yes,
+                    Click.No
+                );
+            }
+        );
+
+        await allure.step("Step 7: Click on the archive button", async () => {
             // Click on the button
             await loadingTaskPage.clickButton(
-                "Архив",
-                '.button-yui-kit.small.primary-yui-kit'
+                " В Архив",
+                '[data-testid="IssueShipment-Button-Archive"]'
             );
         });
 
-        await allure.step("Step 06: Confirm the archive", async () => {
+        await allure.step("Step 8: Confirm the archive", async () => {
             await loadingTaskPage.clickButton(
-                "Да",
-                '.dialog-ban__buttons .button-yui-kit.small.primary-yui-kit'
+                " Подтвердить ",
+                '[data-testid="ModalPromptMini-Button-Confirm"]'
             );
         });
     });
@@ -6393,9 +5606,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableMain = '[data-testid="Revision-TableRevisionPagination-Products"]';
         const tableMainCbed = '[data-testid="Revision-TableRevisionPagination-Cbeds"]'
         const tableMainDetal = '[data-testid="Revision-TableRevisionPagination-Detals"]'
+
+        const tableModalComing = "ShipmentsTable-Table";
         let numberColumn: number;
 
-        await allure.step("Step 01: Open the warehouse page", async () => {
+        await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
             await revisionPage.goto(
                 SELECTORS.MAINMENU.WAREHOUSE.URL
@@ -6403,7 +5618,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step(
-            "Step 02: Open the warehouse shipping task page",
+            "Step 2: Open the warehouse shipping task page",
             async () => {
                 // Find and go to the page using the locator Склад: Задачи на отгрузку
                 const selector = '[data-testid="Sclad-revision-revision"]';
@@ -6419,52 +5634,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             }
         );
 
-        await allure.step("Step 03: Checking the main page headings", async () => {
-            const titles = testData1.elements.RevisionPage.titles.map((title) => title.trim());
-            const h3Titles = await revisionPage.getAllH3TitlesInClass(page, 'container');
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 04: Checking the main buttons on the page", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            const buttons = testData1.elements.RevisionPage.filters;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-                const expectedState = button.state === "true" ? true : false;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await revisionPage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
-            }
-
-        });
-
-        await allure.step("Step 05: Search product", async () => {
+        await allure.step("Step 3: Search product", async () => {
             // Using table search we look for the value of the variable
             await revisionPage.searchTable(
                 nameProduct,
@@ -6477,26 +5647,25 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
         });
 
-        await allure.step("Step 06: Checking if the first line contains a variable name", async () => {
+        await allure.step("Step 4: Checking if the first line contains a variable name", async () => {
             await revisionPage.checkNameInLineFromFirstRow(
                 nameProduct,
                 tableMain
             );
         });
 
-        await allure.step("Step 07: Changing warehouse balances", async () => {
+        await allure.step("Step 5: Changing warehouse balances", async () => {
             await revisionPage.changeWarehouseBalances('0');
         });
 
-        await allure.step("Step 08: Confirm the archive", async () => {
+        await allure.step("Step 6: Confirm the archive", async () => {
             await revisionPage.clickButton(
                 " Подтвердить ",
                 '[data-testid="ModalPromptMini-Button-Confirm"]'
             );
         });
 
-        await allure.step('Step 09: Checking that the balance is now 0', async () => {
-            await page.waitForTimeout(500)
+        await allure.step('Step 7: Checking that the balance is now 0', async () => {
             await revisionPage.checkWarehouseBalances('0')
         })
 
@@ -6506,11 +5675,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         } else {
             // Loop through the array of assemblies
             for (const cbed of descendantsCbedArray) {
-                await allure.step("Step 10: Open the warehouse shipping task page", async () => {
+                await allure.step("Step 1: Open the warehouse shipping task page", async () => {
                     await revisionPage.clickButton('Сборки', '[data-testid="MiniNavigation-POS-Data1"]')
                 });
 
-                await allure.step("Step 11: Search product", async () => {
+                await allure.step("Step 2: Search product", async () => {
                     await revisionPage.waitForTimeout(500)
                     // Using table search we look for the value of the variable
                     await revisionPage.searchTable(
@@ -6523,26 +5692,25 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     );
                 });
 
-                await allure.step("Step 12: Checking if the first line contains a variable name", async () => {
+                await allure.step("Step 3: Checking if the first line contains a variable name", async () => {
                     await revisionPage.checkNameInLineFromFirstRow(
                         cbed.name,
                         tableMainCbed
                     );
                 });
 
-                await allure.step("Step 13: Changing warehouse balances", async () => {
+                await allure.step("Step 4: Changing warehouse balances", async () => {
                     await revisionPage.changeWarehouseBalances('0');
                 });
 
-                await allure.step("Step 14: Confirm the archive", async () => {
+                await allure.step("Step 5: Confirm the archive", async () => {
                     await revisionPage.clickButton(
                         " Подтвердить ",
                         '[data-testid="ModalPromptMini-Button-Confirm"]'
                     );
                 });
 
-                await allure.step('Step 15: Checking that the balance is now 0', async () => {
-                    await page.waitForTimeout(500)
+                await allure.step('Step 6: Checking that the balance is now 0', async () => {
                     await revisionPage.checkWarehouseBalances('0')
                 })
             }
@@ -6553,11 +5721,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             throw new Error("Массив пустой. Перебор невозможен.");
         } else {
             for (const detail of descendantsDetailArray) {
-                await allure.step("Step 16: Open the warehouse shipping task page", async () => {
+                await allure.step("Step 1: Open the warehouse shipping task page", async () => {
                     await revisionPage.clickButton('Детали', '[data-testid="MiniNavigation-POS-Data2"]')
                 });
 
-                await allure.step("Step 17: Search product", async () => {
+                await allure.step("Step 2: Search product", async () => {
                     await revisionPage.waitForTimeout(500)
                     // Using table search we look for the value of the variable
                     await revisionPage.searchTable(
@@ -6570,26 +5738,27 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                     );
                 });
 
-                await allure.step("Step 18: Checking if the first line contains a variable name", async () => {
+                await allure.step("Step 3: Checking if the first line contains a variable name", async () => {
                     await revisionPage.checkNameInLineFromFirstRow(
                         detail.name,
                         tableMainDetal
                     );
+
+
                 });
 
-                await allure.step("Step 19: Changing warehouse balances", async () => {
+                await allure.step("Step 4: Changing warehouse balances", async () => {
                     await revisionPage.changeWarehouseBalances('0');
                 });
 
-                await allure.step("Step 20: Confirm the archive", async () => {
+                await allure.step("Step 5: Confirm the archive", async () => {
                     await revisionPage.clickButton(
                         " Подтвердить ",
                         '[data-testid="ModalPromptMini-Button-Confirm"]'
                     );
                 });
 
-                await allure.step('Step 21: Checking that the balance is now 0', async () => {
-                    await page.waitForTimeout(500)
+                await allure.step('Step 6: Checking that the balance is now 0', async () => {
                     await revisionPage.checkWarehouseBalances('0')
                 })
             }

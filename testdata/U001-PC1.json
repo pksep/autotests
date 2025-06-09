@@ -1,0 +1,531 @@
+{
+    "elements": {
+        "LoadingPage": {
+            "titles": [
+                "Задачи на отгрузку"
+            ],
+            "buttons": [
+                {
+                    "class": ".button-yui-kit.medium.disabled-yui-kit.pill-yui-kit.primary-yui-kit",
+                    "label": "Сбросить",
+                    "state": "false"
+                },
+                {
+                    "class": ".button-yui-kit.small.primary-yui-kit",
+                    "label": "Создать заказ",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
+                    "label": "Редактировать",
+                    "state": "false"
+                },
+                {
+                    "class": ".button-yui-kit.small.primary-yui-kit",
+                    "label": "Печать",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
+                    "label": "Архив",
+                    "state": "false"
+                }
+            ]
+        },
+        "CreateOrderPage": {
+            "titles": [
+                "Создать заказ",
+                "Комплектация",
+                "Медиа файлы",
+                "Примечание"
+            ],
+            "buttons":[
+
+                {
+                    "class": ".button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "label": "Создать копированием",
+                    "state": "false"
+                },
+
+                {
+                    "class": ".button-yui-kit.small.outline-yui-kit.specification__btns-full",
+                    "label": "Полная спецификация",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+                    "label": "Добавить из базы",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.disabled-yui-kit.outline-yui-kit.history-btn",
+                    "label": "История изменений",
+                    "state": "false"
+                },
+                {
+                    "class": ".button-yui-kit.medium.outline-yui-kit",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.primary-yui-kit",
+                    "label": "Сохранить",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowChoiceProduct": {
+            "titles": [
+                "Выбрать изделие"
+            ],
+            "filters": [
+                {
+                    "class": ".filters__btn",
+                    "label": "Сортировать по отметке",
+                    "state": "true"
+                },
+                {
+                    "class": ".filters__btn",
+                    "label": "Сортировать по дате создания",
+                    "state": "true"
+                },
+                {
+                    "class": ".filters__btn",
+                    "label": "Показать мои",
+                    "state": "false"
+                }
+            ],
+            "buttons": [
+                {
+                    "class": ".base-modal__section-button-return .button-yui-kit.medium.outline-yui-kit",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": ".base-modal__section-button-return .button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "label": "Добавить",
+                    "state": "false"
+                }
+            ]
+        },
+        "ProductShortage": {
+            "titles": [
+                "Дефицит Продукции"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"DeficitIzd-ShipmentList-ShipmentsShow\"]",
+                    "label": "Показать Задачи на отгрузку ",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitIzd-ShipmentList-ClearFilters\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitIzd-NormTimeButton\"]",
+                    "label": "Норма времени по операциям",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitIzd-StartButton\"]",
+                    "label": "Запустить в производство",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowLaunchOnProduction": {
+            "titles":[
+                "Запустить в производство",
+                "Примечание",
+                "Комплектация"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
+                    "label": "Отмена",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
+                    "label": "В производство",
+                    "state": "true"
+                }
+            ]
+        },
+        "CbedShortage": {
+            "titles": [
+                "Дефицит Сборочных Едениц"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"ComplectKit-ShipmentList-ShipmentsShow\"]",
+                    "label": "Показать Задачи на отгрузку ",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ComplectKit-ShipmentList-ShipmentsClear\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitCbed-NormTimeButton\"]",
+                    "label": "Норма времени по операциям",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitCbed-StartButton\"]",
+                    "label": "Запустить в производство",
+                    "state": "true"
+                }
+            ]
+        },
+        "PartsShortage":{
+            "titles": [
+                "Дефицит Деталей"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"DeficitDetal-Shipments-Hidden\"]",
+                    "label": "Показать Задачи на отгрузку ",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitDetal-Table-ButtonFilter\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitDetal-StartButton\"]",
+                    "label": "Запустить в производство",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowPartsProductionPath": {
+            "titles": [
+                "Производственный путь Детали",
+                "Детали операций"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"ModalOperationPathMetaloworking-Button-Refresh\"]",
+                    "label": "Актуализировать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalOperationPathMetaloworking-Button-Print\"]",
+                    "label": "Печать",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowMarkOfCompletion": {
+            "titles": [
+                "Отметка о выполнении",
+                "Поля для заполнения",
+                "Примечание"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"ModalMark-Button-Save\"]",
+                    "label": "Сохранить Отметку",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowAssemblyInvoice": {
+            "titles":[
+                "Накладная на комплектацию Сборки",
+                "Информация по Сборочной единице",
+                "История изменений",
+                "Комплектация Сборочной единицы",
+                "Сборки",
+                "Детали",
+                "Покупные детали",
+                "Материалы"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-CancelButton\"]",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-ActualizeButton\"]",
+                    "label": "Актуализировать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-PrintButton\"]",
+                    "label": "Вывести на печать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-CreateIncomeButton\"]",
+                    "label": "Создать приход",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-CompleteSetButton\"]",
+                    "label": "Скомплектовать в набор",
+                    "state": "true"
+                }
+            ]
+        },
+        "AssemblyKittingOnThePlan":{
+            "titles":[
+                "Комплектация сборок на план"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentShow\"]",
+                    "label": "Показать Задачи на отгрузку ",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentClear\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                }
+            ]
+        },
+        "DisassemblyPage": {
+            "titles":[
+                "Скомплектованные наборы"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"ComplectKit-SelectList-ShipmentsShow\"]",
+                    "label": "Показать Задачи на отгрузку",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ComplectKit-SelectList-ClearFilters\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ComplectKit-Button-Unassemble\"]",
+                    "label": "Разкомплектовать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ComplectKit-Button-TransferToAssembly\"]",
+                    "label": "Передать на сборку",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowResetInSets": {
+            "titles":[
+                "Скомплектованные наборы",
+                "Набор для разкомплектовки № 1"
+            ],
+            "buttons": [
+                {
+                    "class": ".content-modal-right-menu .btn-small.btn-add",
+                    "label": "Разкомплектовать",
+                    "state": "true"
+                }
+            ]
+        },
+        "RemainingProductsPage": {
+            "titles":[
+                "Остатки продукции, сборок и деталей на складе"
+            ],
+            "buttons":[
+                {
+                    "class": "data-testid=\"OstatkPCBD-Button-ResetInSets\"",
+                    "label": "Акутализировать \"В наборах\"",
+                    "state": "true"
+                }
+            ]
+        },
+        "ArrivalAtTheWarehousePage": {
+            "titles":[
+                "Приход на склад от поставщика и производства"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"DatePicterRange-BlockPicter-PeriodButton\"]",
+                    "label": "Сбросить",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ComingToSclad-Button-Print\"]",
+                    "label": "Печать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ComingToSclad-Button-MakeComing\"]",
+                    "label": "Создать Приход",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowSelectSupplier": {
+            "buttons":[
+                {
+                    "class": ".type-operation",
+                    "label": "Поставщик",
+                    "state": "true"
+                },
+                {
+                    "class": ".type-operation",
+                    "label": "Металлообработка",
+                    "state": "true"
+                },
+                {
+                    "class": ".type-operation",
+                    "label": "Сборка",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowCreateReceiptParts": {
+            "titles":[
+                "Создать приход. Накладная",
+                "Потенциальные от Металлообработка",
+                "Выбранные позиции",
+                "Примечание"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"ModalComing-IncomingReceipt-ChangeSelectionButton\"]",
+                    "label": "Изменить выбор",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalComing-DocumentAttachment-CancelButton\"]",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalComing-DocumentAttachment-PrintButton\"]",
+                    "label": "Печать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalComing-DocumentAttachment-CreateIncomeButton\"]",
+                    "label": "Создать приход",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalComing-DocumentAttachment-AttachDocumentLabel\"]",
+                    "label": "Прикрепить документ",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowCompletSets": {
+            "titles":[
+                "Скомплектованные наборы"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"ModalKitsList-SelectButton\"]",
+                    "label": "Выбрать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalKitsList-CancelButton\"]",
+                    "label": "Отменить",
+                    "state": "true"
+                }
+            ]
+        },
+        "EquipmentOfProductsOnThePlan": {
+            "titles":[
+                "Комплектация Изделий на план"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentShow\"]",
+                    "label": "Показать Задачи на отгрузку ",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentClear\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                }
+            ]
+        },
+        "WarehouseLoadingTasks": {
+            "titles":[
+                "Склад: Задачи на отгрузку"
+            ],
+            "buttons": [
+                {
+                    "class": ".button-yui-kit.medium.disabled-yui-kit.pill-yui-kit.primary-yui-kit",
+                    "label": "Сбросить",
+                    "state": "false"
+                },
+                {
+                    "class": "[data-testid=\"IssueToPull-Button-Print\"]",
+                    "label": "Печать",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"IssueToPull-Button-Ship-Complit\"]",
+                    "label": "Открыть отгрузки",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"IssueToPull-Button-Ship\"]",
+                    "label": "Отгрузить",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowUploadingTask": {
+            "titles":[
+                "Отгрузка",
+                "Комплектация",
+                "Примечание",
+                "Файлы"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"ModalShComlit-Button-Cancel\"]",
+                    "label": "Отменить",
+                    "state": "true"
+                },                {
+                    "class": "[data-testid=\"ModalShComlit-Button-Ship\"]",
+                    "label": "Отгрузить",
+                    "state": "true"
+                }
+            ]
+        },
+        "RevisionPage": {
+            "titles":[
+                "Ревизия на складе",
+                "История изменений"
+            ],
+            "filters": [
+                {
+                    "class": "[data-testid=\"MiniNavigation-POS-Data0\"]",
+                    "label": "Изделия",
+                    "state": "true"
+                }, 
+                {
+                    "class": "[data-testid=\"MiniNavigation-POS-Data1\"]",
+                    "label": "Сборки",
+                    "state": "true"
+                }, 
+                {
+                    "class": "[data-testid=\"MiniNavigation-POS-Data2\"]",
+                    "label": "Детали",
+                    "state": "true"
+                }, 
+                {
+                    "class": "[data-testid=\"MiniNavigation-POS-Data3\"]",
+                    "label": "Материалы",
+                    "state": "true"
+                }
+            ]
+        }
+    }
+}

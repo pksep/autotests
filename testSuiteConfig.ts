@@ -16,7 +16,15 @@ import { runTC100 } from './testcases/TC100.spec';
 import { runU001 } from "./testcases/U001.spec";
 import { runU002 } from "./testcases/U002.spec";
 import { runU003 } from "./testcases/U003.spec";
-import { runU004 } from "./testcases/U004.spec";
+import { runU004_1 } from "./testcases/U004-1.spec";
+import { runU004_2 } from "./testcases/U004-2.spec";
+import { runU004_3 } from "./testcases/U004-3.spec";
+import { runU004_4 } from "./testcases/U004-4.spec";
+import { runU004_5 } from "./testcases/U004-5.spec";
+import { runU004_6 } from "./testcases/U004-6.spec";
+import { runU004_7 } from "./testcases/U004-7.spec";
+import { runU004_8 } from "./testcases/U004-8.spec";
+import { runU004_9 } from "./testcases/U004-9.spec";
 import { runU005 } from "./testcases/U005.spec";
 import { runU006 } from "./testcases/U006.spec";
 import { runU007 } from "./testcases/U007.spec";
@@ -147,20 +155,45 @@ export const testSuites = {
         description: 'This is a group of full page tests p02 - P04',
         tests: [
             {
+                test: runU004_1,
+                description: 'This test checks the User Scenario series of tests U004_1',
+            },
+            {
+                test: runU004_2,
+                description: 'This test checks the User Scenario series of tests U004_2',
+            },
+            {
+                test: runU004_3,
+                description: 'This test checks the User Scenario series of tests U004_3',
+            },
+            {
+                test: runU004_4,
+                description: 'This test checks the User Scenario series of tests U004_4',
+            },
+            {
+                test: runU004_5,
+                description: 'This test checks the User Scenario series of tests U004_5',
+            },
+            {
+                test: runU004_6,
+                description: 'This test checks the User Scenario series of tests U004_6',
+            },
+            {
+                test: runU004_7,
+                description: 'This test checks the User Scenario series of tests U004_7',
+            },
+            {
+                test: runU004_8,
+                description: 'This test checks the User Scenario series of tests U004_8',
+            },
+            {
+                test: runU004_9,
+                description: 'This test checks the User Scenario series of tests U004_9',
+            },
+            {
                 test: runU005,
-                description: 'This test checks the User Scenario series of tests U005.',
-            },
-            {
-                test: runU004,
-                description: 'This test checks the User Scenario series of tests U004',
-            },
-            {
-                test: runU001,
-                description: 'This test checks the User Scenario series of tests U001',
-            },
-            {
-                test: runU002,
-                description: 'This test checks the User Scenario series of tests U002',
+                description: 'This test checks the User Scenario series of tests U005',
+
             }
             // Add more test cases as needed
         ],
@@ -195,11 +228,91 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
-    U004: {
+    U004_1: {
         description: "verify changes to full specifications after adding items to the product",
         tests: [
             {
-                test: runU004,
+                test: runU004_1,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_2: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_2,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_3: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_3,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_4: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_4,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_5: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_5,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_6: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_6,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_7: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_7,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_8: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_8,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    },
+    U004_9: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU004_9,
                 description: "verify changes to full specifications after adding items to the product",
             },
             // Add more test cases as needed
@@ -214,6 +327,7 @@ export const testSuites = {
             },
             // Add more test cases as needed
         ],
-    }
 
+    },
 };
+

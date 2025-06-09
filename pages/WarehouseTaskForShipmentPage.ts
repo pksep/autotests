@@ -30,11 +30,7 @@ export class CreateWarehouseTaskForShipmentPage extends PageObject {
         ).toBeVisible();
         await expect(modalWindow).toBeVisible();
 
-        await this.clickButton(
-            " Отгрузить ",
-            '[data-testid="ModalShComlit-Button-Ship"]',
-            Click.No
-        );
+
         await this.clickButton(
             " Отменить ",
             '[data-testid="ModalShComlit-Button-Cancel"]',
