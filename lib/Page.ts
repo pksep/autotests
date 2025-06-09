@@ -2772,7 +2772,9 @@ export class PageObject extends AbstractPage {
     const container = page.locator(`[data-testid="${modalTestId}"][open]`);
     await expect(container).toBeVisible({ timeout: 5000 });
 
-    console.log("Container visibility confirmed.");
+
+    logger.info("Container visibility confirmed.");
+
 
     // Wait briefly to ensure all elements are loaded
     await page.waitForTimeout(500);
@@ -2781,7 +2783,9 @@ export class PageObject extends AbstractPage {
     const h4Elements = container.locator('h4');
 
     const h4Count = await h4Elements.count();
-    console.log(`Number of <h4> elements found: ${h4Count}`);
+
+    logger.info(`Number of <h4> elements found: ${h4Count}`);
+
 
     if (h4Count === 0) {
       logger.warn(`No <h4> elements found inside modal '${modalTestId}'.`);
