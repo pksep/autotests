@@ -45,7 +45,7 @@ const EDIT_PAGE_SPECIFICATIONS_TABLE = "Editor-TableSpecification-Product";
 // Страница: База деталей
 export const runTC100 = () => {
     logger.info(`Starting test: Validating full specifications ( Полная спецификация ) for an item on parts database Page`);
-    test('Test Case 1: База деталей Page - process all products with recursive logic', async ({ page }) => {
+    test('База деталей Page - process all products with recursive logic', async ({ page }) => {
 
         test.setTimeout(2147483);
         allure.label('severity', 'normal');
@@ -57,20 +57,20 @@ export const runTC100 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         let dataRows: Locator[]; // Holds rows of all products
 
-        await allure.step('Step 0: Navigate to Parts Database', async () => {
+        await allure.step('Step 1: Navigate to Parts Database', async () => {
             await page.waitForTimeout(2000);
             await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
         });
         const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
-        await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
+        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
             await page.waitForTimeout(1000);
             await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
-        await allure.step("Step 04: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
+        await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
             await page.waitForLoadState("networkidle");
             await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();//DATA_TESTID
         });
-        await allure.step("Step 05: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
+        await allure.step("Step 04: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
             // Locate the search field within the left table and fill it
             await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);//DATA_TESTID
             await page.waitForLoadState("networkidle");
@@ -78,24 +78,24 @@ export const runTC100 = () => {
             await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
 
         });
-        await allure.step("Step 06: Проверяем, что введенное значение в поиске совпадает с переменной. (Verify the entered search value matches the variable)", async () => {
+        await allure.step("Step 05: Проверяем, что введенное значение в поиске совпадает с переменной. (Verify the entered search value matches the variable)", async () => {
             await page.waitForLoadState("networkidle");
             // Locate the search field within the left table and validate its value
             await expect(leftTable.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT); //DATA-TESTID
         });
-        await allure.step("Step 07: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
+        await allure.step("Step 06: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
             // Simulate pressing "Enter" in the search field
             await leftTable.locator('input.search-yui-kit__input').press('Enter');//DATA-TESTID
             await page.waitForLoadState("networkidle");
         });
-        await allure.step("Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
+        await allure.step("Step 07: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
             await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
 
-        await allure.step("Step 09: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable.)", async () => {
+        await allure.step("Step 08: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable.)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
@@ -112,7 +112,7 @@ export const runTC100 = () => {
             // Confirm that the first cell contains the search term
             expect(secondCellValue).toContain(TEST_PRODUCT); // Validate that the value matches the search term
         });
-        await allure.step("Step 10: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
+        await allure.step("Step 09: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
             // Find the first row in the table
@@ -133,7 +133,7 @@ export const runTC100 = () => {
         const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
 
 
-        await allure.step("Step 12: Нажимаем по данной кнопке. (Press the button)", async () => {
+        await allure.step("Step 11: Нажимаем по данной кнопке. (Press the button)", async () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
@@ -142,7 +142,7 @@ export const runTC100 = () => {
             await page.waitForTimeout(500);
         });
 
-        await allure.step('Step 1: Parse the Product Specifications recursively and build an array', async () => {
+        await allure.step('Step 12: Parse the Product Specifications recursively and build an array', async () => {
             // Fetch the product designation at the start
             const productDesignationElement = page.locator('[data-testid="Creator-Designation-Input-Input"]');
             await productDesignationElement.evaluate((row) => {
@@ -160,14 +160,14 @@ export const runTC100 = () => {
         });
         let specs: Record<string, any[]> = {};
 
-        await allure.step('Step 2: Parse the Product Specifications Table', async () => {
+        await allure.step('Step 13: Parse the Product Specifications Table', async () => {
             const openSpecificationButton = page.locator('[data-testid="Specification-Buttons-openSpecification"]').last();
             await openSpecificationButton.click();
             specs = await shortagePage.extractAllTableData(page, 'Specification-ModalCbed');
             console.log(JSON.stringify(specs, null, 2));
         });
 
-        await allure.step('Step 3: Validate Parsed Data Against Specification Table', async () => {
+        await allure.step('Step 14: Validate Parsed Data Against Specification Table', async () => {
             console.log("Comparing parsed data with extracted specification table...");
 
             // Convert parsed data to JSON for comparison
@@ -203,11 +203,5 @@ export const runTC100 = () => {
             // ✅ Assertion to prove the test passes or fails
             expect(parsedDataJSON).toEqual(specsJSON);
         });
-
-
-
-
     });
-
 };
-
