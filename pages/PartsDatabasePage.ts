@@ -2159,13 +2159,13 @@ export class CreatePartsDatabasePage extends PageObject {
                                     designation: rowData[1],
                                     name: rowData[2],
                                     unit: currentGroup === "СБ" || currentGroup === "Д" ? parentId : rowData[3],
-                                    quantity: currentGroup === "ПД" ? 0 : parseInt(rowData[4], 10) * multiplier // ✅ Fix: Set quantity to 0 for ПД
+                                    quantity: currentGroup === "ПД" ? (parseInt(rowData[4], 10) || 1) : parseInt(rowData[4], 10) * multiplier // ✅ FIX: Use row data if available, default to 1
                                 };
+
 
                                 if (currentGroup === "ПД") {
                                     // ✅ Check if item already exists in `ПД`
                                     const existingIndex = this.parsedData["ПД"].findIndex(existingItem => existingItem.name === item.name);
-
                                     if (existingIndex !== -1) {
                                         this.parsedData["ПД"][existingIndex] = item; // ✅ Overwrite existing item
                                     } else {
@@ -2241,36 +2241,50 @@ export class CreatePartsDatabasePage extends PageObject {
                                     }
 
                                     if (materialText) {
+                                        console.log(`🔎 Processing material: ${materialText}`);
+                                        console.log(`📌 Found in group: ${materialGroup}`);
+
                                         if (materialGroup === "ПД") {
-                                            // ✅ Store ПД items in the required format
+                                            console.log(`🛠 Checking if ${materialText} exists in ПД...`);
                                             const existingMaterial = this.parsedData["ПД"].find(mat => mat.name === materialText.trim());
+
                                             if (existingMaterial) {
-                                                existingMaterial.quantity = 0;//+= item.quantity;
+                                                console.log(`✅ Existing ПД item found: ${existingMaterial.name}, current quantity: ${existingMaterial.quantity}`);
+                                                existingMaterial.quantity += item.quantity;
+                                                console.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
                                             } else {
+                                                console.log(`➕ Adding new ПД item: ${materialText}, quantity: ${item.quantity}`);
                                                 this.parsedData["ПД"].push({
-                                                    designation: "-", // ✅ Required format for ПД
+                                                    designation: "-",
                                                     name: materialText.trim(),
-                                                    unit: "шт", // ✅ Required format for ПД
-                                                    quantity: 0 // ✅ Fix: Set quantity to 1 for ПД
+                                                    unit: "шт",
+                                                    quantity: item.quantity
                                                 });
                                             }
                                         } else if (materialGroup === "МД") {
-                                            // ✅ Store МД items with quantity forced to 1
+                                            console.log(`🛠 Checking if ${materialText} exists in МД...`);
                                             const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
+
                                             if (existingMaterial) {
-                                                existingMaterial.quantity = 1; // ✅ Always set quantity to 1
+                                                console.log(`✅ Existing МД item found: ${existingMaterial.material}, overriding quantity to 1.`);
+                                                existingMaterial.quantity = 1;
                                             } else {
+                                                console.log(`➕ Adding new МД item: ${materialText}, quantity: 1`);
                                                 this.parsedData["МД"].push({
                                                     material: materialText.trim(),
-                                                    quantity: 1 // ✅ Ensure quantity is always 1
+                                                    quantity: 1
                                                 });
                                             }
                                         } else {
-                                            // ✅ Default behavior for other material groups
+                                            console.log(`🛠 Checking if ${materialText} exists in ${materialGroup}...`);
                                             const existingMaterial = this.parsedData[materialGroup].find(mat => mat.material === materialText.trim());
+
                                             if (existingMaterial) {
+                                                console.log(`✅ Existing ${materialGroup} item found: ${existingMaterial.material}, current quantity: ${existingMaterial.quantity}`);
                                                 existingMaterial.quantity += item.quantity;
+                                                console.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
                                             } else {
+                                                console.log(`➕ Adding new ${materialGroup} item: ${materialText}, quantity: ${item.quantity}`);
                                                 this.parsedData[materialGroup].push({
                                                     material: materialText.trim(),
                                                     quantity: item.quantity
@@ -2278,6 +2292,7 @@ export class CreatePartsDatabasePage extends PageObject {
                                             }
                                         }
                                     }
+
 
 
                                     page.mouse.click(1, 1);
@@ -2428,7 +2443,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
             for (const row of rows) {
                 await row.evaluate((node) => {
-                    (node as HTMLElement).style.backgroundColor = "yellow"; // Cast `node` to `HTMLElement`
+                    (node as HTMLElement).style.backgroundColor = "yellow";
                     (node as HTMLElement).style.border = "2px solid red";
                     (node as HTMLElement).style.color = "blue";
                 });
@@ -2438,13 +2453,23 @@ export class CreatePartsDatabasePage extends PageObject {
                     const text = await cell.textContent();
                     return text?.trim() || "";
                 }));
+
                 if (group === "ПД") {
                     console.log(rowData);
                 }
-                // Handle different groups with a standard format
-                if (rowData.length >= 4 || (group === "ПД" && rowData.length === 3)) {
+
+                // ✅ Handle РМ items separately (only 3 columns)
+                if (group === "РМ" && rowData.length === 3) {
+                    structuredData["РМ"].push({
+                        name: rowData[0] || "",
+                        unit: rowData[1] || "шт",
+                        quantity: parseInt(rowData[2], 10) || 1 // Ensure quantity defaults to 1 if missing
+                    });
+                }
+                // ✅ Standard handling for other groups
+                else if (rowData.length >= 4 || (group === "ПД" && rowData.length === 3)) {
                     let quantity = parseInt(rowData[4], 10);
-                    if (isNaN(quantity)) quantity = 1; // Default fallback for missing values
+                    if (isNaN(quantity)) quantity = 1;
 
                     if (group === "МД") {
                         const materialName = rowData[1];
@@ -2454,39 +2479,35 @@ export class CreatePartsDatabasePage extends PageObject {
                         } else {
                             structuredData["МД"].push({ material: materialName, quantity });
                         }
+                    } else if (group === "ПД") {
+                        structuredData["ПД"].push({
+                            designation: rowData[6] || "-",
+                            name: rowData[1] || "",
+                            unit: rowData[3] || "шт",
+                            quantity: parseInt(rowData[2], 10) || 1 // Ensure quantity defaults to 1 if missing
+                        });
                     } else {
-                        if (group === "ПД") {
-                            structuredData[group].push({
-                                designation: rowData[6] || "-",
-                                name: rowData[1] || "",
-                                unit: rowData[3] || "шт",
-                                quantity: 0
-                            });
-                        }
-                        else {
-                            structuredData[group].push({
-                                designation: rowData[6] || "-",
-                                name: rowData[7] || "",
-                                unit: rowData[3] || "шт",
-                                quantity
-                            });
-                        }
+                        structuredData[group].push({
+                            designation: rowData[6] || "-",
+                            name: rowData[7] || "",
+                            unit: rowData[3] || "шт",
+                            quantity
+                        });
                     }
                 }
             }
         }
 
-        // Ensure consistency with recursive format (sorting, structuring)
+        // ✅ Ensure sorting consistency across all groups
         for (const group of Object.keys(structuredData)) {
-            if (structuredData[group]?.length > 0) { // Check if group is not empty
+            if (structuredData[group]?.length > 0) {
                 structuredData[group].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
             }
         }
 
-
-
         return structuredData;
     }
+
 
     async checkItemExistsInBottomTable(
         page: Page,

@@ -12,8 +12,8 @@ import testData1 from '../testdata/PD18-T1.json'; // Import your test data
 import testData2 from '../testdata/PD18-T2.json'; // Import your test data
 import testData3 from '../testdata/PD18-T3.json'; // Import your test data
 
-//const TEST_PRODUCT = 'Т15';
-const TEST_PRODUCT = 'СС7500';
+const TEST_PRODUCT = 'Т15';
+//const TEST_PRODUCT = 'СС7500';
 
 const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";
 const LEFT_DATA_TABLE = "BasePaginationTable-Table-Component-product";
@@ -45,26 +45,6 @@ const EDIT_PAGE_SPECIFICATIONS_TABLE = "Editor-TableSpecification-Product";
 // Страница: База деталей
 export const runTC100 = () => {
     logger.info(`Starting test: Validating full specifications ( Полная спецификация ) for an item on parts database Page`);
-    ;
-
-
-
-
-    // test.skip('Test Case 0: База деталей Page - Scan tables within a specific element', async ({ page }) => {
-    //     test.setTimeout(0);
-    //     allure.label('severity', 'normal');
-    //     allure.label('epic', 'База деталей');
-    //     allure.label('feature', 'База деталей');
-    //     allure.label('story', 'Verify table structures');
-    //     allure.description('Verify  База деталей Page - Scan tables within a specific element.');
-
-    //     await allure.step('Step 1: Validate the structure of the tables on the page', async () => {
-    //         const shortagePage = new CreatePartsDatabasePage(page);
-    //         await page.waitForLoadState('networkidle');
-    //         const result = await shortagePage.scanTablesWithinElement(page, 'App-RouterView'); // Replace with your data-testid
-    //         expect(result.success, 'Validation failed with the following errors:\n' + result.errors.join('\n')).toBeTruthy();
-    //     });
-    // });
     test('Test Case 1: База деталей Page - process all products with recursive logic', async ({ page }) => {
 
         test.setTimeout(2147483);
@@ -219,7 +199,11 @@ export const runTC100 = () => {
                     }
                 });
             }
+
+            // ✅ Assertion to prove the test passes or fails
+            expect(parsedDataJSON).toEqual(specsJSON);
         });
+
 
 
 
