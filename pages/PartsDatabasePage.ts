@@ -2,7 +2,7 @@ import { Page, Locator, expect } from "@playwright/test";
 
 import { PageObject } from "../lib/Page";
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
-
+import { ENV, SELECTORS } from "../config";
 import logger from "../lib/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
@@ -10,6 +10,7 @@ import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
 const EDIT_PAGE_ADD_BUTTON = "Specification-Buttons-addingSpecification";
 const MAIN_TABLE_TEST_ID = "Editor-TableSpecification-Product";
+
 
 const TABLE_TEST_IDS = [
     "Specification-ModalCbed-AccordionCbed-Table",
@@ -2158,13 +2159,13 @@ export class CreatePartsDatabasePage extends PageObject {
                                     designation: rowData[1],
                                     name: rowData[2],
                                     unit: currentGroup === "СБ" || currentGroup === "Д" ? parentId : rowData[3],
-                                    quantity: currentGroup === "ПД" ? 0 : parseInt(rowData[4], 10) * multiplier // ✅ Fix: Set quantity to 0 for ПД
+                                    quantity: currentGroup === "ПД" ? (parseInt(rowData[4], 10) || 1) : parseInt(rowData[4], 10) * multiplier // ✅ FIX: Use row data if available, default to 1
                                 };
+
 
                                 if (currentGroup === "ПД") {
                                     // ✅ Check if item already exists in `ПД`
                                     const existingIndex = this.parsedData["ПД"].findIndex(existingItem => existingItem.name === item.name);
-
                                     if (existingIndex !== -1) {
                                         this.parsedData["ПД"][existingIndex] = item; // ✅ Overwrite existing item
                                     } else {
@@ -2178,50 +2179,127 @@ export class CreatePartsDatabasePage extends PageObject {
                                     console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
                                     await nestedRow.click();
                                     await page.waitForTimeout(500);
-                                    const modalDialog = page.locator(`dialog[data-testid^="Specification-ModalCbed"]`).last();
+
+                                    const modalDialog = page.locator(`dialog[data-testid^="ModalCbed"]`).nth(-1); // ✅ Get most recent modal
                                     await modalDialog.waitFor({ state: 'visible' });
-                                    const specTable = modalDialog.locator(`[data-testid^="Specification-ModalCbed"][data-testid$="-TableSpecification-Cbed"]`).last();
+                                    await modalDialog.evaluate((row) => {
+                                        row.style.border = '2px solid red';
+                                    });
+                                    const specTable = modalDialog.locator(`[data-testid^="ModalCbed"][data-testid$="-TableSpecification-Cbed"]`).nth(-1);
+                                    await specTable.waitFor({ state: 'visible' });
+                                    await specTable.evaluate((row) => {
+                                        row.style.border = '2px solid red';
+                                    });
                                     await specTable.evaluate((el) => el.scrollIntoView());
                                     await page.waitForTimeout(500);
+
                                     if (await specTable.count() > 0) {
-                                        const designationElement = modalDialog.locator('[data-testid^="Specification-ModalCbed"][data-testid$="Designation-Text"] span').last();
+                                        const designationElement = modalDialog.locator('[data-testid^="ModalCbed"][data-testid$="Designation-Text"] span').nth(-1);
                                         await designationElement.waitFor({ state: 'visible' });
-                                        const parentDesignation = await designationElement.textContent() || '';
+                                        await designationElement.evaluate((row) => {
+                                            row.style.border = '2px solid red';
+                                        });
+                                        const parentDesignation = await designationElement.textContent();
                                         console.log(`Extracted ParentDesignation: ${parentDesignation}`);
-                                        await this.parseRecursiveStructuredTable(page, "Specification-TableSpecification-Cbed", parentDesignation, item.quantity);
+
+                                        // ✅ Ensure recursion happens only if parentDesignation is valid
+                                        if (parentDesignation) {
+                                            await this.parseRecursiveStructuredTable(page, "ModalCbed-TableSpecification-Cbed", parentDesignation, item.quantity);
+                                        }
                                     }
+
                                     await page.mouse.click(1, 1);
                                     await page.waitForTimeout(1000);
                                     console.log(`Closed modal for ${rowData[1]}`);
                                 }
 
+
                                 if (currentGroup === "Д") {
                                     console.log(`Opening material modal for Д item: ${rowData[1]}`);
                                     await nestedRow.click();
-                                    const materialElement = page.locator(`[data-testid^="Specification-ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
+
+                                    const materialElement = page.locator(`[data-testid^="ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
                                     await materialElement.evaluate((row) => {
-                                        row.style.backgroundColor = 'yellow';
-                                        row.style.border = '2px solid red';
-                                        row.style.color = 'blue';
+                                        (row as HTMLElement).style.backgroundColor = 'yellow';
+                                        (row as HTMLElement).style.border = '2px solid red';
+                                        (row as HTMLElement).style.color = 'blue';
                                     });
                                     await materialElement.evaluate((el) => el.scrollIntoView());
                                     await materialElement.waitFor({ state: 'visible' });
                                     await page.waitForTimeout(2000);
-                                    const materialText = await materialElement.textContent();
+
+                                    let materialText = await materialElement.textContent();
+                                    let materialGroup = '';
+
+                                    // ✅ Call the helper function to find the correct material type
                                     if (materialText) {
-                                        const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
-                                        if (existingMaterial) {
-                                            existingMaterial.quantity += item.quantity;
+                                        materialGroup = await this.findMaterialType(page, materialText);
+                                        console.log("Searching for material: " + materialText);
+                                        console.log("Found in group: " + materialGroup);
+                                    } else {
+                                        console.warn("Material text is null, skipping material type lookup.");
+                                    }
+
+                                    if (materialText) {
+                                        console.log(`🔎 Processing material: ${materialText}`);
+                                        console.log(`📌 Found in group: ${materialGroup}`);
+
+                                        if (materialGroup === "ПД") {
+                                            console.log(`🛠 Checking if ${materialText} exists in ПД...`);
+                                            const existingMaterial = this.parsedData["ПД"].find(mat => mat.name === materialText.trim());
+
+                                            if (existingMaterial) {
+                                                console.log(`✅ Existing ПД item found: ${existingMaterial.name}, current quantity: ${existingMaterial.quantity}`);
+                                                existingMaterial.quantity += item.quantity;
+                                                console.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
+                                            } else {
+                                                console.log(`➕ Adding new ПД item: ${materialText}, quantity: ${item.quantity}`);
+                                                this.parsedData["ПД"].push({
+                                                    designation: "-",
+                                                    name: materialText.trim(),
+                                                    unit: "шт",
+                                                    quantity: item.quantity
+                                                });
+                                            }
+                                        } else if (materialGroup === "МД") {
+                                            console.log(`🛠 Checking if ${materialText} exists in МД...`);
+                                            const existingMaterial = this.parsedData["МД"].find(mat => mat.material === materialText.trim());
+
+                                            if (existingMaterial) {
+                                                console.log(`✅ Existing МД item found: ${existingMaterial.material}, overriding quantity to 1.`);
+                                                existingMaterial.quantity = 1;
+                                            } else {
+                                                console.log(`➕ Adding new МД item: ${materialText}, quantity: 1`);
+                                                this.parsedData["МД"].push({
+                                                    material: materialText.trim(),
+                                                    quantity: 1
+                                                });
+                                            }
                                         } else {
-                                            this.parsedData["МД"].push({
-                                                material: materialText.trim(),
-                                                quantity: item.quantity
-                                            });
+                                            console.log(`🛠 Checking if ${materialText} exists in ${materialGroup}...`);
+                                            const existingMaterial = this.parsedData[materialGroup].find(mat => mat.material === materialText.trim());
+
+                                            if (existingMaterial) {
+                                                console.log(`✅ Existing ${materialGroup} item found: ${existingMaterial.material}, current quantity: ${existingMaterial.quantity}`);
+                                                existingMaterial.quantity += item.quantity;
+                                                console.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
+                                            } else {
+                                                console.log(`➕ Adding new ${materialGroup} item: ${materialText}, quantity: ${item.quantity}`);
+                                                this.parsedData[materialGroup].push({
+                                                    material: materialText.trim(),
+                                                    quantity: item.quantity
+                                                });
+                                            }
                                         }
                                     }
+
+
+
                                     page.mouse.click(1, 1);
                                     await page.waitForTimeout(500);
                                 }
+
+
                             }
                         }
                     }
@@ -2238,6 +2316,80 @@ export class CreatePartsDatabasePage extends PageObject {
         }
 
     }
+
+    async findMaterialType(page: Page, materialName: string): Promise<string> {
+        // Open a new browser tab
+        const newContext = await page.context().newPage();
+        await newContext.goto(SELECTORS.MAINMENU.MATERIALS.URL);
+
+        // Define possible material types
+        const materialTypes = ['МД', 'ПД', 'РД'];
+        const switchItems = [
+            'MaterialTableList-Switch-Item1',
+            'MaterialTableList-Switch-Item2',
+            'MaterialTableList-Switch-Item3'
+        ];
+
+        for (let i = 0; i < switchItems.length; i++) {
+            const switchItem = newContext.locator(`[data-testid="${switchItems[i]}"]`);
+
+            // Click the selector item to switch the category
+            await switchItem.click();
+            await newContext.waitForTimeout(500); // Small delay to allow the switch
+
+            // Locate search input field
+            const searchInput = newContext.locator('[data-testid="MaterialTableList-Table-Item-SearchInput-Dropdown-Input"]');
+            await searchInput.fill(materialName);
+            await searchInput.press('Enter');
+            await searchInput.evaluate((row) => {
+                row.style.backgroundColor = 'yellow';
+                row.style.border = '2px solid red';
+                row.style.color = 'blue';
+            });
+            await newContext.waitForTimeout(1000); // Wait for results
+
+            // Locate the table
+            const materialTable = newContext.locator('[data-testid="MaterialTableList-Table-Item"]');
+            await materialTable.evaluate((row) => {
+                row.style.backgroundColor = 'yellow';
+                row.style.border = '2px solid red';
+                row.style.color = 'blue';
+            });
+            // Get number of rows
+            const rows = await materialTable.locator('tbody tr').count();
+
+            if (rows === 1) {
+                // Found exactly one match, return corresponding material type
+                await newContext.close();
+                return materialTypes[i];
+            } else if (rows > 1) {
+                // More than one match—search through each row for an exact match
+                const rowElements = await materialTable.locator('tbody tr').elementHandles();
+
+                for (const row of rowElements) {
+                    const rowText = await row.textContent();
+
+                    if (rowText?.trim() === materialName) { // ✅ Exact match
+                        await row.evaluate((el) => {
+                            (el as HTMLElement).style.backgroundColor = 'yellow'; // ✅ Cast `el` to HTMLElement
+                            (el as HTMLElement).style.border = '2px solid red';
+                            (el as HTMLElement).style.color = 'blue';
+                        });
+
+
+                        await newContext.close();
+                        return materialTypes[i];
+                    }
+                }
+
+            }
+        }
+
+        // No exact match found after checking all lists
+        await newContext.close();
+        throw new Error(`Material "${materialName}" not found in any category.`);
+    }
+
 
 
 
@@ -2291,7 +2443,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
             for (const row of rows) {
                 await row.evaluate((node) => {
-                    (node as HTMLElement).style.backgroundColor = "yellow"; // Cast `node` to `HTMLElement`
+                    (node as HTMLElement).style.backgroundColor = "yellow";
                     (node as HTMLElement).style.border = "2px solid red";
                     (node as HTMLElement).style.color = "blue";
                 });
@@ -2301,13 +2453,23 @@ export class CreatePartsDatabasePage extends PageObject {
                     const text = await cell.textContent();
                     return text?.trim() || "";
                 }));
+
                 if (group === "ПД") {
                     console.log(rowData);
                 }
-                // Handle different groups with a standard format
-                if (rowData.length >= 4 || (group === "ПД" && rowData.length === 3)) {
+
+                // ✅ Handle РМ items separately (only 3 columns)
+                if (group === "РМ" && rowData.length === 3) {
+                    structuredData["РМ"].push({
+                        name: rowData[0] || "",
+                        unit: rowData[1] || "шт",
+                        quantity: parseInt(rowData[2], 10) || 1 // Ensure quantity defaults to 1 if missing
+                    });
+                }
+                // ✅ Standard handling for other groups
+                else if (rowData.length >= 4 || (group === "ПД" && rowData.length === 3)) {
                     let quantity = parseInt(rowData[4], 10);
-                    if (isNaN(quantity)) quantity = 1; // Default fallback for missing values
+                    if (isNaN(quantity)) quantity = 1;
 
                     if (group === "МД") {
                         const materialName = rowData[1];
@@ -2317,39 +2479,35 @@ export class CreatePartsDatabasePage extends PageObject {
                         } else {
                             structuredData["МД"].push({ material: materialName, quantity });
                         }
+                    } else if (group === "ПД") {
+                        structuredData["ПД"].push({
+                            designation: rowData[6] || "-",
+                            name: rowData[1] || "",
+                            unit: rowData[3] || "шт",
+                            quantity: parseInt(rowData[2], 10) || 1 // Ensure quantity defaults to 1 if missing
+                        });
                     } else {
-                        if (group === "ПД") {
-                            structuredData[group].push({
-                                designation: rowData[6] || "-",
-                                name: rowData[1] || "",
-                                unit: rowData[3] || "шт",
-                                quantity: 0
-                            });
-                        }
-                        else {
-                            structuredData[group].push({
-                                designation: rowData[6] || "-",
-                                name: rowData[7] || "",
-                                unit: rowData[3] || "шт",
-                                quantity
-                            });
-                        }
+                        structuredData[group].push({
+                            designation: rowData[6] || "-",
+                            name: rowData[7] || "",
+                            unit: rowData[3] || "шт",
+                            quantity
+                        });
                     }
                 }
             }
         }
 
-        // Ensure consistency with recursive format (sorting, structuring)
+        // ✅ Ensure sorting consistency across all groups
         for (const group of Object.keys(structuredData)) {
-            if (structuredData[group]?.length > 0) { // Check if group is not empty
+            if (structuredData[group]?.length > 0) {
                 structuredData[group].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
             }
         }
 
-
-
         return structuredData;
     }
+
 
     async checkItemExistsInBottomTable(
         page: Page,
