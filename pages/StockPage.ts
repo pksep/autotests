@@ -20,14 +20,14 @@ export class CreateStockPage extends PageObject {
         serachName: string,
         tableSelection: TableSelection
     ) {
-        let tableLocator: string = ".scroll-table.product";
+        let tableLocator: string = '[data-testid="OstatkPCBD-Product-Table"]';
         let tableDataTestId: string = "";
 
         if (tableSelection === TableSelection.cbed) {
-            tableLocator = ".scroll-table.cbed";
+            tableLocator = '[data-testid="OstatkPCBD-Cbed-Table"]';
             tableDataTestId = "ModalAddWaybill-ShipmentDetailsTable-Table";
         } else if (tableSelection === TableSelection.detail) {
-            tableLocator = ".scroll-table.detal";
+            tableLocator = '[data-testid="OstatkPCBD-Detal-Table"]';
         }
 
         if (!tableLocator) {
@@ -46,7 +46,7 @@ export class CreateStockPage extends PageObject {
         await this.waitingTableBody(tableLocator);
 
         // Using table search we look for the value of the variable
-        await this.searchTable(serachName, tableLocator);
+        await this.searchTableRedesign(serachName, tableLocator);
 
         // Wait for the table body to load
         await this.waitingTableBody(tableLocator);
@@ -60,14 +60,21 @@ export class CreateStockPage extends PageObject {
         //     "ModalAddWaybill-ShipmentDetailsTable-SelectColumn"
         // );
         // console.log("numberColumn: ", numberColumn);
-        let remainingStock = await this.getValueOrClickFromFirstRow(
-            tableLocator,
-            2
-        );
-
+        let remainingStock
+        if (tableSelection === TableSelection.product) {
+            remainingStock = await this.getValueOrClickFromFirstRow(
+                tableLocator,
+                3
+            );
+        } else {
+            remainingStock = await this.getValueOrClickFromFirstRow(
+                tableLocator,
+                2
+            );
+        }
         // Output to the console
         console.log(
-            `Количество ${serachName} на складе до оприходования  ${remainingStock}`
+            `Количество ${serachName} на складе ${remainingStock}`
         );
 
         return remainingStock;

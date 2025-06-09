@@ -1,0 +1,160 @@
+{
+    "elements": {
+        "LoadingPage": {
+            "titles": [
+                "Задачи на отгрузку"
+            ],
+            "buttons": [
+                {
+                    "class": ".button-yui-kit.medium.disabled-yui-kit.pill-yui-kit.primary-yui-kit",
+                    "label": "Сбросить",
+                    "state": "false"
+                },
+                {
+                    "class": ".button-yui-kit.small.primary-yui-kit",
+                    "label": "Создать заказ",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
+                    "label": "Редактировать",
+                    "state": "false"
+                },
+                {
+                    "class": ".button-yui-kit.small.primary-yui-kit",
+                    "label": "Печать",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
+                    "label": "Архив",
+                    "state": "false"
+                }
+            ]
+        },
+        "CreateOrderPage": {
+            "titles": [
+                "Создать заказ",
+                "Комплектация",
+                "Медиа файлы",
+                "Примечание"
+            ],
+            "buttons":[
+                {
+                    "class": ".button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "label": "Создать копированием",
+                    "state": "false"
+                },
+
+                {
+                    "class": ".button-yui-kit.small.outline-yui-kit.specification__btns-full",
+                    "label": "Полная спецификация",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+                    "label": "Добавить из базы",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.disabled-yui-kit.outline-yui-kit.history-btn",
+                    "label": "История изменений",
+                    "state": "false"
+                },
+                {
+                    "class": ".button-yui-kit.medium.outline-yui-kit",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.primary-yui-kit",
+                    "label": "Сохранить",
+                    "state": "true"
+                }
+            ]
+        },
+        "OrderEditingPage": {
+            "buttons": [
+                {
+                    "class": ".button-yui-kit.medium.primary-yui-kit.attachments-buttons__button",
+                    "label": "Создать копированием",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.outline-yui-kit.specification__btns-full",
+                    "label": "Полная спецификация",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+                    "label": "Добавить из базы",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.outline-yui-kit.history-btn",
+                    "label": "История изменений",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.outline-yui-kit",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.primary-yui-kit",
+                    "label": "Сохранить",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.outline-yui-kit.editor-buttons__button",
+                    "label": "Печать",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.outline-yui-kit.editor-buttons__button",
+                    "label": "Архив",
+                    "state": "true"
+                },
+                {
+                    "class": ".button-yui-kit.medium.outline-yui-kit.editor-buttons__button",
+                    "label": "Добавить новое изделие к заказу",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowChoiceProduct": {
+            "titles": [
+                "Выбрать изделие"
+            ],
+            "filters": [
+                {
+                    "class": ".filters__btn",
+                    "label": "Сортировать по отметке",
+                    "state": "true"
+                },
+                {
+                    "class": ".filters__btn",
+                    "label": "Сортировать по дате создания",
+                    "state": "true"
+                },
+                {
+                    "class": ".filters__btn",
+                    "label": "Показать мои",
+                    "state": "false"
+                }
+            ],
+            "buttons": [
+                {
+                    "class": ".base-modal__section-button-return .button-yui-kit.medium.outline-yui-kit",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": ".base-modal__section-button-return .button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "label": "Добавить",
+                    "state": "false"
+                }
+            ]
+        }
+    }
+}

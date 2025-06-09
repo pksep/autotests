@@ -1,0 +1,50 @@
+{
+    "elements": {
+        "MainPage": {
+            "titles": [
+                "Дефицит Продукции"
+            ],
+            "buttons": [
+                {
+                    "class": "[data-testid=\"DeficitIzd-ShipmentList-ShipmentsShow\"]",
+                    "label": "Показать Задачи на отгрузку ",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitIzd-ShipmentList-ClearFilters\"]",
+                    "label": "Сбросить все фильтры",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitIzd-NormTimeButton\"]",
+                    "label": "Норма времени по операциям",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"DeficitIzd-StartButton\"]",
+                    "label": "Запустить в производство",
+                    "state": "true"
+                }
+            ]
+        },
+        "ModalWindowLaunchOnProduction": {
+            "titles":[
+                "Запустить в производство",
+                "Примечание",
+                "Комплектация"
+            ],
+            "buttons":[
+                {
+                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
+                    "label": "Отмена",
+                    "state": "true"
+                },
+                {
+                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
+                    "label": "В производство",
+                    "state": "true"
+                }
+            ]
+        }
+    }
+}
