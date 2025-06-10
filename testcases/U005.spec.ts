@@ -949,7 +949,11 @@ export const runU005 = () => {
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
+            await field.fill('');
+            await field.press('Enter');
+            await page.waitForTimeout(500);
             await field.fill(TEST_DETAIL_NAME);
+            await page.waitForTimeout(500);
             await expect(await field.inputValue()).toBe(TEST_DETAIL_NAME);
             await page.waitForTimeout(50);
         });
