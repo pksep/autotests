@@ -1478,13 +1478,23 @@ export const runU005 = () => {
 
                 // Locate rows where the second column contains the base name
                 const matchingRows = await tableRows.locator(`.table-yui-kit__td:nth-child(2):has-text("${name}")`);
-                await matchingRows.evaluate((row) => {
-                    row.style.backgroundColor = 'yellow';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
-                });
+                try {
+                  await matchingRows.evaluate((row) => {
+                      row.style.backgroundColor = 'yellow';
+                      row.style.border = '2px solid red';
+                      row.style.color = 'blue';
+                  });
+                
                 const rowCount = await matchingRows.count();
-
+                } catch (error) {
+                  // Capture screenshot when an error occurs
+                  const screenshotBuffer = await page.screenshot({ fullPage: true });
+                  testInfo.attach('Failure Screenshot', {
+                    body: screenshotBuffer,
+                    contentType: 'image/png'
+                  });
+                  throw error;
+                }
                 if (rowCount > 0) {
                     console.log(`Found ${rowCount} rows matching base name "${name}".`);
                     let extensionMatch = false;
