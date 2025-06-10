@@ -1385,6 +1385,7 @@ export const runU005 = () => {
                 // Check modal visibility again after the button click
                 if ((await modalLocator.count()) === 0) {
                     console.log("Modal closed after button click. Upload succeeded!");
+                    await page.waitForTimeout(1000);
                     break;
                 }
 
@@ -1444,6 +1445,7 @@ export const runU005 = () => {
 
                 console.log("Waiting before retrying...");
                 await page.waitForTimeout(500);
+                
             }
 
             if (retryCounter >= maxRetries) {
