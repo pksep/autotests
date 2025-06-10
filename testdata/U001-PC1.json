@@ -110,28 +110,13 @@
         },
         "ProductShortage": {
             "titles": [
-                "Дефицит Продукции"
+                "Дефицит продукции"
             ],
             "buttons": [
                 {
-                    "class": "[data-testid=\"DeficitIzd-ShipmentList-ShipmentsShow\"]",
-                    "label": "Показать Задачи на отгрузку ",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"DeficitIzd-ShipmentList-ClearFilters\"]",
-                    "label": "Сбросить все фильтры",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"DeficitIzd-NormTimeButton\"]",
-                    "label": "Норма времени по операциям",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"DeficitIzd-StartButton\"]",
+                    "class": "[data-testid=\"DeficitIzd-Main-Footer-Button-IntoProduction\"]",
                     "label": "Запустить в производство",
-                    "state": "true"
+                    "state": "false"
                 }
             ]
         },
@@ -144,7 +129,7 @@
             "buttons":[
                 {
                     "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
-                    "label": "Отмена",
+                    "label": "Отменить",
                     "state": "true"
                 },
                 {
@@ -484,8 +469,7 @@
             "titles":[
                 "Отгрузка",
                 "Комплектация",
-                "Примечание",
-                "Файлы"
+                "Примечание"
             ],
             "buttons": [
                 {
