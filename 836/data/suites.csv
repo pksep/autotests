@@ -1,0 +1,3 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","60975","TestCase 01 - создат дитайл - Проверка страница","U005","Tue Jun 10 09:08:10 GMT 2025","passed","Tue Jun 10 09:09:11 GMT 2025","Test Suite: U005 - verify changes to full specifications after adding items to the product","main.spec.ts","",""
+"","23884","TestCase 02 - создат дитайл","U005","Tue Jun 10 09:09:13 GMT 2025","failed","Tue Jun 10 09:09:37 GMT 2025","Test Suite: U005 - verify changes to full specifications after adding items to the product","main.spec.ts","",""
