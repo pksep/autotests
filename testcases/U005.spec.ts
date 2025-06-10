@@ -371,6 +371,7 @@ export const runU005 = () => {
                     const tableTitle = table.title;
                     console.log(table);
                     // Locate the table using its data-testid attribute.
+                    await page.waitForTimeout(1500);
                     const targetTable = page.locator(`table[data-testid="${table.datatestid}"]`);
 
                     // Ensure the table is visible.
