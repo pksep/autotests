@@ -371,7 +371,9 @@ export const runU005 = () => {
                     const tableTitle = table.title;
                     console.log(table);
                     // Locate the table using its data-testid attribute.
+
                     await page.waitForTimeout(1500);
+
                     const targetTable = page.locator(`table[data-testid="${table.datatestid}"]`);
 
                     // Ensure the table is visible.
@@ -1462,9 +1464,10 @@ export const runU005 = () => {
             // Locate the parent section for the specific table
             const parentSection = page.locator('section.attach-file-component');
             console.log("Located parent section for the file table.");
-            
+           
 
             await page.waitForTimeout(1000);
+
             // Locate the table rows within the scoped section
             const tableRows = parentSection.locator('.table-yui-kit__tr'); // Only rows inside the specific section
 
