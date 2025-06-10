@@ -1,1 +1,0 @@
-[{"uid":"9a90515d355d9c43","name":"TestCase 01 - создат дитайл - Проверка страница","time":{"start":1749546490173,"stop":1749546551148,"duration":60975},"status":"passed","severity":"normal"},{"uid":"13b6477433afbd8e","name":"TestCase 02 - создат дитайл","time":{"start":1749546553529,"stop":1749546577413,"duration":23884},"status":"failed","severity":"normal"}]
