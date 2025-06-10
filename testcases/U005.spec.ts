@@ -1380,7 +1380,7 @@ export const runU005 = () => {
                 console.log("Upload button clicked.");
 
                 // Wait for notifications
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(1500);
 
                 // Check modal visibility again after the button click
                 if ((await modalLocator.count()) === 0) {
