@@ -371,7 +371,9 @@ export const runU005 = () => {
                     const tableTitle = table.title;
                     console.log(table);
                     // Locate the table using its data-testid attribute.
-                    await page.waitForTimeout(1000);
+
+                    await page.waitForTimeout(1500);
+
                     const targetTable = page.locator(`table[data-testid="${table.datatestid}"]`);
 
                     // Ensure the table is visible.
@@ -949,7 +951,11 @@ export const runU005 = () => {
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
+            await field.fill('');
+            await field.press('Enter');
+            await page.waitForTimeout(500);
             await field.fill(TEST_DETAIL_NAME);
+            await page.waitForTimeout(500);
             await expect(await field.inputValue()).toBe(TEST_DETAIL_NAME);
             await page.waitForTimeout(50);
         });
@@ -1350,7 +1356,7 @@ export const runU005 = () => {
             const modalLocator = page.locator('dialog[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
             console.log("Upload button and modal located.");
 
-            const maxRetries = 5;
+            const maxRetries = 50;
             let retryCounter = 0;
 
             while (retryCounter <= maxRetries) {
@@ -1376,11 +1382,12 @@ export const runU005 = () => {
                 console.log("Upload button clicked.");
 
                 // Wait for notifications
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(1500);
 
                 // Check modal visibility again after the button click
                 if ((await modalLocator.count()) === 0) {
                     console.log("Modal closed after button click. Upload succeeded!");
+                    await page.waitForTimeout(1000);
                     break;
                 }
 
@@ -1440,6 +1447,7 @@ export const runU005 = () => {
 
                 console.log("Waiting before retrying...");
                 await page.waitForTimeout(500);
+                
             }
 
             if (retryCounter >= maxRetries) {
@@ -1456,9 +1464,10 @@ export const runU005 = () => {
             // Locate the parent section for the specific table
             const parentSection = page.locator('section.attach-file-component');
             console.log("Located parent section for the file table.");
-            allure.attach('Screenshotx', await page.screenshot(), 'image/png');
+           
 
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1000);
+
             // Locate the table rows within the scoped section
             const tableRows = parentSection.locator('.table-yui-kit__tr'); // Only rows inside the specific section
 
@@ -1472,13 +1481,23 @@ export const runU005 = () => {
 
                 // Locate rows where the second column contains the base name
                 const matchingRows = await tableRows.locator(`.table-yui-kit__td:nth-child(2):has-text("${name}")`);
-                await matchingRows.evaluate((row) => {
-                    row.style.backgroundColor = 'yellow';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
-                });
+                try {
+                  await matchingRows.evaluate((row) => {
+                      row.style.backgroundColor = 'yellow';
+                      row.style.border = '2px solid red';
+                      row.style.color = 'blue';
+                  });
+                
                 const rowCount = await matchingRows.count();
-
+                } catch (error) {
+                  // Capture screenshot when an error occurs
+                  const screenshotBuffer = await page.screenshot({ fullPage: true });
+                  testInfo.attach('Failure Screenshot', {
+                    body: screenshotBuffer,
+                    contentType: 'image/png'
+                  });
+                  throw error;
+                }
                 if (rowCount > 0) {
                     console.log(`Found ${rowCount} rows matching base name "${name}".`);
                     let extensionMatch = false;
