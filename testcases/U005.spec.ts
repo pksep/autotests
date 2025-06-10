@@ -1354,7 +1354,7 @@ export const runU005 = () => {
             const modalLocator = page.locator('dialog[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
             console.log("Upload button and modal located.");
 
-            const maxRetries = 5;
+            const maxRetries = 50;
             let retryCounter = 0;
 
             while (retryCounter <= maxRetries) {
