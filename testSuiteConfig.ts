@@ -193,6 +193,7 @@ export const testSuites = {
             {
                 test: runU005,
                 description: 'This test checks the User Scenario series of tests U005',
+
             }
             // Add more test cases as needed
         ],
@@ -326,5 +327,7 @@ export const testSuites = {
             },
             // Add more test cases as needed
         ],
+
     },
 };
+

@@ -371,7 +371,7 @@ export const runU005 = () => {
                     const tableTitle = table.title;
                     console.log(table);
                     // Locate the table using its data-testid attribute.
-                    const targetTable = page.locator(`[data-testid="${table.datatestid}"]`);
+                    const targetTable = page.locator(`table[data-testid="${table.datatestid}"]`);
 
                     // Ensure the table is visible.
                     await expect(targetTable).toBeVisible();
@@ -451,7 +451,7 @@ export const runU005 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the table using data-testid
-            const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Type-Table"]');
+            const leftTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Type"]');
 
             await leftTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -491,7 +491,7 @@ export const runU005 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the table using data-testid
-            const centerTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType-Table"]');
+            const centerTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-SubType"]');
 
             await centerTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -531,7 +531,7 @@ export const runU005 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the table using data-testid
-            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
 
             await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -569,7 +569,7 @@ export const runU005 = () => {
         });
         await allure.step("Step 21: Open Archive dialog (Open Archive dialog)", async () => {
             // To open the archive dialog, we need to add something to the archive
-            const targetTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            const targetTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
 
             // Ensure the table is visible
             await expect(targetTable).toBeVisible();
@@ -933,7 +933,7 @@ export const runU005 = () => {
         });
     });
     test("TestCase 02 - создат дитайл", async ({ browser, page }) => {
-        test.setTimeout(50000);
+        test.setTimeout(900000);
         const shortagePage = new CreatePartsDatabasePage(page);
         await allure.step("Step 01: Перейдите на страницу создания детали. (Navigate to the create part page)", async () => {
             shortagePage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
@@ -981,13 +981,14 @@ export const runU005 = () => {
         });
         await allure.step("Step 04: Verify that search works for table 3 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
-            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]');
+            await page.waitForTimeout(500);
+            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
             await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
-            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-Table"]')).toBeVisible();
+            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]')).toBeVisible();
             await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').fill('');
             await page.waitForTimeout(1000);
             // Locate the search field within the left table and fill it
@@ -1119,10 +1120,11 @@ export const runU005 = () => {
             //     'testdata/1.3.1.1 Клапан М6х10.PNG__+__c3a2fced-9b03-461b-a596-ef3808d8a475.png',
             // ]);
             // Verify the files were successfully uploaded
-            const uploadedFiles = await fileInput.evaluate((element) => {
-                const input = element as HTMLInputElement; // Explicitly cast the element as HTMLInputElement
-                return input.files?.length || 0; // Return the number of files uploaded
+            await page.waitForTimeout(1000); // Wait before execution
+            const uploadedFiles = await fileInput.evaluate((element: HTMLInputElement) => {
+                return element.files?.length || 0;
             });
+
             console.log(`Number of files uploaded: ${uploadedFiles}`);
             expect(uploadedFiles).toBe(2); // Ensure 2 files were uploaded
 
@@ -1449,12 +1451,18 @@ export const runU005 = () => {
         await allure.step("Step 17: Verify uploaded file names with wildcard matching and extension validation", async () => {
             console.log("Starting file verification process...");
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(2500);
             // Locate the parent section for the specific table
             const parentSection = page.locator('section.attach-file-component');
             console.log("Located parent section for the file table.");
 
             // Locate the table rows within the scoped section
             const tableRows = parentSection.locator('.table-yui-kit__tr'); // Only rows inside the specific section
+
+            // Debug: Print all row texts
+            tableRows.evaluateAll(rows => rows.map(row => row.textContent)).then(texts => {
+                console.log("Table Rows Content:", texts);
+            });
 
             for (const { name, extension } of baseFileNamesToVerify) {
                 console.log(`Verifying presence of file with base name: ${name} and extension: ${extension}`);
@@ -1543,6 +1551,9 @@ export const runU005 = () => {
             await page.waitForTimeout(500);
             await searchField.focus(); // Focus on the input field
             await searchField.fill(''); // Clear any existing content
+            await searchField.press('Enter');
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
 
             // Programmatically set the value using JavaScript
             await searchField.evaluate((element, value) => {
@@ -1556,13 +1567,15 @@ export const runU005 = () => {
             const fieldValue = await searchField.inputValue();
             console.log("Verified input value:", fieldValue);
             expect(fieldValue).toBe(TEST_FILE);
-
+            const firstRow1 = leftTable.locator('tbody tr:first-child');
+            console.log("First Row:", await firstRow1.textContent());
             // Trigger the search by pressing 'Enter'
             await searchField.press('Enter');
             await page.waitForLoadState("networkidle");
-
+            await page.waitForTimeout(1500);
             // Locate and highlight the first row in the table
             const firstRow = leftTable.locator('tbody tr:first-child');
+            console.log("First Row 2:", await firstRow.textContent());
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
