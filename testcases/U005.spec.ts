@@ -1460,7 +1460,10 @@ export const runU005 = () => {
             // Locate the parent section for the specific table
             const parentSection = page.locator('section.attach-file-component');
             console.log("Located parent section for the file table.");
-            allure.addAttachment('Screenshotx', await page.screenshot(), 'image/png');
+            testInfo.attach('Screenshotx', { 
+              body: await page.screenshot(), 
+              contentType: 'image/png' 
+            });
 
             await page.waitForTimeout(500);
             // Locate the table rows within the scoped section
