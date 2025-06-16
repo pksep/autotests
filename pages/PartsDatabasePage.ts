@@ -2574,6 +2574,17 @@ export class CreatePartsDatabasePage extends PageObject {
         logger.info("Item not found in the bottom table.");
         return false; // ✅ Item does NOT exist in the bottom table
     }
+    // Inside your CreatePartsDatabasePage (or your base PageObject class)
+    async fillDetailName(dataTestId: string, value: string): Promise<void> {
+        // Locate the input field by its data-testid.
+        const detailNameInput = this.page.locator(`[data-testid="${dataTestId}"]`);
+
+        // Ensure the input field is visible before interacting.
+        await expect(detailNameInput).toBeVisible({ timeout: 5000 });
+
+        // Fill the input field with the provided value.
+        await detailNameInput.fill(value);
+    }
 
 
 
@@ -2583,5 +2594,5 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
 
-} 
+}
 
