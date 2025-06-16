@@ -2316,7 +2316,7 @@ export class CreatePartsDatabasePage extends PageObject {
         }
 
     }
-
+    //this should really be in the materials base class
     async findMaterialType(page: Page, materialName: string): Promise<string> {
         // Open a new browser tab
         const newContext = await page.context().newPage();
@@ -2390,11 +2390,69 @@ export class CreatePartsDatabasePage extends PageObject {
         throw new Error(`Material "${materialName}" not found in any category.`);
     }
 
+    async searchAndSelectMaterial(sliderDataTestId: string, materialName: string): Promise<void> {
+        // Open a new browser tab for material search.
+        //const newPage = await this.page.context().newPage();
+        //await newPage.goto(SELECTORS.MAINMENU.MATERIALS.URL);
 
+        // Click the specified slider using its data-testid.
+        const switchItem = this.page.locator(`[data-testid="${sliderDataTestId}"]`);
+        await switchItem.click();
+        await this.page.waitForTimeout(500);
 
+        // Locate and fill the search input field, then trigger the search.
+        const searchInput = this.page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]');
+        await searchInput.fill(materialName);
+        await searchInput.press('Enter');
 
+        // Apply debug styling to the search input (optional).
+        await searchInput.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+        });
+        await this.page.waitForTimeout(1000);
 
+        // Locate the material table and apply debug styling.
+        const materialTable = this.page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
+        await materialTable.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+        });
 
+        // Retrieve the number of rows with search results.
+        const rowsCount = await materialTable.locator('tbody tr').count();
+        let materialFound = false;
+
+        if (rowsCount === 1) {
+            // If exactly one row is present, select it.
+            const row = materialTable.locator('tbody tr').first();
+            await row.click();
+            materialFound = true;
+        } else if (rowsCount > 1) {
+            // If multiple rows are returned, iterate through them for an exact match.
+            const rowElements = await materialTable.locator('tbody tr').elementHandles();
+            for (const row of rowElements) {
+                const rowText = await row.textContent();
+                if (rowText?.trim() === materialName) {
+                    // Apply debug styling before clicking.
+                    await row.evaluate((el: HTMLElement) => {
+                        el.style.backgroundColor = 'yellow';
+                        el.style.border = '2px solid red';
+                        el.style.color = 'blue';
+                    });
+                    await row.click();
+                    materialFound = true;
+                    break;
+                }
+            }
+        }
+        await this.page.waitForTimeout(1000);
+
+        // Expect a material to have been selected.
+        expect(materialFound).toBe(true);
+    }
 
     async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {
         const TABLE_SELECTORS = {
@@ -2575,6 +2633,57 @@ export class CreatePartsDatabasePage extends PageObject {
         return false; // ✅ Item does NOT exist in the bottom table
     }
 
+    // In CreatePartsDatabasePage.ts
+    async fillDetailName(detailName: string, dataTestId: string = "AddDetal-Information-Input-Input"): Promise<void> {
+        await this.page.waitForLoadState("networkidle");
+        const field = this.page.locator(`[data-testid="${dataTestId}"]`);
+
+        // (Optional) Highlight for debugging
+        await field.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+        });
+
+        // Clear any text and simulate Enter to reset the field if necessary
+        await field.fill('');
+        await field.press('Enter');
+        await this.page.waitForTimeout(500);
+
+        // Fill in the provided detail name
+        await field.fill(detailName);
+        await this.page.waitForTimeout(500);
+
+        // Verify the input value is as expected
+        await expect(await field.inputValue()).toBe(detailName);
+        await this.page.waitForTimeout(50);
+    }
+    /**
+   * Verifies that a success message is shown after saving a detail.
+   * This method uses the generic notification element with data-testid
+   * "Notification-Notification-Description" (same as used in getMessage).
+   */
+    async verifyDetailSuccessMessage(expectedText: string): Promise<void> {
+        // Locate the notification element using the same data-testid as getMessage:
+        const successDialog = this.page.locator('[data-testid="Notification-Notification-Description"]').last();
+
+        // Apply styling for visibility
+        await successDialog.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+        });
+
+        // Wait for visibility with a timeout
+        await expect(successDialog).toBeVisible({ timeout: 5000 });
+
+        // Retrieve and log the text content for debugging
+        const dialogText = await successDialog.textContent();
+        console.log("Success dialog text:", dialogText);
+
+        // Verify that the notification contains the expected text
+        expect(dialogText).toContain(expectedText);
+    }
 
 
 
@@ -2583,5 +2692,5 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
 
-} 
+}
 
