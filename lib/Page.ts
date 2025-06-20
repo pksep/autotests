@@ -189,20 +189,20 @@ export class PageObject extends AbstractPage {
     waitTime: number = 10000,
     doubleClick?: boolean
   ): Promise<void> {
-    logger.info(
+    console.log(
       `Searching for elements with partial data-testid="${partialDataTestId}"`
     );
 
     // Locate all elements with the partial data-testid
     const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
 
-    logger.info(
+    console.log(
       `Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`
     );
 
     if (elements.length > 0) {
       if (elements.length > 1) {
-        logger.warn(
+        console.log(
           `Found multiple elements with data-testid="${partialDataTestId}" will click first`
         );
       }
@@ -214,20 +214,20 @@ export class PageObject extends AbstractPage {
         await elements[0].dblclick({ force: true });
       }
 
-      logger.info(
+      console.log(
         `Clicked on the first element with partial data-testid="${partialDataTestId}"`
       );
       await elements[0].evaluate((element) => {
         element.style.border = "2px solid red";
-        element.style.backgroundColor = "yellow";
+        element.style.backgroundColor = "red";
       });
       // Wait for the specified amount of time
       await page.waitForTimeout(waitTime);
-
-      logger.info(`Waited for ${waitTime}ms after clicking the element`);
+      await page.waitForTimeout(3000);
+      console.log(`Waited for ${waitTime}ms after clicking the element`);
     } else {
       // Log that no elements were found
-      logger.error(
+      console.log(
         `No elements found with partial data-testid="${partialDataTestId}"`
       );
 
@@ -247,8 +247,10 @@ export class PageObject extends AbstractPage {
           element.style.backgroundColor = "yellow";
         });
         if (!doubleClick) {
+          console.log("XXXXXXXXXXX");
           await elementById.click({ force: true });
         } else {
+          console.log("YYYYYYYYYY");
           await elementById.dblclick({ force: true });
         }
 
@@ -425,7 +427,7 @@ export class PageObject extends AbstractPage {
     try {
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(500);
-      
+
       // Step 1: Fill "Табельный номер" field
       await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-Input"]', { state: 'visible', timeout: 10000 });
       console.log('Табельный номер field is visible.');
