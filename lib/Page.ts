@@ -189,20 +189,20 @@ export class PageObject extends AbstractPage {
     waitTime: number = 10000,
     doubleClick?: boolean
   ): Promise<void> {
-    console.log(
+    logger.info(
       `Searching for elements with partial data-testid="${partialDataTestId}"`
     );
 
     // Locate all elements with the partial data-testid
     const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
 
-    console.log(
+    logger.info(
       `Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`
     );
 
     if (elements.length > 0) {
       if (elements.length > 1) {
-        console.log(
+        logger.warn(
           `Found multiple elements with data-testid="${partialDataTestId}" will click first`
         );
       }
@@ -214,7 +214,7 @@ export class PageObject extends AbstractPage {
         await elements[0].dblclick({ force: true });
       }
 
-      console.log(
+      logger.info(
         `Clicked on the first element with partial data-testid="${partialDataTestId}"`
       );
       await elements[0].evaluate((element) => {
@@ -224,10 +224,10 @@ export class PageObject extends AbstractPage {
       // Wait for the specified amount of time
       await page.waitForTimeout(waitTime);
       await page.waitForTimeout(3000);
-      console.log(`Waited for ${waitTime}ms after clicking the element`);
+      logger.info(`Waited for ${waitTime}ms after clicking the element`);
     } else {
       // Log that no elements were found
-      console.log(
+      logger.error(
         `No elements found with partial data-testid="${partialDataTestId}"`
       );
 
@@ -247,10 +247,8 @@ export class PageObject extends AbstractPage {
           element.style.backgroundColor = "yellow";
         });
         if (!doubleClick) {
-          console.log("XXXXXXXXXXX");
           await elementById.click({ force: true });
         } else {
-          console.log("YYYYYYYYYY");
           await elementById.dblclick({ force: true });
         }
 
