@@ -1207,6 +1207,7 @@ export const runERP_969 = () => {
             const freeQuantityValueForDeficit = await freeQuantityCellForDeficit.textContent();
             const needValueForDeficit = await needCellForDeficit.textContent();
 
+            // Calculate expected deficit: completed - ordered (should be negative when there's a shortage)
             const expectedDeficit = parseInt(freeQuantityValueForDeficit?.trim() || "0") - parseInt(needValueForDeficit?.trim() || "0");
             console.log(`Calculated expected deficit: ${freeQuantityValueForDeficit} - ${needValueForDeficit} = ${expectedDeficit}`);
 
@@ -1529,7 +1530,7 @@ export const runERP_969 = () => {
         await allure.step("Step 17: Navigate to assembly kitting plan page and test waybill modal", async () => {
             // Navigate back to the sklad main page in a new tab
             const waybillPage = await page.context().newPage();
-            await waybillPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL); // Use direct URL instead of SELECTORS
+            await waybillPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
             await waybillPage.waitForLoadState("networkidle");
             await waybillPage.waitForTimeout(2000);
 
@@ -1570,16 +1571,14 @@ export const runERP_969 = () => {
                 el.style.color = 'black';
                 el.style.fontWeight = 'bold';
             });
-            // Clear the search input first
             await searchInput.clear();
             await waybillPage.waitForTimeout(500);
-            // Fill with search value
             await searchInput.fill(NEW_SB_A);
             await searchInput.press("Enter");
             await waybillPage.waitForLoadState("networkidle");
             await waybillPage.waitForTimeout(2000);
 
-            // Confirm our result is in the first row by checking the fourth column (Name column)
+            // Confirm our result is in the first row
             const firstRow = waybillTable.locator("tbody tr").first();
             const nameCell = firstRow.locator('[data-testid="TableComplect-TableComplect-RowNameCell"]');
             await nameCell.evaluate((el: HTMLElement) => {
@@ -1592,7 +1591,7 @@ export const runERP_969 = () => {
             console.log(`Found SB name: "${nameValue}"`);
             expect(nameValue?.trim()).toBe(NEW_SB_A);
 
-            // Double click on the third column (Designation column) to open modal
+            // Double click on the designation column to open modal
             const designationCell = firstRow.locator('[data-testid="TableComplect-TableComplect-RowDesignationCell"]');
             await designationCell.evaluate((el: HTMLElement) => {
                 el.style.backgroundColor = 'orange';
@@ -1613,303 +1612,433 @@ export const runERP_969 = () => {
                 el.style.fontWeight = 'bold';
             });
 
-            // Validate modal title contains today's date (ignore the missing number after №)
+            // Validate modal title contains today's date
             const modalTitle = await waybillModal.textContent();
             console.log(`Modal title: "${modalTitle}"`);
             expect(modalTitle).toContain("Накладная на комплектацию Сборки № от");
             expect(modalTitle).toContain(today);
 
-            // Validate collected quantity cell shows 0
-            const collectedQuantityCell = await waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-CollectedQuantityCell"]');
-            await collectedQuantityCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'red';
-                el.style.border = '2px solid red';
-                el.style.color = 'white';
-                el.style.fontWeight = 'bold';
-            });
-            const collectedQuantityValue = await collectedQuantityCell.textContent();
-            const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
-
-            console.log(`Collected quantity: "${collectedQuantityValue}"`);
-            // This is the second time opening the modal, so collected quantity should reflect the build quantity we set earlier
-            expect(parseInt(collectedQuantityValue?.trim() || "0")).toBe(currentBuildQuantity);
-
-            // Validate required quantity cell shows orderedQuantity
-            const requiredQuantityCell = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-RequiredQuantityCell"]');
-            await requiredQuantityCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '2px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const requiredQuantityValue = await requiredQuantityCell.textContent();
-            console.log(`Required quantity: "${requiredQuantityValue}"`);
-            expect(parseInt(requiredQuantityValue?.trim() || "0")).toBe(orderedQuantity);
-
-            // Validate own quantity input shows orderedQuantity
-            const ownQuantityInput = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-OwnQuantityInput"]');
-            await ownQuantityInput.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '2px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const ownQuantityValue = await ownQuantityInput.inputValue();
-            console.log(`Own quantity input: "${ownQuantityValue}"`);
-            expect(parseInt(ownQuantityValue?.trim() || "0")).toBe(orderedQuantity - currentBuildQuantity);
-
-            // Validate name cell shows our SB name
-            const waybillNameCell = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-NameCell"]');
-            await waybillNameCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-                el.style.fontWeight = 'bold';
-            });
-            const waybillNameValue = await waybillNameCell.textContent();
-            console.log(`Waybill name: "${waybillNameValue}"`);
-            expect(waybillNameValue?.trim()).toBe(NEW_SB_A);
-
-            // Validate total quantity label shows "Всего: 0"
-            const totalQuantityLabel = waybillPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel"]');
-            await totalQuantityLabel.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightcyan';
-                el.style.border = '2px solid blue';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const totalQuantityText = await totalQuantityLabel.textContent();
-            console.log(`Total quantity label: "${totalQuantityText}"`);
-            expect(totalQuantityText?.trim()).toBe("Всего: 0");
-
-            // Validate order number cell shows our captured order number
-            const orderNumberCell = waybillPage.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-OrderNumberCell"]');
-            await orderNumberCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightyellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const orderNumberValue = await orderNumberCell.textContent();
-            console.log(`Order number: "${orderNumberValue}"`);
-            expect(orderNumberValue?.trim()).toBe(`№${orderNumber}`);
-
-            // Validate remaining quantity cell shows orderedQuantity
-            const remainingQuantityCell = waybillPage.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]');
-            await remainingQuantityCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '2px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const remainingQuantityValue = await remainingQuantityCell.textContent();
-            console.log(`Remaining quantity: "${remainingQuantityValue}"`);
-            expect(parseInt(remainingQuantityValue?.trim() || "0")).toBe(orderedQuantity);
-
-            // Validate total left to do label shows "Всего: orderedQuantity"
-            const totalLeftToDoLabel = waybillPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-TotalLeftToDoLabel"]');
-            await totalLeftToDoLabel.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightcyan';
-                el.style.border = '2px solid blue';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const totalLeftToDoText = await totalLeftToDoLabel.textContent();
-            console.log(`Total left to do: "${totalLeftToDoText}"`);
-            expect(totalLeftToDoText?.trim()).toBe(`Всего: ${orderedQuantity}`);
-
-            // Find the detail row by searching for the name cell with dynamic ID
-            const detailNameCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-NameCell"]');
-            await detailNameCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '3px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const detailNameValue = await detailNameCell.textContent();
-            console.log(`Detail name: "${detailNameValue}"`);
-            expect(detailNameValue?.trim()).toBe(NEW_DETAIL_A);
-
-            // Validate quantity per unit cell shows specificationQuantity
-            const quantityPerUnitCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-QuantityPerUnitCell"]');
-            await quantityPerUnitCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '2px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const quantityPerUnitValue = await quantityPerUnitCell.textContent();
-            console.log(`Quantity per unit: "${quantityPerUnitValue}"`);
-            expect(parseInt(quantityPerUnitValue?.trim() || "0")).toBe(specificationQuantity);
-
-            // Validate material cell shows "Нет материала"
-            const materialCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-MaterialCell"]');
-            await materialCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightred';
-                el.style.border = '2px solid red';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const materialValue = await materialCell.textContent();
-            console.log(`Material: "${materialValue}"`);
-            expect(materialValue?.trim()).toBe("Нет материала");
-
-            // Calculate expected need: orderedQuantity * specificationQuantity
-            const expectedNeed = orderedQuantity * specificationQuantity - collectedQuantity;
-
-            // Validate need cell shows the calculated need
-            const needCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-NeedCell"]');
-            await needCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'orange';
-                el.style.border = '2px solid red';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const needValue = await needCell.textContent();
-            console.log(`Need: "${needValue}"`);
-            expect(parseInt(needValue?.trim() || "0")).toBe(expectedNeed);
-
-            // Validate free quantity cell shows 1
-            const freeQuantityCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-FreeQuantityCell"]');
-            await freeQuantityCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '2px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const freeQuantityValue = await freeQuantityCell.textContent();
-            console.log(`Free quantity: "${freeQuantityValue}"`);
-            const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(NEW_DETAIL_A);
-            expect(parseInt(freeQuantityValue?.trim() || "0")).toBe(expectedFreeQuantity);
-
-            // Validate quantity cell shows 1
-            const quantityCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-QuantityCell"]');
-            await quantityCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '2px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
-            });
-            const quantityValue = await quantityCell.textContent();
-            console.log(`Quantity: "${quantityValue}"`);
-            expect(parseInt(quantityValue?.trim() || "0")).toBe(1);
-
-            // Validate in kits cell shows 0
-            const inKitsCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-InKitsCell"]');
-            await inKitsCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'red';
-                el.style.border = '2px solid red';
-                el.style.color = 'white';
-                el.style.fontWeight = 'bold';
-            });
-            const inKitsValue = await inKitsCell.textContent();
-            console.log(`In kits: "${inKitsValue}"`);
-            const expectedInKits = await detailsPage.getInKitsValue(NEW_DETAIL_A);
-            expect(parseInt(inKitsValue?.trim() || "0")).toBe(expectedInKits);
-
-            // Calculate expected deficit: freeQuantity - need = 1 - expectedNeed
-            const expectedDeficit = 1 - expectedNeed;
-
-            // Validate deficit cell shows the calculated deficit
-            const deficitCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-DeficitCell"]');
-            await deficitCell.evaluate((el: HTMLElement, deficit: number) => {
-                el.style.backgroundColor = deficit < 0 ? 'red' : 'lightgreen';
-                el.style.border = '2px solid red';
-                el.style.color = 'white';
-                el.style.fontWeight = 'bold';
-            }, expectedDeficit);
-            const deficitValue = await deficitCell.textContent();
-            console.log(`Deficit: "${deficitValue}"`);
-            expect(parseInt(deficitValue?.trim() || "0")).toBe(expectedDeficit);
-
-            // Check for warning message if deficit is negative
-            let warningMessage;
-            if (expectedDeficit < 0) {
-                warningMessage = waybillPage.locator('[data-testid="ModalAddWaybill-ControlButtons-IncompleteSetWarning"]');
-                await expect(warningMessage).toBeVisible({ timeout: 5000 });
-                await warningMessage.evaluate((el: HTMLElement) => {
-                    el.style.backgroundColor = 'red';
+            // Sub-step 17.1: Validate collected quantity cell
+            await allure.step("Sub-step 17.1: Validate collected quantity cell", async () => {
+                const collectedQuantityCell = await waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-CollectedQuantityCell"]');
+                await collectedQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const collectedQuantityValue = await collectedQuantityCell.textContent();
+                const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
+                console.log(`Collected quantity: "${collectedQuantityValue}"`);
+                expect(parseInt(collectedQuantityValue?.trim() || "0")).toBe(currentBuildQuantity);
+                await collectedQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
                     el.style.color = 'white';
                     el.style.fontWeight = 'bold';
                 });
-                const warningText = await warningMessage.textContent();
-                console.log(`Warning message: "${warningText}"`);
-                expect(warningText).toBe("Вы не можете скомплектовать набор из-за недостатка комплектующих");
-            }
-
-            // Change own quantity input to 1
-            await ownQuantityInput.fill(currentBuildQuantity.toString());
-            await ownQuantityInput.press("Enter");
-            await waybillPage.waitForTimeout(2000);
-
-            // Recalculate expected need with new quantity: 1 * specificationQuantity
-            const newExpectedNeed = currentBuildQuantity * specificationQuantity;
-
-            // Verify need cell now shows the recalculated value
-            await needCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'lightgreen';
-                el.style.border = '3px solid green';
-                el.style.color = 'black';
-                el.style.fontWeight = 'bold';
             });
-            const updatedNeedQuantity = await needCell.textContent();
-            console.log(`Updated need quantity: "${updatedNeedQuantity}"`);
-            expect(parseInt(updatedNeedQuantity?.trim() || "0")).toBe(newExpectedNeed);
 
-            // Calculate expected need after quantity change: newQuantity * specificationQuantity
-            const expectedUpdatedNeed = currentBuildQuantity * specificationQuantity;
-            console.log(`Expected updated need: ${currentBuildQuantity} * ${specificationQuantity} = ${expectedUpdatedNeed}`);
-
-            expect(parseInt(updatedNeedQuantity?.trim() || "0")).toBe(expectedUpdatedNeed);
-
-            // Recalculate expected deficit: freeQuantity - newNeed = 1 - newExpectedNeed
-            const newExpectedDeficit = 1 - newExpectedNeed;
-
-            // Validate deficit cell now shows the new calculated deficit
-            const newDeficitValue = await deficitCell.textContent();
-            console.log(`New deficit: "${newDeficitValue}"`);
-            expect(parseInt(newDeficitValue?.trim() || "0")).toBe(newExpectedDeficit);
-
-            // Check that complete set button is now visible and clickable
-            const completeSetButton = waybillPage.locator('[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]');
-            await expect(completeSetButton).toBeVisible({ timeout: 5000 });
-            await expect(completeSetButton).toBeEnabled({ timeout: 5000 });
-
-            // Verify warning message is no longer present
-            if (warningMessage) {
-                await expect(warningMessage).not.toBeVisible({ timeout: 5000 });
-            }
-
-            // Click the complete set button
-            await completeSetButton.click();
-            await waybillPage.waitForLoadState("networkidle");
-            await waybillPage.waitForTimeout(2000);
-
-            // Verify warning message appears
-            const selectOrderWarning = waybillPage.locator('text="Предупреждение Выберите заказ"');
-            await expect(selectOrderWarning).toBeVisible({ timeout: 5000 });
-
-            // Click the checkbox in the shipment details table
-            const checkboxCell = waybillPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-ScladSetCheckbox"]');
-            await checkboxCell.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-                el.style.fontWeight = 'bold';
+            // Sub-step 17.2: Validate required quantity cell
+            await allure.step("Sub-step 17.2: Validate required quantity cell", async () => {
+                const requiredQuantityCell = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-RequiredQuantityCell"]');
+                await requiredQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const requiredQuantityValue = await requiredQuantityCell.textContent();
+                console.log(`Required quantity: "${requiredQuantityValue}"`);
+                expect(parseInt(requiredQuantityValue?.trim() || "0")).toBe(orderedQuantity);
+                await requiredQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
             });
-            await checkboxCell.click();
-            await waybillPage.waitForTimeout(1000);
 
-            // Click the complete set button again
-            await completeSetButton.click();
-            await waybillPage.waitForLoadState("networkidle");
-            await waybillPage.waitForTimeout(2000);
+            // Sub-step 17.3: Validate own quantity input
+            await allure.step("Sub-step 17.3: Validate own quantity input", async () => {
+                const ownQuantityInput = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-OwnQuantityInput"]');
+                await ownQuantityInput.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const ownQuantityValue = await ownQuantityInput.inputValue();
+                console.log(`Own quantity input: "${ownQuantityValue}"`);
+                expect(parseInt(ownQuantityValue?.trim() || "0")).toBe(orderedQuantity - currentBuildQuantity);
+                await ownQuantityInput.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
 
-            // Verify we're back on the main kitting page
-            await expect(pageTitle).toHaveText("Комплектация сборок на план", { timeout: 5000 });
+            // Sub-step 17.4: Validate name cell
+            await allure.step("Sub-step 17.4: Validate name cell", async () => {
+                const waybillNameCell = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-NameCell"]');
+                await waybillNameCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const waybillNameValue = await waybillNameCell.textContent();
+                console.log(`Waybill name: "${waybillNameValue}"`);
+                expect(waybillNameValue?.trim()).toBe(NEW_SB_A);
+                await waybillNameCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
 
-            await waybillPage.waitForTimeout(3000);
+            // Sub-step 17.5: Validate total quantity label
+            await allure.step("Sub-step 17.5: Validate total quantity label", async () => {
+                const totalQuantityLabel = waybillPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel"]');
+                await totalQuantityLabel.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const totalQuantityText = await totalQuantityLabel.textContent();
+                console.log(`Total quantity label: "${totalQuantityText}"`);
+                expect(totalQuantityText?.trim()).toBe("Всего: 0");
+                await totalQuantityLabel.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.6: Validate order number cell
+            await allure.step("Sub-step 17.6: Validate order number cell", async () => {
+                const orderNumberCell = waybillPage.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-OrderNumberCell"]');
+                await orderNumberCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const orderNumberValue = await orderNumberCell.textContent();
+                console.log(`Order number: "${orderNumberValue}"`);
+                expect(orderNumberValue?.trim()).toBe(`№${orderNumber}`);
+                await orderNumberCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.7: Validate remaining quantity cell
+            await allure.step("Sub-step 17.7: Validate remaining quantity cell", async () => {
+                const remainingQuantityCell = waybillPage.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]');
+                await remainingQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const remainingQuantityValue = await remainingQuantityCell.textContent();
+                console.log(`Remaining quantity: "${remainingQuantityValue}"`);
+                expect(parseInt(remainingQuantityValue?.trim() || "0")).toBe(orderedQuantity);
+                await remainingQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.8: Validate total left to do label
+            await allure.step("Sub-step 17.8: Validate total left to do label", async () => {
+                const totalLeftToDoLabel = waybillPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-TotalLeftToDoLabel"]');
+                await totalLeftToDoLabel.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const totalLeftToDoText = await totalLeftToDoLabel.textContent();
+                console.log(`Total left to do: "${totalLeftToDoText}"`);
+                expect(totalLeftToDoText?.trim()).toBe(`Всего: ${orderedQuantity}`);
+                await totalLeftToDoLabel.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.9: Validate detail name cell
+            await allure.step("Sub-step 17.9: Validate detail name cell", async () => {
+                const detailNameCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-NameCell"]');
+                await detailNameCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '3px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const detailNameValue = await detailNameCell.textContent();
+                console.log(`Detail name: "${detailNameValue}"`);
+                expect(detailNameValue?.trim()).toBe(NEW_DETAIL_A);
+                await detailNameCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '3px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Define needCell and deficitCell for later use
+            const needCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-NeedCell"]');
+            const deficitCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-DeficitCell"]');
+
+            // Extract collected quantity value for use in calculations
+            const collectedQuantityCell = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-CollectedQuantityCell"]');
+            const collectedQuantityValue = await collectedQuantityCell.textContent();
+            const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
+
+            // Define own quantity input for later use
+            const ownQuantityInput = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-OwnQuantityInput"]');
+
+            // Sub-step 17.10: Validate quantity per unit cell
+            await allure.step("Sub-step 17.10: Validate quantity per unit cell", async () => {
+                const quantityPerUnitCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-QuantityPerUnitCell"]');
+                await quantityPerUnitCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const quantityPerUnitValue = await quantityPerUnitCell.textContent();
+                console.log(`Quantity per unit: "${quantityPerUnitValue}"`);
+                expect(parseInt(quantityPerUnitValue?.trim() || "0")).toBe(specificationQuantity);
+                await quantityPerUnitCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.11: Validate material cell
+            await allure.step("Sub-step 17.11: Validate material cell", async () => {
+                const materialCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-MaterialCell"]');
+                await materialCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const materialValue = await materialCell.textContent();
+                console.log(`Material: "${materialValue}"`);
+                expect(materialValue?.trim()).toBe("Нет материала");
+                await materialCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.12: Calculate and validate need cell
+            await allure.step("Sub-step 17.12: Calculate and validate need cell", async () => {
+                const expectedNeed = orderedQuantity * specificationQuantity - collectedQuantity;
+                await needCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const needValue = await needCell.textContent();
+                console.log(`Need: "${needValue}"`);
+                expect(parseInt(needValue?.trim() || "0")).toBe(expectedNeed);
+                await needCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.13: Validate free quantity cell
+            await allure.step("Sub-step 17.13: Validate free quantity cell", async () => {
+                const freeQuantityCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-FreeQuantityCell"]');
+                await freeQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const freeQuantityValue = await freeQuantityCell.textContent();
+                console.log(`Free quantity: "${freeQuantityValue}"`);
+                const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(NEW_DETAIL_A);
+                expect(parseInt(freeQuantityValue?.trim() || "0")).toBe(expectedFreeQuantity);
+                await freeQuantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.14: Validate quantity cell
+            await allure.step("Sub-step 17.14: Validate quantity cell", async () => {
+                const quantityCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-QuantityCell"]');
+                await quantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const quantityValue = await quantityCell.textContent();
+                console.log(`Quantity: "${quantityValue}"`);
+                expect(parseInt(quantityValue?.trim() || "0")).toBe(1);
+                await quantityCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.15: Validate in kits cell
+            await allure.step("Sub-step 17.15: Validate in kits cell", async () => {
+                const inKitsCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-InKitsCell"]');
+                await inKitsCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const inKitsValue = await inKitsCell.textContent();
+                console.log(`In kits: "${inKitsValue}"`);
+                const expectedInKits = await detailsPage.getInKitsValue(NEW_DETAIL_A);
+                expect(parseInt(inKitsValue?.trim() || "0")).toBe(expectedInKits);
+                await inKitsCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.16: Calculate and validate deficit cell
+            await allure.step("Sub-step 17.16: Calculate and validate deficit cell", async () => {
+                const doneQuantity = parseInt((await waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-KitCollectionLink"]').textContent())?.replace(/\D/g, '') || "0", 10);
+                const expectedDeficit = doneQuantity - orderedQuantity;
+                await deficitCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                const deficitValue = await deficitCell.textContent();
+                console.log(`Deficit: "${deficitValue}"`);
+                expect(parseInt(deficitValue?.trim() || "0")).toBe(expectedDeficit);
+                await deficitCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.17: Validate warning message if deficit is negative
+            await allure.step("Sub-step 17.17: Validate warning message if deficit is negative", async () => {
+                const doneQuantity = parseInt((await waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-KitCollectionLink"]').textContent())?.replace(/\D/g, '') || "0", 10);
+                const expectedDeficit = doneQuantity - orderedQuantity;
+
+                // Capture the deficit value before we change the quantity (for use in step 17.20)
+                const deficitBeforeChange = parseInt((await deficitCell.textContent())?.trim() || "0", 10);
+                console.log(`Deficit before quantity change: ${deficitBeforeChange}`);
+
+                if (expectedDeficit < 0) {
+                    const warningMessage = waybillPage.locator('[data-testid="ModalAddWaybill-ControlButtons-IncompleteSetWarning"]');
+                    await expect(warningMessage).toBeVisible({ timeout: 5000 });
+                    await warningMessage.evaluate((el: HTMLElement) => {
+                        el.style.backgroundColor = 'yellow';
+                        el.style.border = '2px solid red';
+                        el.style.color = 'blue';
+                        el.style.fontWeight = 'bold';
+                    });
+                    const warningText = await warningMessage.textContent();
+                    console.log(`Warning message: "${warningText}"`);
+                    expect(warningText?.trim()).toBe("Вы не можете скомплектовать набор из-за недостатка комплектующих");
+                    await warningMessage.evaluate((el: HTMLElement) => {
+                        el.style.backgroundColor = 'green';
+                        el.style.border = '2px solid green';
+                        el.style.color = 'white';
+                        el.style.fontWeight = 'bold';
+                    });
+                }
+            });
+
+            // Sub-step 17.18: Change own quantity input to currentBuildQuantity
+            await allure.step("Sub-step 17.18: Change own quantity input to currentBuildQuantity", async () => {
+                await ownQuantityInput.fill(currentBuildQuantity.toString());
+                await ownQuantityInput.press("Enter");
+                await waybillPage.waitForTimeout(2000);
+            });
+
+            // Sub-step 17.19: Validate updated need cell after quantity change
+            await allure.step("Sub-step 17.19: Validate updated need cell after quantity change", async () => {
+                const newExpectedNeed = currentBuildQuantity * specificationQuantity;
+                await needCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                    el.style.fontWeight = 'bold';
+                });
+                await waybillPage.waitForTimeout(2000);
+                const updatedNeedQuantity = await needCell.textContent();
+                console.log(`Updated need quantity: "${updatedNeedQuantity}"`);
+                expect(parseInt(updatedNeedQuantity?.trim() || "0")).toBe(newExpectedNeed);
+                await needCell.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'green';
+                    el.style.border = '2px solid green';
+                    el.style.color = 'white';
+                    el.style.fontWeight = 'bold';
+                });
+            });
+
+            // Sub-step 17.20: Validate updated deficit cell after quantity change
+            await allure.step("Sub-step 17.20: Validate updated deficit cell after quantity change", async () => {
+                // Get the deficit value that was captured in step 17.17 (before quantity change)
+                const doneQuantity = parseInt((await waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-KitCollectionLink"]').textContent())?.replace(/\D/g, '') || "0", 10);
+                const deficitBeforeChange = doneQuantity - orderedQuantity;
+                console.log(`Deficit before quantity change: ${deficitBeforeChange}`);
+
+                // Calculate how much the deficit should change
+                // The need quantity changed from (orderedQuantity - currentBuildQuantity) * specificationQuantity 
+                // to currentBuildQuantity * specificationQuantity
+                const oldNeed = (orderedQuantity - currentBuildQuantity) * specificationQuantity;
+                const newNeed = currentBuildQuantity * specificationQuantity;
+                const needChange = newNeed - oldNeed;
+                const expectedDeficitChange = -needChange; // Negative because increasing need decreases deficit
+
+                // Get the new deficit after the quantity change
+                let newDeficitValue = await deficitCell.textContent();
+                console.log(`New deficit after quantity change: "${newDeficitValue}"`);
+                newDeficitValue = newDeficitValue?.trim() || "";
+                const deficitAfterChange = parseInt(newDeficitValue || "0", 10);
+
+                // Verify the deficit changed by the expected amount
+                const actualDeficitChange = deficitAfterChange - deficitBeforeChange;
+                console.log(`Expected deficit change: ${expectedDeficitChange}, Actual deficit change: ${actualDeficitChange}`);
+                expect(actualDeficitChange).toBe(expectedDeficitChange);
+            });
+
         });
     });
 
