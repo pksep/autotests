@@ -2060,7 +2060,7 @@ export class CreatePartsDatabasePage extends PageObject {
                     return false;
                 }
 
-                // Verify writability if it’s a text field.
+                // Verify writability if it's a text field.
                 if (!(field.type === "input" && field.title === "Медиа файлы")) {
                     const testValue = "Test Value";
                     await fieldLocator.fill(testValue);
@@ -2574,6 +2574,227 @@ export class CreatePartsDatabasePage extends PageObject {
         logger.info("Item not found in the bottom table.");
         return false; // ✅ Item does NOT exist in the bottom table
     }
+    // Inside your CreatePartsDatabasePage (or your base PageObject class)
+    async fillDetailName(dataTestId: string, value: string): Promise<void> {
+        // Locate the input field by its data-testid.
+        const detailNameInput = this.page.locator(`[data-testid="${dataTestId}"]`);
+
+        // Ensure the input field is visible before interacting.
+        await expect(detailNameInput).toBeVisible({ timeout: 5000 });
+
+        // Fill the input field with the provided value.
+        await detailNameInput.fill(value);
+        await detailNameInput.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+        });
+    }
+
+    /**
+      * Verifies that a success message is shown after saving a detail.
+      * This method uses the generic notification element with data-testid
+      * "Notification-Notification-Description" (same as used in getMessage).
+      */
+    async verifyDetailSuccessMessage(expectedText: string): Promise<void> {
+        // Locate the notification element using the same data-testid as getMessage:
+        const successDialog = this.page.locator('[data-testid="Notification-Notification-Description"]');
+
+        // Apply styling for visibility
+        await successDialog.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+        });
+
+        // Wait for visibility with a timeout
+        await expect(successDialog).toBeVisible({ timeout: 5000 });
+
+        // Retrieve and log the text content for debugging
+        const dialogText = await successDialog.textContent();
+        console.log("Success dialog text:", dialogText);
+
+        // Verify that the notification contains the expected text
+        expect(dialogText).toContain(expectedText);
+    }
+
+    /**
+     * Calculates the free quantity for a detail by checking warehouse inventory.
+     * Opens a new tab to the warehouse, searches for the detail, and calculates stock minus in-kits.
+     * @param detailName - The name of the detail to search for
+     * @returns Promise<number> - The calculated free quantity (stock - inKits)
+     */
+    async calculateFreeQuantity(detailName: string): Promise<number> {
+        // Open a new tab to the warehouse
+        const warehousePage = await this.page.context().newPage();
+        await warehousePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+
+        const residualsButton = warehousePage.locator('[data-testid="Sclad-residuals-residuals"]');
+        await residualsButton.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+            el.style.fontWeight = 'bold';
+        });
+        await residualsButton.click();
+        await warehousePage.waitForTimeout(2000);
+
+        const table = warehousePage.locator('[data-testid="OstatkPCBD-Detal-Table"]');
+        await table.waitFor({ state: 'visible' });
+        await table.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'lightcyan';
+            el.style.border = '2px solid blue';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+
+        const searchInput = table.locator('[data-testid="OstatkiPCBDTable-SearchInput-Dropdown-Input"]');
+        await searchInput.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'lightgreen';
+            el.style.border = '2px solid green';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+        await searchInput.fill(detailName);
+        await searchInput.press("Enter");
+        await warehousePage.waitForTimeout(2000);
+
+        const firstRow = table.locator("tbody tr").first();
+        await firstRow.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'orange';
+            el.style.border = '2px solid red';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+        const stockCell = firstRow.locator('[data-testid="OstatkiPCBDTable-Row-Stock"]');
+        const inKitsCell = firstRow.locator('[data-testid="OstatkiPCBDTable-Row-InKits"]');
+
+        await stockCell.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'lightgreen';
+            el.style.border = '2px solid green';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+        await inKitsCell.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'lightblue';
+            el.style.border = '2px solid blue';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+
+        const stockValue = await stockCell.textContent();
+        const inKitsValue = await inKitsCell.textContent();
+
+        const stock = parseInt(stockValue?.trim() || "0", 10);
+        const inKits = parseInt(inKitsValue?.trim() || "0", 10);
+        const freeQuantity = stock - inKits;
+
+        console.log(`Warehouse data for ${detailName}: Stock=${stock}, InKits=${inKits}, FreeQuantity=${freeQuantity}`);
+
+        await warehousePage.close();
+        return freeQuantity;
+    }
+
+    // Inside your CreatePartsDatabasePage (or your base PageObject class)
+
+    /**
+     * Gets the InKits value for a detail from warehouse inventory.
+     * Opens a new tab to the warehouse, searches for the detail, and returns the InKits value.
+     * @param detailName - The name of the detail to search for
+     * @returns Promise<number> - The InKits value
+     */
+    async getInKitsValue(detailName: string): Promise<number> {
+        // Open a new tab to the warehouse
+        const warehousePage = await this.page.context().newPage();
+        await warehousePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+
+        const residualsButton = warehousePage.locator('[data-testid="Sclad-residuals-residuals"]');
+        await residualsButton.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'yellow';
+            el.style.border = '2px solid red';
+            el.style.color = 'blue';
+            el.style.fontWeight = 'bold';
+        });
+        await residualsButton.click();
+        await warehousePage.waitForTimeout(2000);
+
+        const table = warehousePage.locator('[data-testid="OstatkPCBD-Detal-Table"]');
+        await table.waitFor({ state: 'visible' });
+        await table.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'lightcyan';
+            el.style.border = '2px solid blue';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+
+        const searchInput = table.locator('[data-testid="OstatkiPCBDTable-SearchInput-Dropdown-Input"]');
+        await searchInput.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'lightgreen';
+            el.style.border = '2px solid green';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+        await searchInput.fill(detailName);
+        await searchInput.press("Enter");
+        await warehousePage.waitForTimeout(2000);
+
+        const firstRow = table.locator("tbody tr").first();
+        await firstRow.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'orange';
+            el.style.border = '2px solid red';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+        const inKitsCell = firstRow.locator('[data-testid="OstatkiPCBDTable-Row-InKits"]');
+
+        await inKitsCell.evaluate((el: HTMLElement) => {
+            el.style.backgroundColor = 'lightblue';
+            el.style.border = '2px solid blue';
+            el.style.color = 'black';
+            el.style.fontWeight = 'bold';
+        });
+
+        const inKitsValue = await inKitsCell.textContent();
+        const inKits = parseInt(inKitsValue?.trim() || "0", 10);
+
+        console.log(`Warehouse InKits value for ${detailName}: ${inKits}`);
+
+        await warehousePage.close();
+        return inKits;
+    }
+
+    // Inside your CreatePartsDatabasePage (or your base PageObject class)
+
+    /**
+     * Opens the developer console and positions it at the bottom for debugging.
+     * This method uses keyboard shortcuts to ensure the console is properly positioned.
+     */
+    async openConsoleAtBottom(): Promise<void> {
+        // First, close any existing DevTools to start fresh
+        await this.page.keyboard.press('Escape');
+        await this.page.waitForTimeout(200);
+
+        // Open developer console using F12
+        await this.page.keyboard.press('F12');
+        await this.page.waitForTimeout(1000);
+
+        // Press Ctrl+Shift+D multiple times to ensure it's at bottom position
+        // This toggles between side and bottom, so we press it 2-3 times to be sure
+        for (let i = 0; i < 3; i++) {
+            await this.page.keyboard.press('Control+Shift+D');
+            await this.page.waitForTimeout(300);
+        }
+
+        // Ensure console panel is active (not elements or other panels)
+        await this.page.keyboard.press('Control+Shift+J');
+        await this.page.waitForTimeout(500);
+
+        // One more dock toggle to ensure bottom position
+        await this.page.keyboard.press('Control+Shift+D');
+        await this.page.waitForTimeout(500);
+
+        console.log('Developer console opened and positioned at bottom');
+    }
 
 
 
@@ -2581,7 +2802,5 @@ export class CreatePartsDatabasePage extends PageObject {
 
 
 
-
-
-} 
+}
 

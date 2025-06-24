@@ -219,11 +219,11 @@ export class PageObject extends AbstractPage {
       );
       await elements[0].evaluate((element) => {
         element.style.border = "2px solid red";
-        element.style.backgroundColor = "yellow";
+        element.style.backgroundColor = "red";
       });
       // Wait for the specified amount of time
       await page.waitForTimeout(waitTime);
-
+      await page.waitForTimeout(1500);
       logger.info(`Waited for ${waitTime}ms after clicking the element`);
     } else {
       // Log that no elements were found
@@ -425,7 +425,7 @@ export class PageObject extends AbstractPage {
     try {
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(500);
-      
+
       // Step 1: Fill "Табельный номер" field
       await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-Input"]', { state: 'visible', timeout: 10000 });
       console.log('Табельный номер field is visible.');
