@@ -87,6 +87,15 @@ const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON = "ModalAddWaybill-C
 const MINI_NAVIGATION_POS_DATA2 = "MiniNavigation-POS-Data2";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW = "ModalAddWaybill-DetailsTable-Row";
 
+// Cell type constants for ModalAddWaybill-DetailsTable-Row
+const QUANTITY_PER_UNIT_CELL = "QuantityPerUnitCell";
+const MATERIAL_CELL = "MaterialCell";
+const NEED_CELL = "NeedCell";
+const FREE_QUANTITY_CELL = "FreeQuantityCell";
+const QUANTITY_CELL = "QuantityCell";
+const IN_KITS_CELL = "InKitsCell";
+const DEFICIT_CELL = "DeficitCell";
+
 // Get today's date in DD.MM.YYYY format
 const today = new Date().toLocaleDateString('ru-RU', {
     day: '2-digit',
@@ -1483,7 +1492,7 @@ export const runERP_969 = () => {
                 rowId = nameCellDataTestId?.replace('ModalAddWaybill-DetailsTable-Row', '').replace('-NameCell', '') || '';
                 console.log(`Row ID: "${rowId}"`);
 
-                const quantityPerUnitCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-QuantityPerUnitCell"]`);
+                const quantityPerUnitCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${QUANTITY_PER_UNIT_CELL}"]`);
                 await quantityPerUnitCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1503,7 +1512,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.20: Verify material cell shows "Нет материала"
             await allure.step("Sub-step 16.20: Verify material cell shows 'Нет материала'", async () => {
-                const materialCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-MaterialCell"]`);
+                const materialCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${MATERIAL_CELL}"]`);
                 await materialCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1523,7 +1532,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.21: Verify need cell calculation
             await allure.step("Sub-step 16.21: Verify need cell calculation", async () => {
-                needCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-NeedCell"]`);
+                needCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${NEED_CELL}"]`);
                 await needCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1543,7 +1552,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.22: Verify free quantity cell
             await allure.step("Sub-step 16.22: Verify free quantity cell", async () => {
-                const freeQuantityCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-FreeQuantityCell"]`);
+                const freeQuantityCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${FREE_QUANTITY_CELL}"]`);
                 await freeQuantityCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1565,7 +1574,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.23: Verify quantity cell
             await allure.step("Sub-step 16.23: Verify quantity cell", async () => {
-                const quantityCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-QuantityCell"]`);
+                const quantityCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${QUANTITY_CELL}"]`);
                 await quantityCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1578,7 +1587,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.24: Verify in kits cell
             await allure.step("Sub-step 16.24: Verify in kits cell", async () => {
-                const inKitsCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-InKitsCell"]`);
+                const inKitsCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${IN_KITS_CELL}"]`);
                 await inKitsCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1596,7 +1605,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.25: Verify deficit cell calculation
             await allure.step("Sub-step 16.25: Verify deficit cell calculation", async () => {
-                deficitCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-DeficitCell"]`);
+                deficitCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${DEFICIT_CELL}"]`);
                 await deficitCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1605,8 +1614,8 @@ export const runERP_969 = () => {
                 const deficitValue = await deficitCell.textContent();
                 console.log(`Deficit: "${deficitValue}"`);
 
-                freeQuantityCellForDeficit = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-FreeQuantityCell"]`);
-                needCellForDeficit = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-NeedCell"]`);
+                freeQuantityCellForDeficit = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${FREE_QUANTITY_CELL}"]`);
+                needCellForDeficit = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${NEED_CELL}"]`);
 
                 const freeQuantityValueForDeficit = await freeQuantityCellForDeficit.textContent();
                 const needValueForDeficit = await needCellForDeficit.textContent();
