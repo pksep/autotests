@@ -13,7 +13,7 @@ const NEW_DETAIL_A = "0T5.21";  // For type Д (the main detail)
 const NEW_SB_A = "0T5.11";      // For the new СБ detail
 
 let orderNumber: string | null = null; // Declare outside to share between steps
-let orderedQuantity: number = 4; // Declare outside to share between steps
+let orderedQuantity: number = 2; // Declare outside to share between steps
 let targetRow: any = null; // Declare outside to share between steps
 let specificationQuantity: number = 1; // Global variable for specification quantity from step 10
 let waybillCollections: number = 0; // Global variable to track waybill collections
@@ -381,22 +381,6 @@ export const runERP_969 = () => {
                 element.style.backgroundColor = "red";
             });
             await save.click();
-            // Debug: Capture and output the HTML of all elements with data-testid="Notification-Notification-Description"
-            // const successDialog = page.locator('[data-testid="Notification-Notification-Description"]');
-            // await successDialog.evaluate((el: HTMLElement) => {
-            //     el.style.backgroundColor = 'yellow';
-            //     el.style.border = '2px solid red';
-            //     el.style.color = 'blue';
-            // });
-
-            // await expect(successDialog).toBeVisible({ timeout: 5000 });
-
-            // Retrieve and log the text content for debugging
-            // const dialogText = await successDialog.textContent();
-            // console.log("Success dialog text:", dialogText);
-
-            // Verify that the notification contains the expected text
-            //expect(dialogText).toContain("Сборочная единица успешно Создана");
 
             await page.waitForTimeout(1000);
         });

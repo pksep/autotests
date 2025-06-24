@@ -223,7 +223,7 @@ export class PageObject extends AbstractPage {
       });
       // Wait for the specified amount of time
       await page.waitForTimeout(waitTime);
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1500);
       logger.info(`Waited for ${waitTime}ms after clicking the element`);
     } else {
       // Log that no elements were found
