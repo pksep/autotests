@@ -67,6 +67,13 @@ const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON = "ModalStartProd
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
 
+// Additional single-use data-testid constants - Batch 2
+const TABLE_COMPLECT_TABLE_COMPLECT_ROW_ORDERED_CELL = "TableComplect-TableComplect-RowOrderedCell";
+const TABLE_COMPLECT_TABLE_COMPLECT_ROW_OPERATIONS_CELL = "TableComplect-TableComplect-RowOperationsCell";
+const TABLE_COMPLECT_TABLE_COMPLECT_ROW_STATUS_CELL = "TableComplect-TableComplect-RowStatusCell";
+const TABLE_COMPLECT_TABLE_COMPLECT_ROW_COMPLETION_LEVEL_CELL = "TableComplect-TableComplect-RowCompletionLevelCell";
+const TABLE_COMPLECT_TABLE_COMPLECT_ROW_COLLECTED_CELL = "TableComplect-TableComplect-RowCollectedCell";
+
 // Get today's date in DD.MM.YYYY format
 const today = new Date().toLocaleDateString('ru-RU', {
     day: '2-digit',
@@ -1831,7 +1838,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.40: Verify updated ordered quantity
             await allure.step("Sub-step 16.40: Verify updated ordered quantity", async () => {
-                const orderedCell = firstRow3.locator('[data-testid="TableComplect-TableComplect-RowOrderedCell"]');
+                const orderedCell = firstRow3.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_ROW_ORDERED_CELL}"]`);
                 await orderedCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1849,7 +1856,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.41: Verify updated operations cell
             await allure.step("Sub-step 16.41: Verify updated operations cell", async () => {
-                const operationsCell = firstRow3.locator('[data-testid="TableComplect-TableComplect-RowOperationsCell"]');
+                const operationsCell = firstRow3.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_ROW_OPERATIONS_CELL}"]`);
                 await operationsCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1869,7 +1876,7 @@ export const runERP_969 = () => {
             await allure.step("Sub-step 16.42: Verify updated status cell", async () => {
                 expectedCompletionPercentage = Math.round((specificationQuantity / orderedQuantity) * 100);
 
-                const statusCell = firstRow3.locator('[data-testid="TableComplect-TableComplect-RowStatusCell"]');
+                const statusCell = firstRow3.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_ROW_STATUS_CELL}"]`);
                 await statusCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1887,7 +1894,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.43: Verify updated completion level cell
             await allure.step("Sub-step 16.43: Verify updated completion level cell", async () => {
-                const completionLevelCell = firstRow3.locator('[data-testid="TableComplect-TableComplect-RowCompletionLevelCell"]');
+                const completionLevelCell = firstRow3.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_ROW_COMPLETION_LEVEL_CELL}"]`);
                 await completionLevelCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1905,7 +1912,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.44: Verify updated collected cell
             await allure.step("Sub-step 16.44: Verify updated collected cell", async () => {
-                const collectedCell = firstRow3.locator('[data-testid="TableComplect-TableComplect-RowCollectedCell"]');
+                const collectedCell = firstRow3.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_ROW_COLLECTED_CELL}"]`);
                 await collectedCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
