@@ -81,6 +81,11 @@ const TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_COLLECTED_QUANTITY_CELL = "TableCom
 const TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_EXECUTOR_CELL = "TableComplect-TableComplect-KitsRowExecutorCell";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel";
 
+// Additional single-use data-testid constants - Batch 4
+const NOTIFICATION_NOTIFICATION_DESCRIPTION = "Notification-Notification-Description";
+const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON = "ModalAddWaybill-ControlButtons-CompleteSetButton";
+const MINI_NAVIGATION_POS_DATA2 = "MiniNavigation-POS-Data2";
+
 // Get today's date in DD.MM.YYYY format
 const today = new Date().toLocaleDateString('ru-RU', {
     day: '2-digit',
@@ -472,7 +477,7 @@ export const runERP_969 = () => {
 
         await allure.step("Step 11.3: Select the Детайли slider", async () => {
             // In the Склад page, select the Detail slider.
-            const detailSlider = skladPage.locator('[data-testid="MiniNavigation-POS-Data2"]');
+            const detailSlider = skladPage.locator(`[data-testid="${MINI_NAVIGATION_POS_DATA2}"]`);
             await detailSlider.click();
             await skladPage.waitForTimeout(500);
         });
@@ -551,7 +556,7 @@ export const runERP_969 = () => {
             await skladPage.waitForLoadState("networkidle");
 
             // Re-open the Детайли slider tab
-            await skladPage.locator('[data-testid="MiniNavigation-POS-Data2"]').click();
+            await skladPage.locator(`[data-testid="${MINI_NAVIGATION_POS_DATA2}"]`).click();
             await skladPage.waitForTimeout(1000);
 
             // Confirm the table is visible
@@ -1684,7 +1689,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.30: Verify complete set button is now visible
             await allure.step("Sub-step 16.30: Verify complete set button is now visible", async () => {
-                completeSetButton = kittingPage.locator('[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]');
+                completeSetButton = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON}"]`);
                 await completeSetButton.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1715,7 +1720,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.33: Verify order selection warning appears
             await allure.step("Sub-step 16.33: Verify order selection warning appears", async () => {
-                const selectOrderWarning = kittingPage.locator('[data-testid="Notification-Notification-Description"]');
+                const selectOrderWarning = kittingPage.locator(`[data-testid="${NOTIFICATION_NOTIFICATION_DESCRIPTION}"]`);
                 await selectOrderWarning.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
