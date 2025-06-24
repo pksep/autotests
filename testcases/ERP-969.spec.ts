@@ -60,6 +60,13 @@ const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON = "Specification-ModalBaseDetal-
 
 const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
 
+// Additional single-use data-testid constants
+const SCLAD_ORDERING_SUPPLIERS = "Sclad-orderingSuppliers";
+const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON = "OrderSuppliers-Div-CreateOrderButton";
+const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON = "ModalStartProduction-ComplectationTable-CancelButton";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
+
 // Get today's date in DD.MM.YYYY format
 const today = new Date().toLocaleDateString('ru-RU', {
     day: '2-digit',
@@ -621,13 +628,13 @@ export const runERP_969 = () => {
             await warehousePage.waitForLoadState("networkidle");
 
             // Click the ordering suppliers button
-            const orderingSuppliersButton = warehousePage.locator('[data-testid="Sclad-orderingSuppliers"]');
+            const orderingSuppliersButton = warehousePage.locator(`[data-testid="${SCLAD_ORDERING_SUPPLIERS}"]`);
             await orderingSuppliersButton.click();
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
 
             // Click the create order button
-            const createOrderButton = warehousePage.locator('[data-testid="OrderSuppliers-Div-CreateOrderButton"]');
+            const createOrderButton = warehousePage.locator(`[data-testid="${ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON}"]`);
             await createOrderButton.click();
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
@@ -720,7 +727,7 @@ export const runERP_969 = () => {
             console.log(`Captured order number: ${orderNumber}`);
 
             // Find and click the "В производство" button
-            const startProductionButton = productionModal.locator('[data-testid="ModalStartProduction-ComplectationTable-CancelButton"]:has-text("В производство")');
+            const startProductionButton = productionModal.locator(`[data-testid="${MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON}"]:has-text("В производство")`);
             await expect(startProductionButton).toBeVisible({ timeout: 5000 });
             await startProductionButton.click();
             await warehousePage.waitForLoadState("networkidle");
@@ -1253,7 +1260,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.12: Verify own quantity input has order quantity
             await allure.step("Sub-step 16.12: Verify own quantity input has order quantity", async () => {
-                ownQuantityInput = kittingPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-OwnQuantityInput"]');
+                ownQuantityInput = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
                 await ownQuantityInput.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1271,7 +1278,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.13: Verify assembly name in waybill modal
             await allure.step("Sub-step 16.13: Verify assembly name in waybill modal", async () => {
-                const nameCell = kittingPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-NameCell"]');
+                const nameCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
                 await nameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -2171,7 +2178,7 @@ export const runERP_969 = () => {
 
             // Sub-step 17.9: Validate own quantity input
             await allure.step("Sub-step 17.9: Validate own quantity input", async () => {
-                const ownQuantityInput = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-OwnQuantityInput"]');
+                const ownQuantityInput = waybillPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
                 await ownQuantityInput.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -2191,7 +2198,7 @@ export const runERP_969 = () => {
 
             // Sub-step 17.10: Validate name cell
             await allure.step("Sub-step 17.10: Validate name cell", async () => {
-                const waybillNameCell = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-NameCell"]');
+                const waybillNameCell = waybillPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
                 await waybillNameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
