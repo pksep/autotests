@@ -10,7 +10,7 @@ import { ENV, SELECTORS } from "../config";
 export enum Supplier {
     cbed = "Сборка",
     details = "Детали",
-    product = "Изделия",
+    product = "Изделии",
     suppler = "Поставщики",
 }
 
@@ -64,13 +64,14 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             .first()
             .click();
         const headerModalWindow = this.page
-            .locator('[data-testid="ModalWorker-StockOrderModal-Heading"]')
+            .locator('.modal-right__title')
             .first();
         expect(await headerModalWindow.textContent()).toBe("Заказ");
 
+        await this.page.waitForLoadState('networkidle')
         const checkOrderNumberLocator = this.page.locator(
-            '[data-testid="ModalWorker-StockOrderModal-OrderNumber"] span'
-        );
+            '.modal-worker__label-span'
+        ).last();
 
         await expect(checkOrderNumberLocator).toBeVisible();
         const checkOrderNumber = checkOrderNumberLocator.textContent();
@@ -104,6 +105,12 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         const selector = '[data-testid="Sclad-orderingSuppliers"]';
         const tableYourQunatityCell =
             "ModalAddOrder-ProductionTable-YourQuantityColumn";
+        const modalWindowLaunchIntoProductionDetail = '[data-testid="ModalAddOrder-Modals-ModalStartProductiontrue-ModalContent"]'
+
+
+        const buttonCreateOrder = ".btn-add"
+        const buttonLaunchIntoProduction = '[data-testid="ModalStartProduction-ComplectationTable-CancelButton"]'
+        const buttonOrder = '[data-testid="ModalAddOrder-ProductionTable-OrderButton"]'
 
         await allure.step("Step 1: Open the warehouse page", async () => {
             // Go to the Warehouse page
@@ -115,14 +122,13 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             async () => {
                 await this.findTable(selector);
                 await this.page.waitForLoadState("networkidle");
-
             }
         );
 
         await allure.step(
             "Step 3: Click on the Launch on Production button",
             async () => {
-                await this.clickButton(" Создать заказ ", ".btn-add");
+                await this.clickButton(" Создать заказ ", buttonCreateOrder);
             }
         );
 
@@ -213,14 +219,14 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         await allure.step("Step 9: Click on the Order button", async () => {
             await this.clickButton(
                 "Заказать",
-                '[data-testid="ModalAddOrder-ProductionTable-OrderButton"]'
+                buttonOrder
             );
         });
 
         await allure.step(
             "Step 10: Check modal window launch in to production",
             async () => {
-                await this.checkModalWindowLaunchIntoProduction();
+                await this.checkModalWindowLaunchIntoProduction(modalWindowLaunchIntoProductionDetail);
 
                 await this.checkCurrentDate(
                     '[data-testid="ModalStartProduction-OrderDateValue"]'
@@ -249,7 +255,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         });
 
         await allure.step("Step 12: Click on the Order button", async () => {
-            await this.clickButton(" В производство ", ".btn-status");
+            await this.clickButton(" В производство ", buttonLaunchIntoProduction);
 
             await this.getMessage(checkOrderNumber);
         });
