@@ -90,14 +90,16 @@
         },
         "LaunchOnProdictuion": {
             "titles": [
-                "Запустить в производство",
-                "Примечание",
-                "Комплектация"
+                "Комплектация",
+                "Описание/Примечание"
+            ],
+            "titlesH4": [
+                "Запустить в производство"
             ],
             "buttons": [
                 {
                     "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
-                    "label": "Отмена",
+                    "label": "Отменить",
                     "state": "true"
                 },
                 {
