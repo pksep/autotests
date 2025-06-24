@@ -120,9 +120,10 @@ jobs:
           docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
           
           apt-get update && apt-get install -y openssh-client
-          sudo mkdir -p /root/.ssh
-          sudo chmod 600 /root/.ssh/id_rsa
-          sudo chmod 644 /root/.ssh/id_rsa.pub
+          whoami
+          mkdir -p /root/.ssh
+          chmod 600 /root/.ssh/id_rsa
+          chmod 644 /root/.ssh/id_rsa.pub
 
           # Add GitHub to known hosts
           ssh-keyscan github.com >> ~/.ssh/known_hosts
