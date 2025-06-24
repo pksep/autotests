@@ -74,6 +74,13 @@ const TABLE_COMPLECT_TABLE_COMPLECT_ROW_STATUS_CELL = "TableComplect-TableComple
 const TABLE_COMPLECT_TABLE_COMPLECT_ROW_COMPLETION_LEVEL_CELL = "TableComplect-TableComplect-RowCompletionLevelCell";
 const TABLE_COMPLECT_TABLE_COMPLECT_ROW_COLLECTED_CELL = "TableComplect-TableComplect-RowCollectedCell";
 
+// Additional single-use data-testid constants - Batch 3
+const TABLE_COMPLECT_TABLE_COMPLECT_ROW_REMAINING_CELL = "TableComplect-TableComplect-RowRemainingCell";
+const TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_EXECUTION_DATE_CELL = "TableComplect-TableComplect-KitsRowExecutionDateCell";
+const TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_COLLECTED_QUANTITY_CELL = "TableComplect-TableComplect-KitsRowCollectedQuantityCell";
+const TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_EXECUTOR_CELL = "TableComplect-TableComplect-KitsRowExecutorCell";
+const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel";
+
 // Get today's date in DD.MM.YYYY format
 const today = new Date().toLocaleDateString('ru-RU', {
     day: '2-digit',
@@ -1324,7 +1331,7 @@ export const runERP_969 = () => {
                 console.log(`Calculated total from order quantities: ${calculatedTotal}`);
 
                 // Now verify the total quantity label shows the correct calculated value
-                const totalQuantityLabel = kittingPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel"]');
+                const totalQuantityLabel = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL}"]`);
                 await totalQuantityLabel.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1932,7 +1939,7 @@ export const runERP_969 = () => {
             await allure.step("Sub-step 16.45: Verify updated remaining cell", async () => {
                 const expectedRemainingQuantity = orderedQuantity - specificationQuantity;
 
-                const remainingCell = firstRow3.locator('[data-testid="TableComplect-TableComplect-RowRemainingCell"]');
+                const remainingCell = firstRow3.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_ROW_REMAINING_CELL}"]`);
                 await remainingCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1957,7 +1964,7 @@ export const runERP_969 = () => {
                     el.style.color = 'blue';
                 });
 
-                const executionDateCell = secondRow.locator('[data-testid="TableComplect-TableComplect-KitsRowExecutionDateCell"]');
+                const executionDateCell = secondRow.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_EXECUTION_DATE_CELL}"]`);
                 await executionDateCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1970,7 +1977,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.47: Verify second row collected quantity
             await allure.step("Sub-step 16.47: Verify second row collected quantity", async () => {
-                const kitsCollectedQuantityCell = secondRow.locator('[data-testid="TableComplect-TableComplect-KitsRowCollectedQuantityCell"]');
+                const kitsCollectedQuantityCell = secondRow.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_COLLECTED_QUANTITY_CELL}"]`);
                 await kitsCollectedQuantityCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1988,7 +1995,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.48: Verify second row executor
             await allure.step("Sub-step 16.48: Verify second row executor", async () => {
-                const executorCell = secondRow.locator('[data-testid="TableComplect-TableComplect-KitsRowExecutorCell"]');
+                const executorCell = secondRow.locator(`[data-testid="${TABLE_COMPLECT_TABLE_COMPLECT_KITS_ROW_EXECUTOR_CELL}"]`);
                 await executorCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -2223,7 +2230,7 @@ export const runERP_969 = () => {
 
             // Sub-step 17.11: Validate total quantity label
             await allure.step("Sub-step 17.11: Validate total quantity label", async () => {
-                const totalQuantityLabel = waybillPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel"]');
+                const totalQuantityLabel = waybillPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL}"]`);
                 await totalQuantityLabel.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
