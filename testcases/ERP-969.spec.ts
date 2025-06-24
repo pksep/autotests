@@ -103,6 +103,11 @@ const today = new Date().toLocaleDateString('ru-RU', {
     year: 'numeric'
 });
 
+// Add at the top of the file, with other constants
+const OSTATTKPCBD_TABLE_SEARCH_INPUT = "OstatkiPCBDTable-SearchInput-Dropdown-Input";
+const ORDER_MODAL_TABLE = "Table";
+const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
+
 export const runERP_969 = () => {
     test("TestCase 06 - Архивация всех совпадающих деталей (Cleanup) `${NEW_DETAIL_A}`", async ({ page }) => {
         test.setTimeout(600000);
@@ -619,7 +624,7 @@ export const runERP_969 = () => {
             await expect(residualsTable).toBeVisible({ timeout: 5000 });
 
             // Perform the search for the new detail
-            const searchInput = residualsTable.locator('[data-testid="OstatkiPCBDTable-SearchInput-Dropdown-Input"]');
+            const searchInput = residualsTable.locator(`[data-testid="${OSTATTKPCBD_TABLE_SEARCH_INPUT}"]`);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
             await searchInput.fill("");
             await searchInput.press("Enter");
@@ -924,7 +929,7 @@ export const runERP_969 = () => {
             });
 
             // Find and verify the table contents
-            const table = orderModal.locator('[data-testid="Table"]');
+            const table = orderModal.locator(`[data-testid="${ORDER_MODAL_TABLE}"]`);
             await table.evaluate((el: HTMLElement) => {
                 el.style.border = '2px solid red';
                 el.style.backgroundColor = 'yellow';
@@ -1040,7 +1045,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.2: Click assembly kitting button
             await allure.step("Sub-step 16.2: Click assembly kitting button", async () => {
-                const assemblyKittingButton = kittingPage.locator('[data-testid="Sclad-completionCbedPlan"]');
+                const assemblyKittingButton = kittingPage.locator(`[data-testid="${SCLAD_COMPLETION_CBED_PLAN}"]`);
                 await assemblyKittingButton.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -2045,7 +2050,7 @@ export const runERP_969 = () => {
 
             // Sub-step 17.1: Click the button to open assembly kitting plan page
             await allure.step("Sub-step 17.1: Click the button to open assembly kitting plan page", async () => {
-                const completionCbedPlanButton = waybillPage.locator('[data-testid="Sclad-completionCbedPlan"]');
+                const completionCbedPlanButton = waybillPage.locator(`[data-testid="${SCLAD_COMPLETION_CBED_PLAN}"]`);
                 await completionCbedPlanButton.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
