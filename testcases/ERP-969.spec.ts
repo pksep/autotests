@@ -107,6 +107,10 @@ const today = new Date().toLocaleDateString('ru-RU', {
 const OSTATTKPCBD_TABLE_SEARCH_INPUT = "OstatkiPCBDTable-SearchInput-Dropdown-Input";
 const ORDER_MODAL_TABLE = "Table";
 const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
+// Add at the top of the file, with other constants
+const TABLE_REVISION_PAGINATION_TABLE = "TableRevisionPagination-Table";
+const TABLE_REVISION_PAGINATION_EDIT_PEN = "TableRevisionPagination-EditPen";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-RequiredQuantityCell";
 
 export const runERP_969 = () => {
     test("TestCase 06 - Архивация всех совпадающих деталей (Cleanup) `${NEW_DETAIL_A}`", async ({ page }) => {
@@ -501,7 +505,7 @@ export const runERP_969 = () => {
             // Locate the table and its search input within the Склад section.
 
 
-            const skladTable = skladPage.locator('[data-testid="TableRevisionPagination-Table"]');
+            const skladTable = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"]`);
             const searchInput = skladTable.locator(`[data-testid="${SEARCH_COVER_INPUT}"]`);
             await searchInput.evaluate((element: HTMLElement) => {
                 element.style.border = "2px solid red";
@@ -518,7 +522,7 @@ export const runERP_969 = () => {
 
         await allure.step("Step 11.5: Verify exactly one matching row is found", async () => {
             // Get all <tbody> elements within the target table
-            const allBodies = skladPage.locator('[data-testid="TableRevisionPagination-Table"] tbody');
+            const allBodies = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"] tbody`);
             const lastBody = allBodies.last(); // The one with actual data rows (not headers)
 
             // Now get all <tr> within the last tbody
@@ -533,7 +537,7 @@ export const runERP_969 = () => {
         // Step 2: Update the value in the 4th column (the editable element).
         await allure.step("Step 11.6: Update the actual quantity to '1' in the editable cell", async () => {
             // Locate the only returned row after the search.
-            const row = skladPage.locator('[data-testid="TableRevisionPagination-Table"] tbody tr').last();
+            const row = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"] tbody tr`).last();
             await expect(row).toBeVisible({ timeout: 5000 });
 
             // Within this row, locate the 4th column (index 3).
@@ -541,7 +545,7 @@ export const runERP_969 = () => {
             await expect(fourthCell).toBeVisible({ timeout: 5000 });
 
             // Inside the cell, locate the editable div with contenteditable=true.
-            const editField = fourthCell.locator('[data-testid="TableRevisionPagination-EditPen"]');
+            const editField = fourthCell.locator(`[data-testid="${TABLE_REVISION_PAGINATION_EDIT_PEN}"]`);
             await expect(editField).toBeVisible({ timeout: 5000 });
 
             // Fill in "1" and press Enter to submit the change.
@@ -575,7 +579,7 @@ export const runERP_969 = () => {
             await skladPage.waitForTimeout(1000);
 
             // Confirm the table is visible
-            const skladTable = skladPage.locator('table[data-testid="TableRevisionPagination-Table"]');
+            const skladTable = skladPage.locator(`table[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"]`);
             await expect(skladTable).toBeVisible({ timeout: 5000 });
 
             // Perform the search again
@@ -599,7 +603,7 @@ export const runERP_969 = () => {
 
             // Locate the editable div in the 4th column and confirm the saved value
             const fourthCell = rows.first().locator("td").nth(3);
-            const editDiv = fourthCell.locator('[data-testid="TableRevisionPagination-EditPen"]');
+            const editDiv = fourthCell.locator(`[data-testid="${TABLE_REVISION_PAGINATION_EDIT_PEN}"]`);
             await expect(editDiv).toBeVisible({ timeout: 5000 });
 
             const value = await editDiv.textContent();
@@ -1276,7 +1280,7 @@ export const runERP_969 = () => {
 
             // Sub-step 16.11: Verify required quantity matches order quantity
             await allure.step("Sub-step 16.11: Verify required quantity matches order quantity", async () => {
-                const requiredQuantityCell = kittingPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-RequiredQuantityCell"]');
+                const requiredQuantityCell = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
                 await requiredQuantityCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -2194,7 +2198,7 @@ export const runERP_969 = () => {
 
             // Sub-step 17.8: Validate required quantity cell
             await allure.step("Sub-step 17.8: Validate required quantity cell", async () => {
-                const requiredQuantityCell = waybillPage.locator('[data-testid="ModalAddWaybill-WaybillDetails-RequiredQuantityCell"]');
+                const requiredQuantityCell = waybillPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
                 await requiredQuantityCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
