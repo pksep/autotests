@@ -283,7 +283,6 @@ export const runU004_4 = () => {
 
                     // Update the value of the input field
                     await inputField.fill((parseInt(currentValue) + 5).toString());
-
                     break;
                 }
             }
@@ -568,7 +567,7 @@ export const runU004_4 = () => {
             const after = await shortagePage.getQuantityByLineItem(tableData_full, TESTCASE_2_PRODUCT_Д);
             logger.info(after);
 
-            expect(after.toString()).toBe(value_before_changequantity.toString());
+            expect(after.toString()).toBe((value_before_changequantity).toString());
 
         });
         //await allure.step("Step 15: delete added detail. (delete added detail)", async () => {
