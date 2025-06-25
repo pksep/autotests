@@ -110,7 +110,7 @@
         },
         "ProductShortage": {
             "titles": [
-                "Дефицит продукции"
+                "Дефицит Продукции"
             ],
             "buttons": [
                 {
@@ -141,28 +141,13 @@
         },
         "CbedShortage": {
             "titles": [
-                "Дефицит Сборочных Едениц"
+                "Дефицит сборочных единиц"
             ],
             "buttons": [
                 {
-                    "class": "[data-testid=\"ComplectKit-ShipmentList-ShipmentsShow\"]",
-                    "label": "Показать Задачи на отгрузку ",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"ComplectKit-ShipmentList-ShipmentsClear\"]",
-                    "label": "Сбросить все фильтры",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"DeficitCbed-NormTimeButton\"]",
-                    "label": "Норма времени по операциям",
-                    "state": "true"
-                },
-                {
                     "class": "[data-testid=\"DeficitCbed-StartButton\"]",
                     "label": "Запустить в производство",
-                    "state": "true"
+                    "state": "false"
                 }
             ]
         },
@@ -172,19 +157,9 @@
             ],
             "buttons": [
                 {
-                    "class": "[data-testid=\"DeficitDetal-Shipments-Hidden\"]",
-                    "label": "Показать Задачи на отгрузку ",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"DeficitDetal-Table-ButtonFilter\"]",
-                    "label": "Сбросить все фильтры",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"DeficitDetal-StartButton\"]",
+                    "class": "[data-testid=\"DeficitIzd-Main-Footer-Button-IntoProduction\"]",
                     "label": "Запустить в производство",
-                    "state": "true"
+                    "state": "false"
                 }
             ]
         },
@@ -456,20 +431,20 @@
                 {
                     "class": "[data-testid=\"IssueToPull-Button-Ship-Complit\"]",
                     "label": "Открыть отгрузки",
-                    "state": "true"
+                    "state": "false"
                 },
                 {
                     "class": "[data-testid=\"IssueToPull-Button-Ship\"]",
                     "label": "Отгрузить",
-                    "state": "true"
+                    "state": "false"
                 }
             ]
         },
         "ModalWindowUploadingTask": {
             "titles":[
-                "Отгрузка",
                 "Комплектация",
-                "Примечание"
+                "Медиа файлы",
+                " Описание/Примечание "
             ],
             "buttons": [
                 {
