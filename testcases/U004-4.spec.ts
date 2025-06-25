@@ -233,7 +233,15 @@ export const runU004_4 = () => {
             const selectedPartName = TESTCASE_2_PRODUCT_Д; // Replace with actual part number
             // Locate the bottom table
             const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_Д_RIGHT_DIALOG}"]`);
+            await modal.evaluate((element: HTMLElement) => {
+                element.style.border = "2px solid red";
+                element.style.backgroundColor = "red";
+            });
             const bottomTableLocator = modal.locator(`table[data-testid="${EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
+            await bottomTableLocator.evaluate((element: HTMLElement) => {
+                element.style.border = "2px solid red";
+                element.style.backgroundColor = "blue";
+            });
             await page.waitForTimeout(500);
             // Locate all rows in the table body
             const rowsLocator = bottomTableLocator.locator('tbody tr');
