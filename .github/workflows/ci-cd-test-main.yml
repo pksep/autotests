@@ -126,7 +126,7 @@ jobs:
           chmod 644 /home/node/.ssh/id_rsa.pub
 
           # Add GitHub to known hosts
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          # ssh-keyscan github.com >> ~/.ssh/known_hosts
           echo \\\"✅ SSH Key Setup Complete Inside Docker!\\\";
          
           echo \\\"📌 [START] Fetching branches for SERVER_BRANCH: \$SERVER_BRANCH on TARGET_BRANCH: \$TARGET_BRANCH\\\";
