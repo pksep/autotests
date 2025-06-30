@@ -1,0 +1,144 @@
+Табельный номер field is visible.
+Табельный номер set to: 001
+Логин field is visible.
+Логин set to: Перов Д.А.
+Waiting for password field...
+Password field is visible.
+Password filled successfully.
+Form filled successfully!
+Set the value "999" in the input field.
+Verified input value: 999
+Number of files uploaded: 2
+Files successfully uploaded via the hidden input.
+H4 Element 1:  Файл №1
+H4 Element 2:  Файл №2
+Textarea in file section 1 is visible.
+Textarea in file section 1 is focused.
+Value entered into textarea in file section 1: Test note 1
+Textarea current value in file section 1: Test note 1
+Textarea in file section 2 is visible.
+Textarea in file section 2 is focused.
+Value entered into textarea in file section 2: Test note 2
+Textarea current value in file section 2: Test note 2
+Checking button: AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Cancel - Отменить - Expected State: true
+Button: AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Cancel - Visible: true, Enabled: true
+Checking button: AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload - Загрузить все файлы - Expected State: true
+Button: AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload - Visible: true, Enabled: true
+Row containing label 'Главный:' is visible for section 1.
+Checkbox in 'Главный:' row is visible for section 1.
+Checkbox state for section 1: Not Checked
+Row containing label 'Главный:' is visible for section 2.
+Checkbox in 'Главный:' row is visible for section 2.
+Checkbox state for section 2: Not Checked
+Row containing label 'Главный:' is visible for section 1.
+Checkbox in 'Главный:' row is visible for section 1.
+Checkbox state for section 1: Checked
+Row containing label 'Главный:' is visible for section 2.
+Checkbox in 'Главный:' row is visible for section 2.
+Checkbox state for section 2: Checked
+Dynamic content in modal section loaded.
+Row for file 1 containing label 'Файл:' is visible.
+Input field for file 1 is visible.
+Expected filename: Test_imagexx_1, Actual input value: Test_imagexx_1
+Row for file 2 containing label 'Файл:' is visible.
+Input field for file 2 is visible.
+Expected filename: Test_imagexx_2, Actual input value: Test_imagexx_2
+All file fields validated successfully.
+Starting file upload process...
+Upload button and modal located.
+Attempt 1: Clicking upload button.
+Button color changed to #14150b.
+Upload button clicked.
+Notification div is visible.
+Notification Title: Предупреждение
+Notification Message: Файл с таким именем уже существует
+Duplicate filename detected. Updating all filenames.
+Found 2 file sections to update filenames.
+Updating filename for section 1.
+Filename updated to "Test_imagexx_1_569p" for section 1.
+Updating filename for section 2.
+Filename updated to "Test_imagexx_2_cklv" for section 2.
+Waiting before retrying...
+Attempt 2: Clicking upload button.
+Button color changed to #f724b0.
+Upload button clicked.
+Notification div is not visible.
+No notification detected. Assuming upload succeeded.
+Waiting before retrying...
+Modal is no longer present in the DOM. Upload succeeded!
+File upload process completed successfully.
+Starting file verification process...
+Located parent section for the file table.
+Verifying presence of file with base name: Test_imagexx_1 and extension: .jpg
+Table Rows Content: [ '1Test_imagexx_1_569p.jpg', '2Test_imagexx_2_cklv.png' ]
+Found 1 rows matching base name "Test_imagexx_1".
+Row 1: Test_imagexx_1_569p.jpg
+File "Test_imagexx_1" with extension ".jpg" is present.
+Verifying presence of file with base name: Test_imagexx_2 and extension: .png
+Found 1 rows matching base name "Test_imagexx_2".
+Row 1: Test_imagexx_2_cklv.png
+File "Test_imagexx_2" with extension ".png" is present.
+File verification process completed successfully.
+Verified input value: 87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg
+First Row: 1Test_imagexx_2_fqni.png30.06.2025Test note 2
+First Row 2: 1ЧЖ087.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg08.04.2025
+First row text: 1ЧЖ087.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg08.04.2025
+Search verification completed successfully.
+Found 1 buttons matching testId "AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton" and label "Добавить".
+Starting isButtonVisibleTestId for label: "Добавить" with Benabled: false
+Button "Добавить" is attached to the DOM.
+Button "Добавить" visibility: true
+Disabled class present for button "Добавить": true
+Expecting button "Добавить" to be disabled.
+Button "Добавить" passed all checks.
+Found 1 buttons matching testId "AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton" and label "Добавить".
+Starting isButtonVisibleTestId for label: "Добавить" with Benabled: true
+Button "Добавить" is attached to the DOM.
+Button "Добавить" visibility: true
+Disabled class present for button "Добавить": false
+Expecting button "Добавить" to be enabled.
+Disabled attribute present for button "Добавить": false
+Button "Добавить" passed all checks.
+3
+Row 1: FileType=, FileName=Test_imagexx_1_569p.jpg
+Row 2: FileType=, FileName=Test_imagexx_2_cklv.png
+Row 3: FileType=ЧЖ, FileName=087.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg
+Selected row found in row 3
+Located parent section for the file table.
+Found 3 rows in the table.
+Row 1: Test_imagexx_1_569p.jpg
+Row 2: Test_imagexx_2_cklv.png
+Row 3: 087.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg
+Selected file name "087.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg" found in row 3. Highlighting...
+File search and highlight process completed successfully.
+Found 1 buttons matching testId "AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint" and label "Печать".
+Starting isButtonVisibleTestId for label: "Печать" with Benabled: false
+Button "Печать" is attached to the DOM.
+Button "Печать" visibility: true
+Disabled class present for button "Печать": true
+Expecting button "Печать" to be disabled.
+Button "Печать" passed all checks.
+Found 1 buttons matching testId "AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc" and label "Удалить".
+Starting isButtonVisibleTestId for label: "Удалить" with Benabled: false
+Button "Удалить" is attached to the DOM.
+Button "Удалить" visibility: true
+Disabled class present for button "Удалить": true
+Expecting button "Удалить" to be disabled.
+Button "Удалить" passed all checks.
+Located parent section for the file table.
+Found 1 buttons matching testId "AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint" and label "Печать".
+Starting isButtonVisibleTestId for label: "Печать" with Benabled: true
+Button "Печать" is attached to the DOM.
+Button "Печать" visibility: true
+Disabled class present for button "Печать": false
+Expecting button "Печать" to be enabled.
+Disabled attribute present for button "Печать": false
+Button "Печать" passed all checks.
+Found 1 buttons matching testId "AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc" and label "Удалить".
+Starting isButtonVisibleTestId for label: "Удалить" with Benabled: true
+Button "Удалить" is attached to the DOM.
+Button "Удалить" visibility: true
+Disabled class present for button "Удалить": false
+Expecting button "Удалить" to be enabled.
+Disabled attribute present for button "Удалить": false
+Button "Удалить" passed all checks.
