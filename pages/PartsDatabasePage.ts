@@ -2676,7 +2676,7 @@ export class CreatePartsDatabasePage extends PageObject {
             const isVisible = await successDialog.isVisible().catch(() => false);
 
             if (!isVisible) {
-                logger.warn("Success notification not visible - this might be normal after rapid clicking");
+                console.warn("Success notification not visible - this might be normal after rapid clicking");
                 return; // Don't fail the test if notification is not visible
             }
 
@@ -2940,6 +2940,162 @@ export class CreatePartsDatabasePage extends PageObject {
         await expect(confirmButton).toBeVisible();
         await confirmButton.click();
         await this.page.waitForLoadState("networkidle");
+        await this.page.waitForTimeout(1000);
+    }
+
+    /**
+     * Cleans up existing test details/assemblies by searching and archiving them.
+     * @param page - The page object
+     * @param detailName - The name of the detail/assembly to clean up
+     * @param tableTestId - The data-testid of the table to search in
+     * @param searchInputTestId - The data-testid of the search input field (optional, defaults to standard search input)
+     * @param archiveButtonTestId - The data-testid of the archive button (optional, defaults to standard archive button)
+     * @param confirmModalTestId - The data-testid of the confirm modal (optional, defaults to standard confirm modal)
+     * @param confirmButtonTestId - The data-testid of the confirm button (optional, defaults to standard confirm button)
+     */
+    async cleanupTestDetail(
+        page: Page,
+        detailName: string,
+        tableTestId: string,
+        searchInputTestId?: string,
+        archiveButtonTestId?: string,
+        confirmModalTestId?: string,
+        confirmButtonTestId?: string
+    ): Promise<void> {
+        const detailTable = page.locator(`[data-testid="${tableTestId}"]`);
+        const searchInputSelector = searchInputTestId || "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
+        const searchInput = detailTable.locator(`[data-testid="${searchInputSelector}"]`);
+
+        // Clear search and search for the detail
+        await searchInput.fill("");
+        await searchInput.press("Enter");
+        await page.waitForTimeout(1000);
+        await searchInput.fill(detailName);
+        await searchInput.press("Enter");
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(1000);
+
+        // Get all rows and find exact matches
+        const rows = detailTable.locator("tbody tr");
+        const rowCount = await rows.count();
+
+        if (rowCount === 0) {
+            console.log(`No existing ${detailName} found for cleanup`);
+            return;
+        }
+
+        // Filter rows to find exact matches
+        const matchingRows: Locator[] = [];
+        for (let i = 0; i < rowCount; i++) {
+            const rowText = await rows.nth(i).textContent();
+            if (rowText && rowText.trim() === detailName) {
+                matchingRows.push(rows.nth(i));
+            }
+        }
+
+        // Archive each matching row
+        for (let i = matchingRows.length - 1; i >= 0; i--) {
+            const currentRow = matchingRows[i];
+
+            // Click the row to select it
+            await currentRow.click();
+            await page.waitForTimeout(500);
+
+            // Click the archive button
+            const archiveButtonSelector = archiveButtonTestId || "BaseDetals-Button-Archive";
+            const archiveButton = page.locator(`[data-testid="${archiveButtonSelector}"]`);
+            await expect(archiveButton).toBeVisible();
+            await archiveButton.click();
+            await page.waitForLoadState("networkidle");
+
+            // Confirm archive in modal
+            const confirmModalSelector = confirmModalTestId || "ModalConfirm";
+            const archiveModal = page.locator(`dialog[data-testid="${confirmModalSelector}"]`);
+            await expect(archiveModal).toBeVisible();
+
+            const confirmButtonSelector = confirmButtonTestId || "ModalConfirm-Content-Buttons-Button-2";
+            const yesButton = archiveModal.locator(`[data-testid="${confirmButtonSelector}"]`);
+            await expect(yesButton).toBeVisible();
+            await yesButton.click();
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1000);
+        }
+
+        console.log(`✅ Cleaned up ${matchingRows.length} instances of ${detailName}`);
+    }
+
+    /**
+     * Adds a detail to an assembly specification.
+     * @param page - The page object
+     * @param detailName - The name of the detail to add
+     */
+    async addDetailToAssemblySpecification(page: Page, detailName: string): Promise<void> {
+        // Click "Добавить" button to open the dialog
+        await page.locator(`[data-testid="Specification-Buttons-addingSpecification"]`).click();
+        await page.waitForTimeout(1000);
+
+        // Select "Деталь" icon (use .first() to avoid strict mode violation)
+        await page.locator(`[data-testid="Specification-Dialog-CardbaseDetail1"]`).first().click();
+        await page.waitForTimeout(1000);
+
+        // Wait for the dialog to be fully loaded
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(2000);
+
+        // Search for the detail in the dialog
+        const dialogTable = page.locator(`[data-testid="BasePaginationTable-Table-detal"]`);
+
+        // Wait for the table to be visible first
+        await expect(dialogTable).toBeVisible({ timeout: 10000 });
+
+        const dialogSearchInput = dialogTable.locator(`[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]`);
+
+        // Wait for the search input to be visible with a longer timeout
+        await expect(dialogSearchInput).toBeVisible({ timeout: 10000 });
+
+        // Clear any existing search and search for the detail
+        await dialogSearchInput.fill("");
+        await dialogSearchInput.press("Enter");
+        await page.waitForTimeout(1000);
+
+        await dialogSearchInput.fill(detailName);
+        await dialogSearchInput.press("Enter");
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(2000);
+
+        // Find and click the detail in search results
+        const resultRows = dialogTable.locator("tbody tr");
+        const rowCount = await resultRows.count();
+        let found = false;
+
+        for (let i = 0; i < rowCount; i++) {
+            const rowText = await resultRows.nth(i).textContent();
+            if (rowText && rowText.trim() === detailName) {
+                // Highlight the search result row before clicking
+                const targetRow = resultRows.nth(i);
+                await this.highlightElement(targetRow);
+                await targetRow.click();
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw new Error(`Detail "${detailName}" not found in dialog results.`);
+        }
+
+        await page.waitForTimeout(1000);
+
+        // Add the detail to the assembly
+        await page.locator(`[data-testid="Specification-ModalBaseDetal-Select-Button"]`).click();
+        await page.waitForTimeout(1000);
+        await page.locator(`[data-testid="Specification-ModalBaseDetal-Add-Button"]`).click();
+        await page.waitForTimeout(1000);
+
+        // Check for any notification message when detail is added to assembly
+        await this.verifyDetailSuccessMessage("Деталь добавлена в спецификацию");
+
+        console.log(`✅ Added detail "${detailName}" to assembly`);
     }
 
     // --- End Additional U006 reusable methods ---
