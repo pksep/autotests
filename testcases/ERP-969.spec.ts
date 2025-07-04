@@ -26,6 +26,7 @@ const MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Button-2";
 const PARTS_PAGE_ARCHIVE_BUTTON = "BaseDetals-Button-Archive";
 const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
 const SEARCH_COVER_INPUT = "Search-Cover-Input";
+const SEARCH_COVER_INPUT_2 = "TableRevisionPagination-SearchInput-Dropdown-Input";
 const TABLE_COMPLECT_TABLE = "TableComplect-TableComplect-Table";
 const COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN = "CompletCbed-Title-AssemblyKittingOnPlan";
 const ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save";
@@ -57,13 +58,14 @@ const SPECIFICATION_BUTTONS_ADDING_SPECIFICATION = "Specification-Buttons-adding
 const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 = "Specification-Dialog-CardbaseDetail1";
 const SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON = "Specification-ModalBaseDetal-Select-Button";
 const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON = "Specification-ModalBaseDetal-Add-Button";
-
+const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG = "TableRevisionPagination-ConfirmDialog";
 const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
-
+const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE = "TableRevisionPagination-ConfirmDialog-Approve";
 // Additional single-use data-testid constants
 const SCLAD_ORDERING_SUPPLIERS = "Sclad-orderingSuppliers";
 const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON = "OrderSuppliers-Div-CreateOrderButton";
 const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON = "ModalStartProduction-ComplectationTable-CancelButton";
+const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_INPRODUCTION_BUTTON = "ModalStartProduction-ComplectationTable-InProduction";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
 
@@ -84,7 +86,7 @@ const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL = "ModalAddW
 // Additional single-use data-testid constants - Batch 4
 const NOTIFICATION_NOTIFICATION_DESCRIPTION = "Notification-Notification-Description";
 const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON = "ModalAddWaybill-ControlButtons-CompleteSetButton";
-const MINI_NAVIGATION_POS_DATA2 = "MiniNavigation-POS-Data2";
+const MINI_NAVIGATION_POS_DATA2 = "Revision-Switch-Item2";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW = "ModalAddWaybill-DetailsTable-Row";
 
 // Cell type constants for ModalAddWaybill-DetailsTable-Row
@@ -105,11 +107,11 @@ const today = new Date().toLocaleDateString('ru-RU', {
 
 // Add at the top of the file, with other constants
 const OSTATTKPCBD_TABLE_SEARCH_INPUT = "OstatkiPCBDTable-SearchInput-Dropdown-Input";
-const ORDER_MODAL_TABLE = "Table";
+const ORDER_MODAL_TABLE = "TableStockOrderItems-TableStockOrderItems-Table";
 const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
 // Add at the top of the file, with other constants
-const TABLE_REVISION_PAGINATION_TABLE = "TableRevisionPagination-Table";
-const TABLE_REVISION_PAGINATION_EDIT_PEN = "TableRevisionPagination-EditPen";
+const TABLE_REVISION_PAGINATION_TABLE = "Revision-TableRevisionPagination-Detals-Table";
+const TABLE_REVISION_PAGINATION_EDIT_PEN = "InputNumber-Input";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-RequiredQuantityCell";
 
 export const runERP_969 = () => {
@@ -360,7 +362,7 @@ export const runERP_969 = () => {
         await allure.step(`Step 8: Create new detail with name "${NEW_DETAIL_A}" and save it`, async () => {
             await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
             await page.waitForLoadState("networkidle");
-            await detailsPage.fillDetailName('AddDetal-Information-Input-Input', NEW_DETAIL_A);
+            await detailsPage.fillDetailName(NEW_DETAIL_A, 'AddDetal-Information-Input-Input');
             await detailsPage.findAndClickElement(page, ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
@@ -506,7 +508,8 @@ export const runERP_969 = () => {
 
 
             const skladTable = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"]`);
-            const searchInput = skladTable.locator(`[data-testid="${SEARCH_COVER_INPUT}"]`);
+
+            const searchInput = skladTable.locator(`[data-testid="${SEARCH_COVER_INPUT_2}"]`);
             await searchInput.evaluate((element: HTMLElement) => {
                 element.style.border = "2px solid red";
                 element.style.backgroundColor = "red";
@@ -522,14 +525,15 @@ export const runERP_969 = () => {
 
         await allure.step("Step 11.5: Verify exactly one matching row is found", async () => {
             // Get all <tbody> elements within the target table
-            const allBodies = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"] tbody`);
-            const lastBody = allBodies.last(); // The one with actual data rows (not headers)
+            await skladPage.waitForTimeout(1000);
+            const allBodies = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"] tbody`).first();
+            //const lastBody = allBodies.last(); // The one with actual data rows (not headers)
 
             // Now get all <tr> within the last tbody
-            const resultRows = lastBody.locator('tr');
+            const resultRows = allBodies.locator('tr');
             const rowCount = await resultRows.count();
             console.log(`✅ Found ${rowCount} row(s) in the data tbody`);
-
+            await skladPage.waitForTimeout(5000);
             // Expect exactly one matching row from the search
             expect(rowCount).toBe(1);
         });
@@ -537,7 +541,7 @@ export const runERP_969 = () => {
         // Step 2: Update the value in the 4th column (the editable element).
         await allure.step("Step 11.6: Update the actual quantity to '1' in the editable cell", async () => {
             // Locate the only returned row after the search.
-            const row = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"] tbody tr`).last();
+            const row = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"] tbody tr`).first();
             await expect(row).toBeVisible({ timeout: 5000 });
 
             // Within this row, locate the 4th column (index 3).
@@ -560,11 +564,11 @@ export const runERP_969 = () => {
 
         await allure.step("Step 11.7: Confirm the update in the confirmation dialog", async () => {
             // Wait for the confirmation dialog to appear.
-            const confirmDialog = skladPage.locator('div[data-testid^="TableRevisionPagination-ModalPrompt"]');
+            const confirmDialog = skladPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_CONFIRM_DIALOG}"]`);
             await expect(confirmDialog).toBeVisible({ timeout: 5000 });
 
             // In the dialog, click the confirm button.
-            const confirmButton = confirmDialog.locator(`[data-testid="${MODAL_PROMPT_MINI_BUTTON_CONFIRM}"]`);
+            const confirmButton = confirmDialog.locator(`[data-testid="${TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE}"]`);
             await expect(confirmButton).toBeVisible({ timeout: 5000 });
             await confirmButton.click();
             await skladPage.waitForLoadState("networkidle");
@@ -579,11 +583,11 @@ export const runERP_969 = () => {
             await skladPage.waitForTimeout(1000);
 
             // Confirm the table is visible
-            const skladTable = skladPage.locator(`table[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"]`);
+            const skladTable = skladPage.locator(`table[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"]`).first();
             await expect(skladTable).toBeVisible({ timeout: 5000 });
 
             // Perform the search again
-            const searchInput = skladTable.locator(`[data-testid="${SEARCH_COVER_INPUT}"]`);
+            const searchInput = skladTable.locator(`[data-testid="${SEARCH_COVER_INPUT_2}"]`);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
             await searchInput.fill("");
             await searchInput.press("Enter");
@@ -604,9 +608,14 @@ export const runERP_969 = () => {
             // Locate the editable div in the 4th column and confirm the saved value
             const fourthCell = rows.first().locator("td").nth(3);
             const editDiv = fourthCell.locator(`[data-testid="${TABLE_REVISION_PAGINATION_EDIT_PEN}"]`);
+            await editDiv.evaluate((element: HTMLElement) => {
+                element.style.border = "2px solid red";
+                element.style.backgroundColor = "red";
+            });
+            await skladPage.waitForTimeout(3000);
             await expect(editDiv).toBeVisible({ timeout: 5000 });
 
-            const value = await editDiv.textContent();
+            const value = await editDiv.inputValue();
             if (value === null) throw new Error("Editable cell content is null.");
             console.log("Confirmed saved value after reload:", value.trim());
 
@@ -681,15 +690,14 @@ export const runERP_969 = () => {
             const supplierModal = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"]`);
             await expect(supplierModal).toBeVisible({ timeout: 5000 });
 
-            // Click the assemblies operation button
+            //Click the assemblies operation button 
             const assembliesButton = warehousePage.locator(`[data-testid="${SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES}"]`);
             await assembliesButton.click();
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
 
-            // Verify the production table is visible
-            const productionTable = warehousePage.locator(`table[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE}"]`);
-
+            //Verify the production table is visible
+            const productionTable = warehousePage.locator(`table[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE}"]`).first();
             await expect(productionTable).toBeVisible({ timeout: 5000 });
 
             // Find and fill the search input
@@ -765,7 +773,7 @@ export const runERP_969 = () => {
             console.log(`Captured order number: ${orderNumber}`);
 
             // Find and click the "В производство" button
-            const startProductionButton = productionModal.locator(`[data-testid="${MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON}"]:has-text("В производство")`);
+            const startProductionButton = productionModal.locator(`[data-testid="${MODAL_START_PRODUCTION_COMPLECTATION_TABLE_INPRODUCTION_BUTTON}"]:has-text("В производство")`);
             await expect(startProductionButton).toBeVisible({ timeout: 5000 });
             await startProductionButton.click();
             await warehousePage.waitForLoadState("networkidle");
@@ -2422,8 +2430,4 @@ export const runERP_969 = () => {
     });
 
     //placeholder so that we don't have to rewrite the testSuiteConfig all the time
-
-
-
 }
-
