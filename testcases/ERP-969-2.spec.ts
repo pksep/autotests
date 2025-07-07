@@ -11,12 +11,14 @@ import { allure } from "allure-playwright";
 const DETAIL_1_NAME = "ERP9692_DETAIL_001";
 const DETAIL_2_NAME = "ERP9692_DETAIL_002";
 const ASSEMBLY_NAME = "ERP9692_ASSEMBLY_001";
+const DETAIL_NEW_QUANTITY = "9";
+const NEW_ORDER_QUANTITY = "3";
 
 const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
 
 // Additional test data variables for the new steps
 let orderNumber: string | null = null; // Declare outside to share between steps
-let orderedQuantity: number = 5; // Declare outside to share between steps
+let orderedQuantity: number = 666 // Declare outside to share between steps
 let targetRow: any = null; // Declare outside to share between steps
 let specificationQuantity: number = 1; // Global variable for specification quantity from step 10
 let waybillCollections: number = 0; // Global variable to track waybill collections
@@ -81,11 +83,11 @@ const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON_CREATE_ORDER = "OrderSuppliers-Div
 
 // Constants for Step 15
 const TABLE_COMPLECT_TABLE = "TableComplect-TableComplect-Table";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "ModalAddWaybill-WaybillDetails-Right";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "TableComplect-TableComplect-ModalAddWaybill";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-RequiredQuantityCell";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-CollectedQuantityCell";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX = "ModalAddWaybill-ShipmentDetailsTable-ScladSetSelectedCheckbox";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL = "ModalAddWaybill-ShipmentDetailsTable-StockOrderRow46940-OrderNumberCell";
@@ -519,7 +521,7 @@ export const runERP_969_2 = () => {
                     await expect(editField).toBeVisible();
 
                     // Fill in "5" and press Enter to submit the change
-                    await editField.fill("5");
+                    await editField.fill(DETAIL_NEW_QUANTITY);
                     await editField.press("Enter");
                     await revisionPage.waitForLoadState("networkidle");
 
@@ -586,7 +588,7 @@ export const runERP_969_2 = () => {
                     await expect(editField2).toBeVisible();
 
                     // Fill in "5" and press Enter to submit the change
-                    await editField2.fill("5");
+                    await editField2.fill(DETAIL_NEW_QUANTITY);
                     await editField2.press("Enter");
                     await revisionPage.waitForLoadState("networkidle");
 
@@ -1033,7 +1035,7 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(1000);
 
             // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
-            const waybillModal = warehousePage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
             await expect(waybillModal).toBeVisible({ timeout: 5000 });
 
             // Find cell with id ModalAddWaybill-WaybillDetails-RequiredQuantityCell
@@ -1100,7 +1102,7 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(1000);
 
             // Set its value to 1
-            await ownQuantityInput.fill("1");
+            await ownQuantityInput.fill(NEW_ORDER_QUANTITY);
             await ownQuantityInput.press("Enter");
             await warehousePage.waitForLoadState("networkidle");
 

@@ -45,8 +45,9 @@ const MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON = "ModalAddOrder-ProductionT
 const MODAL_ADD_ORDER_MODALS_MODAL_START_PRODUCTION_TRUE = "ModalAddOrder-Modals-ModalStartProductiontrue";
 const MODAL_START_PRODUCTION_ORDER_NUMBER_VALUE = "ModalStartProduction-OrderNumberValue";
 const ORDER_SUPPLIERS_TABLE_ORDER_TABLE = "OrderSuppliers-Table-OrderTable";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "ModalAddWaybill-WaybillDetails-Right";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "TableComplect-TableComplect-ModalAddWaybill";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_HEADING = "ModalAddWaybill-WaybillDetails-Heading";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT_INNER = "ModalAddWaybill-WaybillDetails-Right";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TABLE = "ModalAddWaybill-ShipmentDetailsTable-Table";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_CHECKBOX_CELL = "ModalAddWaybill-ShipmentDetailsTable-ScladSetCheckboxCell";
 const TABLE_COMPLECT_TABLE_ROW_DESIGNATION_CELL = "TableComplect-TableComplect-RowDesignationCell";
@@ -66,7 +67,7 @@ const SCLAD_ORDERING_SUPPLIERS = "Sclad-orderingSuppliers";
 const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON = "OrderSuppliers-Div-CreateOrderButton";
 const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON = "ModalStartProduction-ComplectationTable-CancelButton";
 const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_INPRODUCTION_BUTTON = "ModalStartProduction-ComplectationTable-InProduction";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
 
 // Additional single-use data-testid constants - Batch 2
@@ -1164,7 +1165,8 @@ export const runERP_969 = () => {
                 await searchInput.press("Enter");
                 await kittingPage.waitForLoadState("networkidle");
                 await kittingPage.waitForTimeout(2000);
-
+                await searchInput.press("Enter");
+                await kittingPage.waitForTimeout(2000);
                 // Style the search input to show it's complete
                 await searchInput.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
@@ -1230,19 +1232,43 @@ export const runERP_969 = () => {
                 });
                 await targetColumn.dblclick();
                 await kittingPage.waitForLoadState("networkidle");
-                await kittingPage.waitForTimeout(1000);
+                await kittingPage.waitForTimeout(2500);
+
+                // Wait for the modal to appear
+                await kittingPage.waitForTimeout(2000);
+
+                // Try to find any dialog element first
+                // const anyDialog = kittingPage.locator('dialog[open]');
+                // const dialogCount = await anyDialog.count();
+                // console.log(`Found ${dialogCount} open dialog(s)`);
+
+                // if (dialogCount > 0) {
+                //     // Get the data-testid of the first dialog
+                //     const firstDialog = anyDialog.first();
+                //     const dialogTestId = await firstDialog.getAttribute('data-testid');
+                //     console.log(`First dialog data-testid: "${dialogTestId}"`);
+                // }
+
+                waybillModal = kittingPage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+                await expect(waybillModal).toBeVisible({ timeout: 10000 });
+
+
+                await waybillModal.evaluate((el: HTMLElement) => {
+                    el.style.border = '2px solid red';
+                });
+                // Wait for the inner content to be loaded
+                const innerContent = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT_INNER}"]`);
+                await expect(innerContent).toBeVisible({ timeout: 10000 });
+
                 await targetColumn.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
                     el.style.color = 'white';
                 });
-
-                waybillModal = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
-                await expect(waybillModal).toBeVisible({ timeout: 5000 });
-
             });
 
             // Sub-step 16.8: Verify waybill modal is visible
+
             await allure.step("Sub-step 16.8: Verify waybill modal is visible", async () => {
                 // Modal visibility is already verified in sub-step 16.7
                 console.log("Waybill modal is visible and ready for interaction");
@@ -1250,7 +1276,8 @@ export const runERP_969 = () => {
 
             // Sub-step 16.9: Verify modal title contains today's date
             await allure.step("Sub-step 16.9: Verify modal title contains today's date", async () => {
-                const modalTitle = kittingPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_HEADING}"]`);
+                // Find the h4 title within the modal since the data-testid was removed
+                const modalTitle = waybillModal.locator('h4');
                 await modalTitle.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
@@ -1789,14 +1816,16 @@ export const runERP_969 = () => {
                     el.style.border = '2px solid red';
                     el.style.color = 'blue';
                 });
-                await completeSetButton.click();
-                await kittingPage.waitForLoadState("networkidle");
-                await kittingPage.waitForTimeout(2000);
+
+                await kittingPage.waitForTimeout(1000);
                 await completeSetButton.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
                     el.style.color = 'white';
                 });
+                await kittingPage.waitForTimeout(1000);
+                await completeSetButton.click();
+                await kittingPage.waitForLoadState("networkidle");
             });
 
             // Sub-step 16.36: Verify return to main kitting page
@@ -2170,20 +2199,26 @@ export const runERP_969 = () => {
 
             // Sub-step 17.6: Wait for modal to appear and validate details
             await allure.step("Sub-step 17.6: Wait for modal to appear and validate details", async () => {
-                const waybillModal = waybillPage.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_HEADING}"]`);
-                await waybillModal.evaluate((el: HTMLElement) => {
+                // First locate the dialog element
+
+                const waybillModal = waybillPage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+                await expect(waybillModal).toBeVisible({ timeout: 10000 });
+
+                // Find the h4 title within the modal since the data-testid was removed
+                const modalTitle = waybillModal.locator('h4');
+                await modalTitle.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'yellow';
                     el.style.border = '2px solid red';
                     el.style.color = 'blue';
                 });
-                await expect(waybillModal).toBeVisible({ timeout: 10000 });
+                await expect(modalTitle).toBeVisible({ timeout: 10000 });
 
                 // Validate modal title contains today's date
-                const modalTitle = await waybillModal.textContent();
-                console.log(`Modal title: "${modalTitle}"`);
-                expect(modalTitle).toContain("Накладная на комплектацию Сборки № от");
-                expect(modalTitle).toContain(today);
-                await waybillModal.evaluate((el: HTMLElement) => {
+                const titleText = await modalTitle.textContent();
+                console.log(`Modal title: "${titleText}"`);
+                expect(titleText).toContain("Накладная на комплектацию Сборки № от");
+                expect(titleText).toContain(today);
+                await modalTitle.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
                     el.style.color = 'white';
