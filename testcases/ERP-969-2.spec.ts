@@ -102,6 +102,7 @@ const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTIT
 
 // Constants for Step 16 - Control buttons
 const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON = "ModalAddWaybill-ControlButtons-CompleteSetButton";
+const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON = "ModalAddWaybill-ControlButtons-ActualizeButton";
 
 // Constants for Step 17 - Table cell selectors
 const TABLE_COMPLECT_TABLE_ROW_DESIGNATION_CELL = "TableComplect-TableComplect-RowDesignationCell";
@@ -1843,15 +1844,303 @@ export const runERP_969_2 = () => {
                     await newTab.waitForLoadState("networkidle");
                     await newTab.waitForTimeout(1000);
 
+                    // Close the new tab that was opened for detail editing
+                    await newTab.close();
+                    await warehousePage.waitForTimeout(1000);
+
                     // Close the modal by clicking outside
                     await warehousePage.mouse.click(1, 1);
                     await warehousePage.waitForTimeout(1000);
 
                     console.log(`✅ Completed interaction with detail: ${detailName}`);
+
+                    // Break after processing the first detail
+                    break;
                 }
             }
 
             console.log(`✅ Step 19 completed - processed detail name interactions`);
+        });
+
+        await allure.step("Step 20: Click the actualize button to reload the waybill modal", async () => {
+            // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            await expect(waybillModal).toBeVisible({ timeout: 5000 });
+
+            // Find and highlight the actualize button
+            const actualizeButton = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON}"]`);
+            await expect(actualizeButton).toBeVisible({ timeout: 5000 });
+
+            await detailsPage.highlightElement(actualizeButton, {
+                backgroundColor: 'yellow',
+                border: '2px solid red',
+                color: 'blue'
+            });
+
+            // Wait a second as requested
+            await warehousePage.waitForTimeout(1000);
+
+            // Click the actualize button to reload the page
+            await actualizeButton.click();
+            await warehousePage.waitForLoadState("networkidle");
+            await warehousePage.waitForTimeout(1000);
+
+            console.log(`✅ Step 20 completed - actualize button clicked and page reloaded`);
+        });
+
+        await allure.step("Step 21: Validate cell values after reload", async () => {
+            // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            await expect(waybillModal).toBeVisible({ timeout: 5000 });
+
+            // Sub-step 21.1: Validate required quantity cell returns to original order quantity
+            await allure.step("Sub-step 21.1: Validate required quantity cell returns to original order quantity", async () => {
+                const requiredQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
+                await detailsPage.highlightElement(requiredQuantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+                await warehousePage.waitForTimeout(1000);
+                const requiredQuantity = await requiredQuantityCell.textContent();
+                console.log(`Required quantity after reload: "${requiredQuantity}"`);
+                expect(parseInt(requiredQuantity?.trim() || "0")).toBe(orderedQuantity);
+                await detailsPage.highlightElement(requiredQuantityCell, {
+                    backgroundColor: 'green',
+                    border: '2px solid green',
+                    color: 'white'
+                });
+            });
+
+            // Sub-step 21.2: Validate collected quantity cell is 0
+            await allure.step("Sub-step 21.2: Validate collected quantity cell is 0", async () => {
+                const collectedQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
+                await detailsPage.highlightElement(collectedQuantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+                await warehousePage.waitForTimeout(1000);
+                const collectedQuantity = await collectedQuantityCell.textContent();
+                console.log(`Collected quantity after reload: "${collectedQuantity}"`);
+                expect(parseInt(collectedQuantity?.trim() || "0")).toBe(0);
+                await detailsPage.highlightElement(collectedQuantityCell, {
+                    backgroundColor: 'green',
+                    border: '2px solid green',
+                    color: 'white'
+                });
+            });
+
+            // Sub-step 21.3: Validate own quantity input is original order quantity
+            await allure.step("Sub-step 21.3: Validate own quantity input is original order quantity", async () => {
+                const ownQuantityInput = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
+                await detailsPage.highlightElement(ownQuantityInput, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+                await warehousePage.waitForTimeout(1000);
+                const ownQuantityValue = await ownQuantityInput.inputValue();
+                console.log(`Own quantity input after reload: "${ownQuantityValue}"`);
+                expect(parseInt(ownQuantityValue || "0")).toBe(orderedQuantity);
+                await detailsPage.highlightElement(ownQuantityInput, {
+                    backgroundColor: 'green',
+                    border: '2px solid green',
+                    color: 'white'
+                });
+            });
+
+            // Sub-step 21.4: Validate progress wrapper shows 0%
+            await allure.step("Sub-step 21.4: Validate progress wrapper shows 0%", async () => {
+                const progressWrapper = waybillModal.locator(`[data-testid^="${TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`).first();
+                await detailsPage.highlightElement(progressWrapper, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+                await warehousePage.waitForTimeout(1000);
+                await expect(progressWrapper).toBeVisible({ timeout: 5000 });
+                // Progress should be 0 since collected quantity is 0
+                const progressValid = await detailsPage.validateProgressPercentage(0, orderedQuantity);
+                expect(progressValid).toBe(true);
+                await detailsPage.highlightElement(progressWrapper, {
+                    backgroundColor: 'green',
+                    border: '2px solid green',
+                    color: 'white'
+                });
+            });
+
+            // Sub-step 21.5: Validate remaining quantity cell is original order quantity
+            await allure.step("Sub-step 21.5: Validate remaining quantity cell is original order quantity", async () => {
+                const remainingQuantityCell = waybillModal.locator(`[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]`);
+                await detailsPage.highlightElement(remainingQuantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+                await warehousePage.waitForTimeout(1000);
+                await expect(remainingQuantityCell).toBeVisible({ timeout: 5000 });
+                const remainingQuantity = await remainingQuantityCell.textContent();
+                console.log(`Remaining quantity after reload: "${remainingQuantity}"`);
+                expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity);
+                await detailsPage.highlightElement(remainingQuantityCell, {
+                    backgroundColor: 'green',
+                    border: '2px solid green',
+                    color: 'white'
+                });
+            });
+
+            // Sub-step 21.6: Validate total left to do label
+            await allure.step("Sub-step 21.6: Validate total left to do label", async () => {
+                const totalLeftToDoLabel = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL}"]`);
+                await detailsPage.highlightElement(totalLeftToDoLabel, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+                await warehousePage.waitForTimeout(1000);
+                const totalLeftText = await totalLeftToDoLabel.textContent();
+                console.log(`Total left to do after reload: "${totalLeftText}"`);
+                expect(totalLeftText?.trim()).toBe(`Всего: ${orderedQuantity}`);
+                await detailsPage.highlightElement(totalLeftToDoLabel, {
+                    backgroundColor: 'green',
+                    border: '2px solid green',
+                    color: 'white'
+                });
+            });
+
+            // Sub-step 21.7: Validate details table row values
+            await allure.step("Sub-step 21.7: Validate details table row values", async () => {
+                const detailsTable = waybillModal.locator(`table[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE}"]`);
+                await expect(detailsTable).toBeVisible({ timeout: 5000 });
+
+                // Get the first row (should be the remaining detail after archiving one)
+                const detailRows = detailsTable.locator("tbody tr");
+                const rowCount = await detailRows.count();
+                console.log(`Found ${rowCount} rows in details table after reload`);
+
+                if (rowCount > 0) {
+                    const firstRow = detailRows.first();
+
+                    // Get the detail name from the first row
+                    const nameCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
+                    const detailName = await nameCell.textContent();
+                    console.log(`Validating detail: "${detailName}"`);
+
+                    // Validate need cell contains original order quantity
+                    const needCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
+                    await detailsPage.highlightElement(needCell, {
+                        backgroundColor: 'yellow',
+                        border: '2px solid red',
+                        color: 'blue'
+                    });
+                    await warehousePage.waitForTimeout(1000);
+                    const needValue = await needCell.textContent();
+                    console.log(`Need cell value: "${needValue}"`);
+                    expect(parseInt(needValue?.trim() || "0")).toBe(orderedQuantity);
+                    await detailsPage.highlightElement(needCell, {
+                        backgroundColor: 'green',
+                        border: '2px solid green',
+                        color: 'white'
+                    });
+
+                    // Validate deficit cell (quantity needed minus available)
+                    const deficitCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="-DeficitCell"]`);
+                    await detailsPage.highlightElement(deficitCell, {
+                        backgroundColor: 'yellow',
+                        border: '2px solid red',
+                        color: 'blue'
+                    });
+                    await warehousePage.waitForTimeout(1000);
+                    const deficitValue = await deficitCell.textContent();
+                    console.log(`Deficit cell value: "${deficitValue}"`);
+                    const deficitNum = parseInt(deficitValue?.trim() || "0");
+
+                    // Calculate expected deficit: quantity needed (orderedQuantity) minus available quantity (DETAIL_NEW_QUANTITY)
+                    const expectedDeficit = parseInt(DETAIL_NEW_QUANTITY) - orderedQuantity;
+                    console.log(`Expected deficit: ${DETAIL_NEW_QUANTITY} - ${orderedQuantity} = ${expectedDeficit}`);
+                    expect(deficitNum).toBe(expectedDeficit);
+
+                    await detailsPage.highlightElement(deficitCell, {
+                        backgroundColor: 'green',
+                        border: '2px solid green',
+                        color: 'white'
+                    });
+
+                    // Validate free quantity cell and click to verify
+                    const freeQuantityCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
+                    await detailsPage.highlightElement(freeQuantityCell, {
+                        backgroundColor: 'yellow',
+                        border: '2px solid red',
+                        color: 'blue'
+                    });
+                    await warehousePage.waitForTimeout(1000);
+                    const freeQuantityValue = await freeQuantityCell.textContent();
+                    console.log(`Free quantity cell value: "${freeQuantityValue}"`);
+                    const freeValue = parseInt(freeQuantityValue?.trim() || "0");
+
+                    // Validate free quantity against warehouse data (same as Step 18)
+                    const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(detailName?.trim() || "");
+                    expect(freeValue).toBe(expectedFreeQuantity);
+
+                    // Click the free quantity cell to verify
+                    await freeQuantityCell.click();
+                    await warehousePage.waitForLoadState("networkidle");
+                    await warehousePage.waitForTimeout(1000);
+                    await detailsPage.highlightElement(freeQuantityCell, {
+                        backgroundColor: 'green',
+                        border: '2px solid green',
+                        color: 'white'
+                    });
+
+                    // Validate quantity cell and click to verify
+                    const quantityCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
+                    await detailsPage.highlightElement(quantityCell, {
+                        backgroundColor: 'yellow',
+                        border: '2px solid red',
+                        color: 'blue'
+                    });
+                    await warehousePage.waitForTimeout(1000);
+                    const quantityValue = await quantityCell.textContent();
+                    console.log(`Quantity cell value: "${quantityValue}"`);
+                    expect(parseInt(quantityValue?.trim() || "0")).toBe(parseInt(DETAIL_NEW_QUANTITY));
+
+                    // Click the quantity cell to verify
+                    await quantityCell.click();
+                    await warehousePage.waitForLoadState("networkidle");
+                    await warehousePage.waitForTimeout(1000);
+                    await detailsPage.highlightElement(quantityCell, {
+                        backgroundColor: 'green',
+                        border: '2px solid green',
+                        color: 'white'
+                    });
+
+                    // Validate in kits cell is 0 and click to verify
+                    const inKitsCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
+                    await detailsPage.highlightElement(inKitsCell, {
+                        backgroundColor: 'yellow',
+                        border: '2px solid red',
+                        color: 'blue'
+                    });
+                    await warehousePage.waitForTimeout(1000);
+                    const inKitsValue = await inKitsCell.textContent();
+                    console.log(`In kits cell value: "${inKitsValue}"`);
+                    const inKitsValueNum = parseInt(inKitsValue?.trim() || "0");
+                    expect(inKitsValueNum).toBe(0);
+
+                    // Click the in kits cell to verify
+                    await inKitsCell.click();
+                    await warehousePage.waitForLoadState("networkidle");
+                    await warehousePage.waitForTimeout(1000);
+                    await detailsPage.highlightElement(inKitsCell, {
+                        backgroundColor: 'green',
+                        border: '2px solid green',
+                        color: 'white'
+                    });
+                }
+            });
+
+            console.log(`✅ Step 21 completed - all cell values validated after reload`);
         });
 
         // ─────────────────────────────────────────────────────────────────────────────
