@@ -2390,7 +2390,9 @@ export class CreatePartsDatabasePage extends PageObject {
         throw new Error(`Material "${materialName}" not found in any category.`);
     }
 
-    async searchAndSelectMaterial(materialName: string, sliderDataTestId: string): Promise<void> {
+
+    async searchAndSelectMaterial(sliderDataTestId: string, materialName: string): Promise<void> {
+
         // Open a new browser tab for material search.
         //const newPage = await this.page.context().newPage();
         //await newPage.goto(SELECTORS.MAINMENU.MATERIALS.URL);
@@ -2664,6 +2666,7 @@ export class CreatePartsDatabasePage extends PageObject {
    * "Notification-Notification-Description" (same as used in getMessage).
    */
     async verifyDetailSuccessMessage(expectedText: string): Promise<void> {
+
         try {
             // Wait for page to be stable first
             await this.page.waitForLoadState("domcontentloaded");
@@ -3099,6 +3102,7 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
     // --- End Additional U006 reusable methods ---
+
 
     // Constants for page state detection
     private readonly ADD_DETAL_TITLE = "AddDetal-Title";
