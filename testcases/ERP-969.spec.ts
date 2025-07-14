@@ -111,7 +111,9 @@ const OSTATTKPCBD_TABLE_SEARCH_INPUT = "OstatkiPCBDTable-SearchInput-Dropdown-In
 const ORDER_MODAL_TABLE = "TableStockOrderItems-TableStockOrderItems-Table";
 const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
 // Add at the top of the file, with other constants
+
 const TABLE_REVISION_PAGINATION_TABLE = "Revision-TableRevisionPagination-Detals-Table";
+
 const TABLE_REVISION_PAGINATION_EDIT_PEN = "InputNumber-Input";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-RequiredQuantityCell";
 
@@ -2465,4 +2467,6 @@ export const runERP_969 = () => {
     });
 
     //placeholder so that we don't have to rewrite the testSuiteConfig all the time
+
 }
+
