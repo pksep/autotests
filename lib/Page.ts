@@ -3292,6 +3292,30 @@ export class PageObject extends AbstractPage {
       });
     }
   }
+  /**
+      * Highlights an element with standard debugging styles.
+      * @param element - The Playwright locator to highlight
+      * @param customStyles - Optional custom styles to apply
+      */
+  async highlightElement(element: Locator, customStyles?: { backgroundColor?: string; border?: string; color?: string }): Promise<void> {
+    await element.evaluate((el: HTMLElement, styles: { backgroundColor?: string; border?: string; color?: string }) => {
+      el.style.backgroundColor = styles?.backgroundColor || 'yellow';
+      el.style.border = styles?.border || '2px solid red';
+      el.style.color = styles?.color || 'blue';
+    }, customStyles || {});
+  }
+  /**
+   * Locates an element by data-testid, highlights it, and waits for it to be visible.
+   * @param dataTestId - The data-testid to locate
+   * @param timeout - Optional timeout for waiting (default: 30000)
+   * @returns The located element
+   */
+  async locateAndHighlightElement(dataTestId: string, timeout: number = 30000): Promise<Locator> {
+    const element = this.page.locator(`[data-testid="${dataTestId}"]`);
+    await element.waitFor({ state: 'visible', timeout });
+    await this.highlightElement(element);
+    return element;
+  }
 }
 
 
