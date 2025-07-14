@@ -114,15 +114,16 @@ jobs:
           echo \"✅ TARGET_BRANCH is: $TARGET_BRANCH\"
           echo \"✅ SERVER_BRANCH is: $SERVER_BRANCH\"
           
-          docker cp /home/npo/.ssh/id_rsa sep-erp-test_app_test_1:/root/.ssh/id_rsa
-          docker cp /home/npo/.ssh/id_rsa.pub sep-erp-test_app_test_1:/root/.ssh/id_rsa.pub
+          docker cp /home/npo/.ssh/id_rsa sep-erp-test_app_test_1:/home/node/.ssh/id_rsa
+          docker cp /home/npo/.ssh/id_rsa.pub sep-erp-test_app_test_1:/home/node/.ssh/id_rsa.pub
 
           docker exec -e TARGET_BRANCH=\"$TARGET_BRANCH\" -e SERVER_BRANCH=\"$SERVER_BRANCH\" sep-erp-test_app_test_1 bash -c \"set -e;
           
-          apt-get update && apt-get install -y openssh-client
-          mkdir -p /root/.ssh
-          chmod 600 /root/.ssh/id_rsa
-          chmod 644 /root/.ssh/id_rsa.pub
+          # apt-get update && apt-get install -y openssh-client
+          whoami
+          mkdir -p /home/node/.ssh
+          chmod 600 /home/node/.ssh/id_rsa
+          chmod 644 /home/node/.ssh/id_rsa.pub
 
           # Add GitHub to known hosts
           ssh-keyscan github.com >> ~/.ssh/known_hosts
@@ -134,8 +135,8 @@ jobs:
           echo \\\"🔹 SERVER_BRANCH is: \$SERVER_BRANCH\\\";
 
           # install git if it is missing
-          apt update && apt install -y git
-
+          # apt update && apt install -y git
+          git config --global --add safe.directory /app
           git fetch --all || { echo \\\"❌ Failed to fetch branches\\\"; exit 1; }
           git reset --hard origin/\$TARGET_BRANCH || { echo \\\"❌ Failed to reset TARGET_BRANCH\\\"; exit 1; }
           git switch \$TARGET_BRANCH || { echo \\\"❌ Failed to switch to TARGET_BRANCH\\\"; exit 1; }

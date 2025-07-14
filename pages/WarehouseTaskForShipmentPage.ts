@@ -14,19 +14,23 @@ export class CreateWarehouseTaskForShipmentPage extends PageObject {
 
     async shipmentModalWindow() {
         const modalWindow = this.page.locator(
-            '[data-testid="ModalShComlit-RightDestroyModal"]'
+            '[data-testid^="IssueToPull-ShipmentDetails-ModalShComlit"][data-testid$="ModalContent"]'
         );
 
         await expect(modalWindow).toBeVisible();
 
         await expect(
-            modalWindow.locator("h3", { hasText: "Отгрузка" })
+            modalWindow.locator("h4", { hasText: "Отгрузка" })
         ).toBeVisible();
         await expect(
             modalWindow.locator("h3", { hasText: "Комплектация" })
         ).toBeVisible();
         await expect(
-            modalWindow.locator("h3", { hasText: "Примечание" })
+            modalWindow.locator("h3", { hasText: " Описание/Примечание " })
+        ).toBeVisible();
+        await expect(modalWindow).toBeVisible();
+        await expect(
+            modalWindow.locator("h3", { hasText: "Медиа файлы" })
         ).toBeVisible();
         await expect(modalWindow).toBeVisible();
 
