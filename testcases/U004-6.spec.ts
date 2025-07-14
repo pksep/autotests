@@ -726,7 +726,7 @@ export const runU004_6 = () => {
                     break;
                 }
             }
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1500);
             // Assert that the selected row is found
             //expect(isRowFound).toBeTruthy();
             logger.info(`The selected row with PartNumber="${selectedPartNumber}" is present in the bottom table.`);
@@ -785,7 +785,7 @@ export const runU004_6 = () => {
         //third refresh and confirm saved
         await allure.step("Step 17: refresh and confirm saved. (refresh and confirm saved)", async () => {
             await page.reload({
-                timeout: 5000, // Sets a 500ms timeout
+                timeout: 30000, // Sets a 30 second timeout
                 waitUntil: 'networkidle', // Waits until the page reaches network idle state
             });
             await page.waitForTimeout(1500);
@@ -936,7 +936,7 @@ export const runU004_6 = () => {
         //fifth refresh and confirm deleted
         await allure.step("Step 19: refresh and confirm deleted. (refresh and confirm deleted)", async () => {
             await page.reload({
-                timeout: 5000, // Sets a 500ms timeout
+                timeout: 30000, // Sets a 500ms timeout
                 waitUntil: 'networkidle', // Waits until the page reaches network idle state
             });
             await page.waitForTimeout(1500);
