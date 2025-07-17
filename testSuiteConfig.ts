@@ -28,6 +28,8 @@ import { runU004_9 } from "./testcases/U004-9.spec";
 import { runU005 } from "./testcases/U005.spec";
 import { runU006 } from "./testcases/U006.spec";
 import { runU007 } from "./testcases/U007.spec";
+import { runERP_969 } from './testcases/ERP-969.spec';
+import { runERP_969_2 } from './testcases/ERP-969-2.spec';
 
 // Create a mapping of test suites to their corresponding test functions with descriptions
 export const testSuites = {
@@ -197,6 +199,27 @@ export const testSuites = {
             }
             // Add more test cases as needed
         ],
+    },
+    suite02: {
+        description: 'This is a group of full page tests tests U005 U006',
+        tests: [
+            {
+                test: runU005,
+                description: 'This test checks the User Scenario series of tests U005',
+            },
+            {
+                test: runU006,
+                description: 'This test checks the User Scenario series of tests U006',
+            },
+            {
+                test: runERP_969,
+                description: 'This test checks the ERP-969',
+            },
+            {
+                test: runERP_969_2,
+                description: 'This test checks the ERP-969-2',
+            }
+        ]
     },
     TC100: {
         description: 'Complete specifications verification.',
