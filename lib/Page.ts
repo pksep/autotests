@@ -3073,6 +3073,8 @@ export class PageObject extends AbstractPage {
  * @returns Promise<void> - Logs navigation status and validates the presence of the specified element.
  */
   async navigateToPage(url: string, dataTestId: string): Promise<void> {
+    console.log(`Navigating to ${url}`);
+    console.log(`PageTitleId to ${dataTestId}`);
     await this.page.goto(url);
     await this.page.waitForTimeout(500);
     await this.page.waitForLoadState("networkidle");

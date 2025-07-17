@@ -191,11 +191,6 @@ export const testSuites = {
             {
                 test: runU004_9,
                 description: 'This test checks the User Scenario series of tests U004_9',
-            },
-            {
-                test: runU005,
-                description: 'This test checks the User Scenario series of tests U005',
-
             }
             // Add more test cases as needed
         ],
@@ -351,6 +346,16 @@ export const testSuites = {
             // Add more test cases as needed
         ],
 
+    },
+    U006: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runU006,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
     },
 };
 

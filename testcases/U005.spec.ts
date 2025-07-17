@@ -75,7 +75,7 @@ const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INP
 const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload";
 
 // Archive dialog constants
-const ADD_DETAIL_CHARACTERISTIC_BLANKS_BAN_DIALOG = "AddDetal-CharacteristicBlanks-BanDialog";
+const ADD_DETAIL_CHARACTERISTIC_BLANKS_BAN_DIALOG = "ModalConfirm";
 
 const baseFileNamesToVerify = [
     { name: "Test_imagexx_1", extension: ".jpg" },
@@ -627,6 +627,7 @@ export const runU005 = () => {
             });
             await page.waitForTimeout(500);
             firstRow.click();
+            await page.waitForTimeout(500);
         });
         await allure.step("Step 21: Open Archive dialog (Open Archive dialog)", async () => {
             // To open the archive dialog, we need to add something to the archive
@@ -648,7 +649,14 @@ export const runU005 = () => {
             await firstRow.click();
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(500);
-
+            await firstRow.evaluate((el) => {
+                el.style.backgroundColor = 'red';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+            await firstRow.click();
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(500);
             // Archive dialog locator
             const dialogTestId = "ModalBaseMaterial"; // No brackets
             const buttonTestId = MODAL_BASE_MATERIAL_ADD_BUTTON; // No brackets
@@ -669,15 +677,16 @@ export const runU005 = () => {
             });
 
             // Reuse the locator for the button
-            const buttonLocator = page.locator(`[data-testid="${buttonTestId}"]`);
+            const buttonLocator = await page.locator(`button[data-testid="${buttonTestId}"]`);
 
             await buttonLocator.evaluate((row) => {
-                row.style.backgroundColor = 'green';
+                row.style.backgroundColor = 'red';
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-
+            await page.waitForTimeout(1500);
             await buttonLocator.click();
+
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1500);
             // Locate the table container using data-testid
@@ -705,21 +714,21 @@ export const runU005 = () => {
             const titles = testData1.elements.CreatePage.modalArchive.titles.map((title) => title.trim());
 
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, ADD_DETAIL_CHARACTERISTIC_BLANKS_BAN_DIALOG);
-            console.log(h3Titles);
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
+            const h4Titles = await shortagePage.getAllH4TitlesInModalByTestId(page, ADD_DETAIL_CHARACTERISTIC_BLANKS_BAN_DIALOG);
+            console.log(h4Titles);
+            const normalizedH4Titles = h4Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             // Log for debugging
             console.log('Expected Titles:', titles);
-            console.log('Received Titles:', h3Titles);
+            console.log('Received Titles:', h4Titles);
 
             // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
+            expect(normalizedH4Titles.length).toBe(titles.length);
 
             // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
+            expect(normalizedH4Titles).toEqual(titles);
 
             await page.waitForTimeout(50);
         });
@@ -735,7 +744,7 @@ export const runU005 = () => {
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
                     // Check if the button is visible and enabled
                     await page.waitForTimeout(50);
-                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState, 'AddDetal-CharacteristicBlanks-BanDialog');
+                    const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState, 'ModalConfirm');
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
                     logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);

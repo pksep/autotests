@@ -8,6 +8,8 @@ import testData1 from '../testdata/U005-PC01.json'; // Import your test data
 import testData2 from '../testdata/U004-PC01.json';
 import { notDeepStrictEqual } from "assert";
 import exp from "constants";
+
+// Constants for data-testid values
 const LEFT_DATA_TABLE = "BasePaginationTable-Table-product";
 const TEST_DETAIL_NAME = "U005_test2_DETAILName";
 const TEST_CATEGORY = "3D печать";
@@ -17,10 +19,64 @@ const TEST_FILE = "87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg";
 
 const TEST_MATERIAL_NAME = "Круг (шнур) РТИ Ø8";
 
-
+// Main page constants
 const MAIN_PAGE_MAIN_DIV = "BaseDetals-Container-MainContainer";
 const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
 const MAIN_PAGE_TITLE_ID = "BaseDetals-Header-Title";
+const MAIN_PAGE_Д_TABLE = "BasePaginationTable-Table-detal";
+const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";
+const MAIN_PAGE_SAVE_BUTTON = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
+const MAIN_PAGE_ARCHIVE_BUTTON = "BaseDetals-Button-Archive";
+
+// Add detail page constants
+const ADD_DETAIL_INFORMATION_INPUT = "AddDetal-Information-Input-Input";
+const ADD_DETAIL_CHARACTERISTIC_BLANKS = "AddDetal-CharacteristicBlanks";
+const ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE = "AddDetal-CharacteristicBlanks-Title";
+const ADD_DETAIL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save";
+
+// Modal base material constants
+const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM = "ModalBaseMaterial-TableList-Table-Item";
+const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT = "ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input";
+const MODAL_BASE_MATERIAL_ADD_BUTTON = "ModalBaseMaterial-Add-Button";
+
+const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_TABLE_ROW = "AddDetal-FileComponent-DocumentTable-Tbody-TableRow";
+const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_NAME = "AddDetal-FileComponent-DocumentTable-Tbody-Name";
+
+// File component constants
+const ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON = "AddDetal-FileComponent-AddFileButton";
+const ADD_DETAIL_FILE_COMPONENT = "AddDetal-FileComponent";
+const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT = "AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint";
+const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC = "AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc";
+
+// Modal base files constants
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES = "AddDetal-FileComponent-ModalBaseFiles";
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM0 = "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0";
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE = "AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable";
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_SEARCH_DROPDOWN_INPUT = "AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Search-Dropdown-Input";
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE = "AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Table";
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON = "AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton";
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_TABLE = "AddDetal-FileComponent-ModalBaseFiles-Table";
+const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_BUTTONS_ADD_BUTTON = "AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton";
+
+// Drag and drop modal constants
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal";
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section";
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-File";
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_TEXTAREA_DESCRIPTION_TEXTAREA = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea";
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_CHECKBOX_MAIN = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main";
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_NUMBER_VERSION_INPUT = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input";
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input";
+const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD = "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload";
+
+// Archive dialog constants
+const MODAL_CONFIRM = "ModalConfirm";
+const MODAL_CONFIRM_CONTENT_BUTTONS_BUTTON_2 = "ModalConfirm-Content-Buttons-Yes";
+
+// Notification constants
+const NOTIFICATION_NOTIFICATION_DESCRIPTION = "Notification-Notification-Description";
+
+// Table search constants
+const BASE_PAGINATION_TABLE_THEAD_SEARCH_INPUT_DROPDOWN_INPUT = "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
 
 const baseFileNamesToVerify = [
     { name: "Test_imagexx_1", extension: ".jpg" },
@@ -29,7 +85,7 @@ const baseFileNamesToVerify = [
 
 
 export const runU006 = () => {
-    test.skip("TestCase 01 - создат дитайл", async ({ browser, page }) => {
+    test("TestCase 01 - создат дитайл", async ({ browser, page }) => {
         test.setTimeout(900000);
         const shortagePage = new CreatePartsDatabasePage(page);
         await allure.step("Step 01: Перейдите на страницу создания детали. (Navigate to the create part page)", async () => {
@@ -38,7 +94,7 @@ export const runU006 = () => {
         });
         await allure.step("Step 02: В поле ввода инпута \"Наименование\" вводим значение переменной. (In the input field \"Name\" we enter the value of the variable)", async () => {
             await page.waitForLoadState("networkidle");
-            const field = page.locator('[data-testid="AddDetal-Information-Input-Input"]');
+            const field = page.locator(`[data-testid="${ADD_DETAIL_INFORMATION_INPUT}"]`);
 
             await field.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
@@ -57,10 +113,10 @@ export const runU006 = () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
+            const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
             await expect(tableContainer).toBeVisible(); // Ensure the table container is visible
 
-            const tableTitle = tableContainer.locator('[data-testid="AddDetal-CharacteristicBlanks-Title"]');
+            const tableTitle = tableContainer.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE}"]`);
             await expect(tableTitle).toBeVisible(); // Ensure the title is visible
 
             // Optionally, highlight the title for debugging
@@ -83,23 +139,23 @@ export const runU006 = () => {
         await allure.step("Step 04: Verify that search works for table 3 (Verify that search works for each column)", async () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(500);
-            const rightTable = page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]');
+            const rightTable = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM}"]`);
             await rightTable.evaluate((row) => {
                 row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
                 row.style.color = 'blue'; // Change text color to blue
             });
-            await expect(page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item"]')).toBeVisible();
-            await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').fill('');
+            await expect(page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM}"]`)).toBeVisible();
+            await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).fill('');
             await page.waitForTimeout(1000);
             // Locate the search field within the left table and fill it
-            await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').fill(TEST_NAME);
+            await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).fill(TEST_NAME);
 
             await page.waitForLoadState("networkidle");
             // Optionally, validate that the search input is visible
-            await expect(rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]')).toBeVisible();
+            await expect(rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`)).toBeVisible();
 
-            await rightTable.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]').press('Enter');
+            await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).press('Enter');
             await page.waitForLoadState("networkidle");
             // Find the first row in the table
             const firstRow = rightTable.locator('tbody tr:first-child');
@@ -124,7 +180,7 @@ export const runU006 = () => {
         await allure.step("Step 05: Add the found Item (Add the found Item)", async () => {
             await page.waitForLoadState("networkidle");
 
-            const addButton = page.locator('[data-testid="ModalBaseMaterial-Add-Button"]');
+            const addButton = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_ADD_BUTTON}"]`);
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -139,7 +195,7 @@ export const runU006 = () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
+            const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
             await tableContainer.waitFor({ state: 'visible' });
             const firstDataRow = tableContainer.locator('table tbody tr').first();
             const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -155,7 +211,7 @@ export const runU006 = () => {
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
             // Locate the table container by searching for the h3 with the specific title.
-            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
+            const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
             await tableContainer.waitFor({ state: 'visible' });
             const firstDataRow = tableContainer.locator('table tbody tr').first();
             const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -172,7 +228,7 @@ export const runU006 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the table container using data-testid
-            const tableContainer = page.locator('[data-testid="AddDetal-CharacteristicBlanks"]');
+            const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
             await expect(tableContainer).toBeVisible();
 
             // Locate the row dynamically by searching for the text "Длина (Д)"
@@ -278,15 +334,15 @@ export const runU006 = () => {
             await page.waitForLoadState('networkidle');
 
             // Locate the modal container using data-testid
-            const modal = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
+            const modal = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL}"]`);
             await expect(modal).toBeVisible();
 
             // Locate the SECTION inside the modal (wildcard for '-Section')
-            const section = await modal.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            const section = await modal.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION}"]`);
             await section.waitFor({ state: 'attached', timeout: 50 });
 
             // Locate ALL FILE SECTIONS inside the section (wildcard for '-File')
-            const fileSections = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]');
+            const fileSections = await section.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE}"]`);
             const fileCount = await fileSections.count();
 
             if (fileCount < 2) {
@@ -300,25 +356,25 @@ export const runU006 = () => {
 
 
                 // Locate the textarea inside the fieldset (specific textarea)
-                const textarea = fileSection.locator('textarea[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea"]');
+                const textarea = fileSection.locator(`textarea[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_TEXTAREA_DESCRIPTION_TEXTAREA}"]`);
                 await textarea.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                const checkbox = fileSection.locator('input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+                const checkbox = fileSection.locator(`input[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_CHECKBOX_MAIN}"]`);
                 await checkbox.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                const version = fileSection.locator('input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]');
+                const version = fileSection.locator(`input[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_NUMBER_VERSION_INPUT}"]`);
                 await version.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
-                const fileName = fileSection.locator('input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]');
+                const fileName = fileSection.locator(`input[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT}"]`);
 
                 // Highlight the textarea for debugging (optional)
                 await fileName.evaluate((row) => {
@@ -388,14 +444,14 @@ export const runU006 = () => {
         await allure.step("Step 13: Проверяем, что в модальном окне есть не отмеченный чекбокс в строке \"Главный:\" (Check that the checkbox is not selected in the MAIN row)", async () => {
             await page.waitForLoadState('networkidle');
 
-            const modal = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
+            const modal = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL}"]`);
             await expect(modal).toBeVisible();
 
-            const section = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            const section = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION}"]`);
             await section.waitFor({ state: 'attached', timeout: 50 });
 
-            const sectionX = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').first();
-            const sectionY = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').nth(1);
+            const sectionX = await section.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE}"]`).first();
+            const sectionY = await section.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE}"]`).nth(1);
 
             // Validate checkboxes and assert their state
             expect(await shortagePage.validateCheckbox(page, sectionX, 1)).toBeFalsy();
@@ -407,11 +463,11 @@ export const runU006 = () => {
         await allure.step("Step 14: Чек чекбокс в строке \"Главный:\" (Check the checkbox in the \"Главный:\" row)", async () => {
             await page.waitForLoadState('networkidle');
 
-            const section = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            const section = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION}"]`);
             await section.waitFor({ state: 'attached', timeout: 50 });
 
-            const sectionX = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').first();
-            const sectionY = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').nth(1);
+            const sectionX = await section.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE}"]`).first();
+            const sectionY = await section.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE}"]`).nth(1);
 
             // Validate checkboxes and assert their state
             expect(await shortagePage.checkCheckbox(page, sectionX, 1)).toBeTruthy();
@@ -422,12 +478,12 @@ export const runU006 = () => {
         await allure.step("Step 15: Проверяем, that in the file field is the name of the file uploaded without its file extension", async () => {
             await page.waitForLoadState('networkidle');
 
-            const section = await page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]');
+            const section = await page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION}"]`);
             await section.waitFor({ state: 'attached', timeout: 50 });
             console.log("Dynamic content in modal section loaded.");
 
             // Extract individual file sections from the main section
-            const fileSections = await section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]').all();
+            const fileSections = await section.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE}"]`).all();
 
             // Convert { name, extension } objects to filename strings without extension
             const filenamesWithoutExtension = baseFileNamesToVerify.map(file => file.name);
@@ -446,8 +502,8 @@ export const runU006 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the upload button using data-testid
-            const uploadButton = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload"]');
-            const modalLocator = page.locator('dialog[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]');
+            const uploadButton = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD}"]`);
+            const modalLocator = page.locator(`dialog[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL}"]`);
             console.log("Upload button and modal located.");
 
             const maxRetries = 50;
@@ -492,7 +548,7 @@ export const runU006 = () => {
                     console.log("Duplicate filename detected. Updating all filenames.");
                     retryCounter++;
 
-                    const sectionsCount = await page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]').count();
+                    const sectionsCount = await page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT}"]`).count();
                     console.log(`Found ${sectionsCount} file sections to update filenames.`);
 
                     for (let i = 0; i < sectionsCount; i++) {
@@ -502,7 +558,7 @@ export const runU006 = () => {
                             break;
                         }
 
-                        const fileInput = page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]').nth(i);
+                        const fileInput = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT}"]`).nth(i);
 
                         try {
                             // Check if field is visible before interaction
@@ -556,14 +612,14 @@ export const runU006 = () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(2500);
             // Locate the parent section for the specific table
-            const parentSection = page.locator('section.attach-file-component');
+            const parentSection = page.locator(`section[data-testid="${ADD_DETAIL_FILE_COMPONENT}"]`);
             console.log("Located parent section for the file table.");
 
 
             await page.waitForTimeout(1000);
 
             // Locate the table rows within the scoped section
-            const tableRows = parentSection.locator('.table-yui-kit__tr'); // Only rows inside the specific section
+            const tableRows = parentSection.locator(`[data-testid^="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_TABLE_ROW}"]`); // Only rows inside the specific section
 
             // Debug: Print all row texts
             tableRows.evaluateAll(rows => rows.map(row => row.textContent)).then(texts => {
@@ -574,7 +630,7 @@ export const runU006 = () => {
                 console.log(`Verifying presence of file with base name: ${name} and extension: ${extension}`);
 
                 // Locate rows where the second column contains the base name
-                const matchingRows = await tableRows.locator(`.table-yui-kit__td:nth-child(2):has-text("${name}")`);
+                const matchingRows = await tableRows.locator(`[data-testid^="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_NAME}"]:has-text("${name}")`);
                 await matchingRows.evaluate((row) => {
                     row.style.backgroundColor = 'yellow';
                     row.style.border = '2px solid red';
@@ -611,7 +667,7 @@ export const runU006 = () => {
         });
         await allure.step("Step 18: Open Добавить из базы dialog (Open Добавить из базы dialog)", async () => {
             await page.waitForLoadState("networkidle");
-            const button = page.locator('[data-testid="AddDetal-FileComponent-AddFileButton"]', { hasText: 'Добавить из базы' });
+            const button = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON}"]`, { hasText: 'Добавить из базы' });
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -626,7 +682,7 @@ export const runU006 = () => {
             await page.waitForTimeout(500);
 
             // Locate the switch item using data-testid and highlight it for debugging
-            const switchItem = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"]');
+            const switchItem = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM0}"]`);
             await switchItem.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -636,15 +692,15 @@ export const runU006 = () => {
             await page.waitForLoadState("networkidle");
 
             // Locate the parent container of the table using data-testid
-            const tableContainer = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable"]');
+            const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE}"]`);
             await expect(tableContainer).toBeVisible();
 
             // Locate the table within the container
-            const leftTable = tableContainer.locator('table');
-            await expect(leftTable).toBeVisible();
+            //const leftTable = tableContainer.locator('table');
+            //await expect(leftTable).toBeVisible();
 
             // Locate the search input field using data-testid
-            const searchField = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Search-Dropdown-Input"]');
+            const searchField = tableContainer.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_SEARCH_DROPDOWN_INPUT}"]`);
 
             // Highlight the search field for debugging
             await searchField.evaluate((input) => {
@@ -674,14 +730,14 @@ export const runU006 = () => {
             const fieldValue = await searchField.inputValue();
             console.log("Verified input value:", fieldValue);
             expect(fieldValue).toBe(TEST_FILE);
-            const firstRow1 = leftTable.locator('tbody tr:first-child');
+            const firstRow1 = tableContainer.locator('tbody tr:first-child');
             console.log("First Row:", await firstRow1.textContent());
             // Trigger the search by pressing 'Enter'
             await searchField.press('Enter');
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1500);
             // Locate and highlight the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
+            const firstRow = tableContainer.locator('tbody tr:first-child');
             console.log("First Row 2:", await firstRow.textContent());
             await firstRow.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
@@ -715,7 +771,7 @@ export const runU006 = () => {
                 row.style.border = '2px solid red';
                 row.style.color = 'blue';
             });
-            const addButton = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton"]', { hasText: 'Добавить' });
+            const addButton = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON}"]`, { hasText: 'Добавить' });
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'yellow';
                 row.style.border = '2px solid red';
@@ -747,7 +803,7 @@ export const runU006 = () => {
             await page.waitForTimeout(1000);
             const selectedPartNumber = TEST_FILE; // Replace with actual part number
 
-            const bottomTableLocator = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-Table"]'); // Adjust 'xxxxx' as per actual table id
+            const bottomTableLocator = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_TABLE}"]`);
             await bottomTableLocator.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -797,7 +853,7 @@ export const runU006 = () => {
         await allure.step("Step 22: Click bottom Add button", async () => {
             await page.waitForLoadState("networkidle");
 
-            const addButton = page.locator('[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton"]', { hasText: 'Добавить' }).last();
+            const addButton = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_BUTTONS_ADD_BUTTON}"]`, { hasText: 'Добавить' }).last();
 
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
@@ -810,13 +866,14 @@ export const runU006 = () => {
         });
         await allure.step("Step 23: Highlight the row containing the selected file name", async () => {
             await page.waitForLoadState("networkidle");
-
+            await page.waitForTimeout(1500);
             // Locate the parent section for the specific table
-            const parentSection = page.locator('section.attach-file-component');
+            //const parentSection = page.locator('section.attach-file-component');
+            const parentSection = page.locator(`section[data-testid="${ADD_DETAIL_FILE_COMPONENT}"]`);
             console.log("Located parent section for the file table.");
 
             // Locate all visible table rows within the scoped section
-            const tableRows = parentSection.locator('tbody .table-yui-kit__tr');
+            const tableRows = parentSection.locator(`[data-testid^="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_TABLE_ROW}"]`);
             const rowCount = await tableRows.count();
 
             console.log(`Found ${rowCount} rows in the table.`);
@@ -827,7 +884,7 @@ export const runU006 = () => {
                 const row = tableRows.nth(i);
                 const rowHtml = await row.evaluate((rowElement) => rowElement.outerHTML);
                 //console.log(`Row ${i + 1} HTML: ${rowHtml}`);
-                const fileNameCell = row.locator('.table-yui-kit__td:nth-child(2)');
+                const fileNameCell = row.locator(`[data-testid^="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_NAME}"]`);
                 await fileNameCell.waitFor({ state: 'visible' });
                 const fileNameText = await fileNameCell.textContent();
 
@@ -934,14 +991,14 @@ export const runU006 = () => {
 
     });
     // TestCase 02: Do not select a material and verify that saving is not allowed.
-    test.skip("TestCase 02 - не дает сохранить деталь без выбора материала", async ({ page }) => {
+    test("TestCase 02 - не дает сохранить деталь без выбора материала", async ({ page }) => {
         test.setTimeout(600000);
 
         // Instantiate our helper classes.
         const detailsPage = new CreatePartsDatabasePage(page);
 
         await allure.step("Step 01: Перейдите на страницу создания детали", async () => {
-            // Navigate to the detail creation page using the warehouse’s goto method.
+            // Navigate to the detail creation page using the warehouse's goto method.
             await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
             await page.waitForLoadState("networkidle");
         });
@@ -968,10 +1025,8 @@ export const runU006 = () => {
         });
 
         await allure.step("Step 06: Проверьте, что уведомление содержит текст 'Выберите материал'", async () => {
-            // Retrieve the notification text for further logging and assertion.
-            const errorText = await page.locator('[data-testid="Notification-Notification-Description"]').last().textContent();
-            console.log("Notification text:", errorText);
-            expect(errorText).toContain("Деталь успешно Создана.");
+            // Use the built-in function to verify the notification message
+            await detailsPage.verifyDetailSuccessMessage("Деталь успешно Создана.");
         });
 
         await allure.step("Step 7: Проверьте, что созданная деталь отображается в базе деталей", async () => {
@@ -1062,7 +1117,7 @@ export const runU006 = () => {
         await allure.step("Step 4: Выберите материал, но не заполните обязательные поля", async () => {
             // Search and select a material from the specified slider.
             // sliderDataTestId is passed in to target a specific material category.
-            await detailsPage.searchAndSelectMaterial(TEST_MATERIAL_NAME, 'ModalBaseMaterial-TableList-Switch-Item1');
+            await detailsPage.searchAndSelectMaterial('ModalBaseMaterial-TableList-Switch-Item1', TEST_MATERIAL_NAME);
         });
 
         await allure.step("Step 5: Нажмите кнопку 'Добавить материал'", async () => {
@@ -1081,9 +1136,7 @@ export const runU006 = () => {
             await detailsPage.verifyDetailSuccessMessage("Все характеристики детали должны быть заполнены");
         });
     });
-
-
-    test.skip("TestCase 06 - Архивация всех совпадающих деталей (Cleanup)", async ({ page }) => {
+    test("TestCase 06 - Архивация всех совпадающих деталей (Cleanup)", async ({ page }) => {
         test.setTimeout(600000);
 
 
@@ -1151,16 +1204,16 @@ export const runU006 = () => {
                     await page.waitForTimeout(500);
 
                     // Click the archive button
-                    const archiveButton = page.locator('[data-testid="BaseDetals-Button-Archive"]');
+                    const archiveButton = page.locator(`[data-testid="${MAIN_PAGE_ARCHIVE_BUTTON}"]`);
                     await expect(archiveButton).toBeVisible();
                     await archiveButton.click();
                     await page.waitForLoadState("networkidle");
 
                     // Verify archive modal appears
-                    const archiveModal = page.locator('dialog[data-testid="ModalConfirm"]');
+                    const archiveModal = page.locator(`dialog[data-testid="${MODAL_CONFIRM}"]`);
                     await expect(archiveModal).toBeVisible();
 
-                    const yesButton = archiveModal.locator('[data-testid="ModalConfirm-Content-Buttons-Button-2"]');
+                    const yesButton = archiveModal.locator(`[data-testid="${MODAL_CONFIRM_CONTENT_BUTTONS_BUTTON_2}"]`);
                     await expect(yesButton).toBeVisible();
                     await yesButton.click();
                     await page.waitForLoadState("networkidle");
