@@ -28,12 +28,15 @@ let currentBuildQuantity: number = 1; // Global variable for current build quant
 const PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD = "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
 const PARTS_PAGE_DETAL_TABLE = "BasePaginationTable-Table-detal";
 const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
+const MAIN_SEARCH_COVER_INPUT = "OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input";
+const BASE_DETAIL_CB_TABLE_SEARCH = "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
+const SEARCH_COVER_INPUT_2 = "TableRevisionPagination-SearchInput-Dropdown-Input";
 const MODAL_CONFIRM_DIALOG = "ModalConfirm";
-const MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Button-2";
+const MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Yes";
 const PARTS_PAGE_ARCHIVE_BUTTON = "BaseDetals-Button-Archive";
 const EDIT_PARTS_PAGE_ARCHIVE_BUTTON = "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive";
-const ARCHIVE_MODAL_CONFIRM_DIALOG = "EditDetal-ButtonSaveAndCancel-ModalConfirm";
-const ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Button-2";
+const ARCHIVE_MODAL_CONFIRM_DIALOG = "ModalConfirm";
+const ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Yes";
 const BASE_DETALS_BUTTON_CREATE = "BaseDetals-Button-Create";
 const BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS = "BaseDetals-CreatLink-Titlebase-of-assembly-units";
 const CREATOR_INFORMATION_INPUT = "Creator-Information-Input-Input";
@@ -51,7 +54,7 @@ const ADD_DETAL_INFORMATION_INPUT_INPUT = "AddDetal-Information-Input-Input";
 const EDIT_DETAL_INFORMATION_INPUT_INPUT = "EditDetal-Information-Input-Input";
 const EDIT_DETAL_TITLE = "EditDetal-Title";
 const CREATOR_TITLE = "Creator-Title";
-
+const MODAL_TITLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title";
 // Revision page constants
 const SCLAD_REVISION_REVISION = "Sclad-revision-revision";
 const MINI_NAVIGATION_POS_DATA1 = "MiniNavigation-POS-Data1";
@@ -65,29 +68,36 @@ const INPUT_NUMBER_INPUT = "InputNumber-Input";
 const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG = "TableRevisionPagination-ConfirmDialog";
 const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE = "TableRevisionPagination-ConfirmDialog-Approve";
 const MODAL_PROMPT_MINI_BUTTON_CONFIRM = "ModalPrompt-Mini-Button-Confirm";
-const MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT = "ModalAddOrder-SupplierOrderCreationModal-Content";
+const MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT = "OrderSuppliers-Modal-AddOrder";
 
 // Additional constants for the new steps
 const SEARCH_COVER_INPUT = "Search-Cover-Input";
-const SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES = "SelectTypeObject-Operation-Assemblies";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE = "ModalAddOrder-ProductionTable-Table";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT = "ModalAddOrder-ProductionTable-TableRowYourQuantityInput";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON = "ModalAddOrder-ProductionTable-OrderButton";
+const SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES = "OrderSuppliers-Modal-AddOrder-Content-AssembleCard";
+const MODAL_ADD_ORDER_DIALOG = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply";
+const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1";
+const MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2";
+const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input";
+const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT = "-TdQuantity-InputNumber-Input";
+const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row";
+const MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save";
+const MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button";
 const MODAL_ADD_ORDER_MODALS_MODAL_START_PRODUCTION_TRUE = "ModalAddOrder-Modals-ModalStartProductiontrue";
 const MODAL_START_PRODUCTION_ORDER_NUMBER_VALUE = "ModalStartProduction-OrderNumberValue";
 const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON = "ModalStartProduction-ComplectationTable-CancelButton";
 const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_INPRODUCTION_BUTTON = "ModalStartProduction-ComplectationTable-InProduction";
-const ORDER_SUPPLIERS_TABLE_ORDER_TABLE = "OrderSuppliers-Table-OrderTable";
-const ORDER_MODAL_TABLE = "TableStockOrderItems-TableStockOrderItems-Table";
-const ORDER_SUPPLIERS_MODAL_WORKER_WORKER_MODAL = "OrderSuppliers-ModalWorker-WorkerModal";
+const ORDER_SUPPLIERS_TABLE_ORDER_TABLE = "OrderSuppliers-Main-Content-TableWrapper-Table";
+const ORDER_MODAL_TABLE = "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table";
+const ORDER_MODAL = "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker";
+const COMPLEX_SBORKA_BY_PLAN = "Search-Cover-Input";
+const KOMPLEKT_SBORKA_BY_PLAN_SEARCH_INPUT = "Search-Cover-Input";
 
 const SCLAD_ORDERING_SUPPLIERS = "Sclad-orderingSuppliers";
-const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON = "OrderSuppliers-Div-CreateOrderButton";
+const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON = "OrderSuppliers-Main-Button";
 const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON_CREATE_ORDER = "OrderSuppliers-Div-CreateOrderButton-CreateOrder";
 
 // Constants for Step 15
 const TABLE_COMPLECT_TABLE = "TableComplect-TableComplect-Table";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "TableComplect-TableComplect-ModalAddWaybill";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "TableComplect-ModalAddWaybill";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-RequiredQuantityCell";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-CollectedQuantityCell";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
@@ -122,13 +132,15 @@ const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_SCLAD_NEED_CELL_SUFFIX = "-ScladNeedCe
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX = "-NeedCell";
 
 // Constants for Step 18 - Progress wrapper selector
-const TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX = "TableComplect-TableComplect-ModalAddWaybill";
+const TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX = "TableComplect-ModalAddWaybill";
 const TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX = "-CircleProgress-Wrapper";
 
 // Constants for Step 19 - Modal dialog selectors
 const OSTATK_PCBD_MODAL_DETAL_PREFIX = "OstatkPCBD-ModalDetal";
 const OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX = "-InformationName-Name";
 const OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX = "-Buttons-ShowFullInformationButton";
+
+const OSTATTKPCBD_TABLE_SEARCH_INPUT = "OstatkiPCBDTable-SearchInput-Dropdown-Input";
 
 export const runERP_969_2 = () => {
     test("ERP-969-2 - Create 2 details and СБ assembly containing both details", async ({ page }) => {
@@ -359,8 +371,8 @@ export const runERP_969_2 = () => {
             }
 
             // Search for the assembly in the СБ table (not the details table)
-            const cbedTable = page.locator(`[data-testid="${MAIN_PAGE_СБ_TABLE}"]`);
-            const assemblySearchInput = cbedTable.locator(`[data-testid="${PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
+            const cbedTable = page.locator(`table[data-testid="${MAIN_PAGE_СБ_TABLE}"]`);
+            const assemblySearchInput = cbedTable.locator(`[data-testid="${BASE_DETAIL_CB_TABLE_SEARCH}"]`);
             await expect(assemblySearchInput).toBeVisible();
             await assemblySearchInput.fill(ASSEMBLY_NAME);
             await assemblySearchInput.press("Enter");
@@ -390,7 +402,9 @@ export const runERP_969_2 = () => {
 
             // Search for the assembly in СБ table
             const cbedTable = page.locator(`[data-testid="${MAIN_PAGE_СБ_TABLE}"]`);
-            const assemblySearchInput = cbedTable.locator(`[data-testid="${PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
+            await detailsPage.highlightElement(cbedTable);
+            const assemblySearchInput = cbedTable.locator(`[data-testid="${BASE_DETAIL_CB_TABLE_SEARCH}"]`);
+            await detailsPage.highlightElement(assemblySearchInput);
             await expect(assemblySearchInput).toBeVisible();
 
             // Clear any existing search first
@@ -678,12 +692,43 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
 
+            const dialog = warehousePage.locator(`dialog[data-testid="${MODAL_ADD_ORDER_DIALOG}"][open]`);
+            await expect(dialog).toBeVisible({ timeout: 5000 });
+            await detailsPage.highlightElement(dialog);
+            await warehousePage.waitForTimeout(5000);
+
+            // Verify the modal title
+            const modalTitle = dialog.locator(`h4[data-testid="${MODAL_TITLE}"]`);
+            await detailsPage.highlightElement(modalTitle);
+            await modalTitle.evaluate((el: HTMLElement) => {
+                el.style.backgroundColor = 'red';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+            await expect(modalTitle).toContainText("Создание заказа на сборку", { timeout: 5000 });
+
+            // Capture the order number from the modal title
+            const modalTitleText = await modalTitle.textContent();
+            console.log(`Modal title text: ${modalTitleText}`);
+
+            // Extract order number from the title text using regex
+            // The format is "Создание заказа на сборку № 25-6067 от 23.07.2025"
+            const orderNumberMatch = modalTitleText?.match(/№\s*([^\s]+)/);
+            if (orderNumberMatch && orderNumberMatch[1]) {
+                orderNumber = orderNumberMatch[1];
+                console.log(`Captured order number: ${orderNumber}`);
+            } else {
+                console.error('Could not extract order number from modal title');
+                throw new Error('Order number not found in modal title');
+            }
+
             //Verify the production table is visible
             const productionTable = warehousePage.locator(`table[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE}"]`).first();
             await expect(productionTable).toBeVisible({ timeout: 5000 });
 
             // Find and fill the search input
-            const searchInput = productionTable.locator(`[data-testid="${SEARCH_COVER_INPUT}"]`);
+            const searchInput = productionTable.locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT}"]`);
+            await detailsPage.highlightElement(searchInput);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
             await searchInput.fill(ASSEMBLY_NAME);
             await searchInput.press("Enter");
@@ -696,66 +741,47 @@ export const runERP_969_2 = () => {
             console.log(`Found ${rowCount} row(s) in production table for SB "${ASSEMBLY_NAME}".`);
             expect(rowCount).toBe(1);
 
-            // Enter quantity "2" in the 8th column
-            const quantityInput = rows.first().locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`);
+            const checkbox = rows.locator("td").nth(0).locator("input[type='checkbox']");
+            await checkbox.click();
+
+            // Click the order button without selecting checkbox (should show warning)
+            const orderButton = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}"]`);
+            await detailsPage.highlightElement(orderButton);
+            await orderButton.click();
+            await warehousePage.waitForTimeout(500);
+            await warehousePage.waitForLoadState("networkidle");
+
+            //now find th ebottom table  via it's top div:ModallAddStockOrderSupply-Main-Content-Block2
+            const bottomTable = warehousePage.locator(`table[data-testid="${MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`);
+            await detailsPage.highlightElement(bottomTable);
+            await expect(bottomTable).toBeVisible({ timeout: 5000 });
+            const bottomRows = bottomTable.locator("tbody tr");
+            const bottomRowCount = await bottomRows.count();
+            console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${ASSEMBLY_NAME}".`);
+            expect(bottomRowCount).toBe(1);
+
+            const quantityInput = bottomRows.first().locator(`[data-testid^="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`);
+            await quantityInput.evaluate((element) => {
+                element.style.border = "2px solid red";
+                element.style.backgroundColor = "red";
+            });
             await expect(quantityInput).toBeVisible({ timeout: 5000 });
             await quantityInput.fill(orderedQuantity.toString());
             await quantityInput.press("Enter");
             await warehousePage.waitForTimeout(500);
 
-            // Click the order button without selecting checkbox (should show warning)
-            const orderButton = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`);
-            await orderButton.click();
-            await warehousePage.waitForTimeout(500);
-            await warehousePage.waitForLoadState("networkidle");
-
-            // Verify warning notification appears
-            //await detailsPage.verifyDetailSuccessMessage("Сначала выберите объекты для запуска в производство");
-
-            // Check the checkbox in the first column of the results row
-            // Try clicking on the parent td element first
-            await rows.locator("td").nth(0).click();
-
-            // Click the order button again (should open production modal)
-            await orderButton.click();
-            await warehousePage.waitForTimeout(500);
-            await warehousePage.waitForLoadState("networkidle");
-
             // Verify the production start modal is visible
-            const productionModal = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_MODALS_MODAL_START_PRODUCTION_TRUE}"]`);
-            await productionModal.evaluate((element) => {
+            const startProductionButton = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`);
+            await startProductionButton.evaluate((element) => {
                 element.style.border = "2px solid red";
                 element.style.backgroundColor = "yellow";
             });
-            await expect(productionModal).toBeVisible({ timeout: 5000 });
+            await expect(startProductionButton).toBeVisible({ timeout: 5000 });
 
-            // Verify the modal title
-            const modalTitle = productionModal.locator('h4');
-            await modalTitle.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-            await expect(modalTitle).toHaveText("Запустить в производство", { timeout: 5000 });
 
-            // Verify today's date is present (check for current date format)
-            const today = new Date().toLocaleDateString('ru-RU');
-            const modalContent = await productionModal.textContent();
-            expect(modalContent).toContain(today);
-
-            // Capture the order number
-            const orderNumberSpan = productionModal.locator(`span[data-testid="${MODAL_START_PRODUCTION_ORDER_NUMBER_VALUE}"]`);
-            await orderNumberSpan.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-            await expect(orderNumberSpan).toBeVisible({ timeout: 5000 });
-            orderNumber = await orderNumberSpan.textContent();
-            console.log(`Captured order number: ${orderNumber}`);
 
             // Find and click the "В производство" button
-            const startProductionButton = productionModal.locator(`[data-testid="${MODAL_START_PRODUCTION_COMPLECTATION_TABLE_INPRODUCTION_BUTTON}"]:has-text("В производство")`);
+
             await expect(startProductionButton).toBeVisible({ timeout: 5000 });
             await startProductionButton.click();
             await warehousePage.waitForLoadState("networkidle");
@@ -778,8 +804,14 @@ export const runERP_969_2 = () => {
             await expect(orderTable).toBeVisible({ timeout: 5000 });
 
             // Find and fill the search input with the captured order number
-            const searchInput = orderTable.locator(`[data-testid="${SEARCH_COVER_INPUT}"]`);
+            const searchInput = orderTable.locator(`[data-testid="${MAIN_SEARCH_COVER_INPUT}"]`);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
+
+            // Ensure orderNumber is not null before using it
+            if (!orderNumber) {
+                throw new Error('Order number is not available for search');
+            }
+
             await searchInput.fill(ASSEMBLY_NAME);
             await searchInput.press("Enter");
             await warehousePage.waitForLoadState("networkidle");
@@ -792,7 +824,7 @@ export const runERP_969_2 = () => {
             console.log(`Found ${tbodyCount} tbody element(s) in order table.`);
 
             // Create the search pattern with "C" prefix
-            const searchPattern = `C${orderNumber}`;
+            const searchPattern = `${orderNumber}`;
             console.log(`Looking for order with pattern: "${searchPattern}"`);
 
             let foundOrder = false;
@@ -856,12 +888,12 @@ export const runERP_969_2 = () => {
             console.log(`Order date from table: "${orderDate}"`);
 
             // Click the found row to open the modal
-            await targetRow.click();
+            await targetRow.dblclick();
             await warehousePage.waitForLoadState("networkidle");
             await warehousePage.waitForTimeout(1000);
 
             // Verify the modal is visible
-            const orderModal = warehousePage.locator(`dialog[data-testid^="${ORDER_SUPPLIERS_MODAL_WORKER_WORKER_MODAL}"]`);
+            const orderModal = warehousePage.locator(`dialog[data-testid^="${ORDER_MODAL}"]`);
             await detailsPage.highlightElement(orderModal, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1028,7 +1060,7 @@ export const runERP_969_2 = () => {
             await expect(kittingTable).toBeVisible({ timeout: 5000 });
 
             // Find input Search-Cover-Input and style it
-            const searchInput = kittingTable.locator(`[data-testid="${SEARCH_COVER_INPUT}"]`);
+            const searchInput = kittingTable.locator(`input[data-testid="${COMPLEX_SBORKA_BY_PLAN}"]`);
             await expect(searchInput).toBeVisible({ timeout: 10000 });
             await searchInput.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -1076,7 +1108,7 @@ export const runERP_969_2 = () => {
 
         await allure.step("Step 16: Verify modal details and interact with waybill form", async () => {
             // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
-            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"][open]`);
             await expect(waybillModal).toBeVisible({ timeout: 5000 });
 
             // Find cell with id ModalAddWaybill-WaybillDetails-RequiredQuantityCell
@@ -1232,7 +1264,7 @@ export const runERP_969_2 = () => {
             await expect(kittingTable).toBeVisible({ timeout: 5000 });
 
             // Find input Search-Cover-Input and style it
-            const searchInput = kittingTable.locator(`[data-testid="${SEARCH_COVER_INPUT}"]`);
+            const searchInput = kittingTable.locator(`input[data-testid="${COMPLEX_SBORKA_BY_PLAN}"]`);
             await expect(searchInput).toBeVisible({ timeout: 10000 });
             await searchInput.waitFor({ state: 'visible', timeout: 10000 });
 
