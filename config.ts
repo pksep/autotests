@@ -16,7 +16,7 @@ export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://test.pksep.ru/",
     HEADLESS: process.env.HEADLESS === "true",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'U005',
+    TEST_SUITE: 'suite01',
     TEST_DIR: '.',
     DEBUG: false,
 };
