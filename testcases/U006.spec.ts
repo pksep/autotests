@@ -5674,7 +5674,5 @@ export const runU006 = () => {
             console.log(`All ${matchingRows.length} exact matching details have been archived.`);
         });
     });
-
-
-
 }
+
