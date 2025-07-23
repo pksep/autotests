@@ -8,8 +8,11 @@ import { title } from "process";
 import { toNamespacedPath } from "path";
 import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
+
+// Constants
 const EDIT_PAGE_ADD_BUTTON = "Specification-Buttons-addingSpecification";
 const MAIN_TABLE_TEST_ID = "Editor-TableSpecification-Product";
+const MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Yes";
 
 
 const TABLE_TEST_IDS = [
@@ -3016,7 +3019,7 @@ export class CreatePartsDatabasePage extends PageObject {
             const archiveModal = page.locator(`dialog[data-testid="${confirmModalSelector}"]`);
             await expect(archiveModal).toBeVisible();
 
-            const confirmButtonSelector = confirmButtonTestId || "ModalConfirm-Content-Buttons-Button-2";
+            const confirmButtonSelector = confirmButtonTestId || MODAL_CONFIRM_DIALOG_YES_BUTTON;
             const yesButton = archiveModal.locator(`[data-testid="${confirmButtonSelector}"]`);
             await expect(yesButton).toBeVisible();
             await yesButton.click();
@@ -3597,7 +3600,7 @@ export class CreatePartsDatabasePage extends PageObject {
         searchInputTestId: string = "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
         archiveButtonTestId: string = "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive",
         confirmModalTestId: string = "ModalConfirm-Content",
-        confirmButtonTestId: string = "ModalConfirm-Content-Buttons-Button-2"
+        confirmButtonTestId: string = "ModalConfirm-Content-Buttons-Yes"
     ): Promise<void> {
         // Search for the item in the table
         const itemTable = page.locator(`[data-testid="${tableTestId}"]`);
@@ -3703,4 +3706,5 @@ export class CreatePartsDatabasePage extends PageObject {
             console.log(`Item "${itemName}" not found in table for archiving`);
         }
     }
+
 }
