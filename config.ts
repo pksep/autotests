@@ -13,10 +13,10 @@
  */
 
 export const ENV = {
-    BASE_URL: process.env.BASE_URL || "http://test.pksep.ru/",
+    BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
     HEADLESS: process.env.HEADLESS === "true",
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'suite01',
+    TEST_SUITE: 'ERP_1527',
     TEST_DIR: '.',
     DEBUG: false,
 };
@@ -177,6 +177,12 @@ export const SELECTORS = {
             TEXT_RUS: "Создать деталь",
             TEXT_ENG: "Create Part",
             DATA_TESTID: "BaseDetals-Button-Create",
+        },
+        ASSEMBLY: {
+            URL: "assembly",
+            TEXT_RUS: "Сборка",
+            TEXT_ENG: "Assembly",
+            DATA_TESTID: "Assembly-Button-AssemblyByOperations",
         },
     },
 

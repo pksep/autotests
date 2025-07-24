@@ -30,9 +30,20 @@ import { runU006 } from "./testcases/U006.spec";
 import { runU007 } from "./testcases/U007.spec";
 import { runERP_969 } from './testcases/ERP-969.spec';
 import { runERP_969_2 } from './testcases/ERP-969-2.spec';
+import { runERP_1527 } from './testcases/ERP-1527.spec';
 
 // Create a mapping of test suites to their corresponding test functions with descriptions
 export const testSuites = {
+    ERP_1527: {
+        description:
+            "ERP-1527 test suite to verify functionalities specific to ERP-1527.",
+        tests: [
+            {
+                test: runERP_1527,
+                description: "This test checks the ERP-1527"
+            }
+        ]
+    },
     ERP_969: {
         description:
             "ERP-969 test suite to verify functionalities specific to ERP-969.",
