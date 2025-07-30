@@ -298,18 +298,18 @@
       },
       "modalArchive": {
         "titles": [
-          "Архив"
+          "Cбросить материал"
         ],
         "buttons": [
           {
-            "class": "button.button-yui-kit.small.secondary-yui-kit",
-            "datatestid": "AddDetal-CharacteristicBlanks-BanDialog-Buttons-Cancel",
+            "class": "button.button-yui-kit.small.reject-yui-kit.modal-confirm__button",
+            "datatestid": "ModalConfirm-Content-Buttons-No",
             "label": "Нет",
             "state": "true"
           },
           {
-            "class": "button.button-yui-kit.small.primary-yui-kit",
-            "datatestid": "AddDetal-CharacteristicBlanks-BanDialog-Buttons-Ban",
+            "class": "button.button-yui-kit.small.primary-yui-kit.modal-confirm__button",
+            "datatestid": "ModalConfirm-Content-Buttons-Yes",
             "label": "Да",
             "state": "true"
           }
