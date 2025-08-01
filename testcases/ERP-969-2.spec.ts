@@ -14,36 +14,26 @@ const ASSEMBLY_NAME = "ERP9692_ASSEMBLY_001";
 const DETAIL_NEW_QUANTITY = "9";
 const NEW_ORDER_QUANTITY = "3";
 
-const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
-
 // Additional test data variables for the new steps
 let orderNumber: string | null = null; // Declare outside to share between steps
-let orderedQuantity: number = 666 // Declare outside to share between steps
+let orderedQuantity2: number = 666 // Declare outside to share between steps
 let targetRow: any = null; // Declare outside to share between steps
 let specificationQuantity: number = 1; // Global variable for specification quantity from step 10
 let waybillCollections: number = 0; // Global variable to track waybill collections
 let currentBuildQuantity: number = 1; // Global variable for current build quantity (how many items we're building now)
 
-// Constants for data-testid selectors
+// Identical constants (same name and value in both files)
 const PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD = "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
 const PARTS_PAGE_DETAL_TABLE = "BasePaginationTable-Table-detal";
 const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
 const MAIN_SEARCH_COVER_INPUT = "OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input";
 const BASE_DETAIL_CB_TABLE_SEARCH = "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
-const SEARCH_COVER_INPUT_2 = "TableRevisionPagination-SearchInput-Dropdown-Input";
-const MODAL_CONFIRM_DIALOG = "ModalConfirm";
-const MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Yes";
-const PARTS_PAGE_ARCHIVE_BUTTON = "BaseDetals-Button-Archive";
 const EDIT_PARTS_PAGE_ARCHIVE_BUTTON = "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive";
 const ARCHIVE_MODAL_CONFIRM_DIALOG = "ModalConfirm";
 const ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Yes";
 const BASE_DETALS_BUTTON_CREATE = "BaseDetals-Button-Create";
 const BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS = "BaseDetals-CreatLink-Titlebase-of-assembly-units";
 const CREATOR_INFORMATION_INPUT = "Creator-Information-Input-Input";
-const SPECIFICATION_BUTTONS_ADDING_SPECIFICATION = "Specification-Buttons-addingSpecification";
-const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 = "Specification-Dialog-CardbaseDetail1";
-const SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON = "Specification-ModalBaseDetal-Select-Button";
-const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON = "Specification-ModalBaseDetal-Add-Button";
 const EDITOR_TABLE_SPECIFICATION_CBED = "Editor-TableSpecification-Cbed";
 const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
 const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel";
@@ -55,74 +45,51 @@ const EDIT_DETAL_INFORMATION_INPUT_INPUT = "EditDetal-Information-Input-Input";
 const EDIT_DETAL_TITLE = "EditDetal-Title";
 const CREATOR_TITLE = "Creator-Title";
 const MODAL_TITLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title";
-// Revision page constants
 const SCLAD_REVISION_REVISION = "Sclad-revision-revision";
-const MINI_NAVIGATION_POS_DATA1 = "MiniNavigation-POS-Data1";
 const REVISION_SWITCH_ITEM2 = "Revision-Switch-Item2";
-const REVISION_TABLE_REVISION_PAGINATION_CBEDS = "Revision-TableRevisionPagination-Cbeds";
-const REVISION_TABLE_REVISION_PAGINATION_DETALS = "Revision-TableRevisionPagination-Detals";
-const TABLE_REVISION_PAGINATION_TABLE = "Revision-TableRevisionPagination-Detals-Table";
 const TABLE_REVISION_PAGINATION_SEARCH_INPUT = "TableRevisionPagination-SearchInput-Dropdown-Input";
-const TABLE_REVISION_PAGINATION_EDIT_PEN = "TableRevisionPagination-EditPen";
 const INPUT_NUMBER_INPUT = "InputNumber-Input";
 const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG = "TableRevisionPagination-ConfirmDialog";
 const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE = "TableRevisionPagination-ConfirmDialog-Approve";
-const MODAL_PROMPT_MINI_BUTTON_CONFIRM = "ModalPrompt-Mini-Button-Confirm";
 const MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT = "OrderSuppliers-Modal-AddOrder";
-
-// Additional constants for the new steps
-const SEARCH_COVER_INPUT = "Search-Cover-Input";
 const SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES = "OrderSuppliers-Modal-AddOrder-Content-AssembleCard";
-const MODAL_ADD_ORDER_DIALOG = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1";
-const MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input";
 const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT = "-TdQuantity-InputNumber-Input";
 const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row";
 const MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save";
 const MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button";
-const MODAL_ADD_ORDER_MODALS_MODAL_START_PRODUCTION_TRUE = "ModalAddOrder-Modals-ModalStartProductiontrue";
-const MODAL_START_PRODUCTION_ORDER_NUMBER_VALUE = "ModalStartProduction-OrderNumberValue";
-const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON = "ModalStartProduction-ComplectationTable-CancelButton";
-const MODAL_START_PRODUCTION_COMPLECTATION_TABLE_INPRODUCTION_BUTTON = "ModalStartProduction-ComplectationTable-InProduction";
 const ORDER_SUPPLIERS_TABLE_ORDER_TABLE = "OrderSuppliers-Main-Content-TableWrapper-Table";
-const ORDER_MODAL_TABLE = "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table";
 const ORDER_MODAL = "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker";
-const COMPLEX_SBORKA_BY_PLAN = "Search-Cover-Input";
-const KOMPLEKT_SBORKA_BY_PLAN_SEARCH_INPUT = "Search-Cover-Input";
-
+const COMPLEX_SBORKA_BY_PLAN = "CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input";
 const SCLAD_ORDERING_SUPPLIERS = "Sclad-orderingSuppliers";
 const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON = "OrderSuppliers-Main-Button";
-const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON_CREATE_ORDER = "OrderSuppliers-Div-CreateOrderButton-CreateOrder";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input";
+const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
+const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel";
+const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON = "ModalAddWaybill-ControlButtons-CompleteSetButton";
+const TABLE_COMPLECT_TABLE_ROW_CELL = "CompletCbed-Content-Table-Table-TableRow";
+const TABLE_COMPLECT_TABLE_ROW_CELL_NAME = "-Name";
+const TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION = "-Designation";
 
-// Constants for Step 15
-const TABLE_COMPLECT_TABLE = "TableComplect-TableComplect-Table";
+// Constants unique to ERP-969-2.spec.ts
+const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
+const SEARCH_COVER_INPUT = "Search-Cover-Input";
+const TABLE_REVISION_PAGINATION_TABLE = "Revision-TableRevisionPagination-Detals-Table";
+const MODAL_ADD_ORDER_DIALOG = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply";
+const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1";
+const MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2";
+const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input";
+const ORDER_MODAL_TABLE = "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table";
+const TABLE_COMPLECT_TABLE = "CompletCbed-Content-Table-Table";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "TableComplect-ModalAddWaybill";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-RequiredQuantityCell";
 const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-CollectedQuantityCell";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input";
-const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX = "ModalAddWaybill-ShipmentDetailsTable-ScladSetSelectedCheckbox";
-
-// Constants for Step 16 - Dynamic locators with suffixes
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX = "ModalAddWaybill-ShipmentDetailsTable-StockOrderRow";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX = "-OrderNumberCell";
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX = "-RemainingQuantityCell";
-
-// Constants for Step 16 - Control buttons
-const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON = "ModalAddWaybill-ControlButtons-CompleteSetButton";
 const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON = "ModalAddWaybill-ControlButtons-ActualizeButton";
-
-// Constants for Step 17 - Table cell selectors
-const TABLE_COMPLECT_TABLE_ROW_DESIGNATION_CELL = "TableComplect-TableComplect-RowDesignationCell";
-const TABLE_COMPLECT_TABLE_ROW_NAME_CELL = "TableComplect-TableComplect-RowNameCell";
-
-// Constants for Step 18 - Additional modal selectors
 const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalLeftToDoLabel";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE = "ModalAddWaybill-DetailsTable-Table";
-
-// Constants for Step 18 - Details table row selectors
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX = "ModalAddWaybill-DetailsTable-Row";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX = "-NameCell";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX = "-QuantityCell";
@@ -130,17 +97,11 @@ const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX = "-InKitsCell";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX = "-FreeQuantityCell";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_SCLAD_NEED_CELL_SUFFIX = "-ScladNeedCell";
 const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX = "-NeedCell";
-
-// Constants for Step 18 - Progress wrapper selector
 const TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX = "TableComplect-ModalAddWaybill";
 const TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX = "-CircleProgress-Wrapper";
-
-// Constants for Step 19 - Modal dialog selectors
 const OSTATK_PCBD_MODAL_DETAL_PREFIX = "OstatkPCBD-ModalDetal";
 const OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX = "-InformationName-Name";
 const OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX = "-Buttons-ShowFullInformationButton";
-
-const OSTATTKPCBD_TABLE_SEARCH_INPUT = "OstatkiPCBDTable-SearchInput-Dropdown-Input";
 
 export const runERP_969_2 = () => {
     test("ERP-969-2 - Create 2 details and СБ assembly containing both details", async ({ page }) => {
@@ -766,7 +727,7 @@ export const runERP_969_2 = () => {
                 element.style.backgroundColor = "red";
             });
             await expect(quantityInput).toBeVisible({ timeout: 5000 });
-            await quantityInput.fill(orderedQuantity.toString());
+            await quantityInput.fill(orderedQuantity2.toString());
             await quantityInput.press("Enter");
             await warehousePage.waitForTimeout(500);
 
@@ -1024,7 +985,7 @@ export const runERP_969_2 = () => {
             });
             const fifthColumnText = await fifthColumn.textContent();
             console.log(`Fifth column (quantity): "${fifthColumnText}"`);
-            expect(parseInt(fifthColumnText?.trim() || "0")).toBe(orderedQuantity);
+            expect(parseInt(fifthColumnText?.trim() || "0")).toBe(orderedQuantity2);
 
             // Verify the last column contains "0"
             const lastColumn = firstDataRow.locator("td").last();
@@ -1091,11 +1052,11 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(2000);
 
             // Wait for results to show - should be one row
-            const resultRows = kittingTable.locator("tbody tr");
+            const resultRows = kittingTable.locator("tbody tr:not([data-testid*='-Kit'])");
             await expect(resultRows).toHaveCount(1, { timeout: 5000 });
 
             // Verify 4th column contains our СБ name
-            const fourthColumn = resultRows.first().locator("td").nth(3); // 4th column (index 3)
+            const fourthColumn = resultRows.first().locator("td").nth(4); // 4th column (index 3)
             const fourthColumnText = await fourthColumn.textContent();
             expect(fourthColumnText?.trim()).toBe(ASSEMBLY_NAME);
 
@@ -1122,7 +1083,7 @@ export const runERP_969_2 = () => {
 
             // Confirm it contains the value of our order quantity
             const requiredQuantity = await requiredQuantityCell.textContent();
-            expect(parseInt(requiredQuantity?.trim() || "0")).toBe(orderedQuantity);
+            expect(parseInt(requiredQuantity?.trim() || "0")).toBe(orderedQuantity2);
             await detailsPage.highlightElement(requiredQuantityCell, {
                 backgroundColor: 'green',
                 border: '2px solid green',
@@ -1231,7 +1192,7 @@ export const runERP_969_2 = () => {
 
             // Confirm it contains our order quantity
             const remainingQuantity = await remainingQuantityCell.textContent();
-            expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity);
+            expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity2);
 
             // Find and click the Complete Set button
             const completeSetButton = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON}"]`);
@@ -1295,7 +1256,7 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(2000);
 
             // Wait for results to show and handle non-standard table structure
-            const resultRows = kittingTable.locator("tbody tr");
+            const resultRows = kittingTable.locator("tbody tr:not([data-testid*='-Kit'])");
             const rowCount = await resultRows.count();
             console.log(`Found ${rowCount} rows in the table after search`);
 
@@ -1313,7 +1274,7 @@ export const runERP_969_2 = () => {
             });
 
             // Verify the name cell contains our СБ name using data-testid
-            const nameCell = firstRow.locator(`[data-testid="${TABLE_COMPLECT_TABLE_ROW_NAME_CELL}"]`);
+            const nameCell = firstRow.locator(`[data-testid^="${TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${TABLE_COMPLECT_TABLE_ROW_CELL_NAME}"]`);
             await detailsPage.highlightElement(nameCell, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1329,7 +1290,7 @@ export const runERP_969_2 = () => {
             });
 
             // Double click the designation cell to open modal using data-testid
-            const designationCell = firstRow.locator(`[data-testid="${TABLE_COMPLECT_TABLE_ROW_DESIGNATION_CELL}"]`);
+            const designationCell = firstRow.locator(`[data-testid^="${TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION}"]`);
             await detailsPage.highlightElement(designationCell, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1415,7 +1376,7 @@ export const runERP_969_2 = () => {
                 await warehousePage.waitForTimeout(1000);
                 const requiredQuantity = await requiredQuantityCell.textContent();
                 console.log(`Required quantity: "${requiredQuantity}"`);
-                expect(parseInt(requiredQuantity?.trim() || "0")).toBe(orderedQuantity);
+                expect(parseInt(requiredQuantity?.trim() || "0")).toBe(orderedQuantity2);
                 await detailsPage.highlightElement(requiredQuantityCell, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -1464,7 +1425,7 @@ export const runERP_969_2 = () => {
                 // This should be the remaining quantity to build
                 const ownValue = parseInt(ownQuantityValue || "0");
                 expect(ownValue).toBeGreaterThanOrEqual(0);
-                expect(ownValue).toBeLessThanOrEqual(orderedQuantity);
+                expect(ownValue).toBeLessThanOrEqual(orderedQuantity2);
                 await detailsPage.highlightElement(ownQuantityInput, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -1537,7 +1498,7 @@ export const runERP_969_2 = () => {
                 await expect(remainingQuantityCell).toBeVisible({ timeout: 5000 });
                 const remainingQuantity = await remainingQuantityCell.textContent();
                 console.log(`Remaining quantity: "${remainingQuantity}"`);
-                expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity);
+                expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity2);
                 await detailsPage.highlightElement(remainingQuantityCell, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -1557,7 +1518,7 @@ export const runERP_969_2 = () => {
                 await warehousePage.waitForTimeout(1000);
                 const totalLeftText = await totalLeftToDoLabel.textContent();
                 console.log(`Total left to do: "${totalLeftText}"`);
-                expect(totalLeftText?.trim()).toBe(`Всего: ${orderedQuantity}`);
+                expect(totalLeftText?.trim()).toBe(`Всего: ${orderedQuantity2}`);
                 await detailsPage.highlightElement(totalLeftToDoLabel, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -1936,7 +1897,7 @@ export const runERP_969_2 = () => {
                 await warehousePage.waitForTimeout(1000);
                 const requiredQuantity = await requiredQuantityCell.textContent();
                 console.log(`Required quantity after reload: "${requiredQuantity}"`);
-                expect(parseInt(requiredQuantity?.trim() || "0")).toBe(orderedQuantity);
+                expect(parseInt(requiredQuantity?.trim() || "0")).toBe(orderedQuantity2);
                 await detailsPage.highlightElement(requiredQuantityCell, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -1974,7 +1935,7 @@ export const runERP_969_2 = () => {
                 await warehousePage.waitForTimeout(1000);
                 const ownQuantityValue = await ownQuantityInput.inputValue();
                 console.log(`Own quantity input after reload: "${ownQuantityValue}"`);
-                expect(parseInt(ownQuantityValue || "0")).toBe(orderedQuantity);
+                expect(parseInt(ownQuantityValue || "0")).toBe(orderedQuantity2);
                 await detailsPage.highlightElement(ownQuantityInput, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -1993,7 +1954,7 @@ export const runERP_969_2 = () => {
                 await warehousePage.waitForTimeout(1000);
                 await expect(progressWrapper).toBeVisible({ timeout: 5000 });
                 // Progress should be 0 since collected quantity is 0
-                const progressValid = await detailsPage.validateProgressPercentage(0, orderedQuantity);
+                const progressValid = await detailsPage.validateProgressPercentage(0, orderedQuantity2);
                 expect(progressValid).toBe(true);
                 await detailsPage.highlightElement(progressWrapper, {
                     backgroundColor: 'green',
@@ -2014,7 +1975,7 @@ export const runERP_969_2 = () => {
                 await expect(remainingQuantityCell).toBeVisible({ timeout: 5000 });
                 const remainingQuantity = await remainingQuantityCell.textContent();
                 console.log(`Remaining quantity after reload: "${remainingQuantity}"`);
-                expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity);
+                expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity2);
                 await detailsPage.highlightElement(remainingQuantityCell, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -2033,7 +1994,7 @@ export const runERP_969_2 = () => {
                 await warehousePage.waitForTimeout(1000);
                 const totalLeftText = await totalLeftToDoLabel.textContent();
                 console.log(`Total left to do after reload: "${totalLeftText}"`);
-                expect(totalLeftText?.trim()).toBe(`Всего: ${orderedQuantity}`);
+                expect(totalLeftText?.trim()).toBe(`Всего: ${orderedQuantity2}`);
                 await detailsPage.highlightElement(totalLeftToDoLabel, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -2069,7 +2030,7 @@ export const runERP_969_2 = () => {
                     await warehousePage.waitForTimeout(1000);
                     const needValue = await needCell.textContent();
                     console.log(`Need cell value: "${needValue}"`);
-                    expect(parseInt(needValue?.trim() || "0")).toBe(orderedQuantity);
+                    expect(parseInt(needValue?.trim() || "0")).toBe(orderedQuantity2);
                     await detailsPage.highlightElement(needCell, {
                         backgroundColor: 'green',
                         border: '2px solid green',
@@ -2088,9 +2049,9 @@ export const runERP_969_2 = () => {
                     console.log(`Deficit cell value: "${deficitValue}"`);
                     const deficitNum = parseInt(deficitValue?.trim() || "0");
 
-                    // Calculate expected deficit: quantity needed (orderedQuantity) minus available quantity (DETAIL_NEW_QUANTITY)
-                    const expectedDeficit = parseInt(DETAIL_NEW_QUANTITY) - orderedQuantity;
-                    console.log(`Expected deficit: ${DETAIL_NEW_QUANTITY} - ${orderedQuantity} = ${expectedDeficit}`);
+                    // Calculate expected deficit: quantity needed (orderedQuantity2) minus available quantity (DETAIL_NEW_QUANTITY)
+                    const expectedDeficit = parseInt(DETAIL_NEW_QUANTITY) - orderedQuantity2;
+                    console.log(`Expected deficit: ${DETAIL_NEW_QUANTITY} - ${orderedQuantity2} = ${expectedDeficit}`);
                     expect(deficitNum).toBe(expectedDeficit);
 
                     await detailsPage.highlightElement(deficitCell, {

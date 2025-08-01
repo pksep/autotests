@@ -371,5 +371,15 @@ export const testSuites = {
             // Add more test cases as needed
         ],
     },
+    ERP_969_2: {
+        description: "verify changes to full specifications after adding items to the product",
+        tests: [
+            {
+                test: runERP_969_2,
+                description: "verify changes to full specifications after adding items to the product",
+            },
+            // Add more test cases as needed
+        ],
+    }
 };
 
