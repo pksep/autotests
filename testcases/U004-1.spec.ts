@@ -1,6 +1,6 @@
 import { test, expect, Locator } from "@playwright/test";
 import { runTC000, performLogin } from "./TC000.spec";
-import { ENV, SELECTORS } from "../config";
+import { ENV, SELECTORS, CONST } from "../config";
 import logger from "../lib/logger";
 import { allure } from "allure-playwright";
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
@@ -17,79 +17,6 @@ let tableData4: { groupName: string; items: string[][] }[] = [];
 let table_before_changequantity: { groupName: string; items: string[][] }[] = [];
 let value_before_changequantity: number = 0;
 let detailvalue_original_before_changequantity: number = 5;
-
-
-const MAIN_PAGE_TITLE_ID = "BaseDetals-Header-Title";
-const MAIN_PAGE_MAIN_DIV = "BaseDetals-Container-MainContainer";
-const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = "BasePaginationTable-Table-product";
-const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
-const MAIN_PAGE_Д_TABLE = "BasePaginationTable-Table-detal";
-const MAIN_PAGE_SMALL_DIALOG = "Specification-DialogSpecification"; //
-const MAIN_PAGE_SMALL_DIALOG_Д = "Specification-Dialog-CardbaseDetail1";
-const MAIN_PAGE_SMALL_DIALOG_СБ = "Specification-Dialog-CardbaseOfAssemblyUnits0";
-const MAIN_PAGE_SMALL_DIALOG_РМ = "Specification-Dialog-CardtheDatabaseOfMaterials3";
-const MAIN_PAGE_SMALL_DIALOG_ПД = "Specification-Dialog-CardtheDatabaseOfMaterials2";
-
-const RESET_СБ_1 = "Опора (Траверса Т10А)СБ";
-const RESET_СБ_2 = "Балка траверсы СБ";
-const RESET_СБ_3 = "Упор подвижный (Траверса Т10А)СБ";
-const RESET_Д_1 = "Опора штока d45мм";
-const RESET_ПД_1 = "Гайка шестигранная DIN934 М12";
-const RESET_ПД_2 = "Болт с полной резьбой DIN933 М8х40";
-
-const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";
-const MAIN_PAGE_SAVE_BUTTON = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
-const EDIT_PAGE_MAIN_ID = "Creator";
-const EDIT_PAGE_SPECIFICATIONS_TABLE = "Editor-TableSpecification-Product";
-const EDIT_PAGE_ADD_BUTTON = "Specification-Buttons-addingSpecification";
-const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG = "Specification-ModalBaseCbed";
-const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "Specification-ModalBaseCbed-Select-Button";
-const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "Specification-ModalBaseCbed-Add-Button";
-const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON = "Specification-ModalBaseCbed-Cancel-Button";
-const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE = "Specification-ModalBaseCbed-Table";
-
-const EDIT_PAGE_ADD_Д_RIGHT_DIALOG = "Specification-ModalBaseDetal";
-const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "Specification-ModalBaseDetal-Select-Button";
-const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "Specification-ModalBaseDetal-Add-Button";
-const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON = "Specification-ModalBaseDetal-Cancel-Button";
-const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE = "BasePaginationTable-Table-detal";
-const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE = "Specification-ModalBaseDetal-Table";
-
-const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG = "ModalBaseMaterial";
-const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item";
-const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE = "ModalBaseMaterial-Table";
-const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "ModalBaseMaterial-Select-Button";
-const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "ModalBaseMaterial-Add-Button";
-
-const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG = "ModalBaseMaterial";
-const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item";
-const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE = "ModalBaseMaterial-Table";
-const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = "ModalBaseMaterial-Select-Button";
-const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = "ModalBaseMaterial-Add-Button";
-
-
-const CREATE_DETAIL_PAGE_SPECIFICATION_ADD_BUTTON = "Specification-Buttons-addingSpecification";//
-const CREATE_DETAIL_PAGE_SPECIFICATION_ADDFILEFROMBASE_BUTTON = "AddDetal-FileComponent-AddFileButton";//
-const CREATE_DETAIL_PAGE_SPECIFICATION_ADDFILEDRAGNDROP_BUTTON = "AddDetal-FileComponent-DragAndDrop-Wrapper";//
-const CREATE_DETAIL_PAGE_DETAIL_CHARACTERISTICS_TABLE = "AddDetal-Characteristic-Table";//
-const CREATE_DETAIL_PAGE_WORKPIECE_CHARACTERISTICS_TABLE = "";  // <----------------------------
-const CREATE_DETAIL_PAGE_DETAIL_PARAMETERS_TABLE = "AddDetal-Detail-Parameters";//
-const CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ТИП_TABLE = "ModalBaseMaterial-TableList-Table-Type-Table";//
-const CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ПОДТИП_TABLE = "ModalBaseMaterial-TableList-Table-SubType-Table";//
-const CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ITEM_TABLE = "ModalBaseMaterial-TableList-Table-Item-Table";
-
-
-const TEST_PRODUCT = 'Т15';
-const TESTCASE_2_PRODUCT_1 = 'Т15';
-
-const EDIT_BUTTON = '';
-const TEST_PRODUCT_СБ = 'Впускной крапан М12';
-const TESTCASE_2_PRODUCT_СБ = 'Впускной крапан М12';
-const TESTCASE_2_PRODUCT_Д = 'Грибок 15';
-const TESTCASE_2_PRODUCT_ПД = 'Блок питания БП12Б-Д1-24';
-const TESTCASE_2_PRODUCT_РМ = 'Рулон бумажных полотенец';
-const TESTCASE_2_PRODUCT_ASSIGNEMENT = "TESTTESTTEST";
-
 let table1Locator: Locator | null = null;
 let table2Locator: Locator | null = null;
 let table3Locator: Locator | null = null;
@@ -103,16 +30,16 @@ export const runU004_1 = () => {
         const shortagePage = new CreatePartsDatabasePage(page);
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
         });
         await allure.step("Step 02: Проверяем наличие заголовка на странице (Check for the presence of the title)", async () => {
             const expectedTitles = testData1.elements.MainPage.titles.map((title) => title.trim());
-            await shortagePage.validatePageTitlesWithStyling(MAIN_PAGE_MAIN_DIV, expectedTitles);
+            await shortagePage.validatePageTitlesWithStyling(CONST.MAIN_PAGE_MAIN_DIV, expectedTitles);
         });
 
-        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         await allure.step("Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+            await shortagePage.validateTableIsDisplayedWithRows(CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
 
         await allure.step("Step 04: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
@@ -121,7 +48,7 @@ export const runU004_1 = () => {
         });
         await allure.step("Step 05: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
             // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);//DATA_TESTID
+            await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT);//DATA_TESTID
             await page.waitForLoadState("networkidle");
             // Optionally, validate that the search input is visible
             await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
@@ -130,7 +57,7 @@ export const runU004_1 = () => {
         await allure.step("Step 06: Проверяем, что введенное значение в поиске совпадает с переменной. (Verify the entered search value matches the variable)", async () => {
             await page.waitForLoadState("networkidle");
             // Locate the search field within the left table and validate its value
-            await expect(leftTable.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT); //DATA-TESTID
+            await expect(leftTable.locator('input.search-yui-kit__input')).toHaveValue(CONST.TEST_PRODUCT); //DATA-TESTID
         });
         await allure.step("Step 07: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
             // Simulate pressing "Enter" in the search field
@@ -139,7 +66,7 @@ export const runU004_1 = () => {
         });
         await allure.step("Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)", async () => {
             await page.waitForTimeout(1500);
-            await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+            await shortagePage.validateTableIsDisplayedWithRows(CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         });
         let firstCellValue = '';
         let secondCellValue = '';
@@ -160,7 +87,7 @@ export const runU004_1 = () => {
             thirdCellValue = thirdCellValue.trim();
 
             // Confirm that the first cell contains the search term
-            expect(secondCellValue).toContain(TEST_PRODUCT); // Validate that the value matches the search term
+            expect(secondCellValue).toContain(CONST.TEST_PRODUCT); // Validate that the value matches the search term
         });
         await allure.step("Step 10: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
             // Wait for loading
@@ -180,7 +107,7 @@ export const runU004_1 = () => {
         });
         const firstRow = leftTable.locator('tbody tr:first-child');
         // Locate the "Редактировать" button
-        const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
+        const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
         await allure.step("Step 11: Проверяем наличие кнопки \"Редактировать\" под таблицей \"Изделий\" (Verify the presence of the 'Edit' button below the table)", async () => {
             await page.waitForLoadState("networkidle");
             await firstRow.waitFor({ state: "visible" });
@@ -206,7 +133,7 @@ export const runU004_1 = () => {
             const titles = testData1.elements.EditPage.titles.map((title) => title.trim());
             await page.waitForTimeout(1000);
             // Retrieve all H3 titles from the specified class
-            const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, EDIT_PAGE_MAIN_ID);
+            const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, CONST.EDIT_PAGE_MAIN_ID);
             console.log(h3Titles);
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
@@ -263,12 +190,12 @@ export const runU004_1 = () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(2000);
             //store the original contents of the table
-            tableData_original = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
-            detailvalue_original_before_changequantity = await shortagePage.getQuantityByLineItem(tableData_original, TESTCASE_2_PRODUCT_Д);
+            tableData_original = await shortagePage.parseStructuredTable(page, CONST.EDIT_PAGE_SPECIFICATIONS_TABLE);
+            detailvalue_original_before_changequantity = await shortagePage.getQuantityByLineItem(tableData_original, CONST.TESTCASE_2_PRODUCT_Д);
 
             expect(tableData_original.length).toBeGreaterThan(0); // Ensure groups are present
 
-            const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+            const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -317,7 +244,7 @@ export const runU004_1 = () => {
 
         await allure.step("Step 18: Нажимаем по селектору из выпадающего списке \"Сборочную единицу (тип СБ)\". (Click on the selector from the drop-down list \"Assembly unit (type СБ)\".)", async () => {
             await page.waitForLoadState("networkidle");
-            const addButton = page.locator(`div[data-testid="${MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
+            const addButton = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
             await addButton.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -333,7 +260,7 @@ export const runU004_1 = () => {
 
             // Retrieve all H3 titles from the specified class
             //const h3Titles = await shortagePage.getAllH3TitlesInModalClass(page, 'modal-yui-kit__modal-content');
-            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, EDIT_PAGE_ADD_СБ_RIGHT_DIALOG);
+            const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG);
 
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
@@ -356,7 +283,7 @@ export const runU004_1 = () => {
             await page.waitForLoadState("networkidle");
 
             const buttons = testData1.elements.EditPage.modalAddСБ.buttons;
-            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+            const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
 
             // Log dialog presence for debugging
             const isDialogPresent = await page.locator(dialogSelector).count();
@@ -373,8 +300,8 @@ export const runU004_1 = () => {
             await page.waitForLoadState("networkidle");
 
             // Define locators for the two tables within the modal
-            table1Locator = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
-            table2Locator = page.locator(`[data-testid="${MAIN_PAGE_СБ_TABLE}"]`); // Adjust the selector as needed for the second table
+            table1Locator = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+            table2Locator = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`); // Adjust the selector as needed for the second table
 
             // Assert that both tables are visible
             await expect(table1Locator).toBeVisible();
@@ -403,7 +330,7 @@ export const runU004_1 = () => {
         await allure.step("Step 22b: Проверяем, существует ли уже наш элемент в нижней таблице, и пропускаем поиск, если он есть.", async () => {
 
             await page.waitForLoadState("networkidle");
-            const searchItemExists = await shortagePage.checkItemExistsInBottomTable(page, TEST_PRODUCT_СБ, EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE);
+            const searchItemExists = await shortagePage.checkItemExistsInBottomTable(page, CONST.TEST_PRODUCT_СБ, CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE);
 
             if (searchItemExists) {
                 console.log("Item already exists in the bottom table. Skipping search.");
@@ -417,8 +344,8 @@ export const runU004_1 = () => {
                 await page.waitForLoadState("networkidle");
 
                 // Use data-testid to scope the dialog
-                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
-                const buttonTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON;
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonTestId = CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON;
                 const buttonLabel = 'Добавить';
                 let expectedState = false;
 
@@ -479,7 +406,7 @@ export const runU004_1 = () => {
             await allure.step("Step 25: Вводим значение переменной в поиск таблицы второй таблицы модального окна. (We enter the value of the variable in the table search of the second table of the modal window.)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                await table2Locator!.locator('input.search-yui-kit__input').fill(TEST_PRODUCT_СБ); //DATATESTID
+                await table2Locator!.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT_СБ); //DATATESTID
                 await page.waitForLoadState("networkidle");
                 await page.waitForTimeout(1000);
 
@@ -489,7 +416,7 @@ export const runU004_1 = () => {
             await allure.step("Step 26: Проверяем, что в поиске второй таблицы модального окна введенное значение совпадает с переменной. (We check that in the search of the second table of the modal window the entered value matches the variable.)", async () => {
                 await page.waitForLoadState("networkidle");
                 // Locate the search field within the left table and validate its value 
-                await expect(table2Locator!.locator('input.search-yui-kit__input')).toHaveValue(TEST_PRODUCT_СБ); //DATATESTID
+                await expect(table2Locator!.locator('input.search-yui-kit__input')).toHaveValue(CONST.TEST_PRODUCT_СБ); //DATATESTID
             });
             await allure.step("Step 27: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
                 // Simulate pressing "Enter" in the search field
@@ -531,7 +458,7 @@ export const runU004_1 = () => {
                 });
                 secondCellValue = secondCellValue.trim();
                 // Confirm that the first cell contains the search term
-                expect(secondCellValue).toContain(TEST_PRODUCT_СБ);
+                expect(secondCellValue).toContain(CONST.TEST_PRODUCT_СБ);
             });
 
             await allure.step("Step 30: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
@@ -564,8 +491,8 @@ export const runU004_1 = () => {
                 await page.waitForLoadState("networkidle");
 
                 // Scoped dialog selector using data-testid
-                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
-                const buttonTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON; // DATATESTID
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonTestId = CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON; // DATATESTID
                 const buttonLabel = 'Добавить';
                 let expectedState = true;
 
@@ -611,14 +538,14 @@ export const runU004_1 = () => {
                 console.log(`Selected Part Name: ${selectedPartName}`);
 
                 // Locate the specific modal containing the table
-                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
+                const modal = await page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
 
                 await modal.waitFor({ state: 'attached', timeout: 15000 }); // Ensure modal is attached to the DOM
                 await modal.waitFor({ state: 'visible', timeout: 15000 }); // Ensure modal becomes visible
                 logger.info("Modal located successfully.");
                 await page.waitForTimeout(1500);
                 // Locate the bottom table dynamically within the modal
-                const bottomTableLocator = modal.locator(`[data-testid="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`); // Match any table with the suffix "-Table"
+                const bottomTableLocator = modal.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`); // Match any table with the suffix "-Table"
                 await bottomTableLocator.waitFor({ state: 'attached', timeout: 15000 }); // Wait for table to be attached
                 logger.info("Bottom table located successfully.");
                 await page.waitForTimeout(1000);
@@ -682,8 +609,8 @@ export const runU004_1 = () => {
             await page.waitForLoadState("networkidle");
 
             // Scoped dialog selector using data-testid
-            const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
-            const buttonTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from your constants
+            const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+            const buttonTestId = CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from your constants
             const buttonLabel = 'Добавить';
             let expectedState = true;
             const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonTestId}"]`);
@@ -719,14 +646,14 @@ export const runU004_1 = () => {
             await page.waitForLoadState("networkidle");
             // Parse the table
             await page.waitForTimeout(1500);
-            tableData1 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
+            tableData1 = await shortagePage.parseStructuredTable(page, CONST.EDIT_PAGE_SPECIFICATIONS_TABLE);
             // Example assertion
             expect(tableData1.length).toBeGreaterThan(0); // Ensure groups are present
         });
         await allure.step("Step 35: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
+            const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
             await button.evaluate((row) => {
                 row.style.backgroundColor = 'green';
                 row.style.border = '2px solid red';
@@ -742,7 +669,7 @@ export const runU004_1 = () => {
             await page.waitForLoadState("networkidle");
             // Parse the table
             await page.waitForTimeout(5000);
-            tableData2 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
+            tableData2 = await shortagePage.parseStructuredTable(page, CONST.EDIT_PAGE_SPECIFICATIONS_TABLE);
             // Example assertion
             expect(tableData2.length).toBeGreaterThan(0); // Ensure groups are present
         });
@@ -761,7 +688,7 @@ export const runU004_1 = () => {
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
             await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible(); //DATATESTID
-            await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT); //DATATESTID
+            await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT); //DATATESTID
             await leftTable.locator('input.search-yui-kit__input').press('Enter'); //DATATESTID
             await page.waitForLoadState("networkidle");
             // Optionally, validate that the search input is visible
@@ -778,7 +705,7 @@ export const runU004_1 = () => {
             await firstRow.click();
             await page.waitForTimeout(500);
 
-            const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
+            const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
             await editButton.evaluate((row) => {
                 row.style.backgroundColor = 'green'; // Highlight with a yellow background
                 row.style.border = '2px solid red';  // Add a red border for extra visibility
@@ -789,7 +716,7 @@ export const runU004_1 = () => {
             editButton.click();
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(3000);
-            tableData3 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
+            tableData3 = await shortagePage.parseStructuredTable(page, CONST.EDIT_PAGE_SPECIFICATIONS_TABLE);
             const identical = await shortagePage.compareTableData(tableData1, tableData2);
 
             logger.info(`Are tableData1 and tableData3 identical? ${identical}`);
@@ -799,7 +726,7 @@ export const runU004_1 = () => {
             //remove the item we added
             await page.waitForLoadState("networkidle");
             await allure.step("Step 39 sub step 1: find and click the Добавить button", async () => {
-                const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+                const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
                 await addButton.evaluate((row) => {
                     row.style.backgroundColor = 'red';
                     row.style.border = '2px solid red';
@@ -811,7 +738,7 @@ export const runU004_1 = () => {
                 await page.waitForLoadState("networkidle");
             });
             await allure.step("Step 39 sub step 2: find and click the Сборочную единицу button", async () => {
-                const add2Button = page.locator(`div[data-testid="${MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
+                const add2Button = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
                 await add2Button.evaluate((row) => {
                     row.style.backgroundColor = 'green';
                     row.style.border = '2px solid red';
@@ -823,9 +750,9 @@ export const runU004_1 = () => {
                 await page.waitForTimeout(100);
             });
             await allure.step("Step 39 sub step 3: find the bottom table", async () => {
-                const selectedPartNumber = TEST_PRODUCT_СБ; // Replace with actual part number
-                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
-                const bottomTableLocator = modal.locator(`table[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
+                const selectedPartNumber = CONST.TEST_PRODUCT_СБ; // Replace with actual part number
+                const modal = await page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modal.locator(`table[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
 
                 // Locate all rows in the table body
                 const rowsLocator = bottomTableLocator.locator('tbody tr');
@@ -892,8 +819,8 @@ export const runU004_1 = () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
-                const buttonDataTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from constants
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from constants
                 const buttonLabel = "Добавить";
                 let expectedState = true;
                 const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
@@ -924,7 +851,7 @@ export const runU004_1 = () => {
             });
 
             await allure.step("Step 39 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                const button = page.locator(`[data-testid="${MAIN_PAGE_SAVE_BUTTON}"]`);
+                const button = page.locator(`[data-testid="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'blue';
                     row.style.border = '2px solid red';
@@ -938,7 +865,7 @@ export const runU004_1 = () => {
                 await page.waitForLoadState("networkidle");
                 // Parse the table
                 await page.waitForTimeout(1500);
-                tableData4 = await shortagePage.parseStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE);
+                tableData4 = await shortagePage.parseStructuredTable(page, CONST.EDIT_PAGE_SPECIFICATIONS_TABLE);
 
                 // Example assertion
                 expect(tableData2.length).toBeGreaterThan(0); // Ensure groups are present
@@ -957,16 +884,16 @@ export const runU004_1 = () => {
     test("TestCase 02 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
         test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+        const leftTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         let firstCellValue = '';
         let secondCellValue = '';
         let thirdCellValue = '';
         await allure.step("Step 001: Find СБ к товару (find СБ product)", async () => {
             await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
+                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
             });
             await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+                await shortagePage.validateTableIsDisplayedWithRows(CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
             });
             await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
                 await page.waitForLoadState("networkidle");
@@ -974,7 +901,7 @@ export const runU004_1 = () => {
             });
             await allure.step("Step 04: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
                 // Locate the search field within the left table and fill it
-                await leftTable.locator('input.search-yui-kit__input').fill(TEST_PRODUCT);
+                await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT);
                 await page.waitForLoadState("networkidle");
                 // Optionally, validate that the search input is visible
                 await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
@@ -1004,7 +931,7 @@ export const runU004_1 = () => {
                 const firstRow = leftTable.locator('tbody tr:first-child');
                 // Locate the "Редактировать" button
 
-                const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
+                const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
 
                 editButton.click();
                 await page.waitForTimeout(500);
@@ -1015,7 +942,7 @@ export const runU004_1 = () => {
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1000);
             await allure.step("Step 002 sub step 1: find and click the Добавить button", async () => {
-                const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+                const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
                 await addButton.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
@@ -1027,7 +954,7 @@ export const runU004_1 = () => {
                 await page.waitForLoadState("networkidle");
             });
             await allure.step("Step 002 sub step 2: find and click the Сборочную единицу button", async () => {
-                const add2Button = page.locator(`div[data-testid="${MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
+                const add2Button = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
 
                 await add2Button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
@@ -1038,11 +965,11 @@ export const runU004_1 = () => {
                 await page.waitForTimeout(1000);
             });
             await allure.step("Step 002 sub step 3: find the bottom table", async () => {
-                const selectedPartNumber = TEST_PRODUCT_СБ; // Replace with actual part number
+                const selectedPartNumber = CONST.TEST_PRODUCT_СБ; // Replace with actual part number
 
 
-                const modal = await page.locator(`dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
-                const bottomTableLocator = modal.locator(`table[data-testid="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
+                const modal = await page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modal.locator(`table[data-testid="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
 
                 await bottomTableLocator.waitFor({ state: 'visible' });
                 await bottomTableLocator.evaluate((element) => {
@@ -1091,8 +1018,8 @@ export const runU004_1 = () => {
                 await page.waitForLoadState("networkidle");
 
                 // Scoped dialog selector using data-testid
-                const dialogSelector = `dialog[data-testid^="${EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
-                const buttonDataTestId = EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from constants
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId from constants
                 const buttonLabel = "Добавить";
                 let expectedState = true;
                 const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
@@ -1125,12 +1052,12 @@ export const runU004_1 = () => {
             await allure.step("Step 002 sub step 4a: reset all items in the specifications (reset all items in the specifications)", async () => {
 
                 const itemsToAdd = [
-                    { smallDialogButtonId: MAIN_PAGE_SMALL_DIALOG_СБ, dialogTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, searchTableTestId: MAIN_PAGE_СБ_TABLE, searchValue: RESET_СБ_1, bottomTableTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'СБ' },
-                    { smallDialogButtonId: MAIN_PAGE_SMALL_DIALOG_СБ, dialogTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, searchTableTestId: MAIN_PAGE_СБ_TABLE, searchValue: RESET_СБ_2, bottomTableTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'СБ' },
-                    { smallDialogButtonId: MAIN_PAGE_SMALL_DIALOG_СБ, dialogTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, searchTableTestId: MAIN_PAGE_СБ_TABLE, searchValue: RESET_СБ_3, bottomTableTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'СБ' },
-                    { smallDialogButtonId: MAIN_PAGE_SMALL_DIALOG_Д, dialogTestId: EDIT_PAGE_ADD_Д_RIGHT_DIALOG, searchTableTestId: MAIN_PAGE_Д_TABLE, searchValue: RESET_Д_1, bottomTableTestId: EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'Д' },
-                    { smallDialogButtonId: MAIN_PAGE_SMALL_DIALOG_ПД, dialogTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, searchTableTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE, searchValue: RESET_ПД_1, bottomTableTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'ПД' },
-                    { smallDialogButtonId: MAIN_PAGE_SMALL_DIALOG_ПД, dialogTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, searchTableTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE, searchValue: RESET_ПД_2, bottomTableTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'ПД' }
+                    { smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_СБ, dialogTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, searchTableTestId: CONST.MAIN_PAGE_СБ_TABLE, searchValue: CONST.RESET_СБ_1, bottomTableTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'СБ' },
+                    { smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_СБ, dialogTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, searchTableTestId: CONST.MAIN_PAGE_СБ_TABLE, searchValue: CONST.RESET_СБ_2, bottomTableTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'СБ' },
+                    { smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_СБ, dialogTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, searchTableTestId: CONST.MAIN_PAGE_СБ_TABLE, searchValue: CONST.RESET_СБ_3, bottomTableTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'СБ' },
+                    { smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_Д, dialogTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG, searchTableTestId: CONST.MAIN_PAGE_Д_TABLE, searchValue: CONST.RESET_Д_1, bottomTableTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'Д' },
+                    { smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_ПД, dialogTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, searchTableTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE, searchValue: CONST.RESET_ПД_1, bottomTableTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'ПД' },
+                    { smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_ПД, dialogTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, searchTableTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE, searchValue: CONST.RESET_ПД_2, bottomTableTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'ПД' }
                 ];
 
                 for (const item of itemsToAdd) {
@@ -1152,7 +1079,7 @@ export const runU004_1 = () => {
             await allure.step("Step 002 sub step 5: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
-                const button = page.locator(`[data-testid^="${MAIN_PAGE_SAVE_BUTTON}"]`);
+                const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
                 await button.evaluate((row) => {
                     row.style.backgroundColor = 'black';
                     row.style.border = '2px solid red';
