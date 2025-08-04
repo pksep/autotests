@@ -1,20 +1,9 @@
 import { test, expect, Locator, Page } from "@playwright/test";
 import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
 import { CreateStockPage } from "../pages/StockPage";
-import { SELECTORS } from "../config";
+import { SELECTORS, CONST } from "../config";
 import { allure } from "allure-playwright";
 
-// Test Data
-const SEARCH_TEXT = "NonExistentDetail";
-const NEW_DETAIL_A = "0T5.21";  // For type Д (the main detail)
-const NEW_SB_A = "0T5.11";      // For the new СБ detail
-
-// Test Data
-const DETAIL_1_NAME = "ERP9692_DETAIL_001";
-const DETAIL_2_NAME = "ERP9692_DETAIL_002";
-const ASSEMBLY_NAME = "ERP9692_ASSEMBLY_001";
-const DETAIL_NEW_QUANTITY = "9";
-const NEW_ORDER_QUANTITY = "3";
 
 let orderNumber: string | null = null; // Declare outside to share between steps
 let orderedQuantity: number = 2; // Declare outside to share between steps
@@ -31,102 +20,7 @@ const today = new Date().toLocaleDateString('ru-RU', {
     year: 'numeric'
 });
 
-export const CONST = {
-    // Identical constants (same name and value in both files)
-    PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
-    PARTS_PAGE_DETAL_TABLE: "BasePaginationTable-Table-detal",
-    MAIN_PAGE_СБ_TABLE: "BasePaginationTable-Table-cbed",
-    MAIN_SEARCH_COVER_INPUT: "OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input",
-    BASE_DETAIL_CB_TABLE_SEARCH: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
-    EDIT_PARTS_PAGE_ARCHIVE_BUTTON: "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive",
-    ARCHIVE_MODAL_CONFIRM_DIALOG: "ModalConfirm",
-    ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
-    BASE_DETALS_BUTTON_CREATE: "BaseDetals-Button-Create",
-    BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS: "BaseDetals-CreatLink-Titlebase-of-assembly-units",
-    CREATOR_INFORMATION_INPUT: "Creator-Information-Input-Input",
-    EDITOR_TABLE_SPECIFICATION_CBED: "Editor-TableSpecification-Cbed",
-    CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "Creator-ButtonSaveAndCancel-ButtonsCenter-Save",
-    CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel",
-    ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save",
-    EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel",
-    MAIN_PAGE_EDIT_BUTTON: "BaseDetals-Button-Edit",
-    ADD_DETAL_INFORMATION_INPUT_INPUT: "AddDetal-Information-Input-Input",
-    EDIT_DETAL_INFORMATION_INPUT_INPUT: "EditDetal-Information-Input-Input",
-    EDIT_DETAL_TITLE: "EditDetal-Title",
-    CREATOR_TITLE: "Creator-Title",
-    MODAL_TITLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title",
-    SCLAD_REVISION_REVISION: "Sclad-revision-revision",
-    REVISION_SWITCH_ITEM2: "Revision-Switch-Item2",
-    TABLE_REVISION_PAGINATION_SEARCH_INPUT: "TableRevisionPagination-SearchInput-Dropdown-Input",
-    INPUT_NUMBER_INPUT: "InputNumber-Input",
-    TABLE_REVISION_PAGINATION_CONFIRM_DIALOG: "TableRevisionPagination-ConfirmDialog",
-    TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE: "TableRevisionPagination-ConfirmDialog-Approve",
-    MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT: "OrderSuppliers-Modal-AddOrder",
-    SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES: "OrderSuppliers-Modal-AddOrder-Content-AssembleCard",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT: "-TdQuantity-InputNumber-Input",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save",
-    MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button",
-    ORDER_SUPPLIERS_TABLE_ORDER_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table",
-    ORDER_MODAL: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker",
-    COMPLEX_SBORKA_BY_PLAN: "CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input",
-    SCLAD_ORDERING_SUPPLIERS: "Sclad-orderingSuppliers",
-    ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON: "OrderSuppliers-Main-Button",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT: "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL: "ModalAddWaybill-WaybillDetails-NameCell",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL: "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel",
-    MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON: "ModalAddWaybill-ControlButtons-CompleteSetButton",
-    TABLE_COMPLECT_TABLE_ROW_CELL: "CompletCbed-Content-Table-Table-TableRow",
-    TABLE_COMPLECT_TABLE_ROW_CELL_NAME: "-Name",
-    TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION: "-Designation",
 
-    // Constants unique to ERP-969.spec.ts
-    MODAL_CONFIRM_DIALOG: "ModalConfirm",
-    MODAL_CONFIRM_DIALOG_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
-    PARTS_PAGE_ARCHIVE_BUTTON: "BaseDetals-Button-Archive",
-    SEARCH_COVER_INPUT_2: "TableRevisionPagination-SearchInput-Dropdown-Input",
-    TABLE_COMPLECT_TABLE: "CompletCbed-Content-Table-Table",
-    COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN: "CompletCbed-Title",
-    SPECIFICATION_BUTTONS_ADDING_SPECIFICATION: "Specification-Buttons-addingSpecification",
-    SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1: "Specification-Dialog-CardbaseDetail1",
-    SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON: "Specification-ModalBaseDetal-Select-Button",
-    SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON: "Specification-ModalBaseDetal-Add-Button",
-    MODAL_PROMPT_MINI_BUTTON_CONFIRM: "ModalPromptMini-Button-Confirm",
-    OSTATTKPCBD_DETAIL_TABLE: "OstatkPCBD-Detal-Table",
-    MODAL_ADD_ORDER_PRODUCTION_DIALOG: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply",
-    TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1",
-    MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input",
-    MODAL_START_PRODUCTION_ORDER_NUMBER_VALUE: "ModalStartProduction-OrderNumberValue",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT: "TableComplect-ModalAddWaybill",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_HEADING: "ModalAddWaybill-WaybillDetails-Heading",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT_INNER: "ModalAddWaybill-WaybillDetails-Right",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TABLE: "ModalAddWaybill-ShipmentDetailsTable-Table",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_CHECKBOX_CELL: "ModalAddWaybill-ShipmentDetailsTable-ScladSetCheckboxCell",
-    TABLE_COMPLECT_TABLE_ROW_CELL_ORDERED: "-Ordred",
-    TABLE_COMPLECT_TABLE_ROW_CELL_OPERATIONS: "-Operations",
-    TABLE_COMPLECT_TABLE_ROW_CELL_STATUS: "-Status",
-    TABLE_COMPLECT_TABLE_ROW_CELL_COMPLETION_LEVEL: "-Readness",
-    TABLE_COMPLECT_TABLE_ROW_CELL_COMPLETED: "-Complited",
-    TABLE_COMPLECT_TABLE_ROW_CELL_REMAINING: "-Left",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-CollectedQuantityCell",
-    NOTIFICATION_NOTIFICATION_DESCRIPTION: "Notification-Notification-Description",
-    MINI_NAVIGATION_POS_DATA2: "Revision-Switch-Item2",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW: "ModalAddWaybill-DetailsTable-Row",
-    QUANTITY_PER_UNIT_CELL: "QuantityPerUnitCell",
-    MATERIAL_CELL: "MaterialCell",
-    NEED_CELL: "NeedCell",
-    FREE_QUANTITY_CELL: "FreeQuantityCell",
-    QUANTITY_CELL: "QuantityCell",
-    IN_KITS_CELL: "InKitsCell",
-    DEFICIT_CELL: "DeficitCell",
-    OSTATTKPCBD_TABLE_SEARCH_INPUT: "OstatkiPCBDTable-SearchInput-Dropdown-Input",
-    ORDER_MODAL_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table",
-    SCLAD_COMPLETION_CBED_PLAN: "Sclad-completionCbedPlan",
-    TABLE_REVISION_PAGINATION_TABLE: "Revision-TableRevisionPagination-Detals-Table",
-    TABLE_REVISION_PAGINATION_EDIT_PEN: "InputNumber-Input",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-RequiredQuantityCell"
-};
 
 export const runERP_969 = () => {
     test("TestCase 06 - Архивация всех совпадающих деталей (Cleanup) `${NEW_DETAIL_A}`", async ({ page }) => {
@@ -149,7 +43,7 @@ export const runERP_969 = () => {
             await searchInput.fill("");
             await searchInput.press("Enter");
             await page.waitForTimeout(1000);
-            await searchInput.fill(NEW_DETAIL_A);
+            await searchInput.fill(CONST.NEW_DETAIL_A);
             await searchInput.press("Enter");
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1000);
@@ -168,12 +62,12 @@ export const runERP_969 = () => {
 
             for (let i = 0; i < rowCount; i++) {
                 const rowText = await rows.nth(i).textContent();
-                if (rowText && rowText.trim() === NEW_DETAIL_A) {
+                if (rowText && rowText.trim() === CONST.NEW_DETAIL_A) {
                     matchingRows.push(rows.nth(i));
                 }
             }
 
-            console.log(`Found ${matchingRows.length} exact matches for '${NEW_DETAIL_A}'.`);
+            console.log(`Found ${matchingRows.length} exact matches for '${CONST.NEW_DETAIL_A}'.`);
 
             if (matchingRows.length === 0) {
                 console.error("No exact matches found for archiving.");
@@ -242,7 +136,7 @@ export const runERP_969 = () => {
             await page.waitForTimeout(1000);
 
             // Search for the СБ detail using NEW_SB_A.
-            await searchInput.fill(NEW_SB_A);
+            await searchInput.fill(CONST.NEW_SB_A);
             await searchInput.press("Enter");
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(1000);
@@ -250,7 +144,7 @@ export const runERP_969 = () => {
             // Retrieve all rows.
             const rows = detailTable.locator("tbody tr");
             const rowCount = await rows.count();
-            console.log(`Found ${rowCount} rows in search results for СБ: ${NEW_SB_A}.`);
+            console.log(`Found ${rowCount} rows in search results for СБ: ${CONST.NEW_SB_A}.`);
 
             if (rowCount === 0) {
                 console.log("No matching rows found for archiving СБ.");
@@ -261,12 +155,12 @@ export const runERP_969 = () => {
             const matchingRows: Locator[] = [];
             for (let i = 0; i < rowCount; i++) {
                 const rowText = await rows.nth(i).textContent();
-                if (rowText && rowText.trim() === NEW_SB_A) {
+                if (rowText && rowText.trim() === CONST.NEW_SB_A) {
                     matchingRows.push(rows.nth(i));
                 }
             }
 
-            console.log(`Found ${matchingRows.length} exact matches for '${NEW_SB_A}'.`);
+            console.log(`Found ${matchingRows.length} exact matches for '${CONST.NEW_SB_A}'.`);
 
             if (matchingRows.length === 0) {
                 console.error("No exact matches found for archiving СБ.");
@@ -336,7 +230,7 @@ export const runERP_969 = () => {
             const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
             const cbedInput = cbedTable.locator(`[data-testid="${CONST.PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
             await expect(cbedInput).toBeVisible();
-            await cbedInput.fill(NEW_SB_A);
+            await cbedInput.fill(CONST.NEW_SB_A);
             await cbedInput.press("Enter");
             await page.waitForTimeout(1000); // Allow search results to update.
         });
@@ -357,7 +251,7 @@ export const runERP_969 = () => {
             const detalTable = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
             const detalInput = detalTable.locator(`[data-testid="${CONST.PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
             await expect(detalInput).toBeVisible();
-            await detalInput.fill(NEW_DETAIL_A);
+            await detalInput.fill(CONST.NEW_DETAIL_A);
             await detalInput.press("Enter");
             await page.waitForTimeout(1000);
         });
@@ -373,16 +267,16 @@ export const runERP_969 = () => {
         // PART B: Create a new detail and verify it saves.
         // ─────────────────────────────────────────────────────────────────────────────
 
-        await allure.step(`Step 8: Create new detail with name "${NEW_DETAIL_A}" and save it`, async () => {
+        await allure.step(`Step 8: Create new detail with name "${CONST.NEW_DETAIL_A}" and save it`, async () => {
             await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
             await page.waitForLoadState("networkidle");
-            await detailsPage.fillDetailName(NEW_DETAIL_A, 'AddDetal-Information-Input-Input');
+            await detailsPage.fillDetailName(CONST.NEW_DETAIL_A, 'AddDetal-Information-Input-Input');
             await detailsPage.findAndClickElement(page, CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
         });
 
-        await allure.step(`Step 9: Verify detail "${NEW_DETAIL_A}" was saved`, async () => {
+        await allure.step(`Step 9: Verify detail "${CONST.NEW_DETAIL_A}" was saved`, async () => {
             // Click the cancel button to return to the listing.
             await detailsPage.findAndClickElement(page, CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL, 500);
             await page.waitForTimeout(1000);
@@ -405,7 +299,7 @@ export const runERP_969 = () => {
             });
             await page.waitForTimeout(1000);
             await expect(detailSearchInput).toBeVisible();
-            await detailSearchInput.fill(NEW_DETAIL_A);
+            await detailSearchInput.fill(CONST.NEW_DETAIL_A);
             await detailSearchInput.press("Enter");
             await page.waitForTimeout(1000);
             const resultRows = detalTable.locator("tbody tr");
@@ -417,7 +311,7 @@ export const runERP_969 = () => {
         // PART C: Add a product specification using a detail of type "СБ".
         // ─────────────────────────────────────────────────────────────────────────────
 
-        await allure.step(`Step 10: Add specification with detail "${NEW_SB_A}" for type СБ`, async () => {
+        await allure.step(`Step 10: Add specification with detail "${CONST.NEW_SB_A}" for type СБ`, async () => {
             // Navigate to the product creation page.
             await detailsPage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
             await page.waitForLoadState("networkidle");
@@ -431,7 +325,7 @@ export const runERP_969 = () => {
             // Fill in the detail name with NEW_SB_A.
             const smallDialogDetailInput = page.locator(`[data-testid="${CONST.CREATOR_INFORMATION_INPUT}"]`);
             await expect(smallDialogDetailInput).toBeVisible({ timeout: 5000 });
-            await smallDialogDetailInput.fill(NEW_SB_A);
+            await smallDialogDetailInput.fill(CONST.NEW_SB_A);
 
             // Click the "Добавить" button in the small dialog.
             await detailsPage.findAndClickElement(page, CONST.SPECIFICATION_BUTTONS_ADDING_SPECIFICATION, 500);
@@ -443,7 +337,7 @@ export const runERP_969 = () => {
             const dialogTable = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
             const dialogSearchInput = dialogTable.locator(`[data-testid="${CONST.PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
             await expect(dialogSearchInput).toBeVisible({ timeout: 5000 });
-            await dialogSearchInput.fill(NEW_DETAIL_A);
+            await dialogSearchInput.fill(CONST.NEW_DETAIL_A);
             await dialogSearchInput.press("Enter");
             await page.waitForTimeout(1000);
 
@@ -453,7 +347,7 @@ export const runERP_969 = () => {
             let found = false;
             for (let i = 0; i < rowCount; i++) {
                 const rowText = await resultRows.nth(i).textContent();
-                if (rowText && rowText.trim() === NEW_DETAIL_A) {
+                if (rowText && rowText.trim() === CONST.NEW_DETAIL_A) {
                     // Exact match found: click the corresponding row.
                     await resultRows.nth(i).click();
                     found = true;
@@ -461,7 +355,7 @@ export const runERP_969 = () => {
                 }
             }
             if (!found) {
-                throw new Error(`Detail "${NEW_DETAIL_A}" not found in dialog results.`);
+                throw new Error(`Detail "${CONST.NEW_DETAIL_A}" not found in dialog results.`);
             }
             await page.waitForTimeout(1000);
             // Click the button to add that detail to the dialog's bottom table.
@@ -481,7 +375,7 @@ export const runERP_969 = () => {
             await expect(specsTable).toBeVisible({ timeout: 5000 });
             const specRows = specsTable.locator("tbody tr");
             const rowTexts = await specRows.allTextContents();
-            const detailAdded = rowTexts.some(text => text.includes(NEW_DETAIL_A));
+            const detailAdded = rowTexts.some(text => text.includes(CONST.NEW_DETAIL_A));
             expect(detailAdded).toBe(true);
 
             // Finally, click save on the product page and verify the success message.
@@ -531,7 +425,7 @@ export const runERP_969 = () => {
             await expect(searchInput).toBeVisible({ timeout: 5000 });
 
             // Enter the detail name (NEW_DETAIL_A) and trigger the search.
-            await searchInput.fill(NEW_DETAIL_A);
+            await searchInput.fill(CONST.NEW_DETAIL_A);
             await searchInput.press("Enter");
             await skladPage.waitForLoadState("networkidle");
             await skladPage.waitForTimeout(1000);
@@ -607,7 +501,7 @@ export const runERP_969 = () => {
             await searchInput.press("Enter");
             await skladPage.waitForTimeout(1000);
 
-            await searchInput.fill(NEW_DETAIL_A);
+            await searchInput.fill(CONST.NEW_DETAIL_A);
             await searchInput.press("Enter");
             await skladPage.waitForLoadState("networkidle");
             await skladPage.waitForTimeout(1000);
@@ -657,14 +551,14 @@ export const runERP_969 = () => {
             await searchInput.press("Enter");
             await residualsPage.waitForTimeout(1000);
 
-            await searchInput.fill(NEW_DETAIL_A);
+            await searchInput.fill(CONST.NEW_DETAIL_A);
             await searchInput.press("Enter");
             await residualsPage.waitForLoadState("networkidle");
             await residualsPage.waitForTimeout(1000);
             // Verify exactly one matching row is returned
             const rows = residualsTable.locator("tbody tr");
             const rowCount = await rows.count();
-            console.log(`Found ${rowCount} row(s) in residuals table for detail "${NEW_DETAIL_A}".`);
+            console.log(`Found ${rowCount} row(s) in residuals table for detail "${CONST.NEW_DETAIL_A}".`);
             expect(rowCount).toBe(1);
 
             // Verify that the 5th column contains value "0"
@@ -722,7 +616,7 @@ export const runERP_969 = () => {
             // Find and fill the search input
             const searchInput = productionTable.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT}"]`);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
-            await searchInput.fill(NEW_SB_A);
+            await searchInput.fill(CONST.NEW_SB_A);
             await searchInput.press("Enter");
             await warehousePage.waitForLoadState("networkidle");
             await warehousePage.waitForTimeout(2000);
@@ -733,7 +627,7 @@ export const runERP_969 = () => {
 
             const rows = productionTable.locator("tbody tr");
             const rowCount = await rows.count();
-            console.log(`Found ${rowCount} row(s) in production table for SB "${NEW_SB_A}".`);
+            console.log(`Found ${rowCount} row(s) in production table for SB "${CONST.NEW_SB_A}".`);
             expect(rowCount).toBe(1);
 
             // select the rows checkbox
@@ -760,7 +654,7 @@ export const runERP_969 = () => {
             await expect(bottomTable).toBeVisible({ timeout: 5000 });
             const bottomRows = bottomTable.locator("tbody tr");
             const bottomRowCount = await bottomRows.count();
-            console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${NEW_SB_A}".`);
+            console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${CONST.NEW_SB_A}".`);
             expect(bottomRowCount).toBe(1);
             // Enter quantity "2" in the 8th column
             const quantityInput = bottomRows.first().locator(`[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`);
@@ -826,7 +720,7 @@ export const runERP_969 = () => {
             // Find and fill the search input with the captured order number
             const searchInput = orderTable.locator(`[data-testid="${CONST.MAIN_SEARCH_COVER_INPUT}"]`);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
-            await searchInput.fill(NEW_SB_A);
+            await searchInput.fill(CONST.NEW_SB_A);
             await searchInput.press("Enter");
             await warehousePage.waitForLoadState("networkidle");
             await warehousePage.waitForTimeout(1000);
@@ -1023,7 +917,7 @@ export const runERP_969 = () => {
             });
             const thirdColumnText = await thirdColumn.textContent();
             console.log(`Third column (item): "${thirdColumnText}"`);
-            expect(thirdColumnText?.trim()).toBe(NEW_SB_A);
+            expect(thirdColumnText?.trim()).toBe(CONST.NEW_SB_A);
 
             // Verify the fourth column contains "Заказано"
             const fourthColumn = firstDataRow.locator("td").nth(3); // 4th column (index 3)
@@ -1149,10 +1043,10 @@ export const runERP_969 = () => {
                 await kittingPage.waitForTimeout(500);
 
                 // Try multiple approaches to enter the search value
-                console.log(`Attempting to enter search value: "${NEW_SB_A}"`);
+                console.log(`Attempting to enter search value: "${CONST.NEW_SB_A}"`);
 
                 // Method 1: Try fill()
-                await searchInput.fill(NEW_SB_A);
+                await searchInput.fill(CONST.NEW_SB_A);
                 await kittingPage.waitForTimeout(500);
 
                 // Check if fill worked
@@ -1160,34 +1054,34 @@ export const runERP_969 = () => {
                 console.log(`Search input value after fill: "${inputValue}"`);
 
                 // Method 2: If fill didn't work, try type()
-                if (inputValue !== NEW_SB_A) {
+                if (inputValue !== CONST.NEW_SB_A) {
                     console.log("Fill didn't work, trying type()...");
                     await searchInput.clear();
-                    await searchInput.type(NEW_SB_A);
+                    await searchInput.type(CONST.NEW_SB_A);
                     await kittingPage.waitForTimeout(500);
                     inputValue = await searchInput.inputValue();
                     console.log(`Search input value after type: "${inputValue}"`);
                 }
 
                 // Method 3: If still not working, try keyboard input
-                if (inputValue !== NEW_SB_A) {
+                if (inputValue !== CONST.NEW_SB_A) {
                     console.log("Type didn't work, trying keyboard input...");
                     await searchInput.clear();
                     await searchInput.focus();
-                    await kittingPage.keyboard.type(NEW_SB_A);
+                    await kittingPage.keyboard.type(CONST.NEW_SB_A);
                     await kittingPage.waitForTimeout(500);
                     inputValue = await searchInput.inputValue();
                     console.log(`Search input value after keyboard: "${inputValue}"`);
                 }
 
                 // Method 4: Last resort - try setting value directly
-                if (inputValue !== NEW_SB_A) {
+                if (inputValue !== CONST.NEW_SB_A) {
                     console.log("Keyboard didn't work, trying direct value setting...");
                     await searchInput.evaluate((el: HTMLInputElement, value: string) => {
                         el.value = value;
                         el.dispatchEvent(new Event('input', { bubbles: true }));
                         el.dispatchEvent(new Event('change', { bubbles: true }));
-                    }, NEW_SB_A);
+                    }, CONST.NEW_SB_A);
                     await kittingPage.waitForTimeout(500);
                     inputValue = await searchInput.inputValue();
                     console.log(`Search input value after direct setting: "${inputValue}"`);
@@ -1245,7 +1139,7 @@ export const runERP_969 = () => {
                 await kittingPage.waitForTimeout(2000);
                 const columnText = await targetColumn.textContent();
                 console.log(`Column 3 value: "${columnText}"`);
-                expect(columnText?.trim()).toBe(NEW_SB_A);
+                expect(columnText?.trim()).toBe(CONST.NEW_SB_A);
                 await targetColumn.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
@@ -1396,7 +1290,7 @@ export const runERP_969 = () => {
                 });
                 const sbName = await nameCell.textContent();
                 console.log(`SB name: "${sbName}"`);
-                expect(sbName?.trim()).toBe(NEW_SB_A);
+                expect(sbName?.trim()).toBe(CONST.NEW_SB_A);
                 await nameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
@@ -1558,7 +1452,7 @@ export const runERP_969 = () => {
                 });
                 const detailName = await detailNameCell.textContent();
                 console.log(`Detail name: "${detailName}"`);
-                expect(detailName?.trim()).toBe(NEW_DETAIL_A);
+                expect(detailName?.trim()).toBe(CONST.NEW_DETAIL_A);
                 await detailNameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
@@ -1642,7 +1536,7 @@ export const runERP_969 = () => {
                 const freeQuantity = await freeQuantityCell.textContent();
                 console.log(`Free quantity: "${freeQuantity}"`);
 
-                const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(NEW_DETAIL_A);
+                const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(CONST.NEW_DETAIL_A);
                 expect(parseInt(freeQuantity?.trim() || "0")).toBe(expectedFreeQuantity);
                 await freeQuantityCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
@@ -1889,7 +1783,7 @@ export const runERP_969 = () => {
                     el.style.color = 'white';
                 });
                 await kittingPage.waitForTimeout(3000);
-                await searchInput2.fill(NEW_SB_A);
+                await searchInput2.fill(CONST.NEW_SB_A);
                 await searchInput2.press("Enter");
                 await searchInput2.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'black';
@@ -1897,7 +1791,7 @@ export const runERP_969 = () => {
                     el.style.color = 'white';
                 });
                 await kittingPage.waitForTimeout(2000);
-                await searchInput2.fill(NEW_SB_A);
+                await searchInput2.fill(CONST.NEW_SB_A);
                 await searchInput2.press("Enter");
                 await kittingPage.waitForLoadState("networkidle");
                 await kittingPage.waitForTimeout(2000);
@@ -1946,7 +1840,7 @@ export const runERP_969 = () => {
                 });
                 const rowName = await rowNameCell.textContent();
                 console.log(`Row name: "${rowName}"`);
-                expect(rowName?.trim()).toBe(NEW_SB_A);
+                expect(rowName?.trim()).toBe(CONST.NEW_SB_A);
                 await rowNameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
@@ -2188,7 +2082,7 @@ export const runERP_969 = () => {
                 });
                 await searchInput.clear();
                 await waybillPage.waitForTimeout(500);
-                await searchInput.fill(NEW_SB_A);
+                await searchInput.fill(CONST.NEW_SB_A);
                 await searchInput.press("Enter");
                 await waybillPage.waitForLoadState("networkidle");
                 await waybillPage.waitForTimeout(2000);
@@ -2220,7 +2114,7 @@ export const runERP_969 = () => {
                 });
                 const nameValue = await nameCell.textContent();
                 console.log(`Found SB name: "${nameValue}"`);
-                expect(nameValue?.trim()).toBe(NEW_SB_A);
+                expect(nameValue?.trim()).toBe(CONST.NEW_SB_A);
                 await nameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
@@ -2340,7 +2234,7 @@ export const runERP_969 = () => {
                 });
                 const waybillNameValue = await waybillNameCell.textContent();
                 console.log(`Waybill name: "${waybillNameValue}"`);
-                expect(waybillNameValue?.trim()).toBe(NEW_SB_A);
+                expect(waybillNameValue?.trim()).toBe(CONST.NEW_SB_A);
                 await waybillNameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
@@ -2430,7 +2324,7 @@ export const runERP_969 = () => {
                 });
                 const detailNameValue = await detailNameCell.textContent();
                 console.log(`Detail name: "${detailNameValue}"`);
-                expect(detailNameValue?.trim()).toBe(NEW_DETAIL_A);
+                expect(detailNameValue?.trim()).toBe(CONST.NEW_DETAIL_A);
                 await detailNameCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';
                     el.style.border = '2px solid green';
@@ -2506,7 +2400,7 @@ export const runERP_969 = () => {
                 });
                 const freeQuantityValue = await freeQuantityCell.textContent();
                 console.log(`Free quantity: "${freeQuantityValue}"`);
-                const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(NEW_DETAIL_A);
+                const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(CONST.NEW_DETAIL_A);
                 expect(parseInt(freeQuantityValue?.trim() || "0")).toBe(expectedFreeQuantity);
                 await freeQuantityCell.evaluate((el: HTMLElement) => {
                     el.style.backgroundColor = 'green';

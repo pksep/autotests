@@ -4,15 +4,10 @@ import { CreatePartsPage } from "../pages/CreatePartsPage";
 import { CreateStockPage } from "../pages/StockPage";
 import { CreateCompletingAssembliesToPlanPage } from "../pages/CompletingAssembliesToPlanPage";
 import { CreateRevisionPage } from "../pages/RevisionPage";
-import { SELECTORS } from "../config";
+import { SELECTORS, CONST } from "../config";
 import { allure } from "allure-playwright";
 
-// Test Data
-const DETAIL_1_NAME = "ERP9692_DETAIL_001";
-const DETAIL_2_NAME = "ERP9692_DETAIL_002";
-const ASSEMBLY_NAME = "ERP9692_ASSEMBLY_001";
-const DETAIL_NEW_QUANTITY = "9";
-const NEW_ORDER_QUANTITY = "3";
+
 
 // Additional test data variables for the new steps
 let orderNumber: string | null = null; // Declare outside to share between steps
@@ -22,89 +17,7 @@ let specificationQuantity: number = 1; // Global variable for specification quan
 let waybillCollections: number = 0; // Global variable to track waybill collections
 let currentBuildQuantity: number = 1; // Global variable for current build quantity (how many items we're building now)
 
-export const CONST = {
-    // Identical constants (same name and value in both files)
-    PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
-    PARTS_PAGE_DETAL_TABLE: "BasePaginationTable-Table-detal",
-    MAIN_PAGE_СБ_TABLE: "BasePaginationTable-Table-cbed",
-    MAIN_SEARCH_COVER_INPUT: "OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input",
-    BASE_DETAIL_CB_TABLE_SEARCH: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
-    EDIT_PARTS_PAGE_ARCHIVE_BUTTON: "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive",
-    ARCHIVE_MODAL_CONFIRM_DIALOG: "ModalConfirm",
-    ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
-    BASE_DETALS_BUTTON_CREATE: "BaseDetals-Button-Create",
-    BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS: "BaseDetals-CreatLink-Titlebase-of-assembly-units",
-    CREATOR_INFORMATION_INPUT: "Creator-Information-Input-Input",
-    EDITOR_TABLE_SPECIFICATION_CBED: "Editor-TableSpecification-Cbed",
-    CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "Creator-ButtonSaveAndCancel-ButtonsCenter-Save",
-    CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel",
-    ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save",
-    EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel",
-    MAIN_PAGE_EDIT_BUTTON: "BaseDetals-Button-Edit",
 
-    ADD_DETAL_INFORMATION_INPUT_INPUT: "AddDetal-Information-Input-Input",
-    EDIT_DETAL_INFORMATION_INPUT_INPUT: "EditDetal-Information-Input-Input",
-    EDIT_DETAL_TITLE: "EditDetal-Title",
-    CREATOR_TITLE: "Creator-Title",
-    MODAL_TITLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title",
-    SCLAD_REVISION_REVISION: "Sclad-revision-revision",
-    REVISION_SWITCH_ITEM2: "Revision-Switch-Item2",
-    TABLE_REVISION_PAGINATION_SEARCH_INPUT: "TableRevisionPagination-SearchInput-Dropdown-Input",
-    INPUT_NUMBER_INPUT: "InputNumber-Input",
-    TABLE_REVISION_PAGINATION_CONFIRM_DIALOG: "TableRevisionPagination-ConfirmDialog",
-    TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE: "TableRevisionPagination-ConfirmDialog-Approve",
-    MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT: "OrderSuppliers-Modal-AddOrder",
-    SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES: "OrderSuppliers-Modal-AddOrder-Content-AssembleCard",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT: "-TdQuantity-InputNumber-Input",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save",
-    MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button",
-    ORDER_SUPPLIERS_TABLE_ORDER_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table",
-    ORDER_MODAL: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker",
-    COMPLEX_SBORKA_BY_PLAN: "CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input",
-    SCLAD_ORDERING_SUPPLIERS: "Sclad-orderingSuppliers",
-    ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON: "OrderSuppliers-Main-Button",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT: "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL: "ModalAddWaybill-WaybillDetails-NameCell",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL: "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel",
-    MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON: "ModalAddWaybill-ControlButtons-CompleteSetButton",
-    TABLE_COMPLECT_TABLE_ROW_CELL: "CompletCbed-Content-Table-Table-TableRow",
-    TABLE_COMPLECT_TABLE_ROW_CELL_NAME: "-Name",
-    TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION: "-Designation",
-
-    // Constants unique to ERP-969-2.spec.ts
-    SCLAD_COMPLETION_CBED_PLAN: "Sclad-completionCbedPlan",
-    SEARCH_COVER_INPUT: "Search-Cover-Input",
-    TABLE_REVISION_PAGINATION_TABLE: "Revision-TableRevisionPagination-Detals-Table",
-    MODAL_ADD_ORDER_PRODUCTION_DIALOG: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply",
-    TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1",
-    MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2",
-    MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input",
-    ORDER_MODAL_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table",
-    TABLE_COMPLECT_TABLE: "CompletCbed-Content-Table-Table",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT: "TableComplect-ModalAddWaybill",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-RequiredQuantityCell",
-    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-CollectedQuantityCell",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX: "ModalAddWaybill-ShipmentDetailsTable-ScladSetSelectedCheckbox",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX: "ModalAddWaybill-ShipmentDetailsTable-StockOrderRow",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX: "-OrderNumberCell",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX: "-RemainingQuantityCell",
-    MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON: "ModalAddWaybill-ControlButtons-ActualizeButton",
-    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL: "ModalAddWaybill-ShipmentDetailsTable-TotalLeftToDoLabel",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE: "ModalAddWaybill-DetailsTable-Table",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX: "ModalAddWaybill-DetailsTable-Row",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX: "-NameCell",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX: "-QuantityCell",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX: "-InKitsCell",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX: "-FreeQuantityCell",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_SCLAD_NEED_CELL_SUFFIX: "-ScladNeedCell",
-    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX: "-NeedCell",
-    TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX: "TableComplect-ModalAddWaybill",
-    TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX: "-CircleProgress-Wrapper",
-    OSTATK_PCBD_MODAL_DETAL_PREFIX: "OstatkPCBD-ModalDetal",
-    OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX: "-InformationName-Name",
-    OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX: "-Buttons-ShowFullInformationButton"
-};
 
 export const runERP_969_2 = () => {
     test("ERP-969-2 - Create 2 details and СБ assembly containing both details", async ({ page }) => {
@@ -120,15 +33,15 @@ export const runERP_969_2 = () => {
             await page.waitForLoadState("networkidle");
 
             // Clean up existing detail 1
-            await detailsPage.cleanupTestDetail(page, DETAIL_1_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
+            await detailsPage.cleanupTestDetail(page, CONST.DETAIL_1_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
             await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
             // Clean up existing detail 2
-            await detailsPage.cleanupTestDetail(page, DETAIL_2_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
+            await detailsPage.cleanupTestDetail(page, CONST.DETAIL_2_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
             await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
             // Clean up existing assembly
-            await detailsPage.cleanupTestDetail(page, ASSEMBLY_NAME, CONST.MAIN_PAGE_СБ_TABLE);
+            await detailsPage.cleanupTestDetail(page, CONST.ASSEMBLY_NAME, CONST.MAIN_PAGE_СБ_TABLE);
             await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
         });
 
@@ -136,12 +49,12 @@ export const runERP_969_2 = () => {
         // PART B: Create first detail
         // ─────────────────────────────────────────────────────────────────────────────
 
-        await allure.step(`Step 2: Create first detail "${DETAIL_1_NAME}"`, async () => {
+        await allure.step(`Step 2: Create first detail "${CONST.DETAIL_1_NAME}"`, async () => {
             await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
             await page.waitForLoadState("networkidle");
 
             // Fill detail name
-            await detailsPage.fillDetailName(DETAIL_1_NAME, CONST.ADD_DETAL_INFORMATION_INPUT_INPUT);
+            await detailsPage.fillDetailName(CONST.DETAIL_1_NAME, CONST.ADD_DETAL_INFORMATION_INPUT_INPUT);
 
             // Save the detail
             const saveButton = page.locator(`[data-testid="${CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
@@ -158,7 +71,7 @@ export const runERP_969_2 = () => {
             await expect(editPageTitle).toBeVisible();
         });
 
-        await allure.step(`Step 3: Verify first detail "${DETAIL_1_NAME}" was saved`, async () => {
+        await allure.step(`Step 3: Verify first detail "${CONST.DETAIL_1_NAME}" was saved`, async () => {
             // Click cancel to return to listing
             const cancelButton = page.locator(`[data-testid="${CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
             await detailsPage.highlightElement(cancelButton);
@@ -170,7 +83,7 @@ export const runERP_969_2 = () => {
             const detalTable = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
             const detailSearchInput = detalTable.locator(`[data-testid="${CONST.PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
             await expect(detailSearchInput).toBeVisible();
-            await detailSearchInput.fill(DETAIL_1_NAME);
+            await detailSearchInput.fill(CONST.DETAIL_1_NAME);
             await detailSearchInput.press("Enter");
             await page.waitForTimeout(1000);
 
@@ -181,7 +94,7 @@ export const runERP_969_2 = () => {
             // Verify the found row contains the correct detail name
             const foundRow = resultRows.first();
             const rowText = await foundRow.textContent();
-            expect(rowText).toContain(DETAIL_1_NAME);
+            expect(rowText).toContain(CONST.DETAIL_1_NAME);
 
             // Highlight the found row
             await detailsPage.highlightElement(foundRow);
@@ -191,12 +104,12 @@ export const runERP_969_2 = () => {
         // PART C: Create second detail
         // ─────────────────────────────────────────────────────────────────────────────
 
-        await allure.step(`Step 4: Create second detail "${DETAIL_2_NAME}"`, async () => {
+        await allure.step(`Step 4: Create second detail "${CONST.DETAIL_2_NAME}"`, async () => {
             await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
             await page.waitForLoadState("networkidle");
 
             // Fill detail name
-            await detailsPage.fillDetailName(DETAIL_2_NAME, CONST.ADD_DETAL_INFORMATION_INPUT_INPUT);
+            await detailsPage.fillDetailName(CONST.DETAIL_2_NAME, CONST.ADD_DETAL_INFORMATION_INPUT_INPUT);
 
             // Save the detail
             const saveButton = page.locator(`[data-testid="${CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
@@ -213,7 +126,7 @@ export const runERP_969_2 = () => {
             await expect(editPageTitle).toBeVisible();
         });
 
-        await allure.step(`Step 5: Verify second detail "${DETAIL_2_NAME}" was saved`, async () => {
+        await allure.step(`Step 5: Verify second detail "${CONST.DETAIL_2_NAME}" was saved`, async () => {
             // Click cancel to return to listing
             const cancelButton = page.locator(`[data-testid="${CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
             await detailsPage.highlightElement(cancelButton);
@@ -225,7 +138,7 @@ export const runERP_969_2 = () => {
             const detalTable = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
             const detailSearchInput = detalTable.locator(`[data-testid="${CONST.PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
             await expect(detailSearchInput).toBeVisible();
-            await detailSearchInput.fill(DETAIL_2_NAME);
+            await detailSearchInput.fill(CONST.DETAIL_2_NAME);
             await detailSearchInput.press("Enter");
             await page.waitForTimeout(1000);
 
@@ -236,7 +149,7 @@ export const runERP_969_2 = () => {
             // Verify the found row contains the correct detail name
             const foundRow = resultRows.first();
             const rowText = await foundRow.textContent();
-            expect(rowText).toContain(DETAIL_2_NAME);
+            expect(rowText).toContain(CONST.DETAIL_2_NAME);
 
             // Highlight the found row
             await detailsPage.highlightElement(foundRow);
@@ -246,7 +159,7 @@ export const runERP_969_2 = () => {
         // PART D: Create СБ assembly containing both details
         // ─────────────────────────────────────────────────────────────────────────────
 
-        await allure.step(`Step 6: Create assembly "${ASSEMBLY_NAME}" with both details`, async () => {
+        await allure.step(`Step 6: Create assembly "${CONST.ASSEMBLY_NAME}" with both details`, async () => {
             await detailsPage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
             await page.waitForLoadState("networkidle");
 
@@ -263,14 +176,14 @@ export const runERP_969_2 = () => {
             // Fill in the assembly name
             const assemblyInput = page.locator(`[data-testid="${CONST.CREATOR_INFORMATION_INPUT}"]`);
             await expect(assemblyInput).toBeVisible({ timeout: 5000 });
-            await assemblyInput.fill(ASSEMBLY_NAME);
+            await assemblyInput.fill(CONST.ASSEMBLY_NAME);
 
             // Add first detail to assembly
-            await detailsPage.addDetailToAssemblySpecification(page, DETAIL_1_NAME);
+            await detailsPage.addDetailToAssemblySpecification(page, CONST.DETAIL_1_NAME);
             await detailsPage.verifyDetailSuccessMessage("Деталь добавлена в спецификацию");
 
             // Add second detail to assembly
-            await detailsPage.addDetailToAssemblySpecification(page, DETAIL_2_NAME);
+            await detailsPage.addDetailToAssemblySpecification(page, CONST.DETAIL_2_NAME);
             await detailsPage.verifyDetailSuccessMessage("Деталь добавлена в спецификацию");
 
             // Verify both details are now in the specification table
@@ -281,8 +194,8 @@ export const runERP_969_2 = () => {
             const rowTexts = await specRows.allTextContents();
 
             // Check that both details are present
-            const detail1Found = rowTexts.some(text => text.includes(DETAIL_1_NAME));
-            const detail2Found = rowTexts.some(text => text.includes(DETAIL_2_NAME));
+            const detail1Found = rowTexts.some(text => text.includes(CONST.DETAIL_1_NAME));
+            const detail2Found = rowTexts.some(text => text.includes(CONST.DETAIL_2_NAME));
 
             expect(detail1Found).toBe(true);
             expect(detail2Found).toBe(true);
@@ -290,7 +203,7 @@ export const runERP_969_2 = () => {
             // Highlight the specification rows that contain our details
             for (let i = 0; i < rowTexts.length; i++) {
                 const rowText = rowTexts[i];
-                if (rowText.includes(DETAIL_1_NAME) || rowText.includes(DETAIL_2_NAME)) {
+                if (rowText.includes(CONST.DETAIL_1_NAME) || rowText.includes(CONST.DETAIL_2_NAME)) {
                     const detailRow = specRows.nth(i);
                     await detailsPage.highlightElement(detailRow);
                 }
@@ -317,10 +230,10 @@ export const runERP_969_2 = () => {
 
             expect(isCreatorPage || isListingPage).toBe(true);
 
-            console.log(`✅ Assembly "${ASSEMBLY_NAME}" created successfully with both details`);
+            console.log(`✅ Assembly "${CONST.ASSEMBLY_NAME}" created successfully with both details`);
         });
 
-        await allure.step(`Step 7: Verify assembly "${ASSEMBLY_NAME}" was saved`, async () => {
+        await allure.step(`Step 7: Verify assembly "${CONST.ASSEMBLY_NAME}" was saved`, async () => {
             // Check if we're already on the listing page, if not navigate there
             const listingPage = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
             const isOnListingPage = await listingPage.isVisible().catch(() => false);
@@ -338,7 +251,7 @@ export const runERP_969_2 = () => {
             const cbedTable = page.locator(`table[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
             const assemblySearchInput = cbedTable.locator(`[data-testid="${CONST.BASE_DETAIL_CB_TABLE_SEARCH}"]`);
             await expect(assemblySearchInput).toBeVisible();
-            await assemblySearchInput.fill(ASSEMBLY_NAME);
+            await assemblySearchInput.fill(CONST.ASSEMBLY_NAME);
             await assemblySearchInput.press("Enter");
             await page.waitForTimeout(1000);
 
@@ -349,7 +262,7 @@ export const runERP_969_2 = () => {
             // Verify the found row contains the correct assembly name
             const foundRow = resultRows.first();
             const rowText = await foundRow.textContent();
-            expect(rowText).toContain(ASSEMBLY_NAME);
+            expect(rowText).toContain(CONST.ASSEMBLY_NAME);
 
             // Highlight the found row
             await detailsPage.highlightElement(foundRow);
@@ -377,7 +290,7 @@ export const runERP_969_2 = () => {
             await page.waitForTimeout(2000);
 
             // Search for the assembly
-            await assemblySearchInput.fill(ASSEMBLY_NAME);
+            await assemblySearchInput.fill(CONST.ASSEMBLY_NAME);
             await assemblySearchInput.press("Enter");
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(2000);
@@ -398,8 +311,8 @@ export const runERP_969_2 = () => {
             const count = await resultRows.count();
 
             if (count === 0) {
-                console.log(`❌ Assembly "${ASSEMBLY_NAME}" not found in СБ table`);
-                console.log(`Search term used: "${ASSEMBLY_NAME}"`);
+                console.log(`❌ Assembly "${CONST.ASSEMBLY_NAME}" not found in СБ table`);
+                console.log(`Search term used: "${CONST.ASSEMBLY_NAME}"`);
                 console.log(`Total rows in table: ${totalRows}`);
 
                 // Try a broader search to see if the assembly exists with a different name
@@ -442,8 +355,8 @@ export const runERP_969_2 = () => {
             const rowTexts = await specRows.allTextContents();
 
             // Check that both details are present and highlight the rows
-            const detail1Found = rowTexts.some(text => text.includes(DETAIL_1_NAME));
-            const detail2Found = rowTexts.some(text => text.includes(DETAIL_2_NAME));
+            const detail1Found = rowTexts.some(text => text.includes(CONST.DETAIL_1_NAME));
+            const detail2Found = rowTexts.some(text => text.includes(CONST.DETAIL_2_NAME));
 
             expect(detail1Found).toBe(true);
             expect(detail2Found).toBe(true);
@@ -451,13 +364,13 @@ export const runERP_969_2 = () => {
             // Highlight the specification rows that contain our details
             for (let i = 0; i < rowTexts.length; i++) {
                 const rowText = rowTexts[i];
-                if (rowText.includes(DETAIL_1_NAME) || rowText.includes(DETAIL_2_NAME)) {
+                if (rowText.includes(CONST.DETAIL_1_NAME) || rowText.includes(CONST.DETAIL_2_NAME)) {
                     const detailRow = specRows.nth(i);
                     await detailsPage.highlightElement(detailRow);
                 }
             }
 
-            console.log(`✅ Assembly "${ASSEMBLY_NAME}" created successfully with both details`);
+            console.log(`✅ Assembly "${CONST.ASSEMBLY_NAME}" created successfully with both details`);
         });
 
         // ─────────────────────────────────────────────────────────────────────────────
@@ -496,8 +409,8 @@ export const runERP_969_2 = () => {
             await revisionPage.waitForTimeout(1000);
 
             // Set quantity for first detail
-            console.log(`Setting quantity for detail "${DETAIL_1_NAME}"`);
-            await searchInput.fill(DETAIL_1_NAME);
+            console.log(`Setting quantity for detail "${CONST.DETAIL_1_NAME}"`);
+            await searchInput.fill(CONST.DETAIL_1_NAME);
             await searchInput.press("Enter");
             await revisionPage.waitForLoadState("networkidle");
             await revisionPage.waitForTimeout(2000);
@@ -505,16 +418,16 @@ export const runERP_969_2 = () => {
             // Find and update the first detail
             const resultRows = revisionTable.locator("tbody tr");
             const count = await resultRows.count();
-            console.log(`Found ${count} rows for detail "${DETAIL_1_NAME}"`);
+            console.log(`Found ${count} rows for detail "${CONST.DETAIL_1_NAME}"`);
 
             if (count > 0) {
                 // Find the row containing our detail
                 let foundRow = null;
                 for (let i = 0; i < count; i++) {
                     const rowText = await resultRows.nth(i).textContent();
-                    if (rowText && rowText.includes(DETAIL_1_NAME)) {
+                    if (rowText && rowText.includes(CONST.DETAIL_1_NAME)) {
                         foundRow = resultRows.nth(i);
-                        console.log(`Found detail "${DETAIL_1_NAME}" in row ${i + 1}`);
+                        console.log(`Found detail "${CONST.DETAIL_1_NAME}" in row ${i + 1}`);
                         break;
                     }
                 }
@@ -536,7 +449,7 @@ export const runERP_969_2 = () => {
                     await expect(editField).toBeVisible();
 
                     // Fill in "5" and press Enter to submit the change
-                    await editField.fill(DETAIL_NEW_QUANTITY);
+                    await editField.fill(CONST.DETAIL_NEW_QUANTITY);
                     await editField.press("Enter");
                     await revisionPage.waitForLoadState("networkidle");
 
@@ -552,19 +465,19 @@ export const runERP_969_2 = () => {
                     await confirmButton.click();
                     await revisionPage.waitForLoadState("networkidle");
 
-                    console.log(`✅ Detail "${DETAIL_1_NAME}" quantity set to 5`);
+                    console.log(`✅ Detail "${CONST.DETAIL_1_NAME}" quantity set to 5`);
                 }
             }
 
             // Now set quantity for second detail
-            console.log(`Setting quantity for detail "${DETAIL_2_NAME}"`);
+            console.log(`Setting quantity for detail "${CONST.DETAIL_2_NAME}"`);
 
             // Clear search and search for second detail
             await searchInput.fill("");
             await searchInput.press("Enter");
             await revisionPage.waitForTimeout(1000);
 
-            await searchInput.fill(DETAIL_2_NAME);
+            await searchInput.fill(CONST.DETAIL_2_NAME);
             await searchInput.press("Enter");
             await revisionPage.waitForLoadState("networkidle");
             await revisionPage.waitForTimeout(2000);
@@ -572,16 +485,16 @@ export const runERP_969_2 = () => {
             // Find and update the second detail
             const resultRows2 = revisionTable.locator("tbody tr");
             const count2 = await resultRows2.count();
-            console.log(`Found ${count2} rows for detail "${DETAIL_2_NAME}"`);
+            console.log(`Found ${count2} rows for detail "${CONST.DETAIL_2_NAME}"`);
 
             if (count2 > 0) {
                 // Find the row containing our detail
                 let foundRow2 = null;
                 for (let i = 0; i < count2; i++) {
                     const rowText = await resultRows2.nth(i).textContent();
-                    if (rowText && rowText.includes(DETAIL_2_NAME)) {
+                    if (rowText && rowText.includes(CONST.DETAIL_2_NAME)) {
                         foundRow2 = resultRows2.nth(i);
-                        console.log(`Found detail "${DETAIL_2_NAME}" in row ${i + 1}`);
+                        console.log(`Found detail "${CONST.DETAIL_2_NAME}" in row ${i + 1}`);
                         break;
                     }
                 }
@@ -603,7 +516,7 @@ export const runERP_969_2 = () => {
                     await expect(editField2).toBeVisible();
 
                     // Fill in "5" and press Enter to submit the change
-                    await editField2.fill(DETAIL_NEW_QUANTITY);
+                    await editField2.fill(CONST.DETAIL_NEW_QUANTITY);
                     await editField2.press("Enter");
                     await revisionPage.waitForLoadState("networkidle");
 
@@ -619,7 +532,7 @@ export const runERP_969_2 = () => {
                     await confirmButton2.click();
                     await revisionPage.waitForLoadState("networkidle");
 
-                    console.log(`✅ Detail "${DETAIL_2_NAME}" quantity set to 5`);
+                    console.log(`✅ Detail "${CONST.DETAIL_2_NAME}" quantity set to 5`);
                 }
             }
 
@@ -694,7 +607,7 @@ export const runERP_969_2 = () => {
             const searchInput = productionTable.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT}"]`);
             await detailsPage.highlightElement(searchInput);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
-            await searchInput.fill(ASSEMBLY_NAME);
+            await searchInput.fill(CONST.ASSEMBLY_NAME);
             await searchInput.press("Enter");
             await warehousePage.waitForLoadState("networkidle");
             await warehousePage.waitForTimeout(1000);
@@ -702,7 +615,7 @@ export const runERP_969_2 = () => {
             // Verify exactly one row is returned
             const rows = productionTable.locator("tbody tr");
             const rowCount = await rows.count();
-            console.log(`Found ${rowCount} row(s) in production table for SB "${ASSEMBLY_NAME}".`);
+            console.log(`Found ${rowCount} row(s) in production table for SB "${CONST.ASSEMBLY_NAME}".`);
             expect(rowCount).toBe(1);
 
             const checkbox = rows.locator("td").nth(0).locator("input[type='checkbox']");
@@ -721,7 +634,7 @@ export const runERP_969_2 = () => {
             await expect(bottomTable).toBeVisible({ timeout: 5000 });
             const bottomRows = bottomTable.locator("tbody tr");
             const bottomRowCount = await bottomRows.count();
-            console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${ASSEMBLY_NAME}".`);
+            console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${CONST.ASSEMBLY_NAME}".`);
             expect(bottomRowCount).toBe(1);
 
             const quantityInput = bottomRows.first().locator(`[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`);
@@ -776,7 +689,7 @@ export const runERP_969_2 = () => {
                 throw new Error('Order number is not available for search');
             }
 
-            await searchInput.fill(ASSEMBLY_NAME);
+            await searchInput.fill(CONST.ASSEMBLY_NAME);
             await searchInput.press("Enter");
             await warehousePage.waitForLoadState("networkidle");
             await warehousePage.waitForTimeout(1000);
@@ -966,7 +879,7 @@ export const runERP_969_2 = () => {
             });
             const thirdColumnText = await thirdColumn.textContent();
             console.log(`Third column (item): "${thirdColumnText}"`);
-            expect(thirdColumnText?.trim()).toBe(ASSEMBLY_NAME);
+            expect(thirdColumnText?.trim()).toBe(CONST.ASSEMBLY_NAME);
 
             // Verify the fourth column contains "Заказано"
             const fourthColumn = firstDataRow.locator("td").nth(3); // 4th column (index 3)
@@ -1041,12 +954,12 @@ export const runERP_969_2 = () => {
             // Focus the input and fill it
             await searchInput.focus();
             await warehousePage.waitForTimeout(500);
-            await searchInput.fill(ASSEMBLY_NAME);
+            await searchInput.fill(CONST.ASSEMBLY_NAME);
 
             // Verify the value was set
             const inputValue = await searchInput.inputValue();
             console.log(`Search input value after fill: "${inputValue}"`);
-            expect(inputValue).toBe(ASSEMBLY_NAME);
+            expect(inputValue).toBe(CONST.ASSEMBLY_NAME);
 
             await warehousePage.waitForTimeout(1000);
             await searchInput.press("Enter");
@@ -1061,7 +974,7 @@ export const runERP_969_2 = () => {
             // Verify 4th column contains our СБ name
             const fourthColumn = resultRows.first().locator("td").nth(4); // 4th column (index 3)
             const fourthColumnText = await fourthColumn.textContent();
-            expect(fourthColumnText?.trim()).toBe(ASSEMBLY_NAME);
+            expect(fourthColumnText?.trim()).toBe(CONST.ASSEMBLY_NAME);
 
             // Double click the third column to open modal
             const thirdColumn = resultRows.first().locator("td").nth(2); // 3rd column (index 2)
@@ -1122,7 +1035,7 @@ export const runERP_969_2 = () => {
 
             // Confirm it contains the name of our СБ
             const nameCellText = await nameCell.textContent();
-            expect(nameCellText?.trim()).toBe(ASSEMBLY_NAME);
+            expect(nameCellText?.trim()).toBe(CONST.ASSEMBLY_NAME);
             await detailsPage.highlightElement(nameCell, {
                 backgroundColor: 'green',
                 border: '2px solid green',
@@ -1139,7 +1052,7 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(1000);
 
             // Set its value to 1
-            await ownQuantityInput.fill(NEW_ORDER_QUANTITY);
+            await ownQuantityInput.fill(CONST.NEW_ORDER_QUANTITY);
             await ownQuantityInput.press("Enter");
             await warehousePage.waitForLoadState("networkidle");
 
@@ -1245,12 +1158,12 @@ export const runERP_969_2 = () => {
             // Focus the input and fill it
             await searchInput.focus();
             await warehousePage.waitForTimeout(1000);
-            await searchInput.fill(ASSEMBLY_NAME);
+            await searchInput.fill(CONST.ASSEMBLY_NAME);
             await warehousePage.waitForTimeout(1000);
             // Verify the value was set
             const inputValue = await searchInput.inputValue();
             console.log(`Search input value after fill: "${inputValue}"`);
-            expect(inputValue).toBe(ASSEMBLY_NAME);
+            expect(inputValue).toBe(CONST.ASSEMBLY_NAME);
 
             await warehousePage.waitForTimeout(1000);
             await searchInput.press("Enter");
@@ -1285,7 +1198,7 @@ export const runERP_969_2 = () => {
             });
             const nameValue = await nameCell.textContent();
             console.log(`Found SB name: "${nameValue}"`);
-            expect(nameValue?.trim()).toBe(ASSEMBLY_NAME);
+            expect(nameValue?.trim()).toBe(CONST.ASSEMBLY_NAME);
             await detailsPage.highlightElement(nameCell, {
                 backgroundColor: 'green',
                 border: '2px solid green',
@@ -1359,7 +1272,7 @@ export const runERP_969_2 = () => {
                 await warehousePage.waitForTimeout(1000);
                 const nameValue = await nameCell.textContent();
                 console.log(`Name cell value: "${nameValue}"`);
-                expect(nameValue?.trim()).toBe(ASSEMBLY_NAME);
+                expect(nameValue?.trim()).toBe(CONST.ASSEMBLY_NAME);
                 await detailsPage.highlightElement(nameCell, {
                     backgroundColor: 'green',
                     border: '2px solid green',
@@ -1402,9 +1315,9 @@ export const runERP_969_2 = () => {
                 const collectedValue = parseInt(collectedQuantity?.trim() || "0");
 
                 // Use async validation method for complex lookup
-                const isValid = await detailsPage.validateCollectedQuantity(ASSEMBLY_NAME, parseInt(NEW_ORDER_QUANTITY));
+                const isValid = await detailsPage.validateCollectedQuantity(CONST.ASSEMBLY_NAME, parseInt(CONST.NEW_ORDER_QUANTITY));
                 expect(isValid).toBe(true);
-                expect(collectedValue).toBeGreaterThanOrEqual(parseInt(NEW_ORDER_QUANTITY));
+                expect(collectedValue).toBeGreaterThanOrEqual(parseInt(CONST.NEW_ORDER_QUANTITY));
 
                 await detailsPage.highlightElement(collectedQuantityCell, {
                     backgroundColor: 'green',
@@ -1580,16 +1493,16 @@ export const runERP_969_2 = () => {
                     console.log(`Row ${i + 1} detail name: "${detailName}"`);
 
                     // Check if this row contains one of our details
-                    if (detailName?.trim() === DETAIL_1_NAME) {
+                    if (detailName?.trim() === CONST.DETAIL_1_NAME) {
                         foundDetail1 = true;
-                        console.log(`Found ${DETAIL_1_NAME} in row ${i + 1}`);
-                    } else if (detailName?.trim() === DETAIL_2_NAME) {
+                        console.log(`Found ${CONST.DETAIL_1_NAME} in row ${i + 1}`);
+                    } else if (detailName?.trim() === CONST.DETAIL_2_NAME) {
                         foundDetail2 = true;
-                        console.log(`Found ${DETAIL_2_NAME} in row ${i + 1}`);
+                        console.log(`Found ${CONST.DETAIL_2_NAME} in row ${i + 1}`);
                     }
 
                     // Only validate details if this row contains one of our details
-                    if (detailName?.trim() === DETAIL_1_NAME || detailName?.trim() === DETAIL_2_NAME) {
+                    if (detailName?.trim() === CONST.DETAIL_1_NAME || detailName?.trim() === CONST.DETAIL_2_NAME) {
                         // Validate quantity cell (should be 9 - what we put in stock)
                         const quantityCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
                         await detailsPage.highlightElement(quantityCell, {
@@ -1600,7 +1513,7 @@ export const runERP_969_2 = () => {
                         await warehousePage.waitForTimeout(1000);
                         const quantityValue = await quantityCell.textContent();
                         console.log(`Row ${i + 1} quantity: "${quantityValue}"`);
-                        expect(parseInt(quantityValue?.trim() || "0")).toBe(parseInt(DETAIL_NEW_QUANTITY));
+                        expect(parseInt(quantityValue?.trim() || "0")).toBe(parseInt(CONST.DETAIL_NEW_QUANTITY));
 
                         // Validate in kits cell (should be 0 initially, but could be more from previous builds)
                         const inKitsCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
@@ -1614,7 +1527,7 @@ export const runERP_969_2 = () => {
                         console.log(`Row ${i + 1} in kits: "${inKitsValue}"`);
                         const inKitsValueNum = parseInt(inKitsValue?.trim() || "0");
                         expect(inKitsValueNum).toBeGreaterThanOrEqual(0);
-                        expect(inKitsValueNum).toBeLessThanOrEqual(parseInt(DETAIL_NEW_QUANTITY));
+                        expect(inKitsValueNum).toBeLessThanOrEqual(parseInt(CONST.DETAIL_NEW_QUANTITY));
 
                         // Validate free quantity cell (quantity - in kits)
                         const freeQuantityCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
@@ -1627,7 +1540,7 @@ export const runERP_969_2 = () => {
                         const freeQuantityValue = await freeQuantityCell.textContent();
                         console.log(`Row ${i + 1} free quantity: "${freeQuantityValue}"`);
                         const freeValue = parseInt(freeQuantityValue?.trim() || "0");
-                        expect(freeValue).toBe(parseInt(DETAIL_NEW_QUANTITY) - inKitsValueNum);
+                        expect(freeValue).toBe(parseInt(CONST.DETAIL_NEW_QUANTITY) - inKitsValueNum);
 
                         // Validate free quantity against warehouse data
                         const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(detailName?.trim() || "");
@@ -1663,7 +1576,7 @@ export const runERP_969_2 = () => {
                         const needValueNum = parseInt(needValue?.trim() || "0");
 
                         // Use async validation method for complex calculation
-                        const needValid = await detailsPage.validateNeedQuantity(detailName?.trim() || "", ASSEMBLY_NAME, needValueNum, inKitsValueNum);
+                        const needValid = await detailsPage.validateNeedQuantity(detailName?.trim() || "", CONST.ASSEMBLY_NAME, needValueNum, inKitsValueNum);
                         expect(needValid).toBe(true);
                         expect(needValueNum).toBeGreaterThanOrEqual(0);
                     }
@@ -1678,7 +1591,7 @@ export const runERP_969_2 = () => {
                 // Verify we found both our details
                 expect(foundDetail1).toBe(true);
                 expect(foundDetail2).toBe(true);
-                console.log(`✅ Found both details: ${DETAIL_1_NAME} and ${DETAIL_2_NAME}`);
+                console.log(`✅ Found both details: ${CONST.DETAIL_1_NAME} and ${CONST.DETAIL_2_NAME}`);
                 await warehousePage.waitForTimeout(5000);
             });
         });
@@ -1717,7 +1630,7 @@ export const runERP_969_2 = () => {
                 console.log(`Row ${i + 1} detail name: "${detailName}"`);
 
                 // Only process rows that contain our details
-                if (detailName?.trim() === DETAIL_1_NAME || detailName?.trim() === DETAIL_2_NAME) {
+                if (detailName?.trim() === CONST.DETAIL_1_NAME || detailName?.trim() === CONST.DETAIL_2_NAME) {
                     console.log(`Processing detail: ${detailName}`);
 
                     // Close all other tabs except the current one before clicking the name cell
@@ -2053,8 +1966,8 @@ export const runERP_969_2 = () => {
                     const deficitNum = parseInt(deficitValue?.trim() || "0");
 
                     // Calculate expected deficit: quantity needed (orderedQuantity2) minus available quantity (DETAIL_NEW_QUANTITY)
-                    const expectedDeficit = parseInt(DETAIL_NEW_QUANTITY) - orderedQuantity2;
-                    console.log(`Expected deficit: ${DETAIL_NEW_QUANTITY} - ${orderedQuantity2} = ${expectedDeficit}`);
+                    const expectedDeficit = parseInt(CONST.DETAIL_NEW_QUANTITY) - orderedQuantity2;
+                    console.log(`Expected deficit: ${CONST.DETAIL_NEW_QUANTITY} - ${orderedQuantity2} = ${expectedDeficit}`);
                     expect(deficitNum).toBe(expectedDeficit);
 
                     await detailsPage.highlightElement(deficitCell, {
@@ -2099,7 +2012,7 @@ export const runERP_969_2 = () => {
                     await warehousePage.waitForTimeout(1000);
                     const quantityValue = await quantityCell.textContent();
                     console.log(`Quantity cell value: "${quantityValue}"`);
-                    expect(parseInt(quantityValue?.trim() || "0")).toBe(parseInt(DETAIL_NEW_QUANTITY));
+                    expect(parseInt(quantityValue?.trim() || "0")).toBe(parseInt(CONST.DETAIL_NEW_QUANTITY));
 
                     // Click the quantity cell to verify
                     await quantityCell.click();
