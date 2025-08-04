@@ -22,86 +22,89 @@ let specificationQuantity: number = 1; // Global variable for specification quan
 let waybillCollections: number = 0; // Global variable to track waybill collections
 let currentBuildQuantity: number = 1; // Global variable for current build quantity (how many items we're building now)
 
-// Identical constants (same name and value in both files)
-const PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD = "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
-const PARTS_PAGE_DETAL_TABLE = "BasePaginationTable-Table-detal";
-const MAIN_PAGE_СБ_TABLE = "BasePaginationTable-Table-cbed";
-const MAIN_SEARCH_COVER_INPUT = "OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input";
-const BASE_DETAIL_CB_TABLE_SEARCH = "BasePaginationTable-Thead-SearchInput-Dropdown-Input";
-const EDIT_PARTS_PAGE_ARCHIVE_BUTTON = "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive";
-const ARCHIVE_MODAL_CONFIRM_DIALOG = "ModalConfirm";
-const ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON = "ModalConfirm-Content-Buttons-Yes";
-const BASE_DETALS_BUTTON_CREATE = "BaseDetals-Button-Create";
-const BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS = "BaseDetals-CreatLink-Titlebase-of-assembly-units";
-const CREATOR_INFORMATION_INPUT = "Creator-Information-Input-Input";
-const EDITOR_TABLE_SPECIFICATION_CBED = "Editor-TableSpecification-Cbed";
-const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = "Creator-ButtonSaveAndCancel-ButtonsCenter-Save";
-const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel";
-const ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save";
-const EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = "EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel";
-const MAIN_PAGE_EDIT_BUTTON = "BaseDetals-Button-Edit";
-const ADD_DETAL_INFORMATION_INPUT_INPUT = "AddDetal-Information-Input-Input";
-const EDIT_DETAL_INFORMATION_INPUT_INPUT = "EditDetal-Information-Input-Input";
-const EDIT_DETAL_TITLE = "EditDetal-Title";
-const CREATOR_TITLE = "Creator-Title";
-const MODAL_TITLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title";
-const SCLAD_REVISION_REVISION = "Sclad-revision-revision";
-const REVISION_SWITCH_ITEM2 = "Revision-Switch-Item2";
-const TABLE_REVISION_PAGINATION_SEARCH_INPUT = "TableRevisionPagination-SearchInput-Dropdown-Input";
-const INPUT_NUMBER_INPUT = "InputNumber-Input";
-const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG = "TableRevisionPagination-ConfirmDialog";
-const TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE = "TableRevisionPagination-ConfirmDialog-Approve";
-const MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT = "OrderSuppliers-Modal-AddOrder";
-const SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES = "OrderSuppliers-Modal-AddOrder-Content-AssembleCard";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT = "-TdQuantity-InputNumber-Input";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save";
-const MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button";
-const ORDER_SUPPLIERS_TABLE_ORDER_TABLE = "OrderSuppliers-Main-Content-TableWrapper-Table";
-const ORDER_MODAL = "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker";
-const COMPLEX_SBORKA_BY_PLAN = "CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input";
-const SCLAD_ORDERING_SUPPLIERS = "Sclad-orderingSuppliers";
-const ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON = "OrderSuppliers-Main-Button";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT = "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL = "ModalAddWaybill-WaybillDetails-NameCell";
-const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel";
-const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON = "ModalAddWaybill-ControlButtons-CompleteSetButton";
-const TABLE_COMPLECT_TABLE_ROW_CELL = "CompletCbed-Content-Table-Table-TableRow";
-const TABLE_COMPLECT_TABLE_ROW_CELL_NAME = "-Name";
-const TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION = "-Designation";
+export const CONST = {
+    // Identical constants (same name and value in both files)
+    PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
+    PARTS_PAGE_DETAL_TABLE: "BasePaginationTable-Table-detal",
+    MAIN_PAGE_СБ_TABLE: "BasePaginationTable-Table-cbed",
+    MAIN_SEARCH_COVER_INPUT: "OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input",
+    BASE_DETAIL_CB_TABLE_SEARCH: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
+    EDIT_PARTS_PAGE_ARCHIVE_BUTTON: "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive",
+    ARCHIVE_MODAL_CONFIRM_DIALOG: "ModalConfirm",
+    ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
+    BASE_DETALS_BUTTON_CREATE: "BaseDetals-Button-Create",
+    BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS: "BaseDetals-CreatLink-Titlebase-of-assembly-units",
+    CREATOR_INFORMATION_INPUT: "Creator-Information-Input-Input",
+    EDITOR_TABLE_SPECIFICATION_CBED: "Editor-TableSpecification-Cbed",
+    CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "Creator-ButtonSaveAndCancel-ButtonsCenter-Save",
+    CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel",
+    ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save",
+    EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel",
+    MAIN_PAGE_EDIT_BUTTON: "BaseDetals-Button-Edit",
 
-// Constants unique to ERP-969-2.spec.ts
-const SCLAD_COMPLETION_CBED_PLAN = "Sclad-completionCbedPlan";
-const SEARCH_COVER_INPUT = "Search-Cover-Input";
-const TABLE_REVISION_PAGINATION_TABLE = "Revision-TableRevisionPagination-Detals-Table";
-const MODAL_ADD_ORDER_DIALOG = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1";
-const MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2";
-const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT = "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input";
-const ORDER_MODAL_TABLE = "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table";
-const TABLE_COMPLECT_TABLE = "CompletCbed-Content-Table-Table";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = "TableComplect-ModalAddWaybill";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-RequiredQuantityCell";
-const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL = "ModalAddWaybill-WaybillDetails-CollectedQuantityCell";
-const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX = "ModalAddWaybill-ShipmentDetailsTable-ScladSetSelectedCheckbox";
-const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX = "ModalAddWaybill-ShipmentDetailsTable-StockOrderRow";
-const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX = "-OrderNumberCell";
-const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX = "-RemainingQuantityCell";
-const MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON = "ModalAddWaybill-ControlButtons-ActualizeButton";
-const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL = "ModalAddWaybill-ShipmentDetailsTable-TotalLeftToDoLabel";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE = "ModalAddWaybill-DetailsTable-Table";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX = "ModalAddWaybill-DetailsTable-Row";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX = "-NameCell";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX = "-QuantityCell";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX = "-InKitsCell";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX = "-FreeQuantityCell";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_SCLAD_NEED_CELL_SUFFIX = "-ScladNeedCell";
-const MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX = "-NeedCell";
-const TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX = "TableComplect-ModalAddWaybill";
-const TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX = "-CircleProgress-Wrapper";
-const OSTATK_PCBD_MODAL_DETAL_PREFIX = "OstatkPCBD-ModalDetal";
-const OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX = "-InformationName-Name";
-const OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX = "-Buttons-ShowFullInformationButton";
+    ADD_DETAL_INFORMATION_INPUT_INPUT: "AddDetal-Information-Input-Input",
+    EDIT_DETAL_INFORMATION_INPUT_INPUT: "EditDetal-Information-Input-Input",
+    EDIT_DETAL_TITLE: "EditDetal-Title",
+    CREATOR_TITLE: "Creator-Title",
+    MODAL_TITLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title",
+    SCLAD_REVISION_REVISION: "Sclad-revision-revision",
+    REVISION_SWITCH_ITEM2: "Revision-Switch-Item2",
+    TABLE_REVISION_PAGINATION_SEARCH_INPUT: "TableRevisionPagination-SearchInput-Dropdown-Input",
+    INPUT_NUMBER_INPUT: "InputNumber-Input",
+    TABLE_REVISION_PAGINATION_CONFIRM_DIALOG: "TableRevisionPagination-ConfirmDialog",
+    TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE: "TableRevisionPagination-ConfirmDialog-Approve",
+    MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT: "OrderSuppliers-Modal-AddOrder",
+    SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES: "OrderSuppliers-Modal-AddOrder-Content-AssembleCard",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT: "-TdQuantity-InputNumber-Input",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save",
+    MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button",
+    ORDER_SUPPLIERS_TABLE_ORDER_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table",
+    ORDER_MODAL: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker",
+    COMPLEX_SBORKA_BY_PLAN: "CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input",
+    SCLAD_ORDERING_SUPPLIERS: "Sclad-orderingSuppliers",
+    ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON: "OrderSuppliers-Main-Button",
+    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT: "ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input",
+    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL: "ModalAddWaybill-WaybillDetails-NameCell",
+    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL: "ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel",
+    MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON: "ModalAddWaybill-ControlButtons-CompleteSetButton",
+    TABLE_COMPLECT_TABLE_ROW_CELL: "CompletCbed-Content-Table-Table-TableRow",
+    TABLE_COMPLECT_TABLE_ROW_CELL_NAME: "-Name",
+    TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION: "-Designation",
+
+    // Constants unique to ERP-969-2.spec.ts
+    SCLAD_COMPLETION_CBED_PLAN: "Sclad-completionCbedPlan",
+    SEARCH_COVER_INPUT: "Search-Cover-Input",
+    TABLE_REVISION_PAGINATION_TABLE: "Revision-TableRevisionPagination-Detals-Table",
+    MODAL_ADD_ORDER_PRODUCTION_DIALOG: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply",
+    TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1",
+    MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input",
+    ORDER_MODAL_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table",
+    TABLE_COMPLECT_TABLE: "CompletCbed-Content-Table-Table",
+    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT: "TableComplect-ModalAddWaybill",
+    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-RequiredQuantityCell",
+    MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-CollectedQuantityCell",
+    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX: "ModalAddWaybill-ShipmentDetailsTable-ScladSetSelectedCheckbox",
+    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX: "ModalAddWaybill-ShipmentDetailsTable-StockOrderRow",
+    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX: "-OrderNumberCell",
+    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX: "-RemainingQuantityCell",
+    MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON: "ModalAddWaybill-ControlButtons-ActualizeButton",
+    MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL: "ModalAddWaybill-ShipmentDetailsTable-TotalLeftToDoLabel",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE: "ModalAddWaybill-DetailsTable-Table",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX: "ModalAddWaybill-DetailsTable-Row",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX: "-NameCell",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX: "-QuantityCell",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX: "-InKitsCell",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX: "-FreeQuantityCell",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_SCLAD_NEED_CELL_SUFFIX: "-ScladNeedCell",
+    MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX: "-NeedCell",
+    TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX: "TableComplect-ModalAddWaybill",
+    TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX: "-CircleProgress-Wrapper",
+    OSTATK_PCBD_MODAL_DETAL_PREFIX: "OstatkPCBD-ModalDetal",
+    OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX: "-InformationName-Name",
+    OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX: "-Buttons-ShowFullInformationButton"
+};
 
 export const runERP_969_2 = () => {
     test("ERP-969-2 - Create 2 details and СБ assembly containing both details", async ({ page }) => {
@@ -117,15 +120,15 @@ export const runERP_969_2 = () => {
             await page.waitForLoadState("networkidle");
 
             // Clean up existing detail 1
-            await detailsPage.cleanupTestDetail(page, DETAIL_1_NAME, PARTS_PAGE_DETAL_TABLE);
+            await detailsPage.cleanupTestDetail(page, DETAIL_1_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
             await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
             // Clean up existing detail 2
-            await detailsPage.cleanupTestDetail(page, DETAIL_2_NAME, PARTS_PAGE_DETAL_TABLE);
+            await detailsPage.cleanupTestDetail(page, DETAIL_2_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
             await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
             // Clean up existing assembly
-            await detailsPage.cleanupTestDetail(page, ASSEMBLY_NAME, MAIN_PAGE_СБ_TABLE);
+            await detailsPage.cleanupTestDetail(page, ASSEMBLY_NAME, CONST.MAIN_PAGE_СБ_TABLE);
             await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
         });
 
@@ -138,12 +141,12 @@ export const runERP_969_2 = () => {
             await page.waitForLoadState("networkidle");
 
             // Fill detail name
-            await detailsPage.fillDetailName(DETAIL_1_NAME, ADD_DETAL_INFORMATION_INPUT_INPUT);
+            await detailsPage.fillDetailName(DETAIL_1_NAME, CONST.ADD_DETAL_INFORMATION_INPUT_INPUT);
 
             // Save the detail
-            const saveButton = page.locator(`[data-testid="${ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
+            const saveButton = page.locator(`[data-testid="${CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
             await detailsPage.highlightElement(saveButton);
-            await detailsPage.findAndClickElement(page, ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
+            await detailsPage.findAndClickElement(page, CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
 
@@ -151,21 +154,21 @@ export const runERP_969_2 = () => {
             await detailsPage.verifyDetailSuccessMessage("Деталь успешно создана");
 
             // Verify we're now in edit mode (page transitioned from add to edit)
-            const editPageTitle = page.locator(`[data-testid="${EDIT_DETAL_TITLE}"]`);
+            const editPageTitle = page.locator(`[data-testid="${CONST.EDIT_DETAL_TITLE}"]`);
             await expect(editPageTitle).toBeVisible();
         });
 
         await allure.step(`Step 3: Verify first detail "${DETAIL_1_NAME}" was saved`, async () => {
             // Click cancel to return to listing
-            const cancelButton = page.locator(`[data-testid="${EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
+            const cancelButton = page.locator(`[data-testid="${CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
             await detailsPage.highlightElement(cancelButton);
-            await detailsPage.findAndClickElement(page, EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL, 500);
+            await detailsPage.findAndClickElement(page, CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL, 500);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
 
             // Search for the detail in the table
-            const detalTable = page.locator(`[data-testid="${PARTS_PAGE_DETAL_TABLE}"]`);
-            const detailSearchInput = detalTable.locator(`[data-testid="${PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
+            const detalTable = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
+            const detailSearchInput = detalTable.locator(`[data-testid="${CONST.PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
             await expect(detailSearchInput).toBeVisible();
             await detailSearchInput.fill(DETAIL_1_NAME);
             await detailSearchInput.press("Enter");
@@ -193,12 +196,12 @@ export const runERP_969_2 = () => {
             await page.waitForLoadState("networkidle");
 
             // Fill detail name
-            await detailsPage.fillDetailName(DETAIL_2_NAME, ADD_DETAL_INFORMATION_INPUT_INPUT);
+            await detailsPage.fillDetailName(DETAIL_2_NAME, CONST.ADD_DETAL_INFORMATION_INPUT_INPUT);
 
             // Save the detail
-            const saveButton = page.locator(`[data-testid="${ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
+            const saveButton = page.locator(`[data-testid="${CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
             await detailsPage.highlightElement(saveButton);
-            await detailsPage.findAndClickElement(page, ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
+            await detailsPage.findAndClickElement(page, CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
 
@@ -206,21 +209,21 @@ export const runERP_969_2 = () => {
             await detailsPage.verifyDetailSuccessMessage("Деталь успешно создана");
 
             // Verify we're now in edit mode (page transitioned from add to edit)
-            const editPageTitle = page.locator(`[data-testid="${EDIT_DETAL_TITLE}"]`);
+            const editPageTitle = page.locator(`[data-testid="${CONST.EDIT_DETAL_TITLE}"]`);
             await expect(editPageTitle).toBeVisible();
         });
 
         await allure.step(`Step 5: Verify second detail "${DETAIL_2_NAME}" was saved`, async () => {
             // Click cancel to return to listing
-            const cancelButton = page.locator(`[data-testid="${EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
+            const cancelButton = page.locator(`[data-testid="${CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
             await detailsPage.highlightElement(cancelButton);
-            await detailsPage.findAndClickElement(page, EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL, 500);
+            await detailsPage.findAndClickElement(page, CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL, 500);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
 
             // Search for the detail in the table
-            const detalTable = page.locator(`[data-testid="${PARTS_PAGE_DETAL_TABLE}"]`);
-            const detailSearchInput = detalTable.locator(`[data-testid="${PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
+            const detalTable = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
+            const detailSearchInput = detalTable.locator(`[data-testid="${CONST.PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD}"]`);
             await expect(detailSearchInput).toBeVisible();
             await detailSearchInput.fill(DETAIL_2_NAME);
             await detailSearchInput.press("Enter");
@@ -248,17 +251,17 @@ export const runERP_969_2 = () => {
             await page.waitForLoadState("networkidle");
 
             // Open the create dialog
-            const createButton = page.locator(`[data-testid="${BASE_DETALS_BUTTON_CREATE}"]`);
+            const createButton = page.locator(`[data-testid="${CONST.BASE_DETALS_BUTTON_CREATE}"]`);
             await detailsPage.highlightElement(createButton);
-            await detailsPage.findAndClickElement(page, BASE_DETALS_BUTTON_CREATE, 500);
+            await detailsPage.findAndClickElement(page, CONST.BASE_DETALS_BUTTON_CREATE, 500);
 
             // Select СБ (assembly) type
-            const assemblyTypeButton = page.locator(`[data-testid="${BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS}"]`);
+            const assemblyTypeButton = page.locator(`[data-testid="${CONST.BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS}"]`);
             await detailsPage.highlightElement(assemblyTypeButton);
-            await detailsPage.findAndClickElement(page, BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS, 500);
+            await detailsPage.findAndClickElement(page, CONST.BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS, 500);
 
             // Fill in the assembly name
-            const assemblyInput = page.locator(`[data-testid="${CREATOR_INFORMATION_INPUT}"]`);
+            const assemblyInput = page.locator(`[data-testid="${CONST.CREATOR_INFORMATION_INPUT}"]`);
             await expect(assemblyInput).toBeVisible({ timeout: 5000 });
             await assemblyInput.fill(ASSEMBLY_NAME);
 
@@ -271,7 +274,7 @@ export const runERP_969_2 = () => {
             await detailsPage.verifyDetailSuccessMessage("Деталь добавлена в спецификацию");
 
             // Verify both details are now in the specification table
-            const specsTable = page.locator(`[data-testid="${EDITOR_TABLE_SPECIFICATION_CBED}"]`);
+            const specsTable = page.locator(`[data-testid="${CONST.EDITOR_TABLE_SPECIFICATION_CBED}"]`);
             await expect(specsTable).toBeVisible({ timeout: 5000 });
 
             const specRows = specsTable.locator("tbody tr");
@@ -294,9 +297,9 @@ export const runERP_969_2 = () => {
             }
 
             // Save the assembly with the added details
-            const saveButton = page.locator(`[data-testid="${CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
+            const saveButton = page.locator(`[data-testid="${CONST.CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`);
             await detailsPage.highlightElement(saveButton);
-            await detailsPage.findAndClickElement(page, CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
+            await detailsPage.findAndClickElement(page, CONST.CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, 500);
             await page.waitForTimeout(1000);
             await page.waitForLoadState("networkidle");
 
@@ -305,8 +308,8 @@ export const runERP_969_2 = () => {
 
             // Verify the assembly was created successfully by checking if we're still on the creator page
             // or if we've been redirected to the listing page
-            const creatorPage = page.locator(`[data-testid="${CREATOR_TITLE}"]`);
-            const listingPage = page.locator(`[data-testid="${PARTS_PAGE_DETAL_TABLE}"]`);
+            const creatorPage = page.locator(`[data-testid="${CONST.CREATOR_TITLE}"]`);
+            const listingPage = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
 
             // Check if we're still on creator page or have been redirected to listing
             const isCreatorPage = await creatorPage.isVisible().catch(() => false);
@@ -319,21 +322,21 @@ export const runERP_969_2 = () => {
 
         await allure.step(`Step 7: Verify assembly "${ASSEMBLY_NAME}" was saved`, async () => {
             // Check if we're already on the listing page, if not navigate there
-            const listingPage = page.locator(`[data-testid="${PARTS_PAGE_DETAL_TABLE}"]`);
+            const listingPage = page.locator(`[data-testid="${CONST.PARTS_PAGE_DETAL_TABLE}"]`);
             const isOnListingPage = await listingPage.isVisible().catch(() => false);
 
             if (!isOnListingPage) {
                 // We're still on the creator page, click cancel to return to listing
-                const cancelButton = page.locator(`[data-testid="${CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
+                const cancelButton = page.locator(`[data-testid="${CONST.CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`);
                 await detailsPage.highlightElement(cancelButton);
-                await detailsPage.findAndClickElement(page, CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL, 500);
+                await detailsPage.findAndClickElement(page, CONST.CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL, 500);
                 await page.waitForTimeout(1000);
                 await page.waitForLoadState("networkidle");
             }
 
             // Search for the assembly in the СБ table (not the details table)
-            const cbedTable = page.locator(`table[data-testid="${MAIN_PAGE_СБ_TABLE}"]`);
-            const assemblySearchInput = cbedTable.locator(`[data-testid="${BASE_DETAIL_CB_TABLE_SEARCH}"]`);
+            const cbedTable = page.locator(`table[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
+            const assemblySearchInput = cbedTable.locator(`[data-testid="${CONST.BASE_DETAIL_CB_TABLE_SEARCH}"]`);
             await expect(assemblySearchInput).toBeVisible();
             await assemblySearchInput.fill(ASSEMBLY_NAME);
             await assemblySearchInput.press("Enter");
@@ -362,9 +365,9 @@ export const runERP_969_2 = () => {
             await page.waitForLoadState("networkidle");
 
             // Search for the assembly in СБ table
-            const cbedTable = page.locator(`[data-testid="${MAIN_PAGE_СБ_TABLE}"]`);
+            const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
             await detailsPage.highlightElement(cbedTable);
-            const assemblySearchInput = cbedTable.locator(`[data-testid="${BASE_DETAIL_CB_TABLE_SEARCH}"]`);
+            const assemblySearchInput = cbedTable.locator(`[data-testid="${CONST.BASE_DETAIL_CB_TABLE_SEARCH}"]`);
             await detailsPage.highlightElement(assemblySearchInput);
             await expect(assemblySearchInput).toBeVisible();
 
@@ -425,14 +428,14 @@ export const runERP_969_2 = () => {
             await page.waitForTimeout(1000);
 
             // Click the edit button to open the assembly
-            const editButton = page.locator(`[data-testid="${MAIN_PAGE_EDIT_BUTTON}"]`);
+            const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
             await expect(editButton).toBeVisible();
             await detailsPage.highlightElement(editButton);
             await editButton.click();
             await page.waitForTimeout(1000);
 
             // Verify both details are in the specification table
-            const specsTable = page.locator(`[data-testid="${EDITOR_TABLE_SPECIFICATION_CBED}"]`);
+            const specsTable = page.locator(`[data-testid="${CONST.EDITOR_TABLE_SPECIFICATION_CBED}"]`);
             await expect(specsTable).toBeVisible({ timeout: 5000 });
 
             const specRows = specsTable.locator("tbody tr");
@@ -468,23 +471,23 @@ export const runERP_969_2 = () => {
             await revisionPage.waitForLoadState("networkidle");
 
             // Click the revision button
-            const revisionButton = revisionPage.locator(`[data-testid="${SCLAD_REVISION_REVISION}"]`);
+            const revisionButton = revisionPage.locator(`[data-testid="${CONST.SCLAD_REVISION_REVISION}"]`);
             await detailsPage.highlightElement(revisionButton);
             await expect(revisionButton).toBeVisible();
             await revisionButton.click();
             await revisionPage.waitForTimeout(500);
 
             // Select the Детали (details) tab
-            const detailsTab = revisionPage.locator(`[data-testid="${REVISION_SWITCH_ITEM2}"]`);
+            const detailsTab = revisionPage.locator(`[data-testid="${CONST.REVISION_SWITCH_ITEM2}"]`);
             await detailsPage.highlightElement(detailsTab);
             await expect(detailsTab).toBeVisible();
             await detailsTab.click();
             await revisionPage.waitForTimeout(500);
 
             // Find the search input and search for the first detail
-            const revisionTable = revisionPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_TABLE}"]`);
+            const revisionTable = revisionPage.locator(`[data-testid="${CONST.TABLE_REVISION_PAGINATION_TABLE}"]`);
             await detailsPage.highlightElement(revisionTable);
-            const searchInput = revisionTable.locator(`[data-testid="${TABLE_REVISION_PAGINATION_SEARCH_INPUT}"]`);
+            const searchInput = revisionTable.locator(`[data-testid="${CONST.TABLE_REVISION_PAGINATION_SEARCH_INPUT}"]`);
             await expect(searchInput).toBeVisible();
 
             // Clear any existing search first
@@ -529,7 +532,7 @@ export const runERP_969_2 = () => {
                     await expect(fourthCell).toBeVisible();
 
                     // Inside the cell, locate the input with data-testid "InputNumber-Input"
-                    const editField = fourthCell.locator(`[data-testid="${INPUT_NUMBER_INPUT}"]`);
+                    const editField = fourthCell.locator(`[data-testid="${CONST.INPUT_NUMBER_INPUT}"]`);
                     await expect(editField).toBeVisible();
 
                     // Fill in "5" and press Enter to submit the change
@@ -538,11 +541,11 @@ export const runERP_969_2 = () => {
                     await revisionPage.waitForLoadState("networkidle");
 
                     // Confirm the update in the confirmation dialog
-                    const confirmDialog = revisionPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_CONFIRM_DIALOG}"]`);
+                    const confirmDialog = revisionPage.locator(`[data-testid="${CONST.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG}"]`);
                     await expect(confirmDialog).toBeVisible({ timeout: 5000 });
 
                     // In the dialog, find and click the approve button
-                    const confirmButton = confirmDialog.locator(`[data-testid="${TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE}"]`);
+                    const confirmButton = confirmDialog.locator(`[data-testid="${CONST.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE}"]`);
                     await expect(confirmButton).toBeVisible();
                     await detailsPage.highlightElement(confirmButton);
                     await revisionPage.waitForTimeout(1000);
@@ -596,7 +599,7 @@ export const runERP_969_2 = () => {
                     await expect(fourthCell2).toBeVisible();
 
                     // Inside the cell, locate the input with data-testid "InputNumber-Input"
-                    const editField2 = fourthCell2.locator(`[data-testid="${INPUT_NUMBER_INPUT}"]`);
+                    const editField2 = fourthCell2.locator(`[data-testid="${CONST.INPUT_NUMBER_INPUT}"]`);
                     await expect(editField2).toBeVisible();
 
                     // Fill in "5" and press Enter to submit the change
@@ -605,11 +608,11 @@ export const runERP_969_2 = () => {
                     await revisionPage.waitForLoadState("networkidle");
 
                     // Confirm the update in the confirmation dialog
-                    const confirmDialog2 = revisionPage.locator(`[data-testid="${TABLE_REVISION_PAGINATION_CONFIRM_DIALOG}"]`);
+                    const confirmDialog2 = revisionPage.locator(`[data-testid="${CONST.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG}"]`);
                     await expect(confirmDialog2).toBeVisible({ timeout: 5000 });
 
                     // In the dialog, find and click the approve button
-                    const confirmButton2 = confirmDialog2.locator(`[data-testid="${TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE}"]`);
+                    const confirmButton2 = confirmDialog2.locator(`[data-testid="${CONST.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE}"]`);
                     await expect(confirmButton2).toBeVisible();
                     await detailsPage.highlightElement(confirmButton2);
                     await revisionPage.waitForTimeout(1000);
@@ -632,34 +635,34 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForLoadState("networkidle");
 
             // Click the ordering suppliers button
-            const orderingSuppliersButton = warehousePage.locator(`[data-testid="${SCLAD_ORDERING_SUPPLIERS}"]`);
+            const orderingSuppliersButton = warehousePage.locator(`[data-testid="${CONST.SCLAD_ORDERING_SUPPLIERS}"]`);
             await orderingSuppliersButton.click();
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
 
             // Click the create order button
-            const createOrderButton = warehousePage.locator(`[data-testid="${ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON}"]`);
+            const createOrderButton = warehousePage.locator(`[data-testid="${CONST.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON}"]`);
             await createOrderButton.click();
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
 
             // Verify the supplier order creation modal is visible
-            const supplierModal = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"]`);
+            const supplierModal = warehousePage.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"]`);
             await expect(supplierModal).toBeVisible({ timeout: 5000 });
 
             //Click the assemblies operation button 
-            const assembliesButton = warehousePage.locator(`[data-testid="${SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES}"]`);
+            const assembliesButton = warehousePage.locator(`[data-testid="${CONST.SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES}"]`);
             await assembliesButton.click();
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
 
-            const dialog = warehousePage.locator(`dialog[data-testid="${MODAL_ADD_ORDER_DIALOG}"][open]`);
+            const dialog = warehousePage.locator(`dialog[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG}"][open]`);
             await expect(dialog).toBeVisible({ timeout: 5000 });
             await detailsPage.highlightElement(dialog);
             await warehousePage.waitForTimeout(5000);
 
             // Verify the modal title
-            const modalTitle = dialog.locator(`h4[data-testid="${MODAL_TITLE}"]`);
+            const modalTitle = dialog.locator(`h4[data-testid="${CONST.MODAL_TITLE}"]`);
             await detailsPage.highlightElement(modalTitle);
             await modalTitle.evaluate((el: HTMLElement) => {
                 el.style.backgroundColor = 'red';
@@ -684,11 +687,11 @@ export const runERP_969_2 = () => {
             }
 
             //Verify the production table is visible
-            const productionTable = warehousePage.locator(`table[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE}"]`).first();
+            const productionTable = warehousePage.locator(`table[data-testid="${CONST.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE}"]`).first();
             await expect(productionTable).toBeVisible({ timeout: 5000 });
 
             // Find and fill the search input
-            const searchInput = productionTable.locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT}"]`);
+            const searchInput = productionTable.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT}"]`);
             await detailsPage.highlightElement(searchInput);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
             await searchInput.fill(ASSEMBLY_NAME);
@@ -706,14 +709,14 @@ export const runERP_969_2 = () => {
             await checkbox.click();
 
             // Click the order button without selecting checkbox (should show warning)
-            const orderButton = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}"]`);
+            const orderButton = warehousePage.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}"]`);
             await detailsPage.highlightElement(orderButton);
             await orderButton.click();
             await warehousePage.waitForTimeout(500);
             await warehousePage.waitForLoadState("networkidle");
 
             //now find th ebottom table  via it's top div:ModallAddStockOrderSupply-Main-Content-Block2
-            const bottomTable = warehousePage.locator(`table[data-testid="${MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`);
+            const bottomTable = warehousePage.locator(`table[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`);
             await detailsPage.highlightElement(bottomTable);
             await expect(bottomTable).toBeVisible({ timeout: 5000 });
             const bottomRows = bottomTable.locator("tbody tr");
@@ -721,7 +724,7 @@ export const runERP_969_2 = () => {
             console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${ASSEMBLY_NAME}".`);
             expect(bottomRowCount).toBe(1);
 
-            const quantityInput = bottomRows.first().locator(`[data-testid^="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="${MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`);
+            const quantityInput = bottomRows.first().locator(`[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`);
             await quantityInput.evaluate((element) => {
                 element.style.border = "2px solid red";
                 element.style.backgroundColor = "red";
@@ -732,7 +735,7 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(500);
 
             // Verify the production start modal is visible
-            const startProductionButton = warehousePage.locator(`[data-testid="${MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`);
+            const startProductionButton = warehousePage.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`);
             await startProductionButton.evaluate((element) => {
                 element.style.border = "2px solid red";
                 element.style.backgroundColor = "yellow";
@@ -761,11 +764,11 @@ export const runERP_969_2 = () => {
         await allure.step("Step 12: Search for the created order in the order table", async () => {
             // Verify the order table is visible
             await warehousePage.waitForLoadState("networkidle");
-            const orderTable = warehousePage.locator(`table[data-testid="${ORDER_SUPPLIERS_TABLE_ORDER_TABLE}"]`);
+            const orderTable = warehousePage.locator(`table[data-testid="${CONST.ORDER_SUPPLIERS_TABLE_ORDER_TABLE}"]`);
             await expect(orderTable).toBeVisible({ timeout: 5000 });
 
             // Find and fill the search input with the captured order number
-            const searchInput = orderTable.locator(`[data-testid="${MAIN_SEARCH_COVER_INPUT}"]`);
+            const searchInput = orderTable.locator(`[data-testid="${CONST.MAIN_SEARCH_COVER_INPUT}"]`);
             await expect(searchInput).toBeVisible({ timeout: 5000 });
 
             // Ensure orderNumber is not null before using it
@@ -854,7 +857,7 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(1000);
 
             // Verify the modal is visible
-            const orderModal = warehousePage.locator(`dialog[data-testid^="${ORDER_MODAL}"]`);
+            const orderModal = warehousePage.locator(`dialog[data-testid^="${CONST.ORDER_MODAL}"]`);
             await detailsPage.highlightElement(orderModal, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -916,7 +919,7 @@ export const runERP_969_2 = () => {
             });
 
             // Find and verify the table contents
-            const table = orderModal.locator(`[data-testid="${ORDER_MODAL_TABLE}"]`);
+            const table = orderModal.locator(`[data-testid="${CONST.ORDER_MODAL_TABLE}"]`);
             await detailsPage.highlightElement(table, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1005,23 +1008,23 @@ export const runERP_969_2 = () => {
         await allure.step("Step 14: go to the warehouse page and click the Комплектация сборок на план button", async () => {
             await warehousePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
             await warehousePage.waitForLoadState("networkidle");
-            await detailsPage.highlightElement(warehousePage.locator(`[data-testid="${SCLAD_COMPLETION_CBED_PLAN}"]`));
+            await detailsPage.highlightElement(warehousePage.locator(`[data-testid="${CONST.SCLAD_COMPLETION_CBED_PLAN}"]`));
             await warehousePage.waitForTimeout(1000);
-            await warehousePage.locator(`[data-testid="${SCLAD_COMPLETION_CBED_PLAN}"]`).click();
+            await warehousePage.locator(`[data-testid="${CONST.SCLAD_COMPLETION_CBED_PLAN}"]`).click();
 
             await warehousePage.waitForTimeout(1000);
         });
 
         await allure.step("Step 15: Search for our СБ in the kitting table and double-click to open modal", async () => {
             // Find TableComplect-TableComplect-Table
-            const kittingTable = warehousePage.locator(`table[data-testid="${TABLE_COMPLECT_TABLE}"]`);
+            const kittingTable = warehousePage.locator(`table[data-testid="${CONST.TABLE_COMPLECT_TABLE}"]`);
             await detailsPage.highlightElement(kittingTable, {
                 border: '2px solid red',
             });
             await expect(kittingTable).toBeVisible({ timeout: 5000 });
 
             // Find input Search-Cover-Input and style it
-            const searchInput = kittingTable.locator(`input[data-testid="${COMPLEX_SBORKA_BY_PLAN}"]`);
+            const searchInput = kittingTable.locator(`input[data-testid="${CONST.COMPLEX_SBORKA_BY_PLAN}"]`);
             await expect(searchInput).toBeVisible({ timeout: 10000 });
             await searchInput.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -1069,11 +1072,11 @@ export const runERP_969_2 = () => {
 
         await allure.step("Step 16: Verify modal details and interact with waybill form", async () => {
             // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
-            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"][open]`);
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"][open]`);
             await expect(waybillModal).toBeVisible({ timeout: 5000 });
 
             // Find cell with id ModalAddWaybill-WaybillDetails-RequiredQuantityCell
-            const requiredQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
+            const requiredQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
             await detailsPage.highlightElement(requiredQuantityCell, {
                 backgroundColor: 'green',
                 border: '2px solid green',
@@ -1091,7 +1094,7 @@ export const runERP_969_2 = () => {
             });
 
             // Find cell with id ModalAddWaybill-WaybillDetails-CollectedQuantityCell
-            const collectedQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
+            const collectedQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
             await detailsPage.highlightElement(collectedQuantityCell, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1109,7 +1112,7 @@ export const runERP_969_2 = () => {
             });
 
             // Find cell with id ModalAddWaybill-WaybillDetails-NameCell
-            const nameCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
+            const nameCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
             await detailsPage.highlightElement(nameCell, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1127,7 +1130,7 @@ export const runERP_969_2 = () => {
             });
 
             // Find input with id ModalAddWaybill-WaybillDetails-OwnQuantityInput
-            const ownQuantityInput = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
+            const ownQuantityInput = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
             await detailsPage.highlightElement(ownQuantityInput, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1148,7 +1151,7 @@ export const runERP_969_2 = () => {
             });
 
             // Find cell with id ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel
-            const totalQuantityLabel = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL}"]`);
+            const totalQuantityLabel = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL}"]`);
             await detailsPage.highlightElement(totalQuantityLabel, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1166,7 +1169,7 @@ export const runERP_969_2 = () => {
             });
 
             // Find cell with id ModalAddWaybill-ShipmentDetailsTable-ScladSetSelectedCheckbox
-            const checkboxCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX}"]`);
+            const checkboxCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX}"]`);
             await detailsPage.highlightElement(checkboxCell, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1179,7 +1182,7 @@ export const runERP_969_2 = () => {
             await warehousePage.waitForTimeout(1000);
 
             // Find cell with id ModalAddWaybill-ShipmentDetailsTable-StockOrderRow46940-OrderNumberCell
-            const orderNumberCell = waybillModal.locator(`[data-testid^="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX}"]`);
+            const orderNumberCell = waybillModal.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX}"]`);
             await expect(orderNumberCell).toBeVisible({ timeout: 5000 });
 
             // Confirm it contains our order number
@@ -1187,7 +1190,7 @@ export const runERP_969_2 = () => {
             expect(orderNumberCellText?.trim()).toContain(orderNumber);
 
             // Find cell with id ModalAddWaybill-ShipmentDetailsTable-StockOrderRow46940-RemainingQuantityCell
-            const remainingQuantityCell = waybillModal.locator(`[data-testid^="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX}"]`);
+            const remainingQuantityCell = waybillModal.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX}"]`);
             await expect(remainingQuantityCell).toBeVisible({ timeout: 5000 });
 
             // Confirm it contains our order quantity
@@ -1195,7 +1198,7 @@ export const runERP_969_2 = () => {
             expect(parseInt(remainingQuantity?.trim() || "0")).toBe(orderedQuantity2);
 
             // Find and click the Complete Set button
-            const completeSetButton = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON}"]`);
+            const completeSetButton = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON}"]`);
             await detailsPage.highlightElement(completeSetButton, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1218,14 +1221,14 @@ export const runERP_969_2 = () => {
         });
         await allure.step("Step 17: Search for our СБ in the kitting table and double-click to open modal", async () => {
             // Find TableComplect-TableComplect-Table
-            const kittingTable = warehousePage.locator(`table[data-testid="${TABLE_COMPLECT_TABLE}"]`);
+            const kittingTable = warehousePage.locator(`table[data-testid="${CONST.TABLE_COMPLECT_TABLE}"]`);
             await detailsPage.highlightElement(kittingTable, {
                 border: '2px solid red',
             });
             await expect(kittingTable).toBeVisible({ timeout: 5000 });
 
             // Find input Search-Cover-Input and style it
-            const searchInput = kittingTable.locator(`input[data-testid="${COMPLEX_SBORKA_BY_PLAN}"]`);
+            const searchInput = kittingTable.locator(`input[data-testid="${CONST.COMPLEX_SBORKA_BY_PLAN}"]`);
             await expect(searchInput).toBeVisible({ timeout: 10000 });
             await searchInput.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -1274,7 +1277,7 @@ export const runERP_969_2 = () => {
             });
 
             // Verify the name cell contains our СБ name using data-testid
-            const nameCell = firstRow.locator(`[data-testid^="${TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${TABLE_COMPLECT_TABLE_ROW_CELL_NAME}"]`);
+            const nameCell = firstRow.locator(`[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_NAME}"]`);
             await detailsPage.highlightElement(nameCell, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1290,7 +1293,7 @@ export const runERP_969_2 = () => {
             });
 
             // Double click the designation cell to open modal using data-testid
-            const designationCell = firstRow.locator(`[data-testid^="${TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION}"]`);
+            const designationCell = firstRow.locator(`[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION}"]`);
             await detailsPage.highlightElement(designationCell, {
                 backgroundColor: 'yellow',
                 border: '2px solid red',
@@ -1309,7 +1312,7 @@ export const runERP_969_2 = () => {
 
         await allure.step("Step 18: Validate waybill modal details and table contents", async () => {
             // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
-            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
             await expect(waybillModal).toBeVisible({ timeout: 5000 });
 
             // Sub-step 18.1: Confirm h4 contains our order number
@@ -1347,7 +1350,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 18.2: Confirm name cell contains our assembly name
             await allure.step("Sub-step 18.2: Confirm name cell contains our assembly name", async () => {
-                const nameCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
+                const nameCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
                 await detailsPage.highlightElement(nameCell, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1367,7 +1370,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 18.3: Confirm required quantity cell contains our original order quantity
             await allure.step("Sub-step 18.3: Confirm required quantity cell contains our original order quantity", async () => {
-                const requiredQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
+                const requiredQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
                 await detailsPage.highlightElement(requiredQuantityCell, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1387,7 +1390,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 18.4: Confirm collected quantity cell contains the number of items we built
             await allure.step("Sub-step 18.4: Confirm collected quantity cell contains the number of items we built", async () => {
-                const collectedQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
+                const collectedQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
                 await detailsPage.highlightElement(collectedQuantityCell, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1413,7 +1416,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 18.5: Confirm own quantity input contains original order quantity minus collected
             await allure.step("Sub-step 18.5: Confirm own quantity input contains original order quantity minus collected", async () => {
-                const ownQuantityInput = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
+                const ownQuantityInput = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
                 await detailsPage.highlightElement(ownQuantityInput, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1436,7 +1439,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 18.6: Confirm progress wrapper contains completion percentage
             await allure.step("Sub-step 18.6: Confirm progress wrapper contains completion percentage", async () => {
-                const progressWrapper = waybillModal.locator(`[data-testid^="${TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`).first();
+                const progressWrapper = waybillModal.locator(`[data-testid^="${CONST.TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`).first();
                 await detailsPage.highlightElement(progressWrapper, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1446,8 +1449,8 @@ export const runERP_969_2 = () => {
                 await expect(progressWrapper).toBeVisible({ timeout: 5000 });
 
                 // Get collected and required quantities for percentage calculation
-                const collectedQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
-                const requiredQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
+                const collectedQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
+                const requiredQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
 
                 const collectedQuantity = parseInt(await collectedQuantityCell.textContent() || "0");
                 const requiredQuantity = parseInt(await requiredQuantityCell.textContent() || "0");
@@ -1509,7 +1512,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 18.9: Confirm total left to do label contains correct value
             await allure.step("Sub-step 18.9: Confirm total left to do label contains correct value", async () => {
-                const totalLeftToDoLabel = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL}"]`);
+                const totalLeftToDoLabel = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL}"]`);
                 await detailsPage.highlightElement(totalLeftToDoLabel, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1529,7 +1532,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 18.10: Validate details table contents
             await allure.step("Sub-step 18.10: Validate details table contents", async () => {
-                const detailsTable = waybillModal.locator(`table[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE}"]`);
+                const detailsTable = waybillModal.locator(`table[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE}"]`);
                 await detailsPage.highlightElement(detailsTable, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1556,7 +1559,7 @@ export const runERP_969_2 = () => {
                     });
                     await warehousePage.waitForTimeout(1000);
                     // Get the detail name for this row
-                    const nameCell = row.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
+                    const nameCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
 
                     // Check if the name cell exists and is visible
                     const nameCellExists = await nameCell.count();
@@ -1588,7 +1591,7 @@ export const runERP_969_2 = () => {
                     // Only validate details if this row contains one of our details
                     if (detailName?.trim() === DETAIL_1_NAME || detailName?.trim() === DETAIL_2_NAME) {
                         // Validate quantity cell (should be 9 - what we put in stock)
-                        const quantityCell = row.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
+                        const quantityCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
                         await detailsPage.highlightElement(quantityCell, {
                             backgroundColor: 'yellow',
                             border: '2px solid red',
@@ -1600,7 +1603,7 @@ export const runERP_969_2 = () => {
                         expect(parseInt(quantityValue?.trim() || "0")).toBe(parseInt(DETAIL_NEW_QUANTITY));
 
                         // Validate in kits cell (should be 0 initially, but could be more from previous builds)
-                        const inKitsCell = row.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
+                        const inKitsCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
                         await detailsPage.highlightElement(inKitsCell, {
                             backgroundColor: 'yellow',
                             border: '2px solid red',
@@ -1614,7 +1617,7 @@ export const runERP_969_2 = () => {
                         expect(inKitsValueNum).toBeLessThanOrEqual(parseInt(DETAIL_NEW_QUANTITY));
 
                         // Validate free quantity cell (quantity - in kits)
-                        const freeQuantityCell = row.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
+                        const freeQuantityCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
                         await detailsPage.highlightElement(freeQuantityCell, {
                             backgroundColor: 'yellow',
                             border: '2px solid red',
@@ -1631,7 +1634,7 @@ export const runERP_969_2 = () => {
                         expect(freeValue).toBe(expectedFreeQuantity);
 
                         // Validate sclad need cell (total demand for this part)
-                        const scladNeedCell = row.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_SCLAD_NEED_CELL_SUFFIX}"]`);
+                        const scladNeedCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_SCLAD_NEED_CELL_SUFFIX}"]`);
                         await detailsPage.highlightElement(scladNeedCell, {
                             backgroundColor: 'yellow',
                             border: '2px solid red',
@@ -1648,7 +1651,7 @@ export const runERP_969_2 = () => {
                         expect(scladNeedValueNum).toBeGreaterThanOrEqual(0);
 
                         // Validate need cell (our order quantity minus in kits)
-                        const needCell = row.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
+                        const needCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
                         await detailsPage.highlightElement(needCell, {
                             backgroundColor: 'yellow',
                             border: '2px solid red',
@@ -1682,11 +1685,11 @@ export const runERP_969_2 = () => {
 
         await allure.step("Step 19: Click on detail name cells and interact with modal", async () => {
             // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
-            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
             await expect(waybillModal).toBeVisible({ timeout: 5000 });
 
             // Find the details table
-            const detailsTable = waybillModal.locator(`table[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE}"]`);
+            const detailsTable = waybillModal.locator(`table[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE}"]`);
             await expect(detailsTable).toBeVisible({ timeout: 5000 });
 
             // Get all detail rows
@@ -1699,7 +1702,7 @@ export const runERP_969_2 = () => {
                 const row = detailRows.nth(i);
 
                 // Get the detail name for this row
-                const nameCell = row.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
+                const nameCell = row.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
 
                 // Check if the name cell exists
                 const nameCellExists = await nameCell.count();
@@ -1736,12 +1739,12 @@ export const runERP_969_2 = () => {
                     await warehousePage.waitForTimeout(1000);
 
                     // Find the modal dialog that starts with OstatkPCBD-ModalDetal
-                    const modalDialog = warehousePage.locator(`dialog[data-testid^="${OSTATK_PCBD_MODAL_DETAL_PREFIX}"]`);
+                    const modalDialog = warehousePage.locator(`dialog[data-testid^="${CONST.OSTATK_PCBD_MODAL_DETAL_PREFIX}"]`);
                     await expect(modalDialog).toBeVisible({ timeout: 5000 });
 
                     // Find and validate the modal title matches the detail name
                     // The pattern is OstatkPCBD-ModalDetal{number}-InformationName-Name
-                    const modalTitleElement = modalDialog.locator(`[data-testid^="${OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX}"]`);
+                    const modalTitleElement = modalDialog.locator(`[data-testid^="${CONST.OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${CONST.OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX}"]`);
                     await expect(modalTitleElement).toBeVisible({ timeout: 5000 });
 
                     // Get the modal title text and validate it matches the detail name
@@ -1751,7 +1754,7 @@ export const runERP_969_2 = () => {
                     expect(modalTitleText?.trim()).toBe(detailName?.trim());
 
                     // Find and click the show full information button
-                    const showFullInfoButton = modalDialog.locator(`[data-testid^="${OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX}"]`);
+                    const showFullInfoButton = modalDialog.locator(`[data-testid^="${CONST.OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${CONST.OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX}"]`);
                     await expect(showFullInfoButton).toBeVisible({ timeout: 5000 });
 
                     // Click the button - this will open a new tab with the edit detail page
@@ -1774,7 +1777,7 @@ export const runERP_969_2 = () => {
                     await newTab.waitForTimeout(1000);
 
                     // Verify the name field contains the correct detail name
-                    const nameField = newTab.locator(`[data-testid="${EDIT_DETAL_INFORMATION_INPUT_INPUT}"]`);
+                    const nameField = newTab.locator(`[data-testid="${CONST.EDIT_DETAL_INFORMATION_INPUT_INPUT}"]`);
                     await expect(nameField).toBeVisible({ timeout: 5000 });
                     const nameFieldValue = await nameField.inputValue();
                     console.log(`Name field value: "${nameFieldValue}"`);
@@ -1790,7 +1793,7 @@ export const runERP_969_2 = () => {
                     await newTab.waitForTimeout(1000);
 
                     // Click the Archive button
-                    const archiveButton = newTab.locator(`button[data-testid="${EDIT_PARTS_PAGE_ARCHIVE_BUTTON}"]`);
+                    const archiveButton = newTab.locator(`button[data-testid="${CONST.EDIT_PARTS_PAGE_ARCHIVE_BUTTON}"]`);
                     await expect(archiveButton).toBeVisible({ timeout: 5000 });
 
                     // Highlight the archive button
@@ -1807,7 +1810,7 @@ export const runERP_969_2 = () => {
                     await newTab.waitForTimeout(1000);
 
                     // Find the archive confirmation dialog
-                    const archiveConfirmDialog = newTab.locator(`[data-testid="${ARCHIVE_MODAL_CONFIRM_DIALOG}"]`);
+                    const archiveConfirmDialog = newTab.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG}"]`);
                     await expect(archiveConfirmDialog).toBeVisible({ timeout: 5000 });
 
                     // Highlight the confirmation dialog
@@ -1819,7 +1822,7 @@ export const runERP_969_2 = () => {
                     await newTab.waitForTimeout(1000);
 
                     // Find and highlight the Yes button
-                    const yesButton = archiveConfirmDialog.locator(`[data-testid="${ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON}"]`);
+                    const yesButton = archiveConfirmDialog.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON}"]`);
                     await expect(yesButton).toBeVisible({ timeout: 5000 });
 
                     // Highlight the Yes button
@@ -1857,11 +1860,11 @@ export const runERP_969_2 = () => {
 
         await allure.step("Step 20: Click the actualize button to reload the waybill modal", async () => {
             // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
-            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
             await expect(waybillModal).toBeVisible({ timeout: 5000 });
 
             // Find and highlight the actualize button
-            const actualizeButton = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON}"]`);
+            const actualizeButton = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_CONTROL_BUTTONS_ACTUALIZE_BUTTON}"]`);
             await expect(actualizeButton).toBeVisible({ timeout: 5000 });
 
             await detailsPage.highlightElement(actualizeButton, {
@@ -1883,12 +1886,12 @@ export const runERP_969_2 = () => {
 
         await allure.step("Step 21: Validate cell values after reload", async () => {
             // Find the dialog with id ModalAddWaybill-WaybillDetails-Right
-            const waybillModal = warehousePage.locator(`dialog[data-testid^="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
+            const waybillModal = warehousePage.locator(`dialog[data-testid^="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"]`);
             await expect(waybillModal).toBeVisible({ timeout: 5000 });
 
             // Sub-step 21.1: Validate required quantity cell returns to original order quantity
             await allure.step("Sub-step 21.1: Validate required quantity cell returns to original order quantity", async () => {
-                const requiredQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
+                const requiredQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
                 await detailsPage.highlightElement(requiredQuantityCell, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1907,7 +1910,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 21.2: Validate collected quantity cell is 0
             await allure.step("Sub-step 21.2: Validate collected quantity cell is 0", async () => {
-                const collectedQuantityCell = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
+                const collectedQuantityCell = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
                 await detailsPage.highlightElement(collectedQuantityCell, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1926,7 +1929,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 21.3: Validate own quantity input is original order quantity
             await allure.step("Sub-step 21.3: Validate own quantity input is original order quantity", async () => {
-                const ownQuantityInput = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
+                const ownQuantityInput = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
                 await detailsPage.highlightElement(ownQuantityInput, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1945,7 +1948,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 21.4: Validate progress wrapper shows 0%
             await allure.step("Sub-step 21.4: Validate progress wrapper shows 0%", async () => {
-                const progressWrapper = waybillModal.locator(`[data-testid^="${TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`).first();
+                const progressWrapper = waybillModal.locator(`[data-testid^="${CONST.TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`).first();
                 await detailsPage.highlightElement(progressWrapper, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -1985,7 +1988,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 21.6: Validate total left to do label
             await allure.step("Sub-step 21.6: Validate total left to do label", async () => {
-                const totalLeftToDoLabel = waybillModal.locator(`[data-testid="${MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL}"]`);
+                const totalLeftToDoLabel = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL}"]`);
                 await detailsPage.highlightElement(totalLeftToDoLabel, {
                     backgroundColor: 'yellow',
                     border: '2px solid red',
@@ -2004,7 +2007,7 @@ export const runERP_969_2 = () => {
 
             // Sub-step 21.7: Validate details table row values
             await allure.step("Sub-step 21.7: Validate details table row values", async () => {
-                const detailsTable = waybillModal.locator(`table[data-testid="${MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE}"]`);
+                const detailsTable = waybillModal.locator(`table[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_TABLE}"]`);
                 await expect(detailsTable).toBeVisible({ timeout: 5000 });
 
                 // Get the first row (should be the remaining detail after archiving one)
@@ -2016,12 +2019,12 @@ export const runERP_969_2 = () => {
                     const firstRow = detailRows.first();
 
                     // Get the detail name from the first row
-                    const nameCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
+                    const nameCell = firstRow.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
                     const detailName = await nameCell.textContent();
                     console.log(`Validating detail: "${detailName}"`);
 
                     // Validate need cell contains original order quantity
-                    const needCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
+                    const needCell = firstRow.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
                     await detailsPage.highlightElement(needCell, {
                         backgroundColor: 'yellow',
                         border: '2px solid red',
@@ -2038,7 +2041,7 @@ export const runERP_969_2 = () => {
                     });
 
                     // Validate deficit cell (quantity needed minus available)
-                    const deficitCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="-DeficitCell"]`);
+                    const deficitCell = firstRow.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="-DeficitCell"]`);
                     await detailsPage.highlightElement(deficitCell, {
                         backgroundColor: 'yellow',
                         border: '2px solid red',
@@ -2061,7 +2064,7 @@ export const runERP_969_2 = () => {
                     });
 
                     // Validate free quantity cell and click to verify
-                    const freeQuantityCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
+                    const freeQuantityCell = firstRow.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
                     await detailsPage.highlightElement(freeQuantityCell, {
                         backgroundColor: 'yellow',
                         border: '2px solid red',
@@ -2087,7 +2090,7 @@ export const runERP_969_2 = () => {
                     });
 
                     // Validate quantity cell and click to verify
-                    const quantityCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
+                    const quantityCell = firstRow.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
                     await detailsPage.highlightElement(quantityCell, {
                         backgroundColor: 'yellow',
                         border: '2px solid red',
@@ -2109,7 +2112,7 @@ export const runERP_969_2 = () => {
                     });
 
                     // Validate in kits cell is 0 and click to verify
-                    const inKitsCell = firstRow.locator(`[data-testid^="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
+                    const inKitsCell = firstRow.locator(`[data-testid^="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
                     await detailsPage.highlightElement(inKitsCell, {
                         backgroundColor: 'yellow',
                         border: '2px solid red',
@@ -2145,14 +2148,14 @@ export const runERP_969_2 = () => {
         //     await page.waitForLoadState("networkidle");
 
         //     // Archive the assembly
-        //     await detailsPage.cleanupTestDetail(page, ASSEMBLY_NAME, MAIN_PAGE_СБ_TABLE);
+        //     await detailsPage.cleanupTestDetail(page, ASSEMBLY_NAME, CONST.MAIN_PAGE_СБ_TABLE);
         //     await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
         //     // Archive both details
-        //     await detailsPage.cleanupTestDetail(page, DETAIL_1_NAME, PARTS_PAGE_DETAL_TABLE);
+        //     await detailsPage.cleanupTestDetail(page, DETAIL_1_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
         //     await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
-        //     await detailsPage.cleanupTestDetail(page, DETAIL_2_NAME, PARTS_PAGE_DETAL_TABLE);
+        //     await detailsPage.cleanupTestDetail(page, DETAIL_2_NAME, CONST.PARTS_PAGE_DETAL_TABLE);
         //     await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
         //     console.log("✅ Test data cleanup completed");
