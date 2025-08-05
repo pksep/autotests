@@ -12,3 +12,4 @@ export class CreateMaterialsDatabasePage extends PageObject {
         super(page);
         this.page = page;
     }
+}
