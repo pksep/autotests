@@ -863,10 +863,22 @@ export const runU004_6 = () => {
         });
         //fifth refresh and confirm deleted
         await allure.step("Step 19: refresh and confirm deleted. (refresh and confirm deleted)", async () => {
-            await page.reload({
-                timeout: 30000, // Sets a 500ms timeout
-                waitUntil: 'networkidle', // Waits until the page reaches network idle state
-            });
+            // Ensure page is stable before reload
+            await page.waitForLoadState("domcontentloaded");
+            await page.waitForTimeout(1000);
+
+            try {
+                await page.reload({
+                    timeout: 30000,
+                    waitUntil: 'networkidle',
+                });
+            } catch (reloadError) {
+                // If reload fails, try navigating to the same URL
+                console.log("Page reload failed, trying navigation instead...");
+                const currentUrl = page.url();
+                await page.goto(currentUrl, { waitUntil: 'networkidle' });
+            }
+
             await page.waitForTimeout(1500);
             tableData_full = await shortagePage.parseStructuredTable(page, CONST.EDIT_PAGE_SPECIFICATIONS_TABLE);
             await page.waitForLoadState("networkidle");

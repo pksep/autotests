@@ -29,6 +29,187 @@ export const runU004_9 = () => {
     test("TestCase 18 - Добавить, изменить и удалить несколько элементов одновременно в спецификацию и проверка сохранения (Add, Modify, and Delete in One Session)", async ({ page }) => {
         test.setTimeout(90000);
         const shortagePage = new CreatePartsDatabasePage(page);
+
+        await allure.step("Setup: Clean up Т15 product specifications", async () => {
+            // Navigate to parts database page
+            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
+
+            // Search for Т15 product
+            const leftTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+            await leftTable.locator('input.search-yui-kit__input').fill("Т15");
+            await leftTable.locator('input.search-yui-kit__input').press('Enter');
+            await page.waitForLoadState("networkidle");
+
+            // Click on the found row
+            const firstRow = leftTable.locator('tbody tr:first-child');
+            await firstRow.waitFor({ state: 'visible' });
+            await firstRow.click();
+            await page.waitForTimeout(500);
+
+            // Click edit button
+            const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
+            editButton.click();
+            await page.waitForTimeout(500);
+
+            // Clean up СБ group - remove items not in allowed list
+            await allure.step("Clean up СБ group", async () => {
+                const allowedСБItems = ["Опора (Траверса Т10А)СБ", "Упор подвижный (Траверса Т10А)СБ"];
+
+                // Click Add button
+                const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
+                addButton.click();
+                await page.waitForTimeout(500);
+
+                // Click СБ option
+                const сбButton = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_СБ}"]`);
+                сбButton.click();
+                await page.waitForTimeout(500);
+
+                // Get bottom table and remove unwanted items
+                const modalСБ = page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modalСБ.locator(`table[data-testid="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+                    const partName = await row.locator('td').nth(1).textContent();
+
+                    if (partName && !allowedСБItems.includes(partName.trim())) {
+                        // Delete this item
+                        const deleteCell = row.locator('td').nth(4);
+                        deleteCell.click();
+                        await page.waitForTimeout(500);
+                    }
+                }
+
+                // Click Add to main button
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
+                const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
+                buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+
+            // Clean up Д group - remove items not in allowed list
+            await allure.step("Clean up Д group", async () => {
+                const allowedДItems = ["Опора штока d45мм"];
+
+                // Click Add button
+                const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
+                addButton.click();
+                await page.waitForTimeout(500);
+
+                // Click Д option
+                const дButton = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_Д}"]`);
+                дButton.click();
+                await page.waitForTimeout(500);
+
+                // Get bottom table and remove unwanted items
+                const modalД = page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modalД.locator(`table[data-testid="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+                    const partName = await row.locator('td').nth(1).textContent();
+
+                    if (partName && !allowedДItems.includes(partName.trim())) {
+                        // Delete this item
+                        const deleteCell = row.locator('td').nth(4);
+                        deleteCell.click();
+                        await page.waitForTimeout(500);
+                    }
+                }
+
+                // Click Add to main button
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
+                const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
+                buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+
+            // Clean up ПД group - remove items not in allowed list
+            await allure.step("Clean up ПД group", async () => {
+                const allowedПДItems = ["Гайка шестигранная DIN934 М12", "Болт с полной резьбой DIN933 М8х40"];
+
+                // Click Add button
+                const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
+                addButton.click();
+                await page.waitForTimeout(500);
+
+                // Click ПД option
+                const пдButton = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_ПД}"]`);
+                пдButton.click();
+                await page.waitForTimeout(500);
+
+                // Get bottom table and remove unwanted items
+                const modalПД = page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modalПД.locator(`table[data-testid="${CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+                    const partName = await row.locator('td').nth(1).textContent();
+
+                    if (partName && !allowedПДItems.includes(partName.trim())) {
+                        // Delete this item
+                        const deleteCell = row.locator('td').nth(4);
+                        deleteCell.click();
+                        await page.waitForTimeout(500);
+                    }
+                }
+
+                // Click Add to main button
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
+                const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
+                buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+
+            // Clean up РМ group - remove all items (should be empty)
+            await allure.step("Clean up РМ group", async () => {
+                // Click Add button
+                const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
+                addButton.click();
+                await page.waitForTimeout(500);
+
+                // Click РМ option
+                const рмButton = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_РМ}"]`);
+                рмButton.click();
+                await page.waitForTimeout(500);
+
+                // Get bottom table and remove all items
+                const modalРМ = page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG}"]`);
+                const bottomTableLocator = modalРМ.locator(`table[data-testid="${CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
+                const rowsLocator = bottomTableLocator.locator('tbody tr');
+                const rowCount = await rowsLocator.count();
+
+                for (let i = 0; i < rowCount; i++) {
+                    const row = rowsLocator.nth(i);
+                    const deleteCell = row.locator('td').nth(4);
+                    deleteCell.click();
+                    await page.waitForTimeout(500);
+                }
+
+                // Click Add to main button
+                const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG}"][open]`;
+                const buttonDataTestId = CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
+                const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
+                buttonLocator.click();
+                await page.waitForTimeout(500);
+            });
+
+            // Save changes
+            const saveButton = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
+            saveButton.click();
+            await page.waitForTimeout(1500);
+        });
+
         // Placeholder for test logic: Open the parts database page
         await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
             await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
@@ -113,9 +294,29 @@ export const runU004_9 = () => {
         table2Locator = modalСБ.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
         await allure.step("Step 10: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            await table2Locator!.locator('input.search-yui-kit__input').fill(CONST.TESTCASE_2_PRODUCT_СБ);
-            await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
+
+            // Ensure search input is visible and ready
+            const searchInput = table2Locator!.locator('input.search-yui-kit__input');
+            await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Clear any existing content
+            await searchInput.clear();
+            await page.waitForTimeout(500);
+
+            // Fill the search input
+            await searchInput.fill(CONST.TESTCASE_2_PRODUCT_СБ);
+            await page.waitForTimeout(500);
+
+            // Verify the input was filled correctly
+            const inputValue = await searchInput.inputValue();
+            console.log(`Search input value: "${inputValue}"`);
+            expect(inputValue).toBe(CONST.TESTCASE_2_PRODUCT_СБ);
+
+            // Press Enter to perform search
+            await searchInput.press('Enter');
             await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(3000); // Add timeout for table to update
+
             // Optionally, validate that the search input is visible
             await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible();
         });
@@ -313,12 +514,31 @@ export const runU004_9 = () => {
         table2Locator = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`);
         await allure.step("Step 18: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)", async () => {
             await page.waitForLoadState("networkidle");
-            await table2Locator!.locator('input.search-yui-kit__input').fill(CONST.TESTCASE_2_PRODUCT_Д);
-            await table2Locator!.locator('input.search-yui-kit__input').press('Enter');
+
+            // Ensure search input is visible and ready
+            const searchInput = table2Locator!.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+            await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Clear any existing content
+            await searchInput.clear();
+            await page.waitForTimeout(500);
+
+            // Fill the search input
+            await searchInput.fill(CONST.TESTCASE_2_PRODUCT_Д);
+            await page.waitForTimeout(500);
+
+            // Verify the input was filled correctly
+            const inputValue = await searchInput.inputValue();
+            console.log(`Search input value: "${inputValue}"`);
+            expect(inputValue).toBe(CONST.TESTCASE_2_PRODUCT_Д);
+
+            // Press Enter to perform search
+            await searchInput.press('Enter');
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(2000);
+
             // Optionally, validate that the search input is visible
-            await expect(table2Locator!.locator('input.search-yui-kit__input')).toBeVisible();
+            await expect(table2Locator!.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`)).toBeVisible();
         });
         await allure.step("Step 19: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)", async () => {
             // Wait for the page to stabilize

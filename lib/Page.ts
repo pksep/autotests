@@ -3075,7 +3075,20 @@ export class PageObject extends AbstractPage {
   async navigateToPage(url: string, dataTestId: string): Promise<void> {
     console.log(`Navigating to ${url}`);
     console.log(`PageTitleId to ${dataTestId}`);
-    await this.page.goto(url);
+
+    try {
+      await this.page.goto(url);
+    } catch (navigationError) {
+      // Handle navigation interruption
+      if (navigationError instanceof Error && navigationError.message.includes('interrupted')) {
+        console.log(`Navigation to ${url} was interrupted, waiting for page to stabilize...`);
+        await this.page.waitForLoadState("domcontentloaded");
+        await this.page.waitForTimeout(2000);
+      } else {
+        throw navigationError;
+      }
+    }
+
     await this.page.waitForTimeout(500);
     await this.page.waitForLoadState("networkidle");
 
