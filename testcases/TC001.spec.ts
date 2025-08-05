@@ -15,7 +15,7 @@ class ConcretePage extends AbstractPage {
  * @param dataTestId - The data-testid for the menu item to click.
  */
 export async function runTC001(page: Page, dataTestId: string): Promise<true | string> {
-    lohher.info('Starting TC001 test case');
+    logger.info('Starting TC001 test case');
 
     // Check if the data-testid is in the SELECTORS list
     const pageConfig = Object.values(SELECTORS.MAINMENU).find(config => config.DATA_TESTID === dataTestId);
