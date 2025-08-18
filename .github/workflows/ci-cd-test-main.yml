@@ -122,8 +122,19 @@ jobs:
           # apt-get update && apt-get install -y openssh-client
           whoami
           mkdir -p /home/node/.ssh
-          chmod 600 /home/node/.ssh/id_rsa
-          chmod 644 /home/node/.ssh/id_rsa.pub
+
+          # Create id_rsa if it doesn't exist
+          if [ ! -f /home/node/.ssh/id_rsa ]; then
+            touch /home/node/.ssh/id_rsa
+            chmod 600 /home/node/.ssh/id_rsa
+          fi
+
+          # Create id_rsa.pub if it doesn't exist
+          if [ ! -f /home/node/.ssh/id_rsa.pub ]; then
+            touch /home/node/.ssh/id_rsa.pub
+            chmod 644 /home/node/.ssh/id_rsa.pub
+          fi
+
 
           # Add GitHub to known hosts
           ssh-keyscan github.com >> ~/.ssh/known_hosts
