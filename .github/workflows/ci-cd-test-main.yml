@@ -65,7 +65,7 @@ jobs:
 
           # **Clone a fresh copy of TARGET_BRANCH**
           echo "⚠️ Cloning fresh repository..."
-          git clone --branch ${TARGET_BRANCH} git@github.com:NPO-Automotive/sep_erp_client.git || { echo "❌ Failed to clone repository"; exit 1; }
+          git clone --branch ${TARGET_BRANCH} git@github.com:pksep/sep_erp_client.git || { echo "❌ Failed to clone repository"; exit 1; }
           cd sep_erp_client || { echo "❌ Failed to enter project directory"; exit 1; }
       
           # Fetch all branches
