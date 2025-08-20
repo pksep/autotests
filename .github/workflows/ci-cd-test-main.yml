@@ -123,13 +123,13 @@ jobs:
           whoami
           mkdir -p /home/node/.ssh
 
-          # Create id_rsa if it doesn't exist
+          # Create id_rsa if it doesnt exist
           if [ ! -f /home/node/.ssh/id_rsa ]; then
             touch /home/node/.ssh/id_rsa
             chmod 600 /home/node/.ssh/id_rsa
           fi
 
-          # Create id_rsa.pub if it doesn't exist
+          # Create id_rsa.pub if it doesnt exist
           if [ ! -f /home/node/.ssh/id_rsa.pub ]; then
             touch /home/node/.ssh/id_rsa.pub
             chmod 644 /home/node/.ssh/id_rsa.pub
