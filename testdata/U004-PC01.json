@@ -37,25 +37,25 @@
         "buttons": [
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-            "datatestid": "BaseDetals-Button-Edit",
+            "datatestid": "BaseProducts-Button-Edit",
             "label": "Редактировать",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-            "datatestid": "BaseDetals-Button-Create",
+            "datatestid": "BaseProducts-Button-Create",
             "label": "Создать",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-            "datatestid": "BaseDetals-Button-CreateCopy",
+            "datatestid": "BaseProducts-Button-CreateCopy",
             "label": "Создать копированием",
             "state": "true"
           } ,
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-            "datatestid": "BaseDetals-Button-Archive",
+            "datatestid": "BaseProducts-Button-Archive",
             "label": "Архив",
             "state": "true"
           }               
@@ -63,25 +63,25 @@
         "buttonsBefore": [
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-			"datatestid": "BaseDetals-Button-Edit",												 
+			"datatestid": "BaseProducts-Button-Edit",												 
             "label": "Редактировать",
             "state": "false"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-			"datatestid": "BaseDetals-Button-Create",									   
+			"datatestid": "BaseProducts-Button-Create",									   
             "label": "Создать",
             "state": "true"
           },
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-			"datatestid": "BaseDetals-Button-CreateCopy",										   
+			      "datatestid": "BaseProducts-Button-CreateCopy",										   
             "label": "Создать копированием",
             "state": "false"
           } ,
           {
             "class": "button.button-yui-kit.small.primary-yui-kit",
-			"datatestid": "BaseDetals-Button-Archive",										
+		      	"datatestid": "BaseProducts-Button-Archive",										
             "label": "Архив",
             "state": "false"
           }               
@@ -89,19 +89,19 @@
         "filters": [
           {
             "class": "button.filters__btn",
-			"datatestid": "BaseDetals-Filter-Component-SortByAttention",									 
+		      	"datatestid": "BaseProducts-Filter-Component-SortByAttention",									 
             "label": "Сортировать по отметке",
             "state": "true"
           },
           {
             "class": "button.filters__btn",
-			"datatestid": "BaseDetals-Filter-Component-SortByDate",							 
+		      	"datatestid": "BaseProducts-Filter-Component-SortByDate",							 
             "label": "Сортировать по дате создания",
             "state": "true"
           },
           {
             "class": "button.filters__btn",
-			"datatestid": "BaseDetals-Filter-Component-SortByOwn",
+	      		"datatestid": "BaseProducts-Filter-Component-SortByOwn",
             "label": "Показать мои",
             "state": "false"
           }
@@ -219,13 +219,13 @@
               "state": "true"
             },
             {
-              "class": "button-yui-kit.medium.primary-yui-kit",
+              "class": "button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
               "datatestid":"Specification-ModalBaseCbed-Add-Button",
               "label": "Добавить",
-              "state": "true"
+              "state": "false"
             },
             {
-              "class": "button-yui-kit.small.primary-yui-kit.base-modal__section-select__button",
+              "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.base-modal__section-select__button",
               "datatestid":"Specification-ModalBaseCbed-Select-Button",
               "label": "Добавить",
               "state": "false"

@@ -13,6 +13,11 @@ export default defineConfig({
         actionTimeout: 10000,
         ignoreHTTPSErrors: true,
         screenshot: "only-on-failure",
+        // API testing specific settings
+        extraHTTPHeaders: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
     },
     projects: [
         {

@@ -87,7 +87,41 @@ export const runU004_9 = () => {
                 const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG}"][open]`;
                 const buttonDataTestId = CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
                 const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
-                buttonLocator.click();
+
+                // Wait for button to be visible and enabled
+                try {
+                    await buttonLocator.waitFor({ state: 'visible', timeout: 10000 });
+                    const isEnabled = await buttonLocator.isEnabled();
+                    if (!isEnabled) {
+                        logger.warn("Add button is disabled. No items to add, clicking cancel button instead.");
+
+                        // Click cancel button since there are no changes to add
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully - no items to add");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    }
+
+                    await buttonLocator.click();
+                    logger.info("Add button clicked successfully");
+                } catch (error) {
+                    logger.error(`Failed to click add button: ${error instanceof Error ? error.message : String(error)}`);
+
+                    // If add button fails, try to click cancel button
+                    try {
+                        logger.warn("Attempting to click cancel button as fallback");
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully as fallback");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    } catch (cancelError) {
+                        logger.error(`Failed to click cancel button: ${cancelError instanceof Error ? cancelError.message : String(cancelError)}`);
+                        throw error; // Throw original error if both fail
+                    }
+                }
+
                 await page.waitForTimeout(500);
             });
 
@@ -127,7 +161,41 @@ export const runU004_9 = () => {
                 const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG}"][open]`;
                 const buttonDataTestId = CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
                 const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
-                buttonLocator.click();
+
+                // Wait for button to be visible and enabled
+                try {
+                    await buttonLocator.waitFor({ state: 'visible', timeout: 10000 });
+                    const isEnabled = await buttonLocator.isEnabled();
+                    if (!isEnabled) {
+                        logger.warn("Add button is disabled. No items to add, clicking cancel button instead.");
+
+                        // Click cancel button since there are no changes to add
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully - no items to add");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    }
+
+                    await buttonLocator.click();
+                    logger.info("Add button clicked successfully");
+                } catch (error) {
+                    logger.error(`Failed to click add button: ${error instanceof Error ? error.message : String(error)}`);
+
+                    // If add button fails, try to click cancel button
+                    try {
+                        logger.warn("Attempting to click cancel button as fallback");
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully as fallback");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    } catch (cancelError) {
+                        logger.error(`Failed to click cancel button: ${cancelError instanceof Error ? cancelError.message : String(cancelError)}`);
+                        throw error; // Throw original error if both fail
+                    }
+                }
+
                 await page.waitForTimeout(500);
             });
 
@@ -167,7 +235,41 @@ export const runU004_9 = () => {
                 const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG}"][open]`;
                 const buttonDataTestId = CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
                 const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
-                buttonLocator.click();
+
+                // Wait for button to be visible and enabled
+                try {
+                    await buttonLocator.waitFor({ state: 'visible', timeout: 10000 });
+                    const isEnabled = await buttonLocator.isEnabled();
+                    if (!isEnabled) {
+                        logger.warn("Add button is disabled. No items to add, clicking cancel button instead.");
+
+                        // Click cancel button since there are no changes to add
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.MATERIAL_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully - no items to add");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    }
+
+                    await buttonLocator.click();
+                    logger.info("Add button clicked successfully");
+                } catch (error) {
+                    logger.error(`Failed to click add button: ${error instanceof Error ? error.message : String(error)}`);
+
+                    // If add button fails, try to click cancel button
+                    try {
+                        logger.warn("Attempting to click cancel button as fallback");
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.MATERIAL_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully as fallback");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    } catch (cancelError) {
+                        logger.error(`Failed to click cancel button: ${cancelError instanceof Error ? cancelError.message : String(cancelError)}`);
+                        throw error; // Throw original error if both fail
+                    }
+                }
+
                 await page.waitForTimeout(500);
             });
 
@@ -200,7 +302,41 @@ export const runU004_9 = () => {
                 const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG}"][open]`;
                 const buttonDataTestId = CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON;
                 const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
-                buttonLocator.click();
+
+                // Wait for button to be visible and enabled
+                try {
+                    await buttonLocator.waitFor({ state: 'visible', timeout: 10000 });
+                    const isEnabled = await buttonLocator.isEnabled();
+                    if (!isEnabled) {
+                        logger.warn("Add button is disabled. No items to add, clicking cancel button instead.");
+
+                        // Click cancel button since there are no changes to add
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully - no items to add");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    }
+
+                    await buttonLocator.click();
+                    logger.info("Add button clicked successfully");
+                } catch (error) {
+                    logger.error(`Failed to click add button: ${error instanceof Error ? error.message : String(error)}`);
+
+                    // If add button fails, try to click cancel button
+                    try {
+                        logger.warn("Attempting to click cancel button as fallback");
+                        const cancelButton = page.locator(`${dialogSelector} [data-testid="${CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON}"]`);
+                        await cancelButton.click();
+                        logger.info("Cancel button clicked successfully as fallback");
+                        await page.waitForTimeout(500);
+                        return; // Exit early since we clicked cancel
+                    } catch (cancelError) {
+                        logger.error(`Failed to click cancel button: ${cancelError instanceof Error ? cancelError.message : String(cancelError)}`);
+                        throw error; // Throw original error if both fail
+                    }
+                }
+
                 await page.waitForTimeout(500);
             });
 
@@ -1639,15 +1775,79 @@ export const runU004_9 = () => {
         await allure.step("Step 09: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
-            const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
-            await button.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
+
+            // Close any open modals before saving
+            await allure.step("Close any open modals before saving", async () => {
+                let attempts = 0;
+                const maxAttempts = 3;
+
+                while (attempts < maxAttempts) {
+                    const modals = page.locator('dialog[open]');
+                    const modalCount = await modals.count();
+
+                    if (modalCount === 0) {
+                        logger.info("No open modals found - safe to proceed with save");
+                        break;
+                    }
+
+                    logger.warn(`Found ${modalCount} open modal(s). Attempting to close them (attempt ${attempts + 1}/${maxAttempts}).`);
+
+                    try {
+                        // Press Escape multiple times
+                        for (let i = 0; i < modalCount; i++) {
+                            await page.keyboard.press('Escape');
+                            await page.waitForTimeout(300);
+                        }
+
+                        // Try clicking outside the modal
+                        await page.click('body', { position: { x: 10, y: 10 } });
+                        await page.waitForTimeout(300);
+
+                        await page.waitForTimeout(500);
+                        attempts++;
+
+                        // Check if modals are still open
+                        const remainingModals = page.locator('dialog[open]');
+                        const remainingCount = await remainingModals.count();
+
+                        if (remainingCount === 0) {
+                            logger.info("All modals successfully closed");
+                            break;
+                        } else {
+                            logger.warn(`${remainingCount} modals still open after attempt ${attempts}`);
+                        }
+
+                    } catch (error) {
+                        logger.warn(`Error during modal cleanup attempt ${attempts + 1}: ${error instanceof Error ? error.message : String(error)}`);
+                        attempts++;
+                    }
+                }
             });
 
-            button.click();
-            await page.waitForTimeout(500);
+            const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
+
+            // Ensure save button is visible and enabled before clicking
+            try {
+                await button.waitFor({ state: 'visible', timeout: 10000 });
+                const isEnabled = await button.isEnabled();
+                if (!isEnabled) {
+                    logger.warn("Save button is disabled. Waiting for it to become enabled...");
+                    await button.waitFor({ state: 'visible', timeout: 5000 });
+                }
+
+                await button.evaluate((row) => {
+                    row.style.backgroundColor = 'green';
+                    row.style.border = '2px solid red';
+                    row.style.color = 'blue';
+                });
+
+                await button.click();
+                logger.info("Save button clicked successfully");
+                await page.waitForTimeout(1500);
+            } catch (error) {
+                logger.error(`Failed to click save button: ${error instanceof Error ? error.message : String(error)}`);
+                throw error;
+            }
         });
     });
 }

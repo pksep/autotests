@@ -2924,7 +2924,12 @@ export class PageObject extends AbstractPage {
 
       console.log(`Button "${label}" visibility: ${isVisible}`);
       await expect(button).toBeVisible(); // Assert visibility explicitly
-      await this.page.waitForTimeout(500);
+      try {
+        await this.page.waitForTimeout(500);
+      } catch (error) {
+        console.warn(`Timeout waiting in button validation: ${error instanceof Error ? error.message : String(error)}`);
+        console.warn("Continuing without waiting.");
+      }
       // Check for 'disabled-yui-kit' class
       const hasDisabledClass = await button.evaluate((btn) => btn.classList.contains('disabled-yui-kit'));
       console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);

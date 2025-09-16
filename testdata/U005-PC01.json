@@ -176,19 +176,19 @@
       "modalAddButtonsPopup": [
         {
           "class": "div.card-yui-kit.detailsdb-dialog__card",
-          "datatestid": "BaseDetals-CreatLink-Cardthe-base-of-the-tool",
+          "datatestid": "BaseProducts-CreatLink-Cardthe-base-of-the-tool",
           "label": "Изделие",
           "state": "true"
         },
         {
           "class": "div.card-yui-kit.detailsdb-dialog__card",
-          "datatestid": "BaseDetals-CreatLink-Cardbase-of-assembly-units",
+          "datatestid": "BaseProducts-CreatLink-Cardbase-of-assembly-units",
           "label": "Сборочную единицу",
           "state": "true"
         },
         {
           "class": "div.card-yui-kit.detailsdb-dialog__card",
-          "datatestid": "BaseDetals-CreatLink-Cardbase-detail",
+          "datatestid": "BaseProducts-CreatLink-Cardbase-detail",
           "label": "Деталь",
           "state": "true"
         }

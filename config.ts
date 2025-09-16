@@ -14,11 +14,72 @@
 
 export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
-    HEADLESS: process.env.HEADLESS === "true",
+    //API_BASE_URL: process.env.API_BASE_URL || "http://localhost:5000/",
+    API_BASE_URL: process.env.API_BASE_URL || "http://dev.pksep.ru/",
+    HEADLESS: process.env.HEADLESS === "false" ? false : true,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'suite01',
+    TEST_SUITE: 'auth_api',
     TEST_DIR: '.',
-    DEBUG: false,
+    DEBUG: true, // Enable debug mode for login testing
+};
+
+// Login Testing Configuration - Easy access for manual testing
+export const LOGIN_TEST_CONFIG = {
+    // API Endpoint
+    LOGIN_ENDPOINT: `${ENV.API_BASE_URL}api/auth/login`,
+
+    // Test Credentials (you can modify these for testing)
+    TEST_CREDENTIALS: {
+        username: "Джойс Р.Г.",
+        password: "O0_f2!3@34OInU",
+        tabel: "005"
+    },
+
+    // Alternative credential formats to test
+    ALTERNATIVE_CREDENTIALS: {
+        email: "test@example.com",
+        user: "testuser",
+        login: "testuser",
+        employee_id: "12345",
+        employee_number: "12345"
+    },
+
+    // Request Headers
+    HEADERS: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+
+    // Request Body Templates
+    REQUEST_TEMPLATES: {
+        // Standard format
+        standard: {
+            username: "testuser",
+            password: "testpass",
+            tabel: "12345"
+        },
+
+        // Alternative format 1
+        alternative1: {
+            email: "test@example.com",
+            password: "testpass",
+            employee_id: "12345"
+        },
+
+        // Alternative format 2
+        alternative2: {
+            user: "testuser",
+            pass: "testpass",
+            employee_number: "12345"
+        },
+
+        // Alternative format 3
+        alternative3: {
+            login: "testuser",
+            pwd: "testpass",
+            tabel: "12345"
+        }
+    }
 };
 
 export const SELECTORS = {
@@ -63,8 +124,8 @@ export const SELECTORS = {
             DATA_TESTID: "menu-assembly-units",
         },
         PARTS_DATABASE: {
-            URL: "basedetals",
-            TEXT_RUS: "База деталей",
+            URL: "baseproduct",
+            TEXT_RUS: "База продукции",
             TEXT_ENG: "Parts",
             DATA_TESTID: "menu-parts",
         },
@@ -176,14 +237,90 @@ export const SELECTORS = {
             URL: "detal/add",
             TEXT_RUS: "Создать деталь",
             TEXT_ENG: "Create Part",
-            DATA_TESTID: "BaseDetals-Button-Create",
+            DATA_TESTID: "BaseProducts-Button-Create",
         },
     },
 
 
 };
+
+
+
+
 export const CONST = {
+    // warehouse page
+    WAREHOUSE_PAGE_CONTAINER: "Sclad-mainContainer-mainContainer",
+    WAREHOUSE_PAGE_DEFICIT_PRODUCTION_BUTTON: "Sclad-deficitProduction-deficitProduction",
+    WAREHOUSE_PAGE_DEFICIT_CBED_BUTTON: "Sclad-deficitCbed-deficitCbed",
+    WAREHOUSE_PAGE_DEFICIT_DETAL_BUTTON: "Sclad-deficitDetal-deficitDetal",
+    WAREHOUSE_PAGE_RESIDUALS_BUTTON: "Sclad-residuals-residuals",
+    WAREHOUSE_PAGE_REVISIONS_BUTTON: "Sclad-revision-revision",
+    WAREHOUSE_PAGE_MOVEMENT_BUTTON: "Sclad-movement-movement",
+    WAREHOUSE_PAGE_DEFICIT_MATERIAL_BUTTON: "Sclad-deficitMaterial-deficitMaterial",
+    WAREHOUSE_PAGE_RESIDUALS_MATERIAL_BUTTON: "Sclad-residualsMaterial-residualsMaterial",
+    WAREHOUSE_PAGE_ORDERING_SUPPLIERS_BUTTON: "Sclad-orderingSuppliers",
+    WAREHOUSE_PAGE_ORDERED_WAY_BUTTON: "Sclad-orderedWay",
+    WAREHOUSE_PAGE_ORDERS_SHIPPED_BUTTON: "Sclad-ordersShipped",
+    WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON: "Sclad-stockOrderMetalworking",
+    WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON: "Sclad-stockOrderAssembly",
+    WAREHOUSE_PAGE_RACKS_BUTTON: "Sclad-racks",
+    WAREHOUSE_PAGE_AVERAGE_CONSUMPTION_BUTTON: "Sclad-averageConsumption",
+    WAREHOUSE_PAGE_RECEIPTS_WAREHOUSE_FOR_SUPPLIERS_AND_PRODUCTION_BUTTON: "Sclad-receiptsWarehouseForSuppliersAndProduction",
+    WAREHOUSE_PAGE_WAREHOUSE_CONSUMPTION_BUTTON: "Sclad-warehouseConsumption",
+    WAREHOUSE_PAGE_RELOCATION_BUTTON: "Sclad-relocation",
+    WAREHOUSE_PAGE_WASTE_STORAGE_BUTTON: "Sclad-wasteStorage",
+    WAREHOUSE_PAGE_SHIPPING_TASKS_BUTTON: "Sclad-shippingTasks",
+    WAREHOUSE_PAGE_MATERIAL_DEFICIT_ON_PLAN_MO_BUTTON: "Sclad-materialDeficitOnPlanMO",
+    WAREHOUSE_PAGE_MATERIAL_DEFICIT_ON_PLAN_ASSEMBLY_BUTTON: "Sclad-materialDeficitOnPlanAssembly",
+    WAREHOUSE_PAGE_METALWORKING_EQUIPMENT_BUTTON: "Sclad-metalworkingEquipment",
+    WAREHOUSE_PAGE_CIRCLE_PROFILE_CUTTING_BUTTON: "Sclad-circleProfileCutting",
+    WAREHOUSE_PAGE_SHEET_CUTTING_BUTTON: "Sclad-sheetCutting",
+    WAREHOUSE_PAGE_METALWORKING_PACKAGE_BUTTON: "Sclad-metalworkingPackage",
+    WAREHOUSE_PAGE_ASSEMBLY_AND_PRODUCT_BUTTON: "Sclad-assemblyAndProduct",
+    WAREHOUSE_PAGE_ASSEMBLY_AND_PRODUCT_DIRECTION_FLEX_BUTTON: "Sclad-assemblyAndProduct-directionFlex",
+    WAREHOUSE_PAGE_COMPLETION_CBED_PLAN_BUTTON: "Sclad-completionCbedPlan",
+    WAREHOUSE_PAGE_COMPLETION_PRODUCT_PLAN_BUTTON: "Sclad-completionProductPlan",
+    WAREHOUSE_PAGE_COMPLETE_SETS_BUTTON: "Sclad-completeSets",
+    WAREHOUSE_PAGE_ONLINE_BOARD_LINK_BUTTON: "Sclad-onlineBoardLink",
+    WAREHOUSE_PAGE_METAL_WORKING_BUTTON: "Sclad-metalWorking-metalWorking",
+
+    // order metalworking page
+    ORDER_METALWORKING_PAGE_CONTAINER: "MetalloworkingSclad",
+    ORDER_METALWORKING_PAGE_TABLE: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table",
+    ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Search-Dropdown-Input",
+
+
+
+
+    //partsDatabase Page
+    BUTTON_DETAIL: "BaseProducts-CreatLink-Cardbase-detail",
+    ADD_DETAL_DESIGNATION_INPUT_INPUT: "AddDetal-Designation-Input-Input",
+    ADD_DETAL_INFORMATION_INPUT_DESIGNATION: "AddDetal-Information-Input-Designation",
+    BUTTON_OPERATION: "EditDetal-Buttons-TechProcess",
+    BUTTON_ADD_OPERATION: "EditDetal-ModalTechProcess-Buttons-ButtonCreate",
+    BUTTON_SAVE_OPERATION: "EditDetal-ModalTechProcess-Button-Save",
+    FILTER_SEARCH_DROPDOWN_INPUT: "Filter-Search-Dropdown-Input",
+    TABLE_PROCESS_ID: "operation-table",
+    DETAIL_PAGE_MODAL_TECH_PROCESS_TABLE: "Creator-ModalTechProcess-Table",
+    TABLE_PROCESS_NAME_OPERATION: "EditDetal-ModalTechProcess-Thead-NameOperation",
+    DETAIL_PAGE_MODAL_TECH_PROCESS_TABLE_PROCESS_NAME_OPERATION: "Creator-ModalTechProcess-Thead-NameOperation",
+    BUTTON: "Button",
+    TABLE_PROCESS: "EditDetal-ModalTechProcess-Table-Wrapper",
+    TABLE_PROCESS_CBED: "BasePaginationTable-Wrapper-cbed",
+    BUTTON_CBED: "BaseProducts-CreatLink-Cardbase-of-assembly-units",
+    INPUT_DESUGNTATION_IZD: "Creator-Designation-Input-Input",
+    INPUT_NAME_IZD: "Creator-Information-Input-Input",
+    BUTTON_PRODUCT: "BaseProducts-CreatLink-Cardthe-base-of-the-tool",
+    BUTTON_OPERATION_PROCESS_ASSYMBLY: "Creator-Buttons-TechProcess",
+    TABLE_PROCESS_ASSYMBLY: "Creator-ModalTechProcess-Table-Wrapper",
+    TABLE_PROCESS_ASSYMBLY_ID: "Creator-ModalTechProcess-Thead-IdOperation",
+    TABLE_PROCESS_ASSYMBLY_NAME: "Creator-ModalTechProcess-Thead-NameOperation",
+    BUTTON_PROCESS_CANCEL: "Creator-ModalTechProcess-Button-Cancel",
+    BUTTON_PROCESS_SAVE: "Creator-ModalTechProcess-Button-Save",
+    TABLE_PRODUCT: "BasePaginationTable-Border-product",
+
     PARTS_PAGE_RIGHT_TABLE_SEARCH_FIELD: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
+    MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT: "BasePaginationTable-Thead-SearchInput-Dropdown-Input",
     PARTS_PAGE_DETAL_TABLE: "BasePaginationTable-Table-detal",
     MAIN_PAGE_СБ_TABLE: "BasePaginationTable-Table-cbed",
     MAIN_SEARCH_COVER_INPUT: "OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input",
@@ -191,15 +328,16 @@ export const CONST = {
     EDIT_PARTS_PAGE_ARCHIVE_BUTTON: "EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive",
     ARCHIVE_MODAL_CONFIRM_DIALOG: "ModalConfirm",
     ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
-    BASE_DETALS_BUTTON_CREATE: "BaseDetals-Button-Create",
-    BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS: "BaseDetals-CreatLink-Titlebase-of-assembly-units",
+    ARCHIVE_MODAL_CONFIRM_DIALOG_NO_BUTTON: "ModalConfirm-Content-Buttons-No",
+    BASE_DETALS_BUTTON_CREATE: "BaseProducts-Button-Create",
+    BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS: "BaseProducts-CreatLink-Titlebase-of-assembly-units",
     CREATOR_INFORMATION_INPUT: "Creator-Information-Input-Input",
     EDITOR_TABLE_SPECIFICATION_CBED: "Editor-TableSpecification-Cbed",
     CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "Creator-ButtonSaveAndCancel-ButtonsCenter-Save",
     CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel",
     ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save",
     EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel",
-    MAIN_PAGE_EDIT_BUTTON: "BaseDetals-Button-Edit",
+    MAIN_PAGE_EDIT_BUTTON: "BaseProducts-Button-Edit",
 
     ADD_DETAL_INFORMATION_INPUT_INPUT: "AddDetal-Information-Input-Input",
     EDIT_DETAL_INFORMATION_INPUT_INPUT: "EditDetal-Information-Input-Input",
@@ -216,6 +354,11 @@ export const CONST = {
     MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT: "OrderSuppliers-Modal-AddOrder",
     SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES: "OrderSuppliers-Modal-AddOrder-Content-AssembleCard",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT: "-TdQuantity-InputNumber-Input",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_CHECKBOX_END: "-TdCheckbox-Wrapper-Checkbox",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_ORDERED_ON_PRODUCTION: "-TdOrderedOnProduction",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_ORDERED_ON_PRODUCTION_TITLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Main-Title",
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_DIALOG: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker",
+
     MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save",
     MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button",
@@ -235,6 +378,7 @@ export const CONST = {
     TABLE_REVISION_PAGINATION_TABLE: "Revision-TableRevisionPagination-Detals-Table",
     MODAL_ADD_ORDER_PRODUCTION_DIALOG: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply",
     TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1",
+    TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE_QUANTITY_HEADER: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-HeadRow-ThQuantity",
     MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input",
     ORDER_MODAL_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table",
@@ -246,8 +390,32 @@ export const CONST = {
     // Constants unique to ERP-969.spec.ts
     MODAL_CONFIRM_DIALOG: "ModalConfirm",
     MODAL_CONFIRM_DIALOG_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
-    PARTS_PAGE_ARCHIVE_BUTTON: "BaseDetals-Button-Archive",
+    PARTS_PAGE_ARCHIVE_BUTTON: "BaseProducts-Button-Archive",
     SEARCH_COVER_INPUT_2: "TableRevisionPagination-SearchInput-Dropdown-Input",
+
+    // OrderedFromSuppliersPage constants
+    ORDERED_SUPPLIERS_PAGE_TABLE: "Sclad-orderingSuppliers",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_TABLE: "ModalAddOrder-ProductionTable-Table",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_SCROLL_CONTAINER: "ModalAddOrder-ProductionTable-ScrollContainer",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_SELECT_COLUMN: "ModalAddOrder-ProductionTable-SelectColumn",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_ORDERED_ON_PRODUCTION_COLUMN: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-HeadRow-ShipmentFromCompany",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_YOUR_QUANTITY_COLUMN: "ModalAddOrder-ProductionTable-YourQuantityColumn",
+    ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_COMPLECTATION_TABLE: "ModalStartProduction-ComplectationTable",
+    ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_COMPLECTATION_TABLE_HEADER_MY_QUANTITY: "ModalStartProduction-ComplectationTableHeader-MyQuantity",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_MODALS_MODAL_START_PRODUCTION_TRUE_MODAL_CONTENT: "ModalAddOrder-Modals-ModalStartProductiontrue-ModalContent",
+    ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON: "ModalStartProduction-ComplectationTable-CancelButton",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "ModalAddOrder-ProductionTable-OrderButton",
+    ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_TABLE_CANCEL_BUTTON: "ModalAddOrder-ProductionTable-CancelButton",
+    ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_SCROLL_TABLE_TABLE_CONTAINER: "OrderSuppliers-ScrollTable-TableContainer",
+    ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_LINK_IMAGE: "OrderSuppliers-LinkImage",
+    ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_LINK_IMAGE_NO_CONTENT: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0-Image-Image-NoContent",
+    ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_ORDER_DATE_VALUE: "ModalStartProduction-OrderDateValue",
+    ORDERER_SUPPLIERS_MAIN_CONTAINER: "OrderSuppliers",
+    ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_TABLE_ROW_POPOVER: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row",
+    ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_TABLE_ROW_POPOVER_BUTTON: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row",
+    ORDERER_SUPPLIERS_PAGE_ORDER_SUPPLIERS_TABLE_ROW_CONTEXT_CELL: "-Popover",
+    ORDERED_SUPPLIERS_PAGE_MODAL_SHIPMENTS_TO_IZED_TABLE_SCLAD: "ModalShipmentsToIzed-Table-Sclad",
+
     COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN: "CompletCbed-Title",
     SPECIFICATION_BUTTONS_ADDING_SPECIFICATION: "Specification-Buttons-addingSpecification",
     SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1: "Specification-Dialog-CardbaseDetail1",
@@ -311,8 +479,9 @@ export const CONST = {
     OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX: "-Buttons-ShowFullInformationButton",
 
     // Constants for U004 files
-    MAIN_PAGE_TITLE_ID: "BaseDetals-Header-Title",
-    MAIN_PAGE_MAIN_DIV: "BaseDetals-Container-MainContainer",
+    //MAIN_PAGE_TITLE_ID: "BaseProducts-Header-Title",
+    MAIN_PAGE_TITLE_ID: "BaseProducts-Container-MainContainer-Title",
+    MAIN_PAGE_MAIN_DIV: "BaseProducts-Container-MainContainer",
     MAIN_PAGE_ИЗДЕЛИЕ_TABLE: "BasePaginationTable-Table-product",
     MAIN_PAGE_Д_TABLE: "BasePaginationTable-Table-detal",
     MAIN_PAGE_SMALL_DIALOG: "Specification-DialogSpecification",
@@ -335,6 +504,7 @@ export const CONST = {
     EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON: "Specification-ModalBaseCbed-Add-Button",
     EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON: "Specification-ModalBaseCbed-Cancel-Button",
     EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE: "Specification-ModalBaseCbed-Table",
+    EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_NAME_CELL: "Specification-ModalBaseCbed-Tbody-Name",
     EDIT_PAGE_ADD_Д_RIGHT_DIALOG: "Specification-ModalBaseDetal",
     EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON: "Specification-ModalBaseDetal-Select-Button",
     EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON: "Specification-ModalBaseDetal-Add-Button",
@@ -351,6 +521,7 @@ export const CONST = {
     EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE: "ModalBaseMaterial-Table",
     EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON: "ModalBaseMaterial-Select-Button",
     EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON: "ModalBaseMaterial-Add-Button",
+    EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON: "ModalBaseMaterial-Cancel-Button",
     CREATE_DETAIL_PAGE_SPECIFICATION_ADD_BUTTON: "Specification-Buttons-addingSpecification",
     CREATE_DETAIL_PAGE_SPECIFICATION_ADDFILEFROMBASE_BUTTON: "AddDetal-FileComponent-AddFileButton",
     CREATE_DETAIL_PAGE_SPECIFICATION_ADDFILEDRAGNDROP_BUTTON: "AddDetal-FileComponent-DragAndDrop-Wrapper",
@@ -362,7 +533,7 @@ export const CONST = {
     CREATE_DETAIL_PAGE_ADDMATERIAL_DIALOG_ITEM_TABLE: "ModalBaseMaterial-TableList-Table-Item-Table",
     TEST_PRODUCT: 'Т15',
     TESTCASE_2_PRODUCT_1: 'Т15',
-    EDIT_BUTTON: 'BaseDetals-Button-Edit',
+    EDIT_BUTTON: 'BaseProducts-Button-Edit',
     TEST_PRODUCT_СБ: 'Впускной крапан М12',
     TESTCASE_2_PRODUCT_СБ: 'Впускной крапан М12',
     TESTCASE_2_PRODUCT_Д: 'Грибок 15',
@@ -377,8 +548,8 @@ export const CONST = {
     TEST_MATERIAL: "09Г2С (Сталь)",
     TEST_NAME: "Круг Сталь 09Г2С Ø100мм",
     TEST_FILE: "87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg",
-    MAIN_PAGE_CREATE_BUTTON: "BaseDetals-Button-Create",
-    MAIN_PAGE_CREATE_DETAIL_LINK: "BaseDetals-CreateLink-base-detail",
+    MAIN_PAGE_CREATE_BUTTON: "BaseProducts-Button-Create",
+    MAIN_PAGE_CREATE_DETAIL_LINK: "BaseProducts-CreateLink-base-detail",
     ADD_DETAIL_INFORMATION_INPUT: "AddDetal-Information-Input-Input",
     ADD_DETAIL_CHARACTERISTIC_BLANKS: "AddDetal-CharacteristicBlanks",
     ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY: "AddDetal-CharacteristicBlanks-Tbody",
@@ -478,7 +649,7 @@ export const CONST = {
     CHARACTERISTIC_BLANKS_CONTAINER: "AddDetal-CharacteristicBlanks",
     CHARACTERISTIC_BLANKS_TITLE: "AddDetal-CharacteristicBlanks-Title",
     SAVE_BUTTON: "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save",
-    ARCHIVE_BUTTON: "BaseDetals-Button-Archive",
+    ARCHIVE_BUTTON: "BaseProducts-Button-Archive",
     CONFIRM_MODAL: "ModalConfirm",
     CONFIRM_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
     SEARCH_DROPDOWN_INPUT: "Search-Dropdown-Input",
@@ -490,9 +661,483 @@ export const CONST = {
     ADD_DETAIL_BUTTONS_ACCESSORY: "AddDetal-Buttons-Accessory",
     ADD_DETAIL_BUTTONS_CHANGE_HISTORY: "AddDetal-Buttons-ChangeHistory",
     // U005 Button Constants
-    BASE_DETALS_BUTTON_EDIT: "BaseDetals-Button-Edit",
-    BASE_DETALS_BUTTON_CREATE_COPY: "BaseDetals-Button-CreateCopy",
-    BASE_DETALS_BUTTON_ARCHIVE: "BaseDetals-Button-Archive",
-    BASE_DETALS_FILTER_COMPONENT_SORT_BY_ATTENTION: "BaseDetals-Filter-Component-SortByAttention",
-    BASE_DETALS_FILTER_COMPONENT_SORT_BY_DATE: "BaseDetals-Filter-Component-SortByDate",
+    BASE_DETALS_BUTTON_EDIT: "BaseProducts-Button-Edit",
+    BASE_DETALS_BUTTON_CREATE_COPY: "BaseProducts-Button-CreateCopy",
+    BASE_DETALS_BUTTON_ARCHIVE: "BaseProducts-Button-Archive",
+    BASE_DETALS_FILTER_COMPONENT_SORT_BY_ATTENTION: "BaseProducts-Filter-Component-SortByAttention",
+    BASE_DETALS_FILTER_COMPONENT_SORT_BY_DATE: "BaseProducts-Filter-Component-SortByDate",
+
+    //Metalworking warehouse page
+    // MetalWorkingWarhouse
+    SELECTOR_METAL_WORKING_WARHOUSE: "Sclad-stockOrderMetalworking",
+    TABLE_METAL_WORKING_WARHOUSE: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table",
+
+    //TABLE_METAL_WORKING_WAREHOUSE_ID: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table",
+    TABLE_METAL_WORKING_ORDERED: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-HeadRow-Ordered",
+    TABLE_METAL_WORKING_OPERATION: 'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-HeadRow-Operations',
+    TABLE_METAL_WORKING_CHECKBOX: "MetalloworkingSclad-DetailsTableHeader-SelectColumn",
+    BUTTON_MOVE_TO_ARCHIVE: "MetalloworkingSclad-PrintControls-ArchiveButton",
+    BUTTON_MOVE_TO_ARCHIVE_NEW: "MetalloworkingSclad-Content-WithFilters-Buttons-ArchiveButton",
+    TABLE_METAL_WORKING_URGENCY: 'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-HeadRow-DateByUrgency',
+
+    // Operations row pattern constants
+    METALWORKING_OPERATIONS_ROW_PATTERN_START: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row",
+    METALWORKING_OPERATIONS_ROW_PATTERN_END: "-Operations",
+    ASSEMBLY_OPERATIONS_ROW_PATTERN_START: "AssemblySclad-Table-Row",
+    ASSEMBLY_OPERATIONS_ROW_PATTERN_END: "-Operations",
+    ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED: "-Ordered",
+
+    OPERATION_TABLE_ID: "OperationPathInfo-Table",
+    OPERATION_TABLE_REMAINS_TO_DO: "OperationPathInfo-Thead-RemainsToDo",
+    OPERATION_TABLE: "ModalOperationPathMetaloworking-OperationTable",
+    OPERATION_TABLE_NAME_FIRST_OPERATION: "OperationPathInfo-Thead-Operation",
+
+    // order from suppliers page
+    ORDER_FROM_SUPPLIERS_MODAL: "OrderSuppliers-Modal-AddOrder-ModalAddProviderOrderSupply",
+    ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply",
+    ORDER_FROM_SUPPLIERS_PAGE_CONTENT_MODAL_RIGHT_MENU: "OrderSuppliers-Modal-AddOrder-Content-ModalRightMenu",
+    TABLEMODALWINDOW: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1",
+    TABLEMODALWINDOWCHECKBOX: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-HeadRow-ThCheckbox",
+
+    //Заказ склада на Сборку page
+    ZAKAZ_SCLAD_STOCK_ORDER_ASSEMBLY_BUTTON: "Sclad-stockOrderAssembly",
+
+    ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID: "tablebody",
+    ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE: "AssemblySclad-ScrollTable",
+    ZAKAZ_SCLAD_TABLE_ASSEMBLY_CHECKBOX: "AssemblySclad-Table-Checkbox",
+    ZAKAZ_SCLAD_TABLE_ASSEMBLY_ORDERED: "AssemblySclad-TableHead-Ordered",
+    ZAKAZ_SCLAD_TABLE_ASSEMBLY_OPERATION: "AssemblySclad-Table-Operations",
+    ZAKAZ_SCLAD_BUTTON_MOVE_TO_ARCHIVE_ASSEMBLY: "AssemblySclad-PrintControls-ArchiveButton",
+    ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY: "ModalOperationPath-OperationTable",
+
+    // Modal Confirmation Window
+    ZAKAZ_SCLAD_MODAL_CONFIRMATION_BUTTON: "ModalPromptMini-Button-Confirm",
+    // Direct cell access constants
+    OPERATION_TABLE_MAKE_SH_CELL: "OperationPathInfo-Tbody-MakeSh",
+
+    // Metalworking warehouse checkbox pattern constants
+    METALWORKING_CHECKBOX_ROW_PATTERN_START: "Metalloworking-Content-WithFilters-Table-Table-Row",
+    METALWORKING_CHECKBOX_ROW_PATTERN_END: "-Checkbox-Wrapper-Checkbox",
+};
+
+// API Test Data Constants
+export const API_CONST = {
+    // Auth Test Data
+    API_TEST_USERNAME: "Джойс Р.Г.",
+    API_TEST_PASSWORD: "O0_f2!3@34OInU",
+    API_TEST_TABEL: "005",
+    API_TEST_AUTHORIZATION_TOKEN: "Bearer test-token-12345",
+
+    // Users Test Data
+    API_TEST_USER_ID: "1",
+    API_TEST_USER_INITIALS: "TU",
+    API_TEST_USER_INITIALS_UPDATED: "TU2",
+    API_TEST_USER_TABEL: "12345",
+    API_TEST_USER_TABEL_UPDATED: "12346",
+
+    // Roles Test Data
+    API_TEST_ROLE_NAME: "Test Role",
+    API_TEST_ROLE_NAME_UPDATED: "Updated Test Role",
+    API_TEST_ROLE_DESCRIPTION: "Test role description",
+    API_TEST_ROLE_DESCRIPTION_UPDATED: "Updated test role description",
+
+    // Documents Test Data
+    API_TEST_DOCUMENT_ID: "1",
+    API_TEST_FILE_ID: "1",
+    API_TEST_USER_TO_UPDATE_ID: "1",
+    API_TEST_DOCUMENT_TYPE: "test-type",
+    API_TEST_DOCUMENT_TYPE_UPDATED: "updated-test-type",
+
+    // Assemble Test Data
+    API_TEST_ASSEMBLE_ID: "1",
+    API_TEST_ASSEMBLE_NAME: "Test Assemble",
+    API_TEST_ASSEMBLE_NAME_UPDATED: "Updated Test Assemble",
+    API_TEST_ASSEMBLE_DESCRIPTION: "Test assemble description",
+    API_TEST_ASSEMBLE_DESCRIPTION_UPDATED: "Updated test assemble description",
+
+    // Materials Test Data
+    API_TEST_MATERIAL_ID: "1",
+    API_TEST_MATERIAL_NAME: "Test Material",
+    API_TEST_MATERIAL_NAME_UPDATED: "Updated Test Material",
+    API_TEST_MATERIAL_TYPE: "test-type",
+    API_TEST_MATERIAL_TYPE_UPDATED: "updated-test-type",
+    API_TEST_SUBTYPE_INSTANS: "1",
+
+    // CBED Test Data
+    API_TEST_CBED_ID: "1",
+    API_TEST_CBED_NAME: "Test CBED",
+    API_TEST_CBED_NAME_UPDATED: "Updated Test CBED",
+    API_TEST_CBED_DESCRIPTION: "Test CBED description",
+    API_TEST_CBED_DESCRIPTION_UPDATED: "Updated test CBED description",
+
+    // Products Test Data
+    API_TEST_PRODUCT_ID: "1",
+    API_TEST_PRODUCT_NAME: "Test Product",
+    API_TEST_PRODUCT_NAME_UPDATED: "Updated Test Product",
+    API_TEST_PRODUCT_DESCRIPTION: "Test product description",
+    API_TEST_PRODUCT_DESCRIPTION_UPDATED: "Updated test product description",
+    API_TEST_PRODUCT_CATEGORY: "test-category",
+    API_TEST_PRODUCT_CATEGORY_UPDATED: "updated-test-category",
+    API_TEST_PRODUCT_PRICE: 100.00,
+    API_TEST_PRODUCT_PRICE_UPDATED: 150.00,
+
+    // Orders Test Data
+    API_TEST_ORDER_ID: "1",
+    API_TEST_ORDER_STATUS: "pending",
+    API_TEST_ORDER_STATUS_UPDATED: "confirmed",
+    API_TEST_ORDER_TOTAL_AMOUNT: 100.00,
+    API_TEST_ORDER_TOTAL_AMOUNT_UPDATED: 150.00,
+    API_TEST_ORDER_NOTES: "Test order",
+    API_TEST_ORDER_NOTES_UPDATED: "Updated test order",
+
+    // Contacts Test Data
+    API_TEST_CONTACT_ID: "1",
+    API_TEST_CONTACT_NAME: "Test Contact",
+    API_TEST_CONTACT_NAME_UPDATED: "Updated Test Contact",
+    API_TEST_CONTACT_EMAIL: "test@example.com",
+    API_TEST_CONTACT_EMAIL_UPDATED: "updated@example.com",
+    API_TEST_CONTACT_PHONE: "+1234567890",
+    API_TEST_CONTACT_PHONE_UPDATED: "+0987654321",
+    API_TEST_CONTACT_TYPE: "customer",
+    API_TEST_CONTACT_TYPE_UPDATED: "supplier",
+
+    // Equipment Test Data
+    API_TEST_EQUIPMENT_ID: "1",
+    API_TEST_EQUIPMENT_NAME: "Test Equipment",
+    API_TEST_EQUIPMENT_NAME_UPDATED: "Updated Test Equipment",
+    API_TEST_EQUIPMENT_TYPE: "machine",
+    API_TEST_EQUIPMENT_TYPE_UPDATED: "tool",
+    API_TEST_EQUIPMENT_STATUS: "active",
+    API_TEST_EQUIPMENT_STATUS_UPDATED: "maintenance",
+
+    // Inventory Test Data
+    API_TEST_INVENTORY_ID: "1",
+    API_TEST_INVENTORY_NAME: "Test Inventory",
+    API_TEST_INVENTORY_NAME_UPDATED: "Updated Test Inventory",
+    API_TEST_INVENTORY_QUANTITY: 100,
+    API_TEST_INVENTORY_QUANTITY_UPDATED: 150,
+    API_TEST_INVENTORY_LOCATION: "warehouse-a",
+    API_TEST_INVENTORY_LOCATION_UPDATED: "warehouse-b",
+
+    // Parts Test Data
+    API_TEST_PART_ID: "1",
+    API_TEST_PART_NAME: "Test Part",
+    API_TEST_PART_NAME_UPDATED: "Updated Test Part",
+    API_TEST_PART_NUMBER: "PART-001",
+    API_TEST_PART_NUMBER_UPDATED: "PART-002",
+    API_TEST_PART_CATEGORY: "mechanical",
+    API_TEST_PART_CATEGORY_UPDATED: "electrical",
+
+    // Warehouse Test Data
+    API_TEST_WAREHOUSE_ID: "1",
+    API_TEST_WAREHOUSE_NAME: "Test Warehouse",
+    API_TEST_WAREHOUSE_NAME_UPDATED: "Updated Test Warehouse",
+    API_TEST_WAREHOUSE_LOCATION: "Building A",
+    API_TEST_WAREHOUSE_LOCATION_UPDATED: "Building B",
+    API_TEST_WAREHOUSE_CAPACITY: 1000,
+    API_TEST_WAREHOUSE_CAPACITY_UPDATED: 1500,
+
+    // Specifications Test Data
+    API_TEST_SPECIFICATION_ID: "1",
+    API_TEST_SPECIFICATION_NAME: "Test Specification",
+    API_TEST_SPECIFICATION_NAME_UPDATED: "Updated Test Specification",
+    API_TEST_SPECIFICATION_VERSION: "1.0",
+    API_TEST_SPECIFICATION_VERSION_UPDATED: "2.0",
+    API_TEST_SPECIFICATION_STATUS: "draft",
+    API_TEST_SPECIFICATION_STATUS_UPDATED: "approved",
+
+    // Shipments Test Data
+    API_TEST_SHIPMENT_ID: "1",
+    API_TEST_SHIPMENT_TRACKING_NUMBER: "TRK-001",
+    API_TEST_SHIPMENT_TRACKING_NUMBER_UPDATED: "TRK-002",
+    API_TEST_SHIPMENT_STATUS: "pending",
+    API_TEST_SHIPMENT_STATUS_UPDATED: "shipped",
+    API_TEST_SHIPMENT_DESTINATION: "New York",
+    API_TEST_SHIPMENT_DESTINATION_UPDATED: "Los Angeles",
+
+    // Manufacturing Test Data
+    API_TEST_MANUFACTURING_ORDER_ID: "1",
+    API_TEST_MANUFACTURING_ORDER_NAME: "Test Manufacturing Order",
+    API_TEST_MANUFACTURING_ORDER_NAME_UPDATED: "Updated Test Manufacturing Order",
+    API_TEST_MANUFACTURING_ORDER_STATUS: "planned",
+    API_TEST_MANUFACTURING_ORDER_STATUS_UPDATED: "in-progress",
+    API_TEST_MANUFACTURING_ORDER_QUANTITY: 50,
+    API_TEST_MANUFACTURING_ORDER_QUANTITY_UPDATED: 75,
+
+    // Quality Test Data
+    API_TEST_QUALITY_CHECK_ID: "1",
+    API_TEST_QUALITY_CHECK_NAME: "Test Quality Check",
+    API_TEST_QUALITY_CHECK_NAME_UPDATED: "Updated Test Quality Check",
+    API_TEST_QUALITY_CHECK_STATUS: "pending",
+    API_TEST_QUALITY_CHECK_STATUS_UPDATED: "passed",
+    API_TEST_QUALITY_CHECK_SCORE: 85,
+    API_TEST_QUALITY_CHECK_SCORE_UPDATED: 95,
+
+    // Maintenance Test Data
+    API_TEST_MAINTENANCE_SCHEDULE_ID: "1",
+    API_TEST_MAINTENANCE_SCHEDULE_NAME: "Test Maintenance Schedule",
+    API_TEST_MAINTENANCE_SCHEDULE_NAME_UPDATED: "Updated Test Maintenance Schedule",
+    API_TEST_MAINTENANCE_SCHEDULE_FREQUENCY: "weekly",
+    API_TEST_MAINTENANCE_SCHEDULE_FREQUENCY_UPDATED: "monthly",
+    API_TEST_MAINTENANCE_SCHEDULE_STATUS: "active",
+    API_TEST_MAINTENANCE_SCHEDULE_STATUS_UPDATED: "paused",
+
+    // Analytics Test Data
+    API_TEST_ANALYTICS_DATE_RANGE: "2024-01-01,2024-12-31",
+    API_TEST_ANALYTICS_METRICS: ["production", "quality", "efficiency"],
+    API_TEST_ANALYTICS_KPI_TYPE: "performance",
+    API_TEST_ANALYTICS_KPI_TYPE_UPDATED: "quality",
+
+    // Notifications Test Data
+    API_TEST_NOTIFICATION_ID: "1",
+    API_TEST_NOTIFICATION_TITLE: "Test Notification",
+    API_TEST_NOTIFICATION_TITLE_UPDATED: "Updated Test Notification",
+    API_TEST_NOTIFICATION_MESSAGE: "This is a test notification",
+    API_TEST_NOTIFICATION_MESSAGE_UPDATED: "This is an updated test notification",
+    API_TEST_NOTIFICATION_TYPE: "info",
+    API_TEST_NOTIFICATION_TYPE_UPDATED: "warning",
+
+    // Settings Test Data
+    API_TEST_SETTING_KEY: "test_setting",
+    API_TEST_SETTING_KEY_UPDATED: "updated_test_setting",
+    API_TEST_SETTING_VALUE: "test_value",
+    API_TEST_SETTING_VALUE_UPDATED: "updated_test_value",
+    API_TEST_SETTING_CATEGORY: "general",
+    API_TEST_SETTING_CATEGORY_UPDATED: "advanced",
+
+    // Logs Test Data
+    API_TEST_LOG_LEVEL: "info",
+    API_TEST_LOG_LEVEL_UPDATED: "debug",
+    API_TEST_LOG_MODULE: "api",
+    API_TEST_LOG_MODULE_UPDATED: "database",
+    API_TEST_LOG_MESSAGE: "Test log message",
+    API_TEST_LOG_MESSAGE_UPDATED: "Updated test log message",
+
+    // Files Test Data
+    API_TEST_FILE_NAME: "test-file.txt",
+    API_TEST_FILE_NAME_UPDATED: "updated-test-file.txt",
+    API_TEST_FILE_TYPE: "text",
+    API_TEST_FILE_TYPE_UPDATED: "document",
+    API_TEST_FILE_SIZE: 1024,
+    API_TEST_FILE_SIZE_UPDATED: 2048,
+
+    // Security Test Data
+    API_TEST_SECURITY_SETTING_KEY: "password_policy",
+    API_TEST_SECURITY_SETTING_KEY_UPDATED: "session_timeout",
+    API_TEST_SECURITY_SETTING_VALUE: "strong",
+    API_TEST_SECURITY_SETTING_VALUE_UPDATED: "30_minutes",
+    API_TEST_SECURITY_ACTION: "login",
+    API_TEST_SECURITY_ACTION_UPDATED: "logout",
+
+    // Backup Test Data
+    API_TEST_BACKUP_ID: "1",
+    API_TEST_BACKUP_NAME: "Test Backup",
+    API_TEST_BACKUP_NAME_UPDATED: "Updated Test Backup",
+    API_TEST_BACKUP_TYPE: "full",
+    API_TEST_BACKUP_TYPE_UPDATED: "incremental",
+    API_TEST_BACKUP_STATUS: "pending",
+    API_TEST_BACKUP_STATUS_UPDATED: "completed",
+
+    // Monitoring Test Data
+    API_TEST_MONITORING_METRIC: "cpu_usage",
+    API_TEST_MONITORING_METRIC_UPDATED: "memory_usage",
+    API_TEST_MONITORING_THRESHOLD: 80,
+    API_TEST_MONITORING_THRESHOLD_UPDATED: 90,
+    API_TEST_MONITORING_ALERT_TYPE: "warning",
+    API_TEST_MONITORING_ALERT_TYPE_UPDATED: "critical",
+
+    // Reports Test Data
+    API_TEST_REPORT_ID: "1",
+    API_TEST_REPORT_NAME: "Test Report",
+    API_TEST_REPORT_NAME_UPDATED: "Updated Test Report",
+    API_TEST_REPORT_TYPE: "summary",
+    API_TEST_REPORT_TYPE_UPDATED: "detailed",
+    API_TEST_REPORT_FORMAT: "pdf",
+    API_TEST_REPORT_FORMAT_UPDATED: "excel",
+
+    // Integrations Test Data
+    API_TEST_INTEGRATION_ID: "1",
+    API_TEST_INTEGRATION_NAME: "Test Integration",
+    API_TEST_INTEGRATION_NAME_UPDATED: "Updated Test Integration",
+    API_TEST_INTEGRATION_TYPE: "api",
+    API_TEST_INTEGRATION_TYPE_UPDATED: "webhook",
+    API_TEST_INTEGRATION_STATUS: "active",
+    API_TEST_INTEGRATION_STATUS_UPDATED: "inactive",
+
+    // Audit Test Data
+    API_TEST_AUDIT_ACTION: "create",
+    API_TEST_AUDIT_ACTION_UPDATED: "update",
+    API_TEST_AUDIT_RESOURCE: "user",
+    API_TEST_AUDIT_RESOURCE_UPDATED: "product",
+    API_TEST_AUDIT_RESULT: "success",
+    API_TEST_AUDIT_RESULT_UPDATED: "failure",
+
+    // Calendar Test Data
+    API_TEST_CALENDAR_EVENT_ID: "1",
+    API_TEST_CALENDAR_EVENT_TITLE: "Test Event",
+    API_TEST_CALENDAR_EVENT_TITLE_UPDATED: "Updated Test Event",
+    API_TEST_CALENDAR_EVENT_START_DATE: "2024-01-01T10:00:00Z",
+    API_TEST_CALENDAR_EVENT_START_DATE_UPDATED: "2024-01-01T11:00:00Z",
+    API_TEST_CALENDAR_EVENT_END_DATE: "2024-01-01T11:00:00Z",
+    API_TEST_CALENDAR_EVENT_END_DATE_UPDATED: "2024-01-01T12:00:00Z",
+
+    // Tasks Test Data
+    API_TEST_TASK_ID: "1",
+    API_TEST_TASK_TITLE: "Test Task",
+    API_TEST_TASK_TITLE_UPDATED: "Updated Test Task",
+    API_TEST_TASK_DESCRIPTION: "Test task description",
+    API_TEST_TASK_DESCRIPTION_UPDATED: "Updated test task description",
+    API_TEST_TASK_PRIORITY: "medium",
+    API_TEST_TASK_PRIORITY_UPDATED: "high",
+    API_TEST_TASK_STATUS: "todo",
+    API_TEST_TASK_STATUS_UPDATED: "in-progress",
+
+    // Chat Test Data
+    API_TEST_CHAT_ROOM_ID: "1",
+    API_TEST_CHAT_ROOM_NAME: "Test Chat Room",
+    API_TEST_CHAT_ROOM_NAME_UPDATED: "Updated Test Chat Room",
+    API_TEST_CHAT_MESSAGE_ID: "1",
+    API_TEST_CHAT_MESSAGE_CONTENT: "Test message",
+    API_TEST_CHAT_MESSAGE_CONTENT_UPDATED: "Updated test message",
+
+    // Dashboard Test Data
+    API_TEST_DASHBOARD_WIDGET_ID: "1",
+    API_TEST_DASHBOARD_WIDGET_TYPE: "chart",
+    API_TEST_DASHBOARD_WIDGET_TYPE_UPDATED: "table",
+    API_TEST_DASHBOARD_WIDGET_TITLE: "Test Widget",
+    API_TEST_DASHBOARD_WIDGET_TITLE_UPDATED: "Updated Test Widget",
+
+    // Search Test Data
+    API_TEST_SEARCH_QUERY: "test search",
+    API_TEST_SEARCH_QUERY_UPDATED: "updated test search",
+    API_TEST_SEARCH_FILTERS: { category: "test" },
+    API_TEST_SEARCH_FILTERS_UPDATED: { category: "updated" },
+
+    // Import/Export Test Data
+    API_TEST_IMPORT_ID: "1",
+    API_TEST_EXPORT_ID: "1",
+    API_TEST_IMPORT_TYPE: "csv",
+    API_TEST_EXPORT_TYPE: "excel",
+    API_TEST_IMPORT_STATUS: "pending",
+    API_TEST_EXPORT_STATUS: "completed",
+
+    // Messaging Test Data
+    API_TEST_MESSAGE_ID: "1",
+    API_TEST_CONVERSATION_ID: "1",
+    API_TEST_MESSAGE_CONTENT: "Test message content",
+    API_TEST_MESSAGE_CONTENT_UPDATED: "Updated test message content",
+
+    // Templates Test Data
+    API_TEST_TEMPLATE_ID: "1",
+    API_TEST_TEMPLATE_NAME: "Test Template",
+    API_TEST_TEMPLATE_NAME_UPDATED: "Updated Test Template",
+    API_TEST_TEMPLATE_CATEGORY: "email",
+    API_TEST_TEMPLATE_CATEGORY_UPDATED: "document",
+
+    // Workflows Test Data
+    API_TEST_WORKFLOW_ID: "1",
+    API_TEST_WORKFLOW_NAME: "Test Workflow",
+    API_TEST_WORKFLOW_NAME_UPDATED: "Updated Test Workflow",
+    API_TEST_WORKFLOW_STATUS: "draft",
+    API_TEST_WORKFLOW_STATUS_UPDATED: "active",
+
+    // Scheduling Test Data
+    API_TEST_SCHEDULE_ID: "1",
+    API_TEST_SCHEDULE_NAME: "Test Schedule",
+    API_TEST_SCHEDULE_NAME_UPDATED: "Updated Test Schedule",
+    API_TEST_SCHEDULE_FREQUENCY: "daily",
+    API_TEST_SCHEDULE_FREQUENCY_UPDATED: "weekly",
+
+    // Versioning Test Data
+    API_TEST_VERSION_ID: "1",
+    API_TEST_VERSION_NUMBER: "1.0.0",
+    API_TEST_VERSION_NUMBER_UPDATED: "1.1.0",
+    API_TEST_VERSION_STATUS: "draft",
+    API_TEST_VERSION_STATUS_UPDATED: "published",
+
+    // Production Tasks Test Data
+    API_TEST_PRODUCTION_TASK_ID: "1",
+    API_TEST_PRODUCTION_TASK_NAME: "Test Production Task",
+    API_TEST_PRODUCTION_TASK_NAME_UPDATED: "Updated Test Production Task",
+    API_TEST_PRODUCTION_TASK_STATUS: "planned",
+    API_TEST_PRODUCTION_TASK_STATUS_UPDATED: "in-progress",
+
+    // Tools Test Data
+    API_TEST_TOOL_ID: "1",
+    API_TEST_TOOL_NAME: "Test Tool",
+    API_TEST_TOOL_NAME_UPDATED: "Updated Test Tool",
+    API_TEST_TOOL_TYPE: "hand-tool",
+    API_TEST_TOOL_TYPE_UPDATED: "power-tool",
+    API_TEST_TOOL_STATUS: "available",
+    API_TEST_TOOL_STATUS_UPDATED: "in-use",
+    API_TEST_CBED_TYPE: "assembly",
+
+    // Edge Case Test Data for Defensive Testing
+    API_TEST_EDGE_CASES: {
+        // Security Test Data
+        SQL_INJECTION_USERNAME: "admin'; DROP TABLE users; --",
+        XSS_PAYLOAD: "<script>alert('XSS')</script>",
+        XSS_PAYLOAD_ADVANCED: "javascript:alert('XSS')",
+
+        // Input Validation Test Data
+        EMPTY_STRING: "",
+        NULL_VALUE: null,
+        UNDEFINED_VALUE: undefined,
+        VERY_LONG_STRING: "A".repeat(10000),
+        SPECIAL_CHARACTERS: "!@#$%^&*()_+-=[]{}|;':\",./<>?",
+        UNICODE_CHARACTERS: "🚀🌟💫⭐️🎯🔥💎✨",
+
+        // Data Type Test Data
+        INVALID_NUMBER: "not_a_number",
+        NEGATIVE_NUMBER: -1,
+        ZERO_NUMBER: 0,
+        VERY_LARGE_NUMBER: 999999999999,
+        FLOAT_NUMBER: 3.14159,
+
+        // Array/Object Test Data
+        INVALID_ARRAY: "not_an_array",
+        EMPTY_ARRAY: [],
+        LARGE_ARRAY: new Array(1000).fill("test"),
+        INVALID_OBJECT: "not_an_object",
+        EMPTY_OBJECT: {},
+
+        // Authentication Test Data
+        INVALID_TOKEN: "invalid_token_12345",
+        EXPIRED_TOKEN: "expired_token_12345",
+        MALFORMED_TOKEN: "malformed.token",
+
+        // Performance Test Data
+        PERFORMANCE_THRESHOLD_MS: 5000,
+        LARGE_PAGE_SIZE: 10000,
+        NEGATIVE_PAGE_NUMBER: -1,
+        ZERO_PAGE_SIZE: 0,
+
+        // Boundary Test Data
+        MAX_INTEGER: 2147483647,
+        MIN_INTEGER: -2147483648,
+        MAX_STRING_LENGTH: 1000,
+        MIN_STRING_LENGTH: 1,
+    },
+
+    // Comprehensive Status Code Validation Patterns
+    STATUS_CODE_VALIDATION: {
+        // Expected success codes
+        SUCCESS_CODES: [200, 201, 202, 204],
+
+        // Expected error codes for different scenarios
+        AUTHENTICATION_ERROR_CODES: [401, 400, 422],
+        AUTHORIZATION_ERROR_CODES: [403, 401, 400],
+        VALIDATION_ERROR_CODES: [400, 422, 401],
+        NOT_FOUND_ERROR_CODES: [404, 400],
+
+        // Unexpected/problematic codes that indicate API issues
+        UNEXPECTED_SUCCESS_CODES: [201, 200], // When we expect failure
+        UNEXPECTED_ERROR_CODES: [500, 502, 503, 504, 520, 521, 522, 523, 524],
+
+        // Server error codes that indicate infrastructure problems
+        SERVER_ERROR_CODES: [500, 502, 503, 504, 520, 521, 522, 523, 524],
+
+        // Client error codes that should be handled properly
+        CLIENT_ERROR_CODES: [400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 422, 423, 424, 426, 428, 429, 431, 451],
+    },
 };
