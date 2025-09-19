@@ -3,62 +3,53 @@ import { APIPageObject } from '../lib/APIPage';
 import { ENV } from '../config';
 import logger from '../lib/logger';
 
-export class APIUsers extends APIPageObject {
+export class UsersAPI extends APIPageObject {
     constructor(page: Page) {
         super(page);
     }
 
-    async createUser(request: APIRequestContext, userData: any, userId: string) {
+    async createUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
         logger.info(`Creating user with data:`, userData);
 
-        const response = await request.post(ENV.API_BASE_URL + 'api/users', {
-            headers: {
-                'Content-Type': 'application/json',
-                'user-id': userId
-            },
-            data: userData
+        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users', userData, {
+            'user-id': userId,
+            ...(authToken && { 'Authorization': `Bearer ${authToken}` })
         });
 
+        const responseData = await response.json();
+
         if (response.ok()) {
-            const responseData = await response.json();
             logger.info(`User created successfully`);
-            return { status: response.status(), data: responseData };
         } else {
             logger.error(`Failed to create user, status: ${response.status()}`);
-            throw new Error(`Failed to create user with status: ${response.status()}`);
         }
+
+        return { status: response.status(), data: responseData };
     }
 
-    async updateUser(request: APIRequestContext, userData: any, userId: string) {
+    async updateUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
         logger.info(`Updating user with data:`, userData);
 
-        const response = await request.post(ENV.API_BASE_URL + 'api/users/update', {
-            headers: {
-                'Content-Type': 'application/json',
-                'user-id': userId
-            },
-            data: userData
+        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/update', userData, {
+            'user-id': userId,
+            ...(authToken && { 'Authorization': `Bearer ${authToken}` })
         });
 
+        const responseData = await response.json();
+
         if (response.ok()) {
-            const responseData = await response.json();
             logger.info(`User updated successfully`);
-            return { status: response.status(), data: responseData };
         } else {
             logger.error(`Failed to update user, status: ${response.status()}`);
-            throw new Error(`Failed to update user with status: ${response.status()}`);
         }
+
+        return { status: response.status(), data: responseData };
     }
 
     async checkTabelUnique(request: APIRequestContext, tabelData: any) {
         logger.info(`Checking tabel uniqueness:`, tabelData);
 
-        const response = await request.post(ENV.API_BASE_URL + 'api/users/tabel/unique', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: tabelData
-        });
+        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/tabel/unique', tabelData);
 
         if (response.ok()) {
             const responseData = await response.json();
@@ -103,12 +94,7 @@ export class APIUsers extends APIPageObject {
     async getAllUsersWithPagination(request: APIRequestContext, paginationData: any) {
         logger.info(`Getting all users with pagination:`, paginationData);
 
-        const response = await request.post(ENV.API_BASE_URL + 'api/users/pagination/all', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: paginationData
-        });
+        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/pagination/all', paginationData);
 
         if (response.ok()) {
             const responseData = await response.json();
@@ -123,12 +109,7 @@ export class APIUsers extends APIPageObject {
     async getArchivedUsers(request: APIRequestContext, archiveData: any) {
         logger.info(`Getting archived users:`, archiveData);
 
-        const response = await request.post(ENV.API_BASE_URL + 'api/users/archive', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: archiveData
-        });
+        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/archive', archiveData);
 
         if (response.ok()) {
             const responseData = await response.json();

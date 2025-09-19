@@ -12,15 +12,10 @@ export class AuthAPI extends APIPageObject {
         logger.info(`Attempting login for user: ${username}`);
 
         // Use the correct endpoint and field names
-        const response = await request.post(ENV.API_BASE_URL + 'api/auth/login', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: {
-                login: username,
-                password: password,
-                tabel: tabel
-            }
+        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/auth/login', {
+            login: username,
+            password: password,
+            tabel: tabel
         });
 
         return await this.handleResponse(response, username);

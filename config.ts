@@ -16,9 +16,10 @@ export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
     //API_BASE_URL: process.env.API_BASE_URL || "http://localhost:5000/",
     API_BASE_URL: process.env.API_BASE_URL || "http://dev.pksep.ru/",
-    HEADLESS: process.env.HEADLESS === "false" ? false : true,
+    //HEADLESS: process.env.HEADLESS === "false" ? false : true,
+    HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'auth_api',
+    TEST_SUITE: 'suite01',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
 };
@@ -534,11 +535,12 @@ export const CONST = {
     TEST_PRODUCT: 'Т15',
     TESTCASE_2_PRODUCT_1: 'Т15',
     EDIT_BUTTON: 'BaseProducts-Button-Edit',
-    TEST_PRODUCT_СБ: 'Впускной крапан М12',
-    TESTCASE_2_PRODUCT_СБ: 'Впускной крапан М12',
-    TESTCASE_2_PRODUCT_Д: 'Грибок 15',
-    TESTCASE_2_PRODUCT_ПД: 'Блок питания БП12Б-Д1-24',
-    TESTCASE_2_PRODUCT_РМ: 'Рулон бумажных полотенец',
+    TEST_PRODUCT_СБ: 'Опора (Траверса Т10А)СБ',
+    // Test Case 2 Product Constants (for U004-2.spec.ts) - FIXED LOCATION
+    TESTCASE_2_PRODUCT_СБ: "СБ Маслобака 2 Литра",
+    TESTCASE_2_PRODUCT_Д: "Опора штока d45мм",
+    TESTCASE_2_PRODUCT_ПД: "22\" (21,5) Сенсорный инфракрасный экран с антивандальным ---стеклом, мультитач, 4 касания, S-серия",
+    TESTCASE_2_PRODUCT_РМ: "Рулон бумажных полотенец",
     TESTCASE_2_PRODUCT_ASSIGNEMENT: "TESTTESTTEST",
 
     // Constants for U005 files
@@ -1118,6 +1120,8 @@ export const API_CONST = {
         MAX_STRING_LENGTH: 1000,
         MIN_STRING_LENGTH: 1,
     },
+
+    // Duplicate constants removed - now defined above at line 540
 
     // Comprehensive Status Code Validation Patterns
     STATUS_CODE_VALIDATION: {

@@ -16,12 +16,29 @@ export default defineConfig({
         // API testing specific settings
         extraHTTPHeaders: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
+            // Removed Content-Type to avoid interfering with form submissions
+            // API tests will set their own Content-Type headers
         },
+        // Browser settings to make automation more like manual browsing
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        locale: 'en-US',
+        timezoneId: 'America/New_York',
+        // Disable webdriver detection
+        javaScriptEnabled: true,
+        // Add realistic delays
+        launchOptions: {
+            args: [
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--disable-blink-features=AutomationControlled',
+                '--disable-dev-shm-usage',
+                '--no-sandbox'
+            ]
+        }
     },
     projects: [
         {
-            name: ENV.TEST_SUITE,
+            name: 'suite01',
             testMatch: "**/main.spec.ts", // Match the dynamically generated test entry point
         },
     ],
