@@ -1,6 +1,6 @@
 import { test, expect, Locator } from "@playwright/test";
 import { runTC000, performLogin } from "./TC000.spec";
-import { ENV, SELECTORS, CONST } from "../config";
+import { ENV, SELECTORS, CONST, PRODUCT_SPECS } from "../config";
 import logger from "../lib/logger";
 import { allure } from "allure-playwright";
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
@@ -284,185 +284,44 @@ export const runU004_8 = () => {
                 });
                 await page.waitForLoadState("networkidle");
                 await page.waitForTimeout(500);
+                // Ensure any open modal is closed before saving
+                try {
+                    const openDlg = page.locator('dialog[open]').first();
+                    if (await openDlg.count() > 0) {
+                        const cancel = openDlg.locator('[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")');
+                        if (await cancel.count() > 0) { await cancel.click().catch(() => { }); }
+                        else { await page.keyboard.press('Escape').catch(() => { }); }
+                        await openDlg.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
+                    }
+                } catch { }
                 button.click();
 
                 await page.waitForLoadState("networkidle");
                 await page.waitForTimeout(3000);
-                await page.reload();
-                await page.waitForLoadState("networkidle");
+                await page.goto(page.url(), { waitUntil: 'networkidle' });
             });
         });
     });
     test("TestCase 17 - cleanup delete all added details (cleanup delete all added details)", async ({ page }) => {
-        // Placeholder for test logic: Open the parts database page      
-        test.setTimeout(900000);
+        test.setTimeout(240000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        // Placeholder for test logic: Open the parts database page
-        await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
-        });
+        const {
+            productName: T15_PRODUCT_NAME,
+            assemblies: T15_ASSEMBLIES,
+            details: T15_DETAILS,
+            standardParts: T15_STANDARD_PARTS,
+            consumables: T15_CONSUMABLES
+        } = PRODUCT_SPECS.T15;
 
-        const leftTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
-        let firstCellValue = '';
-        let secondCellValue = '';
-        let thirdCellValue = '';
-
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            await shortagePage.validateTableIsDisplayedWithRows(CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
-        });
-        await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
-            await page.waitForLoadState("networkidle");
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
-        });
-        await allure.step("Step 04: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
-            // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT);
-            await page.waitForLoadState("networkidle");
-            // Optionally, validate that the search input is visible
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
-        });
-        await allure.step("Step 05: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
-            // Simulate pressing "Enter" in the search field
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
-            await page.waitForLoadState("networkidle");
-        });
-        await allure.step("Step 06: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-            // Find the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
-            await firstRow.evaluate((row) => {
-                row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-                row.style.border = '2px solid red';  // Add a red border for extra visibility
-                row.style.color = 'blue'; // Change text color to blue
+        await allure.step("Setup: Clean up Т15 product specifications", async () => {
+            console.log("Step: Clean up Т15 product specifications");
+            await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
+                assemblies: T15_ASSEMBLIES,
+                details: T15_DETAILS,
+                standardParts: T15_STANDARD_PARTS,
+                consumables: T15_CONSUMABLES
             });
-            // Wait for the row to be visible and click on it
-            await firstRow.waitFor({ state: 'visible' });
-            await firstRow.hover();
-            await firstRow.click();
-            await page.waitForTimeout(500);
         });
-        await allure.step("Step 07: Найдите кнопку «Редактировать» и нажмите ее. (Find the edit button and click it)", async () => {
-            const firstRow = leftTable.locator('tbody tr:first-child');
-            // Locate the "Редактировать" button
-            const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
-
-            editButton.click();
-            await page.waitForTimeout(500);
-        });
-        await allure.step("Step 08: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (above the комплектации table)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-
-            const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
-            await addButton.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'red';
-            });
-
-            addButton.click();
-            await page.waitForTimeout(500);
-        });
-        await page.waitForLoadState("networkidle");
-        const addButton = page.locator(`div[data-testid="${CONST.MAIN_PAGE_SMALL_DIALOG_Д}"]`);
-        await addButton.evaluate((row) => {
-            row.style.backgroundColor = 'green';
-            row.style.border = '2px solid red';
-            row.style.color = 'red';
-        });
-
-        addButton.click();
-        await page.waitForTimeout(1500);
-        const modal = await page.locator(`dialog[data-testid^="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG}"]`);
-        const bottomTableLocator = modal.locator(`table[data-testid^="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE}"]`);
-
-        // Locate all rows in the table body
-        const rowsLocator = bottomTableLocator.locator('tbody tr');
-        const rowCount = await rowsLocator.count();
-        expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
-
-
-        // Iterate through each row
-        for (let i = rowCount - 1; i >= 0; i--) {
-            const row = rowsLocator.nth(i);
-
-            // Wait for the delete button in the fifth cell
-            const deleteButton = row.locator('td').nth(4).locator('button');
-            const deleteButtonCount = await deleteButton.count();
-            logger.info(`Delete button count in row ${i + 1}: ${deleteButtonCount}`);
-
-            if (deleteButtonCount === 0) {
-                throw new Error(`Delete button not found in row ${i + 1}.`);
-            }
-
-            // Debug the delete button's visibility and state
-            const isDeleteButtonVisible = await deleteButton.isVisible();
-            const isDeleteButtonEnabled = await deleteButton.isEnabled();
-
-            logger.info(`Delete button in row ${i + 1}: Visible=${isDeleteButtonVisible}, Enabled=${isDeleteButtonEnabled}`);
-            if (!isDeleteButtonVisible || !isDeleteButtonEnabled) {
-                throw new Error(`Delete button in row ${i + 1} is not interactable.`);
-            }
-
-            // Click the delete button
-            await deleteButton.click();
-            await page.waitForTimeout(500);
-            logger.info(`Delete button clicked in row ${i + 1}.`);
-        }
-        await page.waitForLoadState("networkidle");
-
-        // Scoped dialog selector using data-testid
-        const dialogSelector = `dialog[data-testid^="${CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG}"][open]`;
-        const buttonDataTestId = CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId constant
-        const buttonLabel = "Добавить";
-        let expectedState = true;
-        const buttonLocator = page.locator(`${dialogSelector} [data-testid="${buttonDataTestId}"]`);
-        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-            // Locate the button using data-testid instead of CSS class selectors
-
-
-            const isButtonReady = await shortagePage.isButtonVisibleTestId(
-                page,
-                buttonDataTestId, // Use data-testid instead of class
-                buttonLabel,
-                expectedState
-            );
-            expect(isButtonReady).toBeTruthy();
-            logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        });
-        buttonLocator.click();
-        await page.waitForTimeout(1000);
-        //resdtore the default Д for the product
-        const itemsToAdd = [
-            { smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_Д, dialogTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG, searchTableTestId: CONST.MAIN_PAGE_Д_TABLE, searchValue: CONST.RESET_Д_1, bottomTableTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE, addToBottomButtonTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON, addToMainButtonTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON, type: 'Д' }
-        ];
-
-        for (const item of itemsToAdd) {
-            await shortagePage.addItemToSpecification(
-                page,
-                item.smallDialogButtonId,
-                item.dialogTestId,
-                item.searchTableTestId,
-                item.searchValue,
-                item.bottomTableTestId,
-                item.addToBottomButtonTestId,
-                item.addToMainButtonTestId,
-                item.type
-            );
-        }
-        await page.waitForTimeout(500);
-        // Wait for loading
-        await page.waitForLoadState("networkidle");
-        const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
-        await button.evaluate((row) => {
-            row.style.backgroundColor = 'green';
-            row.style.border = '2px solid red';
-            row.style.color = 'blue';
-        });
-
-        button.click();
-        await page.waitForTimeout(500);
     });
 
 }

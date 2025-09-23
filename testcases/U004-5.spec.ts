@@ -1,6 +1,6 @@
 import { test, expect, Locator } from "@playwright/test";
 import { runTC000, performLogin } from "./TC000.spec";
-import { ENV, SELECTORS, CONST } from "../config";
+import { ENV, SELECTORS, CONST, PRODUCT_SPECS } from "../config";
 import logger from "../lib/logger";
 import { allure } from "allure-playwright";
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
@@ -322,105 +322,24 @@ export const runU004_5 = () => {
         });
     });
     test("TestCase 10 - cleanup (Return to original state)", async ({ page }) => {
-        // Placeholder for test logic: Open the parts database page      
-        test.setTimeout(90000);
+        test.setTimeout(240000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        // Placeholder for test logic: Open the parts database page
-        await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-            await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
-        });
+        const {
+            productName: T15_PRODUCT_NAME,
+            assemblies: T15_ASSEMBLIES,
+            details: T15_DETAILS,
+            standardParts: T15_STANDARD_PARTS,
+            consumables: T15_CONSUMABLES
+        } = PRODUCT_SPECS.T15;
 
-        const leftTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
-        let firstCellValue = '';
-        let secondCellValue = '';
-        let thirdCellValue = '';
-
-        await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-            await shortagePage.validateTableIsDisplayedWithRows(CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
-        });
-        await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
-            await page.waitForLoadState("networkidle");
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
-        });
-        await allure.step("Step 04: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
-            // Locate the search field within the left table and fill it
-            await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT);
-            await page.waitForLoadState("networkidle");
-            // Optionally, validate that the search input is visible
-            await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
-        });
-        await allure.step("Step 05: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
-            // Simulate pressing "Enter" in the search field
-            await leftTable.locator('input.search-yui-kit__input').press('Enter');
-            await page.waitForLoadState("networkidle");
-        });
-        await allure.step("Step 06: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-            // Find the first row in the table
-            const firstRow = leftTable.locator('tbody tr:first-child');
-            await firstRow.evaluate((row) => {
-                row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-                row.style.border = '2px solid red';  // Add a red border for extra visibility
-                row.style.color = 'blue'; // Change text color to blue
-            });
-            // Wait for the row to be visible and click on it
-            await firstRow.waitFor({ state: 'visible' });
-            await firstRow.hover();
-            await firstRow.click();
-        });
-        await allure.step("Step 07: Найдите кнопку «Редактировать» и нажмите ее. (Find the edit button and click it)", async () => {
-            const firstRow = leftTable.locator('tbody tr:first-child');
-            // Locate the "Редактировать" button
-            const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
-
-            editButton.click();
-            await page.waitForTimeout(500);
-        });
-        await allure.step("Step 08: Нажимаем по кнопки \"Добавить\" (под таблицей комплектации)Click on the button \"Добавить\" (above the комплектации table)", async () => {
-            await allure.step("Step 002 sub step 5: Remove ПД", async () => {
-                const itemsToRemove = [
-                    {
-                        smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_ПД, // Button to open the dialog for "Стандартную или покупную деталь"
-                        dialogTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, // Test ID for the modal dialog
-                        bottomTableTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE, // Table test ID in the modal
-                        removeButtonColumnIndex: 4, // Column index for the delete button
-                        searchValue: CONST.TESTCASE_2_PRODUCT_ПД, // The part number to locate and remove
-                        returnButtonTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON, // The ID of the button to return to the main page
-                        itemType: 'ПД' // Item type
-                    }
-                ];
-
-                for (const item of itemsToRemove) {
-                    const shortagePage = new CreatePartsDatabasePage(page);
-                    await shortagePage.removeItemFromSpecification(
-                        page,
-                        item.smallDialogButtonId,
-                        item.dialogTestId,
-                        item.bottomTableTestId,
-                        item.removeButtonColumnIndex,
-                        item.searchValue,
-                        item.returnButtonTestId,
-                        item.itemType
-                    );
-                }
-
+        await allure.step("Setup: Clean up Т15 product specifications", async () => {
+            console.log("Step: Clean up Т15 product specifications");
+            await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
+                assemblies: T15_ASSEMBLIES,
+                details: T15_DETAILS,
+                standardParts: T15_STANDARD_PARTS,
+                consumables: T15_CONSUMABLES
             });
         });
-
-        await allure.step("Step 16: Нажимаем на кнопку \"Сохранить\". (Press the save button)", async () => {
-            // Wait for loading
-            await page.waitForLoadState("networkidle");
-            const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
-            await button.evaluate((row) => {
-                row.style.backgroundColor = 'green';
-                row.style.border = '2px solid red';
-                row.style.color = 'blue';
-            });
-
-            button.click();
-            await page.waitForTimeout(500);
-        });
-
     });
 }

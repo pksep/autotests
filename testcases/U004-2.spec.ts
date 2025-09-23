@@ -1,6 +1,6 @@
 import { test, expect, Locator } from "@playwright/test";
 import { runTC000, performLogin } from "./TC000.spec";
-import { ENV, SELECTORS, CONST } from "../config";
+import { ENV, SELECTORS, CONST, PRODUCT_SPECS } from "../config";
 import logger from "../lib/logger";
 import { allure } from "allure-playwright";
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
@@ -111,6 +111,16 @@ export const runU004_2 = () => {
                     row.style.border = '2px solid red';
                     row.style.color = 'blue';
                 });
+                // Ensure any open modal is closed before saving
+                try {
+                    const openDlg = page.locator('dialog[open]').first();
+                    if (await openDlg.count() > 0) {
+                        const cancel = openDlg.locator('[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")');
+                        if (await cancel.count() > 0) { await cancel.click().catch(() => { }); }
+                        else { await page.keyboard.press('Escape').catch(() => { }); }
+                        await openDlg.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
+                    }
+                } catch { }
                 button.click();
                 await page.waitForTimeout(1500);
             });
@@ -194,6 +204,16 @@ export const runU004_2 = () => {
                     row.style.color = 'blue';
                 });
 
+                // Ensure any open modal is closed before saving
+                try {
+                    const openDlg = page.locator('dialog[open]').first();
+                    if (await openDlg.count() > 0) {
+                        const cancel = openDlg.locator('[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")');
+                        if (await cancel.count() > 0) { await cancel.click().catch(() => { }); }
+                        else { await page.keyboard.press('Escape').catch(() => { }); }
+                        await openDlg.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
+                    }
+                } catch { }
                 button.click();
                 await page.waitForTimeout(1500);
             });
@@ -278,6 +298,16 @@ export const runU004_2 = () => {
                     row.style.color = 'blue';
                 });
 
+                // Ensure any open modal is closed before saving
+                try {
+                    const openDlg = page.locator('dialog[open]').first();
+                    if (await openDlg.count() > 0) {
+                        const cancel = openDlg.locator('[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")');
+                        if (await cancel.count() > 0) { await cancel.click().catch(() => { }); }
+                        else { await page.keyboard.press('Escape').catch(() => { }); }
+                        await openDlg.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
+                    }
+                } catch { }
                 button.click();
                 await page.waitForTimeout(1500);
             });
@@ -360,6 +390,16 @@ export const runU004_2 = () => {
                     row.style.color = 'blue';
                 });
 
+                // Ensure any open modal is closed before saving
+                try {
+                    const openDlg = page.locator('dialog[open]').first();
+                    if (await openDlg.count() > 0) {
+                        const cancel = openDlg.locator('[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")');
+                        if (await cancel.count() > 0) { await cancel.click().catch(() => { }); }
+                        else { await page.keyboard.press('Escape').catch(() => { }); }
+                        await openDlg.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
+                    }
+                } catch { }
                 button.click();
                 await page.waitForTimeout(1500);
             });
@@ -375,7 +415,7 @@ export const runU004_2 = () => {
             await page.waitForTimeout(1000);
             const nestedArray = tableData_full.map(group => group.items).flat();
 
-            const result1 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TESTCASE_2_PRODUCT_СБ); // Output: true
+            const result1 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TEST_PRODUCT_СБ); // Output: true
             const result2 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TESTCASE_2_PRODUCT_Д); // Output: true
             const result3 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TESTCASE_2_PRODUCT_ПД); // Output: true
             const result4 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TESTCASE_2_PRODUCT_РМ); // Output: true
@@ -387,242 +427,24 @@ export const runU004_2 = () => {
         });
     });
     test("TestCase 04 - Очистка после теста. (Cleanup after test)", async ({ page }) => {
-        test.setTimeout(900000);
+        test.setTimeout(240000);
         const shortagePage = new CreatePartsDatabasePage(page);
-        const leftTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
-        let firstCellValue = '';
-        let secondCellValue = '';
-        let thirdCellValue = '';
-        await allure.step("Step 001: Find Specification к товару (find Specification product)", async () => {
-            await allure.step("Step 01: Открываем страницу базы деталей (Open the parts database page)", async () => {
-                await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
-            });
+        const {
+            productName: T15_PRODUCT_NAME,
+            assemblies: T15_ASSEMBLIES,
+            details: T15_DETAILS,
+            standardParts: T15_STANDARD_PARTS,
+            consumables: T15_CONSUMABLES
+        } = PRODUCT_SPECS.T15;
 
-            await allure.step("Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)", async () => {
-                await shortagePage.validateTableIsDisplayedWithRows(CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
-            });
-            await allure.step("Step 03: Проверяем, что поиск в первой таблицы \"Изделий\" отображается (Ensure search functionality in the first table 'Products' is available)", async () => {
-                await page.waitForLoadState("networkidle");
-                await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
-            });
-            await allure.step("Step 04: Вводим значение переменной в поиск таблицы \"Изделий\" (Enter a variable value in the 'Products' table search)", async () => {
-                // Locate the search field within the left table and fill it
-                await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT);
-                await page.waitForLoadState("networkidle");
-                // Optionally, validate that the search input is visible
-                await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
-            });
-            await allure.step("Step 05: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)", async () => {
-                // Simulate pressing "Enter" in the search field
-                await leftTable.locator('input.search-yui-kit__input').press('Enter');
-                await page.waitForLoadState("networkidle");
-            });
-            await allure.step("Step 06: Нажимаем по найденной строке (Click on the found row in the table)", async () => {
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
-                // Find the first row in the table
-                const firstRow = leftTable.locator('tbody tr:first-child');
-                await firstRow.evaluate((row) => {
-                    row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-                    row.style.border = '2px solid red';  // Add a red border for extra visibility
-                    row.style.color = 'blue'; // Change text color to blue
-                });
-                // Wait for the row to be visible and click on it
-                await firstRow.waitFor({ state: 'visible' });
-                await firstRow.hover();
-                await firstRow.click();
-                await page.waitForTimeout(500);
-            });
-            await allure.step("Step 07: Найдите кнопку «Редактировать» и нажмите ее. (Find the edit button and click it)", async () => {
-                const firstRow = leftTable.locator('tbody tr:first-child');
-                // Locate the "Редактировать" button
-                const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
-
-                editButton.click();
-                await page.waitForTimeout(500);
+        await allure.step("Setup: Clean up Т15 product specifications", async () => {
+            console.log("Step: Clean up Т15 product specifications");
+            await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
+                assemblies: T15_ASSEMBLIES,
+                details: T15_DETAILS,
+                standardParts: T15_STANDARD_PARTS,
+                consumables: T15_CONSUMABLES
             });
         });
-        await allure.step("Step 002: Очистка после теста. (Cleanup after test)", async () => {
-            //remove the item we added СБ
-            await allure.step("Step 002 sub step 1: Remove СБ", async () => {
-                const itemsToRemove = [
-                    {
-                        smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_СБ, // Button to open the dialog for "Сборочную единицу"
-                        dialogTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG, // Modal dialog test ID
-                        bottomTableTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE, // Bottom table test ID in the modal
-                        removeButtonColumnIndex: 4, // Column index for the delete button
-                        searchValue: CONST.TEST_PRODUCT_СБ, // The specific part number to locate
-                        returnButtonTestId: CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, // The ID of the button to return to the main page
-                        itemType: 'СБ' // Item type
-                    }
-                ];
-
-                for (const item of itemsToRemove) {
-                    const shortagePage = new CreatePartsDatabasePage(page);
-                    await shortagePage.removeItemFromSpecification(
-                        page,
-                        item.smallDialogButtonId,
-                        item.dialogTestId,
-                        item.bottomTableTestId,
-                        item.removeButtonColumnIndex,
-                        item.searchValue,
-                        item.returnButtonTestId, // Pass the returnButtonTestId here
-                        item.itemType
-                    );
-                }
-
-            });
-
-            await allure.step("Step 002 sub step 2: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                await page.waitForLoadState("networkidle");
-                const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
-                await button.evaluate((row) => {
-                    row.style.backgroundColor = 'black';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
-                });
-
-                button.click();
-                await page.waitForTimeout(1500);
-            });
-            ////////////////// end of СБ deletion
-            //remove the item we added Д
-            await allure.step("Step 002 sub step 3: Remove Д", async () => {
-                const itemsToRemove = [
-                    {
-                        smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_Д, // Identifies the "Деталь" button
-                        dialogTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG, // Modal dialog test ID
-                        bottomTableTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE, // Table in the modal
-                        removeButtonColumnIndex: 4, // Column index for the delete button
-                        searchValue: CONST.TESTCASE_2_PRODUCT_Д, // Part number to locate and remove
-                        returnButtonTestId: CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON, // The ID of the button to return to the main page
-                        itemType: 'Д' // Type of item
-                    }
-                ];
-
-                for (const item of itemsToRemove) {
-                    const shortagePage = new CreatePartsDatabasePage(page);
-                    await shortagePage.removeItemFromSpecification(
-                        page,
-                        item.smallDialogButtonId,
-                        item.dialogTestId,
-                        item.bottomTableTestId,
-                        item.removeButtonColumnIndex,
-                        item.searchValue,
-                        item.returnButtonTestId,
-                        item.itemType
-                    );
-                }
-
-            });
-
-
-            await allure.step("Step 002 sub step 4: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                await page.waitForLoadState("networkidle");
-                const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
-                await button.evaluate((row) => {
-                    row.style.backgroundColor = 'black';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
-                });
-                await page.waitForTimeout(500);
-
-                button.click();
-                await page.waitForTimeout(2000);
-            });
-            ///// end of Д removal
-            await page.reload();
-            //remove the item we added ПД
-            await allure.step("Step 002 sub step 5: Remove ПД", async () => {
-                const itemsToRemove = [
-                    {
-                        smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_ПД, // Button to open the dialog for "Стандартную или покупную деталь"
-                        dialogTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, // Test ID for the modal dialog
-                        bottomTableTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE, // Table test ID in the modal
-                        removeButtonColumnIndex: 4, // Column index for the delete button
-                        searchValue: CONST.TESTCASE_2_PRODUCT_ПД, // The part number to locate and remove
-                        returnButtonTestId: CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON, // The ID of the button to return to the main page
-                        itemType: 'ПД' // Item type
-                    }
-                ];
-
-                for (const item of itemsToRemove) {
-                    const shortagePage = new CreatePartsDatabasePage(page);
-                    await shortagePage.removeItemFromSpecification(
-                        page,
-                        item.smallDialogButtonId,
-                        item.dialogTestId,
-                        item.bottomTableTestId,
-                        item.removeButtonColumnIndex,
-                        item.searchValue,
-                        item.returnButtonTestId,
-                        item.itemType
-                    );
-                }
-
-            });
-            await allure.step("Step 002 sub step 6: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                await page.waitForLoadState("networkidle");
-                const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
-                await button.evaluate((row) => {
-                    row.style.backgroundColor = 'black';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
-                });
-                await page.waitForTimeout(500);
-
-                button.click();
-                await page.waitForTimeout(2000);
-            });
-            ////////////////// end of ПД deletion
-            ///////////// start РМ deletion
-            await page.reload();
-            //remove the item we added РМ
-            await allure.step("Step 002 sub step 7: Remove РМ", async () => {
-                const itemsToRemove = [
-                    {
-                        smallDialogButtonId: CONST.MAIN_PAGE_SMALL_DIALOG_РМ, // Button to open the dialog for "Расходный материал"
-                        dialogTestId: CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG, // Modal dialog test ID
-                        bottomTableTestId: CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE, // Bottom table test ID in the modal
-                        removeButtonColumnIndex: 4, // Column index for the delete button
-                        searchValue: CONST.TESTCASE_2_PRODUCT_РМ, // The part number to locate and remove
-                        returnButtonTestId: CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON, // The ID of the button to return to the main page
-                        itemType: 'РМ' // Item type
-                    }
-                ];
-
-                for (const item of itemsToRemove) {
-                    const shortagePage = new CreatePartsDatabasePage(page);
-                    await shortagePage.removeItemFromSpecification(
-                        page,
-                        item.smallDialogButtonId,
-                        item.dialogTestId,
-                        item.bottomTableTestId,
-                        item.removeButtonColumnIndex,
-                        item.searchValue,
-                        item.returnButtonTestId,
-                        item.itemType
-                    );
-                }
-
-            });
-
-
-            await allure.step("Step 002 sub step 8: Нажимаем по кнопке \"Сохранить\"  (Click on the \"Сохранить\" button in the main window)", async () => {
-                await page.waitForLoadState("networkidle");
-                const button = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
-                await button.evaluate((row) => {
-                    row.style.backgroundColor = 'green';
-                    row.style.border = '2px solid red';
-                    row.style.color = 'blue';
-                });
-                await page.waitForTimeout(500);
-
-                button.click();
-                await page.waitForTimeout(2000);
-            });
-            ////////////////// end of РМ deletion
-        });
-
     });
 }
