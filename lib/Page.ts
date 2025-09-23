@@ -2861,33 +2861,35 @@ export class PageObject extends AbstractPage {
     }
   }
   async extractNotificationMessage(page: Page): Promise<{ title: string, message: string } | null> {
-    // Define the locator for the dynamic notification div
-    const notificationDiv = page.locator('div.push-notification-yui-kit');
-
-    // Check if the notification div is present
-    const isPresent = await notificationDiv.isVisible();
-    if (!isPresent) {
-      console.log("Notification div is not visible.");
-      return null; // Return null if the div is not present
-    }
-
-    console.log("Notification div is visible.");
-
-    // Extract the title (h4 tag within the notification)
-    const titleLocator = notificationDiv.locator('h4.notification-yui-kit__block-title');
-    const title = await titleLocator.textContent();
-    console.log(`Notification Title: ${title}`);
-
-    // Extract the message (span tag within the notification)
-    const messageLocator = notificationDiv.locator('span.notification-yui-kit__block-text');
-    const message = await messageLocator.textContent();
-    console.log(`Notification Message: ${message}`);
-
-    // Return the extracted title and message
-    return {
-      title: title?.trim() || '', // Trim whitespace and ensure it's a string
-      message: message?.trim() || '' // Trim whitespace and ensure it's a string
-    };
+    // Extract using data-testid; poll briefly due to transient nature
+    const container = page.locator('[data-testid="Notification-Notification"]').last();
+    //let visible = await container.isVisible().catch(() => false);
+    // for (let i = 0; i < 10 && !visible; i++) {
+    //   await page.waitForTimeout(100);
+    //   visible = await container.isVisible().catch(() => false);
+    // }
+    // if (!visible) {
+    //   console.log('Notification not visible.');
+    //   return null;
+    // }
+    const titleLoc = container.locator('[data-testid="Notification-Notification-Title"]');
+    await titleLoc.evaluate((row) => {
+      row.style.backgroundColor = 'yellow';
+      row.style.border = '2px solid red';
+      row.style.color = 'blue';
+    });
+    const descLoc = container.locator('[data-testid="Notification-Notification-Description"]');
+    await descLoc.evaluate((row) => {
+      row.style.backgroundColor = 'yellow';
+      row.style.border = '2px solid red';
+      row.style.color = 'blue';
+    });
+    // Highlight data-testid elements
+    //await titleLoc.evaluate((el: HTMLElement) => { el.style.backgroundColor = 'yellow'; el.style.border = '2px solid red'; el.style.color = 'blue'; }).catch(() => { });
+    //await descLoc.evaluate((el: HTMLElement) => { el.style.backgroundColor = 'yellow'; el.style.border = '2px solid red'; el.style.color = 'blue'; }).catch(() => { });
+    const title = (await titleLoc.textContent().catch(() => '') || '').trim();
+    const message = (await descLoc.textContent().catch(() => '') || '').trim();
+    return { title, message };
   }
 
   async isButtonVisibleTestId(

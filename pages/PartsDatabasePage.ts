@@ -2,7 +2,7 @@ import { Page, Locator, expect } from "@playwright/test";
 
 import { PageObject } from "../lib/Page";
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
-import { ENV, SELECTORS } from "../config";
+import { ENV, SELECTORS, CONST } from "../config";
 import logger from "../lib/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
@@ -31,6 +31,13 @@ export type Item = {
     material: string;
     quantity: number;
 
+};
+
+export type TestProductSpecification = {
+    assemblies: Array<{ partNumber: string; name: string; quantity: number }>;
+    details: Array<{ partNumber: string; name: string; quantity: number }>;
+    standardParts: Array<{ name: string; quantity: number }>;
+    consumables: Array<{ name: string; quantity: number }>;
 };
 
 // Страница: Сборка
@@ -1738,53 +1745,32 @@ export class CreatePartsDatabasePage extends PageObject {
                 return; // Skip instead of failing
             }
         }
-        // Step 9: Add the item to the main table
+        // Step 9: Commit additions (or close modal if nothing to add)
         const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
-
-        // Wait for the button to be visible and ready
         await addToMainButton.waitFor({ state: 'visible', timeout: 10000 });
 
-        // Check if the button is enabled before clicking
-        const isButtonEnabled = await addToMainButton.isEnabled();
+        let isButtonEnabled = false;
+        try { isButtonEnabled = await addToMainButton.isEnabled(); } catch { }
         logger.info(`Add to main button enabled: ${isButtonEnabled}`);
 
         if (!isButtonEnabled) {
-            logger.warn("Add to main button is disabled. This might indicate no items in bottom table.");
-            // Wait a bit more and try again
-            await page.waitForTimeout(2000);
-            const isButtonEnabledAfterWait = await addToMainButton.isEnabled();
-            logger.info(`Add to main button enabled after wait: ${isButtonEnabledAfterWait}`);
-
-            if (!isButtonEnabledAfterWait) {
-                logger.warn(`Add to main button is disabled. Skipping addition of item: ${searchValue}`);
-                return; // Skip the addition instead of throwing an error
-            }
-        }
-
-        // Wait a bit more to ensure the button is fully ready
-        try {
-            await page.waitForTimeout(1000);
-        } catch (error) {
-            logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
-            logger.warn("Continuing without waiting.");
-        }
-
-        try {
-            await addToMainButton.click();
-        } catch (error) {
-            logger.warn(`Failed to click add to main button: ${error instanceof Error ? error.message : String(error)}`);
-            logger.warn("Skipping add to main button click since it's not available.");
+            logger.warn("Add to main disabled. Closing modal via Cancel/Return.");
+            const cancelButtonTestId =
+                dialogTestId === CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG ? CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON :
+                    dialogTestId === CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG ? CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON :
+                        dialogTestId === CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG ? CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON :
+                            CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON;
+            const cancelButton = modal.locator(`[data-testid="${cancelButtonTestId}"]`);
+            await cancelButton.click().catch(() => { });
+            await modal.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
             return;
         }
-        try {
-            await page.waitForTimeout(500);
-        } catch (error) {
-            logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
-            logger.warn("Continuing without waiting.");
-        }
 
-        // Step 10: Ensure modal is closed before checking the main table
-        await modal.waitFor({ state: "hidden", timeout: 5000 });
+        // Click Add to Main when enabled
+        await page.waitForTimeout(500).catch(() => { });
+        await addToMainButton.click().catch(() => { });
+        await page.waitForTimeout(500).catch(() => { });
+        await modal.waitFor({ state: "hidden", timeout: 5000 }).catch(() => { });
 
         const parsedTableArray = await this.parseStructuredTable(page, MAIN_TABLE_TEST_ID); // Parse the table
 
@@ -1803,6 +1789,312 @@ export class CreatePartsDatabasePage extends PageObject {
         }
     }
 
+    /**
+     * Add multiple items to the specification within a single dialog session (one group at a time).
+     * - Opens the dialog once
+     * - For each searchValue: clears search, searches, selects first matching row, clicks "add to bottom", verifies presence
+     * - After all items are in the bottom table, clicks "add to main"
+     */
+    async addMultipleItemsToSpecification(
+        page: Page,
+        smallDialogButtonId: string,
+        dialogTestId: string,
+        searchTableTestId: string,
+        bottomTableTestId: string,
+        addToBottomButtonTestId: string,
+        addToMainButtonTestId: string,
+        items: Array<{ name: string; quantity?: number }>,
+        itemType?: string
+    ): Promise<void> {
+        // Open add dialog and select group
+        try { await page.waitForLoadState("networkidle", { timeout: 10000 }); } catch { }
+        const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+        await addButton.click().catch(() => { });
+        await page.waitForTimeout(300).catch(() => { });
+
+        const dialogButton = page.locator(`div[data-testid="${smallDialogButtonId}"]`);
+        await dialogButton.click().catch(() => { });
+        await page.waitForTimeout(300).catch(() => { });
+
+        const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
+        await expect(modal).toBeVisible();
+        await page.waitForTimeout(500).catch(() => { });
+
+        // Try primary table; if missing, try common fallback for CBED tables; else use modal-level search input
+        let itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+        try {
+            await itemTableLocator.waitFor({ state: "visible", timeout: 10000 });
+        } catch {
+            const fallbackCbedTable = modal.locator(`table[data-testid="BasePaginationTable-Table-cbed"]`);
+            if (await fallbackCbedTable.count() > 0) {
+                itemTableLocator = fallbackCbedTable;
+                await itemTableLocator.waitFor({ state: "visible", timeout: 10000 }).catch(() => { });
+            }
+        }
+
+        for (const { name: searchValue, quantity } of items) {
+            // Clear the search input and search this item
+            // Prefer dedicated data-testid for search input if present; otherwise fallback to input inside table
+            let searchInput = modal.locator(`[data-testid="${CONST.BASE_DETAIL_CB_TABLE_SEARCH}"]`).first();
+            if (await searchInput.count() === 0) {
+                searchInput = itemTableLocator.locator('input.search-yui-kit__input').first();
+            }
+            await searchInput.fill("").catch(() => { });
+            await searchInput.fill(searchValue);
+            await searchInput.press('Enter');
+            try { await page.waitForLoadState('networkidle', { timeout: 10000 }); } catch { }
+            await page.waitForTimeout(500).catch(() => { });
+
+            // Select first result
+            const results = itemTableLocator.locator('tbody tr');
+            const count = await results.count();
+            if (count === 0) {
+                logger.warn(`No results for "${searchValue}" in ${dialogTestId}`);
+                continue;
+            }
+            await results.first().click().catch(() => { });
+            await page.waitForTimeout(200).catch(() => { });
+
+            // Add to bottom
+            const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
+            await addToBottomButton.click().catch(() => { });
+            await page.waitForTimeout(300).catch(() => { });
+
+            // Verify presence in bottom table
+            const bottomTable = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
+            await bottomTable.waitFor({ state: 'visible', timeout: 10000 });
+            const bottomRows = bottomTable.locator('tbody tr');
+            const bottomCount = await bottomRows.count();
+            expect(bottomCount).toBeGreaterThan(0);
+
+            // Set quantity if provided (default 1)
+            const desiredQty = (quantity ?? 1).toString();
+            try {
+                const lastRow = bottomRows.nth(bottomCount - 1);
+                const qtyCell = lastRow.locator('td').nth(3);
+                await qtyCell.dblclick();
+                await page.waitForTimeout(100).catch(() => { });
+                const qtyInput = qtyCell.locator('input');
+                await qtyInput.fill(desiredQty);
+                await page.waitForTimeout(50).catch(() => { });
+                await qtyInput.press('Enter');
+                await page.waitForTimeout(100).catch(() => { });
+            } catch (e) {
+                logger.warn(`Failed to set quantity for "${searchValue}": ${(e as Error).message}`);
+            }
+        }
+
+        // Finalize: add all from bottom to main
+        const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
+        await addToMainButton.waitFor({ state: 'visible', timeout: 10000 });
+        const enabled = await addToMainButton.isEnabled();
+        if (enabled) {
+            await addToMainButton.click().catch(() => { });
+        } else {
+            logger.warn('Add to main button disabled after multiple additions');
+        }
+        await modal.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+    }
+
+    /**
+     * Open group dialog, clear all existing items from bottom table, then add provided items and commit to main table.
+     */
+    private async reconcileGroupClearAndSet(
+        smallDialogButtonId: string,
+        dialogTestId: string,
+        searchTableTestId: string,
+        bottomTableTestId: string,
+        addToBottomButtonTestId: string,
+        addToMainButtonTestId: string,
+        items: Array<{ name: string; quantity?: number }>
+    ): Promise<void> {
+        const page = this.page;
+
+        // Open add dialog and select group
+        try { await page.waitForLoadState("networkidle", { timeout: 10000 }); } catch { }
+        const addButton = page.locator(`[data-testid="${CONST.EDIT_PAGE_ADD_BUTTON}"]`);
+        await addButton.click().catch(() => { });
+        await page.waitForTimeout(300).catch(() => { });
+
+        const dialogButton = page.locator(`div[data-testid="${smallDialogButtonId}"]`);
+        await dialogButton.click().catch(() => { });
+        await page.waitForTimeout(300).catch(() => { });
+
+        const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
+        await expect(modal).toBeVisible();
+
+        // Clear existing rows in bottom table
+        const bottomTable = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
+        await bottomTable.waitFor({ state: 'visible', timeout: 10000 }).catch(() => { });
+        const deleteColumnIndex = 4; // matches current UI for delete action
+        while (true) {
+            const rows = bottomTable.locator('tbody tr');
+            const count = await rows.count();
+            if (count === 0) break;
+            const row = rows.nth(count - 1);
+            const deleteCell = row.locator('td').nth(deleteColumnIndex);
+            await deleteCell.click().catch(() => { });
+            await page.waitForTimeout(200).catch(() => { });
+        }
+
+        // If items provided, add them and commit to main table in the same open modal
+        if (items && items.length > 0) {
+            // Locate search table with fallbacks
+            let itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+            try {
+                await itemTableLocator.waitFor({ state: "visible", timeout: 10000 });
+            } catch {
+                const fallbackCbedTable = modal.locator(`table[data-testid="BasePaginationTable-Table-cbed"]`);
+                if (await fallbackCbedTable.count() > 0) {
+                    itemTableLocator = fallbackCbedTable;
+                    await itemTableLocator.waitFor({ state: "visible", timeout: 10000 }).catch(() => { });
+                }
+            }
+
+            for (const { name: searchValue, quantity } of items) {
+                // Prefer dedicated search input if present; otherwise fallback to input inside the table
+                let searchInput = modal.locator(`[data-testid="${CONST.BASE_DETAIL_CB_TABLE_SEARCH}"]`).first();
+                if (await searchInput.count() === 0) {
+                    searchInput = itemTableLocator.locator('input.search-yui-kit__input').first();
+                }
+                await searchInput.fill("").catch(() => { });
+                await searchInput.fill(searchValue);
+                await searchInput.press('Enter');
+                try { await page.waitForLoadState('networkidle', { timeout: 10000 }); } catch { }
+                await page.waitForTimeout(500).catch(() => { });
+
+                const results = itemTableLocator.locator('tbody tr');
+                const count = await results.count();
+                if (count === 0) {
+                    logger.warn(`No results for "${searchValue}" in ${dialogTestId}`);
+                    continue;
+                }
+                await results.first().click().catch(() => { });
+                await page.waitForTimeout(200).catch(() => { });
+
+                // Add to bottom table
+                const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
+                await addToBottomButton.click().catch(() => { });
+                await page.waitForTimeout(300).catch(() => { });
+
+                // Ensure item appears in bottom table
+                await bottomTable.waitFor({ state: 'visible', timeout: 10000 }).catch(() => { });
+                const bottomRows = bottomTable.locator('tbody tr');
+                const bottomCount = await bottomRows.count();
+                expect(bottomCount).toBeGreaterThan(0);
+
+                // Set quantity if provided
+                const desiredQty = (quantity ?? 1).toString();
+                try {
+                    const lastRow = bottomRows.nth(bottomCount - 1);
+                    const qtyCell = lastRow.locator('td').nth(3);
+                    await qtyCell.dblclick();
+                    await page.waitForTimeout(100).catch(() => { });
+                    const qtyInput = qtyCell.locator('input');
+                    await qtyInput.fill(desiredQty);
+                    await page.waitForTimeout(50).catch(() => { });
+                    await qtyInput.press('Enter');
+                    await page.waitForTimeout(100).catch(() => { });
+                } catch (e) {
+                    logger.warn(`Failed to set quantity for "${searchValue}": ${(e as Error).message}`);
+                }
+            }
+
+            // Finalize: add all from bottom to main
+            const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
+            await addToMainButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => { });
+            const enabled = await addToMainButton.isEnabled();
+            if (enabled) {
+                await addToMainButton.click().catch(() => { });
+            } else {
+                logger.warn('Add to main button disabled after multiple additions');
+            }
+            await modal.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        } else {
+            // Nothing to add, close modal via cancel button if exists, else escape by clicking cancel specific to dialog
+            const cancelButtonTestId =
+                dialogTestId === CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG ? CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON :
+                    dialogTestId === CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG ? CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON :
+                        dialogTestId === CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG ? CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON :
+                            CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON;
+            const cancelButton = modal.locator(`[data-testid="${cancelButtonTestId}"]`);
+            await cancelButton.click().catch(() => { });
+            await modal.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        }
+    }
+
+    /**
+     * Resets a product's specification to match the provided configuration.
+     */
+    async resetProductSpecificationsByConfig(productSearch: string, config: TestProductSpecification): Promise<void> {
+        const page = this.page;
+
+        // Navigate to parts database and open product for editing
+        await this.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, CONST.MAIN_PAGE_TITLE_ID);
+        const leftTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+        const searchInput = leftTable.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT}"]`);
+        await searchInput.fill(productSearch);
+        await searchInput.press('Enter');
+        try { await page.waitForLoadState('networkidle', { timeout: 10000 }); } catch { }
+        await page.waitForTimeout(1000).catch(() => { });
+        const firstRow = leftTable.locator('tbody tr:first-child');
+        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRow.click();
+        await page.waitForTimeout(300).catch(() => { });
+        const editButton = page.locator(`[data-testid="${CONST.MAIN_PAGE_EDIT_BUTTON}"]`);
+        await editButton.click().catch(() => { });
+        await page.waitForTimeout(300).catch(() => { });
+
+        // СБ: clear and set from config.assemblies (search by name)
+        await this.reconcileGroupClearAndSet(
+            CONST.MAIN_PAGE_SMALL_DIALOG_СБ,
+            CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG,
+            "Specification-ModalCbed-AccordionCbed-Table",
+            CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE,
+            CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
+            CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+            (config.assemblies || []).map(i => ({ name: i.name, quantity: i.quantity }))
+        );
+
+        // Д: clear and set from config.details (search by name)
+        await this.reconcileGroupClearAndSet(
+            CONST.MAIN_PAGE_SMALL_DIALOG_Д,
+            CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG,
+            CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE,
+            CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE,
+            CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
+            CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+            (config.details || []).map(i => ({ name: i.name, quantity: i.quantity }))
+        );
+
+        // ПД: clear and set from config.standardParts (search by name)
+        await this.reconcileGroupClearAndSet(
+            CONST.MAIN_PAGE_SMALL_DIALOG_ПД,
+            CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG,
+            CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE,
+            CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE,
+            CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
+            CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+            (config.standardParts || []).map(i => ({ name: i.name, quantity: i.quantity }))
+        );
+
+        // РМ: clear and set from config.consumables (often empty)
+        await this.reconcileGroupClearAndSet(
+            CONST.MAIN_PAGE_SMALL_DIALOG_РМ,
+            CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG,
+            CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE,
+            CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE,
+            CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
+            CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+            (config.consumables || []).map(i => ({ name: i.name, quantity: i.quantity }))
+        );
+
+        // Save changes
+        const saveButton = page.locator(`[data-testid^="${CONST.MAIN_PAGE_SAVE_BUTTON}"]`);
+        await saveButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => { });
+        await saveButton.click().catch(() => { });
+        await page.waitForTimeout(500).catch(() => { });
+    }
 
 
     async removeItemFromSpecification(

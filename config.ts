@@ -19,7 +19,7 @@ export const ENV = {
     //HEADLESS: process.env.HEADLESS === "false" ? false : true,
     HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'suite01',
+    TEST_SUITE: 'U005',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
 };
@@ -235,7 +235,7 @@ export const SELECTORS = {
     },
     SUBPAGES: {
         CREATEDETAIL: {
-            URL: "detal/add",
+            URL: "baseproduct/detal/add",
             TEXT_RUS: "Создать деталь",
             TEXT_ENG: "Create Part",
             DATA_TESTID: "BaseProducts-Button-Create",
@@ -575,16 +575,18 @@ export const CONST = {
     ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC: "AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc",
     ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES: "AddDetal-FileComponent-ModalBaseFiles",
     ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM0: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0",
-    ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable",
-    ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_SEARCH_DROPDOWN_INPUT: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Search-Dropdown-Input",
+    ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table",
+    ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_SEARCH_DROPDOWN_INPUT: "Search-Dropdown-Input",
     ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Table",
+    ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE_TBODY: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table-Tbody",
     ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton",
     ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_TABLE: "AddDetal-FileComponent-ModalBaseFiles-Table",
     ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_BUTTONS_ADD_BUTTON: "AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton",
     ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown",
-    ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE_THEAD: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable-Table-Thead",
+    ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE_THEAD: "AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table-Thead",
     ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL: "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal",
     ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION: "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section",
+    ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_LOADER: "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Loader",
     ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE: "AddDetal-FileComponent-DragAndDrop-ModalAddFile-File",
     ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_TEXTAREA_DESCRIPTION_TEXTAREA: "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea",
     ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_CHECKBOX_MAIN: "AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main",
@@ -1144,4 +1146,24 @@ export const API_CONST = {
         // Client error codes that should be handled properly
         CLIENT_ERROR_CODES: [400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 422, 423, 424, 426, 428, 429, 431, 451],
     },
+};
+
+// Reusable product specifications for tests
+export const PRODUCT_SPECS = {
+    T15: {
+        productName: "Т15",
+        assemblies: [
+            { partNumber: "109.01-03.00СБ", name: "Опора (Траверса Т10А)СБ", quantity: 2 },
+            { partNumber: "109.02-01.00СБ", name: "Балка траверсы", quantity: 1 },
+            { partNumber: "109.02-02.00СБ", name: "Упор подвижный", quantity: 2 }
+        ],
+        details: [
+            { partNumber: "109.01-01", name: "Стойка опоры траверсы", quantity: 2 }
+        ],
+        standardParts: [
+            { name: "Гайка шестигранная DIN934 М8", quantity: 4 },
+            { name: "Болт с полной резьбой DIN933 М8х40", quantity: 4 }
+        ],
+        consumables: [] as Array<{ name: string; quantity: number }>
+    }
 };
