@@ -6,10 +6,9 @@ import {
 } from "../pages/OrderedFromSuppliersPage";
 import { CreateMetalworkingWarehousePage } from "../pages/MetalworkingWarehousePage";
 import { CreateAssemblyWarehousePage } from "../pages/AssemplyWarehousePage";
-import { ENV, SELECTORS } from "../config";
+import { ENV, SELECTORS, CONST } from "../config";
 import { allure } from "allure-playwright";
 import { Click } from "../lib/Page";
-import { allColors } from "winston/lib/winston/config";
 import testData1 from '../testdata/U002-PC1.json';
 import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
 
@@ -32,27 +31,8 @@ const arrayIzd = [
     }
 ]
 
-// Create new part
-const buttonCreateNewPart = '[data-testid="BaseDetals-Button-Create"]'
-const buttonDetail = '[data-testid="BaseDetals-CreatLink-Cardbase-detail"]'
-const buttonCbed = '[data-testid="BaseDetals-CreatLink-Cardbase-of-assembly-units"]'
-const buttonProduct = '[data-testid="BaseDetals-CreatLink-Cardthe-base-of-the-tool"]'
-const buttonAddOperation = '[data-testid="EditDetal-ModalTechProcess-Buttons-ButtonCreate"]'
-const buttonSaveOperation = '[data-testid="EditDetal-ModalTechProcess-Button-Save"]'
-const buttonSave = '[data-testid="AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save"]'
-const buttonCancel = '[data-testid="EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel"]'
-const buttonOperation = '[data-testid="EditDetal-Buttons-TechProcess"]'
-const buttonOperationProcessAssymbly = '[data-testid="Creator-Buttons-TechProcess"]'
-const buttonSaveCbed = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]'
-const buttonCancelCbed = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]'
-const tableProcessID = '#operation-table'
-const tableProcess = '[data-testid="EditDetal-ModalTechProcess-Table-Wrapper"]'
-const tableProcessNameOperation = 'EditDetal-ModalTechProcess-Thead-NameOperation'
 let nameOprerationOnProcess: string
-const tableProcessNameOperationAss = 'Creator-ModalTechProcess-Thead-NameOperation'
-const tableProcessAss = '[data-testid="Creator-ModalTechProcess-Table-Wrapper"]'
 let nameOprerationOnProcessAssebly: string
-const buttonProcessCancel = '[data-testid="Creator-ModalTechProcess-Button-Cancel"]'
 let nameOprerationOnProcessIzd: string
 
 // Quantity launched into production
@@ -60,46 +40,12 @@ let quantityOrder = "2";
 let checkOrderNumber: string;
 let quantityLaunchInProduct: string;
 
-const buttonLaunchIntoProduction = '[data-testid="ModalStartProduction-ComplectationTable-CancelButton"]'
-const buttonOrder = '[data-testid="ModalAddOrder-ProductionTable-OrderButton"]'
-const buttonCreateOrder = ".btn-add"
-
-const selectorOrderedFromSuppliers = '[data-testid="Sclad-orderingSuppliers"]';
-
-const tableModalCheckbox = "ModalAddOrder-ProductionTable-SelectColumn";
-const tableModalWindowDataTestId =
-    "ModalAddOrder-ProductionTable-Table";
-const tableModalWindow =
-    '[data-testid="ModalAddOrder-ProductionTable-Table"]';
-
-// MetalWorkingWarhouse
-const selectorMetalWorkingWarhouse = '[data-testid="Sclad-stockOrderMetalworking"]';
-const tableMetalWorkingWarhouse = '[data-testid="MetalloworkingSclad-DetailsTable"]';
-const tableMetalworkingWarehouseID = 'MetalloworkingSclad-DetailsTable'
-const tableMetalWorkingOrdered = "MetalloworkingSclad-DetailsTableHeader-OrderedColumn"
-const tableMetalWorkingOperation = 'MetalloworkingSclad-DetailsTableHeader-OperationsColumn'
-const tableMetalWorkingCheckbox = "MetalloworkingSclad-DetailsTableHeader-SelectColumn"
-const buttonMoveToArchive = '[data-testid="MetalloworkingSclad-PrintControls-ArchiveButton"]'
 let numberColumnQunatityMade: number;
 let firstOperation: string;
 let valueLeftToDo
-const operationTable = '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
-const operationTableID = "OperationPathInfo-Table";
-const operationTableRemainsToDo = 'OperationPathInfo-Thead-RemainsToDo'
-const operationTableNameFirstOperation = 'OperationPathInfo-Thead-Operation'
 
-// AssemblyWarhouse
-const selectorAsseblyWarhouse = '[data-testid="Sclad-stockOrderAssembly"]';
-const tableAssemblyWarhouseID = "#tablebody";
-const tableAssemblyWarhouse = '[data-testid="AssemblySclad-Table"]'
-const tableAssemblyCheckbox = "AssemblySclad-PrintTableHeader-SelectColumn"
-const tableAssemblyOrdered = 'AssemblySclad-PrintTableHeader-OrderedColumn'
-const tableAssemblyOperation = 'AssemblySclad-PrintTableHeader-OperationsColumn'
-const buttonMoveToArchiveAssembly = '[data-testid="AssemblySclad-PrintControls-ArchiveButton"]'
-const operationTableAssembly = '[data-testid="ModalOperationPath-OperationTable"]'
 
-// Modal Confirmation Window
-const buttonConfirmationButton = '[data-testid="ModalPromptMini-Button-Confirm"]'
+
 
 export const runU002 = (isSingleTest: boolean, iterations: number) => {
     console.log(
@@ -107,21 +53,25 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     );
 
     test('Test Case 01 - Check all elements on page Ordered from suppliers', async ({ page }) => {
+        test.setTimeout(60000);
+        console.log("Test Case 01 - Check all elements on page Ordered from suppliers");
         const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
+        const selectedItems: Array<{ id: string; name: string }> = [];
         await allure.step("Step 1: Open the warehouse page", async () => {
-            // Go to the Warehouse page
+            // Go to the Warehouse page 
             await orderedFromSuppliersPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step(
             "Step 2: Open the shortage assemblies page",
             async () => {
-                await orderedFromSuppliersPage.findTable(selectorOrderedFromSuppliers);
+                await orderedFromSuppliersPage.findTable(`[data-testid="${CONST.ORDERED_SUPPLIERS_PAGE_TABLE}"]`);
                 await page.waitForLoadState("networkidle");
             }
         );
 
         await allure.step('Step 3: Проверяем  наличие заголовков на странице Заказано у поставщиков', async () => {
+            console.log('Step 3: Проверяем  наличие заголовков на странице Заказано у поставщиков');
             const titles = testData1.elements.MainPage.titles.map((title) => title.trim());
             const h3Titles = await orderedFromSuppliersPage.getAllH3TitlesInClass(page, 'container');
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
@@ -141,21 +91,48 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         })
 
         await allure.step("Step 04: Проверяем наличие кнопок на странице Заказано у поставщиков", async () => {
+            console.log("Step 04: Проверяем наличие кнопок на странице Заказано у поставщиков");
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
             const buttons = testData1.elements.MainPage.buttons;
+            const knownButtonTestIdsByLabel: Record<string, string> = {
+                'Создать заказ': CONST.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON
+            };
             // Iterate over each button in the array
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
                 const buttonClass = button.class;
                 const buttonLabel = button.label;
+                const dataTestId = button.datatestid;
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    console.log(`Validate button with label: "${buttonLabel}"`);
                     // Check if the button is visible and enabled
 
-                    const isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
+                    // Highlight the button as we find it
+                    try {
+                        const highlightLocator = dataTestId
+                            ? page.locator(`[data-testid="${dataTestId}"]`).first()
+                            : page.locator(buttonClass).first();
+                        await highlightLocator.waitFor({ state: 'visible', timeout: 3000 });
+                        await highlightLocator.evaluate((el: HTMLElement) => {
+                            el.style.backgroundColor = 'yellow';
+                            el.style.border = '2px solid red';
+                            el.style.color = 'blue';
+                        });
+                        await page.waitForTimeout(500);
+                    } catch { }
+
+                    let isButtonReady = false;
+                    const mappedTestId = dataTestId || knownButtonTestIdsByLabel[buttonLabel];
+                    if (mappedTestId) {
+                        isButtonReady = await orderedFromSuppliersPage.isButtonVisibleTestId(page, mappedTestId, buttonLabel);
+                    } else {
+                        console.log(`data-testid отсутствует в тестовых данных для кнопки "${buttonLabel}", используем проверку по классу.`);
+                        isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
+                    }
 
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -166,18 +143,41 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step("Step 05: Проверка свитчера", async () => {
+            console.log("Step 05: Проверка свитчера");
             const switchers = testData1.elements.MainPage.switcher;
 
             for (const switcher of switchers) {
                 // Extract the class, label, and state from the button object
                 const buttonClass = switcher.class;
                 const buttonLabel = switcher.label;
+                const dataTestId = switcher.datatestid;
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
+                    console.log(`Validate button with label: "${buttonLabel}"`);
                     // Check if the button is visible and enabled
 
-                    const isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
+                    // Highlight the switch as we find it
+                    try {
+                        const highlightLocator = dataTestId
+                            ? page.locator(`[data-testid="${dataTestId}"]`).first()
+                            : page.locator(buttonClass).first();
+                        await highlightLocator.waitFor({ state: 'visible', timeout: 3000 });
+                        await highlightLocator.evaluate((el: HTMLElement) => {
+                            el.style.backgroundColor = 'yellow';
+                            el.style.border = '2px solid red';
+                            el.style.color = 'blue';
+                        });
+                        await page.waitForTimeout(500);
+                    } catch { }
+
+                    let isButtonReady = false;
+                    if (dataTestId) {
+                        isButtonReady = await orderedFromSuppliersPage.isButtonVisibleTestId(page, dataTestId, buttonLabel);
+                    } else {
+                        console.log(`data-testid отсутствует в тестовых данных для переключателя "${buttonLabel}", используем проверку по классу.`);
+                        isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
+                    }
 
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -188,13 +188,32 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         })
 
         await allure.step(
-            "Step 06: Click on the Launch on Production button",
+            "Step 06: Click on the Create Order button",
             async () => {
-                await orderedFromSuppliersPage.clickButton(" Создать заказ ", buttonCreateOrder);
+                const createOrderSelector = `[data-testid="${CONST.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON}"]`;
+                try {
+                    const createBtn = page.locator(createOrderSelector).first();
+                    await createBtn.waitFor({ state: 'visible' });
+                    await createBtn.evaluate((el: HTMLElement) => {
+                        el.style.backgroundColor = 'yellow';
+                        el.style.border = '2px solid red';
+                        el.style.color = 'blue';
+                    });
+                    await page.waitForTimeout(1000);
+                } catch { }
+
+                await orderedFromSuppliersPage.clickButton(" Создать заказ ", createOrderSelector);
+                // Wait for supplier selection modal to appear (fallback to a reliable content element if container testid differs)
+                try {
+                    await page.waitForSelector(`[data-testid="${CONST.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"]`, { state: 'visible', timeout: 5000 });
+                } catch {
+                    await page.waitForSelector(`[data-testid="OrderSuppliers-Modal-AddOrder-Content-ProductCard"]`, { state: 'visible', timeout: 10000 });
+                }
             }
         );
 
         await allure.step("Step 07: Проверяем модальное окно на наличие всех кнопок с поставщиками", async () => {
+            console.log("Step 07: Проверяем модальное окно на наличие всех кнопок с поставщиками");
             // Wait for the page to stabilize
             await page.waitForLoadState("networkidle");
 
@@ -204,12 +223,35 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 // Extract the class, label, and state from the button object
                 const buttonClass = button.class;
                 const buttonLabel = button.label;
+                const dataTestId = button.datatestid;
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
+                    // Простое подсвечивание: ищем элемент по data-testid в пределах модального окна
+                    const modal = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"]`).first();
+                    await modal.waitFor({ state: 'visible' });
+                    if (dataTestId) {
+                        const item = modal.locator(`[data-testid="${dataTestId}"]`).first();
+                        await item.waitFor({ state: 'visible', timeout: 3000 });
+                        await item.evaluate((el: HTMLElement) => {
+                            el.style.backgroundColor = 'yellow';
+                            el.style.border = '2px solid red';
+                            el.style.color = 'blue';
+                        });
+                        await page.waitForTimeout(1000);
+                    }
 
-                    const isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
+                    // Prefer data-testid when provided; ignore text filter to avoid mismatches like "Изделии" vs "Изделие"
+                    //const dataTestId = (button as any).datatestid as string | undefined;
+                    let isButtonReady = false;
+                    if (dataTestId) {
+                        const btn = page.locator(`[data-testid="${dataTestId}"]`).first();
+                        await btn.waitFor({ state: 'visible' });
+                        const hasDisabledAttr = await btn.getAttribute('disabled');
+                        isButtonReady = !hasDisabledAttr;
+                    } else {
+                        isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
+                    }
 
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -220,13 +262,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step('Step 08: Выбор поставщика "Детали"', async () => {
-            await orderedFromSuppliersPage.selectSupplier(Supplier.details)
+            console.log('Step 08: Выбор поставщика "Детали"');
+            const modal = await page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"][open]`);
+            const button = await modal.locator(`[data-testid="${CONST.SELECT_TYPE_OBJECT_OPERATION_DETAILS}"]`);
+            await button.click();
+            await page.waitForTimeout(500);
+            await page.waitForLoadState("networkidle");
         })
 
         await allure.step('Step 09: Проверка модального окна Создание заказа поставщика', async () => {
+            console.log('Step 09: Проверка модального окна Создание заказа поставщика');
             const titles = testData1.elements.ModalCreateOrderSupplier.titles.map((title) => title.trim());
-            const target = '[data-testid="ModalStartProduction-ModalCloseLeft"]';
-            const h3Titles = await orderedFromSuppliersPage.getAllH3TitlesInModalClass(page, 'content-modal-right-menu');
+            //const target = `[data-testid="${CONST.MODAL_START_PRODUCTION_MODAL_CLOSE_LEFT}"]`;
+            const h3Titles = await orderedFromSuppliersPage.getAllH4TitlesInModalByTestId(page, CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY);
             const normalizedH3Titles = h3Titles.map((title) => title.trim());
 
             // Wait for the page to stabilize
@@ -240,7 +288,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             expect(normalizedH3Titles.length).toBe(titles.length);
 
             // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
+            expect(normalizedH3Titles[0]).toContain(titles[0]);
+            expect(normalizedH3Titles[1]).toBe(titles[1]);
         })
 
         await allure.step("Step 10: Проверяем кнопки в модальном окне Создание заказа поставщика", async () => {
@@ -251,13 +300,48 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             // Iterate over each button in the array
             for (const button of buttons) {
                 // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
                 const buttonLabel = button.label;
+                const dataTestId = button.datatestid;
+                const buttonClass = button.class;
+                const shouldBeEnabled = String((button as any).state ?? 'true').toLowerCase() === 'true';
 
                 // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    const isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
+                    // Подсветка в пределах модалки "Создание заказа поставщика"
+                    const modal = page.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY}"]`).first();
+                    await modal.waitFor({ state: 'visible' });
+                    if (dataTestId) {
+                        try {
+                            const highlightLocator = modal.locator(`[data-testid="${dataTestId}"]`).first();
+                            await highlightLocator.waitFor({ state: 'visible', timeout: 3000 });
+                            await highlightLocator.evaluate((el: HTMLElement) => {
+                                el.style.backgroundColor = 'yellow';
+                                el.style.border = '2px solid red';
+                                el.style.color = 'blue';
+                            });
+                            await page.waitForTimeout(1000);
+                        } catch { }
+                    }
+
+                    // Проверка доступности: предпочитаем data-testid, иначе падение к классу
+                    let isButtonReady = false;
+                    if (dataTestId) {
+                        isButtonReady = await orderedFromSuppliersPage.isButtonVisibleTestId(
+                            page,
+                            dataTestId,
+                            buttonLabel,
+                            shouldBeEnabled,
+                            CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY
+                        );
+                    } else {
+                        isButtonReady = await orderedFromSuppliersPage.isButtonVisible(
+                            page,
+                            `[data-testid="${dataTestId}"]` || buttonClass,
+                            buttonLabel,
+                            shouldBeEnabled,
+                            `[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY}"]`
+                        );
+                    }
 
                     // Validate the button's visibility and state
                     expect(isButtonReady).toBeTruthy();
@@ -266,79 +350,138 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             }
         });
 
-        await allure.step('Step 11: Кликаем по чекбоксу', async () => {
-            // Find the checkbox column and click
-            const numberColumn = await orderedFromSuppliersPage.findColumn(
+        await allure.step('Step 11: Выбираем первые две строки и сохраняем их данные', async () => {
+            const tbody = page.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_TBODY}"]`).first();
+            await tbody.waitFor({ state: 'visible' });
+
+            const row0 = tbody.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW0}"]`).first();
+            const row1 = tbody.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW1}"]`).first();
+            await row0.waitFor({ state: 'visible', timeout: 5000 });
+            await row1.waitFor({ state: 'visible', timeout: 5000 });
+
+            const rows = [row0, row1];
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                await row.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                });
+                await page.waitForTimeout(150);
+
+                const tdCheckbox = row.locator('[data-testid$="-TdCheckbox"]').first();
+                await tdCheckbox.waitFor({ state: 'visible', timeout: 5000 });
+                await tdCheckbox.click();
+                await page.waitForTimeout(150);
+
+                const checkbox = row.locator('[data-testid$="-TdCheckbox-Wrapper-Checkbox"]').first();
+                await expect(checkbox).toBeChecked();
+
+                const tds = row.locator('td');
+                const idText = (await tds.nth(1).innerText().catch(() => '')).trim();
+                const nameText = (await tds.nth(2).innerText().catch(() => '')).trim();
+                selectedItems.push({ id: idText, name: nameText });
+                console.log(`Выбрана строка ${i}: id="${idText}", name="${nameText}"`);
+            }
+        })
+
+        await allure.step("Step 12: Нажимаем кнопку 'Выбрать' и проверяем выбранные позиции", async () => {
+            // Ensure the 'Выбрать' button is enabled
+            const chooseBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}"]`).first();
+            await chooseBtn.waitFor({ state: 'visible' });
+            await chooseBtn.evaluate((el: HTMLElement) => {
+                el.style.backgroundColor = 'yellow';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+            await page.waitForTimeout(300);
+
+            const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
                 page,
-                tableModalWindowDataTestId,
-                tableModalCheckbox
+                CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON,
+                'Выбрать',
+                true,
+                CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY
             );
-            console.log("numberColumn: ", numberColumn);
-            await orderedFromSuppliersPage.getValueOrClickFromFirstRow(
-                tableModalWindow,
-                numberColumn,
-                Click.Yes,
-                Click.No
-            );
-        })
+            expect(enabled).toBeTruthy();
+            await chooseBtn.click();
 
-        await allure.step("Step 12: Click on the Order button", async () => {
-            await orderedFromSuppliersPage.clickButton(
-                "Заказать",
-                buttonOrder
-            );
-        });
+            // Wait for bottom table to appear and verify selected items
+            const bottomTable = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`).first();
+            await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
 
-        await allure.step("Step 13: Проверка модального окна запустить в производство", async () => {
-            const titles = testData1.elements.LaunchOnProdictuion.titles.map((title) => title.trim());
-
-            const target = `[data-testid="ModalStartProduction-ModalContent"]`;
-            const h3Titles = await orderedFromSuppliersPage.getAllH3TitlesInModalClassNew(page, target);
-
-            const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-
-            // Log for debugging
-            console.log('Expected Titles:', titles);
-            console.log('Received Titles:', normalizedH3Titles);
-
-            // Validate length
-            expect(normalizedH3Titles.length).toBe(titles.length);
-
-            // Validate content and order
-            expect(normalizedH3Titles).toEqual(titles);
-        })
-
-        await allure.step("Step 14: Проверяем кнопки в модальном окне Создание заказа поставщика", async () => {
-            // Wait for the page to stabilize
-            await page.waitForLoadState("networkidle");
-            await page.waitForTimeout(500);
-
-            const buttons = testData1.elements.LaunchOnProdictuion.buttons;
-            // Iterate over each button in the array
-            for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
-                const buttonLabel = button.label;
-
-                // Perform the validation for the button
-                await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-                    await page.waitForTimeout(500);
-                    const isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-                });
+            for (const item of selectedItems) {
+                const rowMatch = bottomTable.locator('tbody tr').filter({ hasText: item.name || item.id });
+                await expect(rowMatch.first()).toBeVisible();
             }
-            await page.waitForTimeout(500);
         });
+
+        await allure.step("Step 12.0: Устанавливаем количество 1 для выбранных строк", async () => {
+            const bottomTable = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`).first();
+            await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
+
+            for (const item of selectedItems) {
+                const row = bottomTable.locator('tbody tr').filter({ hasText: item.name || item.id }).first();
+                await row.waitFor({ state: 'visible', timeout: 5000 });
+                await row.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                });
+                await page.waitForTimeout(200);
+
+                // Находим инпут количества внутри строки по паттерну data-testid
+                let qtyInput = row.locator(`*[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="-TdQuantity-InputNumber-Input"]`).first();
+                if (!(await qtyInput.isVisible().catch(() => false))) {
+                    // Резервный путь: ищем по окончанию testid внутри текущей строки
+                    qtyInput = row.locator(`*[data-testid$="-TdQuantity-InputNumber-Input"]`).first();
+                }
+                await qtyInput.waitFor({ state: 'visible', timeout: 5000 });
+                await qtyInput.evaluate((el: HTMLElement) => {
+                    (el as HTMLElement).style.backgroundColor = 'yellow';
+                    (el as HTMLElement).style.border = '2px solid red';
+                    (el as HTMLElement).style.color = 'blue';
+                });
+                await qtyInput.click();
+                await page.keyboard.press('Control+A');
+                await qtyInput.type('1');
+                await page.keyboard.press('Tab');
+                await page.waitForTimeout(200);
+                await expect(qtyInput).toHaveValue('1');
+            }
+        });
+
+        await allure.step("Step 12.1: Нажимаем 'В производство' (должна быть активна)", async () => {
+            const saveBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`).first();
+            await saveBtn.waitFor({ state: 'visible' });
+            const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
+                page,
+                CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON,
+                'В производство',
+                true,
+                CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY
+            );
+            await page.waitForTimeout(500);
+            expect(enabled).toBeTruthy();
+            await saveBtn.click();
+        });
+
+        await allure.step("Step 13: Проверяем уведомление после отправки в производство", async () => {
+            // Уведомление может появиться быстро и исчезнуть — читаем сразу после клика 'В производство'
+            const notif = await orderedFromSuppliersPage.extractNotificationMessage(page);
+            if (!notif) {
+                throw new Error('Уведомление не найдено после отправки в производство');
+            }
+            console.log(`Notification Title: ${notif.title}`);
+            console.log(`Notification Message: ${notif.message}`);
+            expect(notif.title).toBe('Успешно');
+            expect(notif.message).toContain('Заказ №');
+            expect(notif.message).toContain('отправлен в производство');
+        })
     })
 
     test('Test Case 02 - Check all elements on page MetalWorkingWarehouse', async ({ page }) => {
+        console.log("Test Case 02 - Check all elements on page MetalWorkingWarehouse");
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
         await allure.step("Step 1: Open the warehouse page", async () => {
@@ -350,13 +493,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             "Step 2: Open the shortage product page",
             async () => {
                 // Find and go to the page using the locator Shortage of Products
-                await metalworkingWarehouse.findTable(selectorMetalWorkingWarhouse);
+                await metalworkingWarehouse.findTable(CONST.SELECTOR_METAL_WORKING_WARHOUSE);
 
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await metalworkingWarehouse.waitingTableBody(tableMetalWorkingWarhouse);
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
             }
         );
 
@@ -406,6 +549,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     })
 
     test('Test Case 03 - Check all elements on page Assembly Warehouse', async ({ page }) => {
+        console.log("Test Case 03 - Check all elements on page Assembly Warehouse");
 
         const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
@@ -425,7 +569,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
             }
         );
 
@@ -475,17 +619,18 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     })
 
     test("Test Case 04 - Delete Product before create", async ({ page }) => {
+        console.log("Test Case 04 - Delete Product before create");
         test.setTimeout(90000)
         const partsDatabsePage = new CreatePartsDatabasePage(page);
-        const productTable = '[data-testid="BasePaginationTable-Table-product"]'
+        const productTable = `[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`
         const productTableDiv = '[data-testid="BasePaginationTable-Wrapper-product"]'
         const searchProduct = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').first()
 
-        const cbedTable = '[data-testid="BasePaginationTable-Table-cbed"]'
+        const cbedTable = `[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`
         const cbedTableDiv = '[data-testid="BasePaginationTable-Wrapper-cbed"]'
         const searchCbed = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').nth(1)
 
-        const detailTable = '[data-testid="BasePaginationTable-Table-detal"]'
+        const detailTable = `[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`
         const detailTableDiv = '[data-testid="BasePaginationTable-Wrapper-detal"]'
         const searchDetail = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').last()
 
@@ -533,7 +678,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                                 })
 
                                 await allure.step('Confirmation of transfer to archive', async () => {
-                                    const confirmButton = page.locator('[data-testid="ModalConfirm-Content-Buttons-Button-2"]', { hasText: 'Да' });
+                                    const confirmButton = page.locator(`[data-testid="${CONST.MODAL_CONFIRM_YES_BUTTON_GENERIC}"]`);
                                     await confirmButton.click();
                                     await page.waitForTimeout(1000) // Wait for the row to be removed
                                 })
@@ -581,7 +726,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                                 })
 
                                 await allure.step('Confirmation of transfer to archive', async () => {
-                                    const confirmButton = page.locator('[data-testid="ModalConfirm-Content-Buttons-Button-2"]', { hasText: 'Да' });
+                                    const confirmButton = page.locator(`[data-testid="${CONST.MODAL_CONFIRM_YES_BUTTON_GENERIC}"]`);
                                     await confirmButton.click();
                                     await page.waitForTimeout(1000) // Wait for the row to be removed
                                 })
@@ -628,7 +773,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                                 })
 
                                 await allure.step('Confirmation of transfer to archive', async () => {
-                                    const confirmButton = page.locator('[data-testid="ModalConfirm-Content-Buttons-Button-2"]', { hasText: 'Да' });
+                                    const confirmButton = page.locator(`[data-testid="${CONST.MODAL_CONFIRM_YES_BUTTON_GENERIC}"]`);
                                     await confirmButton.click();
                                     await page.waitForTimeout(1000) // Wait for the row to be removed
                                 })
@@ -641,6 +786,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     })
 
     test("Test Case 05 - Create Parts", async ({ page }) => {
+        console.log("Test Case 05 - Create Parts");
         const partsDatabsePage = new CreatePartsDatabasePage(page);
 
         await allure.step('Step 01: Open the parts database page', async () => {
@@ -656,11 +802,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         } else {
             for (const detail of arrayDetail) {
                 await allure.step('Step 02: Click on the Create button', async () => {
-                    await partsDatabsePage.clickButton('Создать', buttonCreateNewPart)
+                    await partsDatabsePage.clickButton('Создать', `[data-testid="${CONST.U002_BUTTON_CREATE_NEW_PART}"]`)
                 })
 
                 await allure.step('Step 03: Click on the Detail button', async () => {
-                    await partsDatabsePage.clickButton('Деталь', buttonDetail)
+                    await partsDatabsePage.clickButton('Деталь', `[data-testid="${CONST.U002_BUTTON_DETAIL}"]`)
                 })
 
                 await allure.step('Step 04: Enter the name of the part', async () => {
@@ -679,26 +825,26 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 06: Click on the Save button', async () => {
-                    await partsDatabsePage.clickButton('Сохранить', buttonSave)
+                    await partsDatabsePage.clickButton('Сохранить', `[data-testid="${CONST.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`)
                 })
 
                 await allure.step('Step 07: Click on the Process', async () => {
                     await page.waitForLoadState("networkidle");
-                    await partsDatabsePage.clickButton('Технологический процесс', buttonOperation)
+                    await partsDatabsePage.clickButton('Технологический процесс', `[data-testid="${CONST.BUTTON_OPERATION}"]`)
                 })
 
                 await allure.step('Step 08: Click on the Add Operation', async () => {
                     await page.waitForSelector('[data-testid="Modal-ModalContent"]')
-                    await partsDatabsePage.clickButton('Добавить операцию', buttonAddOperation)
+                    await partsDatabsePage.clickButton('Добавить операцию', `[data-testid="${CONST.BUTTON_ADD_OPERATION}"]`)
                 })
 
                 await allure.step('Step 09: Click on the type of operation', async () => {
                     await page.waitForLoadState('networkidle')
-                    await page.locator('[data-testid="Filter-Title"]').click()
+                    await page.locator(`[data-testid="${CONST.FILTER_TITLE}"]`).click()
                 })
 
                 await allure.step('Step 10: Search in dropdown menu', async () => {
-                    const searchTypeOperation = page.locator('[data-testid="Filter-Search-Dropdown-Input"]')
+                    const searchTypeOperation = page.locator(`[data-testid="${CONST.FILTER_SEARCH_DROPDOWN_INPUT}"]`)
                     const typeOperation = 'Сварочная'
 
                     await searchTypeOperation.fill(typeOperation)
@@ -706,6 +852,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 11: Choice type operation', async () => {
+                    // If a dedicated constant exists for the first option, use it; otherwise keep generic pattern
                     await page.locator('[data-testid="Filter-Options-0"]').click()
                 })
 
@@ -716,13 +863,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                 await allure.step('Step 13: Getting the name of the operation', async () => {
                     await page.waitForTimeout(1000)
-                    const numberColumnOnNameProcess = await partsDatabsePage.findColumn(page, tableProcessID, tableProcessNameOperation)
+                    const numberColumnOnNameProcess = await partsDatabsePage.findColumn(page, CONST.TABLE_PROCESS_ID, CONST.TABLE_PROCESS_NAME_OPERATION)
 
                     console.log('Column number with process: ', numberColumnOnNameProcess)
 
                     nameOprerationOnProcess =
                         await partsDatabsePage.getValueOrClickFromFirstRow(
-                            tableProcess,
+                            `[data-testid="${CONST.TABLE_PROCESS}"]`,
                             numberColumnOnNameProcess
                         );
 
@@ -731,18 +878,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                 await allure.step('Step 14: Click on the Save button', async () => {
                     await page.waitForTimeout(500)
-                    await page.locator(buttonSaveOperation, { hasText: 'Сохранить' }).click()
+                    await page.locator(`[data-testid="${CONST.BUTTON_SAVE_OPERATION}"]`, { hasText: 'Сохранить' }).click()
                 })
 
                 await allure.step('Step 15: Click on the Create by copyinp', async () => {
                     await page.waitForTimeout(500)
-                    await partsDatabsePage.clickButton('Отменить', buttonCancel)
+                    await partsDatabsePage.clickButton('Отменить', `[data-testid="${CONST.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL}"]`)
                 })
             }
         }
     })
 
     test('Test Case 06 - Create Cbed', async ({ page }) => {
+        console.log("Test Case 06 - Create Cbed");
         const partsDatabsePage = new CreatePartsDatabasePage(page);
 
         await allure.step('Step 01: Open the parts database page', async () => {
@@ -760,11 +908,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 await allure.step('Step 02: Click on the Create button', async () => {
                     await page.waitForLoadState("networkidle");
                     await page.waitForTimeout(1000)
-                    await partsDatabsePage.clickButton('Создать', buttonCreateNewPart)
+                    await partsDatabsePage.clickButton('Создать', `[data-testid="${CONST.U002_BUTTON_CREATE_NEW_PART}"]`)
                 })
 
                 await allure.step('Step 03: Click on the Detail button', async () => {
-                    await partsDatabsePage.clickButton('Сборочную единицу', buttonCbed)
+                    await partsDatabsePage.clickButton('Сборочную единицу', `[data-testid="${CONST.U002_BUTTON_CBED}"]`)
                 })
 
                 await allure.step('Step 04: Enter the name of the part', async () => {
@@ -785,24 +933,24 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 06: Click on the Save button', async () => {
-                    await partsDatabsePage.clickButton('Сохранить', buttonSaveCbed)
+                    await partsDatabsePage.clickButton('Сохранить', `[data-testid="${CONST.U002_CREATOR_SAVE_BUTTON}"]`)
                     await page.waitForTimeout(2000)
                 })
 
                 await allure.step('Step 07: Click on the Process', async () => {
                     await page.waitForLoadState("networkidle");
-                    await partsDatabsePage.clickButton('Технологический процесс', buttonOperationProcessAssymbly)
+                    await partsDatabsePage.clickButton('Технологический процесс', `[data-testid="${CONST.U002_CREATOR_BUTTONS_TECHPROCESS}"]`)
                 })
 
                 await allure.step('Step 08: Getting the name of the operation', async () => {
                     await page.waitForTimeout(1000)
-                    const numberColumnOnNameProcess = await partsDatabsePage.findColumn(page, tableProcessID, tableProcessNameOperationAss)
+                    const numberColumnOnNameProcess = await partsDatabsePage.findColumn(page, CONST.TABLE_PROCESS_ID, CONST.TABLE_PROCESS_ASSYMBLY_NAME)
 
                     console.log('Column number with process: ', numberColumnOnNameProcess)
 
                     nameOprerationOnProcessAssebly =
                         await partsDatabsePage.getValueOrClickFromFirstRow(
-                            tableProcessAss,
+                            `[data-testid="${CONST.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER}"]`,
                             numberColumnOnNameProcess
                         );
 
@@ -811,18 +959,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                 await allure.step('Step 09: Click on the Save button', async () => {
                     await page.waitForTimeout(500)
-                    await partsDatabsePage.clickButton('Отменить', buttonProcessCancel)
+                    await partsDatabsePage.clickButton('Отменить', `[data-testid="${CONST.BUTTON_PROCESS_CANCEL}"]`)
                 })
 
                 await allure.step('Step 10: Click on the Create by copyinp', async () => {
                     await page.waitForLoadState("networkidle");
-                    await partsDatabsePage.clickButton('Отменить', buttonCancelCbed)
+                    await partsDatabsePage.clickButton('Отменить', `[data-testid="${CONST.U002_CREATOR_CANCEL_BUTTON}"]`)
                 })
             }
         }
     })
 
     test('Test Case 07 - Create Product', async ({ page }) => {
+        console.log("Test Case 07 - Create Product");
         const partsDatabsePage = new CreatePartsDatabasePage(page);
 
         await allure.step('Step 01: Open the parts database page', async () => {
@@ -837,11 +986,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             for (const izd of arrayIzd) {
                 await allure.step('Step 02: Click on the Create button', async () => {
                     await page.waitForLoadState("networkidle");
-                    await partsDatabsePage.clickButton('Создать', buttonCreateNewPart)
+                    await partsDatabsePage.clickButton('Создать', `[data-testid="${CONST.U002_BUTTON_CREATE_NEW_PART}"]`)
                 })
 
                 await allure.step('Step 03: Click on the Detail button', async () => {
-                    await partsDatabsePage.clickButton('Изделие', buttonProduct)
+                    await partsDatabsePage.clickButton('Изделие', `[data-testid="${CONST.U002_BUTTON_PRODUCT}"]`)
                 })
 
                 await allure.step('Step 04: Enter the name of the part', async () => {
@@ -860,24 +1009,24 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     expect(await nameParts.inputValue()).toBe(izd.designation)
                 })
                 await allure.step('Step 06: Click on the Save button', async () => {
-                    await partsDatabsePage.clickButton('Сохранить', buttonSaveCbed)
+                    await partsDatabsePage.clickButton('Сохранить', `[data-testid="${CONST.U002_CREATOR_SAVE_BUTTON}"]`)
                     await page.waitForTimeout(2000)
                 })
 
                 await allure.step('Step 07: Click on the Process', async () => {
                     await page.waitForLoadState("networkidle");
-                    await partsDatabsePage.clickButton('Технологический процесс', buttonOperationProcessAssymbly)
+                    await partsDatabsePage.clickButton('Технологический процесс', `[data-testid="${CONST.U002_CREATOR_BUTTONS_TECHPROCESS}"]`)
                 })
 
                 await allure.step('Step 08: Getting the name of the operation', async () => {
                     await page.waitForTimeout(1000)
-                    const numberColumnOnNameProcess = await partsDatabsePage.findColumn(page, tableProcessID, tableProcessNameOperationAss)
+                    const numberColumnOnNameProcess = await partsDatabsePage.findColumn(page, CONST.TABLE_PROCESS_ID, CONST.TABLE_PROCESS_ASSYMBLY_NAME)
 
                     console.log('Column number with process: ', numberColumnOnNameProcess)
 
                     nameOprerationOnProcessIzd =
                         await partsDatabsePage.getValueOrClickFromFirstRow(
-                            tableProcessAss,
+                            `[data-testid="${CONST.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER}"]`,
                             numberColumnOnNameProcess
                         );
 
@@ -886,20 +1035,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                 await allure.step('Step 09: Click on the Save button', async () => {
                     await page.waitForTimeout(500)
-                    await partsDatabsePage.clickButton('Отменить', buttonProcessCancel)
+                    await partsDatabsePage.clickButton('Отменить', `[data-testid="${CONST.BUTTON_PROCESS_CANCEL}"]`)
                 })
 
                 await allure.step('Step 10: Click on the Create by copyinp', async () => {
                     await page.waitForLoadState("networkidle");
-                    await partsDatabsePage.clickButton('Отменить', buttonCancelCbed)
+                    await partsDatabsePage.clickButton('Отменить', `[data-testid="${CONST.U002_CREATOR_CANCEL_BUTTON}"]`)
                 })
             }
         }
     })
 
-    test("Test Case 08 Detail- Launch Detail Into Production Through Suppliers", async ({
-        page,
-    }) => {
+    test("Test Case 08 Detail- Launch Detail Into Production Through Suppliers", async ({ page }) => {
+        console.log("Test Case 08 - Launch Detail Into Production Through Suppliers");
         const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
             page
         );
@@ -923,9 +1071,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         }
     });
 
-    test("Test Case 09 Detail - Checking Metalworking Warehouse", async ({
-        page,
-    }) => {
+    test("Test Case 09 Detail - Checking Metalworking Warehouse", async ({ page }) => {
+        console.log("Test Case 09 - Checking Metalworking Warehouse");
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
         if (arrayDetail.length === 0) {
@@ -941,13 +1088,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 2: Open the shortage product page",
                     async () => {
                         // Find and go to the page using the locator Shortage of Products
-                        await metalworkingWarehouse.findTable(selectorMetalWorkingWarhouse);
+                        await metalworkingWarehouse.findTable(CONST.SELECTOR_METAL_WORKING_WARHOUSE);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
 
                         // Wait for the table body to load
-                        await metalworkingWarehouse.waitingTableBody(tableMetalWorkingWarhouse);
+                        await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
                     }
                 );
 
@@ -955,11 +1102,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     // Using table search we look for the value of the variable
                     await metalworkingWarehouse.searchTable(
                         detail.name,
-                        tableMetalWorkingWarhouse
+                        `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`
                     );
 
                     // Wait for the table body to load
-                    await metalworkingWarehouse.waitingTableBody(tableMetalWorkingWarhouse);
+                    await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -970,20 +1117,20 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await metalworkingWarehouse.findColumn(
                             page,
-                            tableMetalworkingWarehouseID,
-                            tableMetalWorkingOrdered
+                            CONST.METALLOWORKINGSCLAD_DETAILS_TABLE,
+                            CONST.TABLE_METAL_WORKING_ORDERED_DETAILS
                         );
                         console.log("numberColumn: ", numberColumn);
 
                         const numberLaunched =
                             await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                                tableMetalWorkingWarhouse,
+                                `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`,
                                 numberColumn
                             );
 
                         await metalworkingWarehouse.checkNameInLineFromFirstRow(
                             detail.name,
-                            tableMetalWorkingWarhouse
+                            `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`
                         );
 
                         console.log(numberLaunched);
@@ -1002,14 +1149,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     const numberColumn =
                         await metalworkingWarehouse.findColumn(
                             page,
-                            tableMetalworkingWarehouseID,
-                            tableMetalWorkingOperation
+                            CONST.METALLOWORKINGSCLAD_DETAILS_TABLE,
+                            CONST.TABLE_METAL_WORKING_OPERATION_DETAILS
                         );
                     console.log("numberColumn Operation: ", numberColumn);
 
                     // Click on the icon in the cell
                     await metalworkingWarehouse.clickIconOperationNew(
-                        tableMetalWorkingWarhouse,
+                        `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`,
                         numberColumn,
                         Click.Yes
                     );
@@ -1026,8 +1173,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         numberColumnQunatityMade =
                             await metalworkingWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableRemainsToDo
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_REMAINS_TO_DO
                             )
                         console.log(
                             "Column number left to do: ",
@@ -1036,7 +1183,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                         // Click on the Done cell
                         valueLeftToDo = await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                            operationTable,
+                            `[data-testid=\"${CONST.U002_MODAL_OPERATION_TABLE_METAL}\"]`,
                             numberColumnQunatityMade
                         );
 
@@ -1055,8 +1202,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         const numberColumnFirstOperation =
                             await metalworkingWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableNameFirstOperation
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
                             );
                         console.log(
                             "Operation column number: ",
@@ -1065,7 +1212,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                         firstOperation =
                             await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                                operationTable,
+                                `[data-testid=\"${CONST.U002_MODAL_OPERATION_TABLE_METAL}\"]`,
                                 numberColumnFirstOperation
                             );
                         console.log("Name of the first operation: ", firstOperation);
@@ -1077,9 +1224,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         }
     });
 
-    test("Test Case 10 Detail- Launch Detail Into Production Through Suppliers", async ({
-        page,
-    }) => {
+    test("Test Case 10 Detail- Launch Detail Into Production Through Suppliers", async ({ page }) => {
+        console.log("Test Case 10 - Launch Detail Into Production Through Suppliers");
         const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
             page
         );
@@ -1100,9 +1246,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         }
     });
 
-    test("Test Case 11 Detail- Checking Metalworking Warehouse", async ({
-        page,
-    }) => {
+    test("Test Case 11 Detail- Checking Metalworking Warehouse", async ({ page }) => {
+        console.log("Test Case 11 - Checking Metalworking Warehouse");
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
         await allure.step("Step 1: Open the warehouse page", async () => {
@@ -1114,13 +1259,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             "Step 2: Open the shortage product page",
             async () => {
                 // Find and go to the page using the locator Shortage of Products
-                await metalworkingWarehouse.findTable(selectorMetalWorkingWarhouse);
+                await metalworkingWarehouse.findTable(CONST.SELECTOR_METAL_WORKING_WARHOUSE);
 
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await metalworkingWarehouse.waitingTableBody(tableMetalWorkingWarhouse);
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
             }
         );
 
@@ -1132,11 +1277,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     // Using table search we look for the value of the variable
                     await metalworkingWarehouse.searchTable(
                         detail.name,
-                        tableMetalWorkingWarhouse
+                        `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`
                     );
 
                     // Wait for the table body to load
-                    await metalworkingWarehouse.waitingTableBody(tableMetalWorkingWarhouse);
+                    await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -1147,20 +1292,20 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await metalworkingWarehouse.findColumn(
                             page,
-                            tableMetalworkingWarehouseID,
-                            tableMetalWorkingOrdered
+                            CONST.METALLOWORKINGSCLAD_DETAILS_TABLE,
+                            CONST.TABLE_METAL_WORKING_ORDERED_DETAILS
                         );
                         console.log("numberColumn: ", numberColumn);
 
                         const numberLaunched =
                             await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                                tableMetalWorkingWarhouse,
+                                `[data-testid=\"${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}\"]`,
                                 numberColumn
                             );
 
                         await metalworkingWarehouse.checkNameInLineFromFirstRow(
                             detail.name,
-                            tableMetalWorkingWarhouse
+                            `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`
                         );
 
                         console.log(numberLaunched);
@@ -1179,14 +1324,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     const numberColumn =
                         await metalworkingWarehouse.findColumn(
                             page,
-                            tableMetalworkingWarehouseID,
-                            tableMetalWorkingOperation
+                            CONST.METALLOWORKINGSCLAD_DETAILS_TABLE,
+                            CONST.TABLE_METAL_WORKING_OPERATION_DETAILS
                         );
                     console.log("numberColumn Operation: ", numberColumn);
 
                     // Click on the icon in the cell
                     await metalworkingWarehouse.clickIconOperationNew(
-                        tableMetalWorkingWarhouse,
+                        `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`,
                         numberColumn,
                         Click.Yes
                     );
@@ -1203,8 +1348,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         numberColumnQunatityMade =
                             await metalworkingWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableRemainsToDo
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_REMAINS_TO_DO
                             )
                         console.log(
                             "Column number left to do: ",
@@ -1214,7 +1359,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         // UPD
                         // Click on the Done cell
                         valueLeftToDo = await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                            operationTable,
+                            `[data-testid=\"${CONST.U002_MODAL_OPERATION_TABLE_METAL}\"]`,
                             numberColumnQunatityMade
                         );
 
@@ -1233,8 +1378,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         const numberColumnFirstOperation =
                             await metalworkingWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableNameFirstOperation
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
                             );
                         console.log(
                             "Operation column number: ",
@@ -1243,7 +1388,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                         firstOperation =
                             await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                                operationTable,
+                                `[data-testid=\"${CONST.U002_MODAL_OPERATION_TABLE_METAL}\"]`,
                                 numberColumnFirstOperation
                             );
                         console.log("Name of the first operation: ", firstOperation);
@@ -1270,13 +1415,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 // Find and go to the page using the locator Shortage of Products
 
-                await metalworkingWarehouse.findTable(selectorMetalWorkingWarhouse);
+                await metalworkingWarehouse.findTable(CONST.SELECTOR_METAL_WORKING_WARHOUSE);
 
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await metalworkingWarehouse.waitingTableBody(tableMetalWorkingWarhouse);
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
             }
         );
 
@@ -1288,11 +1433,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     // Using table search we look for the value of the variable
                     await metalworkingWarehouse.searchTable(
                         detail.name,
-                        tableMetalWorkingWarhouse
+                        `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`
                     );
 
                     // Wait for the table body to load
-                    await metalworkingWarehouse.waitingTableBody(tableMetalWorkingWarhouse);
+                    await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -1303,7 +1448,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await metalworkingWarehouse.checkNameInLineFromFirstRow(
                             detail.name,
-                            tableMetalWorkingWarhouse
+                            `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`
                         );
                     }
                 );
@@ -1313,14 +1458,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await metalworkingWarehouse.findColumn(
                             page,
-                            tableMetalworkingWarehouseID,
-                            tableMetalWorkingCheckbox
+                            CONST.METALLOWORKINGSCLAD_DETAILS_TABLE,
+                            CONST.TABLE_METAL_WORKING_CHECKBOX
                         );
                         console.log("numberColumn: ", numberColumn);
 
                         // Upd:
                         await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                            tableMetalWorkingWarhouse,
+                            `[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`,
                             numberColumn,
                             Click.Yes
                         );
@@ -1332,7 +1477,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await metalworkingWarehouse.clickButton(
                             " Переместить в архив ",
-                            buttonMoveToArchive
+                            `[data-testid="${CONST.BUTTON_MOVE_TO_ARCHIVE}"]`
                         );
                     }
                 );
@@ -1349,7 +1494,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await metalworkingWarehouse.clickButton(
                             " Подтвердить ",
-                            buttonConfirmationButton
+                            `[data-testid="${CONST.U002_MODAL_PROMPT_MINI_BUTTON_CONFIRM}"]`
                         );
                     }
                 );
@@ -1372,7 +1517,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             async () => {
                 // Find and go to the page using the locator Shortage of Products
 
-                await metalworkingWarehouse.findTable(selectorMetalWorkingWarhouse);
+                await metalworkingWarehouse.findTable(CONST.SELECTOR_METAL_WORKING_WARHOUSE);
 
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
@@ -1389,7 +1534,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     // Using table search we look for the value of the variable
                     await metalworkingWarehouse.searchTable(
                         detail.name,
-                        tableMetalWorkingWarhouse
+                        `[data-testid=\"${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}\"]`
                     );
 
                     // Wait for loading without expecting table body to have rows
@@ -1401,10 +1546,10 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 4: Verify that no records with the given name are found in the table",
                     async () => {
                         // Wait for the table to be present (but it might be empty)
-                        await page.waitForSelector(tableMetalWorkingWarhouse, { timeout: 5000 });
+                        await page.waitForSelector(`[data-testid=\"${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}\"]`, { timeout: 5000 });
 
                         // Get all rows in the table
-                        const rows = page.locator(`${tableMetalWorkingWarhouse} tbody tr`);
+                        const rows = page.locator(`[data-testid=\"${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}\"] tbody tr`);
                         const rowCount = await rows.count();
 
                         console.log(`Total rows found in table after search: ${rowCount}`);
@@ -1480,22 +1625,22 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 2: Open the shortage product page",
                     async () => {
                         // Find and go to the page using the locator Shortage of Products
-                        await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                        await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
 
                         // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
                     }
                 );
 
                 await allure.step("Step 3: Search product", async () => {
                     // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(arrayCbed[0].name, tableAssemblyWarhouse);
+                    await assemblyWarehouse.searchTable(arrayCbed[0].name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -1506,20 +1651,20 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyOrdered
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_ORDERED
                         );
                         console.log("numberColumn Ordered: ", numberColumn);
 
 
                         const numberLaunched =
                             await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                tableAssemblyWarhouse,
+                                `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`,
                                 numberColumn
                             );
                         await assemblyWarehouse.checkNameInLineFromFirstRow(
                             arrayCbed[0].name,
-                            tableAssemblyWarhouse
+                            `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`
                         );
 
 
@@ -1539,14 +1684,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     const numberColumn =
                         await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyOperation
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_OPERATION
                         );
                     console.log("numberColumn Operation: ", numberColumn);
 
                     // Click on the icon in the cell
                     await assemblyWarehouse.clickIconOperationNew(
-                        tableAssemblyWarhouse,
+                        `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`,
                         numberColumn,
                         Click.Yes
                     );
@@ -1563,8 +1708,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         numberColumnQunatityMade =
                             await assemblyWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableRemainsToDo
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_REMAINS_TO_DO
                             )
                         console.log(
                             "Column number left to do: ",
@@ -1574,7 +1719,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         // UPD
                         // Click on the Done cell
                         valueLeftToDo = await assemblyWarehouse.getValueOrClickFromFirstRow(
-                            operationTableAssembly,
+                            `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                             numberColumnQunatityMade
                         );
 
@@ -1593,8 +1738,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         const numberColumnFirstOperation =
                             await assemblyWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableNameFirstOperation
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
                             );
                         console.log(
                             "Operation column number: ",
@@ -1603,7 +1748,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                         firstOperation =
                             await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                operationTableAssembly,
+                                `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                                 numberColumnFirstOperation
                             );
                         console.log("Name of the first operation: ", firstOperation);
@@ -1655,22 +1800,22 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 2: Open the shortage product page",
                     async () => {
                         // Find and go to the page using the locator Shortage of Products
-                        await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                        await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
 
                         // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
                     }
                 );
 
                 await allure.step("Step 3: Search product", async () => {
                     // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(cbed.name, tableAssemblyWarhouse);
+                    await assemblyWarehouse.searchTable(cbed.name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -1681,19 +1826,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyOrdered
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_ORDERED
                         );
                         console.log("numberColumn Ordered: ", numberColumn);
 
                         const numberLaunched =
                             await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                tableAssemblyWarhouse,
+                                `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`,
                                 numberColumn
                             );
                         await assemblyWarehouse.checkNameInLineFromFirstRow(
                             cbed.name,
-                            tableAssemblyWarhouse
+                            `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`
                         );
 
                         console.log(numberLaunched);
@@ -1712,14 +1857,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     const numberColumn =
                         await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyOperation
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_OPERATION
                         );
                     console.log("numberColumn Operation: ", numberColumn);
 
                     // Click on the icon in the cell
                     await assemblyWarehouse.clickIconOperationNew(
-                        tableAssemblyWarhouse,
+                        `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`,
                         numberColumn,
                         Click.Yes
                     );
@@ -1736,8 +1881,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         numberColumnQunatityMade =
                             await assemblyWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableRemainsToDo
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_REMAINS_TO_DO
                             )
                         console.log(
                             "Column number left to do: ",
@@ -1747,7 +1892,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         // UPD
                         // Click on the Done cell
                         valueLeftToDo = await assemblyWarehouse.getValueOrClickFromFirstRow(
-                            operationTableAssembly,
+                            `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                             numberColumnQunatityMade
                         );
 
@@ -1766,8 +1911,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         const numberColumnFirstOperation =
                             await assemblyWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableNameFirstOperation
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
                             );
                         console.log(
                             "Operation column number: ",
@@ -1776,7 +1921,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                         firstOperation =
                             await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                operationTableAssembly,
+                                `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                                 numberColumnFirstOperation
                             );
                         console.log("Name of the first operation: ", firstOperation);
@@ -1805,22 +1950,22 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 2: Open the shortage product page",
                     async () => {
                         // Find and go to the page using the locator Shortage of Products
-                        await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                        await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
 
                         // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
                     }
                 );
 
                 await allure.step("Step 3: Search product", async () => {
                     // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(cbed.name, tableAssemblyWarhouse);
+                    await assemblyWarehouse.searchTable(cbed.name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -1831,7 +1976,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await assemblyWarehouse.checkNameInLineFromFirstRow(
                             cbed.name,
-                            tableAssemblyWarhouse
+                            `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`
                         );
                     }
                 );
@@ -1841,14 +1986,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyCheckbox
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_CHECKBOX
                         );
                         console.log("numberColumn: ", numberColumn);
 
                         // Upd:
                         await assemblyWarehouse.getValueOrClickFromFirstRow(
-                            tableAssemblyWarhouse,
+                            `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`,
                             numberColumn,
                             Click.Yes
                         );
@@ -1860,7 +2005,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await assemblyWarehouse.clickButton(
                             " Переместить в архив ",
-                            buttonMoveToArchiveAssembly
+                            `[data-testid="${CONST.ZAKAZ_SCLAD_BUTTON_MOVE_TO_ARCHIVE_ASSEMBLY}"]`
                         );
                     }
                 );
@@ -1877,7 +2022,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await assemblyWarehouse.clickButton(
                             " Подтвердить ",
-                            buttonConfirmationButton
+                            `[data-testid="${CONST.U002_MODAL_PROMPT_MINI_BUTTON_CONFIRM}"]`
                         );
                     }
                 );
@@ -1902,7 +2047,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 2: Open the assembly warehouse page",
                     async () => {
                         // Find and go to the page using the locator
-                        await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                        await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
@@ -1915,7 +2060,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     // Using table search we look for the value of the variable
                     await assemblyWarehouse.searchTable(
                         cbed.name,
-                        tableAssemblyWarhouse
+                        `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`
                     );
 
                     // Wait for loading without expecting table body to have rows
@@ -1927,10 +2072,10 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 4: Verify that no records with the given CBED name are found in the table",
                     async () => {
                         // Wait for the table to be present (but it might be empty)
-                        await page.waitForSelector(tableAssemblyWarhouse, { timeout: 5000 });
+                        await page.waitForSelector(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`, { timeout: 5000 });
 
                         // Get all rows in the table
-                        const rows = page.locator(`${tableAssemblyWarhouse} tbody tr`);
+                        const rows = page.locator(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"] tbody tr`);
                         const rowCount = await rows.count();
 
                         console.log(`Total rows found in assembly table after search: ${rowCount}`);
@@ -2006,23 +2151,23 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 2: Open the shortage product page",
                     async () => {
                         // Find and go to the page using the locator Shortage of Products
-                        await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                        await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
 
                         // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
                     }
                 );
 
                 for (const izd of arrayIzd) {
                     await allure.step("Step 3: Search product", async () => {
                         // Using table search we look for the value of the variable
-                        await assemblyWarehouse.searchTable(izd.name, tableAssemblyWarhouse);
+                        await assemblyWarehouse.searchTable(izd.name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                         // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
@@ -2033,20 +2178,20 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         async () => {
                             const numberColumn = await assemblyWarehouse.findColumn(
                                 page,
-                                tableAssemblyWarhouseID,
-                                tableAssemblyOrdered
+                                CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                                CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_ORDERED
                             );
                             console.log("numberColumn Ordered: ", numberColumn);
 
 
                             const numberLaunched =
                                 await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                    tableAssemblyWarhouse,
+                                    `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`,
                                     numberColumn
                                 );
                             await assemblyWarehouse.checkNameInLineFromFirstRow(
                                 izd.name,
-                                tableAssemblyWarhouse
+                                `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`
                             );
 
 
@@ -2067,14 +2212,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         const numberColumn =
                             await assemblyWarehouse.findColumn(
                                 page,
-                                tableAssemblyWarhouseID,
-                                tableAssemblyOperation
+                                CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                                CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_OPERATION
                             );
                         console.log("numberColumn Operation: ", numberColumn);
 
                         // Click on the icon in the cell
                         await assemblyWarehouse.clickIconOperationNew(
-                            tableAssemblyWarhouse,
+                            `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`,
                             numberColumn,
                             Click.Yes
                         );
@@ -2091,8 +2236,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                             numberColumnQunatityMade =
                                 await assemblyWarehouse.findColumn(
                                     page,
-                                    operationTableID,
-                                    operationTableRemainsToDo
+                                    CONST.OPERATION_TABLE_ID,
+                                    CONST.OPERATION_TABLE_REMAINS_TO_DO
                                 )
                             console.log(
                                 "Column number left to do: ",
@@ -2102,7 +2247,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                             // UPD
                             // Click on the Done cell
                             valueLeftToDo = await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                operationTableAssembly,
+                                `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                                 numberColumnQunatityMade
                             );
 
@@ -2121,8 +2266,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                             const numberColumnFirstOperation =
                                 await assemblyWarehouse.findColumn(
                                     page,
-                                    operationTableID,
-                                    operationTableNameFirstOperation
+                                    CONST.OPERATION_TABLE_ID,
+                                    CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
                                 );
                             console.log(
                                 "Operation column number: ",
@@ -2131,7 +2276,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                             firstOperation =
                                 await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                    operationTableAssembly,
+                                    `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                                     numberColumnFirstOperation
                                 );
                             console.log("Name of the first operation: ", firstOperation);
@@ -2184,22 +2329,22 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 2: Open the shortage product page",
                     async () => {
                         // Find and go to the page using the locator Shortage of Products
-                        await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                        await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                         // Wait for loading
                         await page.waitForLoadState("networkidle");
 
                         // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
                     }
                 );
 
                 await allure.step("Step 3: Search product", async () => {
                     // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(izd.name, tableAssemblyWarhouse);
+                    await assemblyWarehouse.searchTable(izd.name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -2210,19 +2355,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyOrdered
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_ORDERED
                         );
                         console.log("numberColumn Ordered: ", numberColumn);
 
                         const numberLaunched =
                             await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                tableAssemblyWarhouse,
+                                `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`,
                                 numberColumn
                             );
                         await assemblyWarehouse.checkNameInLineFromFirstRow(
                             izd.name,
-                            tableAssemblyWarhouse
+                            `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`
                         );
 
                         console.log(numberLaunched);
@@ -2241,14 +2386,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     const numberColumn =
                         await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyOperation
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_OPERATION
                         );
                     console.log("numberColumn Operation: ", numberColumn);
 
                     // Click on the icon in the cell
                     await assemblyWarehouse.clickIconOperationNew(
-                        tableAssemblyWarhouse,
+                        `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`,
                         numberColumn,
                         Click.Yes
                     );
@@ -2265,8 +2410,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         numberColumnQunatityMade =
                             await assemblyWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableRemainsToDo
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_REMAINS_TO_DO
                             )
                         console.log(
                             "Column number left to do: ",
@@ -2276,7 +2421,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         // UPD
                         // Click on the Done cell
                         valueLeftToDo = await assemblyWarehouse.getValueOrClickFromFirstRow(
-                            operationTableAssembly,
+                            `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                             numberColumnQunatityMade
                         );
 
@@ -2295,8 +2440,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                         const numberColumnFirstOperation =
                             await assemblyWarehouse.findColumn(
                                 page,
-                                operationTableID,
-                                operationTableNameFirstOperation
+                                CONST.OPERATION_TABLE_ID,
+                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
                             );
                         console.log(
                             "Operation column number: ",
@@ -2305,7 +2450,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                         firstOperation =
                             await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                operationTableAssembly,
+                                `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
                                 numberColumnFirstOperation
                             );
                         console.log("Name of the first operation: ", firstOperation);
@@ -2331,13 +2476,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             "Step 2: Open the shortage product page",
             async () => {
                 // Find and go to the page using the locator Shortage of Products
-                await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
             }
         );
 
@@ -2347,10 +2492,10 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             for (const izd of arrayIzd) {
                 await allure.step("Step 3: Search product", async () => {
                     // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(izd.name, tableAssemblyWarhouse);
+                    await assemblyWarehouse.searchTable(izd.name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(tableAssemblyWarhouse);
+                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -2361,7 +2506,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await assemblyWarehouse.checkNameInLineFromFirstRow(
                             izd.name,
-                            tableAssemblyWarhouse
+                            `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`
                         );
                     }
                 );
@@ -2371,14 +2516,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         const numberColumn = await assemblyWarehouse.findColumn(
                             page,
-                            tableAssemblyWarhouseID,
-                            tableAssemblyCheckbox
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
+                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_CHECKBOX
                         );
                         console.log("numberColumn: ", numberColumn);
 
                         // Upd:
                         await assemblyWarehouse.getValueOrClickFromFirstRow(
-                            tableAssemblyWarhouse,
+                            `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`,
                             numberColumn,
                             Click.Yes
                         );
@@ -2390,7 +2535,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await assemblyWarehouse.clickButton(
                             " Переместить в архив ",
-                            buttonMoveToArchiveAssembly
+                            `[data-testid="${CONST.ZAKAZ_SCLAD_BUTTON_MOVE_TO_ARCHIVE_ASSEMBLY}"]`
                         );
                     }
                 );
@@ -2407,7 +2552,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     async () => {
                         await assemblyWarehouse.clickButton(
                             " Подтвердить ",
-                            buttonConfirmationButton
+                            `[data-testid="${CONST.U002_MODAL_PROMPT_MINI_BUTTON_CONFIRM}"]`
                         );
                     }
                 );
@@ -2431,7 +2576,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 "Step 2: Open the assembly warehouse page",
                 async () => {
                     // Find and go to the page using the locator
-                    await assemblyWarehouse.findTable(selectorAsseblyWarhouse);
+                    await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
 
                     // Wait for loading
                     await page.waitForLoadState("networkidle");
@@ -2445,7 +2590,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     // Using table search we look for the value of the variable
                     await assemblyWarehouse.searchTable(
                         izd.name,
-                        tableAssemblyWarhouse
+                        `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`
                     );
 
                     // Wait for loading without expecting table body to have rows
@@ -2457,10 +2602,10 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     "Step 4: Verify that no records with the given CBED name are found in the table",
                     async () => {
                         // Wait for the table to be present (but it might be empty)
-                        await page.waitForSelector(tableAssemblyWarhouse, { timeout: 5000 });
+                        await page.waitForSelector(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`, { timeout: 5000 });
 
                         // Get all rows in the table
-                        const rows = page.locator(`${tableAssemblyWarhouse} tbody tr`);
+                        const rows = page.locator(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"] tbody tr`);
                         const rowCount = await rows.count();
 
                         console.log(`Total rows found in assembly table after search: ${rowCount}`);

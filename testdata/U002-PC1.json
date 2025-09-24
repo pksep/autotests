@@ -2,42 +2,44 @@
     "elements": {
         "MainPage": {
             "titles": [
-                "Заказано у поставщиков"
+                "Заказаны у поставщиков"
             ],
             "buttons": [
                 {
                     "class": "button.btn-small.btn-add",
-                    "label": "Создать заказ"
-                },
-                {
-                    "class": "[data-testid=\"DatePicterRange-BlockPicter-PeriodButton\"]",
-                    "label": "Сбросить"
+                    "label": "Создать заказ",
+                    "datatestid": "OrderSuppliers-Main-Button"
                 }
             ],
             "switcher": [
                 {
                     "class": "span.td-row.td-row-all",
                     "label": "Все",
+                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item0",
                     "state": "false"
                 },
                 {
                     "class": "span.td-row",
-                    "label": "От Поставщика",
+                    "label": "От поставщика",
+                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item1",
                     "state": "false"
                 },
                 {
                     "class": "span.td-row",
-                    "label": "Только Сборки",
+                    "label": "Только сборки",
+                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item2",
                     "state": "false"
                 },
                 {
                     "class": "span.td-row",
-                    "label": "Только Металлообработка",
+                    "label": "Металлообработка",
+                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item3",
                     "state": "false"
                 },
                 {
                     "class": "span.td-row",
                     "label": "Архив",
+                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item4",
                     "state": "false"
                 }
             ]
@@ -47,44 +49,51 @@
                 {
                     "class": ".type-operation",
                     "label": "Поставщик",
+                    "datatestid": "OrderSuppliers-Modal-AddOrder-Content-ProviderCard",
                     "state": "true"
                 },
                 {
                     "class": ".type-operation",
                     "label": "Детали",
+                    "datatestid": "OrderSuppliers-Modal-AddOrder-Content-DetalCard",
                     "state": "true"
                 },
                 {
                     "class": ".type-operation",
                     "label": "Сборка",
+                    "datatestid": "OrderSuppliers-Modal-AddOrder-Content-AssembleCard",
                     "state": "true"
                 },
                 {
                     "class": ".type-operation",
                     "label": "Изделии",
+                    "datatestid": "OrderSuppliers-Modal-AddOrder-Content-ProductCard",
                     "state": "true"
                 }
             ]
         },
         "ModalCreateOrderSupplier": {
             "titles": [
-                "Создание заказа поставщика"
+                "Создание заказа на металлообработку","Описание/Примечание"
             ],
             "buttons": [
                 {
-                    "class": "[data-testid=\"ModalAddOrder-SupplierOrderDetails-ChangeSelectionButton\"]",
-                    "label": "Изменить выбор",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"ModalAddOrder-ProductionTable-CancelButton\"]",
+                    "class": "button-yui-kit.medium.outline-yui-kit.template-modal-order-suppliers__button",
+                    "datatestid": "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Cancel",
                     "label": "Отменить",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalAddOrder-ProductionTable-OrderButton\"]",
-                    "label": "Заказать",
-                    "state": "true"
+                    "class": "button-yui-kit.medium.disabled-yui-kit.primary-yui-kit.template-modal-order-suppliers__button",
+                    "datatestid": "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save",
+                    "label": "В производство",
+                    "state": "false"
+                },
+                {
+                    "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.modal-add-stock-order-supply__button",
+                    "datatestid": "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button",
+                    "label": "Выбрать",
+                    "state": "false"
                 }
             ]
         },
