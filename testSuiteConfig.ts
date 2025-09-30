@@ -28,6 +28,7 @@ import { runU004_9 } from "./testcases/U004-9.spec";
 import { runU005 } from "./testcases/U005.spec";
 import { runU006 } from "./testcases/U006.spec";
 import { runU007 } from "./testcases/U007.spec";
+import { runCheckTableTotals } from "./testcases/CheckTableTotals.spec";
 import { runERP_969 } from './testcases/ERP-969.spec';
 import { runERP_969_2 } from './testcases/ERP-969-2.spec';
 import { runAuthAPI } from './testcases/APIAuth.spec';
@@ -977,6 +978,15 @@ export const testSuites = {
             {
                 test: runToolsAPI,
                 description: "Tests all Tools API endpoints including CRUD operations.",
+            },
+        ],
+    },
+    CheckTableTotals: {
+        description: "Verifies that table row counts match the numeric values displayed in homepage cards.",
+        tests: [
+            {
+                test: runCheckTableTotals,
+                description: "Check table totals functionality by comparing card values with actual table row counts.",
             },
         ],
     }

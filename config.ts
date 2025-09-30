@@ -19,7 +19,7 @@ export const ENV = {
     //HEADLESS: process.env.HEADLESS === "false" ? false : true,
     HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'U002',
+    TEST_SUITE: 'U005',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
 };
@@ -300,8 +300,8 @@ export const CONST = {
     BUTTON_OPERATION: "EditDetal-Buttons-TechProcess",
     BUTTON_ADD_OPERATION: "EditDetal-ModalTechProcess-Buttons-ButtonCreate",
     BUTTON_SAVE_OPERATION: "EditDetal-ModalTechProcess-Button-Save",
-    FILTER_TITLE: "Filter-Title",
-    FILTER_SEARCH_DROPDOWN_INPUT: "Filter-Search-Dropdown-Input",
+    FILTER_TITLE: "BaseFilter-Title",
+    FILTER_SEARCH_DROPDOWN_INPUT: "BaseFilter-Search-Dropdown-Input",
     TABLE_PROCESS_ID: "operation-table",
     DETAIL_PAGE_MODAL_TECH_PROCESS_TABLE: "Creator-ModalTechProcess-Table",
     TABLE_PROCESS_NAME_OPERATION: "EditDetal-ModalTechProcess-Thead-NameOperation",
@@ -367,6 +367,9 @@ export const CONST = {
     MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save",
     MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button",
+    // Table1 (left/top) row/cell identifiers
+    TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE_ROW_PREFIX: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row",
+    TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE_ROW_CHECKBOX_SUFFIX: "-TdCheckbox",
     ORDER_SUPPLIERS_TABLE_ORDER_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table",
     ORDER_MODAL: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker",
     COMPLEX_SBORKA_BY_PLAN: "CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input",
@@ -405,10 +408,10 @@ export const CONST = {
     MODAL_START_PRODUCTION_MODAL_CLOSE_LEFT: "ModalStartProduction-ModalCloseLeft",
     MODAL_START_PRODUCTION_MODAL_CONTENT: "ModalStartProduction-ModalContent",
     // U002-specific fallbacks where generic constants differ
-    U002_BUTTON_CREATE_NEW_PART: "BaseDetals-Button-Create",
-    U002_BUTTON_DETAIL: "BaseDetals-CreatLink-Cardbase-detail",
-    U002_BUTTON_CBED: "BaseDetals-CreatLink-Cardbase-of-assembly-units",
-    U002_BUTTON_PRODUCT: "BaseDetals-CreatLink-Cardthe-base-of-the-tool",
+    U002_BUTTON_CREATE_NEW_PART: "BaseProducts-Button-Create",
+    U002_BUTTON_DETAIL: "BaseProducts-CreatLink-Cardbase-detail",
+    U002_BUTTON_CBED: "BaseProducts-CreatLink-Cardbase-of-assembly-units",
+    U002_BUTTON_PRODUCT: "BaseProducts-CreatLink-Cardthe-base-of-the-tool",
     U002_CREATOR_BUTTONS_TECHPROCESS: "Creator-Buttons-TechProcess",
     U002_CREATOR_SAVE_BUTTON: "Creator-ButtonSaveAndCancel-ButtonsCenter-Save",
     U002_CREATOR_CANCEL_BUTTON: "Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel",
@@ -558,7 +561,7 @@ export const CONST = {
     // Test Case 2 Product Constants (for U004-2.spec.ts) - FIXED LOCATION
     TESTCASE_2_PRODUCT_СБ: "СБ Маслобака 2 Литра",
     TESTCASE_2_PRODUCT_Д: "Опора штока d45мм",
-    TESTCASE_2_PRODUCT_ПД: "22\" (21,5) Сенсорный инфракрасный экран с антивандальным ---стеклом, мультитач, 4 касания, S-серия",
+    TESTCASE_2_PRODUCT_ПД: "22\" (21,5) Сенсорный инфракрасный экран с антивандальным стеклом, мультитач, 4 касания, S-серия",
     TESTCASE_2_PRODUCT_РМ: "Рулон бумажных полотенец",
     TESTCASE_2_PRODUCT_ASSIGNEMENT: "TESTTESTTEST",
 
@@ -755,6 +758,13 @@ export const CONST = {
     // Metalworking warehouse checkbox pattern constants
     METALWORKING_CHECKBOX_ROW_PATTERN_START: "Metalloworking-Content-WithFilters-Table-Table-Row",
     METALWORKING_CHECKBOX_ROW_PATTERN_END: "-Checkbox-Wrapper-Checkbox",
+
+    // CheckTableTotals Test Constants
+    SWITCH_ITEM0: "Switch-Item0",
+    SWITCH_ITEM1: "Switch-Item1",
+    CARD: "Card",
+    TABLE: "Table",
+    TABLE_SBORKA: "TableOperationBody-TableOperation-TableOperation",
 };
 
 // API Test Data Constants

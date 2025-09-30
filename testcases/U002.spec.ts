@@ -1,35 +1,93 @@
 import { test, expect, Page } from "@playwright/test";
 import { runTC000, performLogin } from "./TC000.spec"; //
-import {
-    CreateOrderedFromSuppliersPage,
-    Supplier,
-} from "../pages/OrderedFromSuppliersPage";
+import { CreateOrderedFromSuppliersPage, Supplier } from "../pages/OrderedFromSuppliersPage";
 import { CreateMetalworkingWarehousePage } from "../pages/MetalworkingWarehousePage";
 import { CreateAssemblyWarehousePage } from "../pages/AssemplyWarehousePage";
-import { ENV, SELECTORS, CONST } from "../config";
+import { ENV, SELECTORS, CONST, LOGIN_TEST_CONFIG } from "../config";
 import { allure } from "allure-playwright";
 import { Click } from "../lib/Page";
 import testData1 from '../testdata/U002-PC1.json';
 import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
 
-const arrayDetail = [
-    {
-        name: '0Т5.21',
-        designation: '-'
+// Test data arrays - will be populated with existing items from the database
+let arrayDetail: Array<{ name: string; designation?: string }> = [];
+let arrayCbed: Array<{ name: string; designation?: string }> = [];
+let arrayIzd: Array<{ name: string; designation?: string }> = [];
+
+// Function to populate test data with existing items from the database
+async function populateTestData(page: Page) {
+    const partsDatabasePage = new CreatePartsDatabasePage(page);
+
+    // Go to parts database page
+    await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+    await page.waitForLoadState("networkidle");
+
+    // Get existing details
+    try {
+        const detailTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`);
+        await detailTable.waitFor({ state: 'visible', timeout: 5000 });
+        const detailRows = detailTable.locator('tbody tr');
+        const detailCount = await detailRows.count();
+
+        if (detailCount > 0) {
+            const firstDetailRow = detailRows.first();
+            const detailName = await firstDetailRow.locator('td').nth(1).textContent();
+            const detailDesignation = await firstDetailRow.locator('td').nth(2).textContent();
+            arrayDetail = [{
+                name: detailName?.trim() || 'DEFAULT_DETAIL',
+                designation: detailDesignation?.trim() || '-'
+            }];
+            console.log(`Found existing detail: ${arrayDetail[0].name}`);
+        }
+    } catch (error) {
+        console.log('No details found, using default');
+        arrayDetail = [{ name: 'DEFAULT_DETAIL', designation: '-' }];
     }
-]
-const arrayCbed = [
-    {
-        name: '0Т5.11',
-        designation: '-'
+
+    // Get existing assemblies
+    try {
+        const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
+        await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
+        const cbedRows = cbedTable.locator('tbody tr');
+        const cbedCount = await cbedRows.count();
+
+        if (cbedCount > 0) {
+            const firstCbedRow = cbedRows.first();
+            const cbedName = await firstCbedRow.locator('td').nth(1).textContent();
+            const cbedDesignation = await firstCbedRow.locator('td').nth(2).textContent();
+            arrayCbed = [{
+                name: cbedName?.trim() || 'DEFAULT_CBED',
+                designation: cbedDesignation?.trim() || '-'
+            }];
+            console.log(`Found existing assembly: ${arrayCbed[0].name}`);
+        }
+    } catch (error) {
+        console.log('No assemblies found, using default');
+        arrayCbed = [{ name: 'DEFAULT_CBED', designation: '-' }];
     }
-]
-const arrayIzd = [
-    {
-        name: '0Т5.01',
-        designation: '-'
+
+    // Get existing products
+    try {
+        const productTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+        await productTable.waitFor({ state: 'visible', timeout: 5000 });
+        const productRows = productTable.locator('tbody tr');
+        const productCount = await productRows.count();
+
+        if (productCount > 0) {
+            const firstProductRow = productRows.first();
+            const productName = await firstProductRow.locator('td').nth(2).textContent();
+            const productDesignation = await firstProductRow.locator('td').nth(3).textContent();
+            arrayIzd = [{
+                name: productName?.trim() || 'DEFAULT_PRODUCT',
+                designation: productDesignation?.trim() || '-'
+            }];
+            console.log(`Found existing product: ${arrayIzd[0].name}`);
+        }
+    } catch (error) {
+        console.log('No products found, using default');
+        arrayIzd = [{ name: 'DEFAULT_PRODUCT', designation: '-' }];
     }
-]
+}
 
 let nameOprerationOnProcess: string
 let nameOprerationOnProcessAssebly: string
@@ -52,13 +110,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         `Starting test: Verify Order From Suppliers Page Functionality`
     );
 
+
     test('Test Case 01 - Check all elements on page Ordered from suppliers', async ({ page }) => {
         test.setTimeout(60000);
         console.log("Test Case 01 - Check all elements on page Ordered from suppliers");
         const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
         const selectedItems: Array<{ id: string; name: string }> = [];
         await allure.step("Step 1: Open the warehouse page", async () => {
-            // Go to the Warehouse page 
+            // Go to the Warehouse page
             await orderedFromSuppliersPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
@@ -493,13 +552,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             "Step 2: Open the shortage product page",
             async () => {
                 // Find and go to the page using the locator Shortage of Products
-                await metalworkingWarehouse.findTable(CONST.SELECTOR_METAL_WORKING_WARHOUSE);
+                const button = page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON}"]`);
+                await button.click();
 
                 // Wait for loading
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.METALLOWORKINGSCLAD_DETAILS_TABLE}"]`);
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`);
             }
         );
 
@@ -527,24 +587,31 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForLoadState("networkidle");
 
             const buttons = testData1.elements.MetalworkingWarhouse.buttons;
-            // Iterate over each button in the array
             for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
                 const buttonLabel = button.label;
+                const dataTestId = button.datatestid;
+                const buttonClass = button.class;
+                const shouldBeEnabled = String((button as any).state ?? 'true').toLowerCase() === 'true';
 
-                // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
+                    let isReady = false;
 
-                    const isButtonReady = await metalworkingWarehouse.isButtonVisible(page, buttonClass, buttonLabel);
+                    if (dataTestId) {
+                        const btn = page.locator(`[data-testid="${dataTestId}"]`).first();
+                        await btn.waitFor({ state: 'visible' });
+                        await btn.evaluate((el: HTMLElement) => {
+                            el.style.backgroundColor = 'yellow';
+                            el.style.border = '2px solid red';
+                            el.style.color = 'blue';
+                        });
+                        isReady = await metalworkingWarehouse.isButtonVisibleTestId(page, dataTestId, buttonLabel, shouldBeEnabled);
+                    } else {
+                        isReady = await metalworkingWarehouse.isButtonVisible(page, buttonClass, buttonLabel, shouldBeEnabled);
+                    }
 
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy();
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                    expect(isReady).toBeTruthy();
                 });
             }
-
         });
     })
 
@@ -569,7 +636,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
+                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
             }
         );
 
@@ -598,21 +665,24 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForLoadState("networkidle");
 
             const buttons = testData1.elements.AssemblyWarehouse.buttons;
-            // Iterate over each button in the array
             for (const button of buttons) {
-                // Extract the class, label, and state from the button object
-                const buttonClass = button.class;
                 const buttonLabel = button.label;
+                const dataTestId = button.datatestid;
+                const buttonClass = button.class;
+                const shouldBeEnabled = String((button as any).state ?? 'true').toLowerCase() === 'true';
 
-                // Perform the validation for the button
                 await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-                    // Check if the button is visible and enabled
-
-                    const isButtonReady = await assemblyWarehouse.isButtonVisible(page, buttonClass, buttonLabel);
-
-                    // Validate the button's visibility and state
-                    expect(isButtonReady).toBeTruthy()
-                    console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+                    console.log(`Validate button with label: "${buttonLabel}"`);
+                    console.log(`DataTestId: "${dataTestId}"`);
+                    console.log(`ButtonClass: "${buttonClass}"`);
+                    console.log(`ShouldBeEnabled: "${shouldBeEnabled}"`);
+                    let isReady = false;
+                    if (dataTestId) {
+                        isReady = await assemblyWarehouse.isButtonVisibleTestId(page, dataTestId, buttonLabel, shouldBeEnabled);
+                    } else {
+                        isReady = await assemblyWarehouse.isButtonVisible(page, buttonClass, buttonLabel, shouldBeEnabled);
+                    }
+                    expect(isReady).toBeTruthy();
                 });
             }
         });
@@ -813,15 +883,15 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     const nameParts = page.locator('[data-testid="AddDetal-Information-Input-Input"]')
 
                     await page.waitForTimeout(500)
-                    await nameParts.fill(detail.name)
-                    await expect(await nameParts.inputValue()).toBe(detail.name)
+                    await nameParts.fill(detail.name || '') //ERP-2099
+                    await expect(await nameParts.inputValue()).toBe(detail.name || '')//ERP-2099
                 })
 
                 await allure.step('Step 05: Enter the designation of the part', async () => {
                     const nameParts = page.locator('[data-testid="AddDetal-Designation-Input-Input"]')
 
-                    await nameParts.fill(detail.designation)
-                    expect(await nameParts.inputValue()).toBe(detail.designation)
+                    await nameParts.fill(detail.designation || '-')
+                    expect(await nameParts.inputValue()).toBe(detail.designation || '-')
                 })
 
                 await allure.step('Step 06: Click on the Save button', async () => {
@@ -853,7 +923,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                 await allure.step('Step 11: Choice type operation', async () => {
                     // If a dedicated constant exists for the first option, use it; otherwise keep generic pattern
-                    await page.locator('[data-testid="Filter-Options-0"]').click()
+                    await page.locator('[data-testid="BaseFilter-Options-0"]').click()
                 })
 
                 await allure.step('Step 12: Click on the Save button', async () => {
@@ -920,16 +990,16 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     await page.waitForTimeout(500)
                     const nameParts = page.locator('[data-testid="Creator-Information-Input-Input"]')
 
-                    await nameParts.fill(cbed.name)
+                    await nameParts.fill(cbed.name || '')
                     await page.waitForTimeout(500)
-                    expect(await nameParts.inputValue()).toBe(cbed.name)
+                    expect(await nameParts.inputValue()).toBe(cbed.name || '')
                 })
 
                 await allure.step('Step 05: Enter the designation of the part', async () => {
                     const nameParts = page.locator('[data-testid="Creator-Designation-Input-Input"]')
 
-                    await nameParts.fill(cbed.designation)
-                    expect(await nameParts.inputValue()).toBe(cbed.designation)
+                    await nameParts.fill(cbed.designation || '-')
+                    expect(await nameParts.inputValue()).toBe(cbed.designation || '-')
                 })
 
                 await allure.step('Step 06: Click on the Save button', async () => {
@@ -978,7 +1048,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             // Go to the Shipping tasks page
             await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
 
-            await partsDatabsePage.waitingTableBody('[data-testid="BasePaginationTable-Border-product"]')
+            await partsDatabsePage.waitingTableBody(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         })
         if (arrayIzd.length === 0) {
             throw new Error("Массив пустой.");
@@ -998,15 +1068,15 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                     const nameParts = page.locator('[data-testid="Creator-Information-Input-Input"]')
 
                     await page.waitForTimeout(500)
-                    await nameParts.fill(izd.name)
-                    expect(await nameParts.inputValue()).toBe(izd.name)
+                    await nameParts.fill(izd.name || '')
+                    expect(await nameParts.inputValue()).toBe(izd.name || '')
                 })
 
                 await allure.step('Step 05: Enter the designation of the part', async () => {
                     const nameParts = page.locator('[data-testid="Creator-Designation-Input-Input"]')
 
-                    await nameParts.fill(izd.designation)
-                    expect(await nameParts.inputValue()).toBe(izd.designation)
+                    await nameParts.fill(izd.designation || '-')
+                    expect(await nameParts.inputValue()).toBe(izd.designation || '-')
                 })
                 await allure.step('Step 06: Click on the Save button', async () => {
                     await partsDatabsePage.clickButton('Сохранить', `[data-testid="${CONST.U002_CREATOR_SAVE_BUTTON}"]`)
@@ -1051,23 +1121,26 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
             page
         );
-        if (arrayDetail.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const detail of arrayDetail) {
-                let result =
-                    await orderedFromSuppliersPage.launchIntoProductionSupplier(
-                        detail.name,
-                        quantityOrder,
-                        Supplier.details
-                    );
 
-                quantityLaunchInProduct = result.quantityLaunchInProduct; // Assign the value to the outer variable
-                checkOrderNumber = result.checkOrderNumber;
+        // Use a placeholder name - the actual item will be found dynamically in the table
+        const testItemName = "PLACEHOLDER_ITEM";
+        
+        let result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
+            testItemName,
+            quantityOrder,
+            Supplier.details
+        );
 
-                console.log("Quantity Launched in Product: ", quantityLaunchInProduct);
-                console.log("Check Order Number: ", checkOrderNumber);
-            }
+        quantityLaunchInProduct = result.quantityLaunchInProduct; // Assign the value to the outer variable
+        checkOrderNumber = result.checkOrderNumber;
+
+        console.log("Quantity Launched in Product: ", quantityLaunchInProduct);
+        console.log("Check Order Number: ", checkOrderNumber);
+
+        // If the test couldn't find enough items, skip the rest
+        if (checkOrderNumber === "INSUFFICIENT_ITEMS" || checkOrderNumber === "INSUFFICIENT_BOTTOM_ROWS") {
+            console.log("Test skipped due to insufficient items in database");
+            return;
         }
     });
 

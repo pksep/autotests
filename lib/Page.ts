@@ -1281,6 +1281,10 @@ export class PageObject extends AbstractPage {
    */
   async waitingTableBody(locator: string) {
     const locatorTable = this.page.locator(locator);
+    await locatorTable.evaluate((element: HTMLElement) => {
+      element.style.border = '2px solid red';
+    });
+
 
     await this.page.waitForSelector(`${locator} tbody tr`, {
       state: "visible",
