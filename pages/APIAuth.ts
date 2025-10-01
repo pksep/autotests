@@ -40,12 +40,15 @@ export class AuthAPI extends APIPageObject {
         return { status: status, data: responseData };
     }
 
-    async getUserByToken(request: APIRequestContext, authorization: string) {
+    async getUserByToken(request: APIRequestContext, token: string) {
         logger.info(`Getting user by token`);
 
+        // Token validation endpoint - returns 200 OK if token is valid (no user data returned)
+        // This is correct API behavior: 200 = valid token, 401 = invalid token
         const response = await request.get(ENV.API_BASE_URL + 'api/userdata-by-token', {
             headers: {
-                'authorization': authorization
+                'authorization': token,
+                'accept': '*/*'
             }
         });
 
@@ -54,8 +57,10 @@ export class AuthAPI extends APIPageObject {
 
         try {
             responseData = await response.json();
+            console.log(`🔍 JSON response parsed successfully: ${JSON.stringify(responseData).substring(0, 200)}...`);
         } catch (e) {
             responseData = await response.text();
+            console.log(`🔍 Text response: "${responseData}" (length: ${responseData.length})`);
         }
 
         // Response processed

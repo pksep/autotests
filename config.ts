@@ -16,10 +16,10 @@ export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
     //API_BASE_URL: process.env.API_BASE_URL || "http://localhost:5000/",
     API_BASE_URL: process.env.API_BASE_URL || "http://dev.pksep.ru/",
-    //HEADLESS: process.env.HEADLESS === "false" ? false : true,
-    HEADLESS: process.env.HEADLESS === "true" ? true : false,
+    HEADLESS: process.env.HEADLESS === "false" ? false : true,
+    //ADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'CheckTableTotals',
+    TEST_SUITE: 'auth_api',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
 };

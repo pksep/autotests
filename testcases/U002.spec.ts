@@ -475,42 +475,168 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             }
         });
 
-        await allure.step("Step 12.0: Устанавливаем количество 1 для выбранных строк", async () => {
+        await allure.step("Step 12.0: Устанавливаем количество 1 только для первой строки", async () => {
             const bottomTable = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`).first();
             await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
 
-            for (const item of selectedItems) {
-                const row = bottomTable.locator('tbody tr').filter({ hasText: item.name || item.id }).first();
-                await row.waitFor({ state: 'visible', timeout: 5000 });
-                await row.evaluate((el: HTMLElement) => {
-                    el.style.backgroundColor = 'yellow';
-                    el.style.border = '2px solid red';
-                    el.style.color = 'blue';
-                });
-                await page.waitForTimeout(200);
+            // Set quantity only for the first item
+            const firstItem = selectedItems[0];
+            const row = bottomTable.locator('tbody tr').filter({ hasText: firstItem.name || firstItem.id }).first();
+            await row.waitFor({ state: 'visible', timeout: 5000 });
+            await row.evaluate((el: HTMLElement) => {
+                el.style.backgroundColor = 'yellow';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+            await page.waitForTimeout(200);
 
-                // Находим инпут количества внутри строки по паттерну data-testid
-                let qtyInput = row.locator(`*[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="-TdQuantity-InputNumber-Input"]`).first();
-                if (!(await qtyInput.isVisible().catch(() => false))) {
-                    // Резервный путь: ищем по окончанию testid внутри текущей строки
-                    qtyInput = row.locator(`*[data-testid$="-TdQuantity-InputNumber-Input"]`).first();
-                }
-                await qtyInput.waitFor({ state: 'visible', timeout: 5000 });
-                await qtyInput.evaluate((el: HTMLElement) => {
-                    (el as HTMLElement).style.backgroundColor = 'yellow';
-                    (el as HTMLElement).style.border = '2px solid red';
-                    (el as HTMLElement).style.color = 'blue';
-                });
-                await qtyInput.click();
-                await page.keyboard.press('Control+A');
-                await qtyInput.type('1');
-                await page.keyboard.press('Tab');
-                await page.waitForTimeout(200);
-                await expect(qtyInput).toHaveValue('1');
+            // Находим инпут количества внутри строки по паттерну data-testid
+            let qtyInput = row.locator(`*[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="-TdQuantity-InputNumber-Input"]`).first();
+            if (!(await qtyInput.isVisible().catch(() => false))) {
+                // Резервный путь: ищем по окончанию testid внутри текущей строки
+                qtyInput = row.locator(`*[data-testid$="-TdQuantity-InputNumber-Input"]`).first();
             }
+            await qtyInput.waitFor({ state: 'visible', timeout: 5000 });
+            await qtyInput.evaluate((el: HTMLElement) => {
+                (el as HTMLElement).style.backgroundColor = 'yellow';
+                (el as HTMLElement).style.border = '2px solid red';
+                (el as HTMLElement).style.color = 'blue';
+            });
+            await qtyInput.click();
+            await page.keyboard.press('Control+A');
+            await qtyInput.type('1');
+            await page.keyboard.press('Tab');
+            await page.waitForTimeout(200);
+            await expect(qtyInput).toHaveValue('1');
         });
 
-        await allure.step("Step 12.1: Нажимаем 'В производство' (должна быть активна)", async () => {
+        await allure.step("Step 12.1: Нажимаем 'В производство' и ожидаем ошибку", async () => {
+            const saveBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`).first();
+            await saveBtn.waitFor({ state: 'visible' });
+            const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
+                page,
+                CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON,
+                'В производство',
+                true,
+                CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY
+            );
+            await page.waitForTimeout(500);
+            expect(enabled).toBeTruthy();
+            await saveBtn.click();
+
+            // Wait for error notification
+            const notif = await orderedFromSuppliersPage.extractNotificationMessage(page);
+            if (!notif) {
+                throw new Error('Уведомление об ошибке не найдено');
+            }
+            console.log(`Notification Title: ${notif.title}`);
+            console.log(`Notification Message: ${notif.message}`);
+            expect(notif.title).toBe('Ошибка');
+            await page.waitForTimeout(2000);
+        });
+
+        await allure.step("Step 12.2: Устанавливаем количество 1 для второй строки", async () => {
+            const bottomTable = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`).first();
+            await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
+
+            // Debug: Log all selected items
+            console.log("Selected items:", selectedItems.map(item => ({ name: item.name, id: item.id })));
+
+            // Set quantity for the second item
+            const secondItem = selectedItems[1];
+            console.log("Setting quantity for second item:", secondItem.name || secondItem.id);
+
+            const row = bottomTable.locator('tbody tr').filter({ hasText: secondItem.name || secondItem.id }).nth(1);
+            await row.evaluate((el: HTMLElement) => {
+                (el as HTMLElement).style.backgroundColor = 'yellow';
+                (el as HTMLElement).style.border = '2px solid red';
+                (el as HTMLElement).style.color = 'blue';
+            });
+            await row.waitFor({ state: 'visible', timeout: 5000 });
+
+            // Debug: Check if row is found
+            const rowCount = await bottomTable.locator('tbody tr').count();
+            console.log("Total rows in bottom table:", rowCount);
+
+            await row.evaluate((el: HTMLElement) => {
+                el.style.backgroundColor = 'yellow';
+                el.style.border = '2px solid red';
+                el.style.color = 'blue';
+            });
+            await page.waitForTimeout(200);
+
+            // Try multiple approaches to find the quantity input
+            let qtyInput = null;
+
+            // Approach 1: Try the specific pattern
+            try {
+                qtyInput = row.locator(`*[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="-TdQuantity-InputNumber-Input"]`).first();
+                if (await qtyInput.isVisible()) {
+                    console.log("Found quantity input using specific pattern");
+                } else {
+                    qtyInput = null;
+                }
+            } catch (e) {
+                console.log("Specific pattern failed:", e.message);
+                qtyInput = null;
+            }
+
+            // Approach 2: Try the fallback pattern
+            if (!qtyInput) {
+                try {
+                    qtyInput = row.locator(`*[data-testid$="-TdQuantity-InputNumber-Input"]`).first();
+                    if (await qtyInput.isVisible()) {
+                        console.log("Found quantity input using fallback pattern");
+                    } else {
+                        qtyInput = null;
+                    }
+                } catch (e) {
+                    console.log("Fallback pattern failed:", e.message);
+                    qtyInput = null;
+                }
+            }
+
+            // Approach 3: Try finding any input in the row
+            if (!qtyInput) {
+                try {
+                    qtyInput = row.locator('input[type="number"], input[type="text"]').first();
+                    if (await qtyInput.isVisible()) {
+                        console.log("Found quantity input using generic input search");
+                    } else {
+                        qtyInput = null;
+                    }
+                } catch (e) {
+                    console.log("Generic input search failed:", e.message);
+                    qtyInput = null;
+                }
+            }
+
+            if (!qtyInput) {
+                throw new Error('Could not find quantity input for second item');
+            }
+
+            await qtyInput.waitFor({ state: 'visible', timeout: 5000 });
+            await qtyInput.evaluate((el: HTMLElement) => {
+                (el as HTMLElement).style.backgroundColor = 'yellow';
+                (el as HTMLElement).style.border = '2px solid red';
+                (el as HTMLElement).style.color = 'blue';
+            });
+
+            // Clear and set the value
+            await qtyInput.click();
+            await page.keyboard.press('Control+A');
+            await page.keyboard.press('Delete');
+            await qtyInput.type('1');
+            await page.keyboard.press('Tab');
+            await page.waitForTimeout(500);
+
+            // Verify the value was set
+            const currentValue = await qtyInput.inputValue();
+            console.log("Current quantity value:", currentValue);
+            await expect(qtyInput).toHaveValue('1');
+        });
+
+        await allure.step("Step 12.3: Нажимаем 'В производство' для успешной отправки", async () => {
             const saveBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`).first();
             await saveBtn.waitFor({ state: 'visible' });
             const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
@@ -525,7 +651,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             await saveBtn.click();
         });
 
-        await allure.step("Step 13: Проверяем уведомление после отправки в производство", async () => {
+        await allure.step("Step 13: Проверяем уведомление об успехе после отправки в производство", async () => {
             // Уведомление может появиться быстро и исчезнуть — читаем сразу после клика 'В производство'
             const notif = await orderedFromSuppliersPage.extractNotificationMessage(page);
             if (!notif) {
@@ -1124,7 +1250,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         // Use a placeholder name - the actual item will be found dynamically in the table
         const testItemName = "PLACEHOLDER_ITEM";
-        
+
         let result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
             testItemName,
             quantityOrder,
