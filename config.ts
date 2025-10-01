@@ -19,7 +19,7 @@ export const ENV = {
     //HEADLESS: process.env.HEADLESS === "false" ? false : true,
     HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'U005',
+    TEST_SUITE: 'CheckTableTotals',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
 };
