@@ -8,17 +8,19 @@ export class AuthAPI extends APIPageObject {
         super(page);
     }
 
-    async login(request: APIRequestContext, username: string, password: string, tabel: string) {
-        logger.info(`Attempting login for user: ${username}`);
+    async login(request: APIRequestContext, login: string, password: string, tabel: string) {
+        logger.info(`Attempting login for user: ${login}`);
 
-        // Use the correct endpoint and field names
+        // Use the correct endpoint and field names with compress header
         const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/auth/login', {
-            login: username,
+            login: login,
             password: password,
             tabel: tabel
+        }, {
+            'compress': 'no-compress'
         });
 
-        return await this.handleResponse(response, username);
+        return await this.handleResponse(response, login);
     }
 
     private async handleResponse(response: any, username: string) {
@@ -48,7 +50,8 @@ export class AuthAPI extends APIPageObject {
         const response = await request.get(ENV.API_BASE_URL + 'api/userdata-by-token', {
             headers: {
                 'authorization': token,
-                'accept': '*/*'
+                'accept': '*/*',
+                'compress': 'no-compress'
             }
         });
 

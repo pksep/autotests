@@ -17,9 +17,10 @@ export const ENV = {
     //API_BASE_URL: process.env.API_BASE_URL || "http://localhost:5000/",
     API_BASE_URL: process.env.API_BASE_URL || "http://dev.pksep.ru/",
     HEADLESS: process.env.HEADLESS === "false" ? false : true,
-    //ADLESS: process.env.HEADLESS === "true" ? true : false,
+    //HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'auth_api',
+    TEST_SUITE: 'users_api',
+    //TEST_SUITE: 'suite01',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
 };
@@ -33,7 +34,7 @@ export const LOGIN_TEST_CONFIG = {
     TEST_CREDENTIALS: {
         username: "Джойс Р.Г.",
         password: "O0_f2!3@34OInU",
-        tabel: "005"
+        tabel: "105"
     },
 
     // Alternative credential formats to test
@@ -772,7 +773,7 @@ export const API_CONST = {
     // Auth Test Data
     API_TEST_USERNAME: "Джойс Р.Г.",
     API_TEST_PASSWORD: "O0_f2!3@34OInU",
-    API_TEST_TABEL: "005",
+    API_TEST_TABEL: "105",
     API_TEST_AUTHORIZATION_TOKEN: "Bearer test-token-12345",
 
     // Users Test Data

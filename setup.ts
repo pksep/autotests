@@ -10,7 +10,7 @@ export function runSetup() { // ✅ Use function declaration instead of arrow fu
             return;
         }
 
-        await performLogin(page, "005", "Джойс Р.Г.", "O0_f2!3@34OInU");
+        await performLogin(page, "105", "Джойс Р.Г.", "O0_f2!3@34OInU");
         await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible' });
         await page.locator('[data-testid="LoginForm-Login-Button"]').click();
 

@@ -7,7 +7,7 @@ import logger from "../lib/logger";
 export const runAuthAPI = () => {
     logger.info(`Starting Auth API defensive tests - looking for API problems`);
 
-    test.skip("Test 1:Auth API - Security & Authentication Tests", async ({ request }) => {
+    test("Test 1:Auth API - Security & Authentication Tests", async ({ request }) => {
         console.log("Test 1: Auth API - Security & Authentication Tests");
         test.setTimeout(60000);
         const authAPI = new AuthAPI(null as any);
@@ -283,7 +283,7 @@ export const runAuthAPI = () => {
         }
     });
 
-    test.skip("Test 2:Auth API - Login Process Test", async ({ request }) => {
+    test("Test 2:Auth API - Login Process Test", async ({ request }) => {
         test.setTimeout(600000);
         const authAPI = new AuthAPI(null as any);
         let capturedToken: string; // Store token for use across steps
@@ -701,7 +701,7 @@ export const runAuthAPI = () => {
         });
     });
 
-    test.skip("Test 4:Auth API - Data Validation & Edge Cases", async ({ request }) => {
+    test("Test 4:Auth API - Data Validation & Edge Cases", async ({ request }) => {
         test.setTimeout(60000);
         const authAPI = new AuthAPI(null as any);
 
