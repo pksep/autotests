@@ -185,8 +185,8 @@
                     "state": "false"
                 },
                 {
-                    "class": "button.button-yui-kit.small.outline-yui-kit.metalloworking-sclad__button",
-                    "datatestid": "Button",
+                    "class": "button.button-yui-kit.small.outline-yui-kit.order-filter__build",
+                    "datatestid": "AssemblySclad-Filters-ButtonAssemblyByOperation",
                     "label": "Сборка по операциям",
                     "state": "true"
                 },

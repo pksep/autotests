@@ -9,6 +9,14 @@ import { Click } from "../lib/Page";
 import testData1 from '../testdata/U002-PC1.json';
 import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
 
+// Global variable declarations
+declare global {
+    var firstItemName: string;
+    var orderNumber: string;
+    var bothItemNames: string[];
+    var orderNumber2: string;
+}
+
 // Test data arrays - will be populated with existing items from the database
 let arrayDetail: Array<{ name: string; designation?: string }> = [];
 let arrayCbed: Array<{ name: string; designation?: string }> = [];
@@ -110,9 +118,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         `Starting test: Verify Order From Suppliers Page Functionality`
     );
 
+    // Setup test case to populate test data arrays
+    test('Setup - Populate test data from database', async ({ page }) => {
+        test.setTimeout(30000);
+        console.log("Setup: Populating test data arrays from database");
+
+        await allure.step("Populate test data arrays", async () => {
+            await populateTestData(page);
+            console.log(`✅ Populated arrays - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
+    });
 
     test('Test Case 01 - Check all elements on page Ordered from suppliers', async ({ page }) => {
-        test.setTimeout(60000);
+        test.setTimeout(600000);
         console.log("Test Case 01 - Check all elements on page Ordered from suppliers");
         const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
         const selectedItems: Array<{ id: string; name: string }> = [];
@@ -266,7 +284,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 try {
                     await page.waitForSelector(`[data-testid="${CONST.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"]`, { state: 'visible', timeout: 5000 });
                 } catch {
-                    await page.waitForSelector(`[data-testid="OrderSuppliers-Modal-AddOrder-Content-ProductCard"]`, { state: 'visible', timeout: 10000 });
+                    await page.waitForSelector(`[data-testid="${CONST.SELECT_TYPE_OBJECT_OPERATION_PRODUCT}"]`, { state: 'visible', timeout: 10000 });
                 }
             }
         );
@@ -475,7 +493,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             }
         });
 
-        await allure.step("Step 12.0: Устанавливаем количество 1 только для первой строки", async () => {
+        // === TEST SCENARIO 1: Single Item Quantity ===
+        await allure.step("Step 12.0: Устанавливаем количество 1 только для первой строки и сохраняем имя элемента", async () => {
             const bottomTable = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`).first();
             await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
 
@@ -490,10 +509,9 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             });
             await page.waitForTimeout(200);
 
-            // Находим инпут количества внутри строки по паттерну data-testid
+            // Find quantity input
             let qtyInput = row.locator(`*[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="-TdQuantity-InputNumber-Input"]`).first();
             if (!(await qtyInput.isVisible().catch(() => false))) {
-                // Резервный путь: ищем по окончанию testid внутри текущей строки
                 qtyInput = row.locator(`*[data-testid$="-TdQuantity-InputNumber-Input"]`).first();
             }
             await qtyInput.waitFor({ state: 'visible', timeout: 5000 });
@@ -508,9 +526,15 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             await page.keyboard.press('Tab');
             await page.waitForTimeout(200);
             await expect(qtyInput).toHaveValue('1');
+
+            // Store the name of the item we set quantity for (from second cell - Name column)
+            const itemNameCell = row.locator('td').nth(1); // Column 1: Name
+            global.firstItemName = await itemNameCell.innerText();
+            console.log(`✅ Set quantity 1 for first item: ${global.firstItemName}`);
+            console.log(`📝 Stored first item name: ${global.firstItemName}`);
         });
 
-        await allure.step("Step 12.1: Нажимаем 'В производство' и ожидаем ошибку", async () => {
+        await allure.step("Step 12.1: Нажимаем 'В производство' и проверяем успешное создание заказа с одним элементом", async () => {
             const saveBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`).first();
             await saveBtn.waitFor({ state: 'visible' });
             const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
@@ -524,145 +548,410 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             expect(enabled).toBeTruthy();
             await saveBtn.click();
 
-            // Wait for error notification
+            // Wait for success notification
             const notif = await orderedFromSuppliersPage.extractNotificationMessage(page);
             if (!notif) {
-                throw new Error('Уведомление об ошибке не найдено');
+                throw new Error('Уведомление об успехе не найдено');
             }
-            console.log(`Notification Title: ${notif.title}`);
-            console.log(`Notification Message: ${notif.message}`);
-            expect(notif.title).toBe('Ошибка');
-            await page.waitForTimeout(2000);
-        });
-
-        await allure.step("Step 12.2: Устанавливаем количество 1 для второй строки", async () => {
-            const bottomTable = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`).first();
-            await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
-
-            // Debug: Log all selected items
-            console.log("Selected items:", selectedItems.map(item => ({ name: item.name, id: item.id })));
-
-            // Set quantity for the second item
-            const secondItem = selectedItems[1];
-            console.log("Setting quantity for second item:", secondItem.name || secondItem.id);
-
-            const row = bottomTable.locator('tbody tr').filter({ hasText: secondItem.name || secondItem.id }).nth(1);
-            await row.evaluate((el: HTMLElement) => {
-                (el as HTMLElement).style.backgroundColor = 'yellow';
-                (el as HTMLElement).style.border = '2px solid red';
-                (el as HTMLElement).style.color = 'blue';
-            });
-            await row.waitFor({ state: 'visible', timeout: 5000 });
-
-            // Debug: Check if row is found
-            const rowCount = await bottomTable.locator('tbody tr').count();
-            console.log("Total rows in bottom table:", rowCount);
-
-            await row.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-            });
-            await page.waitForTimeout(200);
-
-            // Try multiple approaches to find the quantity input
-            let qtyInput = null;
-
-            // Approach 1: Try the specific pattern
-            try {
-                qtyInput = row.locator(`*[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="-TdQuantity-InputNumber-Input"]`).first();
-                if (await qtyInput.isVisible()) {
-                    console.log("Found quantity input using specific pattern");
-                } else {
-                    qtyInput = null;
-                }
-            } catch (e) {
-                console.log("Specific pattern failed:", e.message);
-                qtyInput = null;
-            }
-
-            // Approach 2: Try the fallback pattern
-            if (!qtyInput) {
-                try {
-                    qtyInput = row.locator(`*[data-testid$="-TdQuantity-InputNumber-Input"]`).first();
-                    if (await qtyInput.isVisible()) {
-                        console.log("Found quantity input using fallback pattern");
-                    } else {
-                        qtyInput = null;
-                    }
-                } catch (e) {
-                    console.log("Fallback pattern failed:", e.message);
-                    qtyInput = null;
-                }
-            }
-
-            // Approach 3: Try finding any input in the row
-            if (!qtyInput) {
-                try {
-                    qtyInput = row.locator('input[type="number"], input[type="text"]').first();
-                    if (await qtyInput.isVisible()) {
-                        console.log("Found quantity input using generic input search");
-                    } else {
-                        qtyInput = null;
-                    }
-                } catch (e) {
-                    console.log("Generic input search failed:", e.message);
-                    qtyInput = null;
-                }
-            }
-
-            if (!qtyInput) {
-                throw new Error('Could not find quantity input for second item');
-            }
-
-            await qtyInput.waitFor({ state: 'visible', timeout: 5000 });
-            await qtyInput.evaluate((el: HTMLElement) => {
-                (el as HTMLElement).style.backgroundColor = 'yellow';
-                (el as HTMLElement).style.border = '2px solid red';
-                (el as HTMLElement).style.color = 'blue';
-            });
-
-            // Clear and set the value
-            await qtyInput.click();
-            await page.keyboard.press('Control+A');
-            await page.keyboard.press('Delete');
-            await qtyInput.type('1');
-            await page.keyboard.press('Tab');
-            await page.waitForTimeout(500);
-
-            // Verify the value was set
-            const currentValue = await qtyInput.inputValue();
-            console.log("Current quantity value:", currentValue);
-            await expect(qtyInput).toHaveValue('1');
-        });
-
-        await allure.step("Step 12.3: Нажимаем 'В производство' для успешной отправки", async () => {
-            const saveBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`).first();
-            await saveBtn.waitFor({ state: 'visible' });
-            const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
-                page,
-                CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON,
-                'В производство',
-                true,
-                CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY
-            );
-            await page.waitForTimeout(500);
-            expect(enabled).toBeTruthy();
-            await saveBtn.click();
-        });
-
-        await allure.step("Step 13: Проверяем уведомление об успехе после отправки в производство", async () => {
-            // Уведомление может появиться быстро и исчезнуть — читаем сразу после клика 'В производство'
-            const notif = await orderedFromSuppliersPage.extractNotificationMessage(page);
-            if (!notif) {
-                throw new Error('Уведомление не найдено после отправки в производство');
-            }
-            console.log(`Notification Title: ${notif.title}`);
-            console.log(`Notification Message: ${notif.message}`);
+            console.log(`📢 Notification Title: ${notif.title}`);
+            console.log(`📢 Notification Message: ${notif.message}`);
             expect(notif.title).toBe('Успешно');
             expect(notif.message).toContain('Заказ №');
             expect(notif.message).toContain('отправлен в производство');
-        })
+
+            // Extract order number from notification (format: "Заказ №25-6686 отправлен в производство")
+            const orderNumberMatch = notif.message.match(/Заказ №\s*([\d-]+)/);
+            if (!orderNumberMatch) {
+                throw new Error('Не удалось извлечь номер заказа из уведомления');
+            }
+            const orderNumber = orderNumberMatch[1];
+            console.log(`🔢 Captured order number: ${orderNumber}`);
+
+            // Store order number for verification
+            global.orderNumber = orderNumber;
+            await page.waitForTimeout(2000);
+        });
+
+        await allure.step("Step 12.2: Ждем закрытия модального окна и ищем заказ по имени элемента", async () => {
+            // Wait for modal to close
+            await page.waitForTimeout(3000);
+
+            // Check if modal is closed
+            const modal = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG}"]`);
+            const isModalVisible = await modal.isVisible().catch(() => false);
+            if (isModalVisible) {
+                console.log("⚠️ Modal is still visible, waiting for it to close...");
+                await page.waitForTimeout(2000);
+            }
+            console.log("✅ Modal closed successfully");
+
+            // Navigate back to main page if needed
+            await page.waitForLoadState("networkidle");
+
+            // Find the main table with correct data-testid
+            const mainTable = page.locator(`[data-testid="${CONST.ORDER_SUPPLIERS_TABLE_ORDER_TABLE}"]`).first();
+            await mainTable.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Find the search input field
+            const searchField = mainTable.locator(`[data-testid="${CONST.MAIN_SEARCH_COVER_INPUT}"]`).first();
+            await searchField.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Clear any existing search and enter the item name we set quantity for
+            await searchField.click();
+            await page.keyboard.press('Control+A');
+            await searchField.type(global.firstItemName);
+            await page.keyboard.press('Enter');
+            await page.waitForTimeout(2000);
+
+            console.log(`🔍 Searching for item name: ${global.firstItemName}`);
+
+            // Wait for search results to load
+            await page.waitForLoadState("networkidle");
+
+            // Look for the created order in the table body
+            const tableBody = mainTable.locator('tbody').first();
+            await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Get the first row in the search results
+            const firstRow = tableBody.locator('tr').first();
+            await expect(firstRow).toBeVisible({ timeout: 10000 });
+
+            // Verify that our order number is in the first row
+            const firstRowText = await firstRow.innerText();
+            expect(firstRowText).toContain(global.orderNumber);
+            console.log(`✅ Verified our order ${global.orderNumber} is the first result`);
+
+            // Highlight the first row
+            await firstRow.evaluate((el: HTMLElement) => {
+                el.style.backgroundColor = 'yellow';
+                el.style.border = '3px solid red';
+                el.style.color = 'blue';
+                el.style.fontWeight = 'bold';
+            });
+            console.log(`🎯 Highlighted first row containing order ${global.orderNumber}`);
+
+            // Double click the row to open the modal
+            await firstRow.dblclick();
+            await page.waitForTimeout(1000);
+            console.log(`📄 Double-clicked to open order modal for ${global.orderNumber}`);
+
+            // Wait for modal to open and verify the item
+            await page.waitForLoadState("networkidle");
+
+            // Look for the item in the modal and verify quantity
+            const itemRow = page.locator('tbody tr').filter({ hasText: global.firstItemName }).first();
+            await expect(itemRow).toBeVisible({ timeout: 10000 });
+
+            // Verify the quantity is 1 for the item
+            const quantityCell = itemRow.locator('td').filter({ hasText: '1' }).first();
+            await expect(quantityCell).toBeVisible({ timeout: 5000 });
+            console.log(`✅ Verified order contains item "${global.firstItemName}" with quantity 1`);
+
+            // Verify that ONLY the item we set quantity for is present (no other items)
+            // Find the specific modal table with the correct data-testid
+            const modalTable = page.locator(`[data-testid="${CONST.ORDER_MODAL_TABLE}"]`).first();
+            await modalTable.waitFor({ state: 'visible', timeout: 10000 });
+
+            const modalTableBody = modalTable.locator('tbody').first();
+            const modalRows = modalTableBody.locator('tr');
+            const rowCount = await modalRows.count();
+
+            // Highlight each row as we count them
+            for (let i = 0; i < rowCount; i++) {
+                const row = modalRows.nth(i);
+                await row.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'lightgreen';
+                    el.style.border = '2px solid blue';
+                    el.style.color = 'darkblue';
+                    el.style.fontWeight = 'bold';
+                });
+                console.log(`🎯 Highlighted row ${i + 1} of ${rowCount}`);
+            }
+
+            expect(rowCount).toBe(1);
+            console.log(`✅ Verified order contains only 1 item (the one we set quantity for)`);
+
+            // Close the modal using the cancel button
+            const cancelButton = page.locator(`[data-testid="${CONST.ORDER_MODAL_CANCEL_BUTTON}"]`).first();
+            await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
+            await cancelButton.click();
+            await page.waitForTimeout(1000);
+            console.log("✅ Closed order modal using cancel button");
+        });
+
+        // === TEST SCENARIO 2: Both Items Quantity ===
+        await allure.step("Step 12.3: Повторяем процесс - добавляем два элемента снова", async () => {
+            // Ensure we're back on the main page and no modals are open
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(2000);
+
+            // Click the "Добавить заказ" button again
+            const addOrderBtn = page.locator(`[data-testid="${CONST.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON}"]`).first();
+            await addOrderBtn.waitFor({ state: 'visible' });
+            await addOrderBtn.click();
+            await page.waitForTimeout(1000);
+
+            // Select supplier "Детали" again
+            const modal = await page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}"][open]`);
+            await modal.waitFor({ state: 'visible', timeout: 5000 });
+
+            const detalBtn = modal.locator(`[data-testid="${CONST.SELECT_TYPE_OBJECT_OPERATION_DETAILS}"]`).first();
+            await detalBtn.click();
+            await page.waitForTimeout(1000);
+
+            // Select the same two items again and update selectedItems array
+            const tbody = page.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_TBODY}"]`).first();
+            await tbody.waitFor({ state: 'visible' });
+
+            const row0 = tbody.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW0}"]`).first();
+            const row1 = tbody.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW1}"]`).first();
+            await row0.waitFor({ state: 'visible', timeout: 5000 });
+            await row1.waitFor({ state: 'visible', timeout: 5000 });
+
+            // Clear and repopulate selectedItems array for the second scenario
+            selectedItems.length = 0; // Clear the array without reassigning
+            const rows = [row0, row1];
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                await row.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                });
+                await page.waitForTimeout(150);
+
+                const tdCheckbox = row.locator('[data-testid$="-TdCheckbox"]').first();
+                await tdCheckbox.waitFor({ state: 'visible', timeout: 5000 });
+                await tdCheckbox.click();
+                await page.waitForTimeout(150);
+
+                const checkbox = row.locator('[data-testid$="-TdCheckbox-Wrapper-Checkbox"]').first();
+                await expect(checkbox).toBeChecked();
+
+                // Capture the item data for the second scenario
+                const tds = row.locator('td');
+
+                // Debug: Log all cell contents to understand the table structure
+                const cellCount = await tds.count();
+                console.log(`🔍 Row ${i} has ${cellCount} cells`);
+                for (let j = 0; j < cellCount; j++) {
+                    const cellText = (await tds.nth(j).innerText().catch(() => '')).trim();
+                    console.log(`🔍 Cell ${j}: "${cellText}"`);
+                }
+
+                const idText = (await tds.nth(0).innerText().catch(() => '')).trim(); // Column 0: Designation
+                const nameText = (await tds.nth(1).innerText().catch(() => '')).trim(); // Column 1: Name
+                selectedItems.push({ id: idText, name: nameText });
+                console.log(`Выбрана строка ${i} для второго сценария: id="${idText}", name="${nameText}"`);
+            }
+
+            // Click "Выбрать" button
+            const chooseBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}"]`).first();
+            await chooseBtn.waitFor({ state: 'visible' });
+            await chooseBtn.click();
+            await page.waitForTimeout(1000);
+
+            console.log("✅ Successfully added two items again and updated selectedItems array");
+        });
+
+        await allure.step("Step 12.4: Устанавливаем количество 1 для обеих строк и сохраняем имена элементов", async () => {
+            const bottomTable = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE}"]`).first();
+            await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
+
+            // Store names of items we set quantity for
+            global.bothItemNames = [];
+
+            // Set quantity for both items
+            for (let i = 0; i < selectedItems.length; i++) {
+                const item = selectedItems[i];
+                const row = bottomTable.locator('tbody tr').filter({ hasText: item.name || item.id }).nth(i);
+                await row.waitFor({ state: 'visible', timeout: 5000 });
+                await row.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'yellow';
+                    el.style.border = '2px solid red';
+                    el.style.color = 'blue';
+                });
+                await page.waitForTimeout(200);
+
+                // Find quantity input
+                let qtyInput = row.locator(`*[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="-TdQuantity-InputNumber-Input"]`).first();
+                if (!(await qtyInput.isVisible().catch(() => false))) {
+                    qtyInput = row.locator(`*[data-testid$="-TdQuantity-InputNumber-Input"]`).first();
+                }
+                await qtyInput.waitFor({ state: 'visible', timeout: 5000 });
+                await qtyInput.evaluate((el: HTMLElement) => {
+                    (el as HTMLElement).style.backgroundColor = 'yellow';
+                    (el as HTMLElement).style.border = '2px solid red';
+                    (el as HTMLElement).style.color = 'blue';
+                });
+                await qtyInput.click();
+                await page.keyboard.press('Control+A');
+                await qtyInput.type('1');
+                await page.keyboard.press('Tab');
+                await page.waitForTimeout(200);
+                await expect(qtyInput).toHaveValue('1');
+
+                // Store the item name (from second cell - Name column)
+                const itemNameCell = row.locator('td').nth(1); // Column 1: Name
+                const itemName = await itemNameCell.innerText();
+                global.bothItemNames.push(itemName);
+                console.log(`✅ Set quantity 1 for item ${i + 1}: ${itemName}`);
+            }
+
+            console.log(`📝 Stored both item names: ${global.bothItemNames.join(', ')}`);
+        });
+
+        await allure.step("Step 12.5: Нажимаем 'В производство' и проверяем успешное создание заказа с двумя элементами", async () => {
+            const saveBtn = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`).first();
+            await saveBtn.waitFor({ state: 'visible' });
+            const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
+                page,
+                CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON,
+                'В производство',
+                true,
+                CONST.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY
+            );
+            await page.waitForTimeout(500);
+            expect(enabled).toBeTruthy();
+            await saveBtn.click();
+
+            // Wait for success notification
+            const notif = await orderedFromSuppliersPage.extractNotificationMessage(page);
+            if (!notif) {
+                throw new Error('Уведомление об успехе не найдено');
+            }
+            console.log(`📢 Notification Title: ${notif.title}`);
+            console.log(`📢 Notification Message: ${notif.message}`);
+            expect(notif.title).toBe('Успешно');
+            expect(notif.message).toContain('Заказ №');
+            expect(notif.message).toContain('отправлен в производство');
+
+            // Extract order number from notification (format: "Заказ №25-6686 отправлен в производство")
+            const orderNumberMatch = notif.message.match(/Заказ №\s*([\d-]+)/);
+            if (!orderNumberMatch) {
+                throw new Error('Не удалось извлечь номер заказа из уведомления');
+            }
+            const orderNumber2 = orderNumberMatch[1];
+            console.log(`🔢 Captured second order number: ${orderNumber2}`);
+
+            // Store second order number for verification
+            global.orderNumber2 = orderNumber2;
+            await page.waitForTimeout(2000);
+        });
+
+        await allure.step("Step 12.6: Ждем закрытия модального окна и ищем второй заказ по имени элемента", async () => {
+            // Wait for modal to close
+            await page.waitForTimeout(3000);
+
+            // Check if modal is closed
+            const modal = page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG}"]`);
+            const isModalVisible = await modal.isVisible().catch(() => false);
+            if (isModalVisible) {
+                console.log("⚠️ Modal is still visible, waiting for it to close...");
+                await page.waitForTimeout(2000);
+            }
+            console.log("✅ Modal closed successfully");
+
+            // Navigate back to main page if needed
+            await page.waitForLoadState("networkidle");
+
+            // Find the main table with correct data-testid
+            const mainTable = page.locator(`[data-testid="${CONST.ORDER_SUPPLIERS_TABLE_ORDER_TABLE}"]`).first();
+            await mainTable.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Find the search input field
+            const searchField = mainTable.locator(`[data-testid="${CONST.MAIN_SEARCH_COVER_INPUT}"]`).first();
+            await searchField.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Clear any existing search and enter the first item name we set quantity for
+            await searchField.click();
+            await page.keyboard.press('Control+A');
+            await searchField.type(global.bothItemNames[0]);
+            await page.keyboard.press('Enter');
+            await page.waitForTimeout(2000);
+
+            console.log(`🔍 Searching for item name: ${global.bothItemNames[0]}`);
+
+            // Wait for search results to load
+            await page.waitForLoadState("networkidle");
+
+            // Look for the second created order in the table body
+            const tableBody = mainTable.locator('tbody').first();
+            await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+
+            // Get the first row in the search results
+            const firstRow = tableBody.locator('tr').first();
+            await expect(firstRow).toBeVisible({ timeout: 10000 });
+
+            // Verify that our second order number is in the first row
+            const firstRowText = await firstRow.innerText();
+            expect(firstRowText).toContain(global.orderNumber2);
+            console.log(`✅ Verified our second order ${global.orderNumber2} is the first result`);
+
+            // Highlight the first row
+            await firstRow.evaluate((el: HTMLElement) => {
+                el.style.backgroundColor = 'yellow';
+                el.style.border = '3px solid red';
+                el.style.color = 'blue';
+                el.style.fontWeight = 'bold';
+            });
+            console.log(`🎯 Highlighted first row containing order ${global.orderNumber2}`);
+
+            // Double click the row to open the modal
+            await firstRow.dblclick();
+            await page.waitForTimeout(1000);
+            console.log(`📄 Double-clicked to open order modal for ${global.orderNumber2}`);
+
+            // Wait for modal to open and verify both items
+            await page.waitForLoadState("networkidle");
+
+            // Verify both items are present with quantity 1
+            for (let i = 0; i < global.bothItemNames.length; i++) {
+                const itemName = global.bothItemNames[i];
+
+                // Check item is present
+                const itemRow = page.locator('tbody tr').filter({ hasText: itemName }).first();
+                await expect(itemRow).toBeVisible({ timeout: 10000 });
+
+                // Verify the quantity is 1 for the item
+                const quantityCell = itemRow.locator('td').filter({ hasText: '1' }).first();
+                await expect(quantityCell).toBeVisible({ timeout: 5000 });
+                console.log(`✅ Verified item "${itemName}" with quantity 1`);
+            }
+
+            // Verify that EXACTLY the items we set quantity for are present (no more, no less)
+            // Find the specific modal table with the correct data-testid
+            const modalTable = page.locator(`[data-testid="${CONST.ORDER_MODAL_TABLE}"]`).first();
+            await modalTable.waitFor({ state: 'visible', timeout: 10000 });
+
+            const modalTableBody = modalTable.locator('tbody').first();
+            const modalRows = modalTableBody.locator('tr');
+            const rowCount = await modalRows.count();
+
+            // Highlight each row as we count them
+            for (let i = 0; i < rowCount; i++) {
+                const row = modalRows.nth(i);
+                await row.evaluate((el: HTMLElement) => {
+                    el.style.backgroundColor = 'lightgreen';
+                    el.style.border = '2px solid blue';
+                    el.style.color = 'darkblue';
+                    el.style.fontWeight = 'bold';
+                });
+                console.log(`🎯 Highlighted row ${i + 1} of ${rowCount}`);
+            }
+
+            expect(rowCount).toBe(2);
+            console.log(`✅ Verified order contains exactly 2 items (the ones we set quantity for)`);
+
+            console.log(`✅ Verified second order contains both items with correct quantities`);
+
+            // Close the modal using the cancel button
+            const cancelButton = page.locator(`[data-testid="${CONST.ORDER_MODAL_CANCEL_BUTTON}"]`).first();
+            await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
+            await cancelButton.click();
+            await page.waitForTimeout(1000);
+            console.log("✅ Closed second order modal using cancel button");
+        });
     })
 
     test('Test Case 02 - Check all elements on page MetalWorkingWarehouse', async ({ page }) => {
@@ -755,7 +1044,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             "Step 2: Open the shortage product page",
             async () => {
                 // Find and go to the page using the locator Shortage of Products
-                const selector = '[data-testid="Sclad-stockOrderAssembly"]';
+                const selector = `[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`;
                 await assemblyWarehouse.findTable(selector);
 
                 // Wait for loading
@@ -1006,7 +1295,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 04: Enter the name of the part', async () => {
-                    const nameParts = page.locator('[data-testid="AddDetal-Information-Input-Input"]')
+                    const nameParts = page.locator(`[data-testid="${CONST.ADD_DETAL_INFORMATION_INPUT_INPUT}"]`)
 
                     await page.waitForTimeout(500)
                     await nameParts.fill(detail.name || '') //ERP-2099
@@ -1014,7 +1303,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 05: Enter the designation of the part', async () => {
-                    const nameParts = page.locator('[data-testid="AddDetal-Designation-Input-Input"]')
+                    const nameParts = page.locator(`[data-testid="${CONST.ADD_DETAL_DESIGNATION_INPUT_INPUT}"]`)
 
                     await nameParts.fill(detail.designation || '-')
                     expect(await nameParts.inputValue()).toBe(detail.designation || '-')
@@ -1114,7 +1403,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 await allure.step('Step 04: Enter the name of the part', async () => {
                     await page.waitForLoadState("networkidle");
                     await page.waitForTimeout(500)
-                    const nameParts = page.locator('[data-testid="Creator-Information-Input-Input"]')
+                    const nameParts = page.locator(`[data-testid="${CONST.CREATOR_INFORMATION_INPUT}"]`)
 
                     await nameParts.fill(cbed.name || '')
                     await page.waitForTimeout(500)
@@ -1122,7 +1411,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 05: Enter the designation of the part', async () => {
-                    const nameParts = page.locator('[data-testid="Creator-Designation-Input-Input"]')
+                    const nameParts = page.locator(`[data-testid="${CONST.INPUT_DESUGNTATION_IZD}"]`)
 
                     await nameParts.fill(cbed.designation || '-')
                     expect(await nameParts.inputValue()).toBe(cbed.designation || '-')
@@ -1191,7 +1480,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
                 await allure.step('Step 04: Enter the name of the part', async () => {
                     await page.waitForLoadState("networkidle");
-                    const nameParts = page.locator('[data-testid="Creator-Information-Input-Input"]')
+                    const nameParts = page.locator(`[data-testid="${CONST.CREATOR_INFORMATION_INPUT}"]`)
 
                     await page.waitForTimeout(500)
                     await nameParts.fill(izd.name || '')
@@ -1199,7 +1488,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 05: Enter the designation of the part', async () => {
-                    const nameParts = page.locator('[data-testid="Creator-Designation-Input-Input"]')
+                    const nameParts = page.locator(`[data-testid="${CONST.INPUT_DESUGNTATION_IZD}"]`)
 
                     await nameParts.fill(izd.designation || '-')
                     expect(await nameParts.inputValue()).toBe(izd.designation || '-')

@@ -16,10 +16,10 @@ export const ENV = {
     BASE_URL: process.env.BASE_URL || "http://localhost:8080/",
     //API_BASE_URL: process.env.API_BASE_URL || "http://localhost:5000/",
     API_BASE_URL: process.env.API_BASE_URL || "http://dev.pksep.ru/",
-    HEADLESS: process.env.HEADLESS === "false" ? false : true,
-    //HEADLESS: process.env.HEADLESS === "true" ? true : false,
+    //HEADLESS: process.env.HEADLESS === "false" ? false : true,
+    HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'tech_process_api',
+    TEST_SUITE: 'U002',
     //TEST_SUITE: 'suite01',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
@@ -390,11 +390,12 @@ export const CONST = {
     TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE_QUANTITY_HEADER: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-HeadRow-ThQuantity",
     MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input",
-    ORDER_MODAL_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table",
+    ORDER_MODAL_CANCEL_BUTTON: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Buttons-ButtonCancel",
     TABLE_COMPLECT_TABLE: "CompletCbed-Content-Table-Table",
     MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT: "TableComplect-ModalAddWaybill",
     MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-RequiredQuantityCell",
     MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-CollectedQuantityCell",
+    ORDER_MODAL_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table",
 
     // Constants unique to ERP-969.spec.ts
     MODAL_CONFIRM_DIALOG: "ModalConfirm",
