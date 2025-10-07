@@ -8,95 +8,199 @@ export class RolesAPI extends APIPageObject {
         super(page);
     }
 
-    async createRole(request: APIRequestContext, roleData: any, userId: string) {
+    async createRole(request: APIRequestContext, roleData: any, userId: string, authToken?: string) {
         logger.info(`Creating role with data:`, roleData);
 
+        const headers = {
+            'accept': '*/*',
+            'user-id': userId,
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+            'compress': 'no-compress'
+        };
+
         const response = await request.post(ENV.API_BASE_URL + 'api/roles', {
-            headers: {
-                'Content-Type': 'application/json',
-                'user-id': userId
-            },
+            headers: headers,
             data: roleData
         });
 
-        if (response.ok()) {
+        try {
             const responseData = await response.json();
-            logger.info(`Role created successfully`);
+            logger.info(`Role creation response received`);
             return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to create role, status: ${response.status()}`);
-            throw new Error(`Failed to create role with status: ${response.status()}`);
+        } catch (error) {
+            // For 201 status, empty response body is normal
+            if (response.status() === 201) {
+                logger.info(`Role creation successful with empty response body`);
+                return { status: response.status(), data: { success: true } };
+            }
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
         }
     }
 
-    async getAllRoles(request: APIRequestContext) {
+    async getAllRoles(request: APIRequestContext, authToken?: string) {
         logger.info(`Getting all roles`);
 
-        const response = await request.get(ENV.API_BASE_URL + 'api/roles');
+        const headers = {
+            'compress': 'no-compress',
+            'Authorization': `Bearer ${authToken}`
+        };
 
-        if (response.ok()) {
+        const response = await request.get(ENV.API_BASE_URL + 'api/roles', {
+            headers: headers
+        });
+
+        try {
             const responseData = await response.json();
-            logger.info(`Successfully retrieved all roles`);
+            logger.info(`All roles response received`);
             return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get all roles, status: ${response.status()}`);
-            throw new Error(`Failed to get all roles with status: ${response.status()}`);
+        } catch (error) {
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
         }
     }
 
-    async getRoleByName(request: APIRequestContext, name: string) {
+    async getRoleByName(request: APIRequestContext, name: string, authToken?: string) {
         logger.info(`Getting role by name: ${name}`);
 
-        const response = await request.get(ENV.API_BASE_URL + `api/roles/${name}`);
+        const headers = {
+            'compress': 'no-compress',
+            'Authorization': `Bearer ${authToken}`
+        };
 
-        if (response.ok()) {
+        const response = await request.get(ENV.API_BASE_URL + `api/roles/${name}`, {
+            headers: headers
+        });
+
+        try {
             const responseData = await response.json();
-            logger.info(`Successfully retrieved role by name`);
+            logger.info(`Role by name response received`);
             return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get role by name, status: ${response.status()}`);
-            throw new Error(`Failed to get role by name with status: ${response.status()}`);
+        } catch (error) {
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
         }
     }
 
-    async updateRoleAccess(request: APIRequestContext, accessData: any, userId: string) {
+    async updateRoleAccess(request: APIRequestContext, accessData: any, userId: string, authToken?: string) {
         logger.info(`Updating role access with data:`, accessData);
 
+        const headers = {
+            'Content-Type': 'application/json',
+            'user-id': userId,
+            'compress': 'no-compress',
+            'Authorization': `Bearer ${authToken}`
+        };
+
         const response = await request.post(ENV.API_BASE_URL + 'api/roles/accesses', {
-            headers: {
-                'Content-Type': 'application/json',
-                'user-id': userId
-            },
+            headers: headers,
             data: accessData
         });
 
-        if (response.ok()) {
+        try {
             const responseData = await response.json();
-            logger.info(`Role access updated successfully`);
+            logger.info(`Role access update response received`);
             return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to update role access, status: ${response.status()}`);
-            throw new Error(`Failed to update role access with status: ${response.status()}`);
+        } catch (error) {
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
         }
     }
 
-    async checkRoleNameUnique(request: APIRequestContext, nameData: any) {
+    async checkRoleNameUnique(request: APIRequestContext, nameData: any, authToken?: string) {
         logger.info(`Checking role name uniqueness:`, nameData);
 
+        const headers = {
+            'Content-Type': 'application/json',
+            'compress': 'no-compress',
+            'Authorization': `Bearer ${authToken}`
+        };
+
         const response = await request.post(ENV.API_BASE_URL + 'api/roles/name/unique', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             data: nameData
         });
 
-        if (response.ok()) {
+        try {
             const responseData = await response.json();
-            logger.info(`Role name uniqueness check completed`);
+            logger.info(`Role name uniqueness check response received`);
             return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to check role name uniqueness, status: ${response.status()}`);
-            throw new Error(`Failed to check role name uniqueness with status: ${response.status()}`);
+        } catch (error) {
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
+        }
+    }
+
+    async getRoleById(request: APIRequestContext, id: string, authToken?: string) {
+        logger.info(`Getting role by ID: ${id}`);
+
+        const headers = {
+            'compress': 'no-compress',
+            'Authorization': `Bearer ${authToken}`
+        };
+
+        const response = await request.get(ENV.API_BASE_URL + `api/roles/one/${id}`, {
+            headers: headers
+        });
+
+        try {
+            const responseData = await response.json();
+            logger.info(`Role by ID response received`);
+            return { status: response.status(), data: responseData };
+        } catch (error) {
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
+        }
+    }
+
+    async deleteRole(request: APIRequestContext, roleId: string, userId: string, authToken?: string) {
+        logger.info(`Deleting role with ID: ${roleId}`);
+
+        const headers = {
+            'accept': '*/*',
+            'user-id': userId,
+            'compress': 'no-compress',
+            'Authorization': `Bearer ${authToken}`
+        };
+
+        const response = await request.delete(ENV.API_BASE_URL + `api/roles/${roleId}`, {
+            headers: headers
+        });
+
+        try {
+            const responseData = await response.json();
+            logger.info(`Role deletion response received`);
+            return { status: response.status(), data: responseData };
+        } catch (error) {
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
+        }
+    }
+
+    async updateRole(request: APIRequestContext, roleData: any, userId: string, authToken?: string) {
+        logger.info(`Updating role with data:`, roleData);
+
+        const headers = {
+            'accept': '*/*',
+            'user-id': userId,
+            'Content-Type': 'application/json',
+            'compress': 'no-compress',
+            'Authorization': `Bearer ${authToken}`
+        };
+
+        const response = await request.post(ENV.API_BASE_URL + 'api/roles/update', {
+            headers: headers,
+            data: roleData
+        });
+
+        try {
+            const responseData = await response.json();
+            logger.info(`Role update response received`);
+            return { status: response.status(), data: responseData };
+        } catch (error) {
+            logger.error(`Failed to parse response, status: ${response.status()}`);
+            return { status: response.status(), data: null };
         }
     }
 }

@@ -34,6 +34,7 @@ import { runERP_969_2 } from './testcases/ERP-969-2.spec';
 import { runAuthAPI } from './testcases/APIAuth.spec';
 import { runUsersAPI } from './testcases/APIUsers.spec';
 import { runRolesAPI } from './testcases/APIRoles.spec';
+import { runDetailsAPI } from './testcases/APIDetails.spec';
 import { runDocumentsAPI } from './testcases/APIDocuments.spec';
 import { runAssembleAPI } from './testcases/APIAssemble.spec';
 import { runMaterialsAPI } from './testcases/APIMaterials.spec';
@@ -74,6 +75,7 @@ import { runMessagingAPI } from './testcases/APIMessaging.spec';
 import { runSchedulingAPI } from './testcases/APIScheduling.spec';
 import { runWorkflowsAPI } from './testcases/APIWorkflows.spec';
 import { runVersioningAPI } from './testcases/APIVersioning.spec';
+import { runTechProcessAPI } from './testcases/APITechProcess.spec';
 
 // Create a mapping of test suites to their corresponding test functions with descriptions
 export const testSuites = {
@@ -444,6 +446,15 @@ export const testSuites = {
             },
         ],
     },
+    details_api: {
+        description: 'Details API test suite to verify detail management endpoints.',
+        tests: [
+            {
+                test: runDetailsAPI,
+                description: "Tests all Details API endpoints including CRUD operations with proper CREATE→READ→UPDATE→DELETE order.",
+            },
+        ],
+    },
     documents_api: {
         description: 'Documents API test suite to verify document management endpoints.',
         tests: [
@@ -783,6 +794,15 @@ export const testSuites = {
             {
                 test: runVersioningAPI,
                 description: "Tests all Versioning API endpoints including version control.",
+            },
+        ],
+    },
+    tech_process_api: {
+        description: 'Tech Process API test suite to verify tech process management endpoints.',
+        tests: [
+            {
+                test: runTechProcessAPI,
+                description: "Tests all Tech Process API endpoints including CRUD operations.",
             },
         ],
     },

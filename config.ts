@@ -19,7 +19,7 @@ export const ENV = {
     HEADLESS: process.env.HEADLESS === "false" ? false : true,
     //HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'users_api',
+    TEST_SUITE: 'tech_process_api',
     //TEST_SUITE: 'suite01',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
@@ -778,16 +778,25 @@ export const API_CONST = {
 
     // Users Test Data
     API_TEST_USER_ID: "1",
+    API_TEST_USER_ID_72: "72", // Real user account created on dev server
+    API_CREATOR_USER_ID_66: "66", // Real user account created on dev server
     API_TEST_USER_INITIALS: "TU",
     API_TEST_USER_INITIALS_UPDATED: "TU2",
     API_TEST_USER_TABEL: "12345",
     API_TEST_USER_TABEL_UPDATED: "12346",
 
     // Roles Test Data
-    API_TEST_ROLE_NAME: "Test Role",
-    API_TEST_ROLE_NAME_UPDATED: "Updated Test Role",
-    API_TEST_ROLE_DESCRIPTION: "Test role description",
-    API_TEST_ROLE_DESCRIPTION_UPDATED: "Updated test role description",
+    API_TEST_ROLE_NAME: "API Test Role",
+    API_TEST_ROLE_NAME_UPDATED: "Updated API Test Role",
+    API_TEST_ROLE_DESCRIPTION: "API test role for automated testing",
+    API_TEST_ROLE_DESCRIPTION_UPDATED: "Updated API test role for automated testing",
+
+    // Details Test Data
+    API_TEST_DETAIL_ID: "2",
+    API_TEST_DETAIL_NAME: "API Test Detail",
+    API_TEST_DETAIL_DESIGNATION: "API-TEST-001",
+    API_TEST_DETAIL_DESCRIPTION: "API test detail for automated testing",
+    API_TEST_DETAIL_ID_LARGE: "999",
 
     // Documents Test Data
     API_TEST_DOCUMENT_ID: "1",
@@ -1168,6 +1177,17 @@ export const API_CONST = {
     },
 
     // Duplicate constants removed - now defined above at line 540
+
+    // Tech Process Test Data
+    API_TEST_TECH_PROCESS_ID: "1",
+    API_TEST_TECH_PROCESS_ID_2: "2",
+    API_TEST_TECH_PROCESS_DESCRIPTION: "процесс токарный",
+    API_TEST_TECH_PROCESS_DESCRIPTION_UPDATED: "обновленный процесс токарный",
+    API_TEST_TECH_PROCESS_IZD_TYPE: "cbed",
+    API_TEST_TECH_PROCESS_IZD_ID: "2",
+    API_TEST_TECH_PROCESS_IZD_ID_UPDATED: "3",
+    API_TEST_TECH_PROCESS_OPERATION_LIST: "[{\"id\":8857}]",
+    API_TEST_TECH_PROCESS_OPERATION_LIST_UPDATED: "[{\"id\":8858}]",
 
     // Comprehensive Status Code Validation Patterns
     STATUS_CODE_VALIDATION: {
