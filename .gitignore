@@ -30,3 +30,13 @@ pnpm-debug.log*
 /allure-results/
 /allure-report/
 /logs/
+
+# IDE and Development Files
+.cursor/
+.cursorrules
+.eslintrc.js
+.prettierrc
+mcp.json
+*.png
+QAReport.md
+docs/
