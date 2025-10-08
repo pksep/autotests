@@ -303,6 +303,7 @@ export const CONST = {
     BUTTON_SAVE_OPERATION: "EditDetal-ModalTechProcess-Button-Save",
     FILTER_TITLE: "BaseFilter-Title",
     FILTER_SEARCH_DROPDOWN_INPUT: "BaseFilter-Search-Dropdown-Input",
+    FILTER_OPTION_FIRST: "BaseFilter-Options-0",
     TABLE_PROCESS_ID: "operation-table",
     DETAIL_PAGE_MODAL_TECH_PROCESS_TABLE: "Creator-ModalTechProcess-Table",
     TABLE_PROCESS_NAME_OPERATION: "EditDetal-ModalTechProcess-Thead-NameOperation",

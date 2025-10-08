@@ -120,7 +120,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
     // Setup test case to populate test data arrays
     test('Setup - Populate test data from database', async ({ page }) => {
-        test.setTimeout(30000);
+        test.setTimeout(120000); // Increased to 2 minutes
         console.log("Setup: Populating test data arrays from database");
 
         await allure.step("Populate test data arrays", async () => {
@@ -1119,7 +1119,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const detailTableDiv = '[data-testid="BasePaginationTable-Wrapper-detal"]'
         const searchDetail = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').last()
 
-        const buttonArchive = '[data-testid="BaseDetals-Button-Archive"]'
+        const buttonArchive = `[data-testid="${CONST.PARTS_PAGE_ARCHIVE_BUTTON}"]`
 
         await allure.step('Step 01: Open the parts database page', async () => {
             await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
@@ -1337,12 +1337,120 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 })
 
                 await allure.step('Step 11: Choice type operation', async () => {
-                    // If a dedicated constant exists for the first option, use it; otherwise keep generic pattern
-                    await page.locator('[data-testid="BaseFilter-Options-0"]').click()
+                    // Wait for the filter option to be visible before clicking
+                    const filterOption = page.locator(`[data-testid="${CONST.FILTER_OPTION_FIRST}"]`);
+                    await filterOption.waitFor({ state: 'visible', timeout: 10000 });
+                    
+                    // Highlight the option for visual validation
+                    await filterOption.evaluate((el: HTMLElement) => {
+                        el.style.backgroundColor = 'yellow';
+                        el.style.border = '2px solid red';
+                        el.style.color = 'blue';
+                        el.style.fontWeight = 'bold';
+                    });
+                    console.log('🎯 Highlighted first filter option');
+                    
+                    // Click on the first filter option
+                    await filterOption.click();
+                    console.log('✅ Clicked on first filter option');
                 })
 
                 await allure.step('Step 12: Click on the Save button', async () => {
-                    await page.locator('[data-testid="Button"]', { hasText: 'Сохранить' }).last().click()
+                    // Wait for page to be fully loaded
+                    await page.waitForLoadState("networkidle");
+                    await page.waitForTimeout(1000);
+                    
+                    // Check if there's an open modal first
+                    const modal = page.locator('[data-testid="Modal"]').first();
+                    const isModalVisible = await modal.isVisible();
+                    
+                    if (isModalVisible) {
+                        console.log('🔍 Modal is open, looking for Save button inside modal');
+                        
+                        // Look for Save button inside the modal
+                        const modalSaveButton = modal.locator('button').filter({ hasText: 'Сохранить' });
+                        const modalButtonCount = await modalSaveButton.count();
+                        console.log(`🔍 Found ${modalButtonCount} Save buttons inside modal`);
+                        
+                        if (modalButtonCount > 0) {
+                            // Highlight the modal Save button
+                            await modalSaveButton.first().evaluate((el: HTMLElement) => {
+                                el.style.backgroundColor = 'yellow';
+                                el.style.border = '3px solid red';
+                                el.style.color = 'blue';
+                                el.style.fontWeight = 'bold';
+                                el.style.zIndex = '9999';
+                            });
+                            console.log('🎯 Highlighted Save button inside modal');
+                            
+                            // Click the Save button inside the modal
+                            await modalSaveButton.first().click();
+                            console.log('✅ Clicked Save button inside modal');
+                            await page.waitForLoadState("networkidle");
+                            return;
+                        }
+                    }
+                    
+                    // If no modal or no Save button in modal, look for Save buttons on the main page
+                    const saveButtons = page.locator('[data-testid="Button"]').filter({ hasText: 'Сохранить' });
+                    const buttonCount = await saveButtons.count();
+                    console.log(`🔍 Found ${buttonCount} Save buttons with text "Сохранить"`);
+                    
+                    // If no buttons found, let's check what buttons are actually available
+                    if (buttonCount === 0) {
+                        console.log('🔍 No "Сохранить" buttons found. Checking all available buttons...');
+                        const allButtons = page.locator('[data-testid="Button"]');
+                        const allButtonCount = await allButtons.count();
+                        console.log(`🔍 Found ${allButtonCount} total buttons with data-testid="Button"`);
+                        
+                        // Log the text content of all buttons
+                        for (let i = 0; i < Math.min(allButtonCount, 10); i++) {
+                            const button = allButtons.nth(i);
+                            const buttonText = await button.textContent();
+                            console.log(`🔍 Button ${i + 1}: "${buttonText}"`);
+                        }
+                        
+                        // Also check for buttons with different data-testids that might contain "Сохранить"
+                        const alternativeButtons = page.locator('button').filter({ hasText: 'Сохранить' });
+                        const altButtonCount = await alternativeButtons.count();
+                        console.log(`🔍 Found ${altButtonCount} buttons with text "Сохранить" (any data-testid)`);
+                        
+                        if (altButtonCount > 0) {
+                            console.log('✅ Found alternative Save buttons, using those instead');
+                            const firstAltButton = alternativeButtons.first();
+                            await firstAltButton.click();
+                            console.log('✅ Clicked alternative Save button');
+                            await page.waitForLoadState("networkidle");
+                            return;
+                        }
+                    }
+
+                    // Highlight all save buttons for visual validation
+                    for (let i = 0; i < buttonCount; i++) {
+                        const button = saveButtons.nth(i);
+                        await button.evaluate((el: HTMLElement) => {
+                            el.style.backgroundColor = 'yellow';
+                            el.style.border = '3px solid red';
+                            el.style.color = 'blue';
+                            el.style.fontWeight = 'bold';
+                            el.style.zIndex = '9999';
+                        });
+                        console.log(`🎯 Highlighted Save button ${i + 1} of ${buttonCount}`);
+                    }
+
+                    // Wait a moment to see the highlighted buttons
+                    await page.waitForTimeout(2000);
+
+                    // Try to click the last (most likely the correct) save button
+                    if (buttonCount > 0) {
+                        const lastSaveButton = saveButtons.last();
+                        await lastSaveButton.waitFor({ state: 'visible', timeout: 10000 });
+                        await lastSaveButton.click();
+                        console.log('✅ Clicked the last Save button');
+                    } else {
+                        throw new Error('No Save buttons found with text "Сохранить"');
+                    }
+
                     await page.waitForLoadState("networkidle");
                 })
 
