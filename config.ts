@@ -301,6 +301,8 @@ export const CONST = {
     BUTTON_OPERATION: "EditDetal-Buttons-TechProcess",
     BUTTON_ADD_OPERATION: "EditDetal-ModalTechProcess-Buttons-ButtonCreate",
     BUTTON_SAVE_OPERATION: "EditDetal-ModalTechProcess-Button-Save",
+    MODAL_ADD_OPERATION: "EditDetal-ModalTechProcess-ModalAddOperation-Modal",
+    BUTTON_SAVE_ADD_OPERATION: "EditDetal-ModalTechProcess-ModalAddOperation-SaveButton",
     FILTER_TITLE: "BaseFilter-Title",
     FILTER_SEARCH_DROPDOWN_INPUT: "BaseFilter-Search-Dropdown-Input",
     FILTER_OPTION_FIRST: "BaseFilter-Options-0",
