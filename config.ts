@@ -437,6 +437,11 @@ export const CONST = {
     ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_SCROLL_TABLE_TABLE_CONTAINER: "OrderSuppliers-ScrollTable-TableContainer",
     ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_LINK_IMAGE: "OrderSuppliers-LinkImage",
     ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_LINK_IMAGE_NO_CONTENT: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0-Image-Image-NoContent",
+    ORDER_EDIT_MODAL_TITLE_TEXT: "Заказ (редактирование)",
+    SUCCESS_NOTIFICATION_TITLE: "Успешно",
+    ORDER_NUMBER_PREFIX: "Заказ №",
+    ORDER_SENT_TO_PRODUCTION_TEXT: "отправлен в производство",
+    CREATE_ORDER_BUTTON_TEXT: " Создать заказ ",
     ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_ORDER_DATE_VALUE: "ModalStartProduction-OrderDateValue",
     ORDERER_SUPPLIERS_MAIN_CONTAINER: "OrderSuppliers",
     ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_TABLE_ROW_POPOVER: "MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row",
@@ -720,6 +725,7 @@ export const CONST = {
     ASSEMBLY_OPERATIONS_ROW_PATTERN_START: "AssemblySclad-Table-Row",
     ASSEMBLY_OPERATIONS_ROW_PATTERN_END: "-Operations",
     ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED: "-Ordered",
+    ASSEMBLY_SCLAD_TABLE_BODY_TD_OPERATION: "AssemblySclad-TableBody-TdOperation",
 
     OPERATION_TABLE_ID: "OperationPathInfo-Table",
     OPERATION_TABLE_REMAINS_TO_DO: "OperationPathInfo-Thead-RemainsToDo",
@@ -746,7 +752,7 @@ export const CONST = {
 
     //Заказ склада на Сборку page
     ZAKAZ_SCLAD_STOCK_ORDER_ASSEMBLY_BUTTON: "Sclad-stockOrderAssembly",
-
+    ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT: "${props.dataTestid}-TableHead-Search-Dropdown-Input",
     ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID: "tablebody",
     ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE: "AssemblySclad-ScrollTable",
     ZAKAZ_SCLAD_TABLE_ASSEMBLY_CHECKBOX: "AssemblySclad-Table-Checkbox",
@@ -763,6 +769,7 @@ export const CONST = {
     // Metalworking warehouse checkbox pattern constants
     METALWORKING_CHECKBOX_ROW_PATTERN_START: "Metalloworking-Content-WithFilters-Table-Table-Row",
     METALWORKING_CHECKBOX_ROW_PATTERN_END: "-Checkbox-Wrapper-Checkbox",
+    METALWORKING_CHECKBOX_ROW_PATTERN_END_CHECKBOX: "-Checkbox",
 
     // CheckTableTotals Test Constants
     SWITCH_ITEM0: "Switch-Item0",

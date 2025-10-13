@@ -55,6 +55,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
     // Проверяем, что в последнем созданном заказе номер заказа совпадает
     async compareOrderNumbers(orderNumber: string) {
+
         // First, make sure we're on the main orders table
         const mainTable = this.page.locator(`[data-testid="${CONST.ORDER_SUPPLIERS_TABLE_ORDER_TABLE}"]`).first();
         await mainTable.waitFor({ state: 'visible', timeout: 10000 });
@@ -72,7 +73,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         await this.page.waitForTimeout(1000);
 
         // Try to find the link image in this specific row
-        const linkImage = orderRow.locator('[data-testid="OrderSuppliers-LinkImage"]').first();
+        const linkImage = orderRow.locator(`[data-testid="${CONST.ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_LINK_IMAGE}"]`).first();
         if (await linkImage.isVisible().catch(() => false)) {
             await linkImage.click();
         } else {
@@ -84,10 +85,8 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         // Wait for modal to open
         await this.page.waitForTimeout(2000);
 
-        const headerModalWindow = this.page
-            .locator('.modal-right__title')
-            .first();
-        expect(await headerModalWindow.textContent()).toBe("Заказ");
+        const headerModalWindow = this.page.locator('.modal-right__title').first();
+        expect(await headerModalWindow.textContent()).toBe(CONST.ORDER_EDIT_MODAL_TITLE_TEXT);
 
         await this.page.waitForLoadState('networkidle')
         const checkOrderNumberLocator = this.page.locator(
@@ -105,9 +104,9 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         name: string,
         quantityOrder: string,
         supplier: Supplier
-    ): Promise<{ quantityLaunchInProduct: string; checkOrderNumber: string }> {
+    ): Promise<{ quantityLaunchInProduct: number; checkOrderNumber: string }> {
         // Quantity launched into production
-        let quantityLaunchInProduct: string = "0";
+        let quantityLaunchInProduct: number = 0;
         let checkOrderNumber: string = "";
 
         const selector = `[data-testid="${CONST.WAREHOUSE_PAGE_ORDERING_SUPPLIERS_BUTTON}"]`;
@@ -128,7 +127,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         await allure.step(
             "Step 3: Click on the Launch on Production button",
             async () => {
-                await this.clickButton(" Создать заказ ", `[data-testid="${CONST.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON}"]`);
+                await this.clickButton(CONST.CREATE_ORDER_BUTTON_TEXT, `[data-testid="${CONST.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON}"]`);
             }
         );
 
@@ -202,7 +201,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 el.style.color = 'blue';
             });
             await this.page.waitForTimeout(300);
-            const checkboxCell = matchingRow.locator('[data-testid$="-TdCheckbox"]').first();
+            const checkboxCell = matchingRow.locator(`[data-testid$="${CONST.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE_ROW_CHECKBOX_SUFFIX}"]`).first();
             await checkboxCell.waitFor({ state: 'visible', timeout: 5000 });
             await checkboxCell.click();
             await this.page.waitForTimeout(150);
@@ -288,7 +287,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             await qtyInput.fill('1');
             await expect(qtyInput).toHaveValue('1');
             // Track launched quantity for downstream checks
-            quantityLaunchInProduct = '1';
+            quantityLaunchInProduct = 1;
 
             // Submit with only first row having quantity - should succeed and only process first item
             const saveBtn = this.page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`).first();
@@ -300,12 +299,12 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             const successNotif = await this.extractNotificationMessage(this.page);
             if (successNotif) {
                 console.log(`Success notification: ${successNotif.title} - ${successNotif.message}`);
-                expect(successNotif.title).toBe('Успешно');
-                expect(successNotif.message).toContain('Заказ №');
-                expect(successNotif.message).toContain('отправлен в производство');
+                expect(successNotif.title).toBe(CONST.SUCCESS_NOTIFICATION_TITLE);
+                expect(successNotif.message).toContain(CONST.ORDER_NUMBER_PREFIX);
+                expect(successNotif.message).toContain(CONST.ORDER_SENT_TO_PRODUCTION_TEXT);
 
                 // Extract order number from success message
-                const orderMatch = successNotif.message.match(/Заказ №\s*([\d-]+)/);
+                const orderMatch = successNotif.message.match(new RegExp(`${CONST.ORDER_NUMBER_PREFIX}\\s*([\\d-]+)`));
                 if (orderMatch) {
                     checkOrderNumber = orderMatch[1];
                     console.log(`Captured order number: ${checkOrderNumber}`);

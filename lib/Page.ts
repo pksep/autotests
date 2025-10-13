@@ -1482,6 +1482,12 @@ export class PageObject extends AbstractPage {
     click: Click = Click.Yes
   ) {
     const button = this.page.locator(locator, { hasText: textButton });
+    await this.highlightElement(button, {
+      backgroundColor: 'yellow',
+      border: '2px solid red',
+      color: 'blue'
+    });
+    await this.page.waitForTimeout(1000);
     await expect(button).toHaveText(textButton);
     await expect(button).toBeVisible();
 
