@@ -367,7 +367,7 @@ export const CONST = {
     MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_ORDERED_ON_PRODUCTION: "-TdOrderedOnProduction",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_ORDERED_ON_PRODUCTION_TITLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Main-Title",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_DIALOG: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker",
-
+    MODAL_ADD_ORDER_PRODUCTION_TABLE_DIALOG_ORDER_NUMBER: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-TableData-Number-",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row",
     MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save",
     MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON: "OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button",
@@ -399,7 +399,7 @@ export const CONST = {
     MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-RequiredQuantityCell",
     MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL: "ModalAddWaybill-WaybillDetails-CollectedQuantityCell",
     ORDER_MODAL_TABLE: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table",
-
+    ORDER_MODAL_TOP_ORDER_NUMBER: "OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-Headers-LabelOrder-Span",
     // Constants unique to ERP-969.spec.ts
     MODAL_CONFIRM_DIALOG: "ModalConfirm",
     MODAL_CONFIRM_DIALOG_YES_BUTTON: "ModalConfirm-Content-Buttons-Yes",
@@ -726,11 +726,17 @@ export const CONST = {
     ASSEMBLY_OPERATIONS_ROW_PATTERN_END: "-Operations",
     ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED: "-Ordered",
     ASSEMBLY_SCLAD_TABLE_BODY_TD_OPERATION: "AssemblySclad-TableBody-TdOperation",
+    ASSEMBLY_SCLAD_TABLE_BODY_TR: "AssemblySclad-TableBody-Tr",
+    DATA_CELL: "DataCell",
 
+    ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO: "AssemblySclad-TableBody-TdKolvo",
+    ASSEMBLY_SCLAD_TABLE_BODY_TD_NAME: "AssemblySclad-TableBody-TdName",
+    ASSEMBLY_SCLAD_TABLE_BODY_TR_OPERATIONS_CELL: "AssemblySclad-TableBodyTrTd9Paragraph",
     OPERATION_TABLE_ID: "OperationPathInfo-Table",
     OPERATION_TABLE_REMAINS_TO_DO: "OperationPathInfo-Thead-RemainsToDo",
     OPERATION_TABLE: "ModalOperationPathMetaloworking-OperationTable",
     OPERATION_TABLE_NAME_FIRST_OPERATION: "OperationPathInfo-Thead-Operation",
+    OPERATION_PATH_INFO_TBODY_FULL_NAME: "OperationPathInfo-Tbody-FullName",
 
     // order from suppliers page
     ORDER_FROM_SUPPLIERS_MODAL: "OrderSuppliers-Modal-AddOrder-ModalAddProviderOrderSupply",
@@ -759,10 +765,13 @@ export const CONST = {
     ZAKAZ_SCLAD_TABLE_ASSEMBLY_ORDERED: "AssemblySclad-TableHead-Ordered",
     ZAKAZ_SCLAD_TABLE_ASSEMBLY_OPERATION: "AssemblySclad-Table-Operations",
     ZAKAZ_SCLAD_BUTTON_MOVE_TO_ARCHIVE_ASSEMBLY: "AssemblySclad-PrintControls-ArchiveButton",
+    ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY: "AssemblySclad-Button-Archive",
     ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY: "ModalOperationPath-OperationTable",
 
     // Modal Confirmation Window
     ZAKAZ_SCLAD_MODAL_CONFIRMATION_BUTTON: "ModalPromptMini-Button-Confirm",
+    ASSEMBLY_SCLAD_BAN_MODAL: "AssemblySclad-BanModal",
+    ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON: "AssemblySclad-BanModal-Content-Buttons-Yes",
     // Direct cell access constants
     OPERATION_TABLE_MAKE_SH_CELL: "OperationPathInfo-Tbody-MakeSh",
 

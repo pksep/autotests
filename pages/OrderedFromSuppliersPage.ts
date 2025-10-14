@@ -58,6 +58,9 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
         // First, make sure we're on the main orders table
         const mainTable = this.page.locator(`[data-testid="${CONST.ORDER_SUPPLIERS_TABLE_ORDER_TABLE}"]`).first();
+        await mainTable.evaluate((el: HTMLElement) => {
+            el.style.border = '2px solid red';
+        });
         await mainTable.waitFor({ state: 'visible', timeout: 10000 });
 
         // Look for the order row that contains our order number
@@ -83,18 +86,19 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         }
 
         // Wait for modal to open
+        await this.page.waitForLoadState("networkidle");
         await this.page.waitForTimeout(2000);
 
-        const headerModalWindow = this.page.locator('.modal-right__title').first();
-        expect(await headerModalWindow.textContent()).toBe(CONST.ORDER_EDIT_MODAL_TITLE_TEXT);
+        const headerModalWindow = this.page.locator(`dialog[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_DIALOG}"][open]`);
+        const headerTitle = headerModalWindow.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_ORDERED_ON_PRODUCTION_TITLE}"]`);
+        expect(await headerTitle.textContent()).toBe(CONST.ORDER_EDIT_MODAL_TITLE_TEXT);
 
         await this.page.waitForLoadState('networkidle')
-        const checkOrderNumberLocator = this.page.locator(
-            '.modal-worker__label-span'
-        ).last();
+        const heaheaderOrderNumber = headerModalWindow.locator(`[data-testid="${CONST.ORDER_MODAL_TOP_ORDER_NUMBER}"]`);
 
-        await expect(checkOrderNumberLocator).toBeVisible();
-        const checkOrderNumber = checkOrderNumberLocator.textContent();
+
+        await expect(heaheaderOrderNumber).toBeVisible();
+        const checkOrderNumber = heaheaderOrderNumber.textContent();
 
         expect(await checkOrderNumber).toBe(orderNumber);
         console.log(`Номера заказов совпадают.`);
