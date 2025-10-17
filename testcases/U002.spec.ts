@@ -13,6 +13,8 @@ import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
 declare global {
     var firstItemName: string;
     var orderNumber: string;
+    var initialOrderedQuantity: string;
+    var pushedIntoProductionQuantity: string;
     var bothItemNames: string[];
     var orderNumber2: string;
 }
@@ -22,87 +24,13 @@ let arrayDetail: Array<{ name: string; designation?: string }> = [];
 let arrayCbed: Array<{ name: string; designation?: string }> = [];
 let arrayIzd: Array<{ name: string; designation?: string }> = [];
 
-// Function to populate test data with existing items from the database
-async function populateTestData(page: Page) {
-    const partsDatabasePage = new CreatePartsDatabasePage(page);
-
-    // Go to parts database page
-    await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-    await page.waitForLoadState("networkidle");
-
-    // Get existing details
-    try {
-        const detailTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`);
-        await detailTable.waitFor({ state: 'visible', timeout: 5000 });
-        const detailRows = detailTable.locator('tbody tr');
-        const detailCount = await detailRows.count();
-
-        if (detailCount > 0) {
-            const firstDetailRow = detailRows.first();
-            const detailName = await firstDetailRow.locator('td').nth(1).textContent();
-            const detailDesignation = await firstDetailRow.locator('td').nth(2).textContent();
-            arrayDetail = [{
-                name: detailName?.trim() || 'DEFAULT_DETAIL',
-                designation: detailDesignation?.trim() || '-'
-            }];
-            console.log(`Found existing detail: ${arrayDetail[0].name}`);
-        }
-    } catch (error) {
-        console.log('No details found, using default');
-        arrayDetail = [{ name: 'DEFAULT_DETAIL', designation: '-' }];
-    }
-
-    // Get existing assemblies
-    try {
-        const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
-        await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
-        const cbedRows = cbedTable.locator('tbody tr');
-        const cbedCount = await cbedRows.count();
-
-        if (cbedCount > 0) {
-            const firstCbedRow = cbedRows.first();
-            const cbedName = await firstCbedRow.locator('td').nth(1).textContent();
-            const cbedDesignation = await firstCbedRow.locator('td').nth(2).textContent();
-            arrayCbed = [{
-                name: cbedName?.trim() || 'DEFAULT_CBED',
-                designation: cbedDesignation?.trim() || '-'
-            }];
-            console.log(`Found existing assembly: ${arrayCbed[0].name}`);
-        }
-    } catch (error) {
-        console.log('No assemblies found, using default');
-        arrayCbed = [{ name: 'DEFAULT_CBED', designation: '-' }];
-    }
-
-    // Get existing products
-    try {
-        const productTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
-        await productTable.waitFor({ state: 'visible', timeout: 5000 });
-        const productRows = productTable.locator('tbody tr');
-        const productCount = await productRows.count();
-
-        if (productCount > 0) {
-            const firstProductRow = productRows.first();
-            const productName = await firstProductRow.locator('td').nth(2).textContent();
-            const productDesignation = await firstProductRow.locator('td').nth(3).textContent();
-            arrayIzd = [{
-                name: productName?.trim() || 'DEFAULT_PRODUCT',
-                designation: productDesignation?.trim() || '-'
-            }];
-            console.log(`Found existing product: ${arrayIzd[0].name}`);
-        }
-    } catch (error) {
-        console.log('No products found, using default');
-        arrayIzd = [{ name: 'DEFAULT_PRODUCT', designation: '-' }];
-    }
-}
 
 let nameOprerationOnProcess: string
 let nameOprerationOnProcessAssebly: string
 let nameOprerationOnProcessIzd: string
 
 // Quantity launched into production
-let quantityOrder = "2";
+let quantityOrder = "5";
 let checkOrderNumber: string;
 let quantityLaunchInProduct: number;
 
@@ -118,46 +46,109 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         `Starting test: Verify Order From Suppliers Page Functionality`
     );
 
-    // Setup test case to populate test data arrays
-    test('Setup - Populate test data from database', async ({ page }) => {
-        test.setTimeout(120000); // Increased to 2 minutes
-        console.log("Setup: Populating test data arrays from database");
+    test("Setup - Ensure test data exists", async ({ page }) => {
+        test.setTimeout(120000);
+        console.log("Setup - Ensuring test data exists");
+        const partsDatabasePage = new CreatePartsDatabasePage(page);
 
-        await allure.step("Populate test data arrays", async () => {
-            await populateTestData(page);
-            console.log(`✅ Populated arrays - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        await allure.step("Clean up existing test items", async () => {
+            await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+            await page.waitForLoadState("networkidle");
+
+            console.log("=== CLEANING UP EXISTING TEST ITEMS ===");
+
+            // 1. Clean up DETAIL items
+            console.log("1. Cleaning up DETAIL items...");
+            const detailSearchInput = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').last();
+            const detailTable = `[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`;
+
+            await detailSearchInput.clear();
+            await detailSearchInput.fill('DEFAULT_DETAIL');
+            await detailSearchInput.press('Enter');
+            await page.waitForTimeout(2000);
+
+            const detailRows = page.locator(`${detailTable} tbody tr`);
+            const detailCount = await detailRows.count();
+            console.log(`Found ${detailCount} DETAIL items to delete`);
+
+            // Delete DETAIL items from bottom up
+            for (let i = detailCount - 1; i >= 0; i--) {
+                const row = detailRows.nth(i);
+                await row.click();
+                await partsDatabasePage.clickButton('Архив', `[data-testid="${CONST.PARTS_PAGE_ARCHIVE_BUTTON}"]`);
+                const confirmButton = page.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON}"]`, { hasText: 'Да' });
+                await confirmButton.click();
+                await page.waitForTimeout(1000);
+            }
+            console.log(`Deleted ${detailCount} DETAIL items`);
+
+            // 2. Clean up CBED items
+            console.log("2. Cleaning up CBED items...");
+            const cbedSearchInput = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').nth(1);
+            const cbedTable = `[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`;
+
+            await cbedSearchInput.clear();
+            await cbedSearchInput.fill('DEFAULT_CBED');
+            await cbedSearchInput.press('Enter');
+            await page.waitForTimeout(2000);
+
+            const cbedRows = page.locator(`${cbedTable} tbody tr`);
+            const cbedCount = await cbedRows.count();
+            console.log(`Found ${cbedCount} CBED items to delete`);
+
+            // Delete CBED items from bottom up
+            for (let i = cbedCount - 1; i >= 0; i--) {
+                const row = cbedRows.nth(i);
+                await row.click();
+                await partsDatabasePage.clickButton('Архив', `[data-testid="${CONST.PARTS_PAGE_ARCHIVE_BUTTON}"]`);
+                const confirmButton = page.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON}"]`, { hasText: 'Да' });
+                await confirmButton.click();
+                await page.waitForTimeout(1000);
+            }
+            console.log(`Deleted ${cbedCount} CBED items`);
+
+            // 3. Clean up IZD items
+            console.log("3. Cleaning up IZD items...");
+            const izdSearchInput = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').first();
+            const izdTable = `[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`;
+
+            await izdSearchInput.clear();
+            await izdSearchInput.fill('DEFAULT_IZD');
+            await izdSearchInput.press('Enter');
+            await page.waitForTimeout(2000);
+
+            const izdRows = page.locator(`${izdTable} tbody tr`);
+            const izdCount = await izdRows.count();
+            console.log(`Found ${izdCount} IZD items to delete`);
+
+            // Delete IZD items from bottom up
+            for (let i = izdCount - 1; i >= 0; i--) {
+                const row = izdRows.nth(i);
+                await row.click();
+                await partsDatabasePage.clickButton('Архив', `[data-testid="${CONST.PARTS_PAGE_ARCHIVE_BUTTON}"]`);
+                const confirmButton = page.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON}"]`, { hasText: 'Да' });
+                await confirmButton.click();
+                await page.waitForTimeout(1000);
+            }
+            console.log(`Deleted ${izdCount} IZD items`);
+
+            console.log("=== CLEANUP COMPLETE ===");
+        });
+
+        await allure.step("Initialize empty test data arrays", async () => {
+            // Initialize empty arrays - Test Cases 5, 6, 7 will populate them
+            arrayDetail = [];
+            arrayCbed = [];
+            arrayIzd = [];
+            console.log("✅ Initialized empty test data arrays - Test Cases 5, 6, 7 will create the items");
+        });
+
+        await allure.step("Final verification", async () => {
+            console.log(`✅ Setup complete - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
         });
     });
 
-    test.beforeAll(async ({ browser }) => {
-        // Ensure there is at least one detail in the Parts DB; if not, create a minimal one
-        const context = await browser.newContext();
-        const page = await context.newPage();
-        const partsDatabasePage = new CreatePartsDatabasePage(page);
-        try {
-            await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await partsDatabasePage.waitingTableBody(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`, { minRows: 0 });
-            const rows = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"] tbody tr`);
-            const count = await rows.count();
-            if (count === 0) {
-                // Create a quick detail
-                await partsDatabasePage.clickButton('Создать', `[data-testid="${CONST.U002_BUTTON_CREATE_NEW_PART}"]`);
-                await partsDatabasePage.clickButton('Деталь', `[data-testid="${CONST.U002_BUTTON_DETAIL}"]`);
-                const name = `AUTO_DETAIL_${Date.now()}`;
-                await page.locator(`[data-testid="${CONST.CREATOR_INFORMATION_INPUT}"]`).fill(name);
-                await page.locator(`[data-testid="${CONST.INPUT_DESUGNTATION_IZD}"]`).fill('-');
-                await partsDatabasePage.clickButton('Сохранить', `[data-testid="${CONST.U002_CREATOR_SAVE_BUTTON}"]`);
-                // Best-effort wait
-                await page.waitForLoadState('networkidle');
-            }
-        } catch (e) {
-            console.warn('Seeding beforeAll encountered an issue:', e);
-        } finally {
-            await context.close();
-        }
-    });
-
-    test.skip('Test Case 01 - Check all elements on page Ordered from suppliers', async ({ page }) => {
+    test('Test Case 01 - Check all elements on page Ordered from suppliers', async ({ page }) => {
         test.setTimeout(600000);
         console.log("Test Case 01 - Check all elements on page Ordered from suppliers");
         const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
@@ -527,7 +518,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // is now handled by Test Case 08 - Launch Detail Into Production Through Suppliers
         // This avoids duplication and maintains focused, maintainable tests.
     })
-    test.skip('Test Case 02 - Check all elements on page MetalWorkingWarehouse', async ({ page }) => {
+    test('Test Case 02 - Check all elements on page MetalWorkingWarehouse', async ({ page }) => {
         console.log("Test Case 02 - Check all elements on page MetalWorkingWarehouse");
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
@@ -547,7 +538,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
                 await page.waitForLoadState("networkidle");
 
                 // Wait for the table body to load
-                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`);
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`, { minRows: 0 });
             }
         );
 
@@ -603,7 +594,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         });
     })
 
-    test.skip('Test Case 03 - Check all elements on page Assembly Warehouse', async ({ page }) => {
+    test('Test Case 03 - Check all elements on page Assembly Warehouse', async ({ page }) => {
         console.log("Test Case 03 - Check all elements on page Assembly Warehouse");
 
         const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
@@ -676,174 +667,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         });
     })
 
-    test.skip("Test Case 04 - Delete Product before create", async ({ page }) => {
-        console.log("Test Case 04 - Delete Product before create");
-        test.setTimeout(90000)
-        const partsDatabsePage = new CreatePartsDatabasePage(page);
-        const productTable = `[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`
-        const productTableDiv = '[data-testid="BasePaginationTable-Wrapper-product"]'
-        const searchProduct = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').first()
-
-        const cbedTable = `[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`
-        const cbedTableDiv = '[data-testid="BasePaginationTable-Wrapper-cbed"]'
-        const searchCbed = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').nth(1)
-
-        const detailTable = `[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`
-        const detailTableDiv = '[data-testid="BasePaginationTable-Wrapper-detal"]'
-        const searchDetail = page.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]').last()
-
-        const buttonArchive = `[data-testid="${CONST.PARTS_PAGE_ARCHIVE_BUTTON}"]`
-
-        await allure.step('Step 01: Open the parts database page', async () => {
-            await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-            await page.waitForLoadState("networkidle");
-        })
-
-        if (arrayDetail.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const detail of arrayDetail) {
-                await allure.step('Step 02: Search Detail', async () => {
-                    await searchDetail.fill(detail.name)
-                    await searchDetail.press('Enter')
-                    expect(await searchDetail.inputValue()).toBe(detail.name)
-                })
-
-                await allure.step('Step 03: Check table rows and process if found', async () => {
-                    await page.waitForLoadState('networkidle')
-                    await page.waitForTimeout(500)
-
-                    const rows = page.locator(`${detailTableDiv} tbody tr`)
-                    const rowCount = await rows.count()
-
-                    if (rowCount === 0) {
-                        console.log(`No rows found for detail: ${detail.name}`)
-                        return
-                    }
-
-                    // Process all rows that match the criteria
-                    for (let i = 0; i < rowCount; i++) {
-                        const row = rows.nth(0)
-                        const nameCell = row.locator('td').nth(1) // Assuming name is in the third column
-                        const cellText = await nameCell.textContent()
-
-                        if (cellText?.trim() === detail.name) {
-                            await allure.step(`Processing row ${i + 1} for detail: ${detail.name}`, async () => {
-                                await partsDatabsePage.getValueOrClickFromFirstRow(detailTable, 0, Click.Yes, Click.No)
-
-                                await allure.step('Click on the Archive button', async () => {
-                                    await partsDatabsePage.clickButton('Архив', buttonArchive)
-                                })
-
-                                await allure.step('Confirmation of transfer to archive', async () => {
-                                    const confirmButton = page.locator(`[data-testid="${CONST.MODAL_CONFIRM_YES_BUTTON_GENERIC}"]`);
-                                    await confirmButton.click();
-                                    await page.waitForTimeout(1000) // Wait for the row to be removed
-                                })
-                            })
-                        }
-                    }
-                })
-            }
-        }
-
-        if (arrayCbed.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const cbed of arrayCbed) {
-                await allure.step('Step 04: Search Cbed', async () => {
-                    await searchCbed.fill(cbed.name)
-                    await searchCbed.press('Enter')
-                    expect(await searchCbed.inputValue()).toBe(cbed.name)
-                })
-
-                await allure.step('Step 05: Check table rows and process if found', async () => {
-                    await page.waitForLoadState('networkidle')
-                    await page.waitForTimeout(500)
-
-                    const rows = page.locator(`${cbedTableDiv} tbody tr`)
-                    const rowCount = await rows.count()
-
-                    if (rowCount === 0) {
-                        console.log(`No rows found for cbed: ${cbed.name}`)
-                        return
-                    }
-
-                    // Process all rows that match the criteria
-                    for (let i = 0; i < rowCount; i++) {
-                        const row = rows.nth(0)
-                        const nameCell = row.locator('td').nth(1) // Assuming name is in the third column
-                        const cellText = await nameCell.textContent()
-
-                        if (cellText?.trim() === cbed.name) {
-                            await allure.step(`Processing row ${i + 1} for cbed: ${cbed.name}`, async () => {
-                                await partsDatabsePage.getValueOrClickFromFirstRow(cbedTable, 0, Click.Yes, Click.No)
-
-                                await allure.step('Click on the Archive button', async () => {
-                                    await partsDatabsePage.clickButton('Архив', buttonArchive)
-                                })
-
-                                await allure.step('Confirmation of transfer to archive', async () => {
-                                    const confirmButton = page.locator(`[data-testid="${CONST.MODAL_CONFIRM_YES_BUTTON_GENERIC}"]`);
-                                    await confirmButton.click();
-                                    await page.waitForTimeout(1000) // Wait for the row to be removed
-                                })
-                            })
-                        }
-                    }
-                })
-            }
-        }
-
-        if (arrayIzd.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const izd of arrayIzd) {
-                await allure.step('Step 06: Search Product', async () => {
-                    await searchProduct.fill(izd.name)
-                    await searchProduct.press('Enter')
-                    expect(await searchProduct.inputValue()).toBe(izd.name)
-                })
-
-                await allure.step('Step 07: Check table rows and process if found', async () => {
-                    await page.waitForLoadState('networkidle')
-                    await page.waitForTimeout(500)
-
-                    const rows = page.locator(`${productTableDiv} tbody tr`)
-                    const rowCount = await rows.count()
-
-                    if (rowCount === 0) {
-                        console.log(`No rows found for product: ${izd.name}`)
-                        return
-                    }
-
-                    for (let i = 0; i < rowCount; i++) {
-                        const row = rows.nth(0)
-                        const nameCell = row.locator('td').nth(2) // Assuming name is in the third column
-                        const cellText = await nameCell.textContent()
-
-                        if (cellText?.trim() === izd.name) {
-                            await allure.step(`Processing row ${i + 1} for product: ${izd.name}`, async () => {
-                                await partsDatabsePage.getValueOrClickFromFirstRow(productTable, 0, Click.Yes, Click.No)
-
-                                await allure.step('Click on the Archive button', async () => {
-                                    await partsDatabsePage.clickButton('Архив', buttonArchive)
-                                })
-
-                                await allure.step('Confirmation of transfer to archive', async () => {
-                                    const confirmButton = page.locator(`[data-testid="${CONST.MODAL_CONFIRM_YES_BUTTON_GENERIC}"]`);
-                                    await confirmButton.click();
-                                    await page.waitForTimeout(1000) // Wait for the row to be removed
-                                })
-                            })
-                        }
-                    }
-                })
-            }
-        }
-    })
-
-    test.skip("Test Case 05 - Create Parts", async ({ page }) => {
+    test("Test Case 05 - Create Parts", async ({ page }) => {
         test.setTimeout(90000)
         console.log("Test Case 05 - Create Parts");
         const partsDatabsePage = new CreatePartsDatabasePage(page);
@@ -855,6 +679,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             // Wait for loading
             await page.waitForLoadState("networkidle");
         })
+
+        // Create DEFAULT_DETAIL and populate arrayDetail
+        const detailName = 'DEFAULT_DETAIL';
+        const detailDesignation = '-';
+        arrayDetail = [{ name: detailName, designation: detailDesignation }];
 
         if (arrayDetail.length === 0) {
             throw new Error("Массив пустой.");
@@ -1092,7 +921,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         }
     })
 
-    test.skip('Test Case 06 - Create Cbed', async ({ page }) => {
+    test('Test Case 06 - Create Cbed', async ({ page }) => {
         console.log("Test Case 06 - Create Cbed");
         const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -1103,6 +932,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             // Wait for loading
             await partsDatabsePage.waitingTableBody(`[data-testid="${CONST.TABLE_PROCESS_CBED}"]`)
         })
+
+        // Create DEFAULT_CBED and populate arrayCbed
+        const cbedName = 'DEFAULT_CBED';
+        const cbedDesignation = '-';
+        arrayCbed = [{ name: cbedName, designation: cbedDesignation }];
 
         if (arrayCbed.length === 0) {
             throw new Error("Массив пустой.");
@@ -1180,7 +1014,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         }
     })
 
-    test.skip('Test Case 07 - Create Product', async ({ page }) => {
+    test('Test Case 07 - Create Product', async ({ page }) => {
         console.log("Test Case 07 - Create Product");
         const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -1190,6 +1024,12 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
             await partsDatabsePage.waitingTableBody(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
         })
+
+        // Create DEFAULT_IZD and populate arrayIzd
+        const izdName = 'DEFAULT_IZD';
+        const izdDesignation = '-';
+        arrayIzd = [{ name: izdName, designation: izdDesignation }];
+
         if (arrayIzd.length === 0) {
             throw new Error("Массив пустой.");
         } else {
@@ -1256,1429 +1096,1258 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         }
     })
 
-    test.skip("Test Case 08 Detail- Launch Detail Into Production Through Suppliers", async ({ page }) => {
+    test("Test Case 08 - Get Initial Ordered Quantity from Metalworking Warehouse", async ({ page }) => {
         test.setTimeout(120000);
-        console.log("Test Case 08 - Launch Detail Into Production Through Suppliers");
-        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
+        console.log("Test Case 08 - Get Initial Ordered Quantity from Metalworking Warehouse");
+        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
+
+        // Verify test data is available (Setup should have prepared it)
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
 
         if (arrayDetail.length === 0) {
             throw new Error("Массив пустой.");
         }
 
-        await allure.step('Launch into production via helper', async () => {
-            // Prefer launching the fallback detail explicitly so downstream search matches it
-            const nameToLaunch = 'DEFAULT_DETAIL';//(arrayDetail.find(a => a.name === 'DEFAULT_DETAIL')?.name)
-            // || arrayDetail[0].name;
-            const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
-                nameToLaunch,
-                quantityOrder,
-                Supplier.details
-            );
-            quantityLaunchInProduct = (Number(quantityLaunchInProduct) || 0) + Number(result.quantityLaunchInProduct);
-            checkOrderNumber = result.checkOrderNumber;
-            console.log("quantityLaunchInProduct:", quantityLaunchInProduct);
-            console.log("checkOrderNumber:", checkOrderNumber);
-            // Ensure Test Case 09 searches for the same name we launched (DEFAULT_DETAIL if present)
-            arrayDetail = [{ name: nameToLaunch } as { name: string; designation?: string }];
-            console.log("arrayDetail set for downstream:", arrayDetail[0]?.name);
-        });
+        for (const detail of arrayDetail) {
+            await allure.step("Step 1: Open the warehouse page", async () => {
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+            });
 
-        console.log("✅ Test Case 08 completed via helper");
-    });
+            await allure.step("Step 2: Open the Metalworking Warehouse page (Заказ склада на металлообработку)", async () => {
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`, { minRows: 0 });
+            });
 
-    test.skip('Test Case 09 Detail - Checking Metalworking Warehouse', async ({ page }) => {
-        console.log("Test Case 09 - Checking Metalworking Warehouse");
-        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
-
-        if (arrayDetail.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const detail of arrayDetail) {
-                await allure.step("Step 1: Open the warehouse page", async () => {
-                    // Go to the Warehouse page
-                    await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-                });
-
-                await allure.step("Step 2: Open the shortage product page (Заказ склада на металлообработку)", async () => {
-                    console.log("Step 2: Open the shortage product page (Заказ склада на металлообработку)");
-                    // Open the page via link with data-testid
-                    await page.locator(`[data-testid="${CONST.SELECTOR_METAL_WORKING_WARHOUSE}"]`).click();
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-
-                    // Wait for the table body to load (allow zero rows after search)
-                    await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`, { minRows: 0 });
-                }
+            await allure.step("Step 3: Search for detail and get initial ordered quantity", async () => {
+                await metalworkingWarehouse.searchTable(
+                    detail.name,
+                    `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
+                    CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
                 );
+                await page.waitForLoadState("networkidle");
 
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await metalworkingWarehouse.searchTable(
-                        detail.name,
-                        `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
-                        CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
-                    );
+                // Check if there are any results
+                const rows = page.locator(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"] tbody tr`);
+                const rowCount = await rows.count();
 
-                    // Wait for the table body to load (allow zero rows after search)
-                    await metalworkingWarehouse.waitingTableBody(`table[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`, { minRows: 0 });
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-
-                    // If results exist, select the first row to load the details table
-                    const resultRows = page.locator(`table[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"] tbody tr`);
-                    const resultCount = await resultRows.count();
-                    console.log(`Metalworking search result rows: ${resultCount}`);
-                    if (resultCount > 0) {
-                        await resultRows.first().click();
-                        // Wait for details table to appear with at least 1 row
-                        await metalworkingWarehouse.waitingTableBody(
-                            `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
-                            { minRows: 1 }
-                        );
-                    } else {
-                        console.warn(`No rows found for search term: ${detail.name}`);
-                    }
-                });
-
-                await allure.step("Step 4: We check the number of those launched into production", async () => {
-                    // Read ordered quantity directly from the first row cell by data-testid pattern
-                    // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{idx}-Ordered
-                    const mainRows = page.locator(`table[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"] tbody tr`);
-                    const rowCount = await mainRows.count();
-                    if (rowCount === 0) {
-                        throw new Error('Нет строк в основной таблице металлообработки после поиска');
-                    }
-                    const orderedCell = page.locator(
-                        `[data-testid="${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${CONST.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED}"]`
-                    ).first();
+                if (rowCount > 0) {
+                    // Get the initial ordered quantity from the first row
+                    const orderedCell = page.locator(`[data-testid^="${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${CONST.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED}"]`).first();
                     await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
-                    const numberLaunched = (await orderedCell.innerText()).trim();
+                    const initialOrderedQuantity = (await orderedCell.innerText()).trim();
 
-                    await metalworkingWarehouse.checkNameInLineFromFirstRow(
-                        detail.name,
-                        `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`
-                    );
-
-                    console.log("Number Launched:" + numberLaunched);
-                    console.log("Quantity Order:" + quantityOrder);
-                    console.log("Quantity Launch in Product:" + quantityLaunchInProduct);
-                    console.log(Number(quantityOrder) + Number(quantityLaunchInProduct));
-
-                    expect(Number(numberLaunched)).toBe(Number(quantityLaunchInProduct));
+                    // Store the initial quantity for later comparison
+                    global.initialOrderedQuantity = initialOrderedQuantity;
+                    console.log(`Initial ordered quantity for ${detail.name}: ${initialOrderedQuantity}`);
+                } else {
+                    // No results found - this is expected for new details
+                    global.initialOrderedQuantity = "0";
+                    console.log(`No existing orders found for ${detail.name} - starting with 0`);
                 }
-                );
-
-                await allure.step("Step 5: Click on the icon in the Operations cell", async () => {
-                    // Click operations cell directly by row data-testid pattern (first result row index = 0)
-                    const operationsCell = page.locator(
-                        `[data-testid="${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_END}"]`
-                    ).first();
-                    await operationsCell.waitFor({ state: 'visible', timeout: 5000 });
-                    await metalworkingWarehouse.highlightElement(operationsCell);
-                    await operationsCell.click();
-
-                    // Waiting for loading
-                    await page.waitForLoadState("networkidle");
-                    await page.waitForTimeout(2000)
-                })
-
-                await allure.step(
-                    "Step 6: We find and get the value from the cell, what remains to be done",
-                    async () => {
-                        // Read remaining-to-do directly from the row cell by data-testid
-                        const remainsCell = page.locator(
-                            `[data-testid="${CONST.OPERATION_TABLE_MAKE_SH_CELL}"]`
-                        ).first();
-                        await metalworkingWarehouse.highlightElement(remainsCell);
-                        await remainsCell.waitFor({ state: 'visible', timeout: 5000 });
-                        valueLeftToDo = (await remainsCell.innerText()).trim();
-
-                        console.log("The value that remains to be made: ", valueLeftToDo);
-
-                        expect(Number(valueLeftToDo)).toBe(
-                            Number(quantityOrder) - Number(quantityLaunchInProduct)
-                        );
-                    }
-                );
-
-                await allure.step(
-                    "Step 7: Find and get the value from the operation cell",
-                    async () => {
-                        // Getting the value of the first operation
-                        const numberColumnFirstOperation =
-                            await metalworkingWarehouse.findColumn(
-                                page,
-                                CONST.OPERATION_TABLE_ID,
-                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
-                            );
-                        console.log(
-                            "Operation column number: ",
-                            numberColumnFirstOperation
-                        );
-
-                        firstOperation =
-                            await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                                `[data-testid=\"${CONST.U002_MODAL_OPERATION_TABLE_METAL}\"]`,
-                                numberColumnFirstOperation
-                            );
-                        console.log("Name of the first operation: ", firstOperation);
-
-                        // Ensure the expected operation name is set for this launched item
-                        if (!nameOprerationOnProcess) {
-                            nameOprerationOnProcess = firstOperation;
-                        }
-                        expect(firstOperation).toBe(nameOprerationOnProcess)
-                    }
-                );
-            }
+            });
         }
     });
-
-    test.skip("Test Case 10 Detail- Launch Detail Into Production Through Suppliers", async ({ page }) => {
-        console.log("Test Case 10 - Launch Detail Into Production Through Suppliers");
-        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
-            page
-        );
-        if (arrayDetail.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const detail of arrayDetail) {
-                let result =
-                    await orderedFromSuppliersPage.launchIntoProductionSupplier(
-                        detail.name,
-                        quantityOrder,
-                        Supplier.details
-                    );
-
-                quantityLaunchInProduct = (Number(quantityLaunchInProduct) || 0) + Number(result.quantityLaunchInProduct); // Accumulate launches
-                checkOrderNumber = result.checkOrderNumber;
-            }
-        }
-    });
-
-    test.skip("Test Case 11 Detail- Checking Metalworking Warehouse", async ({ page }) => {
-        console.log("Test Case 11 - Checking Metalworking Warehouse");
+    test("Test Case 10 - Create Two Orders, Verify Total, and Archive Second Order", async ({ page }) => {
+        test.setTimeout(180000);
+        console.log("Test Case 10 - Create Two Orders, Verify Total, and Archive Second Order");
+        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
         const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
-        await allure.step("Step 1: Open the warehouse page", async () => {
-            // Go to the Warehouse page
-            await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+        // Verify test data is available (Setup should have prepared it)
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
         });
-
-        await allure.step(
-            "Step 2: Open the shortage product page",
-            async () => {
-                // Open the page via link with data-testid
-                await page.locator(`[data-testid="${CONST.SELECTOR_METAL_WORKING_WARHOUSE}"]`).click();
-
-                // Wait for loading
-                await page.waitForLoadState("networkidle");
-
-                // Wait for the table body to load
-                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`);
-            }
-        );
 
         if (arrayDetail.length === 0) {
             throw new Error("Массив пустой.");
-        } else {
-            for (const detail of arrayDetail) {
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await metalworkingWarehouse.searchTable(
-                        detail.name,
-                        `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
-                        CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
-                    );
-
-                    // Wait for the table body to load
-                    await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`);
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-
-                    // Validate launch data present before proceeding
-                    if (quantityLaunchInProduct === undefined || quantityLaunchInProduct === null) {
-                        throw new Error('quantityLaunchInProduct is undefined. Ensure the launch into production step completed successfully prior to this check.');
-                    }
-                });
-
-                await allure.step(
-                    "Step 4: We check the number of those launched into production",
-                    async () => {
-                        const orderedCell = page.locator(
-                            `[data-testid="${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${CONST.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED}"]`
-                        ).first();
-                        await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
-                        const numberLaunched = (await orderedCell.innerText()).trim();
-
-                        await metalworkingWarehouse.checkNameInLineFromFirstRow(
-                            detail.name,
-                            `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`
-                        );
-
-                        console.log(numberLaunched);
-                        console.log(
-                            Number(quantityOrder) + Number(quantityLaunchInProduct)
-                        );
-
-                        expect(Number(numberLaunched)).toBe(Number(quantityOrder));
-                    }
-                );
-
-                await allure.step("Step 5: Click on the icon in the Operations cell", async () => {
-                    // Click operations cell directly by row data-testid pattern (first result row index = 0)
-                    const operationsCell = page.locator(
-                        `[data-testid="${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_END}"]`
-                    ).first();
-                    await operationsCell.waitFor({ state: 'visible', timeout: 5000 });
-                    await operationsCell.click();
-
-                    // Waiting for loading
-                    await page.waitForLoadState("networkidle");
-                    await page.waitForTimeout(2000)
-                })
-
-                await allure.step("Step 6: We find and get the value from the cell, what remains to be done", async () => {
-                    // Debug: Log the calculation values
-                    console.log("DEBUG - quantityOrder:", quantityOrder);
-                    console.log("DEBUG - quantityLaunchInProduct:", quantityLaunchInProduct);
-                    console.log("DEBUG - Expected calculation:", Number(quantityOrder));
-
-                    // Read remaining-to-do directly from the first row cell by new data-testid pattern
-                    const remainsCell = page.locator(
-                        `[data-testid="${CONST.OPERATION_TABLE_MAKE_SH_CELL}"]`
-                    ).first();
-                    await metalworkingWarehouse.highlightElement(remainsCell);
-                    await remainsCell.waitFor({ state: 'visible', timeout: 5000 });
-                    valueLeftToDo = (await remainsCell.innerText()).trim();
-
-                    console.log("The value that remains to be made: ", valueLeftToDo);
-
-                    expect(Number(valueLeftToDo)).toBe(Number(quantityOrder));
-                }
-                );
-
-                await allure.step(
-                    "Step 7: Find and get the value from the operation cell",
-                    async () => {
-                        // Getting the value of the first operation
-                        const numberColumnFirstOperation =
-                            await metalworkingWarehouse.findColumn(
-                                page,
-                                CONST.OPERATION_TABLE_ID,
-                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
-                            );
-                        console.log(
-                            "Operation column number: ",
-                            numberColumnFirstOperation
-                        );
-
-                        firstOperation =
-                            await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                                `[data-testid=\"${CONST.U002_MODAL_OPERATION_TABLE_METAL}\"]`,
-                                numberColumnFirstOperation
-                            );
-                        console.log("Name of the first operation: ", firstOperation);
-
-                        expect(firstOperation).toBe(nameOprerationOnProcess)
-                    }
-                );
-            }
         }
-    });
 
-    test.skip("Test Case 12 Detail - Moving a warehouse task to the archive", async ({
-        page,
-    }) => {
-        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
+        for (const detail of arrayDetail) {
+            let firstOrderNumber: string;
+            let secondOrderNumber: string;
 
-        await allure.step("Step 1: Open the warehouse page", async () => {
-            // Go to the Warehouse page
-            await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        });
+            await allure.step("Step 1: Create first order with quantity 50", async () => {
+                console.log("Creating first order with quantity 50...");
+                const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
+                    detail.name,
+                    "50",
+                    Supplier.details
+                );
 
-        await allure.step(
-            "Step 2: Open the shortage product page",
-            async () => {
-                // Open the page via link with data-testid
-                await page.locator(`[data-testid="${CONST.SELECTOR_METAL_WORKING_WARHOUSE}"]`).click();
+                firstOrderNumber = result.checkOrderNumber;
+                console.log(`✅ First order created - Order number: ${firstOrderNumber}, Quantity: 50`);
+            });
 
-                // Wait for loading
+            await allure.step("Step 2: Create second order with quantity 5", async () => {
+                console.log("Creating second order with quantity 5...");
+                const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
+                    detail.name,
+                    "5",
+                    Supplier.details
+                );
+
+                secondOrderNumber = result.checkOrderNumber;
+                console.log(`✅ Second order created - Order number: ${secondOrderNumber}, Quantity: 5`);
+            });
+
+            await allure.step("Step 3: Go to Metalworking Warehouse and verify total quantity is 55", async () => {
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`, { minRows: 0 });
+
+                // Search for detail
+                await metalworkingWarehouse.searchTable(
+                    detail.name,
+                    `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
+                    CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
+                );
                 await page.waitForLoadState("networkidle");
 
-                // Wait for the table body to load
-                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`);
-            }
-        );
+                // Wait for orders to propagate
+                await page.waitForTimeout(3000);
 
-        if (arrayDetail.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const detail of arrayDetail) {
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await metalworkingWarehouse.searchTable(
-                        detail.name,
-                        `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
-                        CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
-                    );
+                // Get the quantity cell directly by data-testid for Metalworking Warehouse
+                const quantityCell = page.locator(`[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0"][data-testid$="-Ordered"]`).first();
+                await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
 
-                    // Wait for the table body to load
-                    await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`);
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
+                // Highlight the quantity cell
+                await metalworkingWarehouse.highlightElement(quantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
                 });
 
-                await allure.step("Step 4: Check the first line in the first row", async () => {
-                    await metalworkingWarehouse.checkNameInLineFromFirstRow(
-                        detail.name,
-                        `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`
-                    );
+                const totalOrderedQuantity = Number((await quantityCell.innerText()).trim());
+                console.log(`Total ordered quantity: ${totalOrderedQuantity}`);
+                expect(totalOrderedQuantity).toBe(55);
+                console.log(`✅ Verified total quantity is 55 (50 + 5)`);
+            });
+
+            await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
+                // Click on the popover cell (ellipse with context menu)
+                const popoverCell = page.locator(`[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0-Popover"]`).first();
+                await popoverCell.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Highlight the popover before clicking
+                await metalworkingWarehouse.highlightElement(popoverCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await popoverCell.click();
+                console.log("Clicked on popover cell");
+
+                // Click on 'Заказы' in context menu
+                const ordersMenuItem = page.locator(`[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0-Popover-Wrapper-Popover-Item0"]`).first();
+                await ordersMenuItem.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Highlight the menu item before clicking
+                await metalworkingWarehouse.highlightElement(ordersMenuItem, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await ordersMenuItem.click();
+                console.log("Clicked on 'Заказы' menu item");
+            });
+
+            await allure.step("Step 5: Verify orders modal opens and shows both orders", async () => {
+                // Wait for the orders modal to appear
+                const ordersModal = page.locator('[data-testid="ModalShipmentsToIzed-RightMenu-Modal"][open]');
+                await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
+
+                // Check the orders table
+                const ordersTable = page.locator('[data-testid="ModalShipmentsToIzed-Table-Sclad"]');
+                await ordersTable.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Get all order rows
+                const orderRows = page.locator('[data-testid="ModalShipmentsToIzed-TbodySclad-Number"]');
+                const orderCount = await orderRows.count();
+                console.log(`Found ${orderCount} orders in the modal`);
+
+                // Verify we have at least 2 orders
+                expect(orderCount).toBeGreaterThanOrEqual(2);
+
+                // Get order numbers and quantities
+                const orderNumbers: string[] = [];
+                const quantities: string[] = [];
+
+                for (let i = 0; i < orderCount; i++) {
+                    const orderNumberCell = orderRows.nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    orderNumbers.push(orderNumber);
+
+                    // Get corresponding quantity
+                    const quantityCell = page.locator('[data-testid="ModalShipmentsToIzed-TbodySclad-CountShipments"]').nth(i);
+                    const quantity = (await quantityCell.innerText()).trim();
+                    quantities.push(quantity);
                 }
-                );
 
-                await allure.step("Step 5: Find the cell and click on the send checkbox", async () => {
-                    // Click checkbox cell directly by row data-testid pattern (first result row index = 0)
-                    const checkboxCell = page.locator(
-                        `[data-testid="${CONST.ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_TABLE_ROW_POPOVER_BUTTON}0${CONST.METALWORKING_CHECKBOX_ROW_PATTERN_END_CHECKBOX}"]`
-                    ).first();
-                    await metalworkingWarehouse.highlightElement(checkboxCell);
-                    await checkboxCell.waitFor({ state: 'visible', timeout: 5000 });
-                    await checkboxCell.click();
+                console.log(`Order numbers: ${orderNumbers}`);
+                console.log(`Quantities: ${quantities}`);
+
+                // Verify our orders are present
+                expect(orderNumbers).toContain(firstOrderNumber);
+                expect(orderNumbers).toContain(secondOrderNumber);
+                expect(quantities).toContain("50");
+                expect(quantities).toContain("5");
+            });
+
+            await allure.step("Step 6: Click on second order to open edit dialog", async () => {
+                // Find the row with the second order (quantity 5) and click on it
+                const orderRows = page.locator('[data-testid="ModalShipmentsToIzed-TbodySclad-Number"]');
+                const orderCount = await orderRows.count();
+
+                let secondOrderRowIndex = -1;
+                for (let i = 0; i < orderCount; i++) {
+                    const orderNumberCell = orderRows.nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    if (orderNumber === secondOrderNumber) {
+                        secondOrderRowIndex = i;
+                        break;
+                    }
                 }
-                );
 
-                await allure.step("Step 6: Click the button to move to archive", async () => {
-                    await metalworkingWarehouse.clickButton(
-                        "Архив",
-                        `[data-testid="${CONST.BUTTON_MOVE_TO_ARCHIVE_NEW}"]`
-                    );
+                if (secondOrderRowIndex === -1) {
+                    throw new Error(`Could not find second order ${secondOrderNumber} in the orders list`);
                 }
-                );
 
-                await allure.step("Step 7: Confirm archive transfer", async () => {
-                    // Find the open dialog
-                    const archiveDialog = page.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG}"]`);
-                    await archiveDialog.waitFor({ state: 'visible', timeout: 5000 });
-                    await metalworkingWarehouse.highlightElement(archiveDialog);
+                // Click on the order number cell to open edit dialog
+                const secondOrderCell = orderRows.nth(secondOrderRowIndex);
+                await metalworkingWarehouse.highlightElement(secondOrderCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
 
-                    // Find and click the "Да" button
-                    const confirmButton = page.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON}"]`);
-                    await metalworkingWarehouse.highlightElement(confirmButton);
-                    await confirmButton.click();
+                await secondOrderCell.click();
+                console.log(`Clicked on second order ${secondOrderNumber} to open edit dialog`);
+            });
+
+            await allure.step("Step 7: Select checkbox and archive the second order", async () => {
+                // Wait for the edit dialog to appear
+                const editModal = page.locator('[data-testid="ModalShipmentsToIzed-ModalWorker"][open]');
+                await editModal.waitFor({ state: 'visible', timeout: 10000 });
+
+                // Find the checkbox for the second order
+                const checkboxes = page.locator('[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-Checkbox-"]');
+                const checkboxCount = await checkboxes.count();
+
+                let secondOrderCheckboxIndex = -1;
+                for (let i = 0; i < checkboxCount; i++) {
+                    // Get the corresponding order number cell
+                    const orderNumberCell = page.locator(`[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-TableData-Number-"]`).nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    if (orderNumber === secondOrderNumber) {
+                        secondOrderCheckboxIndex = i;
+                        break;
+                    }
                 }
+
+                if (secondOrderCheckboxIndex === -1) {
+                    throw new Error(`Could not find checkbox for second order ${secondOrderNumber}`);
+                }
+
+                // Click the checkbox
+                const checkbox = checkboxes.nth(secondOrderCheckboxIndex);
+                await metalworkingWarehouse.highlightElement(checkbox, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await checkbox.click();
+                console.log(`Selected checkbox for second order ${secondOrderNumber}`);
+
+                // Click the archive button
+                const archiveButton = page.locator('[data-testid="ModalShipmentsToIzed-ModalWorker-Buttons-ButtonArchive"]');
+                await metalworkingWarehouse.highlightElement(archiveButton, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await archiveButton.click();
+                console.log("Clicked archive button");
+            });
+
+            await allure.step("Step 8: Confirm archive in standard dialog", async () => {
+                // Wait for the standard archive dialog
+                const archiveDialog = page.locator('[data-testid="ModalConfirm-Content"]');
+                await archiveDialog.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Click the "Да" button
+                const confirmButton = page.locator('[data-testid="ModalConfirm-Content-Buttons-Yes"]');
+                await metalworkingWarehouse.highlightElement(confirmButton, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await confirmButton.click();
+                console.log("Confirmed archive action");
+            });
+
+            await allure.step("Step 9: Close dialogs and refresh page", async () => {
+                // Click at position (1,1) to close open dialogs
+                await page.click('body', { position: { x: 1, y: 1 } });
+                await page.waitForTimeout(1000);
+
+                // Refresh the page
+                await page.reload();
+                await page.waitForLoadState("networkidle");
+                console.log("Page refreshed");
+            });
+
+            await allure.step("Step 10: Search for detail again and verify quantity decreased by 5", async () => {
+                // Go back to Metalworking Warehouse
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`, { minRows: 0 });
+
+                // Search for detail
+                await metalworkingWarehouse.searchTable(
+                    detail.name,
+                    `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
+                    CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
                 );
-            }
-        }
-    });
-
-    test.skip("Test Case 13 Detail - Verify no records found after archiving", async ({
-        page,
-    }) => {
-        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
-
-        await allure.step("Step 1: Open the warehouse page", async () => {
-            // Go to the Warehouse page
-            await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        });
-
-        await allure.step(
-            "Step 2: Open the shortage product page",
-            async () => {
-                // Open the page via link with data-testid
-                await page.locator(`[data-testid="${CONST.SELECTOR_METAL_WORKING_WARHOUSE}"]`).click();
-
-                // Wait for loading
                 await page.waitForLoadState("networkidle");
 
-                // Don't wait for table body as it might be empty after archiving
-            }
-        );
+                // Wait for system to update
+                await page.waitForTimeout(3000);
 
-        if (arrayDetail.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const detail of arrayDetail) {
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await metalworkingWarehouse.searchTable(
-                        detail.name,
-                        `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
-                        CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
-                    );
+                // Get the quantity cell directly by data-testid for Metalworking Warehouse
+                const quantityCell = page.locator(`[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0"][data-testid$="-Ordered"]`).first();
+                await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
 
-                    // Wait for loading without expecting table body to have rows
-                    await page.waitForLoadState("networkidle");
-                    await page.waitForTimeout(1000); // Give time for search to complete
+                // Highlight the quantity cell
+                await metalworkingWarehouse.highlightElement(quantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
                 });
 
-                await allure.step("Step 4: Verify that no records with the given name are found in the table", async () => {
-                    // Wait for the table to be present (but it might be empty)
-                    await page.waitForSelector(`[data-testid=\"${CONST.TABLE_METAL_WORKING_WARHOUSE}\"]`, { timeout: 5000 });
+                const remainingOrderedQuantity = Number((await quantityCell.innerText()).trim());
+                console.log(`Remaining ordered quantity: ${remainingOrderedQuantity}`);
+                expect(remainingOrderedQuantity).toBe(50); // Should be 50 (55 - 5)
+                console.log(`✅ Verified quantity decreased by 5 - now showing ${remainingOrderedQuantity} instead of 55`);
 
-                    // Get all rows in the table
-                    const rows = page.locator(`[data-testid=\"${CONST.TABLE_METAL_WORKING_WARHOUSE}\"] tbody tr`);
-                    const rowCount = await rows.count();
-
-                    console.log(`Total rows found in table after search: ${rowCount}`);
-
-                    // If table is empty, that's exactly what we expect after archiving
-                    if (rowCount === 0) {
-                        console.log("Table is empty - no records found after archiving, which is expected");
-                        expect(rowCount).toBe(0);
-                        return;
-                    }
-
-                    // If table has rows, check that none contain the archived product name
-                    let foundRow = false;
-                    for (let i = 0; i < rowCount; i++) {
-                        const row = rows.nth(i);
-                        const nameCell = row.locator('td').nth(1); // Assuming name is in the second column
-                        const cellText = await nameCell.textContent();
-
-                        if (cellText?.trim() === detail.name) {
-                            foundRow = true;
-                            console.log(`Found row with name: ${detail.name} at index ${i}`);
-                            break;
-                        }
-                    }
-
-                    // Assert that no row with the given name was found
-                    expect(foundRow).toBeFalsy();
-                    console.log(`Row with name "${detail.name}" was successfully archived and is not found in the table`);
-                    console.log(`Table contains ${rowCount} other records, but not the archived one`);
-                }
-                );
-            }
+                // Set the global variable for subsequent test cases
+                global.pushedIntoProductionQuantity = remainingOrderedQuantity.toString();
+                quantityLaunchInProduct = remainingOrderedQuantity;
+                console.log(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
+            });
         }
     });
-
-    test.skip("Test Case 14 Cbed - Launch Cbed Into Production Through Suppliers", async ({ page }) => {
+    test("Test Case 11 - Archive Task and Verify Removal", async ({ page }) => {
         test.setTimeout(120000);
-        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
-            page
-        );
+        console.log("Test Case 11 - Archive Task and Verify Removal");
+        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
+
+        // Verify test data is available (Setup should have prepared it)
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
+
+        if (arrayDetail.length === 0) {
+            throw new Error("Массив пустой.");
+        }
+
+        for (const detail of arrayDetail) {
+            await allure.step("Step 1: Open Metalworking Warehouse page", async () => {
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`, { minRows: 0 });
+            });
+
+            await allure.step("Step 2: Search for detail", async () => {
+                await metalworkingWarehouse.searchTable(
+                    detail.name,
+                    `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
+                    CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
+            });
+
+            await allure.step("Step 3: Select checkbox and archive", async () => {
+                const checkbox = page.locator(`[data-testid^="${CONST.METALWORKING_OPERATIONS_ROW_PATTERN_START}0"][data-testid$="-Checkbox"]`).first();
+                await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+                await checkbox.click();
+
+                const archiveButton = page.locator(`[data-testid="${CONST.BUTTON_MOVE_TO_ARCHIVE_NEW}"]`);
+                await archiveButton.waitFor({ state: 'visible', timeout: 5000 });
+                await archiveButton.click();
+
+                const confirmButton = page.locator(`[data-testid="${CONST.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON}"]`);
+                await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
+                await confirmButton.click();
+            });
+
+            await allure.step("Step 4: Verify task is archived", async () => {
+                await page.waitForTimeout(2000);
+                await metalworkingWarehouse.searchTable(
+                    detail.name,
+                    `[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"]`,
+                    CONST.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
+
+                const rows = page.locator(`[data-testid="${CONST.TABLE_METAL_WORKING_WARHOUSE}"] tbody tr`);
+                const rowCount = await rows.count();
+
+                // Should have no rows after archiving
+                expect(rowCount).toBe(0);
+                console.log(`Task successfully archived - no rows found for ${detail.name}`);
+            });
+        }
+    });
+    test("Test Case 13 Cbed - Get Initial Ordered Quantity from Assembly Warehouse", async ({ page }) => {
+        test.setTimeout(120000);
+        console.log("Test Case 13 - Get Initial Ordered Quantity from Assembly Warehouse");
+        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
+
+        // Verify test data is available (Setup should have prepared it)
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
+
         if (arrayCbed.length === 0) {
             throw new Error("Массив пустой.");
-        } else {
-            for (const cbed of arrayCbed) {
-                let result =
-                    await orderedFromSuppliersPage.launchIntoProductionSupplier(
-                        cbed.name,
-                        quantityOrder,
-                        Supplier.cbed
-                    );
-
-                quantityLaunchInProduct = (Number(quantityLaunchInProduct) || 0) + Number(result.quantityLaunchInProduct); // Accumulate launches
-                checkOrderNumber = result.checkOrderNumber;
-            }
         }
-    });
 
-    test.skip("Test Case 15 Cbed - Checking Assembly Warehouse", async ({ page }) => {
-        test.setTimeout(220000);
-        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-        // Use hardcoded CBED data for testing
-        const testCbed = { name: 'DEFAULT_CBED', designation: '-' };
-        // Reset quantityLaunchInProduct for CBED testing since this test uses hardcoded data
-        quantityLaunchInProduct = 1;
-        for (const cbed of [testCbed]) {
+        for (const cbed of arrayCbed) {
             await allure.step("Step 1: Open the warehouse page", async () => {
-                // Go to the Warehouse page
                 await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
             });
 
-            await allure.step("Step 2: Open the shortage product page", async () => {
-                // Find and go to the page using the locator Shortage of Products
+            await allure.step("Step 2: Open the Assembly Warehouse page (Заказ склада на сборку)", async () => {
                 await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
-                // Wait for loading
                 await page.waitForLoadState("networkidle");
-
-                // Wait for the table body to load
-                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
+                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
             });
 
-            await allure.step("Step 3: Search product", async () => {
-                // Using table search we look for the value of the variable
+            await allure.step("Step 3: Search for CBED and get initial ordered quantity", async () => {
                 await assemblyWarehouse.searchTable(
                     cbed.name,
                     `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
                     CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
                 );
-                // Wait for the table body to load
-                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-
-                // Wait for loading
                 await page.waitForLoadState("networkidle");
-            });
 
-            await allure.step("Step 4: We check the number of those launched into production", async () => {
-                // Read launched quantity directly from the first row cell by data-testid
-                const launchedCell = page.locator(
-                    `[data-testid="AssemblySclad-TableBody-TdKolvo"]`
-                ).first();
-                await assemblyWarehouse.highlightElement(launchedCell);
-                await launchedCell.waitFor({ state: 'visible', timeout: 5000 });
-                const numberLaunched = (await launchedCell.innerText()).trim();
+                // Check if there are any results
+                const rows = page.locator(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"] tbody tr`);
+                const rowCount = await rows.count();
 
-                // Verify the name in the same row
-                const nameCell = page.locator(
-                    `[data-testid="AssemblySclad-TableBody-TdName"]`
-                ).first();
-                await assemblyWarehouse.highlightElement(nameCell);
-                await nameCell.waitFor({ state: 'visible', timeout: 5000 });
-                const actualName = (await nameCell.innerText()).trim();
-                expect(actualName).toBe(cbed.name);
+                if (rowCount > 0) {
+                    // Get the initial ordered quantity from the first row
+                    const orderedCell = page.locator(`[data-testid="AssemblySclad-TableBody-TdKolvo"]`).first();
+                    await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
+                    const initialOrderedQuantity = (await orderedCell.innerText()).trim();
 
-                console.log("Number Launched:", numberLaunched);
-                console.log("Quantity Launch in Product:", quantityLaunchInProduct);
-
-                expect(Number(numberLaunched)).toBe(Number(quantityLaunchInProduct));
-            });
-
-            await allure.step("Step 5: Click on the icon in the Operations cell", async () => {
-                // Click operations cell directly by row data-testid pattern (first result row index = 0)
-                const operationsRow = page.locator(
-                    `[data-testid^="${CONST.ASSEMBLY_SCLAD_TABLE_BODY_TR}"]`
-                ).first();
-                await operationsRow.waitFor({ state: 'visible', timeout: 5000 });
-                await assemblyWarehouse.highlightElement(operationsRow);
-                const operationsCell = operationsRow.locator(
-                    `[data-testid^="${CONST.ASSEMBLY_SCLAD_TABLE_BODY_TD_OPERATION}"]`
-                );
-                await assemblyWarehouse.highlightElement(operationsCell);
-                await operationsCell.click();
-
-                // Waiting for loading
-                await page.waitForLoadState("networkidle");
-                await page.waitForTimeout(2000);
-            });
-
-            await allure.step("Step 6: We find and get the value from the cell, what remains to be done", async () => {
-                // Read remaining-to-do directly from the row cell by data-testid
-                const remainsCell = page.locator(
-                    `[data-testid="${CONST.OPERATION_TABLE_MAKE_SH_CELL}"]`
-                ).first();
-                await assemblyWarehouse.highlightElement(remainsCell);
-                await remainsCell.waitFor({ state: 'visible', timeout: 5000 });
-                valueLeftToDo = (await remainsCell.innerText()).trim();
-
-                console.log("The value that remains to be made: ", valueLeftToDo);
-
-                expect(Number(valueLeftToDo)).toBe(
-                    Number(quantityOrder) - Number(quantityLaunchInProduct)
-                );
-            });
-
-            await allure.step("Step 7: Find and get the value from the operation cell", async () => {
-                // Getting the value of the first operation
-                const numberColumnFirstOperation =
-                    await assemblyWarehouse.findColumn(
-                        page,
-                        CONST.OPERATION_TABLE_ID,
-                        CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
-                    );
-                console.log("Operation column number: ", numberColumnFirstOperation);
-
-                firstOperation =
-                    await assemblyWarehouse.getValueOrClickFromFirstRow(
-                        `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
-                        numberColumnFirstOperation
-                    );
-                console.log("Name of the first operation: ", firstOperation);
-
-                expect(firstOperation).toBe(nameOprerationOnProcessAssebly);
+                    // Store the initial quantity for later comparison
+                    global.initialOrderedQuantity = initialOrderedQuantity;
+                    console.log(`Initial ordered quantity for ${cbed.name}: ${initialOrderedQuantity}`);
+                } else {
+                    // No results found - this is expected for new CBED items
+                    global.initialOrderedQuantity = "0";
+                    console.log(`No existing orders found for ${cbed.name} - starting with 0`);
+                }
             });
         }
     });
-
-    test.skip("Test Case 16 Cbed - Launch Cbed Into Production Through Suppliers", async ({ page }) => {
-        test.setTimeout(520000);
-        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
-            page
-        );
-        if (arrayCbed.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const cbed of arrayCbed) {
-                let result =
-                    await orderedFromSuppliersPage.launchIntoProductionSupplier(
-                        cbed.name,
-                        quantityOrder,
-                        Supplier.cbed
-                    );
-
-                quantityLaunchInProduct = (Number(quantityLaunchInProduct) || 0) + Number(result.quantityLaunchInProduct); // Accumulate launches
-                checkOrderNumber = result.checkOrderNumber;
-            }
-        }
-    });
-
-    test.skip("Test Case 17 Cbed - Checking Assembly Warehouse", async ({
-        page,
-    }) => {
-        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-        if (arrayCbed.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const cbed of arrayCbed) {
-                await allure.step("Step 1: Open the warehouse page", async () => {
-                    // Go to the Warehouse page
-                    await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-                });
-
-                await allure.step("Step 2: Open the shortage product page", async () => {
-                    // Find and go to the page using the locator Shortage of Products
-                    await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-
-                    // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-                }
-                );
-
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(
-                        cbed.name,
-                        `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
-                        CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
-                    );
-
-                    // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-                });
-
-                await allure.step(
-                    "Step 4: We check the number of those launched into production",
-                    async () => {
-                        // Read launched quantity directly from the first row cell by data-testid
-                        const launchedCell = page.locator(
-                            `[data-testid="AssemblySclad-TableBody-TdKolvo"]`
-                        ).first();
-                        await assemblyWarehouse.highlightElement(launchedCell);
-                        await launchedCell.waitFor({ state: 'visible', timeout: 5000 });
-                        const numberLaunched = (await launchedCell.innerText()).trim();
-
-                        // Verify the name in the same row
-                        const nameCell = page.locator(
-                            `[data-testid="AssemblySclad-TableBody-TdName"]`
-                        ).first();
-                        await assemblyWarehouse.highlightElement(nameCell);
-                        await nameCell.waitFor({ state: 'visible', timeout: 5000 });
-                        const actualName = (await nameCell.innerText()).trim();
-                        expect(actualName).toBe(cbed.name);
-
-                        console.log("Number Launched:", numberLaunched);
-                        console.log("Quantity Order:", quantityOrder);
-
-                        expect(Number(numberLaunched)).toBe(Number(quantityOrder));
-                    }
-                );
-
-                await allure.step("Step 5: Click on the icon in the Operations cell", async () => {
-                    // Click operations cell directly by row data-testid pattern (first result row index = 0)
-                    const operationsCell = page.locator(
-                        `[data-testid="${CONST.ASSEMBLY_SCLAD_TABLE_BODY_TD_OPERATION}"]`
-                    ).first();
-                    await operationsCell.waitFor({ state: 'visible', timeout: 5000 });
-                    await assemblyWarehouse.highlightElement(operationsCell);
-                    await operationsCell.click();
-
-                    // Waiting for loading
-                    await page.waitForLoadState("networkidle");
-                    await page.waitForTimeout(2000);
-                });
-
-                await allure.step("Step 6: We find and get the value from the cell, what remains to be done", async () => {
-                    // Read remaining-to-do directly from the row cell by data-testid
-                    const remainsCell = page.locator(`[data-testid="${CONST.OPERATION_TABLE_MAKE_SH_CELL}"]`).first();
-                    await assemblyWarehouse.highlightElement(remainsCell);
-                    await remainsCell.waitFor({ state: 'visible', timeout: 5000 });
-                    valueLeftToDo = (await remainsCell.innerText()).trim();
-
-                    console.log("The value that remains to be made: ", valueLeftToDo);
-
-                    expect(Number(valueLeftToDo)).toBe(Number(quantityOrder));
-                }
-                );
-
-                await allure.step("Step 7: Find and get the value from the operation cell", async () => {
-                    // Get the first operation name directly from the operations table
-                    const operationNameCell = page.locator(`[data-testid="${CONST.OPERATION_PATH_INFO_TBODY_FULL_NAME}"]`).first();
-                    await assemblyWarehouse.highlightElement(operationNameCell);
-                    await operationNameCell.waitFor({ state: 'visible', timeout: 5000 });
-                    firstOperation = (await operationNameCell.innerText()).trim();
-
-                    console.log("Name of the first operation: ", firstOperation);
-
-                    expect(firstOperation).toBe(nameOprerationOnProcessAssebly);
-                });
-            }
-        }
-    });
-
-    test.skip("Test Case 18 Cbed - Moving a warehouse task to the archive", async ({ page }) => {
-        test.setTimeout(820000);
-        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-        if (arrayCbed.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const cbed of arrayCbed) {
-                await allure.step("Step 1: Open the warehouse page", async () => {
-                    // Go to the Warehouse page
-                    await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-                });
-
-                await allure.step(
-                    "Step 2: Open the shortage product page",
-                    async () => {
-                        // Find and go to the page using the locator Shortage of Products
-                        await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
-
-                        // Wait for loading
-                        await page.waitForLoadState("networkidle");
-
-                        // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-                    }
-                );
-
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(cbed.name, `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT);
-
-                    // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-                });
-
-                await allure.step(
-                    "Step 4: Check the first line in the first row",
-                    async () => {
-                        await assemblyWarehouse.checkNameInLineFromFirstRow(
-                            cbed.name,
-                            `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`
-                        );
-                    }
-                );
-
-                await allure.step("Step 5: Find the cell and click on the send checkbox", async () => {
-                    const myTable = page.locator(`table[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-                    await myTable.waitFor({ state: 'visible' });
-                    await myTable.evaluate((el: HTMLElement) => {
-                        el.style.backgroundColor = 'yellow';
-                        el.style.border = '2px solid red';
-                    });
-                    const firstRow = myTable.locator(`tbody tr`).first();
-                    await firstRow.waitFor({ state: 'visible' });
-                    await firstRow.evaluate((el: HTMLElement) => {
-                        el.style.backgroundColor = 'red';
-                        el.style.border = '2px solid red';
-                    });
-                    const checkboxCell = firstRow.locator(`td[data-testid="DataCell"]`).first();
-                    await checkboxCell.waitFor({ state: 'visible' });
-                    await checkboxCell.evaluate((el: HTMLElement) => {
-                        el.style.backgroundColor = 'green';
-                        el.style.border = '2px solid red';
-                    });
-                    await page.waitForTimeout(1500);
-                    await checkboxCell.waitFor({ state: 'visible' });
-                    await assemblyWarehouse.highlightElement(checkboxCell);
-                    await checkboxCell.click();
-                }
-                );
-
-                await allure.step("Step 6: Click the button to move to archive", async () => {
-                    await assemblyWarehouse.clickButton("Архив", `[data-testid="${CONST.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY}"]`);
-                }
-                );
-
-                await allure.step("Step 7: Check modal window transferring to archive", async () => {
-                    // Find the dialog with the specified data-testid
-                    const archiveDialog = page.locator(`[data-testid="${CONST.ASSEMBLY_SCLAD_BAN_MODAL}"]`);
-                    await archiveDialog.waitFor({ state: 'visible', timeout: 5000 });
-                    await assemblyWarehouse.highlightElement(archiveDialog);
-
-                    // Find and click the "Да" button
-                    const confirmButton = page.locator(`[data-testid="${CONST.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON}"]`);
-                    await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
-                    await assemblyWarehouse.highlightElement(confirmButton);
-                    await confirmButton.click();
-                }
-                );
-            }
-        }
-    });
-
-    test.skip("Test Case 19 Cbed - Verify no records found after archiving", async ({ page }) => {
-        test.setTimeout(820000);
-        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-        if (arrayCbed.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const cbed of arrayCbed) {
-                await allure.step("Step 1: Open the warehouse page", async () => {
-                    // Go to the Warehouse page
-                    await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-                });
-
-                await allure.step("Step 2: Open the assembly warehouse page", async () => {
-                    // Find and go to the page using the locator
-
-                    await assemblyWarehouse.findTable(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`);
-
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-
-                    // Don't wait for table body as it might be empty after archiving
-                }
-                );
-
-                await allure.step("Step 3: Search for the archived CBED product", async () => {
-                    // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(
-                        cbed.name,
-                        `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
-                        CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
-                    );
-                    // Wait for loading without expecting table body to have rows
-                    await page.waitForLoadState("networkidle");
-                    await page.waitForTimeout(1000); // Give time for search to complete
-                });
-
-                await allure.step("Step 4: Verify that no records with the given CBED name are found in the table", async () => {
-                    // Wait for the table to be present (but it might be empty)
-                    await page.waitForSelector(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { timeout: 5000 });
-
-                    // Get all rows in the table
-                    const rows = page.locator(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"] tbody tr`);
-                    const rowCount = await rows.count();
-
-                    console.log(`Total rows found in assembly table after search: ${rowCount}`);
-
-                    // If table is empty, that's exactly what we expect after archiving
-                    if (rowCount === 0) {
-                        console.log("Assembly table is empty - no records found after archiving, which is expected");
-                        expect(rowCount).toBe(0);
-                        return;
-                    }
-
-                    // If table has rows, check that none contain the archived CBED product name
-                    let foundRow = false;
-                    for (let i = 0; i < rowCount; i++) {
-                        const row = rows.nth(i);
-                        const nameCell = row.locator('td').nth(1); // Assuming name is in the second column
-                        const cellText = await nameCell.textContent();
-
-                        if (cellText?.trim() === cbed.name) {
-                            foundRow = true;
-                            console.log(`Found row with CBED name: ${cbed.name} at index ${i}`);
-                            break;
-                        }
-                    }
-
-                    // Assert that no row with the given CBED name was found
-                    expect(foundRow).toBeFalsy();
-                    console.log(`Row with CBED name "${cbed.name}" was successfully archived and is not found in the table`);
-                    console.log(`Assembly table contains ${rowCount} other records, but not the archived CBED`);
-                }
-                );
-            }
-        }
-    });
-
-    test.skip("Test Case 20 product - Launch product Into Production Through Suppliers", async ({ page }) => {
-        test.setTimeout(120000);
-        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
-            page
-        );
-        if (arrayIzd.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const izd of arrayIzd) {
-                let result =
-                    await orderedFromSuppliersPage.launchIntoProductionSupplier(
-                        izd.name,
-                        quantityOrder,
-                        Supplier.product
-                    );
-
-                quantityLaunchInProduct = (Number(quantityLaunchInProduct) || 0) + Number(result.quantityLaunchInProduct); // Accumulate launches
-                checkOrderNumber = result.checkOrderNumber;
-            }
-        }
-    });
-
-    test("Test Case 21 product - Checking Assembly Warehouse", async ({ page }) => {
-        test.setTimeout(120000);
-        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-        // Set default launched quantity since Test Case 20 is skipped
-        if (quantityLaunchInProduct === undefined) {
-            quantityLaunchInProduct = 1;
-        }
-        if (arrayIzd.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const izd of arrayIzd) {
-                await allure.step("Step 1: Open the warehouse page", async () => {
-                    // Go to the Warehouse page
-                    await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-                });
-
-                await allure.step(
-                    "Step 2: Open the shortage product page",
-                    async () => {
-                        // Find and go to the page using the locator Shortage of Products
-                        await assemblyWarehouse.findTable(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`);
-                        // Wait for loading
-                        await page.waitForLoadState("networkidle");
-
-                        // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-                    }
-                );
-
-                for (const izd of arrayIzd) {
-                    await allure.step("Step 3: Search product", async () => {
-                        // Using table search we look for the value of the variable
-                        await assemblyWarehouse.searchTable(
-                            izd.name,
-                            `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
-                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
-                        );
-                        // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`);
-
-                        // Wait for loading
-                        await page.waitForLoadState("networkidle");
-                    });
-
-                    await allure.step(
-                        "Step 4: We check the number of those launched into production",
-                        async () => {
-                            // Read launched quantity directly from the first row cell by data-testid
-                            const launchedCell = page.locator(`[data-testid="${CONST.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO}"]`).first();
-                            await assemblyWarehouse.highlightElement(launchedCell);
-                            await launchedCell.waitFor({ state: 'visible', timeout: 5000 });
-                            const numberLaunched = (await launchedCell.innerText()).trim();
-
-                            // Verify the name in the same row
-                            const nameCell = page.locator(`[data-testid="${CONST.ASSEMBLY_SCLAD_TABLE_BODY_TD_NAME}"]`).first();
-                            await assemblyWarehouse.highlightElement(nameCell);
-                            await nameCell.waitFor({ state: 'visible', timeout: 5000 });
-                            const actualName = (await nameCell.innerText()).trim();
-                            expect(actualName).toBe(izd.name);
-
-                            console.log("Number Launched:", numberLaunched);
-                            console.log("Quantity Order:", quantityOrder);
-                            console.log("Quantity Launch in Product:", quantityLaunchInProduct);
-
-                            expect(Number(numberLaunched)).toBe(Number(quantityLaunchInProduct));
-                        }
-                    );
-
-
-                    await allure.step("Step 5: Click on the icon in the Operations cell", async () => {
-                        // Click operations cell directly by row data-testid pattern (first result row index = 0)
-                        const operationsCell = page.locator(
-                            `[data-testid="${CONST.ASSEMBLY_SCLAD_TABLE_BODY_TR_OPERATIONS_CELL}"]`
-                        ).first();
-                        await operationsCell.waitFor({ state: 'visible', timeout: 5000 });
-                        await assemblyWarehouse.highlightElement(operationsCell);
-                        await operationsCell.click();
-
-                        // Waiting for loading
-                        await page.waitForLoadState("networkidle");
-                        await page.waitForTimeout(2000);
-                    });
-
-                    await allure.step("Step 6: We find and get the value from the cell, what remains to be done", async () => {
-                        // Read remaining-to-do directly from the row cell by data-testid
-                        const remainsCell = page.locator(
-                            `[data-testid="${CONST.OPERATION_TABLE_MAKE_SH_CELL}"]`
-                        ).first();
-                        await remainsCell.waitFor({ state: 'visible', timeout: 5000 });
-                        valueLeftToDo = (await remainsCell.innerText()).trim();
-
-                        console.log("The value that remains to be made: ", valueLeftToDo);
-
-                        expect(Number(valueLeftToDo)).toBe(
-                            Number(quantityOrder) - Number(quantityLaunchInProduct)
-                        );
-                    }
-                    );
-
-                    await allure.step(
-                        "Step 7: Find and get the value from the operation cell",
-                        async () => {
-                            // Getting the value of the first operation
-                            const numberColumnFirstOperation =
-                                await assemblyWarehouse.findColumn(
-                                    page,
-                                    CONST.OPERATION_TABLE_ID,
-                                    CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
-                                );
-                            console.log(
-                                "Operation column number: ",
-                                numberColumnFirstOperation
-                            );
-
-                            firstOperation =
-                                await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                    `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
-                                    numberColumnFirstOperation
-                                );
-                            console.log("Name of the first operation: ", firstOperation);
-
-                            expect(firstOperation).toBe(nameOprerationOnProcessAssebly);
-                        }
-                    );
-                }
-            }
-        }
-    });
-
-    test.skip("Test Case 22 product - Launch product Into Production Through Suppliers", async ({
-        page,
-    }) => {
-        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(
-            page
-        );
-        if (arrayIzd.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const izd of arrayIzd) {
-                let result =
-                    await orderedFromSuppliersPage.launchIntoProductionSupplier(
-                        izd.name,
-                        quantityOrder,
-                        Supplier.product
-                    );
-
-                quantityLaunchInProduct = (Number(quantityLaunchInProduct) || 0) + Number(result.quantityLaunchInProduct); // Accumulate launches
-                checkOrderNumber = result.checkOrderNumber;
-            }
-        }
-    });
-
-    test.skip("Test Case 23 product - Checking Assembly Warehouse", async ({
-        page,
-    }) => {
-        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-        if (arrayIzd.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const izd of arrayIzd) {
-                await allure.step("Step 1: Open the warehouse page", async () => {
-                    // Go to the Warehouse page
-                    await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-                });
-
-                await allure.step(
-                    "Step 2: Open the shortage product page",
-                    async () => {
-                        // Find and go to the page using the locator Shortage of Products
-                        await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
-
-                        // Wait for loading
-                        await page.waitForLoadState("networkidle");
-
-                        // Wait for the table body to load
-                        await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
-                    }
-                );
-
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(izd.name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
-
-                    // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
-                });
-
-                await allure.step(
-                    "Step 4: We check the number of those launched into production",
-                    async () => {
-                        const numberColumn = await assemblyWarehouse.findColumn(
-                            page,
-                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
-                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_ORDERED
-                        );
-                        console.log("numberColumn Ordered: ", numberColumn);
-
-                        const numberLaunched =
-                            await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`,
-                                numberColumn
-                            );
-                        await assemblyWarehouse.checkNameInLineFromFirstRow(
-                            izd.name,
-                            `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`
-                        );
-
-                        console.log(numberLaunched);
-                        console.log(
-                            Number(quantityOrder) + Number(quantityLaunchInProduct)
-                        );
-
-                        expect(Number(numberLaunched)).toBe(Number(quantityOrder));
-                    }
-                );
-
-                await allure.step("Step 5: Click on the icon in the Operations cell", async () => {
-                    // Click operations cell directly by row data-testid pattern (first result row index = 0)
-                    const operationsCell = page.locator(
-                        `[data-testid="${CONST.ASSEMBLY_OPERATIONS_ROW_PATTERN_START}0${CONST.ASSEMBLY_OPERATIONS_ROW_PATTERN_END}"]`
-                    ).first();
-                    await operationsCell.waitFor({ state: 'visible', timeout: 5000 });
-                    await assemblyWarehouse.highlightElement(operationsCell);
-                    await operationsCell.click();
-
-                    // Waiting for loading
-                    await page.waitForLoadState("networkidle");
-                    await page.waitForTimeout(2000);
-                });
-
-                await allure.step(
-                    "Step 6: We find and get the value from the cell, what remains to be done",
-                    async () => {
-                        // Read remaining-to-do directly from the row cell by data-testid
-                        const remainsCell = page.locator(
-                            `[data-testid="${CONST.OPERATION_TABLE_MAKE_SH_CELL}"]`
-                        ).first();
-                        await metalworkingWarehouse.highlightElement(remainsCell);
-                        await remainsCell.waitFor({ state: 'visible', timeout: 5000 });
-                        valueLeftToDo = (await remainsCell.innerText()).trim();
-
-                        console.log("The value that remains to be made: ", valueLeftToDo);
-
-                        expect(Number(valueLeftToDo)).toBe(
-                            Number(quantityOrder) - Number(quantityLaunchInProduct)
-                        );
-                    }
-                );
-
-                await allure.step(
-                    "Step 7: Find and get the value from the operation cell",
-                    async () => {
-                        // Getting the value of the first operation
-                        const numberColumnFirstOperation =
-                            await assemblyWarehouse.findColumn(
-                                page,
-                                CONST.OPERATION_TABLE_ID,
-                                CONST.OPERATION_TABLE_NAME_FIRST_OPERATION
-                            );
-                        console.log(
-                            "Operation column number: ",
-                            numberColumnFirstOperation
-                        );
-
-                        firstOperation =
-                            await assemblyWarehouse.getValueOrClickFromFirstRow(
-                                `[data-testid=\"${CONST.ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY}\"]`,
-                                numberColumnFirstOperation
-                            );
-                        console.log("Name of the first operation: ", firstOperation);
-
-                        expect(firstOperation).toBe(nameOprerationOnProcessAssebly);
-                    }
-                );
-            }
-        }
-    });
-
-    test.skip("Test Case 24 product - Moving a warehouse task to the archive", async ({
-        page,
-    }) => {
-        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-
-        await allure.step("Step 1: Open the warehouse page", async () => {
-            // Go to the Warehouse page
-            await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+    test("Test Case 14 Cbed - Create Two CBED Orders, Verify Total, and Archive Second Order", async ({ page }) => {
+        test.setTimeout(180000);
+        console.log("Test Case 14 - Create Two CBED Orders, Verify Total, and Archive Second Order");
+        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
+        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
+
+        // Verify test data is available
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
         });
 
-        await allure.step(
-            "Step 2: Open the shortage product page",
-            async () => {
-                // Find and go to the page using the locator Shortage of Products
-                await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
+        if (arrayCbed.length === 0) {
+            throw new Error("Массив пустой.");
+        }
 
-                // Wait for loading
+        for (const cbed of arrayCbed) {
+            let firstOrderNumber: string;
+            let secondOrderNumber: string;
+
+            await allure.step("Step 1: Create first CBED order with quantity 50", async () => {
+                console.log("Creating first CBED order with quantity 50...");
+                const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
+                    cbed.name,
+                    "50",
+                    Supplier.cbed
+                );
+
+                firstOrderNumber = result.checkOrderNumber;
+                console.log(`✅ First CBED order created - Order number: ${firstOrderNumber}, Quantity: 50`);
+            });
+
+            await allure.step("Step 2: Create second CBED order with quantity 5", async () => {
+                console.log("Creating second CBED order with quantity 5...");
+                const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
+                    cbed.name,
+                    "5",
+                    Supplier.cbed
+                );
+
+                secondOrderNumber = result.checkOrderNumber;
+                console.log(`✅ Second CBED order created - Order number: ${secondOrderNumber}, Quantity: 5`);
+            });
+
+            await allure.step("Step 3: Go to Assembly Warehouse and verify total quantity is 55", async () => {
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
+
+                // Search for CBED
+                await metalworkingWarehouse.searchTable(
+                    cbed.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
+                );
                 await page.waitForLoadState("networkidle");
 
-                // Wait for the table body to load
-                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
-            }
-        );
+                // Wait for orders to propagate
+                await page.waitForTimeout(3000);
 
-        if (arrayIzd.length === 0) {
-            throw new Error("Массив пустой.");
-        } else {
-            for (const izd of arrayIzd) {
-                await allure.step("Step 3: Search product", async () => {
-                    // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(izd.name, `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
+                // Get the quantity cell directly by data-testid
+                const quantityCell = page.locator(`[data-testid="AssemblySclad-TableBody-TdKolvo"]`).first();
+                await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
 
-                    // Wait for the table body to load
-                    await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`);
-
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
+                // Highlight the quantity cell
+                await metalworkingWarehouse.highlightElement(quantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
                 });
 
-                await allure.step(
-                    "Step 4: Check the first line in the first row",
-                    async () => {
-                        await assemblyWarehouse.checkNameInLineFromFirstRow(
-                            izd.name,
-                            `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`
-                        );
-                    }
-                );
+                const totalOrderedQuantity = Number((await quantityCell.innerText()).trim());
+                console.log(`Total ordered quantity: ${totalOrderedQuantity}`);
+                expect(totalOrderedQuantity).toBe(55);
+                console.log(`✅ Verified total CBED quantity is 55 (50 + 5)`);
+            });
 
-                await allure.step(
-                    "Step 5: Find the cell and click on the send checkbox",
-                    async () => {
-                        const numberColumn = await assemblyWarehouse.findColumn(
-                            page,
-                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE_ID,
-                            CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_CHECKBOX
-                        );
-                        console.log("numberColumn: ", numberColumn);
+            await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
+                // Click on the popover cell (ellipse with context menu) - Assembly Warehouse version
+                const popoverCell = page.locator(`[data-testid="DataCell"]`).nth(1);
+                await popoverCell.waitFor({ state: 'visible', timeout: 5000 });
 
-                        // Upd:
-                        await assemblyWarehouse.getValueOrClickFromFirstRow(
-                            `[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`,
-                            numberColumn,
-                            Click.Yes
-                        );
-                    }
-                );
+                // Highlight the popover before clicking
+                await metalworkingWarehouse.highlightElement(popoverCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
 
-                await allure.step(
-                    "Step 6: Click the button to move to archive",
-                    async () => {
-                        await assemblyWarehouse.clickButton(
-                            " Переместить в архив ",
-                            `[data-testid="${CONST.ZAKAZ_SCLAD_BUTTON_MOVE_TO_ARCHIVE_ASSEMBLY}"]`
-                        );
-                    }
-                );
+                await popoverCell.click();
+                console.log("Clicked on popover cell");
 
-                await allure.step(
-                    "Step 7: Check modal window transferring to archive",
-                    async () => {
-                        await assemblyWarehouse.checkModalWindowForTransferringToArchive('AssemblySclad-PrintControls-ModalPromptMini');
-                    }
-                );
+                // Click on 'Заказы' in context menu - Assembly Warehouse version
+                const ordersMenuItem = page.locator(`[data-testid="Popover-Item0"]`).first();
+                await ordersMenuItem.waitFor({ state: 'visible', timeout: 5000 });
 
-                await allure.step(
-                    "Step 8: Click the button to confirm button",
-                    async () => {
-                        await assemblyWarehouse.clickButton(
-                            " Подтвердить ",
-                            `[data-testid="${CONST.U002_MODAL_PROMPT_MINI_BUTTON_CONFIRM}"]`
-                        );
+                // Highlight the menu item before clicking
+                await metalworkingWarehouse.highlightElement(ordersMenuItem, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await ordersMenuItem.click();
+                console.log("Clicked on 'Заказы' menu item");
+            });
+
+            await allure.step("Step 5: Verify orders modal opens and shows both orders", async () => {
+                // Wait for the orders modal to appear
+                const ordersModal = page.locator('[data-testid="ModalShipmentsToIzed-RightMenu-Modal"][open]');
+                await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
+
+                // Check the orders table
+                const ordersTable = page.locator('[data-testid="ModalShipmentsToIzed-Table-Sclad"]');
+                await ordersTable.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Get all order rows
+                const orderRows = page.locator('[data-testid="ModalShipmentsToIzed-TbodySclad-Number"]');
+                const orderCount = await orderRows.count();
+                console.log(`Found ${orderCount} CBED orders in the modal`);
+
+                // Verify we have at least 2 orders
+                expect(orderCount).toBeGreaterThanOrEqual(2);
+
+                // Get order numbers and quantities
+                const orderNumbers: string[] = [];
+                const quantities: string[] = [];
+
+                for (let i = 0; i < orderCount; i++) {
+                    const orderNumberCell = orderRows.nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    orderNumbers.push(orderNumber);
+
+                    // Get corresponding quantity
+                    const quantityCell = page.locator('[data-testid="ModalShipmentsToIzed-TbodySclad-CountShipments"]').nth(i);
+                    const quantity = (await quantityCell.innerText()).trim();
+                    quantities.push(quantity);
+                }
+
+                console.log(`CBED Order numbers: ${orderNumbers}`);
+                console.log(`CBED Quantities: ${quantities}`);
+
+                // Verify our orders are present
+                expect(orderNumbers).toContain(firstOrderNumber);
+                expect(orderNumbers).toContain(secondOrderNumber);
+                expect(quantities).toContain("50");
+                expect(quantities).toContain("5");
+            });
+
+            await allure.step("Step 6: Click on second order to open edit dialog", async () => {
+                // Find the row with the second order (quantity 5) and click on it
+                const orderRows = page.locator('[data-testid="ModalShipmentsToIzed-TbodySclad-Number"]');
+                const orderCount = await orderRows.count();
+
+                let secondOrderRowIndex = -1;
+                for (let i = 0; i < orderCount; i++) {
+                    const orderNumberCell = orderRows.nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    if (orderNumber === secondOrderNumber) {
+                        secondOrderRowIndex = i;
+                        break;
                     }
+                }
+
+                if (secondOrderRowIndex === -1) {
+                    throw new Error(`Could not find second CBED order ${secondOrderNumber} in the orders list`);
+                }
+
+                // Click on the order number cell to open edit dialog
+                const secondOrderCell = orderRows.nth(secondOrderRowIndex);
+                await metalworkingWarehouse.highlightElement(secondOrderCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await secondOrderCell.click();
+                console.log(`Clicked on second CBED order ${secondOrderNumber} to open edit dialog`);
+            });
+
+            await allure.step("Step 7: Select checkbox and archive the second order", async () => {
+                // Wait for the edit dialog to appear
+                const editModal = page.locator('[data-testid="ModalShipmentsToIzed-ModalWorker"][open]');
+                await editModal.waitFor({ state: 'visible', timeout: 10000 });
+
+                // Find the checkbox for the second order
+                const checkboxes = page.locator('[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-Checkbox-"]');
+                const checkboxCount = await checkboxes.count();
+
+                let secondOrderCheckboxIndex = -1;
+                for (let i = 0; i < checkboxCount; i++) {
+                    // Get the corresponding order number cell
+                    const orderNumberCell = page.locator(`[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-TableData-Number-"]`).nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    if (orderNumber === secondOrderNumber) {
+                        secondOrderCheckboxIndex = i;
+                        break;
+                    }
+                }
+
+                if (secondOrderCheckboxIndex === -1) {
+                    throw new Error(`Could not find checkbox for second CBED order ${secondOrderNumber}`);
+                }
+
+                // Click the checkbox
+                const checkbox = checkboxes.nth(secondOrderCheckboxIndex);
+                await metalworkingWarehouse.highlightElement(checkbox, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await checkbox.click();
+                console.log(`Selected checkbox for second CBED order ${secondOrderNumber}`);
+
+                // Click the archive button
+                const archiveButton = page.locator('[data-testid="ModalShipmentsToIzed-ModalWorker-Buttons-ButtonArchive"]');
+                await metalworkingWarehouse.highlightElement(archiveButton, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await archiveButton.click();
+                console.log("Clicked archive button");
+            });
+
+            await allure.step("Step 8: Confirm archive in standard dialog", async () => {
+                // Wait for the standard archive dialog
+                const archiveDialog = page.locator('[data-testid="ModalConfirm-Content"]');
+                await archiveDialog.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Click the "Да" button
+                const confirmButton = page.locator('[data-testid="ModalConfirm-Content-Buttons-Yes"]');
+                await metalworkingWarehouse.highlightElement(confirmButton, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await confirmButton.click();
+                console.log("Confirmed archive action");
+            });
+
+            await allure.step("Step 9: Close dialogs and refresh page", async () => {
+                // Click at position (1,1) to close open dialogs
+                await page.click('body', { position: { x: 1, y: 1 } });
+                await page.waitForTimeout(1000);
+
+                // Refresh the page
+                await page.reload();
+                await page.waitForLoadState("networkidle");
+                console.log("Page refreshed");
+            });
+
+            await allure.step("Step 10: Search for CBED again and verify quantity decreased by 5", async () => {
+                // Go back to Assembly Warehouse
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
+
+                // Search for CBED
+                await metalworkingWarehouse.searchTable(
+                    cbed.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
                 );
-            }
+                await page.waitForLoadState("networkidle");
+
+                // Wait for system to update
+                await page.waitForTimeout(3000);
+
+                // Get the quantity cell directly by data-testid
+                const quantityCell = page.locator(`[data-testid="AssemblySclad-TableBody-TdKolvo"]`).first();
+                await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Highlight the quantity cell
+                await metalworkingWarehouse.highlightElement(quantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                const remainingOrderedQuantity = Number((await quantityCell.innerText()).trim());
+                console.log(`Remaining ordered quantity: ${remainingOrderedQuantity}`);
+                expect(remainingOrderedQuantity).toBe(50); // Should be 50 (55 - 5)
+                console.log(`✅ Verified CBED quantity decreased by 5 - now showing ${remainingOrderedQuantity} instead of 55`);
+
+                // Set the global variable for subsequent test cases
+                quantityLaunchInProduct = remainingOrderedQuantity;
+                console.log(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
+            });
         }
     });
-
-    test.skip("Test Case 25 product - Verify no records found after archiving", async ({
-        page,
-    }) => {
+    test("Test Case 15 Cbed - Archive Task and Verify Removal", async ({ page }) => {
+        test.setTimeout(120000);
+        console.log("Test Case 18 - Archive CBED Task and Verify Removal");
         const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
+
+        // Verify test data is available
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
+
+        if (arrayCbed.length === 0) {
+            throw new Error("Массив пустой.");
+        }
+
+        for (const cbed of arrayCbed) {
+            await allure.step("Step 1: Open Assembly Warehouse page", async () => {
+                await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
+            });
+
+            await allure.step("Step 2: Search for CBED", async () => {
+                await assemblyWarehouse.searchTable(
+                    cbed.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
+            });
+
+            await allure.step("Step 3: Select checkbox and archive", async () => {
+                const checkbox = page.locator(`[data-testid="${CONST.DATA_CELL}"]`).first();
+                await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+                await checkbox.click();
+
+                const archiveButton = page.locator(`[data-testid="${CONST.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY}"]`);
+                await archiveButton.waitFor({ state: 'visible', timeout: 5000 });
+                await archiveButton.click();
+
+                const confirmButton = page.locator(`[data-testid="${CONST.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON}"]`);
+                await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
+                await confirmButton.click();
+            });
+
+            await allure.step("Step 4: Verify task is archived", async () => {
+                await page.waitForTimeout(2000);
+                await assemblyWarehouse.searchTable(
+                    cbed.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
+
+                const rows = page.locator(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"] tbody tr`);
+                const rowCount = await rows.count();
+
+                // Should have no rows after archiving
+                expect(rowCount).toBe(0);
+                console.log(`CBED task successfully archived - no rows found for ${cbed.name}`);
+            });
+        }
+    });
+    test("Test Case 16 Izd - Get Initial Ordered Quantity from Assembly Warehouse", async ({ page }) => {
+        test.setTimeout(120000);
+        console.log("Test Case 16 - Get Initial Ordered Quantity from Assembly Warehouse for IZD");
+        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
+
+        // Verify test data is available (Setup should have prepared it)
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
+
         if (arrayIzd.length === 0) {
             throw new Error("Массив пустой.");
-        } else {
+        }
+
+        for (const izd of arrayIzd) {
             await allure.step("Step 1: Open the warehouse page", async () => {
-                // Go to the Warehouse page
                 await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
             });
 
-            await allure.step(
-                "Step 2: Open the assembly warehouse page",
-                async () => {
-                    // Find and go to the page using the locator
-                    await assemblyWarehouse.findTable(CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
+            await allure.step("Step 2: Open the Assembly Warehouse page (Заказ склада на сборку)", async () => {
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
+            });
 
-                    // Wait for loading
-                    await page.waitForLoadState("networkidle");
+            await allure.step("Step 3: Search for IZD and get initial ordered quantity", async () => {
+                await assemblyWarehouse.searchTable(
+                    izd.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
 
-                    // Don't wait for table body as it might be empty after archiving
+                // Check if there are any results
+                const rows = page.locator(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"] tbody tr`);
+                const rowCount = await rows.count();
+
+                if (rowCount > 0) {
+                    // Get the initial ordered quantity from the first row
+                    const orderedCell = page.locator(`[data-testid="AssemblySclad-TableBody-TdKolvo"]`).first();
+                    await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
+                    const initialOrderedQuantity = (await orderedCell.innerText()).trim();
+
+                    // Store the initial quantity for later comparison
+                    global.initialOrderedQuantity = initialOrderedQuantity;
+                    console.log(`Initial ordered quantity for ${izd.name}: ${initialOrderedQuantity}`);
+                } else {
+                    // No results found - this is expected for new IZD items
+                    global.initialOrderedQuantity = "0";
+                    console.log(`No existing orders found for ${izd.name} - starting with 0`);
                 }
-            );
+            });
+        }
+    });
 
-            for (const izd of arrayIzd) {
-                await allure.step("Step 3: Search for the archived CBED product", async () => {
-                    // Using table search we look for the value of the variable
-                    await assemblyWarehouse.searchTable(
-                        izd.name,
-                        `[data-testid=\"${CONST.U002_ASSEMBLY_TABLE}\"]`
-                    );
+    test("Test Case 17 Izd - Create Two IZD Orders, Verify Total, and Archive Second Order", async ({ page }) => {
+        test.setTimeout(180000);
+        console.log("Test Case 17 - Create Two IZD Orders, Verify Total, and Archive Second Order");
+        const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
+        const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
-                    // Wait for loading without expecting table body to have rows
-                    await page.waitForLoadState("networkidle");
-                    await page.waitForTimeout(1000); // Give time for search to complete
+        // Verify test data is available
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
+
+        if (arrayIzd.length === 0) {
+            throw new Error("Массив пустой.");
+        }
+
+        for (const izd of arrayIzd) {
+            let firstOrderNumber: string;
+            let secondOrderNumber: string;
+
+            await allure.step("Step 1: Create first IZD order with quantity 50", async () => {
+                console.log("Creating first IZD order with quantity 50...");
+                const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
+                    izd.name,
+                    "50",
+                    Supplier.product
+                );
+
+                firstOrderNumber = result.checkOrderNumber;
+                console.log(`✅ First IZD order created - Order number: ${firstOrderNumber}, Quantity: 50`);
+            });
+
+            await allure.step("Step 2: Create second IZD order with quantity 5", async () => {
+                console.log("Creating second IZD order with quantity 5...");
+                const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(
+                    izd.name,
+                    "5",
+                    Supplier.product
+                );
+
+                secondOrderNumber = result.checkOrderNumber;
+                console.log(`✅ Second IZD order created - Order number: ${secondOrderNumber}, Quantity: 5`);
+            });
+
+            await allure.step("Step 3: Go to Assembly Warehouse and verify total quantity is 55", async () => {
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
+
+                // Search for IZD
+                await metalworkingWarehouse.searchTable(
+                    izd.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
+
+                // Wait for orders to propagate
+                await page.waitForTimeout(3000);
+
+                // Get the quantity cell directly by data-testid
+                const quantityCell = page.locator(`[data-testid="AssemblySclad-TableBody-TdKolvo"]`).first();
+                await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Highlight the quantity cell
+                await metalworkingWarehouse.highlightElement(quantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
                 });
 
-                await allure.step(
-                    "Step 4: Verify that no records with the given CBED name are found in the table",
-                    async () => {
-                        // Wait for the table to be present (but it might be empty)
-                        await page.waitForSelector(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"]`, { timeout: 5000 });
+                const totalOrderedQuantity = Number((await quantityCell.innerText()).trim());
+                console.log(`Total ordered quantity: ${totalOrderedQuantity}`);
+                expect(totalOrderedQuantity).toBe(55);
+                console.log(`✅ Verified total IZD quantity is 55 (50 + 5)`);
+            });
 
-                        // Get all rows in the table
-                        const rows = page.locator(`[data-testid="${CONST.U002_ASSEMBLY_TABLE}"] tbody tr`);
-                        const rowCount = await rows.count();
+            await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
+                // Click on the context menu cell (not the checkbox cell)
+                const contextMenuCell = page.locator(`[data-testid="DataCell"]`).nth(1);
+                await contextMenuCell.waitFor({ state: 'visible', timeout: 5000 });
 
-                        console.log(`Total rows found in assembly table after search: ${rowCount}`);
+                // Highlight the context menu cell before clicking
+                await metalworkingWarehouse.highlightElement(contextMenuCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
 
-                        // If table is empty, that's exactly what we expect after archiving
-                        if (rowCount === 0) {
-                            console.log("Assembly table is empty - no records found after archiving, which is expected");
-                            expect(rowCount).toBe(0);
-                            return;
-                        }
+                await contextMenuCell.click();
+                console.log("Clicked on context menu cell");
 
-                        // If table has rows, check that none contain the archived CBED product name
-                        let foundRow = false;
-                        for (let i = 0; i < rowCount; i++) {
-                            const row = rows.nth(i);
-                            const nameCell = row.locator('td').nth(1); // Assuming name is in the second column
-                            const cellText = await nameCell.textContent();
+                // Click on 'Заказы' in context menu
+                const ordersMenuItem = page.locator(`[data-testid="Popover-Item0"]`).first();
+                await ordersMenuItem.waitFor({ state: 'visible', timeout: 5000 });
 
-                            if (cellText?.trim() === izd.name) {
-                                foundRow = true;
-                                console.log(`Found row with CBED name: ${izd.name} at index ${i}`);
-                                break;
-                            }
-                        }
+                // Highlight the menu item before clicking
+                await metalworkingWarehouse.highlightElement(ordersMenuItem, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
 
-                        // Assert that no row with the given CBED name was found
-                        expect(foundRow).toBeFalsy();
-                        console.log(`Row with CBED name "${izd.name}" was successfully archived and is not found in the table`);
-                        console.log(`Assembly table contains ${rowCount} other records, but not the archived CBED`);
+                await ordersMenuItem.click();
+                console.log("Clicked on 'Заказы' menu item");
+
+                // Wait for the orders modal to appear
+                const ordersModal = page.locator('[data-testid="ModalShipmentsToIzed-RightMenu-Modal"][open]');
+                await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
+            });
+
+            await allure.step("Step 5: Verify orders are present", async () => {
+                // Get all order rows
+                const ordersModal = page.locator('[data-testid="ModalShipmentsToIzed-RightMenu-Modal"][open]');
+                await metalworkingWarehouse.highlightElement(ordersModal, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+                const orderRows = ordersModal.locator('[data-testid^="ModalShipmentsToIzed-TbodySclad-StockOrder"]');
+                const orderCount = await orderRows.count();
+                console.log(`Found ${orderCount} IZD orders in the modal`);
+                await page.waitForTimeout(10000);
+                // Verify we have at least 2 orders
+                expect(orderCount).toBeGreaterThanOrEqual(2);
+
+                // Get order numbers and quantities
+                const orderNumbers: string[] = [];
+                const quantities: string[] = [];
+
+                for (let i = 0; i < orderCount; i++) {
+                    // Get the order number from the first cell with data-testid="ModalShipmentsToIzed-TbodySclad-Number"
+                    const orderNumberCell = orderRows.nth(i).locator('[data-testid="ModalShipmentsToIzed-TbodySclad-Number"]');
+                    await metalworkingWarehouse.highlightElement(orderNumberCell, {
+                        backgroundColor: 'red',
+                        border: '2px solid yellow',
+                        color: 'blue'
+                    });
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    orderNumbers.push(orderNumber);
+
+                    // Get the quantity from the cell with data-testid="ModalShipmentsToIzed-TbodySclad-Quantity"
+                    const quantityCell = orderRows.nth(i).locator('[data-testid^="ModalShipmentsToIzed-TbodySclad-CountShipments"]');
+                    await metalworkingWarehouse.highlightElement(quantityCell, {
+                        backgroundColor: 'red',
+                        border: '2px solid yellow',
+                        color: 'blue'
+                    });
+                    const quantity = (await quantityCell.innerText()).trim();
+                    quantities.push(quantity);
+
+                    console.log(`IZD Order ${i + 1}: Number="${orderNumber}", Quantity="${quantity}"`);
+                }
+
+                console.log(`IZD Order numbers: ${orderNumbers}`);
+                console.log(`IZD Quantities: ${quantities}`);
+
+                // Verify our orders are present
+                expect(orderNumbers).toContain(firstOrderNumber);
+                expect(orderNumbers).toContain(secondOrderNumber);
+                expect(quantities).toContain("50");
+                expect(quantities).toContain("5");
+            });
+
+            await allure.step("Step 6: Click on second order to open edit dialog", async () => {
+                // Find the row with the second order (quantity 5) and click on it
+                const orderRows = page.locator('[data-testid="ModalShipmentsToIzed-TbodySclad-Number"]');
+                const orderCount = await orderRows.count();
+
+                let secondOrderRowIndex = -1;
+                for (let i = 0; i < orderCount; i++) {
+                    const orderNumberCell = orderRows.nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    if (orderNumber === secondOrderNumber) {
+                        secondOrderRowIndex = i;
+                        break;
                     }
+                }
+
+                if (secondOrderRowIndex === -1) {
+                    throw new Error(`Could not find second IZD order ${secondOrderNumber} in the orders list`);
+                }
+
+                // Click on the order number cell to open edit dialog
+                const secondOrderCell = orderRows.nth(secondOrderRowIndex);
+                await metalworkingWarehouse.highlightElement(secondOrderCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await secondOrderCell.click();
+                console.log(`Clicked on second IZD order ${secondOrderNumber} to open edit dialog`);
+            });
+
+            await allure.step("Step 7: Select checkbox and archive the second order", async () => {
+                // Wait for the edit dialog to appear
+                const editModal = page.locator('[data-testid="ModalShipmentsToIzed-ModalWorker"][open]');
+                await editModal.waitFor({ state: 'visible', timeout: 10000 });
+
+                // Find the checkbox for the second order
+                const checkboxes = page.locator('[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-Checkbox-"]');
+                const checkboxCount = await checkboxes.count();
+
+                let secondOrderCheckboxIndex = -1;
+                for (let i = 0; i < checkboxCount; i++) {
+                    // Get the corresponding order number cell
+                    const orderNumberCell = page.locator(`[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-TableData-Number-"]`).nth(i);
+                    const orderNumber = (await orderNumberCell.innerText()).trim();
+                    if (orderNumber === secondOrderNumber) {
+                        secondOrderCheckboxIndex = i;
+                        break;
+                    }
+                }
+
+                if (secondOrderCheckboxIndex === -1) {
+                    throw new Error(`Could not find checkbox for second IZD order ${secondOrderNumber}`);
+                }
+
+                // Click the checkbox
+                const checkbox = checkboxes.nth(secondOrderCheckboxIndex);
+                await metalworkingWarehouse.highlightElement(checkbox, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await checkbox.click();
+                console.log(`Selected checkbox for second IZD order ${secondOrderNumber}`);
+
+                // Click the archive button
+                const archiveButton = page.locator('[data-testid="ModalShipmentsToIzed-ModalWorker-Buttons-ButtonArchive"]');
+                await metalworkingWarehouse.highlightElement(archiveButton, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await archiveButton.click();
+                console.log("Clicked archive button");
+            });
+
+            await allure.step("Step 8: Confirm archive in standard dialog", async () => {
+                // Wait for the standard archive dialog
+                const archiveDialog = page.locator('[data-testid="ModalConfirm-Content"]');
+                await archiveDialog.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Click the "Да" button
+                const confirmButton = page.locator('[data-testid="ModalConfirm-Content-Buttons-Yes"]');
+                await metalworkingWarehouse.highlightElement(confirmButton, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                await confirmButton.click();
+                console.log("Confirmed archive action");
+            });
+
+            await allure.step("Step 9: Close dialogs and refresh page", async () => {
+                // Click at position (1,1) to close open dialogs
+                await page.click('body', { position: { x: 1, y: 1 } });
+                await page.waitForTimeout(1000);
+
+                // Refresh the page
+                await page.reload();
+                await page.waitForLoadState("networkidle");
+                console.log("Page refreshed");
+            });
+
+            await allure.step("Step 10: Search for IZD again and verify quantity decreased by 5", async () => {
+                // Go back to Assembly Warehouse
+                await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await metalworkingWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
+
+                // Search for IZD
+                await metalworkingWarehouse.searchTable(
+                    izd.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
                 );
-            }
+                await page.waitForLoadState("networkidle");
+
+                // Wait for system to update
+                await page.waitForTimeout(3000);
+
+                // Get the quantity cell directly by data-testid
+                const quantityCell = page.locator(`[data-testid="AssemblySclad-TableBody-TdKolvo"]`).first();
+                await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Highlight the quantity cell
+                await metalworkingWarehouse.highlightElement(quantityCell, {
+                    backgroundColor: 'yellow',
+                    border: '2px solid red',
+                    color: 'blue'
+                });
+
+                const remainingOrderedQuantity = Number((await quantityCell.innerText()).trim());
+                console.log(`Remaining ordered quantity: ${remainingOrderedQuantity}`);
+                expect(remainingOrderedQuantity).toBe(50); // Should be 50 (55 - 5)
+                console.log(`✅ Verified IZD quantity decreased by 5 - now showing ${remainingOrderedQuantity} instead of 55`);
+
+                // Set the global variable for subsequent test cases
+                quantityLaunchInProduct = remainingOrderedQuantity;
+                console.log(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
+            });
+        }
+    });
+
+    test("Test Case 18 Izd - Archive Task and Verify Removal", async ({ page }) => {
+        test.setTimeout(120000);
+        console.log("Test Case 18 - Archive IZD Task and Verify Removal");
+        const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
+
+        // Verify test data is available
+        await allure.step("Verify test data is available", async () => {
+            console.log(`✅ Using test data - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+        });
+
+        if (arrayIzd.length === 0) {
+            throw new Error("Массив пустой.");
+        }
+
+        for (const izd of arrayIzd) {
+            await allure.step("Step 1: Open Assembly Warehouse page", async () => {
+                await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+                await page.locator(`[data-testid="${CONST.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON}"]`).click();
+                await page.waitForLoadState("networkidle");
+                await assemblyWarehouse.waitingTableBody(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`, { minRows: 0 });
+            });
+
+            await allure.step("Step 2: Search for IZD", async () => {
+                await assemblyWarehouse.searchTable(
+                    izd.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
+            });
+
+            await allure.step("Step 3: Select checkbox and archive", async () => {
+                const checkbox = page.locator(`[data-testid="${CONST.DATA_CELL}"]`).first();
+                await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+                await checkbox.click();
+
+                const archiveButton = page.locator(`[data-testid="${CONST.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY}"]`);
+                await archiveButton.waitFor({ state: 'visible', timeout: 5000 });
+                await archiveButton.click();
+
+                const confirmButton = page.locator(`[data-testid="${CONST.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON}"]`);
+                await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
+                await confirmButton.click();
+            });
+
+            await allure.step("Step 4: Verify task is archived", async () => {
+                await page.waitForTimeout(2000);
+                await assemblyWarehouse.searchTable(
+                    izd.name,
+                    `[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"]`,
+                    CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT
+                );
+                await page.waitForLoadState("networkidle");
+
+                const rows = page.locator(`[data-testid="${CONST.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE}"] tbody tr`);
+                const rowCount = await rows.count();
+
+                // Should have no rows after archiving
+                expect(rowCount).toBe(0);
+                console.log(`IZD task successfully archived - no rows found for ${izd.name}`);
+            });
         }
     });
 };

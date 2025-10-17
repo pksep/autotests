@@ -19,10 +19,217 @@ import { exec } from "child_process";
 import exp from "constants";
 import { allure } from "allure-playwright";
 
+// Global variable declarations for test data arrays
+declare global {
+  var arrayDetail: Array<{ name: string; designation?: string }>;
+  var arrayCbed: Array<{ name: string; designation?: string }>;
+  var arrayIzd: Array<{ name: string; designation?: string }>;
+}
+
+// Initialize global arrays
+global.arrayDetail = global.arrayDetail || [];
+global.arrayCbed = global.arrayCbed || [];
+global.arrayIzd = global.arrayIzd || [];
+
 /**
  * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
  * Inherits from the AbstractPage class for basic page handling functionality.
  */
+// Utility function to populate test data arrays
+export async function populateTestData(page: Page, skipNavigation = false) {
+  const partsDatabasePage = new CreatePartsDatabasePage(page);
+
+  // Go to parts database page only if not already there
+  if (!skipNavigation) {
+    await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+    await page.waitForLoadState("networkidle");
+  }
+
+  // Get existing details
+  try {
+    const detailTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`);
+    await detailTable.waitFor({ state: 'visible', timeout: 5000 });
+    const detailRows = detailTable.locator('tbody tr');
+    const detailCount = await detailRows.count();
+
+    if (detailCount > 0) {
+      const firstDetailRow = detailRows.first();
+      const detailName = await firstDetailRow.locator('td').nth(1).textContent();
+      const detailDesignation = await firstDetailRow.locator('td').nth(2).textContent();
+      arrayDetail = [{
+        name: detailName?.trim() || 'DEFAULT_DETAIL',
+        designation: detailDesignation?.trim() || '-'
+      }];
+      console.log(`Found existing detail: ${arrayDetail[0].name}`);
+    }
+  } catch (error) {
+    console.log('No details found, using default');
+    arrayDetail = [{ name: 'DEFAULT_DETAIL', designation: '-' }];
+  }
+
+  // Get existing assemblies
+  try {
+    const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
+    await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
+    const cbedRows = cbedTable.locator('tbody tr');
+    const cbedCount = await cbedRows.count();
+
+    if (cbedCount > 0) {
+      const firstCbedRow = cbedRows.first();
+      const cbedName = await firstCbedRow.locator('td').nth(1).textContent();
+      const cbedDesignation = await firstCbedRow.locator('td').nth(2).textContent();
+      arrayCbed = [{
+        name: cbedName?.trim() || 'DEFAULT_CBED',
+        designation: cbedDesignation?.trim() || '-'
+      }];
+      console.log(`Found existing assembly: ${arrayCbed[0].name}`);
+    }
+  } catch (error) {
+    console.log('No assemblies found, using default');
+    arrayCbed = [{ name: 'DEFAULT_CBED', designation: '-' }];
+  }
+
+  // Get existing products by searching for them
+  try {
+    console.log('Looking for products table...');
+    const productTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+    await productTable.waitFor({ state: 'visible', timeout: 5000 });
+    console.log('Products table found, searching for products...');
+
+    // Search for products that might exist (try common patterns)
+    const searchInput = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"] [data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT}"]`);
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+
+    // Try searching for products with common patterns
+    const searchTerms = ['Впускной', 'крапан', 'М12', 'DEFAULT_PRODUCT'];
+    let foundProduct = false;
+
+    for (const searchTerm of searchTerms) {
+      console.log(`Searching for products with term: "${searchTerm}"`);
+      await searchInput.clear();
+      await searchInput.fill(searchTerm);
+      await searchInput.press('Enter');
+      await page.waitForTimeout(1000); // Wait for search results
+
+      const productRows = productTable.locator('tbody tr');
+      const productCount = await productRows.count();
+      console.log(`Found ${productCount} products matching "${searchTerm}"`);
+
+      if (productCount > 0) {
+        const firstProductRow = productRows.first();
+        const productName = await firstProductRow.locator('td').nth(2).textContent();
+        const productDesignation = await firstProductRow.locator('td').nth(3).textContent();
+        arrayIzd = [{
+          name: productName?.trim() || 'DEFAULT_PRODUCT',
+          designation: productDesignation?.trim() || '-'
+        }];
+        console.log(`Found existing product: ${arrayIzd[0].name}`);
+        foundProduct = true;
+        break;
+      }
+    }
+
+    if (!foundProduct) {
+      console.log('No products found with any search terms, will use default');
+    }
+  } catch (error) {
+    console.log('No products found, using default. Error:', error);
+    arrayIzd = [{ name: 'DEFAULT_PRODUCT', designation: '-' }];
+  }
+
+  // Populate details array
+  try {
+    console.log('Looking for details table...');
+    const detailTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`);
+    await detailTable.waitFor({ state: 'visible', timeout: 5000 });
+    console.log('Details table found, searching for details...');
+
+    const searchInput = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"] [data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT}"]`);
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+
+    const searchTerms = ['DEFAULT_DETAIL', 'Шток', 'поршнем'];
+    let foundDetail = false;
+
+    for (const searchTerm of searchTerms) {
+      console.log(`Searching for details with term: "${searchTerm}"`);
+      await searchInput.clear();
+      await searchInput.fill(searchTerm);
+      await searchInput.press('Enter');
+      await page.waitForTimeout(1000);
+
+      const rows = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"] tbody tr`);
+      const rowCount = await rows.count();
+
+      if (rowCount > 0) {
+        console.log(`Found ${rowCount} details with search term: "${searchTerm}"`);
+        arrayDetail = [];
+        for (let i = 0; i < Math.min(rowCount, 3); i++) {
+          const nameCell = rows.nth(i).locator('td').nth(1);
+          const designationCell = rows.nth(i).locator('td').nth(2);
+          const name = (await nameCell.textContent())?.trim() || `DETAIL_${i + 1}`;
+          const designation = (await designationCell.textContent())?.trim() || '-';
+          arrayDetail.push({ name, designation });
+        }
+        foundDetail = true;
+        break;
+      }
+    }
+
+    if (!foundDetail) {
+      console.log('No details found with any search terms, will use default');
+    }
+  } catch (error) {
+    console.log('No details found, using default. Error:', error);
+    arrayDetail = [{ name: 'DEFAULT_DETAIL', designation: '-' }];
+  }
+
+  // Populate CBED array
+  try {
+    console.log('Looking for CBED table...');
+    const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
+    await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
+    console.log('CBED table found, searching for CBEDs...');
+
+    const searchInput = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"] [data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT}"]`);
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+
+    const searchTerms = ['DEFAULT_CBED', 'СБЕД', 'сборка'];
+    let foundCbed = false;
+
+    for (const searchTerm of searchTerms) {
+      console.log(`Searching for CBEDs with term: "${searchTerm}"`);
+      await searchInput.clear();
+      await searchInput.fill(searchTerm);
+      await searchInput.press('Enter');
+      await page.waitForTimeout(1000);
+
+      const rows = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"] tbody tr`);
+      const rowCount = await rows.count();
+
+      if (rowCount > 0) {
+        console.log(`Found ${rowCount} CBEDs with search term: "${searchTerm}"`);
+        arrayCbed = [];
+        for (let i = 0; i < Math.min(rowCount, 3); i++) {
+          const nameCell = rows.nth(i).locator('td').nth(1);
+          const designationCell = rows.nth(i).locator('td').nth(2);
+          const name = (await nameCell.textContent())?.trim() || `CBED_${i + 1}`;
+          const designation = (await designationCell.textContent())?.trim() || '-';
+          arrayCbed.push({ name, designation });
+        }
+        foundCbed = true;
+        break;
+      }
+    }
+
+    if (!foundCbed) {
+      console.log('No CBEDs found with any search terms, will use default');
+    }
+  } catch (error) {
+    console.log('No CBEDs found, using default. Error:', error);
+    arrayCbed = [{ name: 'DEFAULT_CBED', designation: '-' }];
+  }
+}
+
 export class PageObject extends AbstractPage {
   protected button: Button; // Button helper instance
   protected input: Input; // Input helper instance
@@ -1219,6 +1426,7 @@ export class PageObject extends AbstractPage {
    * @param locator - the full locator of the table
    */
   async searchTable(nameSearch: string, locator: string, searchInputDataTestId?: string) {
+    console.log("Search Table", nameSearch, locator, searchInputDataTestId);
     const table = this.page.locator(locator);
     const searchTable = (searchInputDataTestId
       ? table.locator(`[data-testid="${searchInputDataTestId}"]`)
