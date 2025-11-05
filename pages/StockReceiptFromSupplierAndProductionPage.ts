@@ -1,89 +1,121 @@
-import { Page, expect } from "@playwright/test";
-import { PageObject, Click } from "../lib/Page";
-import logger from "../lib/logger";
-import { table } from "console";
+import { Page, expect } from '@playwright/test';
+import { PageObject, Click } from '../lib/Page';
+import logger from '../lib/logger';
+import { table } from 'console';
 
 export enum StockReceipt {
-    metalworking = "Металлообработка",
-    cbed = "Сборка",
-    suppler = "Поставщик",
+  metalworking = 'Металлообработка',
+  cbed = 'Сборка',
+  suppler = 'Поставщик',
 }
 
 // Страница: Приход на склад от поставщиков и производства
 export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject {
-    constructor(page: Page) {
-        super(page);
-        this.page = page;
+  constructor(page: Page) {
+    super(page);
+    this.page = page;
+  }
+
+  /**  Выбираем поставщика и проверяем, что отображается выбранный тип поставщика
+   * @param supplier - Выбираем от кого ожидаем посутпление
+   */
+  async selectStockReceipt(stockReceipt: StockReceipt) {
+    // Map stock receipt types to their data-testid values
+    const stockReceiptTestIds: Record<StockReceipt, string> = {
+      [StockReceipt.suppler]: 'ComingToSclad-Modal-Coming-Main-Provider',
+      [StockReceipt.metalworking]:
+        'ComingToSclad-Modal-Coming-Main-Metalloworking',
+      [StockReceipt.cbed]: 'ComingToSclad-Modal-Coming-Main-Assembly',
+    };
+
+    const testId = stockReceiptTestIds[stockReceipt];
+    if (!testId) {
+      throw new Error(`Unknown stock receipt type: ${stockReceipt}`);
     }
 
-    /**  Выбираем поставщика и проверяем, что отображается выбранный тип поставщика
-     * @param supplier - Выбираем от кого ожидаем посутпление
-     */
-    async selectStockReceipt(stockReceipt: StockReceipt) {
-        const typeOperations = await this.page.$$(".type-operation");
-        for (const typeOperation of typeOperations) {
-            const nameOperation = (await typeOperation.textContent())!.trim();
+    // Click the button in the first modal (selection modal)
+    const stockReceiptButton = this.page.getByTestId(testId);
+    await stockReceiptButton.waitFor({ state: 'visible', timeout: 10000 });
+    await stockReceiptButton.scrollIntoViewIfNeeded();
+    console.log(`Операция ${stockReceipt} выбрана.`);
+    await stockReceiptButton.click();
 
-            if (nameOperation === stockReceipt) {
-                console.log(`Операция ${nameOperation} выбрана.`);
-                await typeOperation.click();
-                break;
-            }
-        }
+    // Wait for the receipt modal dialog to appear after clicking
+    await this.page
+      .locator('[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill"]')
+      .waitFor({ state: 'visible', timeout: 10000 });
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(500);
 
-        // Заголовко Поставщик:
-        const headerSuppler = await this.page
-            .locator(
-                '[data-testid="ModalComing-IncomingReceipt-ProviderLabel"]'
-            )
-            .textContent();
-        console.log(`Проверка заголовка поставщиков ${headerSuppler}`);
-        expect(headerSuppler?.trim()).toBe("Поставщик:");
+    // Check the selected supplier type by reading the block title in the modal
+    // The title contains: "Потенциальные от {Type}" - we extract the last word
+    const blockTitleElement = this.page.locator(
+      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-BlockTitle"]'
+    );
 
-        // Проверка выбранного поставщика
-        const selectSuppler = await this.page
-            .locator(
-                '[data-testid="ModalComing-IncomingReceipt-TypeComingDisplay"]'
-            )
-            .textContent();
+    await blockTitleElement.waitFor({ state: 'visible', timeout: 10000 });
 
-        console.log(`Поставщик: ${selectSuppler}`);
-        if ((await selectSuppler) == "Сборки") {
-            return selectSuppler as "Сборка";
-        }
-        expect(selectSuppler).toBe(stockReceipt);
+    // Highlight the element for visual confirmation
+    await blockTitleElement.evaluate((el: HTMLElement) => {
+      el.style.backgroundColor = 'yellow';
+      el.style.border = '2px solid red';
+      el.style.color = 'blue';
+    });
 
-        await this.clickButton(
-            " Изменить выбор ",
-            '[data-testid="ModalComing-IncomingReceipt-ChangeSelectionButton"]',
-            Click.No
-        );
-        await this.clickButton(
-            " Отменить ",
-            '[data-testid="ModalComing-DocumentAttachment-CancelButton"]',
-            Click.No
-        );
-        await this.clickButton(
-            " Печать ",
-            '[data-testid="ModalComing-DocumentAttachment-PrintButton"]',
-            Click.No
-        );
-        await this.clickButton(
-            " Создать приход ",
-            '[data-testid="ModalComing-DocumentAttachment-CreateIncomeButton"]',
-            Click.No
-        );
+    const blockTitle = await blockTitleElement.textContent();
+    console.log(`Заголовок блока: ${blockTitle}`);
+
+    if (!blockTitle) {
+      throw new Error('Block title not found or empty');
     }
 
-    async inputQuantityInCell(quantity: string) {
-        const tableStockReciep = await this.page.locator(
-            '[data-testid="ModalComingTable-TableScroll"]'
-        );
-        const tableStockRecieptInput = await tableStockReciep.locator(
-            '[type="number"]'
-        );
-        await tableStockRecieptInput.fill(quantity);
-        expect(await tableStockRecieptInput.inputValue()).toBe(quantity);
-        await tableStockRecieptInput.press("Enter");
-    }
+    // Extract the last word from the title (e.g., "Потенциальные от Металлообработка" -> "Металлообработка")
+    const words = blockTitle.trim().split(/\s+/);
+    const extractedType = words[words.length - 1];
+    console.log(`Извлеченный тип поступления: ${extractedType}`);
+
+    // Map "Поставщики" -> "Поставщик" for comparison
+    const normalizedExtractedType =
+      extractedType === 'Поставщики' ? 'Поставщик' : extractedType;
+
+    // Verify the displayed type matches what we selected
+    expect(normalizedExtractedType).toBe(stockReceipt);
+
+    // Validate buttons in the modal
+    await this.clickButton(
+      'Добавить',
+      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]',
+      Click.No
+    );
+
+    await this.clickButton(
+      'Добавить из базы',
+      '[data-testid="AttachFileComponent-AddFileButton"]',
+      Click.No
+    );
+
+    await this.clickButton(
+      'Отменить',
+      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Cancel"]',
+      Click.No
+    );
+
+    await this.clickButton(
+      'Создать',
+      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create"]',
+      Click.No
+    );
+  }
+
+  async inputQuantityInCell(quantity: string) {
+    const tableStockReciep = await this.page.locator(
+      '[data-testid="ModalComingTable-TableScroll"]'
+    );
+    const tableStockRecieptInput = await tableStockReciep.locator(
+      '[type="number"]'
+    );
+    await tableStockRecieptInput.fill(quantity);
+    expect(await tableStockRecieptInput.inputValue()).toBe(quantity);
+    await tableStockRecieptInput.press('Enter');
+  }
 }

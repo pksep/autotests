@@ -19,7 +19,7 @@ export const ENV = {
     //HEADLESS: process.env.HEADLESS === "false" ? false : true,
     HEADLESS: process.env.HEADLESS === "true" ? true : false,
     TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-    TEST_SUITE: 'U002',
+    TEST_SUITE: 'U001',
     //TEST_SUITE: 'suite01',
     TEST_DIR: '.',
     DEBUG: true, // Enable debug mode for login testing
@@ -344,7 +344,7 @@ export const CONST = {
     ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE: "AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save",
     EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL: "EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel",
     MAIN_PAGE_EDIT_BUTTON: "BaseProducts-Button-Edit",
-
+    EDIT_DETAIL_CANCEL_BUTTON_TEXT: "Отменить",
     ADD_DETAL_INFORMATION_INPUT_INPUT: "AddDetal-Information-Input-Input",
     EDIT_DETAL_INFORMATION_INPUT_INPUT: "EditDetal-Information-Input-Input",
     EDIT_DETAL_TITLE: "EditDetal-Title",
@@ -432,6 +432,7 @@ export const CONST = {
     ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_COMPLECTATION_TABLE_HEADER_MY_QUANTITY: "ModalStartProduction-ComplectationTableHeader-MyQuantity",
     ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_MODALS_MODAL_START_PRODUCTION_TRUE_MODAL_CONTENT: "ModalAddOrder-Modals-ModalStartProductiontrue-ModalContent",
     ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_COMPLECTATION_TABLE_CANCEL_BUTTON: "ModalStartProduction-ComplectationTable-CancelButton",
+    ORDERED_SUPPLIERS_PAGE_MODAL_START_PRODUCTION_COMPLECTATION_TABLE_ORDER_BUTTON: "ModalStartProduction-ComplectationTable-InProduction",
     ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON: "ModalAddOrder-ProductionTable-OrderButton",
     ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_TABLE_CANCEL_BUTTON: "ModalAddOrder-ProductionTable-CancelButton",
     ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_SCROLL_TABLE_TABLE_CONTAINER: "OrderSuppliers-ScrollTable-TableContainer",
@@ -767,7 +768,7 @@ export const CONST = {
     ZAKAZ_SCLAD_BUTTON_MOVE_TO_ARCHIVE_ASSEMBLY: "AssemblySclad-PrintControls-ArchiveButton",
     ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY: "AssemblySclad-Button-Archive",
     ZAKAZ_SCLAD_OPERATION_TABLE_ASSEMBLY: "ModalOperationPath-OperationTable",
-
+    ZAKAZ_SCLAD_TABLE_ASSEMBLY_CHECKBOX_CBEED: "DeficitCbed-TableData-Checkbox",
     // Modal Confirmation Window
     ZAKAZ_SCLAD_MODAL_CONFIRMATION_BUTTON: "ModalPromptMini-Button-Confirm",
     ASSEMBLY_SCLAD_BAN_MODAL: "AssemblySclad-BanModal",
@@ -786,6 +787,50 @@ export const CONST = {
     CARD: "Card",
     TABLE: "Table",
     TABLE_SBORKA: "TableOperationBody-TableOperation-TableOperation",
+
+    // Button Text Constants
+    BUTTON_TEXT_YES: "Да",
+    BUTTON_TEXT_NO: "Нет",
+    BUTTON_TEXT_SAVE: "Сохранить",
+    BUTTON_TEXT_CANCEL: "Отмена",
+    BUTTON_TEXT_ADD: "Добавить",
+    BUTTON_TEXT_SELECT: "Выбрать",
+    BUTTON_TEXT_CREATE: "Создать",
+    BUTTON_TEXT_DETAIL: "Деталь",
+    BUTTON_TEXT_ASSEMBLY_UNIT: "Сборочную единицу",
+    BUTTON_TEXT_TECHNOLOGICAL_PROCESS: "Технологический процесс",
+    BUTTON_TEXT_ADD_OPERATION: "Добавить операцию",
+    BUTTON_TEXT_PRODUCT: "Изделие",
+    BUTTON_TEXT_ASSEMBLIES: "Сборки",
+    BUTTON_TEXT_PARTS: "Детали",
+
+    // U001 Uploading Constants
+    UPLOADING_TABLE_MAIN: "IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table",
+    UPLOADING_TABLE_ID: "Table",
+    UPLOADING_BUTTON_SHIP: "IssueToPull-Button-Ship",
+
+    // U001 Deficit Constants
+    DEFICIT_IZD_MAIN_TABLE: "DeficitIzd-Main-Table",
+    DEFICIT_IZD_TABLE_MAIN: "DeficitIzd-Main-Table",
+    DEFICIT_IZD_TABLE_HEADROW_TOTAL_CHECKBOX: "DeficitIzdTable-HeadRow-TotalCheckbox",
+    DEFICIT_IZD_TABLE_HEADROW_DATE_URGENCY: "DeficitIzdTable-HeadRow-DateUrgency",
+    DEFICIT_IZD_TABLE_HEADROW_ORDER_FROM_PRODUCTION: "DeficitIzdTable-HeadRow-OrderFromProduction",
+    DEFICIT_IZD_MAIN_FOOTER_BUTTON_INTO_PRODUCTION: "DeficitIzd-Main-Footer-Button-IntoProduction",
+
+    DEFICIT_CBED_TABLE: "DeficitCbed-Table",
+    DEFICIT_CBED_TABLE_MAIN: "DeficitCbed-Table",
+    DEFICIT_CBED_TABLE_HEADER_VIEWS_DEFICITS_DUEDATE: "DeficitCbed-TableHeader-ViewsDeficitsDuedate",
+    DEFICIT_CBED_TABLE_HEADER_VIEWS_DEFICITS_ORDERED_FOR_PRODUCTION: "DeficitCbed-TableHeader-ViewsDeficitsOrderedforproduction",
+    DEFICIT_CBED_TABLE_HEADER_SELECT_ALL: "DeficitCbed-TableHeader-SelectAll",
+    DEFICIT_CBED_START_BUTTON: "DeficitCbed-StartButton",
+    DEFICIT_CBED_START_PRODUCTION_MODAL_MODAL_CONTENT: "DeficitCbed-StartProductionModal-ModalContent",
+
+    DEFICIT_DETAIL_MAIN_TABLE: "DeficitIzd-Main-Table",
+    DEFICIT_DETAIL_TABLE_MAIN: "DeficitIzd-Main-Table",
+    DEFICIT_DETAIL_TABLE_HEADROW_DATE_URGENCY: "DeficitIzdTable-HeadRow-DateUrgency",
+    DEFICIT_DETAIL_TABLE_HEADROW_ORDER_FROM_PRODUCTION: "DeficitIzdTable-HeadRow-OrderFromProduction",
+    DEFICIT_DETAIL_TABLE_HEADROW_TOTAL_CHECKBOX: "DeficitIzdTable-HeadRow-TotalCheckbox",
+    DEFICIT_DETAIL_MAIN_FOOTER_BUTTON_INTO_PRODUCTION: "DeficitIzd-Main-Footer-Button-IntoProduction",
 };
 
 // API Test Data Constants

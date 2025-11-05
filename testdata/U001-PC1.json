@@ -6,28 +6,33 @@
             ],
             "buttons": [
                 {
-                    "class": ".button-yui-kit.medium.disabled-yui-kit.pill-yui-kit.primary-yui-kit",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.pill-yui-kit.primary-yui-kit",
                     "label": "Сбросить",
+                    "datatestid":"IssueShipment-ShipmentsTableBlock-Main-Clear",
                     "state": "false"
                 },
                 {
-                    "class": ".button-yui-kit.small.primary-yui-kit",
+                    "class": "button.button-yui-kit.small.primary-yui-kit.action-btns__btn",
                     "label": "Создать заказ",
+                    "datatestid":"IssueShipment-ActionsButtons-AddOrder",
                     "state": "true"
                 },
                 {
-                    "class": ".button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
                     "label": "Редактировать",
+                    "datatestid":"IssueShipment-ActionsButtons-EditOrder",
                     "state": "false"
                 },
                 {
                     "class": ".button-yui-kit.small.primary-yui-kit",
                     "label": "Печать",
+                    "datatestid":"IssueShipment-ActionsButtons-Print",
                     "state": "true"
                 },
                 {
-                    "class": ".button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit",
                     "label": "Архив",
+                    "datatestid":"IssueShipment-ActionsButtons-Archive",
                     "state": "false"
                 }
             ]
@@ -110,7 +115,7 @@
         },
         "ProductShortage": {
             "titles": [
-                "Дефицит Продукции"
+                "Дефицит продукции"
             ],
             "buttons": [
                 {
@@ -130,11 +135,13 @@
                 {
                     "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
                     "label": "Отменить",
+                    "data-testid": "ModalStartProduction-ComplectationTable-CancelButton",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-CancelButton\"]",
+                    "class": "[data-testid=\"ModalStartProduction-ComplectationTable-InProduction\"]",
                     "label": "В производство",
+                    "data-testid": "ModalStartProduction-ComplectationTable-InProduction",
                     "state": "true"
                 }
             ]
@@ -153,7 +160,7 @@
         },
         "PartsShortage":{
             "titles": [
-                "Дефицит Деталей"
+                "Дефицит деталей"
             ],
             "buttons": [
                 {
@@ -165,41 +172,63 @@
         },
         "ModalWindowPartsProductionPath": {
             "titles": [
-                "Производственный путь Детали",
-                "Детали операций"
+                "Информация по детали",
+                "Медиа",
+                "Комплектация",
+                "Производственный путь"
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"ModalOperationPathMetaloworking-Button-Refresh\"]",
-                    "label": "Актуализировать",
+                    "class": "button.button-yui-kit.small.outline-yui-kit",
+                    "datatestid": "ModalOperationPath-InformationDetal-ButtonHistory",
+                    "label": "История изменений",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalOperationPathMetaloworking-Button-Print\"]",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalOperationPathMetaloworking-Button-Print",
                     "label": "Печать",
                     "state": "true"
+                },
+                {
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalOperationPath-btn-Update",
+                    "label": "Обновить",
+                    "state": "true"
+                },
+                {
+                    "class": "button.button-yui-kit.medium.disabled-yui-kit.outline-yui-kit",
+                    "datatestid": "ModalOperationPathMetaloworking-Button-AddMark",
+                    "label": "Добавить отметку",
+                    "state": "false"
                 }
             ]
         },
         "ModalWindowMarkOfCompletion": {
             "titles": [
-                "Отметка о выполнении",
-                "Поля для заполнения",
-                "Примечание"
+                "Распределение времени",
+                "Отметка о выполнении"
             ],
             "buttons": [
                 {
-                    "class": "[data-testid=\"ModalMark-Button-Save\"]",
-                    "label": "Сохранить Отметку",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalMark-Button-Cancel",
+                    "label": "Отменить",
+                    "state": "true"
+                },
+                {
+                    "class": "button.button-yui-kit.medium.primary-yui-kit",
+                    "datatestid": "ModalMark-Button-Save",
+                    "label": "Сохранить",
                     "state": "true"
                 }
             ]
         },
         "ModalWindowAssemblyInvoice": {
             "titles":[
-                "Накладная на комплектацию Сборки",
-                "Информация по Сборочной единице",
-                "История изменений",
+                "Информация по сборочной единице",
+                "Медиа",
+                "Комментарии:",
                 "Комплектация Сборочной единицы",
                 "Сборки",
                 "Детали",
@@ -208,28 +237,33 @@
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-CancelButton\"]",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalAddWaybill-ControlButtons-CancelButton",
                     "label": "Отменить",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-ActualizeButton\"]",
-                    "label": "Актуализировать",
+                    "class": "button.button-yui-kit.medium.primary-yui-kit",
+                    "datatestid": "ModalAddWaybill-ControlButtons-ActualizeButton",
+                    "label": "Обновить",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-PrintButton\"]",
-                    "label": "Вывести на печать",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalAddWaybill-ControlButtons-PrintButton",
+                    "label": "Печать",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-CreateIncomeButton\"]",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalAddWaybill-ControlButtons-CreateIncomeButton",
                     "label": "Создать приход",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalAddWaybill-ControlButtons-CompleteSetButton\"]",
-                    "label": "Скомплектовать в набор",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalAddWaybill-ControlButtons-CompleteSetButton",
+                    "label": "Скомплектовать",
                     "state": "true"
                 }
             ]
@@ -240,14 +274,16 @@
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentShow\"]",
-                    "label": "Показать Задачи на отгрузку ",
+                    "class": "buttom.button-yui-kit.little.primary-yui-kit",
+                    "datatestid": "CompletCbed-Content-ParentFilter-Button-Choose",
+                    "label": "Выбрать объект",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentClear\"]",
-                    "label": "Сбросить все фильтры",
-                    "state": "true"
+                    "class": "button.button-yui-kit.little.disabled-yui-kit.outline-yui-kit",
+                    "datatestid": "CompletCbed-Content-ParentFilter-Button-Clear",
+                    "label": "Сбросить",
+                    "state": "false"
                 }
             ]
         },
@@ -257,36 +293,35 @@
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"ComplectKit-SelectList-ShipmentsShow\"]",
-                    "label": "Показать Задачи на отгрузку",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"ComplectKit-SelectList-ClearFilters\"]",
-                    "label": "Сбросить все фильтры",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"ComplectKit-Button-Unassemble\"]",
+                    "class": "button.button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "datatestid": "ComplectKit-Button-Unassemble",
                     "label": "Разкомплектовать",
-                    "state": "true"
+                    "state": "false"
                 },
                 {
-                    "class": "[data-testid=\"ComplectKit-Button-TransferToAssembly\"]",
+                    "class": "button.button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "datatestid": "ComplectKit-Button-TransferToAssembly",
                     "label": "Передать на сборку",
-                    "state": "true"
+                    "state": "false"
                 }
             ]
         },
         "ModalWindowResetInSets": {
             "titles":[
-                "Скомплектованные наборы",
-                "Набор для разкомплектовки № 1"
+                "Информация о сущности",
+                "Наборы для разкомплектовки"
             ],
             "buttons": [
                 {
-                    "class": ".content-modal-right-menu .btn-small.btn-add",
+                    "class": "button.button-yui-kit.medium.disabled-yui-kit.primary-yui-kit.template-item-modal__button",
+                    "datatestid": "ComplectKit-Modal-UncomplectKit-Bottom-ButtonsCenter-Save",
                     "label": "Разкомплектовать",
+                    "state": "false"
+                },
+                {
+                    "class": "button.button-yui-kit.medium.outline-yui-kit.template-item-modal__button",
+                    "datatestid": "ComplectKit-Modal-UncomplectKit-Bottom-ButtonsCenter-Cancel",
+                    "label": "Отменить",
                     "state": "true"
                 }
             ]
@@ -305,22 +340,31 @@
         },
         "ArrivalAtTheWarehousePage": {
             "titles":[
-                "Приход на склад от поставщика и производства"
+                "Приход на склад от поставщиков и производства"
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"DatePicterRange-BlockPicter-PeriodButton\"]",
-                    "label": "Сбросить",
+                    "class": "button.button-yui-kit.small.ghost-yui-kit.date-picker-close-yui-kit",
+                    "datatestid":"ComingToSclad-Main-Filters-Calendar-DataPickerRange-Component-Start-Choose-Button-Clear",
+                    "label": "",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ComingToSclad-Button-Print\"]",
+                    "class": "button.button-yui-kit.small.ghost-yui-kit.date-picker-close-yui-kit",
+                    "datatestid":"ComingToSclad-Main-Filters-Calendar-DataPickerRange-Component-End-Choose-Button-Clear",
+                    "label": "",
+                    "state": "true"
+                },
+                {
+                    "class": "button-yui-kit.small.primary-yui-kit.coming-to-sclad__button",
+                    "datatestid":"ComingToSclad-Content-Buttons-Print",
                     "label": "Печать",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ComingToSclad-Button-MakeComing\"]",
-                    "label": "Создать Приход",
+                    "class": "button.button-yui-kit.small.primary-yui-kit.coming-to-sclad__button",
+                    "datatestid":"ComingToSclad-Content-Buttons-Parish",
+                    "label": "Создать приход",
                     "state": "true"
                 }
             ]
@@ -328,17 +372,20 @@
         "ModalWindowSelectSupplier": {
             "buttons":[
                 {
-                    "class": ".type-operation",
+                    "class": "button.card-yui-kit.modal-coming__card",
+                    "datatestid":"ComingToSclad-Modal-Coming-Main-Provider",
                     "label": "Поставщик",
                     "state": "true"
                 },
                 {
-                    "class": ".type-operation",
+                    "class": "button.card-yui-kit.modal-coming__card",
+                    "datatestid":"ComingToSclad-Modal-Coming-Main-Metalloworking",
                     "label": "Металлообработка",
                     "state": "true"
                 },
                 {
-                    "class": ".type-operation",
+                    "class": "button.card-yui-kit.modal-coming__card",
+                    "datatestid":"ComingToSclad-Modal-Coming-Main-Assembly",
                     "label": "Сборка",
                     "state": "true"
                 }
@@ -353,45 +400,58 @@
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"ModalComing-IncomingReceipt-ChangeSelectionButton\"]",
-                    "label": "Изменить выбор",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit.modal-add-new-waybill__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add",
+                    "label": "Добавить",
+                    "state": "false"
+                },
+                {
+                    "class": "button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+                    "datatestid": "AttachFileComponent-AddFileButton",
+                    "label": "Добавить из базы",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalComing-DocumentAttachment-CancelButton\"]",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit.modal-add-new-waybill__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Cancel",
                     "label": "Отменить",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalComing-DocumentAttachment-PrintButton\"]",
-                    "label": "Печать",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"ModalComing-DocumentAttachment-CreateIncomeButton\"]",
-                    "label": "Создать приход",
-                    "state": "true"
-                },
-                {
-                    "class": "[data-testid=\"ModalComing-DocumentAttachment-AttachDocumentLabel\"]",
-                    "label": "Прикрепить документ",
-                    "state": "true"
+                    "class": "button.button-yui-kit.medium.disabled-yui-kit.primary-yui-kit.modal-add-new-waybill__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create",
+                    "label": "Создать",
+                    "state": "false"
                 }
             ]
         },
         "ModalWindowCompletSets": {
             "titles":[
-                "Скомплектованные наборы"
+                "Создать приход. Накладная №"
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"ModalKitsList-SelectButton\"]",
-                    "label": "Выбрать",
+                    "class": "button.button-yui-kit.medium.primary-yui-kit.modal-add-new-waybill__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create",
+                    "label": "Создать",
+                    "state": "false"
+                },
+                {
+                    "class": "button.button-yui-kit.medium.outline-yui-kit.modal-add-new-waybill__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Cancel",
+                    "label": "Отменить",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"ModalKitsList-CancelButton\"]",
-                    "label": "Отменить",
+                    "class": "button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
+                    "datatestid": "AttachFileComponent-AddFileButton",
+                    "label": "Добавить из базы",
+                    "state": "true"
+                },
+                {
+                    "class": "button.button-yui-kit.small.primary-yui-kit.modal-add-new-waybill__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add",
+                    "label": "Добавить",
                     "state": "true"
                 }
             ]

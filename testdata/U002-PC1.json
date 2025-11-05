@@ -124,37 +124,37 @@
             ],
             "buttons": [
                 {
-                    "class": "button-yui-kit.small.primary-yui-kit.metalloworking-sclad__button",
+                    "class": "button.button-yui-kit.small.primary-yui-kit.metalloworking-sclad__button",
                     "datatestid": "MetalloworkingSclad-Content-WithFilters-Buttons-ColumnButton",
                     "label": "Столбцы для печати",
                     "state": "true"
                 },
                 {
-                    "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.metalloworking-sclad__button",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit.metalloworking-sclad__button",
                     "datatestid": "MetalloworkingSclad-Content-WithFilters-Buttons-ExcelButton",
                     "label": "Экспорт в EXCEL",
                     "state": "false"
                 },
                 {
-                    "class": "button-yui-kit.small.disabled-yui-kit.primary-yui-kit.metalloworking-sclad__button",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit.metalloworking-sclad__button",
                     "datatestid": "MetalloworkingSclad-Content-WithFilters-Buttons-ArchiveButton",
                     "label": "Архив",
                     "state": "false"
                 },
                 {
-                    "class": "button-yui-kit.small.outline-yui-kit.metalloworking-sclad__button",
+                    "class": "button.button-yui-kit.small.outline-yui-kit.metalloworking-sclad__button",
                     "datatestid": "MetalloworkingSclad-Content-RowDetal-ButtonDetalByOperation",
                     "label": "Детали по операциям",
                     "state": "true"
                 },
                 {
-                    "class": "button-yui-kit.little.primary-yui-kit",
+                    "class": "button.button-yui-kit.little.primary-yui-kit",
                     "datatestid": "MetalloworkingSclad-Content-WithFilters-Filters-ParentFilter-Button-Choose",
                     "label": "Выбрать объект",
                     "state": "true"
                 },
                 {
-                    "class": "button-yui-kit.little.disabled-yui-kit.outline-yui-kit",
+                    "class": "button.button-yui-kit.little.disabled-yui-kit.outline-yui-kit",
                     "datatestid": "MetalloworkingSclad-Content-WithFilters-Filters-ParentFilter-Button-Clear",
                     "label": "Сбросить",
                     "state": "false"
@@ -197,7 +197,7 @@
                     "state": "true"
                 },
                 {
-                    "class": "button.button-yui-kit.little.disabled-yui-kit.outline-yui-kit",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.outline-yui-kit",
                     "datatestid": "AssemblySclad-ParentFilter-Button-Clear",
                     "label": "Сбросить",
                     "state": "false"

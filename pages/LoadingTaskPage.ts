@@ -117,9 +117,14 @@ export class CreateLoadingTaskPage extends PageObject {
                     .locator(`[data-testid="DatePicter-DatePicker-Input"]`)
                     .nth(i); // Получаем соответствующий input
                 if ((await dateInput.count()) > 0) {
-                    const value = await dateInput.getAttribute("value");
-                    console.log("Found date:", value); // Отладочное сообщение
-                    return value; // Возвращаем значение из атрибута value
+                    try {
+                        const value = await dateInput.getAttribute("value");
+                        console.log("Found date:", value); // Отладочное сообщение
+                        return value; // Возвращаем значение из атрибута value
+                    } catch (error) {
+                        console.log("Error getting date value:", error);
+                        return null;
+                    }
                 }
             }
         }
@@ -129,17 +134,33 @@ export class CreateLoadingTaskPage extends PageObject {
 
     async getOrderInfoFromLocator(locator: string) {
         const text = await this.page.locator(locator).innerText();
+        console.log("Text to parse:", text); // Debug: see what text we're trying to parse
 
-        const regex = /(?:Редактирование заказа №| Добавить позицию к заказу №) (\d+-\d+)(?: \/(\d+))? от (\d{2}\.\d{2}\.\d{4})/; const matches = text.match(regex);
+        // Try to match with order number first
+        const regexWithNumber = /(?:Редактирование заказа №| Добавить позицию к заказу №) (\d+-\d+)(?: \/(\d+))? от (\d{2}\.\d{2}\.\d{4})/;
+        let matches = text.match(regexWithNumber);
 
         if (matches) {
             return {
                 orderNumber: matches[1],
-                version: matches[2] || null, // Если версия отсутствует, возвращаем null
+                version: matches[2] || null,
                 orderDate: matches[3]
             };
         }
 
+        // If no order number, try to extract date from the text
+        const dateRegex = /Дата заказа:\s*([А-Яа-я]+ \d+, \d{4})/;
+        const dateMatch = text.match(dateRegex);
+
+        if (dateMatch) {
+            return {
+                orderNumber: null, // No order number available
+                version: null,
+                orderDate: dateMatch[1]
+            };
+        }
+
+        console.log("No order info found in text:", text);
         throw new Error('Не удалось извлечь информацию о заказе');
     }
 
@@ -219,7 +240,7 @@ export class CreateLoadingTaskPage extends PageObject {
         logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
         return valueInCell;
     }
-  
+
     async urgencyDate(month: Month, day: string) {
         await this.page.locator('.date-picker-yui-kit__header-btn').nth(2).click()
         await this.page.locator('.vc-popover-content-wrapper.is-interactive').nth(2).isVisible()

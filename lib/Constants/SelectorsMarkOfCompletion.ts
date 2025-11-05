@@ -1,0 +1,1 @@
+export const BUTTON_ADD_MARK = '[data-testid="ModalOperationPathMetaloworking-Button-AddMark"]'

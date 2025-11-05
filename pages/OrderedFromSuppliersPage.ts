@@ -395,14 +395,14 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         await allure.step(
             "Step 4: Select the selector in the modal window",
             async () => {
-                if (supplier == Supplier.cbed) {
-                    await this.selectSupplier(Supplier.cbed);
-                } else if (supplier == Supplier.details) {
-                    await this.selectSupplier(Supplier.details);
-                } else if (supplier == Supplier.product) {
-                    await this.selectSupplier(Supplier.product);
-                }
+            if (supplier == Supplier.cbed) {
+                await this.selectSupplier(Supplier.cbed);
+            } else if (supplier == Supplier.details) {
+                await this.selectSupplier(Supplier.details);
+            } else if (supplier == Supplier.product) {
+                await this.selectSupplier(Supplier.product);
             }
+        }
         );
 
         await allure.step("Step 5: Search product", async () => {
@@ -469,8 +469,8 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 // Scroll down to see the bottom table
                 await this.page.evaluate(() => {
                     window.scrollTo(0, document.body.scrollHeight);
-                });
-                await this.page.waitForTimeout(1000);
+            });
+            await this.page.waitForTimeout(1000);
 
                 // Use the correct data-testid pattern for the quantity input in ChoosedTable2
                 const quantityInput = this.page.locator('[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row"][data-testid$="-TdQuantity-InputNumber-Input"]');
@@ -484,7 +484,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 });
 
                 // Wait 1 second after highlighting
-                await this.page.waitForTimeout(1000);
+            await this.page.waitForTimeout(1000);
 
                 await quantityInput.fill(quantityOrder);
                 console.log('Количество запускаемых в производство сущности:', quantityOrder);
@@ -521,8 +521,8 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
                     // Extract order number from message (format: "Заказ №25-7147 отправлен в производство")
                     const orderMatch = notification.message.match(/№([\d-]+)/i);
-                    if (orderMatch) {
-                        checkOrderNumber = orderMatch[1];
+                if (orderMatch) {
+                    checkOrderNumber = orderMatch[1];
                         console.log(`Extracted order number: ${checkOrderNumber}`);
                     } else {
                         console.log("Could not extract order number from notification");

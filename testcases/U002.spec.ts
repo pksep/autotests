@@ -1642,7 +1642,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
             await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
                 // Click on the popover cell (ellipse with context menu) - Assembly Warehouse version
-                const popoverCell = page.locator(`[data-testid="DataCell"]`).nth(1);
+                const popoverCell = page.locator(`[data-testid="AssemblySclad-TableHead-Popover"]`).nth(1);
                 await popoverCell.waitFor({ state: 'visible', timeout: 5000 });
 
                 // Highlight the popover before clicking
@@ -2055,7 +2055,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
             await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
                 // Click on the context menu cell (not the checkbox cell)
-                const contextMenuCell = page.locator(`[data-testid="DataCell"]`).nth(1);
+                const contextMenuCell = page.locator(`[data-testid="AssemblySclad-TableHead-Popover"]`).nth(1);
                 await contextMenuCell.waitFor({ state: 'visible', timeout: 5000 });
 
                 // Highlight the context menu cell before clicking
