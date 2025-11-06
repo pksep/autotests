@@ -2065,6 +2065,7 @@ export class PageObject extends AbstractPage {
       el.style.border = '2px solid red';
       el.style.color = 'blue';
     });
+    await this.page.waitForTimeout(5000);
     const cells = await firstRow.locator('td').allInnerTexts();
 
     if (cellIndex < 0 || cellIndex > cells.length) {
@@ -2442,26 +2443,12 @@ export class PageObject extends AbstractPage {
 
   // Check the modal window "Completed Sets"
   async completesSetsModalWindow() {
-    const locatorModalWindow = '[data-testid="ModalKitsList-RightContent"]';
+    const locatorModalWindow =
+      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList"]';
     const modalWindow = this.page.locator(locatorModalWindow);
 
     await expect(modalWindow).toBeVisible();
     await this.waitingTableBody(locatorModalWindow);
-
-    await expect(
-      modalWindow.locator('h3', { hasText: 'Скомплектованные наборы' })
-    ).toBeVisible();
-
-    await this.clickButton(
-      ' Выбрать ',
-      '[data-testid="ModalKitsList-SelectButton"]',
-      Click.No
-    );
-    await this.clickButton(
-      ' Отменить ',
-      '[data-testid="ModalKitsList-CancelButton"]',
-      Click.No
-    );
   }
 
   /**

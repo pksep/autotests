@@ -427,47 +427,37 @@
         },
         "ModalWindowCompletSets": {
             "titles":[
-                "Создать приход. Накладная №"
+                "Скомплектованные наборы"
             ],
             "buttons":[
                 {
-                    "class": "button.button-yui-kit.medium.primary-yui-kit.modal-add-new-waybill__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create",
-                    "label": "Создать",
-                    "state": "false"
+                    "class": "button.button-yui-kit.medium.primary-yui-kit.modal-kits-list__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Buttons-Save",
+                    "label": "Сохранить",
+                    "state": "true"
                 },
                 {
-                    "class": "button.button-yui-kit.medium.outline-yui-kit.modal-add-new-waybill__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Cancel",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit.modal-kits-list__button",
+                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Buttons-Cancel",
                     "label": "Отменить",
-                    "state": "true"
-                },
-                {
-                    "class": "button.button-yui-kit.small.primary-yui-kit.attach-file-component__btn",
-                    "datatestid": "AttachFileComponent-AddFileButton",
-                    "label": "Добавить из базы",
-                    "state": "true"
-                },
-                {
-                    "class": "button.button-yui-kit.small.primary-yui-kit.modal-add-new-waybill__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add",
-                    "label": "Добавить",
                     "state": "true"
                 }
             ]
         },
         "EquipmentOfProductsOnThePlan": {
             "titles":[
-                "Комплектация Изделий на план"
+                "Комплектация изделий на план"
             ],
             "buttons":[
                 {
-                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentShow\"]",
+                    "class": "",
+                    "datatestid": "",
                     "label": "Показать Задачи на отгрузку ",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"TableComplect-ShipmentList-ShipmentClear\"]",
+                    "class": "",
+                    "datatestid":"",
                     "label": "Сбросить все фильтры",
                     "state": "true"
                 }
