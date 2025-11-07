@@ -3,9 +3,9 @@ export const SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION =
 export const TABLE_REMAINING_PRODUCTS = '[data-testid="ModalKitsList-Table"]';
 //export const MODAL_WINDOW_TABLE = '[data-testid="Table"]';
 export const MODAL_WINDOW_TABLE =
-  'table[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+  'table[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
 export const MODAL_WINDOW_TABLE_ID =
-  'ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table';
+  'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table';
 export const MODAL_WINDOW_TABLE_QUANTITY_COLUMN_ID =
   '.table-th.coming-table__th.coming-table__th_count-parish';
 export const MODAL_WINDOW_TABLE_CHECKBOX_COLUMN_ID =
@@ -19,4 +19,4 @@ export const BUTTON_ADD_TO_RECEIPT =
   '.button-yui-kit.small.primary-yui-kit.modal-add-new-waybill__button';
 
 export const MODAL_WINDOW_TABLE_SEARCH_INPUT =
-  'ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input';
+  'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input';

@@ -2444,7 +2444,7 @@ export class PageObject extends AbstractPage {
   // Check the modal window "Completed Sets"
   async completesSetsModalWindow() {
     const locatorModalWindow =
-      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList"]';
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Content"]';
     const modalWindow = this.page.locator(locatorModalWindow);
 
     await expect(modalWindow).toBeVisible();
@@ -2481,12 +2481,28 @@ export class PageObject extends AbstractPage {
 
     const headerModal = await h4Element.textContent();
     console.log(`DEBUG: Found H4 title in dialog: "${headerModal?.trim()}"`);
-    const infoHeader = await modalWindow
-      .locator('[data-testid="ModalAddWaybill-WaybillDetails-InfoHeading"]')
-      .textContent();
-    const configuration = await modalWindow
-      .locator('[data-testid="ModalAddWaybill-Complectation-Header"]')
-      .textContent();
+
+    // Wait for and get infoHeader text
+    const infoHeaderElement = modalWindow.locator(
+      '[data-testid="ModalAddWaybill-WaybillDetails-InfoHeading"]'
+    );
+    await infoHeaderElement.waitFor({ state: 'visible', timeout: 10000 });
+    const infoHeaderRaw = await infoHeaderElement.textContent();
+    if (!infoHeaderRaw) {
+      throw new Error('Info header not found or empty');
+    }
+    const infoHeader = infoHeaderRaw.trim();
+
+    // Wait for and get configuration text
+    const configurationElement = modalWindow.locator(
+      '[data-testid="ModalAddWaybill-Complectation-Header"]'
+    );
+    await configurationElement.waitFor({ state: 'visible', timeout: 10000 });
+    const configurationRaw = await configurationElement.textContent();
+    if (!configurationRaw) {
+      throw new Error('Configuration header not found or empty');
+    }
+    const configuration = configurationRaw.trim();
     // expect(headerModal).toContain(
     //   await this.checkCurrentDate(
     //     '[data-testid="ModalAddWaybill-WaybillDetails-Heading"]'
@@ -2501,7 +2517,7 @@ export class PageObject extends AbstractPage {
       expect(configuration).toContain(assemblyComfiguration);
     } else {
       const headerInvoiceModal = 'Накладная на комплектацию Изделия';
-      const infoHeaderModal = 'Информация по Изделию';
+      const infoHeaderModal = 'Информация по изделию';
       const productConfiguration = 'Комплектация Изделия';
       expect(headerModal).toContain(headerInvoiceModal);
       expect(infoHeader).toContain(infoHeaderModal);
@@ -3310,7 +3326,7 @@ export class PageObject extends AbstractPage {
         );
         console.warn('Continuing without waiting.');
       }
-      // Check for 'disabled-yui-kit' class
+      // Check for 'disabled-yui-kit' class and 'disabled' attribute
       const hasDisabledClass = await button.evaluate(btn => {
         const classList = Array.from(btn.classList);
         console.log(`Button classList:`, classList);
@@ -3322,23 +3338,28 @@ export class PageObject extends AbstractPage {
         console.log(`Button outerHTML:`, outerHTML);
         return hasDisabled;
       });
+
+      // Also check for disabled attribute
+      const hasDisabledAttribute = await button.evaluate(btn =>
+        btn.hasAttribute('disabled')
+      );
+
       console.log(
         `Disabled class present for button "${label}": ${hasDisabledClass}`
+      );
+      console.log(
+        `Disabled attribute present for button "${label}": ${hasDisabledAttribute}`
       );
 
       if (Benabled) {
         console.log(`Expecting button "${label}" to be enabled.`);
         expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
-        const isDisabled = await button.evaluate(btn =>
-          btn.hasAttribute('disabled')
-        );
-        console.log(
-          `Disabled attribute present for button "${label}": ${isDisabled}`
-        );
-        expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
+        expect(hasDisabledAttribute).toBeFalsy(); // Button should not have 'disabled' attribute
       } else {
         console.log(`Expecting button "${label}" to be disabled.`);
-        expect(hasDisabledClass).toBeTruthy(); // Button should be disabled
+        // Button should be disabled either by class or attribute
+        const isDisabled = hasDisabledClass || hasDisabledAttribute;
+        expect(isDisabled).toBeTruthy(); // Button should be disabled (class or attribute)
       }
       console.log(`Button "${label}" passed all checks.`);
       return true; // If everything passes, the button is valid

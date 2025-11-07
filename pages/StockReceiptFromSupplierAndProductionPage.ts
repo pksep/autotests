@@ -22,10 +22,10 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
   async selectStockReceipt(stockReceipt: StockReceipt) {
     // Map stock receipt types to their data-testid values
     const stockReceiptTestIds: Record<StockReceipt, string> = {
-      [StockReceipt.suppler]: 'ComingToSclad-Modal-Coming-Main-Provider',
+      [StockReceipt.suppler]: 'ComingToSclad-ModalComing-Main-Provider',
       [StockReceipt.metalworking]:
-        'ComingToSclad-Modal-Coming-Main-Metalloworking',
-      [StockReceipt.cbed]: 'ComingToSclad-Modal-Coming-Main-Assembly',
+        'ComingToSclad-ModalComing-Main-Metalloworking',
+      [StockReceipt.cbed]: 'ComingToSclad-ModalComing-Main-Assembly',
     };
 
     const testId = stockReceiptTestIds[stockReceipt];
@@ -42,7 +42,7 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
 
     // Wait for the receipt modal dialog to appear after clicking
     await this.page
-      .locator('[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill"]')
+      .locator('[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]')
       .waitFor({ state: 'visible', timeout: 10000 });
     await this.page.waitForLoadState('networkidle');
     await this.page.waitForTimeout(500);
@@ -50,7 +50,7 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     // Check the selected supplier type by reading the block title in the modal
     // The title contains: "Потенциальные от {Type}" - we extract the last word
     const blockTitleElement = this.page.locator(
-      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-BlockTitle"]'
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-BlockTitle"]'
     );
 
     await blockTitleElement.waitFor({ state: 'visible', timeout: 10000 });
@@ -84,7 +84,7 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     // Validate buttons in the modal
     await this.clickButton(
       'Добавить',
-      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]',
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]',
       Click.No
     );
 
@@ -96,13 +96,13 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
 
     await this.clickButton(
       'Отменить',
-      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Cancel"]',
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Cancel"]',
       Click.No
     );
 
     await this.clickButton(
       'Создать',
-      '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create"]',
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]',
       Click.No
     );
   }

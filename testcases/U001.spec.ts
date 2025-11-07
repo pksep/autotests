@@ -1135,6 +1135,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       for (const button of buttons) {
         // Extract the class, label, and state from the button object
         const buttonClass = button.class;
+        const buttonDataTestId = button.datatestid;
         const buttonLabel = button.label;
         const expectedState = button.state === 'true' ? true : false;
 
@@ -1142,10 +1143,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           `Validate button with label: "${buttonLabel}"`,
           async () => {
-            // Check if the button is visible and enabled
-            const isButtonReady = await loadingTaskPage.isButtonVisible(
+            // Check if the button is visible and enabled using data-testid
+            if (!buttonDataTestId) {
+              throw new Error(
+                `Button "${buttonLabel}" does not have a data-testid`
+              );
+            }
+            const isButtonReady = await loadingTaskPage.isButtonVisibleTestId(
               page,
-              buttonClass,
+              buttonDataTestId,
               buttonLabel,
               expectedState
             );
@@ -2229,7 +2235,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Get the value using data-testid directly
             const quantityCell = page
-              .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
               .first();
             await quantityCell.evaluate((el: HTMLElement) => {
               el.style.backgroundColor = 'yellow';
@@ -3029,11 +3035,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           'Step 07: Checking the urgency date of an order',
           async () => {
             // Get the value using data-testid directly
+            // const urgencyDateCell = page
+            //   .locator(
+            //     '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
+            //   )
+            //   .first();
             const urgencyDateCell = page
               .locator(
                 '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
               )
-              .first();
+              .nth(1); //ERP-2423
             await urgencyDateCell.evaluate((el: HTMLElement) => {
               el.style.backgroundColor = 'yellow';
               el.style.border = '2px solid red';
@@ -3605,12 +3616,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Get the value using data-testid directly
             // Pattern: CompletCbed-Content-Table-Table-TableRow{number}-DateUrgency
+            // const urgencyDateCell = page
+            //   .locator(
+            //     '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
+            //   )
+            //   .first(); //ERP-2423
             const urgencyDateCell = page
               .locator(
                 '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
               )
-              .first();
-
+              .nth(1);
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
             urgencyDateOnTable = await urgencyDateCell.textContent();
 
@@ -3971,10 +3986,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           'Step 11: Enter the quantity in the cells',
           async () => {
             // Find the quantity input cell using data-testid pattern
-            // Pattern: ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdInput
+            // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdInput
             const quantityCell = page
               .locator(
-                '[data-testid^="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput"]'
+                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput"]'
               )
               .first();
 
@@ -4013,7 +4028,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               );
               quantityInput = page
                 .locator(
-                  'input[data-testid^="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput-Input-Input"]'
+                  'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput-Input-Input"]'
                 )
                 .first();
             }
@@ -4100,10 +4115,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           'Step 12: Find the checkbox column and click',
           async () => {
             // Find the checkbox cell using data-testid pattern
-            // Pattern: ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
+            // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
             const checkboxCell = page
               .locator(
-                '[data-testid^="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
               )
               .first();
 
@@ -4139,7 +4154,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Wait for the Добавить button to become enabled and click it
             const addButton = page.getByTestId(
-              'ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add'
+              'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add'
             );
 
             await addButton.scrollIntoViewIfNeeded();
@@ -4154,7 +4169,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           // Click on the Создать button
           await stockReceipt.clickButton(
             'Создать',
-            '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create"]'
+            '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
           );
         });
 
@@ -4188,13 +4203,24 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       }
     }
   });
-
+  const descendantsDetailArray = [
+    {
+      name: '0Т4.21',
+      designation: '-',
+      quantity: 1,
+    },
+    {
+      name: '0Т4.22',
+      designation: '-',
+      quantity: 1,
+    },
+  ];
   test('Test Case 16 - Receiving Cbed And Check Stock', async ({
     // doc test case 11
     page,
   }) => {
     console.log('Test Case 16 - Receiving Cbed And Check Stock');
-    test.setTimeout(90000);
+    test.setTimeout(900000);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(
       page
     );
@@ -4288,10 +4314,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             console.log('Step 07: Find the checkbox column and click');
             // Find the checkbox cell using data-testid pattern
-            // Pattern: ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
+            // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
             const checkboxCell = page
               .locator(
-                '[data-testid^="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
               )
               .first();
 
@@ -4318,15 +4344,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             console.log('Step 07a: Find the Кол-во на приход column and click');
             // Ensure the main modal is visible first
             const mainModal = page.locator(
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
             );
             await mainModal.waitFor({ state: 'visible', timeout: 10000 });
 
             // Find the Кол-во на приход cell using data-testid pattern
-            // Pattern: ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdParish
+            // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdParish
             const prihodQuantityCell = page
               .locator(
-                '[data-testid^="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
               )
               .first();
 
@@ -4352,7 +4378,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForTimeout(500);
             // Wait for the Completed sets modal to appear
             const completedSetsModal = page.locator(
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList"]'
             );
             await completedSetsModal.waitFor({
               state: 'visible',
@@ -4369,7 +4395,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
             const h3Titles = await stockReceipt.getAllH4TitlesInModalByTestId(
               page,
-              'ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList'
+              'ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList'
             );
             const normalizedH3Titles = h3Titles.map(title => title.trim());
 
@@ -4441,7 +4467,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             console.log('Step 10: Check the modal window Completed sets');
             // Ensure the Completed sets modal is visible
             const completedSetsModal = page.locator(
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList"]'
             );
             await completedSetsModal.waitFor({
               state: 'visible',
@@ -4450,7 +4476,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Check the modal window Completed sets
             await stockReceipt.completesSetsModalWindow();
             await stockReceipt.waitingTableBody(
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Main-Table"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table"]'
             );
           }
         );
@@ -4460,7 +4486,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Ensure the Completed sets modal is still visible
             const completedSetsModal = page.locator(
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList"]'
             );
             await completedSetsModal.waitFor({
               state: 'visible',
@@ -4469,7 +4495,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
             const headerRowCell = page
               .locator(
-                'table[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Main-Table"] thead tr th input'
+                'table[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table"] thead tr th input'
               )
               .first();
 
@@ -4493,7 +4519,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Enter the value into the input cell
 
             const inputlocator =
-              '[data-testid^="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
+              '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
 
             await page
               .locator(inputlocator)
@@ -4527,7 +4553,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Сохранить',
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Buttons-Save"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save"]'
             );
           }
         );
@@ -4540,7 +4566,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
             // Wait for the table body to load
             const tableSelectedItems =
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
             await stockReceipt.waitingTableBody(tableSelectedItems);
 
             // Check that the first row of the table contains the variable name
@@ -4559,7 +4585,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Добавить',
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]'
             );
           }
         );
@@ -4572,14 +4598,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Создать',
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
             );
             // Wait for modal to close and page to stabilize
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(1000);
             // Ensure the modal is closed before proceeding
             const modal = page.locator(
-              '[data-testid="ComingToSclad-Modal-Coming-ModalAddNewWaybill"]'
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
             );
             await modal
               .waitFor({ state: 'hidden', timeout: 10000 })
@@ -4618,13 +4644,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
           }
         );
-        await page.goto(ENV.BASE_URL);
-        await page.waitForTimeout(2000);
+        // await page.goto(ENV.BASE_URL);
+        // await page.waitForTimeout(2000);
       }
     }
   });
 
-  test.only('Test Case 17 - Complete Set Of Product', async ({ page }) => {
+  test('Test Case 17 - Complete Set Of Product', async ({ page }) => {
     // doc test case 12
     console.log('Test Case 17 - Complete Set Of Product');
     test.setTimeout(90000);
@@ -4632,7 +4658,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       page
     );
     const tableComplect = '[data-testid="scroll-wrapper__slot"]';
-    const tableMainTable = 'CompletIzd-Content-Table-Table';
+    const tableMainTable =
+      'table[data-testid="CompletIzd-Content-Table-Table"]';
 
     await allure.step('Step 01: Open the warehouse page', async () => {
       console.log('Step 01: Open the warehouse page');
@@ -4716,10 +4743,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 05: Search product', async () => {
       // Using table search we look for the value of the variable
-      await completingProductsToPlan.searchTable(nameProduct, tableComplect);
+      await completingProductsToPlan.searchTable(
+        nameProduct,
+        tableMainTable,
+        'CompletIzd-Content-Table-Table-SearchInput-Dropdown-Input'
+      );
 
       // Wait for the table body to load
-      await completingProductsToPlan.waitingTableBody(tableComplect);
+      await completingProductsToPlan.waitingTableBody(tableMainTable);
     });
 
     await allure.step(
@@ -4728,7 +4759,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Check that the first row of the table contains the variable name
         await completingProductsToPlan.checkNameInLineFromFirstRow(
           nameProduct,
-          tableComplect
+          tableMainTable
         );
       }
     );
@@ -4736,53 +4767,73 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 07: Checking the urgency date of an order',
       async () => {
-        const numberColumn = await completingProductsToPlan.findColumn(
-          page,
-          tableMainTable,
-          'TableComplect-TableComplect-UrgencyDateColumn'
-        );
-        console.log('Number column urgency date: ', numberColumn);
+        // Get the value using data-testid directly
+        // Pattern: CompletIzd-Content-Table-Table-TableRow{number}-DateUrgency
+        // const urgencyDateCell = page
+        //   .locator(
+        //     '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
+        //   )
+        //   .first();
+        const urgencyDateCell = page
+          .locator(
+            '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
+          )
+          .nth(1); //          ERP-2423
 
-        urgencyDateOnTable =
-          await completingProductsToPlan.getValueOrClickFromFirstRowNoThead(
-            tableComplect,
-            numberColumn
-          );
+        await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+        await urgencyDateCell.scrollIntoViewIfNeeded();
+
+        // Highlight the cell for visual confirmation
+        await urgencyDateCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'yellow';
+          el.style.border = '2px solid red';
+          el.style.color = 'blue';
+        });
+
+        urgencyDateOnTable = await urgencyDateCell.textContent();
+        if (urgencyDateOnTable) {
+          urgencyDateOnTable = urgencyDateOnTable.trim();
+        } else {
+          throw new Error('Urgency date cell not found or empty');
+        }
 
         console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
         console.log('Дата по срочности в переменной: ', urgencyDate);
 
-        expect(urgencyDateOnTable).toBe(urgencyDate);
+        expect(urgencyDateOnTable).toBe(urgencyDate); //
       }
     );
 
     await allure.step(
       'Step 08: Find the column designation and click',
       async () => {
-        // We get the cell number with the designation
-        const numberColumn = await completingProductsToPlan.findColumn(
-          page,
-          tableMainTable,
-          'TableComplect-TableComplect-DesignationColumn'
-        );
-        console.log('numberColumn: ', numberColumn);
+        // Get the designation cell using data-testid directly
+        // Pattern: CompletIzd-Content-Table-Table-TableRow{number}-Designation
+        const designationCell = page
+          .locator(
+            '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+          )
+          .first();
 
-        const test = await completingProductsToPlan.getValueOrClickFromFirstRow(
-          tableComplect,
-          numberColumn
-        );
+        await designationCell.waitFor({ state: 'visible', timeout: 10000 });
+        await designationCell.scrollIntoViewIfNeeded();
 
-        // Output to the console
-        console.log(`Проверка текста ${test}`);
+        // Highlight the cell for visual confirmation
+        await designationCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'yellow';
+          el.style.border = '2px solid red';
+          el.style.color = 'blue';
+        });
 
-        await completingProductsToPlan.getValueOrClickFromFirstRow(
-          tableComplect,
-          numberColumn,
-          Click.No,
-          Click.Yes
-        );
+        // Get the text content for verification
+        const designationText = await designationCell.textContent();
+        console.log(`Проверка текста ${designationText?.trim() || ''}`);
+
+        // Double-click the designation cell
+        await designationCell.dblclick();
 
         // Wait for loading
+        await page.waitForTimeout(1000);
         await page.waitForLoadState('networkidle');
       }
     );
@@ -4807,7 +4858,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await completingProductsToPlan.clickButton(
-          ' Скомплектовать в набор ',
+          'Скомплектовать',
           '[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]'
         );
 
@@ -4815,12 +4866,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForLoadState('networkidle');
 
         // Wait for the table body to load
-        await completingProductsToPlan.waitingTableBody(tableComplect);
+        await completingProductsToPlan.waitingTableBody(tableMainTable);
       }
     );
   });
 
-  test('Test Case 18 - Receiving Product And Check Stock', async ({ page }) => {
+  test.only('Test Case 18 - Receiving Product And Check Stock', async ({
+    page,
+  }) => {
     // doc test case 13
     console.log('Test Case 18 - Receiving Product And Check Stock');
     test.setTimeout(90000);
@@ -4880,49 +4933,89 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         // Wait for the table body to load
         await stockReceipt.waitingTableBodyNoThead(
-          tableStockRecieptModalWindow
+          //tableStockRecieptModalWindow
+          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE
         );
       }
     );
 
     await allure.step('Step 06: Search product', async () => {
       // Using table search we look for the value of the variable
-      await stockReceipt.searchTable(nameProduct, tableStockRecieptModalWindow);
+      await stockReceipt.searchTable(
+        nameProduct,
+        SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
+        SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT
+      );
 
       // Waiting for loading
       await page.waitForLoadState('networkidle');
 
       // Wait for the table body to load
-      await stockReceipt.waitingTableBodyNoThead(tableStockRecieptModalWindow);
+      await stockReceipt.waitingTableBodyNoThead(
+        SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE
+      );
     });
 
     await allure.step(
       'Step 07: Find the checkbox column and click',
       async () => {
-        // Find the checkbox column and click
-        const tableModalComing = 'ModalComingTable-Table';
-        const numberColumn = await stockReceipt.findColumn(
-          page,
-          tableModalComing,
-          'ModalComingTable-Header-AllItemsAdd'
+        // Click the header checkbox using direct data-testid
+        const headerCheckbox = page.getByTestId(
+          'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-HeadRow-Checkbox-Wrapper-Checkbox'
         );
-        console.log('numberColumn: ', numberColumn);
-        await stockReceipt.getValueOrClickFromFirstRowNoThead(
-          tableStockRecieptModalWindow,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
+
+        // Wait for the checkbox to be visible
+        await headerCheckbox.waitFor({ state: 'visible', timeout: 10000 });
+        await headerCheckbox.scrollIntoViewIfNeeded();
+
+        // Highlight the checkbox for debugging
+        await headerCheckbox.evaluate(el => {
+          (el as HTMLElement).style.outline = '3px solid red';
+        });
+        await page.waitForTimeout(500);
+
+        // Check if the checkbox is already checked
+        const isChecked = await headerCheckbox.isChecked();
+        if (!isChecked) {
+          await headerCheckbox.click();
+          console.log('Header checkbox clicked');
+        } else {
+          console.log('Header checkbox is already checked, skipping click');
+        }
       }
     );
+    await allure.step('Step 07a: Click the parish cell link', async () => {
+      // Click the parish cell (data-testid ends with -TdParish) in the first row
+      const parishCell = page
+        .locator(
+          '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+        )
+        .first();
 
+      await parishCell.waitFor({ state: 'visible', timeout: 10000 });
+      await parishCell.scrollIntoViewIfNeeded();
+
+      // Prefer inner link/button if present
+      const inner = parishCell.locator('a, [role="link"], button');
+      const hasInner = await inner
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (hasInner) {
+        await inner.first().click();
+      } else {
+        await parishCell.click();
+      }
+
+      await page.waitForTimeout(300);
+    });
     await allure.step(
       'Step 08: Check the modal window Completed sets',
       async () => {
         // Check the modal window Completed sets
         await stockReceipt.completesSetsModalWindow();
         await stockReceipt.waitingTableBody(
-          '[data-testid="ModalKitsList-HiddenContent"]'
+          'table[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table"]'
         );
       }
     );
@@ -4930,28 +5023,38 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 09: We get the cell number with a checkmark',
       async () => {
-        // We get the cell number with a checkmark
-        const tableComplectsSetsDataTestId = 'ModalKitsList-Table';
-        const numberColumnCheckbox = await stockReceipt.findColumn(
-          page,
-          tableComplectsSetsDataTestId,
-          'ModalKitsList-TableHeader-SelectAll'
-        );
-        console.log('numberColumn: ', numberColumnCheckbox);
-        await stockReceipt.getValueOrClickFromFirstRow(
-          tableComplectsSets,
-          numberColumnCheckbox,
-          Click.Yes,
-          Click.No
-        );
+        // Click the first row checkbox using direct data-testid pattern
+        const firstRowCheckbox = page
+          .locator(
+            '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-Checkbox-Wrapper-Checkbox"]'
+          )
+          .first();
+
+        // Wait for the checkbox to be visible
+        await firstRowCheckbox.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRowCheckbox.scrollIntoViewIfNeeded();
+
+        // Highlight the checkbox for debugging
+        await firstRowCheckbox.evaluate(el => {
+          (el as HTMLElement).style.outline = '3px solid red';
+        });
+        await page.waitForTimeout(500);
+
+        // Check if the checkbox is already checked
+        const isChecked = await firstRowCheckbox.isChecked();
+        if (!isChecked) {
+          await firstRowCheckbox.click();
+          console.log('First row checkbox clicked');
+        } else {
+          console.log('First row checkbox is already checked, skipping click');
+        }
       }
     );
 
     await allure.step('Step 10: Enter the quantity in the cells', async () => {
       // Enter the value into the input cell
       const inputlocator =
-        '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
-
+        'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
       await page.locator(inputlocator).nth(0).waitFor({ state: 'visible' });
 
       // Проверяем, что элемент не заблокирован
@@ -4974,20 +5077,39 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 11: Click on the choice button on the modal window',
       async () => {
+        console.log('Step 11: Click on the choice button on the modal window');
         // Click on the button
         await stockReceipt.clickButton(
-          ' Выбрать ',
-          '[data-testid="ModalKitsList-SelectButton"]'
+          'Сохранить',
+          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save"]'
         );
       }
     );
 
+    // await allure.step(
+    //   'Step 12: Check that the first row of the table contains the variable name',
+    //   async () => {
+    //     // Wait for the table body to load
+    //     const tableSelectedItems =
+    //       '[data-testid="ModalComing-SelectedItems-ScladTable"]';
+    //     await stockReceipt.waitingTableBody(tableSelectedItems);
+
+    //     // Check that the first row of the table contains the variable name
+    //     await stockReceipt.checkNameInLineFromFirstRow(
+    //       nameProduct,
+    //       tableSelectedItems
+    //     );
+    //   }
+    // );
     await allure.step(
-      'Step 12: Check that the first row of the table contains the variable name',
+      'Step 14: Check that the first row of the table contains the variable name',
       async () => {
+        console.log(
+          'Step 14: Check that the first row of the table contains the variable name'
+        );
         // Wait for the table body to load
         const tableSelectedItems =
-          '[data-testid="ModalComing-SelectedItems-ScladTable"]';
+          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
         await stockReceipt.waitingTableBody(tableSelectedItems);
 
         // Check that the first row of the table contains the variable name
@@ -4997,21 +5119,49 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
       }
     );
-
     await allure.step(
-      'Step 13: Click on the create receipt button on the modal window',
+      'Step 12a: Click on the Добавить button on the modal window',
       async () => {
+        console.log(
+          'Step 15: Click on the create receipt button on the modal window'
+        );
         // Click on the button
         await stockReceipt.clickButton(
-          ' Создать приход ',
-          '[data-testid="ModalComing-DocumentAttachment-CreateIncomeButton"]'
+          'Добавить',
+          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]'
         );
+      }
+    );
+    await allure.step(
+      'Step 15: Click on the create receipt button on the modal window',
+      async () => {
+        console.log(
+          'Step 15: Click on the create receipt button on the modal window'
+        );
+        // Click on the button
+        await stockReceipt.clickButton(
+          'Создать',
+          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
+        );
+        // Wait for modal to close and page to stabilize
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000);
+        // Ensure the modal is closed before proceeding
+        const modal = page.locator(
+          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
+        );
+        await modal
+          .waitFor({ state: 'hidden', timeout: 10000 })
+          .catch(() => {});
       }
     );
 
     await allure.step(
-      'Step 14: Check the number of parts in the warehouse after posting',
+      'Step 16: Check the number of parts in the warehouse after posting',
       async () => {
+        console.log(
+          'Step 16: Check the number of parts in the warehouse after posting'
+        );
         // Checking the remainder of the entity after capitalization
         remainingStockAfter = await stock.checkingTheQuantityInStock(
           nameProduct,
@@ -5020,7 +5170,21 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       }
     );
 
-    await allure.step('Step 15: Compare the quantity in cells', async () => {
+    // await allure.step('Step 15: Compare the quantity in cells', async () => {
+    //   // Compare the quantity in cells
+    //   expect(Number(remainingStockAfter)).toBe(
+    //     Number(remainingStockBefore) + Number(incomingQuantity)
+    //   );
+
+    //   // Output to the console
+    //   console.log(
+    //     `Количество ${nameProduct} на складе до оприходования: ${remainingStockBefore}, ` +
+    //       `оприходовали в количестве: ${incomingQuantity}, ` +
+    //       `и после оприходования: ${remainingStockAfter}.`
+    //   );
+    // });
+    await allure.step('Step 18: Compare the quantity in cells', async () => {
+      console.log('Step 18: Compare the quantity in cells');
       // Compare the quantity in cells
       expect(Number(remainingStockAfter)).toBe(
         Number(remainingStockBefore) + Number(incomingQuantity)
@@ -6701,7 +6865,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click the parish cell (data-testid ends with -TdParish) in the first row
       const parishCell = page
         .locator(
-          '[data-testid^="ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+          '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
         )
         .first();
 

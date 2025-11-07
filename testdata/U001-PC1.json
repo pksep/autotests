@@ -86,16 +86,19 @@
             "filters": [
                 {
                     "class": ".filters__btn",
-                    "label": "Сортировать по отметке",
+                    "datatestid": "Filter-SortByAttention",
+                    "label": "Фильтровать по отметке",
                     "state": "true"
                 },
                 {
                     "class": ".filters__btn",
+                    "datatestid": "Filter-SortByDate",
                     "label": "Сортировать по дате создания",
                     "state": "true"
                 },
                 {
                     "class": ".filters__btn",
+                    "datatestid": "Filter-SortByOwn",
                     "label": "Показать мои",
                     "state": "false"
                 }
@@ -345,25 +348,25 @@
             "buttons":[
                 {
                     "class": "button.button-yui-kit.small.ghost-yui-kit.date-picker-close-yui-kit",
-                    "datatestid":"ComingToSclad-Main-Filters-Calendar-DataPickerRange-Component-Start-Choose-Button-Clear",
+                    "datatestid":"ComingToSclad-Main-Filters-Tooltip-Calendar-DataPickerRange-Component-Start-Choose-Button-Clear",
                     "label": "",
                     "state": "true"
                 },
                 {
                     "class": "button.button-yui-kit.small.ghost-yui-kit.date-picker-close-yui-kit",
-                    "datatestid":"ComingToSclad-Main-Filters-Calendar-DataPickerRange-Component-End-Choose-Button-Clear",
+                    "datatestid":"ComingToSclad-Main-Filters-Tooltip-Calendar-DataPickerRange-Component-End-Choose-Button-Clear",
                     "label": "",
                     "state": "true"
                 },
                 {
                     "class": "button-yui-kit.small.primary-yui-kit.coming-to-sclad__button",
-                    "datatestid":"ComingToSclad-Content-Buttons-Print",
+                    "datatestid":"ComingToSclad-Main-Content-Buttons-Print",
                     "label": "Печать",
                     "state": "true"
                 },
                 {
                     "class": "button.button-yui-kit.small.primary-yui-kit.coming-to-sclad__button",
-                    "datatestid":"ComingToSclad-Content-Buttons-Parish",
+                    "datatestid":"ComingToSclad-Main-Content-Tooltip-Buttons-Parish",
                     "label": "Создать приход",
                     "state": "true"
                 }
@@ -372,20 +375,20 @@
         "ModalWindowSelectSupplier": {
             "buttons":[
                 {
-                    "class": "button.card-yui-kit.modal-coming__card",
-                    "datatestid":"ComingToSclad-Modal-Coming-Main-Provider",
+                    "class": "button.card-yui-kit.ModalComing__card",
+                    "datatestid":"ComingToSclad-ModalComing-Main-Provider",
                     "label": "Поставщик",
                     "state": "true"
                 },
                 {
-                    "class": "button.card-yui-kit.modal-coming__card",
-                    "datatestid":"ComingToSclad-Modal-Coming-Main-Metalloworking",
+                    "class": "button.card-yui-kit.ModalComing__card",
+                    "datatestid":"ComingToSclad-ModalComing-Main-Metalloworking",
                     "label": "Металлообработка",
                     "state": "true"
                 },
                 {
-                    "class": "button.card-yui-kit.modal-coming__card",
-                    "datatestid":"ComingToSclad-Modal-Coming-Main-Assembly",
+                    "class": "button.card-yui-kit.ModalComing__card",
+                    "datatestid":"ComingToSclad-ModalComing-Main-Assembly",
                     "label": "Сборка",
                     "state": "true"
                 }
@@ -401,7 +404,7 @@
             "buttons":[
                 {
                     "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit.modal-add-new-waybill__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add",
+                    "datatestid": "ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add",
                     "label": "Добавить",
                     "state": "false"
                 },
@@ -413,13 +416,13 @@
                 },
                 {
                     "class": "button.button-yui-kit.medium.outline-yui-kit.modal-add-new-waybill__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Cancel",
+                    "datatestid": "ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Cancel",
                     "label": "Отменить",
                     "state": "true"
                 },
                 {
                     "class": "button.button-yui-kit.medium.disabled-yui-kit.primary-yui-kit.modal-add-new-waybill__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-Buttons-Create",
+                    "datatestid": "ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create",
                     "label": "Создать",
                     "state": "false"
                 }
@@ -432,13 +435,13 @@
             "buttons":[
                 {
                     "class": "button.button-yui-kit.medium.primary-yui-kit.modal-kits-list__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Buttons-Save",
+                    "datatestid": "ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save",
                     "label": "Сохранить",
                     "state": "true"
                 },
                 {
                     "class": "button.button-yui-kit.medium.outline-yui-kit.modal-kits-list__button",
-                    "datatestid": "ComingToSclad-Modal-Coming-ModalAddNewWaybill-KitsList-Buttons-Cancel",
+                    "datatestid": "ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Cancel",
                     "label": "Отменить",
                     "state": "true"
                 }
