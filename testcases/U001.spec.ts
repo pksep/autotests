@@ -151,7 +151,7 @@ const modalWindowLaunchIntoProductionDetail =
 
 // Uploading
 const tableMainUploading =
-  'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table';
+  'table[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]';
 const tableMainUploadingID = 'Table';
 const buttonUploading = '[data-testid="IssueToPull-Button-Ship"]';
 
@@ -4871,9 +4871,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     );
   });
 
-  test.only('Test Case 18 - Receiving Product And Check Stock', async ({
-    page,
-  }) => {
+  test('Test Case 18 - Receiving Product And Check Stock', async ({ page }) => {
     // doc test case 13
     console.log('Test Case 18 - Receiving Product And Check Stock');
     test.setTimeout(90000);
@@ -5321,29 +5319,32 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 07: Find the checkbox column and click',
       async () => {
-        // Find the checkbox column and click
-        numberColumn = await warehouseTaskForShipment.findColumn(
-          page,
-          tableMainUploadingID,
-          'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-Number'
-        );
+        // Click the first row cell using direct data-testid pattern
+        const firstRowCell = page
+          .locator(
+            '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Number"]'
+          )
+          .first();
 
-        // console.log("numberColumn: ", numberColumn);
-        await warehouseTaskForShipment.getValueOrClickFromFirstRow(
-          tableMainUploading,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
+        // Wait for the cell to be visible
+        await firstRowCell.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRowCell.scrollIntoViewIfNeeded();
+
+        // Highlight the cell for debugging
+        await firstRowCell.evaluate(el => {
+          (el as HTMLElement).style.outline = '3px solid red';
+        });
+        await page.waitForTimeout(500);
+
+        // Click the cell
+        await firstRowCell.click();
+        console.log('First row cell clicked');
       }
     );
 
     await allure.step('Step 08: Click on the ship button', async () => {
       // Click on the button
-      await warehouseTaskForShipment.clickButton(
-        ' Отгрузить ',
-        buttonUploading
-      );
+      await warehouseTaskForShipment.clickButton('Отгрузить', buttonUploading);
       // Wait for the page to stabilize
       await page.waitForTimeout(1000);
     });
@@ -5657,59 +5658,71 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 11: We set the date according to urgency',
       async () => {
-        await page.locator('.date-picker-yui-kit__header-btn').nth(2).click();
+        console.log('Step 11: We set the date according to urgency');
         await page
-          .locator('.vc-popover-content-wrapper.is-interactive')
-          .nth(2)
+          .locator(
+            '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-HeaderBtn-Trigger"]'
+          )
+          .click();
+        await page
+          .locator(
+            '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Popover"]'
+          )
           .isVisible();
 
-        await page.locator('.vc-title-wrapper').click();
+        // Scope to the calendar component
+        const calendar = page.locator(
+          '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Component"]'
+        );
 
-        const yearElement = await page.locator('.vc-nav-title.vc-focus');
-        const currentYear = await yearElement.textContent();
-        if (!currentYear) throw new Error('Year element not found');
+        // Open the years popup by clicking the header year button
+        const yearButton = calendar
+          .locator('button[id^="open-years-popup"]')
+          .first();
+        await yearButton.waitFor({ state: 'visible' });
+        await yearButton.click();
 
+        // Scope to the open years popover
+        const yearsPopover = page
+          .locator('wa-popover[for^="open-years-popup"][open]')
+          .first();
+        await yearsPopover.waitFor({ state: 'visible' });
+
+        // Select target year directly inside the open years popover
         const targetYear = 2025;
-        const currentYearNum = parseInt(currentYear);
-        console.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
+        // Some builds render part="year " (with a trailing space) — use starts-with selector
+        const yearCell = yearsPopover
+          .locator('[part^="year"]', { hasText: String(targetYear) })
+          .first();
+        await yearCell.waitFor({ state: 'visible', timeout: 10000 });
+        await yearCell.click();
 
-        // Если текущий год не равен целевому
-        if (currentYearNum !== targetYear) {
-          // Определяем, нужно ли увеличивать или уменьшать год
-          const isYearLess = currentYearNum < targetYear;
-          const arrowSelector = isYearLess
-            ? '.vc-nav-arrow.is-right.vc-focus'
-            : '.vc-nav-arrow.is-left.vc-focus';
+        // Verify selection reflects on the header year button
+        const finalYearText = ((await yearButton.textContent()) || '').trim();
+        expect(parseInt(finalYearText, 10)).toBe(targetYear);
+        // Open months popup and select January
+        const monthButton = calendar
+          .locator('button[id^="open-months-popup"]')
+          .first();
+        await monthButton.waitFor({ state: 'visible' });
+        await monthButton.click();
 
-          // Кликаем на стрелку, пока не достигнем нужного года
-          while (currentYearNum !== targetYear) {
-            await page.locator(arrowSelector).click();
-            await page.waitForTimeout(500); // Небольшая задержка для обновления
+        const monthsPopover = page
+          .locator('wa-popover[for^="open-months-popup"][open]')
+          .first();
+        await monthsPopover.waitFor({ state: 'visible' });
+        // Click January (Month 1, index 1)
+        const januaryCell = monthsPopover.locator('div[part^="month"]').nth(1);
+        await januaryCell.waitFor({ state: 'visible' });
+        await januaryCell.click({ force: true });
+        // Wait for month button to show "Янв" to confirm selection
+        await monthButton.waitFor({ state: 'visible' });
+        await page.waitForTimeout(1000); // Give time for the selection to register
 
-            const newYear = await yearElement.textContent();
-            if (!newYear) throw new Error('Year element not found');
-            const newYearNum = parseInt(newYear);
-
-            if (newYearNum === targetYear) {
-              console.log(`Year successfully set to ${targetYear}`);
-              break;
-            }
-          }
-        } else {
-          console.log(`Year is already set to ${targetYear}`);
-        }
-
-        // Проверяем, что год установлен правильно
-        const finalYear = await yearElement.textContent();
-        if (!finalYear) throw new Error('Year element not found');
-        expect(parseInt(finalYear)).toBe(targetYear);
-
-        await page.locator('[aria-label="январь"]').click();
-        await page
-          .locator('.vc-day-content.vc-focusable.vc-focus.vc-attr', {
-            hasText: '21',
-          })
-          .nth(0)
+        // Pick the day 21 in January 2025 by aria-label
+        await calendar
+          .locator('button[role="gridcell"][aria-label="January 21st, 2025"]')
+          .first()
           .click();
       }
     );
@@ -5724,14 +5737,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 13: Checking the ordered quantity', async () => {
       await page.waitForTimeout(3000);
-      orderNumber = await loadingTaskPage.getOrderInfoFromLocator(
+      const orderNumber = await loadingTaskPage.getOrderInfoFromLocator(
         '.add-order-component'
       );
       console.log('orderNumber: ', orderNumber);
     });
   });
 
-  test('Test Case 22 - Marking Parts', async ({ page }) => {
+  test.only('Test Case 22 - Marking Parts', async ({ page }) => {
     // doc test case 17
     console.log('Test Case 22 - Marking Parts');
     test.setTimeout(90000);

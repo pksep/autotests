@@ -472,22 +472,26 @@
             ],
             "buttons": [
                 {
-                    "class": ".button-yui-kit.medium.disabled-yui-kit.pill-yui-kit.primary-yui-kit",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.pill-yui-kit.primary-yui-kit",
+                    "datatestid": "IssueToPull-ShipmentsTableBlock-ShippingTasks-Clear",
                     "label": "Сбросить",
                     "state": "false"
                 },
                 {
-                    "class": "[data-testid=\"IssueToPull-Button-Print\"]",
+                    "class": "button.button-yui-kit.small.primary-yui-kit",
+                    "datatestid": "IssueToPull-Button-Print",                    
                     "label": "Печать",
                     "state": "true"
                 },
                 {
-                    "class": "[data-testid=\"IssueToPull-Button-Ship-Complit\"]",
+                    "class": "button.button-yui-kit.disabled-yui-kit.small.primary-yui-kit",
+                    "datatestid": "IssueToPull-Button-Ship-Complit",                    
                     "label": "Открыть отгрузки",
                     "state": "false"
                 },
                 {
-                    "class": "[data-testid=\"IssueToPull-Button-Ship\"]",
+                    "class": "button.button-yui-kit.disabled-yui-kit.small.primary-yui-kit",
+                    "datatestid": "IssueToPull-Button-Ship",                    
                     "label": "Отгрузить",
                     "state": "false"
                 }
@@ -497,7 +501,7 @@
             "titles":[
                 "Комплектация",
                 "Медиа файлы",
-                " Описание/Примечание "
+                "Описание/Примечание"
             ],
             "buttons": [
                 {
