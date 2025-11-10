@@ -108,14 +108,30 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
   }
 
   async inputQuantityInCell(quantity: string) {
-    const tableStockReciep = await this.page.locator(
-      '[data-testid="ModalComingTable-TableScroll"]'
+    // Ensure the dialog is visible
+    const dialog = this.page.locator(
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
     );
-    const tableStockRecieptInput = await tableStockReciep.locator(
-      '[type="number"]'
-    );
-    await tableStockRecieptInput.fill(quantity);
-    expect(await tableStockRecieptInput.inputValue()).toBe(quantity);
-    await tableStockRecieptInput.press('Enter');
+    await dialog.waitFor({ state: 'visible', timeout: 10000 });
+
+    // Find the input in the first row of the table
+    // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdInput-Input-Input
+    const quantityInput = this.page
+      .locator(
+        'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput-Input-Input"]'
+      )
+      .first();
+
+    await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
+    await quantityInput.scrollIntoViewIfNeeded();
+
+    // Fill the quantity
+    await quantityInput.fill(quantity);
+
+    // Verify the quantity was entered
+    expect(await quantityInput.inputValue()).toBe(quantity);
+
+    // Press Enter
+    await quantityInput.press('Enter');
   }
 }

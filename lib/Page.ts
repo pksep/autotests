@@ -2250,7 +2250,7 @@ export class PageObject extends AbstractPage {
     if (containsSearchValue) {
       logger.info('Имя найдено');
 
-      const secondCell = cells.nth(1);
+      const secondCell = cells.nth(0);
       const isSecondCellVisible = await secondCell.isVisible();
 
       if (isSecondCellVisible) {
@@ -2443,8 +2443,10 @@ export class PageObject extends AbstractPage {
 
   // Check the modal window "Completed Sets"
   async completesSetsModalWindow() {
+    await this.page.waitForTimeout(1000);
     const locatorModalWindow =
-      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Content"]';
+      //'[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Content"]';
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Content"]';
     const modalWindow = this.page.locator(locatorModalWindow);
 
     await expect(modalWindow).toBeVisible();

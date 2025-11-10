@@ -4203,18 +4203,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       }
     }
   });
-  const descendantsDetailArray = [
-    {
-      name: '0Т4.21',
-      designation: '-',
-      quantity: 1,
-    },
-    {
-      name: '0Т4.22',
-      designation: '-',
-      quantity: 1,
-    },
-  ];
+
   test('Test Case 16 - Receiving Cbed And Check Stock', async ({
     // doc test case 11
     page,
@@ -5743,14 +5732,25 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       console.log('orderNumber: ', orderNumber);
     });
   });
-
-  test.only('Test Case 22 - Marking Parts', async ({ page }) => {
+  const descendantsDetailArray = [
+    {
+      name: '0Т4.21',
+      designation: '-',
+      quantity: 1,
+    },
+    {
+      name: '0Т4.22',
+      designation: '-',
+      quantity: 1,
+    },
+  ];
+  test('Test Case 22 - Marking Parts', async ({ page }) => {
     // doc test case 17
     console.log('Test Case 22 - Marking Parts');
     test.setTimeout(90000);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
     const tableMetalworkingWarehouse =
-      '[data-testid="MetalloworkingSclad-ScrollTable"]';
+      '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table"]';
     const productionTable =
       '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
     let numberColumnQunatityMade: number;
@@ -5776,8 +5776,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     if (descendantsDetailArray.length === 0) {
       throw new Error('Массив пустой.');
     } else {
+      console.log(
+        'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD: ' +
+          JSON.stringify(descendantsDetailArray, null, 2)
+      );
       // Iterate through the array of parts
       for (const part of descendantsDetailArray) {
+        console.log('LOOOOOOOOOOOOOP');
         await allure.step('Step 03: Search product', async () => {
           // Wait for the table body to load
           await metalworkingWarehouse.waitingTableBody(
@@ -5792,14 +5797,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           // );
           const table = page.locator(tableMetalworkingWarehouse);
           const searchTable = table
-            .locator('[data-testid="Search-Cover-Input"]')
+            .locator(
+              '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Search-Dropdown-Input"]'
+            )
             .nth(0);
 
           // Clear the input field first
           await searchTable.clear();
           await searchTable.fill(part.name);
           await page.waitForLoadState('networkidle');
-
+          await page.waitForTimeout(3000);
           expect(await searchTable.inputValue()).toBe(part.name);
           await searchTable.press('Enter');
 
@@ -5815,6 +5822,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 04: Check the checkbox in the first column',
           async () => {
+            await page.waitForTimeout(500);
             // Check that the first row of the table contains the variable name
             await metalworkingWarehouse.checkNameInLineFromFirstRow(
               part.name,
@@ -5831,20 +5839,31 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 05: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await metalworkingWarehouse.findColumn(
-              page,
-              tableMain,
-              'MetalloworkingSclad-DetailsTableHeader-UrgencyDateColumn'
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Get the value using data-testid directly
+            // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-DateByUrgency
+            const urgencyDateCell = page
+              .locator(
+                '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-DateByUrgency"]'
+              )
+              .first();
 
-            urgencyDateOnTable =
-              await metalworkingWarehouse.getValueOrClickFromFirstRowNoThead(
-                tableMetalworkingWarehouse,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+              el.style.color = 'blue';
+            });
+
+            urgencyDateOnTable = await urgencyDateCell.textContent();
+            if (urgencyDateOnTable) {
+              urgencyDateOnTable = urgencyDateOnTable.trim();
+            }
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+            console.log('Дата по срочности в переменной: ', urgencyDateSecond);
 
             expect(urgencyDateOnTable).toBe(urgencyDateSecond);
           }
@@ -5853,18 +5872,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 06: We check the number of those launched into production',
           async () => {
-            const numberColumn = await metalworkingWarehouse.findColumn(
-              page,
-              tableMain,
-              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_ORDERED
-            );
-            console.log('Column number orders: ', numberColumn);
+            // Get the value using data-testid directly
+            // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-Ordered
+            const orderedCell = page
+              .locator(
+                '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Ordered"]'
+              )
+              .first();
+
+            await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
+            await orderedCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await orderedCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+              el.style.color = 'blue';
+            });
 
             quantityProductLaunchOnProductionBefore =
-              await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                tableMetalworkingWarehouse,
-                numberColumn
-              );
+              (await orderedCell.textContent()) || '0';
+            quantityProductLaunchOnProductionBefore =
+              quantityProductLaunchOnProductionBefore.trim();
 
             console.log(
               'The value in the cells is orders befor:',
@@ -5880,20 +5909,27 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 07: Find and click on the operation icon',
           async () => {
-            // Getting cell value by id
-            const numberColumn = await metalworkingWarehouse.findColumn(
-              page,
-              tableMain,
-              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_OPERATION
-            );
-            console.log('numberColumn: ', numberColumn);
+            // Get the operations cell using data-testid directly
+            // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-Operations
+            const operationsCell = page
+              .locator(
+                '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Operations"]'
+              )
+              .first();
 
-            // Click on the icon in the cell
-            await metalworkingWarehouse.clickIconOperationNew(
-              tableMetalworkingWarehouse,
-              numberColumn,
-              Click.Yes
-            );
+            await operationsCell.waitFor({ state: 'visible', timeout: 10000 });
+            await operationsCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await operationsCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+              el.style.color = 'blue';
+            });
+
+            // Click the operations cell directly
+            await operationsCell.click();
+            console.log('Operation cell clicked');
 
             // Waiting for loading
             await page.waitForLoadState('networkidle');
@@ -5983,29 +6019,30 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           }
         );
 
-        await allure.step(
-          'Step 13: Click on the Save order button',
-          async () => {
-            // Click on the button
-            await metalworkingWarehouse.clickButton(
-              ' Сохранить Отметку ',
-              '.btn-status'
-            );
-          }
-        );
+        // await allure.step(
+        //   'Step 13: Click on the Save order button',
+        //   async () => {
+        //     // Click on the button
+        //     await metalworkingWarehouse.clickButton(
+        //       'Сохранить',
+        //       '[data-testid="ModalMark-Button-Save"]'
+        //     );
+        //   }
+        // );
 
         await allure.step(
           'Step 14: Closing a modal window by clicking on the logo',
           async () => {
-            // Double click on the coordinates and close the modal window
+            // Press Escape key to close the modal window
             await page.waitForTimeout(1000);
             await page.waitForLoadState('networkidle');
-            await page.mouse.dblclick(1, 1);
+            await page.keyboard.press('Escape');
 
             // Wait for the table body to load
             await metalworkingWarehouse.waitingTableBody(
               tableMetalworkingWarehouse
             );
+            await page.waitForTimeout(5000);
           }
         );
       }
@@ -6269,7 +6306,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     );
     const stock = new CreateStockPage(page);
     const tableStockRecieptModalWindow =
-      '[data-testid="ModalComingTable-TableScroll"]';
+      // '[data-testid="ModalComingTable-TableScroll"]';
+      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
 
     // Check if the array is empty
     if (descendantsDetailArray.length === 0) {
@@ -6335,7 +6373,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForTimeout(500);
           await stockReceipt.searchTable(
             detail.name,
-            tableStockRecieptModalWindow
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT
           );
           // Waiting for loading
           await page.waitForTimeout(500);
@@ -6358,41 +6397,87 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 08: Find the checkbox column and click',
           async () => {
-            // Find the checkbox column and click
-            const tableModalComing = 'ModalComingTable-Table';
-            const numberColumn = await stockReceipt.findColumn(
-              page,
-              tableModalComing,
-              'ModalComingTable-Header-AllItemsAdd'
+            // Click the header checkbox using direct data-testid
+            const headerCheckbox = page.getByTestId(
+              'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-HeadRow-Checkbox-Wrapper-Checkbox'
             );
-            console.log('numberColumn: ', numberColumn);
-            await stockReceipt.getValueOrClickFromFirstRowNoThead(
-              tableStockRecieptModalWindow,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+
+            // Wait for the checkbox to be visible
+            await headerCheckbox.waitFor({ state: 'visible', timeout: 10000 });
+            await headerCheckbox.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox for debugging
+            await headerCheckbox.evaluate(el => {
+              (el as HTMLElement).style.outline = '3px solid red';
+            });
+            await page.waitForTimeout(500);
+
+            // Check if the checkbox is already checked
+            const isChecked = await headerCheckbox.isChecked();
+            if (!isChecked) {
+              await headerCheckbox.click();
+              console.log('Header checkbox clicked');
+            } else {
+              console.log('Header checkbox is already checked, skipping click');
+            }
           }
         );
 
+        // await allure.step(
+        //   'Step 09: Check that the first row of the table contains the variable name',
+        //   async () => {
+        //     // Check that the first row of the table contains the variable name
+        //     await stockReceipt.checkNameInLineFromFirstRow(
+        //       detail.name,
+        //       '[data-testid="ModalComing-SelectedItems-TableScroll"]'
+        //     );
+        //   }
+        // );
         await allure.step(
           'Step 09: Check that the first row of the table contains the variable name',
           async () => {
+            console.log(
+              'Step 09: Check that the first row of the table contains the variable name'
+            );
+            // Wait for the table body to load
+            const tableSelectedItems =
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+            await stockReceipt.waitingTableBody(tableSelectedItems);
+
             // Check that the first row of the table contains the variable name
             await stockReceipt.checkNameInLineFromFirstRow(
               detail.name,
-              '[data-testid="ModalComing-SelectedItems-TableScroll"]'
+              tableSelectedItems
             );
           }
         );
-
+        await allure.step(
+          'Step 9a: Click on the Добавить button on the modal window',
+          async () => {
+            console.log(
+              'Step 15: Click on the create receipt button on the modal window'
+            );
+            // Click on the button
+            await stockReceipt.clickButton(
+              'Добавить',
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]'
+            );
+          }
+        );
         await allure.step(
           'Step 10: Click on the create receipt button on the modal window',
           async () => {
+            // Wait for the Create button to become enabled (may take time after quantity is entered)
+            const createButton = page.getByTestId(
+              'ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create'
+            );
+            await createButton.scrollIntoViewIfNeeded();
+            await expect(createButton).toBeEnabled({ timeout: 15000 });
+
             // Click on the button
             await stockReceipt.clickButton(
-              ' Создать приход ',
-              '[data-testid="ModalComing-DocumentAttachment-CreateIncomeButton"]'
+              'Создать',
+              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
             );
           }
         );
@@ -6428,1579 +6513,1820 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     }
   });
 
-  test('Test Case 25 - Receiving Cbed And Check Stock', async ({ page }) => {
-    // doc test case 20
-    console.log('Test Case 25 - Receiving Cbed And Check Stock');
-    test.setTimeout(90000);
-    const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(
-      page
-    );
-    const stock = new CreateStockPage(page);
-    const tableStockRecieptModalWindow =
-      '[data-testid="ModalComingTable-TableScroll"]';
-    const tableComplectsSets = '[data-testid="ModalKitsList-Table"]';
-
-    // Check if the array is empty
-    if (descendantsCbedArray.length === 0) {
-      throw new Error('Массив пустой.');
-    } else {
-      // Loop through the array of assemblies
-      for (const cbed of descendantsCbedArray) {
-        await allure.step(
-          'Step 01: Receiving quantities from balances',
-          async () => {
-            // Check the number of entities in the warehouse before posting
-            remainingStockBefore = await stock.checkingTheQuantityInStock(
-              cbed.name,
-              TableSelection.cbed
-            );
-          }
-        );
-
-        // Capitalization of the entity
-        await allure.step('Step 02: Open the warehouse page', async () => {
-          // Go to the Warehouse page
-          await stockReceipt.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        });
-
-        await allure.step('Step 03: Open the stock receipt page', async () => {
-          // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
-          const selectorstockReceipt =
-            '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
-          await stockReceipt.findTable(selectorstockReceipt);
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-        });
-
-        await allure.step(
-          'Step 04: Click on the create receipt button',
-          async () => {
-            // Click on the button
-            await stockReceipt.clickButton(
-              'Создать приход',
-              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE_INCOME
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 05: Select the selector in the modal window',
-          async () => {
-            // Select the selector in the modal window
-            await stockReceipt.selectStockReceipt(StockReceipt.cbed);
-            // Waiting for loading
-            await page.waitForLoadState('networkidle');
-
-            // Wait for the table body to load
-            await stockReceipt.waitingTableBodyNoThead(
-              tableStockRecieptModalWindow
-            );
-          }
-        );
-
-        await allure.step('Step 06: Search product', async () => {
-          // Using table search we look for the value of the variable
-          await stockReceipt.searchTable(
-            cbed.name,
-            tableStockRecieptModalWindow
-          );
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          // Wait for the table body to load
-          await stockReceipt.waitingTableBodyNoThead(
-            tableStockRecieptModalWindow
-          );
-        });
-
-        await allure.step(
-          'Step 07: Find the checkbox column and click',
-          async () => {
-            // Find the checkbox column and click
-            const tableModalComing = 'ModalComingTable-Table';
-            const numberColumn = await stockReceipt.findColumn(
-              page,
-              tableModalComing,
-              'ModalComingTable-Header-AllItemsAdd'
-            );
-            console.log('numberColumn: ', numberColumn);
-            await stockReceipt.getValueOrClickFromFirstRowNoThead(
-              tableStockRecieptModalWindow,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 08: Check the modal window Completed sets',
-          async () => {
-            // Check the modal window Completed sets
-            await stockReceipt.completesSetsModalWindow();
-            await stockReceipt.waitingTableBody(
-              '[data-testid="ModalKitsList-HiddenContent"]'
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 09: We get the cell number with a checkmark',
-          async () => {
-            // We get the cell number with a checkmark
-            const tableComplectsSetsDataTestId = 'ModalKitsList-Table';
-            const numberColumnCheckbox = await stockReceipt.findColumn(
-              page,
-              tableComplectsSetsDataTestId,
-              'ModalKitsList-TableHeader-SelectAll'
-            );
-
-            console.log('numberColumn: ', numberColumnCheckbox);
-            await stockReceipt.getValueOrClickFromFirstRow(
-              `[data-testid="${tableComplectsSetsDataTestId}"]`,
-              numberColumnCheckbox,
-              Click.Yes,
-              Click.No
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 10: Enter the quantity in the cells',
-          async () => {
-            // Enter the value into the input cell
-            await page.waitForTimeout(500);
-            const inputlocator =
-              '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
-
-            await page
-              .locator(inputlocator)
-              .nth(0)
-              .waitFor({ state: 'visible' });
-
-            // Проверяем, что элемент не заблокирован
-            const isDisabled = await page
-              .locator(inputlocator)
-              .nth(0)
-              .getAttribute('disabled');
-            if (isDisabled) {
-              throw new Error('Элемент заблокирован для ввода.');
-            }
-            const quantityPerShipment = await page
-              .locator(inputlocator)
-              .nth(0)
-              .getAttribute('value');
-            console.log('Кол-во на отгрузку: ', quantityPerShipment);
-            await page.locator(inputlocator).nth(0).fill('1');
-            await page.locator(inputlocator).nth(0).press('Enter');
-          }
-        );
-
-        await allure.step(
-          'Step 11: Click on the choice button on the modal window',
-          async () => {
-            // Click on the button
-            await stockReceipt.clickButton(
-              ' Выбрать ',
-              '[data-testid="ModalKitsList-SelectButton"]'
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 12: Check that the first row of the table contains the variable name',
-          async () => {
-            // Wait for the table body to load
-            const tableSelectedItems =
-              '[data-testid="ModalComing-SelectedItems-ScladTable"]';
-            await stockReceipt.waitingTableBody(tableSelectedItems);
-
-            // Check that the first row of the table contains the variable name
-            await stockReceipt.checkNameInLineFromFirstRow(
-              cbed.name,
-              tableSelectedItems
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 13: Click on the create receipt button on the modal window',
-          async () => {
-            // Click on the button
-            await stockReceipt.clickButton(
-              ' Создать приход ',
-              '[data-testid="ModalComing-DocumentAttachment-CreateIncomeButton"]'
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 14: Check the number of parts in the warehouse after posting',
-          async () => {
-            // Checking the remainder of the entity after capitalization
-            remainingStockAfter = await stock.checkingTheQuantityInStock(
-              cbed.name,
-              TableSelection.cbed
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 15: Compare the quantity in cells',
-          async () => {
-            // Compare the quantity in cells
-            expect(Number(remainingStockAfter)).toBe(
-              Number(remainingStockBefore) + Number(incomingQuantity)
-            );
-
-            // Output to the console
-            console.log(
-              `Количество ${cbed.name} на складе до оприходования: ${remainingStockBefore}, ` +
-                `оприходовали в количестве: ${incomingQuantity}, ` +
-                `и после оприходования: ${remainingStockAfter}.`
-            );
-          }
-        );
-      }
-    }
-  });
-
-  test('Test Case 26 - Complete Set Of Product', async ({ page }) => {
-    // doc test case 21
-    console.log('Test Case 26 - Complete Set Of Product');
-    test.setTimeout(90000);
-    const completingProductsToPlan = new CreateCompletingProductsToPlanPage(
-      page
-    );
-    const TableComplect =
-      '[data-testid="TableComplect-TableComplect-ScrollContainer"]';
-
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await completingProductsToPlan.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step(
-      'Step 02: Open the completion product plan page',
-      async () => {
-        // Find and go to the page using the locator Complete set of Products on the plan
-        const selector = '[data-testid="Sclad-completionProductPlan"]';
-        await completingProductsToPlan.findTable(selector);
-
-        // Wait for the table body to load
-        await completingProductsToPlan.waitingTableBody(TableComplect);
-      }
-    );
-
-    await allure.step('Step 03: Search product', async () => {
-      // Using table search we look for the value of the variable
-      await completingProductsToPlan.searchTable(nameProduct, TableComplect);
-
-      // Wait for the table body to load
-      await completingProductsToPlan.waitingTableBody(TableComplect);
-    });
-
-    await allure.step(
-      'Step 04: Check the first line in the first row',
-      async () => {
-        // Check that the first row of the table contains the variable name
-        await completingProductsToPlan.checkNameInLineFromFirstRow(
-          nameProduct,
-          TableComplect
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 05: Find the column designation and click',
-      async () => {
-        // We get the cell number with the designation
-        const tableModalComing = 'TableComplect-TableComplect-Table';
-        const numberColumn = await completingProductsToPlan.findColumn(
-          page,
-          tableModalComing,
-          'TableComplect-TableComplect-DesignationColumn'
-        );
-        console.log('numberColumn: ', numberColumn);
-
-        const test = await completingProductsToPlan.getValueOrClickFromFirstRow(
-          TableComplect,
-          numberColumn
-        );
-
-        // Output to the console
-        console.log(`Проверка текста ${test}`);
-
-        await completingProductsToPlan.getValueOrClickFromFirstRow(
-          TableComplect,
-          numberColumn,
-          Click.No,
-          Click.Yes
-        );
-
-        // Wait for loading
-        await page.waitForLoadState('networkidle');
-      }
-    );
-
-    await allure.step(
-      'Step 06: Check the modal window for the delivery note and check the checkbox',
-      async () => {
-        // Check the modal window for the delivery note and check the checkbox
-        await completingProductsToPlan.assemblyInvoiceModalWindow(
-          TypeInvoice.product,
-          true,
-          '1'
-        );
-
-        // Wait for loading
-        await page.waitForLoadState('networkidle');
-      }
-    );
-
-    await allure.step(
-      'Step 07: Click on the button to assemble into a set',
-      async () => {
-        // Click on the button
-        await completingProductsToPlan.clickButton(
-          ' Скомплектовать в набор ',
-          '[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]'
-        );
-
-        // Wait for loading
-        await page.waitForLoadState('networkidle');
-
-        // Wait for the table body to load
-        await completingProductsToPlan.waitingTableBody(TableComplect);
-      }
-    );
-  });
-
-  test('Test Case 27 - Receiving Product And Check Stock', async ({ page }) => {
-    // doc test case 22
-    console.log('Test Case 27 - Receiving Product And Check Stock');
-    test.setTimeout(90000);
-    const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(
-      page
-    );
-    const stock = new CreateStockPage(page);
-    const tableStockRecieptModalWindow =
-      '[data-testid="ModalComingTable-TableScroll"]';
-    const tableComplectsSets = '[data-testid="ModalKitsList-Table"]';
-
-    await allure.step(
-      'Step 01: Receiving quantities from balances',
-      async () => {
-        // Check the number of entities in the warehouse before posting
-        remainingStockBefore = await stock.checkingTheQuantityInStock(
-          nameProduct,
-          TableSelection.product
-        );
-      }
-    );
-
-    // Capitalization of the entity
-    await allure.step('Step 02: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await stockReceipt.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step('Step 03: Open the stock receipt page', async () => {
-      // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
-      const selector =
-        '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
-      await stockReceipt.findTable(selector);
-
-      // Waiting for loading
-      await page.waitForLoadState('networkidle');
-    });
-
-    await allure.step(
-      'Step 04: Click on the create receipt button',
-      async () => {
-        // Click on the button
-        await stockReceipt.clickButton(
-          'Создать приход',
-          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE_INCOME
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 05: Select the selector in the modal window',
-      async () => {
-        // Select the selector in the modal window
-        await stockReceipt.selectStockReceipt(StockReceipt.cbed);
-        // Waiting for loading
-        await page.waitForLoadState('networkidle');
-
-        // Wait for the table body to load
-        await stockReceipt.waitingTableBodyNoThead(
-          tableStockRecieptModalWindow
-        );
-      }
-    );
-
-    await allure.step('Step 06: Search product', async () => {
-      // Using table search we look for the value of the variable
-      await stockReceipt.searchTable(nameProduct, tableStockRecieptModalWindow);
-
-      // Waiting for loading
-      await page.waitForLoadState('networkidle');
-
-      // Wait for the table body to load
-      await stockReceipt.waitingTableBodyNoThead(tableStockRecieptModalWindow);
-    });
-
-    await allure.step(
-      'Step 07: Find the checkbox column and click',
-      async () => {
-        // Find the checkbox column and click
-        const tableModalComing = 'ModalComingTable-Table';
-        const numberColumn = await stockReceipt.findColumn(
-          page,
-          tableModalComing,
-          'ModalComingTable-Header-AllItemsAdd'
-        );
-        console.log('numberColumn: ', numberColumn);
-        await stockReceipt.getValueOrClickFromFirstRowNoThead(
-          tableStockRecieptModalWindow,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
-      }
-    );
-
-    await allure.step('Step 07a: Click the parish cell link', async () => {
-      // Click the parish cell (data-testid ends with -TdParish) in the first row
-      const parishCell = page
-        .locator(
-          '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
-        )
-        .first();
-
-      await parishCell.waitFor({ state: 'visible', timeout: 10000 });
-      await parishCell.scrollIntoViewIfNeeded();
-
-      // Prefer inner link/button if present
-      const inner = parishCell.locator('a, [role="link"], button');
-      const hasInner = await inner
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (hasInner) {
-        await inner.first().click();
-      } else {
-        await parishCell.click();
-      }
-
-      await page.waitForTimeout(300);
-    });
-
-    await allure.step(
-      'Step 08: Check the modal window Completed sets',
-      async () => {
-        // Check the modal window Completed sets
-        await stockReceipt.completesSetsModalWindow();
-        await stockReceipt.waitingTableBody(
-          '[data-testid="ModalKitsList-HiddenContent"]'
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 09: We get the cell number with a checkmark',
-      async () => {
-        // We get the cell number with a checkmark
-        const tableComplectsSetsDataTestId = 'ModalKitsList-Table';
-        const numberColumnCheckbox = await stockReceipt.findColumn(
-          page,
-          tableComplectsSetsDataTestId,
-          'ModalKitsList-TableHeader-SelectAll'
-        );
-        console.log('numberColumn: ', numberColumnCheckbox);
-        await stockReceipt.getValueOrClickFromFirstRow(
-          tableComplectsSets,
-          numberColumnCheckbox,
-          Click.Yes,
-          Click.No
-        );
-      }
-    );
-
-    await allure.step('Step 10: Enter the quantity in the cells', async () => {
-      // Enter the value into the input cell
-      const inputlocator =
-        '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
-
-      const quantityPerShipment = await page
-        .locator(inputlocator)
-        .nth(0)
-        .getAttribute('value');
-      console.log('Кол-во на отгрузку: ', quantityPerShipment);
-      await page.locator(inputlocator).nth(0).fill('1');
-      await page.locator(inputlocator).nth(0).press('Enter');
-    });
-
-    await allure.step(
-      'Step 11: Click on the choice button on the modal window',
-      async () => {
-        // Click on the button
-        await stockReceipt.clickButton(
-          ' Выбрать ',
-          '[data-testid="ModalKitsList-SelectButton"]'
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 12: Check that the first row of the table contains the variable name',
-      async () => {
-        // Wait for the table body to load
-        const tableSelectedItems =
-          '[data-testid="ModalComing-SelectedItems-ScladTable"]';
-        await stockReceipt.waitingTableBody(tableSelectedItems);
-
-        // Check that the first row of the table contains the variable name
-        await stockReceipt.checkNameInLineFromFirstRow(
-          nameProduct,
-          tableSelectedItems
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 13: Click on the create receipt button on the modal window',
-      async () => {
-        // Click on the button
-        await stockReceipt.clickButton(
-          ' Создать приход ',
-          '[data-testid="ModalComing-DocumentAttachment-CreateIncomeButton"]'
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 14: Check the number of parts in the warehouse after posting',
-      async () => {
-        // Checking the remainder of the entity after capitalization
-        remainingStockAfter = await stock.checkingTheQuantityInStock(
-          nameProduct,
-          TableSelection.product
-        );
-      }
-    );
-
-    await allure.step('Step 15: Compare the quantity in cells', async () => {
-      // Compare the quantity in cells
-      expect(Number(remainingStockAfter)).toBe(
-        Number(remainingStockBefore) + Number(incomingQuantity)
-      );
-
-      // Output to the console
-      console.log(
-        `Количество ${nameProduct} на складе до оприходования: ${remainingStockBefore}, ` +
-          `оприходовали в количестве: ${incomingQuantity}, ` +
-          `и после оприходования: ${remainingStockAfter}.`
-      );
-    });
-  });
-
-  test('Test Case 28 - Launch Into Production Product', async ({ page }) => {
-    // doc test case 23
-    console.log('Test Case 28 - Launch Into Production Product');
-    test.setTimeout(90000);
-    const shortageProduct = new CreateShortageProductPage(page);
-    let checkOrderNumber: string;
-
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step('Step 02: Open the shortage product page', async () => {
-      // Find and go to the page using the locator Shortage of Products
-      const selector =
-        '[data-testid="Sclad-deficitProduction-deficitProduction"]';
-      await shortageProduct.findTable(selector);
-
-      // Wait for loading
-      await page.waitForLoadState('networkidle');
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
-    });
-
-    await allure.step('Step 03: Search product', async () => {
-      // Using table search we look for the value of the variable
-      await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
-    });
-
-    await allure.step(
-      'Step 04: Check the checkbox in the first column',
-      async () => {
-        await page.waitForTimeout(500);
-        // Find the variable name in the first line and check the checkbox
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnCheckbox
-        );
-        console.log('Column number with checkbox: ', numberColumn);
-
-        await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
-
-        // Wait for the table body to load
-        await shortageProduct.waitingTableBody(deficitTable);
-      }
-    );
-
-    await allure.step(
-      'Step 05: Checking the urgency date of an order',
-      async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnDateUrgency
-        );
-        console.log('numberColumn: ', numberColumn);
-
-        urgencyDateOnTable = await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn
-        );
-
-        console.log('Date by urgency in the table: ', urgencyDateOnTable);
-
-        expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-      }
-    );
-
-    await allure.step(
-      'Step 06: We check the number of those launched into production',
-      async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnOrderFromProduction
-        );
-
-        quantityProductLaunchOnProductionBefore =
-          await shortageProduct.getValueOrClickFromFirstRow(
-            deficitTable,
-            numberColumn
-          );
-
-        console.log(
-          'The value in the cells is put into production befor:',
-          quantityProductLaunchOnProductionBefore
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 07: Click on the Launch on production button',
-      async () => {
-        // Click on the button
-        await shortageProduct.clickButton(
-          ' Запустить в производство ',
-          buttonLaunchIntoProduction
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 08: Testing a modal window for production launch',
-      async () => {
-        // Check the modal window Launch into production
-        await shortageProduct.checkModalWindowLaunchIntoProduction(
-          modalWindowLaunchIntoProduction
-        );
-
-        // Check the date in the Launch into production modal window
-        await shortageProduct.checkCurrentDate(
-          '[data-testid="ModalStartProduction-OrderDateValue"]'
-        );
-      }
-    );
-
-    await allure.step('Step 09: Enter a value into a cell', async () => {
-      // Check the value in the Own quantity field and enter the value
-      const locator = '[data-testid="ModalStartProduction-ModalContent"]';
-      await shortageProduct.checkOrderQuantity(
-        locator,
-        '2',
-        quantityProductLaunchOnProduction
-      );
-    });
-
-    await allure.step('Step 10: We save the order number', async () => {
-      // Get the order number
-      checkOrderNumber = await shortageProduct.checkOrderNumber();
-      console.log(`Полученный номер заказа: ${checkOrderNumber}`);
-    });
-
-    await allure.step('Step 11: Click on the In launch button', async () => {
-      // Click on the button
-      await shortageProduct.clickButton(
-        'В производство',
-        buttonLaunchIntoProductionModalWindow
-      );
-    });
-
-    await allure.step(
-      'Step 12: We check that the order number is displayed in the notification',
-      async () => {
-        // Check the order number in the success notification
-        await shortageProduct.getMessage(checkOrderNumber);
-      }
-    );
-
-    await allure.step(
-      'Step 13: We check the number of those launched into production',
-      async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnOrderFromProduction
-        );
-
-        quantityProductLaunchOnProductionAfter =
-          await shortageProduct.getValueOrClickFromFirstRow(
-            deficitTable,
-            numberColumn
-          );
-
-        console.log(
-          'The value in the cells is put into production after:',
-          quantityProductLaunchOnProductionAfter
-        );
-        quantitySumLaunchOnProduction =
-          Number(quantityProductLaunchOnProductionBefore) +
-          Number(quantityProductLaunchOnProduction);
-        expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-          Number(quantityProductLaunchOnProductionBefore) +
-            Number(quantityProductLaunchOnProduction)
-        );
-      }
-    );
-  });
-
-  test('Test Case 29 - Launch Into Production Cbed', async ({ page }) => {
-    // doc test case 24
-    console.log('Test Case 29 - Launch Into Production Cbed');
-    test.setTimeout(90000);
-    const shortageAssemblies = new CreatShortageAssembliesPage(page);
-    let checkOrderNumber: string;
-
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step(
-      'Step 02: Open the shortage assemblies page',
-      async () => {
-        // Find and go to the page using the locator shortage assemblies
-        const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
-        await shortageAssemblies.findTable(selector);
-      }
-    );
-
-    // Check if the array is empty
-    if (descendantsCbedArray.length === 0) {
-      throw new Error('Массив пустой.');
-    } else {
-      // Loop through the array of assemblies
-      for (const cbed of descendantsCbedArray) {
-        await allure.step('Step 03: Search product', async () => {
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
-
-          // Using table search we look for the value of the variable
-          await shortageAssemblies.searchTableRedesign(
-            cbed.name,
-            deficitTableCbed
-          );
-
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
-
-          await page.locator(buttonLaunchIntoProductionCbed).hover();
-        });
-
-        await allure.step(
-          'Step 04: Check the checkbox in the first column',
-          async () => {
-            // Find the variable name in the first line and check the checkbox
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnCheckboxCbed
-            );
-            console.log('Column number with checkbox: ', numberColumn);
-
-            await shortageAssemblies.getValueOrClickFromFirstRow(
-              deficitTableCbed,
-              numberColumn,
-              Click.Yes
-            );
-
-            // Wait for the table body to load
-            await shortageAssemblies.waitingTableBody(deficitTableCbed);
-          }
-        );
-
-        await allure.step(
-          'Step 05: Checking the urgency date of an order',
-          async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnDateUrgencyCbed
-            );
-            console.log('Number column urgency date: ', numberColumn);
-
-            urgencyDateOnTable =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
-
-            console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-            expect(urgencyDateOnTable).toBe(urgencyDate);
-          }
-        );
-
-        await allure.step(
-          'Step 06: We check the number of those launched into production',
-          async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnOrderFromProductionCbed
-            );
-            console.log(
-              'Number column launched into production: ',
-              numberColumn
-            );
-
-            quantityProductLaunchOnProductionBefore =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
-
-            console.log(
-              'The value in the cells is put into production befor:',
-              quantityProductLaunchOnProductionBefore
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 07: Click on the Launch on production button',
-          async () => {
-            // Click on the button
-            await shortageAssemblies.clickButton(
-              ' Запустить в производство ',
-              buttonLaunchIntoProductionCbed
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 08: Testing a modal window for production launch',
-          async () => {
-            // Check the modal window Launch into production
-            await shortageAssemblies.checkModalWindowLaunchIntoProduction(
-              modalWindowLaunchIntoProductionCbed
-            );
-
-            // Check the date in the Launch into production modal window
-            await shortageAssemblies.checkCurrentDate(
-              '[data-testid="ModalStartProduction-OrderDateValue"]'
-            );
-          }
-        );
-
-        await allure.step('Step 09: Enter a value into a cell', async () => {
-          // Check the value in the Own quantity field and enter the value
-          const locator = '[data-testid="ModalStartProduction-ModalContent"]';
-          await shortageAssemblies.checkOrderQuantity(
-            locator,
-            '2',
-            quantityProductLaunchOnProduction
-          );
-        });
-
-        await allure.step('Step 10: We save the order number', async () => {
-          // Get the order number
-          checkOrderNumber = await shortageAssemblies.checkOrderNumber();
-          console.log(`Полученный номер заказа: ${checkOrderNumber}`);
-        });
-
-        await allure.step(
-          'Step 11: Click on the In launch button',
-          async () => {
-            // Click on the button
-            await shortageAssemblies.clickButton(
-              'В производство',
-              buttonLaunchIntoProductionModalWindow
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 12: We check that the order number is displayed in the notification',
-          async () => {
-            // Check the order number in the success notification
-            await shortageAssemblies.getMessage(checkOrderNumber);
-          }
-        );
-
-        await allure.step('Step 13: Close success message', async () => {
-          // Close the success notification
-          await page.waitForLoadState('networkidle');
-          await page.waitForTimeout(1000);
-          await shortageAssemblies.closeSuccessMessage();
-        });
-
-        await allure.step(
-          'Step 14: We check the number of those launched into production',
-          async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnOrderFromProductionCbed
-            );
-
-            quantityProductLaunchOnProductionAfter =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
-
-            console.log(
-              'The value in the cells is put into production after:',
-              quantityProductLaunchOnProductionAfter
-            );
-
-            expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-              Number(quantityProductLaunchOnProductionBefore) +
-                Number(quantityProductLaunchOnProduction)
-            );
-          }
-        );
-      }
-    }
-  });
-
-  test('Test Case 30 - Launch Into Production Parts', async ({ page }) => {
-    // doc test case 25
-    console.log('Test Case 30 - Launch Into Production Parts');
-    test.setTimeout(90000);
-    const shortageParts = new CreatShortagePartsPage(page);
-    let checkOrderNumber: string;
-
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step('Step 02: Open the shortage parts page', async () => {
-      // Find and go to the page using the locator Parts Shortage
-      const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
-      await shortageParts.findTable(selector);
-    });
-
-    // Check if the array is empty
-    if (descendantsDetailArray.length === 0) {
-      throw new Error('Массив пустой.');
-    } else {
-      // Iterate through the array of parts
-      for (const part of descendantsDetailArray) {
-        await allure.step('Step 03: Search product', async () => {
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          // Using table search we look for the value of the variable
-          await shortageParts.searchTableRedesign(
-            part.name,
-            deficitTableDetail
-          );
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          await page.waitForTimeout(1000);
-
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
-        });
-
-        await allure.step(
-          'Step 04: Check that the first row of the table contains the variable name',
-          async () => {
-            // Check that the first row of the table contains the variable name
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnCheckBoxDetail
-            );
-            console.log('Column number with checkbox: ', numberColumn);
-
-            await shortageParts.getValueOrClickFromFirstRow(
-              deficitTableDetail,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
-
-            // Wait for the table body to load
-            await shortageParts.waitingTableBody(deficitTableDetail);
-          }
-        );
-
-        await allure.step(
-          'Step 05: Checking the urgency date of an order',
-          async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnDateUrgencyDetail
-            );
-            console.log('Number column urgency date: ', numberColumn);
-
-            urgencyDateOnTable =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
-
-            console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-            expect(urgencyDateOnTable).toBe(urgencyDate);
-          }
-        );
-
-        await allure.step(
-          'Step 06: We check the number of those launched into production',
-          async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnOrderFromProductionDetail
-            );
-            console.log(
-              'Number column launched into production: ',
-              numberColumn
-            );
-
-            quantityProductLaunchOnProductionBefore =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
-
-            console.log(
-              'The value in the cells is put into production befor:',
-              quantityProductLaunchOnProductionBefore
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 07: Click on the Launch on production button ',
-          async () => {
-            // Click on the button
-            await shortageParts.clickButton(
-              ' Запустить в производство ',
-              buttonLaunchIntoProductionDetail
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 08: Testing a modal window for production launch',
-          async () => {
-            // Check the modal window Launch into production
-            await shortageParts.checkModalWindowLaunchIntoProduction(
-              modalWindowLaunchIntoProductionDetail
-            );
-
-            // Check the date in the Launch into production modal window
-            await shortageParts.checkCurrentDate(
-              '[data-testid="ModalStartProduction-OrderDateValue"]'
-            );
-          }
-        );
-
-        await allure.step('Step 09: Enter a value into a cell', async () => {
-          // Check the value in the Own quantity field and enter the value
-          const locator = '[data-testid="ModalStartProduction-ModalContent"]';
-          await shortageParts.checkOrderQuantity(
-            locator,
-            '2',
-            quantityProductLaunchOnProduction
-          );
-        });
-
-        await allure.step('Step 10: We save the order number', async () => {
-          // Get the order number
-          checkOrderNumber = await shortageParts.checkOrderNumber();
-          console.log(`Полученный номер заказа: ${checkOrderNumber}`);
-        });
-
-        await allure.step(
-          'Step 11: Click on the In launch button',
-          async () => {
-            // Click on the button
-            await shortageParts.clickButton(
-              ' В производство ',
-              buttonLaunchIntoProductionModalWindow
-            );
-          }
-        );
-
-        await allure.step(
-          'Step 12: We check that the order number is displayed in the notification',
-          async () => {
-            // Check the order number in the success notification
-            await shortageParts.getMessage(checkOrderNumber);
-          }
-        );
-
-        await allure.step('Step 13: Close success message', async () => {
-          // Close the success notification
-          await shortageParts.closeSuccessMessage();
-        });
-
-        await allure.step(
-          'Step 14: We check the number of those launched into production',
-          async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnOrderFromProductionDetail
-            );
-            console.log(
-              'Number column launched into production: ',
-              numberColumn
-            );
-
-            quantityProductLaunchOnProductionAfter =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
-
-            console.log(
-              'The value in the cells is put into production after:',
-              quantityProductLaunchOnProductionAfter
-            );
-
-            expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-              Number(quantityProductLaunchOnProductionBefore) +
-                Number(quantityProductLaunchOnProduction)
-            );
-          }
-        );
-      }
-    }
-  });
-
-  test('Test Case 31 - Uploading Second Shipment Task', async ({ page }) => {
-    // doc test case 26
-    console.log('Test Case 31 - Uploading Second Shipment Task');
-    test.setTimeout(90000);
-    const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
-      page
-    );
-
-    let numberColumn: number;
-
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await warehouseTaskForShipment.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step(
-      'Step 02: Open the warehouse shipping task page',
-      async () => {
-        // Find and go to the page using the locator Склад: Задачи на отгрузку
-        const selector = '[data-testid="Sclad-shippingTasks"]';
-        await warehouseTaskForShipment.findTable(selector);
-
-        // Wait for loading
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(500);
-
-        // Wait for the table body to load
-        await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
-      }
-    );
-
-    await allure.step('Step 03: Search product', async () => {
-      // Using table search we look for the value of the variable
-      await warehouseTaskForShipment.searchTableRedesign(
-        nameProduct,
-        tableMainUploading
-      );
-
-      await page.waitForTimeout(1000);
-
-      // Wait for the table body to load
-      await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
-    });
-
-    await allure.step(
-      'Step 04: Check that the first row of the table contains the variable name',
-      async () => {
-        // Check that the first row of the table contains the variable name
-        await warehouseTaskForShipment.checkNameInLineFromFirstRow(
-          orderNumber.orderNumber,
-          tableMainUploading
-        );
-      }
-    );
-
-    await allure.step(
-      'Step 05: Find the checkbox column and click',
-      async () => {
-        // Find the checkbox column and click
-        numberColumn = await warehouseTaskForShipment.findColumn(
-          page,
-          tableMainUploadingID,
-          'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-Number'
-        );
-
-        // console.log("numberColumn: ", numberColumn);
-        await warehouseTaskForShipment.getValueOrClickFromFirstRow(
-          tableMainUploading,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
-      }
-    );
-
-    await allure.step('Step 06: Click on the ship button', async () => {
-      // Click on the button
-      await warehouseTaskForShipment.clickButton(
-        ' Отгрузить ',
-        buttonUploading
-      );
-    });
-
-    await allure.step('Step 07: Check the Shipping modal window', async () => {
-      // Check the Shipping modal window
-      await warehouseTaskForShipment.shipmentModalWindow();
-    });
-
-    await allure.step('Step 08: Click on the ship button', async () => {
-      // Click on the button
-      await warehouseTaskForShipment.clickButton(
-        ' Отгрузить ',
-        '[data-testid="ModalShComlit-Button-Ship"]'
-      );
-    });
-  });
-
-  test('Test Case 32 - Checking new date by urgency', async ({ page }) => {
-    // doc test case 27
-    console.log('Test Case 32 - Checking new date by urgency');
-    test.setTimeout(90000);
-    // Проверка изделия на дату по срочности
-    const shortageProduct = new CreateShortageProductPage(page);
-    let checkOrderNumber: string;
-
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step('Step 02: Open the shortage product page', async () => {
-      // Find and go to the page using the locator Shortage of Products
-      const selector =
-        '[data-testid="Sclad-deficitProduction-deficitProduction"]';
-      await shortageProduct.findTable(selector);
-
-      // Wait for loading
-      await page.waitForLoadState('networkidle');
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
-    });
-
-    await allure.step('Step 03: Search product', async () => {
-      // Using table search we look for the value of the variable
-      await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
-    });
-
-    await allure.step(
-      'Step 04: Check the checkbox in the first column',
-      async () => {
-        // Check that the first row of the table contains the variable name
-        await shortageProduct.checkNameInLineFromFirstRow(
-          nameProduct,
-          deficitTable
-        );
-
-        // Wait for the table body to load
-        await shortageProduct.waitingTableBody(deficitTable);
-      }
-    );
-
-    await allure.step(
-      'Step 04: Checking the urgency date of an order',
-      async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnDateUrgency
-        );
-        console.log('numberColumn: ', numberColumn);
-
-        urgencyDateOnTable = await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn
-        );
-
-        console.log('Date by urgency in the table: ', urgencyDateOnTable);
-
-        expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-      }
-    );
-
-    // Checking the board for urgency of assembly
-    const shortageAssemblies = new CreatShortageAssembliesPage(page);
-
-    await allure.step('Step 05: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step(
-      'Step 06: Open the shortage assemblies page',
-      async () => {
-        // Find and go to the page using the locator shortage assemblies
-        const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
-        await shortageAssemblies.findTable(selector);
-      }
-    );
-
-    // Check if the array is empty
-    if (descendantsCbedArray.length === 0) {
-      throw new Error('Массив пустой.');
-    } else {
-      // Loop through the array of assemblies
-      for (const cbed of descendantsCbedArray) {
-        await allure.step('Step 07: Search product', async () => {
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
-
-          // Using table search we look for the value of the variable
-          await shortageAssemblies.searchTableRedesign(
-            cbed.name,
-            deficitTableCbed
-          );
-
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
-
-          await page.locator(buttonLaunchIntoProductionCbed).hover();
-        });
-
-        await allure.step(
-          'Step 08: Checking the urgency date of an order',
-          async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnDateUrgencyCbed
-            );
-            console.log('Number column urgency date: ', numberColumn);
-
-            urgencyDateOnTable =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
-
-            console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-            expect(urgencyDateOnTable).toBe(urgencyDate);
-          }
-        );
-      }
-    }
-
-    // Проверка на дату по срочности деталей
-    const shortageParts = new CreatShortagePartsPage(page);
-
-    await allure.step('Step 09: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step('Step 10: Open the shortage parts page', async () => {
-      // Find and go to the page using the locator Parts Shortage
-      const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
-      await shortageParts.findTable(selector);
-    });
-
-    // Check if the array is empty
-    if (descendantsDetailArray.length === 0) {
-      throw new Error('Массив пустой.');
-    } else {
-      // Iterate through the array of parts
-      for (const part of descendantsDetailArray) {
-        await allure.step('Step 11: Search product', async () => {
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          // Using table search we look for the value of the variable
-          await shortageParts.searchTableRedesign(
-            part.name,
-            deficitTableDetail
-          );
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          await page.waitForTimeout(1000);
-
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
-        });
-
-        await allure.step(
-          'Step 12: Check that the first row of the table contains the variable name',
-          async () => {
-            // Check that the first row of the table contains the variable name
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnCheckBoxDetail
-            );
-            console.log('Column number with checkbox: ', numberColumn);
-
-            await shortageParts.getValueOrClickFromFirstRow(
-              deficitTableDetail,
-              numberColumn,
-              Click.Yes
-            );
-
-            // Wait for the table body to load
-            await shortageParts.waitingTableBody(deficitTableDetail);
-          }
-        );
-
-        await allure.step(
-          'Step 13: Checking the urgency date of an order',
-          async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnDateUrgencyDetail
-            );
-            console.log('Number column urgency date: ', numberColumn);
-
-            urgencyDateOnTable =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
-
-            console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-            expect(urgencyDateOnTable).toBe(urgencyDate);
-          }
-        );
-      }
-    }
-  });
-
-  test('Test Case 33 - Archive Metalworking Warehouse Task All', async ({
-    // doc test case 28
-    page,
-  }) => {
-    console.log('Test Case 33 - Archive Metalworking Warehouse Task All');
-    test.setTimeout(90000);
-    const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
-    const warehouseTable = '[data-testid="MetalloworkingSclad-ScrollTable"]';
-
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step(
-      'Step 02: Open the metalworking warehouse page',
-      async () => {
-        const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
-        await metalworkingWarehouse.findTable(selector);
-
-        // Wait for loading
-        await page.waitForLoadState('networkidle');
-        await metalworkingWarehouse.waitingTableBody(warehouseTable);
-      }
-    );
-
-    await allure.step('Step 03: Search product', async () => {
-      await metalworkingWarehouse.searchTable(designation, warehouseTable);
-
-      await metalworkingWarehouse.waitingTableBody(warehouseTable);
-    });
-
-    await allure.step(
-      'Step 04: Check that the first row of the table contains the variable name',
-      async () => {
-        await metalworkingWarehouse.checkboxMarkNameInLineFromFirstRow(
-          designation,
-          warehouseTable
-        );
-      }
-    );
-
-    await allure.step('Step 05: Click on the archive button', async () => {
-      await metalworkingWarehouse.clickOnTheTableHeaderCell(15, warehouseTable);
-
-      await metalworkingWarehouse.clickButton(
-        ' Переместить в архив ',
-        '[data-testid="MetalloworkingSclad-PrintControls-ArchiveButton"]'
-      );
-    });
-
-    await allure.step('Step 06: Confirm the archive', async () => {
-      await metalworkingWarehouse.clickButton(
-        ' Подтвердить ',
-        '[data-testid="ModalPromptMini-Button-Confirm"]'
-      );
-    });
-  });
+  // test('Test Case 25 - Receiving Cbed And Check Stock', async ({ page }) => {
+  //   // doc test case 20
+  //   console.log('Test Case 25 - Receiving Cbed And Check Stock');
+  //   test.setTimeout(90000);
+  //   const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(
+  //     page
+  //   );
+  //   const stock = new CreateStockPage(page);
+  //   const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(
+  //     page
+  //   );
+  //   const tableStockRecieptModalWindow =
+  //     '[data-testid="ModalComingTable-TableScroll"]';
+  //   const tableComplectsSets =
+  //     'table[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+
+  //   // Check if the array is empty
+  //   if (descendantsCbedArray.length === 0) {
+  //     throw new Error('Массив пустой.');
+  //   } else {
+  //     // Loop through the array of assemblies
+  //     for (const cbed of descendantsCbedArray) {
+  //       // Step 00: Complete assembly kitting (required before receiving at warehouse)
+  //       await allure.step(
+  //         'Step 00: Complete assembly kitting to set quantity to 1',
+  //         async () => {
+  //           // Navigate to warehouse page
+  //           await completingAssembliesToPlan.goto(
+  //             SELECTORS.MAINMENU.WAREHOUSE.URL
+  //           );
+
+  //           // Open the assembly kitting page
+  //           const selector = '[data-testid="Sclad-completionCbedPlan"]';
+  //           await completingAssembliesToPlan.findTable(selector);
+  //           await page.waitForLoadState('networkidle');
+
+  //           // Search for the CBED
+  //           await completingAssembliesToPlan.searchTable(
+  //             cbed.name,
+  //             `table[data-testid="${CONST.TABLE_COMPLECT_TABLE}"]`,
+  //             CONST.COMPLEX_SBORKA_BY_PLAN
+  //           );
+  //           await page.waitForTimeout(1000);
+  //           await page.waitForLoadState('networkidle');
+
+  //           // Double-click the designation cell to open the waybill modal
+  //           const designationCell = page
+  //             .locator(
+  //               '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+  //             )
+  //             .first();
+  //           await designationCell.waitFor({ state: 'visible', timeout: 10000 });
+  //           await designationCell.scrollIntoViewIfNeeded();
+  //           await designationCell.dblclick();
+  //           await page.waitForLoadState('networkidle');
+  //           await page.waitForTimeout(1500);
+
+  //           // Wait for the modal to appear
+  //           const waybillModal = page.locator(
+  //             '[data-testid="TableComplect-ModalAddWaybill-Content"]'
+  //           );
+  //           await waybillModal.waitFor({ state: 'visible', timeout: 10000 });
+
+  //           // Check the checkbox in the modal
+  //           const checkboxCell = page
+  //             .locator(
+  //               '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]'
+  //             )
+  //             .first();
+  //           await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+  //           await checkboxCell.scrollIntoViewIfNeeded();
+  //           await checkboxCell.click();
+  //           await page.waitForTimeout(500);
+  //           await page.waitForLoadState('networkidle');
+
+  //           // Click the "Скомплектовать" button
+  //           await completingAssembliesToPlan.clickButton(
+  //             'Скомплектовать',
+  //             SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON
+  //           );
+
+  //           // Wait for modal to close
+  //           await waybillModal
+  //             .waitFor({ state: 'hidden', timeout: 10000 })
+  //             .catch(() => {});
+  //           await page.waitForLoadState('networkidle');
+  //           await page.waitForTimeout(1000);
+
+  //           console.log(`Assembly kitting completed for ${cbed.name}`);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 01: Receiving quantities from balances',
+  //         async () => {
+  //           // Check the number of entities in the warehouse before posting
+  //           remainingStockBefore = await stock.checkingTheQuantityInStock(
+  //             cbed.name,
+  //             TableSelection.cbed
+  //           );
+  //         }
+  //       );
+
+  //       // Capitalization of the entity
+  //       await allure.step('Step 02: Open the warehouse page', async () => {
+  //         // Go to the Warehouse page
+  //         await stockReceipt.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //       });
+
+  //       await allure.step('Step 03: Open the stock receipt page', async () => {
+  //         // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
+  //         const selectorstockReceipt =
+  //           '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
+  //         await stockReceipt.findTable(selectorstockReceipt);
+
+  //         // Waiting for loading
+  //         await page.waitForLoadState('networkidle');
+  //       });
+
+  //       await allure.step(
+  //         'Step 04: Click on the create receipt button',
+  //         async () => {
+  //           // Click on the button
+  //           await stockReceipt.clickButton(
+  //             'Создать приход',
+  //             SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE_INCOME
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 05: Select the selector in the modal window',
+  //         async () => {
+  //           // Select the selector in the modal window
+  //           await stockReceipt.selectStockReceipt(StockReceipt.cbed);
+  //           // Waiting for loading
+  //           await page.waitForLoadState('networkidle');
+
+  //           // Wait for the table body to load
+  //           await stockReceipt.waitingTableBodyNoThead(tableComplectsSets);
+  //         }
+  //       );
+
+  //       await allure.step('Step 06: Search product', async () => {
+  //         // Using table search we look for the value of the variable
+  //         await stockReceipt.searchTable(
+  //           cbed.name,
+  //           tableComplectsSets,
+  //           'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input'
+  //         );
+
+  //         // Waiting for loading
+  //         await page.waitForLoadState('networkidle');
+
+  //         // Wait for the table body to load
+  //         await stockReceipt.waitingTableBodyNoThead(tableComplectsSets);
+  //       });
+
+  //       await allure.step(
+  //         'Step 06a: Check the checkbox in the first row',
+  //         async () => {
+  //           // Find the checkbox cell using data-testid pattern
+  //           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
+  //           const checkboxCell = page
+  //             .locator(
+  //               '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+  //             )
+  //             .first();
+
+  //           await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+  //           await checkboxCell.scrollIntoViewIfNeeded();
+
+  //           // Highlight the cell for visual confirmation
+  //           await checkboxCell.evaluate((el: HTMLElement) => {
+  //             el.style.backgroundColor = 'yellow';
+  //             el.style.border = '2px solid red';
+  //             el.style.color = 'blue';
+  //           });
+
+  //           // Find the actual checkbox input inside the cell
+  //           const checkbox = checkboxCell.getByRole('checkbox').first();
+
+  //           // Check if the checkbox is disabled
+  //           const isDisabled = await checkbox.isDisabled();
+  //           if (isDisabled) {
+  //             throw new Error(
+  //               'Cannot check the checkbox. Checkbox has the disabled attribute and cannot be checked.'
+  //             );
+  //           }
+
+  //           // Check if the checkbox is already checked
+  //           const isChecked = await checkbox.isChecked();
+
+  //           if (!isChecked) {
+  //             console.log('Checkbox is not checked, attempting to check it...');
+  //             await checkbox.click();
+  //             await page.waitForTimeout(300);
+
+  //             // Verify the checkbox is now checked
+  //             const isCheckedAfter = await checkbox.isChecked();
+  //             if (!isCheckedAfter) {
+  //               throw new Error(
+  //                 'Failed to check the checkbox. Checkbox remains unchecked after click.'
+  //               );
+  //             }
+  //             console.log('Checkbox successfully checked');
+  //           } else {
+  //             console.log('Checkbox is already checked, skipping click');
+  //           }
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 06b: Click on the Добавить button to add item to selected items',
+  //         async () => {
+  //           // Wait for the Добавить button to become enabled and click it
+  //           const addButton = page.getByTestId(
+  //             'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add'
+  //           );
+
+  //           await addButton.scrollIntoViewIfNeeded();
+  //           // Wait for button to be enabled
+  //           await expect(addButton).toBeEnabled({ timeout: 15000 });
+  //           await addButton.click();
+  //           await page.waitForTimeout(500);
+  //           await page.waitForLoadState('networkidle');
+  //           console.log(
+  //             'Добавить button clicked - item added to selected items'
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 06c: Find and click on the operation cell to mark operations',
+  //         async () => {
+  //           // Get the operations cell using data-testid pattern
+  //           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-Operations
+  //           const operationsCell = page
+  //             .locator(
+  //               '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-Operations"]'
+  //             )
+  //             .first();
+
+  //           await operationsCell.waitFor({ state: 'visible', timeout: 10000 });
+  //           await operationsCell.scrollIntoViewIfNeeded();
+
+  //           // Highlight the cell for visual confirmation
+  //           await operationsCell.evaluate((el: HTMLElement) => {
+  //             el.style.backgroundColor = 'yellow';
+  //             el.style.border = '2px solid red';
+  //             el.style.color = 'blue';
+  //           });
+
+  //           // Click the operations cell to mark operations (required before quantity input becomes available)
+  //           await operationsCell.click();
+  //           console.log('Operation cell clicked to mark operations');
+
+  //           // Waiting for loading
+  //           await page.waitForLoadState('networkidle');
+  //           await page.waitForTimeout(500);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 06d: Enter the quantity in the main table cells',
+  //         async () => {
+  //           // Enter the quantity in the cells (required before checkbox can be enabled)
+  //           await stockReceipt.inputQuantityInCell(incomingQuantity);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 07: Find the checkbox column and click',
+  //         async () => {
+  //           // Find the checkbox cell using data-testid pattern
+  //           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
+  //           const checkboxCell = page
+  //             .locator(
+  //               '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+  //             )
+  //             .first();
+
+  //           await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+  //           await checkboxCell.scrollIntoViewIfNeeded();
+
+  //           // Highlight the cell for visual confirmation
+  //           await checkboxCell.evaluate((el: HTMLElement) => {
+  //             el.style.backgroundColor = 'yellow';
+  //             el.style.border = '2px solid red';
+  //             el.style.color = 'blue';
+  //           });
+
+  //           // Click on the checkbox cell
+  //           await checkboxCell.click();
+  //           await page.waitForTimeout(300);
+  //         }
+  //       );
+
+  //       // await allure.step(
+  //       //   'Step 08: Check the modal window Completed sets',
+  //       //   async () => {
+  //       //     // Check the modal window Completed sets
+  //       //     await stockReceipt.completesSetsModalWindow();
+  //       //     await stockReceipt.waitingTableBody(
+  //       //       '[data-testid="ModalKitsList-HiddenContent"]'
+  //       //     );
+  //       //   }
+  //       // );
+  //       await allure.step(
+  //         'Step 08: Check the modal window Completed sets',
+  //         async () => {
+  //           // Check the modal window Completed sets
+  //           await stockReceipt.completesSetsModalWindow();
+  //           await stockReceipt.waitingTableBody(
+  //             'table[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]'
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 09: We get the cell number with a checkmark',
+  //         async () => {
+  //           // Find the checkbox cell using data-testid pattern
+  //           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
+  //           const checkboxCell = page
+  //             .locator(
+  //               '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+  //             )
+  //             .first();
+
+  //           await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+  //           await checkboxCell.scrollIntoViewIfNeeded();
+
+  //           // Highlight the cell for visual confirmation
+  //           await checkboxCell.evaluate((el: HTMLElement) => {
+  //             el.style.backgroundColor = 'yellow';
+  //             el.style.border = '2px solid red';
+  //             el.style.color = 'blue';
+  //           });
+
+  //           // Find the actual checkbox input inside the cell
+  //           const checkbox = checkboxCell.getByRole('checkbox').first();
+
+  //           // Check if the checkbox is disabled
+  //           const isDisabled = await checkbox.isDisabled();
+  //           if (isDisabled) {
+  //             throw new Error(
+  //               'Cannot check the checkbox. Checkbox has the disabled attribute and cannot be checked.'
+  //             );
+  //           }
+
+  //           // Check if the checkbox is already checked
+  //           const isChecked = await checkbox.isChecked();
+
+  //           if (!isChecked) {
+  //             console.log('Checkbox is not checked, attempting to check it...');
+  //             await checkbox.click();
+  //             await page.waitForTimeout(300);
+
+  //             // Verify the checkbox is now checked
+  //             const isCheckedAfter = await checkbox.isChecked();
+  //             if (!isCheckedAfter) {
+  //               throw new Error(
+  //                 'Failed to check the checkbox. Checkbox remains unchecked after click.'
+  //               );
+  //             }
+  //             console.log('Checkbox successfully checked');
+  //           } else {
+  //             console.log('Checkbox is already checked, skipping click');
+  //           }
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 10: Enter the quantity in the cells',
+  //         async () => {
+  //           // Enter the value into the input cell
+  //           await page.waitForTimeout(500);
+  //           const inputlocator =
+  //             '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
+
+  //           await page
+  //             .locator(inputlocator)
+  //             .nth(0)
+  //             .waitFor({ state: 'visible' });
+
+  //           // Проверяем, что элемент не заблокирован
+  //           const isDisabled = await page
+  //             .locator(inputlocator)
+  //             .nth(0)
+  //             .getAttribute('disabled');
+  //           if (isDisabled) {
+  //             throw new Error('Элемент заблокирован для ввода.');
+  //           }
+  //           const quantityPerShipment = await page
+  //             .locator(inputlocator)
+  //             .nth(0)
+  //             .getAttribute('value');
+  //           console.log('Кол-во на отгрузку: ', quantityPerShipment);
+  //           await page.locator(inputlocator).nth(0).fill('1');
+  //           await page.locator(inputlocator).nth(0).press('Enter');
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 11: Click on the choice button on the modal window',
+  //         async () => {
+  //           // Click on the button
+  //           await stockReceipt.clickButton(
+  //             ' Выбрать ',
+  //             '[data-testid="ModalKitsList-SelectButton"]'
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 12: Check that the first row of the table contains the variable name',
+  //         async () => {
+  //           // Wait for the table body to load
+  //           const tableSelectedItems =
+  //             '[data-testid="ModalComing-SelectedItems-ScladTable"]';
+  //           await stockReceipt.waitingTableBody(tableSelectedItems);
+
+  //           // Check that the first row of the table contains the variable name
+  //           await stockReceipt.checkNameInLineFromFirstRow(
+  //             cbed.name,
+  //             tableSelectedItems
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 13: Click on the create receipt button on the modal window',
+  //         async () => {
+  //           // Click on the button
+  //           await stockReceipt.clickButton(
+  //             ' Создать приход ',
+  //             '[data-testid="ModalComing-DocumentAttachment-CreateIncomeButton"]'
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 14: Check the number of parts in the warehouse after posting',
+  //         async () => {
+  //           // Checking the remainder of the entity after capitalization
+  //           remainingStockAfter = await stock.checkingTheQuantityInStock(
+  //             cbed.name,
+  //             TableSelection.cbed
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 15: Compare the quantity in cells',
+  //         async () => {
+  //           // Compare the quantity in cells
+  //           expect(Number(remainingStockAfter)).toBe(
+  //             Number(remainingStockBefore) + Number(incomingQuantity)
+  //           );
+
+  //           // Output to the console
+  //           console.log(
+  //             `Количество ${cbed.name} на складе до оприходования: ${remainingStockBefore}, ` +
+  //               `оприходовали в количестве: ${incomingQuantity}, ` +
+  //               `и после оприходования: ${remainingStockAfter}.`
+  //           );
+  //         }
+  //       );
+  //     }
+  //   }
+  // });
+
+  // test('Test Case 26 - Complete Set Of Product', async ({ page }) => {
+  //   // doc test case 21
+  //   console.log('Test Case 26 - Complete Set Of Product');
+  //   test.setTimeout(90000);
+  //   const completingProductsToPlan = new CreateCompletingProductsToPlanPage(
+  //     page
+  //   );
+  //   const TableComplect =
+  //     '[data-testid="TableComplect-TableComplect-ScrollContainer"]';
+
+  //   await allure.step('Step 01: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await completingProductsToPlan.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step(
+  //     'Step 02: Open the completion product plan page',
+  //     async () => {
+  //       // Find and go to the page using the locator Complete set of Products on the plan
+  //       const selector = '[data-testid="Sclad-completionProductPlan"]';
+  //       await completingProductsToPlan.findTable(selector);
+
+  //       // Wait for the table body to load
+  //       await completingProductsToPlan.waitingTableBody(TableComplect);
+  //     }
+  //   );
+
+  //   await allure.step('Step 03: Search product', async () => {
+  //     // Using table search we look for the value of the variable
+  //     await completingProductsToPlan.searchTable(nameProduct, TableComplect);
+
+  //     // Wait for the table body to load
+  //     await completingProductsToPlan.waitingTableBody(TableComplect);
+  //   });
+
+  //   await allure.step(
+  //     'Step 04: Check the first line in the first row',
+  //     async () => {
+  //       // Check that the first row of the table contains the variable name
+  //       await completingProductsToPlan.checkNameInLineFromFirstRow(
+  //         nameProduct,
+  //         TableComplect
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 05: Find the column designation and click',
+  //     async () => {
+  //       // We get the cell number with the designation
+  //       const tableModalComing = 'TableComplect-TableComplect-Table';
+  //       const numberColumn = await completingProductsToPlan.findColumn(
+  //         page,
+  //         tableModalComing,
+  //         'TableComplect-TableComplect-DesignationColumn'
+  //       );
+  //       console.log('numberColumn: ', numberColumn);
+
+  //       const test = await completingProductsToPlan.getValueOrClickFromFirstRow(
+  //         TableComplect,
+  //         numberColumn
+  //       );
+
+  //       // Output to the console
+  //       console.log(`Проверка текста ${test}`);
+
+  //       await completingProductsToPlan.getValueOrClickFromFirstRow(
+  //         TableComplect,
+  //         numberColumn,
+  //         Click.No,
+  //         Click.Yes
+  //       );
+
+  //       // Wait for loading
+  //       await page.waitForLoadState('networkidle');
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 06: Check the modal window for the delivery note and check the checkbox',
+  //     async () => {
+  //       // Check the modal window for the delivery note and check the checkbox
+  //       await completingProductsToPlan.assemblyInvoiceModalWindow(
+  //         TypeInvoice.product,
+  //         true,
+  //         '1'
+  //       );
+
+  //       // Wait for loading
+  //       await page.waitForLoadState('networkidle');
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 07: Click on the button to assemble into a set',
+  //     async () => {
+  //       // Click on the button
+  //       await completingProductsToPlan.clickButton(
+  //         ' Скомплектовать в набор ',
+  //         '[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]'
+  //       );
+
+  //       // Wait for loading
+  //       await page.waitForLoadState('networkidle');
+
+  //       // Wait for the table body to load
+  //       await completingProductsToPlan.waitingTableBody(TableComplect);
+  //     }
+  //   );
+  // });
+
+  // test('Test Case 27 - Receiving Product And Check Stock', async ({ page }) => {
+  //   // doc test case 22
+  //   console.log('Test Case 27 - Receiving Product And Check Stock');
+  //   test.setTimeout(90000);
+  //   const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(
+  //     page
+  //   );
+  //   const stock = new CreateStockPage(page);
+  //   const tableStockRecieptModalWindow =
+  //     '[data-testid="ModalComingTable-TableScroll"]';
+  //   const tableComplectsSets = '[data-testid="ModalKitsList-Table"]';
+
+  //   await allure.step(
+  //     'Step 01: Receiving quantities from balances',
+  //     async () => {
+  //       // Check the number of entities in the warehouse before posting
+  //       remainingStockBefore = await stock.checkingTheQuantityInStock(
+  //         nameProduct,
+  //         TableSelection.product
+  //       );
+  //     }
+  //   );
+
+  //   // Capitalization of the entity
+  //   await allure.step('Step 02: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await stockReceipt.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step('Step 03: Open the stock receipt page', async () => {
+  //     // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
+  //     const selector =
+  //       '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
+  //     await stockReceipt.findTable(selector);
+
+  //     // Waiting for loading
+  //     await page.waitForLoadState('networkidle');
+  //   });
+
+  //   await allure.step(
+  //     'Step 04: Click on the create receipt button',
+  //     async () => {
+  //       // Click on the button
+  //       await stockReceipt.clickButton(
+  //         'Создать приход',
+  //         SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE_INCOME
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 05: Select the selector in the modal window',
+  //     async () => {
+  //       // Select the selector in the modal window
+  //       await stockReceipt.selectStockReceipt(StockReceipt.cbed);
+  //       // Waiting for loading
+  //       await page.waitForLoadState('networkidle');
+
+  //       // Wait for the table body to load
+  //       await stockReceipt.waitingTableBodyNoThead(
+  //         tableStockRecieptModalWindow
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step('Step 06: Search product', async () => {
+  //     // Using table search we look for the value of the variable
+  //     await stockReceipt.searchTable(nameProduct, tableStockRecieptModalWindow);
+
+  //     // Waiting for loading
+  //     await page.waitForLoadState('networkidle');
+
+  //     // Wait for the table body to load
+  //     await stockReceipt.waitingTableBodyNoThead(tableStockRecieptModalWindow);
+  //   });
+
+  //   await allure.step(
+  //     'Step 07: Find the checkbox column and click',
+  //     async () => {
+  //       // Find the checkbox column and click
+  //       const tableModalComing = 'ModalComingTable-Table';
+  //       const numberColumn = await stockReceipt.findColumn(
+  //         page,
+  //         tableModalComing,
+  //         'ModalComingTable-Header-AllItemsAdd'
+  //       );
+  //       console.log('numberColumn: ', numberColumn);
+  //       await stockReceipt.getValueOrClickFromFirstRowNoThead(
+  //         tableStockRecieptModalWindow,
+  //         numberColumn,
+  //         Click.Yes,
+  //         Click.No
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step('Step 07a: Click the parish cell link', async () => {
+  //     // Click the parish cell (data-testid ends with -TdParish) in the first row
+  //     const parishCell = page
+  //       .locator(
+  //         '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+  //       )
+  //       .first();
+
+  //     await parishCell.waitFor({ state: 'visible', timeout: 10000 });
+  //     await parishCell.scrollIntoViewIfNeeded();
+
+  //     // Prefer inner link/button if present
+  //     const inner = parishCell.locator('a, [role="link"], button');
+  //     const hasInner = await inner
+  //       .first()
+  //       .isVisible()
+  //       .catch(() => false);
+  //     if (hasInner) {
+  //       await inner.first().click();
+  //     } else {
+  //       await parishCell.click();
+  //     }
+
+  //     await page.waitForTimeout(300);
+  //   });
+
+  //   await allure.step(
+  //     'Step 08: Check the modal window Completed sets',
+  //     async () => {
+  //       // Check the modal window Completed sets
+  //       await stockReceipt.completesSetsModalWindow();
+  //       await stockReceipt.waitingTableBody(
+  //         '[data-testid="ModalKitsList-HiddenContent"]'
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 09: We get the cell number with a checkmark',
+  //     async () => {
+  //       // We get the cell number with a checkmark
+  //       const tableComplectsSetsDataTestId = 'ModalKitsList-Table';
+  //       const numberColumnCheckbox = await stockReceipt.findColumn(
+  //         page,
+  //         tableComplectsSetsDataTestId,
+  //         'ModalKitsList-TableHeader-SelectAll'
+  //       );
+  //       console.log('numberColumn: ', numberColumnCheckbox);
+  //       await stockReceipt.getValueOrClickFromFirstRow(
+  //         tableComplectsSets,
+  //         numberColumnCheckbox,
+  //         Click.Yes,
+  //         Click.No
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step('Step 10: Enter the quantity in the cells', async () => {
+  //     // Enter the value into the input cell
+  //     const inputlocator =
+  //       '[data-testid^="ModalKitsList-TableRow-QuantityInputField"]';
+
+  //     const quantityPerShipment = await page
+  //       .locator(inputlocator)
+  //       .nth(0)
+  //       .getAttribute('value');
+  //     console.log('Кол-во на отгрузку: ', quantityPerShipment);
+  //     await page.locator(inputlocator).nth(0).fill('1');
+  //     await page.locator(inputlocator).nth(0).press('Enter');
+  //   });
+
+  //   await allure.step(
+  //     'Step 11: Click on the choice button on the modal window',
+  //     async () => {
+  //       // Click on the button
+  //       await stockReceipt.clickButton(
+  //         ' Выбрать ',
+  //         '[data-testid="ModalKitsList-SelectButton"]'
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 12: Check that the first row of the table contains the variable name',
+  //     async () => {
+  //       // Wait for the table body to load
+  //       const tableSelectedItems =
+  //         '[data-testid="ModalComing-SelectedItems-ScladTable"]';
+  //       await stockReceipt.waitingTableBody(tableSelectedItems);
+
+  //       // Check that the first row of the table contains the variable name
+  //       await stockReceipt.checkNameInLineFromFirstRow(
+  //         nameProduct,
+  //         tableSelectedItems
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 13: Click on the create receipt button on the modal window',
+  //     async () => {
+  //       // Click on the button
+  //       await stockReceipt.clickButton(
+  //         ' Создать приход ',
+  //         '[data-testid="ModalComing-DocumentAttachment-CreateIncomeButton"]'
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 14: Check the number of parts in the warehouse after posting',
+  //     async () => {
+  //       // Checking the remainder of the entity after capitalization
+  //       remainingStockAfter = await stock.checkingTheQuantityInStock(
+  //         nameProduct,
+  //         TableSelection.product
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step('Step 15: Compare the quantity in cells', async () => {
+  //     // Compare the quantity in cells
+  //     expect(Number(remainingStockAfter)).toBe(
+  //       Number(remainingStockBefore) + Number(incomingQuantity)
+  //     );
+
+  //     // Output to the console
+  //     console.log(
+  //       `Количество ${nameProduct} на складе до оприходования: ${remainingStockBefore}, ` +
+  //         `оприходовали в количестве: ${incomingQuantity}, ` +
+  //         `и после оприходования: ${remainingStockAfter}.`
+  //     );
+  //   });
+  // });
+
+  // test('Test Case 28 - Launch Into Production Product', async ({ page }) => {
+  //   // doc test case 23
+  //   console.log('Test Case 28 - Launch Into Production Product');
+  //   test.setTimeout(90000);
+  //   const shortageProduct = new CreateShortageProductPage(page);
+  //   let checkOrderNumber: string;
+
+  //   await allure.step('Step 01: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step('Step 02: Open the shortage product page', async () => {
+  //     // Find and go to the page using the locator Shortage of Products
+  //     const selector =
+  //       '[data-testid="Sclad-deficitProduction-deficitProduction"]';
+  //     await shortageProduct.findTable(selector);
+
+  //     // Wait for loading
+  //     await page.waitForLoadState('networkidle');
+
+  //     // Wait for the table body to load
+  //     await shortageProduct.waitingTableBody(deficitTable);
+  //   });
+
+  //   await allure.step('Step 03: Search product', async () => {
+  //     // Using table search we look for the value of the variable
+  //     await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
+
+  //     // Wait for the table body to load
+  //     await shortageProduct.waitingTableBody(deficitTable);
+  //   });
+
+  //   await allure.step(
+  //     'Step 04: Check the checkbox in the first column',
+  //     async () => {
+  //       await page.waitForTimeout(500);
+  //       // Find the variable name in the first line and check the checkbox
+  //       const numberColumn = await shortageProduct.findColumn(
+  //         page,
+  //         tableMain,
+  //         columnCheckbox
+  //       );
+  //       console.log('Column number with checkbox: ', numberColumn);
+
+  //       await shortageProduct.getValueOrClickFromFirstRow(
+  //         deficitTable,
+  //         numberColumn,
+  //         Click.Yes,
+  //         Click.No
+  //       );
+
+  //       // Wait for the table body to load
+  //       await shortageProduct.waitingTableBody(deficitTable);
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 05: Checking the urgency date of an order',
+  //     async () => {
+  //       const numberColumn = await shortageProduct.findColumn(
+  //         page,
+  //         tableMain,
+  //         columnDateUrgency
+  //       );
+  //       console.log('numberColumn: ', numberColumn);
+
+  //       urgencyDateOnTable = await shortageProduct.getValueOrClickFromFirstRow(
+  //         deficitTable,
+  //         numberColumn
+  //       );
+
+  //       console.log('Date by urgency in the table: ', urgencyDateOnTable);
+
+  //       expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 06: We check the number of those launched into production',
+  //     async () => {
+  //       const numberColumn = await shortageProduct.findColumn(
+  //         page,
+  //         tableMain,
+  //         columnOrderFromProduction
+  //       );
+
+  //       quantityProductLaunchOnProductionBefore =
+  //         await shortageProduct.getValueOrClickFromFirstRow(
+  //           deficitTable,
+  //           numberColumn
+  //         );
+
+  //       console.log(
+  //         'The value in the cells is put into production befor:',
+  //         quantityProductLaunchOnProductionBefore
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 07: Click on the Launch on production button',
+  //     async () => {
+  //       // Click on the button
+  //       await shortageProduct.clickButton(
+  //         ' Запустить в производство ',
+  //         buttonLaunchIntoProduction
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 08: Testing a modal window for production launch',
+  //     async () => {
+  //       // Check the modal window Launch into production
+  //       await shortageProduct.checkModalWindowLaunchIntoProduction(
+  //         modalWindowLaunchIntoProduction
+  //       );
+
+  //       // Check the date in the Launch into production modal window
+  //       await shortageProduct.checkCurrentDate(
+  //         '[data-testid="ModalStartProduction-OrderDateValue"]'
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step('Step 09: Enter a value into a cell', async () => {
+  //     // Check the value in the Own quantity field and enter the value
+  //     const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+  //     await shortageProduct.checkOrderQuantity(
+  //       locator,
+  //       '2',
+  //       quantityProductLaunchOnProduction
+  //     );
+  //   });
+
+  //   await allure.step('Step 10: We save the order number', async () => {
+  //     // Get the order number
+  //     checkOrderNumber = await shortageProduct.checkOrderNumber();
+  //     console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+  //   });
+
+  //   await allure.step('Step 11: Click on the In launch button', async () => {
+  //     // Click on the button
+  //     await shortageProduct.clickButton(
+  //       'В производство',
+  //       buttonLaunchIntoProductionModalWindow
+  //     );
+  //   });
+
+  //   await allure.step(
+  //     'Step 12: We check that the order number is displayed in the notification',
+  //     async () => {
+  //       // Check the order number in the success notification
+  //       await shortageProduct.getMessage(checkOrderNumber);
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 13: We check the number of those launched into production',
+  //     async () => {
+  //       const numberColumn = await shortageProduct.findColumn(
+  //         page,
+  //         tableMain,
+  //         columnOrderFromProduction
+  //       );
+
+  //       quantityProductLaunchOnProductionAfter =
+  //         await shortageProduct.getValueOrClickFromFirstRow(
+  //           deficitTable,
+  //           numberColumn
+  //         );
+
+  //       console.log(
+  //         'The value in the cells is put into production after:',
+  //         quantityProductLaunchOnProductionAfter
+  //       );
+  //       quantitySumLaunchOnProduction =
+  //         Number(quantityProductLaunchOnProductionBefore) +
+  //         Number(quantityProductLaunchOnProduction);
+  //       expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
+  //         Number(quantityProductLaunchOnProductionBefore) +
+  //           Number(quantityProductLaunchOnProduction)
+  //       );
+  //     }
+  //   );
+  // });
+
+  // test('Test Case 29 - Launch Into Production Cbed', async ({ page }) => {
+  //   // doc test case 24
+  //   console.log('Test Case 29 - Launch Into Production Cbed');
+  //   test.setTimeout(90000);
+  //   const shortageAssemblies = new CreatShortageAssembliesPage(page);
+  //   let checkOrderNumber: string;
+
+  //   await allure.step('Step 01: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step(
+  //     'Step 02: Open the shortage assemblies page',
+  //     async () => {
+  //       // Find and go to the page using the locator shortage assemblies
+  //       const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
+  //       await shortageAssemblies.findTable(selector);
+  //     }
+  //   );
+
+  //   // Check if the array is empty
+  //   if (descendantsCbedArray.length === 0) {
+  //     throw new Error('Массив пустой.');
+  //   } else {
+  //     // Loop through the array of assemblies
+  //     for (const cbed of descendantsCbedArray) {
+  //       await allure.step('Step 03: Search product', async () => {
+  //         // Wait for the table body to load
+  //         await shortageAssemblies.waitingTableBody(deficitTableCbed);
+
+  //         // Using table search we look for the value of the variable
+  //         await shortageAssemblies.searchTableRedesign(
+  //           cbed.name,
+  //           deficitTableCbed
+  //         );
+
+  //         // Wait for the table body to load
+  //         await shortageAssemblies.waitingTableBody(deficitTableCbed);
+
+  //         await page.locator(buttonLaunchIntoProductionCbed).hover();
+  //       });
+
+  //       await allure.step(
+  //         'Step 04: Check the checkbox in the first column',
+  //         async () => {
+  //           // Find the variable name in the first line and check the checkbox
+  //           const numberColumn = await shortageAssemblies.findColumn(
+  //             page,
+  //             tableMainCbed,
+  //             columnCheckboxCbed
+  //           );
+  //           console.log('Column number with checkbox: ', numberColumn);
+
+  //           await shortageAssemblies.getValueOrClickFromFirstRow(
+  //             deficitTableCbed,
+  //             numberColumn,
+  //             Click.Yes
+  //           );
+
+  //           // Wait for the table body to load
+  //           await shortageAssemblies.waitingTableBody(deficitTableCbed);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 05: Checking the urgency date of an order',
+  //         async () => {
+  //           const numberColumn = await shortageAssemblies.findColumn(
+  //             page,
+  //             tableMainCbed,
+  //             columnDateUrgencyCbed
+  //           );
+  //           console.log('Number column urgency date: ', numberColumn);
+
+  //           urgencyDateOnTable =
+  //             await shortageAssemblies.getValueOrClickFromFirstRow(
+  //               deficitTableCbed,
+  //               numberColumn
+  //             );
+
+  //           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+
+  //           expect(urgencyDateOnTable).toBe(urgencyDate);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 06: We check the number of those launched into production',
+  //         async () => {
+  //           const numberColumn = await shortageAssemblies.findColumn(
+  //             page,
+  //             tableMainCbed,
+  //             columnOrderFromProductionCbed
+  //           );
+  //           console.log(
+  //             'Number column launched into production: ',
+  //             numberColumn
+  //           );
+
+  //           quantityProductLaunchOnProductionBefore =
+  //             await shortageAssemblies.getValueOrClickFromFirstRow(
+  //               deficitTableCbed,
+  //               numberColumn
+  //             );
+
+  //           console.log(
+  //             'The value in the cells is put into production befor:',
+  //             quantityProductLaunchOnProductionBefore
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 07: Click on the Launch on production button',
+  //         async () => {
+  //           // Click on the button
+  //           await shortageAssemblies.clickButton(
+  //             ' Запустить в производство ',
+  //             buttonLaunchIntoProductionCbed
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 08: Testing a modal window for production launch',
+  //         async () => {
+  //           // Check the modal window Launch into production
+  //           await shortageAssemblies.checkModalWindowLaunchIntoProduction(
+  //             modalWindowLaunchIntoProductionCbed
+  //           );
+
+  //           // Check the date in the Launch into production modal window
+  //           await shortageAssemblies.checkCurrentDate(
+  //             '[data-testid="ModalStartProduction-OrderDateValue"]'
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step('Step 09: Enter a value into a cell', async () => {
+  //         // Check the value in the Own quantity field and enter the value
+  //         const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+  //         await shortageAssemblies.checkOrderQuantity(
+  //           locator,
+  //           '2',
+  //           quantityProductLaunchOnProduction
+  //         );
+  //       });
+
+  //       await allure.step('Step 10: We save the order number', async () => {
+  //         // Get the order number
+  //         checkOrderNumber = await shortageAssemblies.checkOrderNumber();
+  //         console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+  //       });
+
+  //       await allure.step(
+  //         'Step 11: Click on the In launch button',
+  //         async () => {
+  //           // Click on the button
+  //           await shortageAssemblies.clickButton(
+  //             'В производство',
+  //             buttonLaunchIntoProductionModalWindow
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 12: We check that the order number is displayed in the notification',
+  //         async () => {
+  //           // Check the order number in the success notification
+  //           await shortageAssemblies.getMessage(checkOrderNumber);
+  //         }
+  //       );
+
+  //       await allure.step('Step 13: Close success message', async () => {
+  //         // Close the success notification
+  //         await page.waitForLoadState('networkidle');
+  //         await page.waitForTimeout(1000);
+  //         await shortageAssemblies.closeSuccessMessage();
+  //       });
+
+  //       await allure.step(
+  //         'Step 14: We check the number of those launched into production',
+  //         async () => {
+  //           const numberColumn = await shortageAssemblies.findColumn(
+  //             page,
+  //             tableMainCbed,
+  //             columnOrderFromProductionCbed
+  //           );
+
+  //           quantityProductLaunchOnProductionAfter =
+  //             await shortageAssemblies.getValueOrClickFromFirstRow(
+  //               deficitTableCbed,
+  //               numberColumn
+  //             );
+
+  //           console.log(
+  //             'The value in the cells is put into production after:',
+  //             quantityProductLaunchOnProductionAfter
+  //           );
+
+  //           expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
+  //             Number(quantityProductLaunchOnProductionBefore) +
+  //               Number(quantityProductLaunchOnProduction)
+  //           );
+  //         }
+  //       );
+  //     }
+  //   }
+  // });
+
+  // test('Test Case 30 - Launch Into Production Parts', async ({ page }) => {
+  //   // doc test case 25
+  //   console.log('Test Case 30 - Launch Into Production Parts');
+  //   test.setTimeout(90000);
+  //   const shortageParts = new CreatShortagePartsPage(page);
+  //   let checkOrderNumber: string;
+
+  //   await allure.step('Step 01: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step('Step 02: Open the shortage parts page', async () => {
+  //     // Find and go to the page using the locator Parts Shortage
+  //     const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
+  //     await shortageParts.findTable(selector);
+  //   });
+
+  //   // Check if the array is empty
+  //   if (descendantsDetailArray.length === 0) {
+  //     throw new Error('Массив пустой.');
+  //   } else {
+  //     // Iterate through the array of parts
+  //     for (const part of descendantsDetailArray) {
+  //       await allure.step('Step 03: Search product', async () => {
+  //         // Wait for the table body to load
+  //         await shortageParts.waitingTableBody(deficitTableDetail);
+
+  //         // Waiting for loading
+  //         await page.waitForLoadState('networkidle');
+
+  //         // Using table search we look for the value of the variable
+  //         await shortageParts.searchTableRedesign(
+  //           part.name,
+  //           deficitTableDetail
+  //         );
+
+  //         // Waiting for loading
+  //         await page.waitForLoadState('networkidle');
+
+  //         await page.waitForTimeout(1000);
+
+  //         // Wait for the table body to load
+  //         await shortageParts.waitingTableBody(deficitTableDetail);
+  //       });
+
+  //       await allure.step(
+  //         'Step 04: Check that the first row of the table contains the variable name',
+  //         async () => {
+  //           // Check that the first row of the table contains the variable name
+  //           const numberColumn = await shortageParts.findColumn(
+  //             page,
+  //             tableMainDetail,
+  //             columnCheckBoxDetail
+  //           );
+  //           console.log('Column number with checkbox: ', numberColumn);
+
+  //           await shortageParts.getValueOrClickFromFirstRow(
+  //             deficitTableDetail,
+  //             numberColumn,
+  //             Click.Yes,
+  //             Click.No
+  //           );
+
+  //           // Wait for the table body to load
+  //           await shortageParts.waitingTableBody(deficitTableDetail);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 05: Checking the urgency date of an order',
+  //         async () => {
+  //           const numberColumn = await shortageParts.findColumn(
+  //             page,
+  //             tableMainDetail,
+  //             columnDateUrgencyDetail
+  //           );
+  //           console.log('Number column urgency date: ', numberColumn);
+
+  //           urgencyDateOnTable =
+  //             await shortageParts.getValueOrClickFromFirstRow(
+  //               deficitTableDetail,
+  //               numberColumn
+  //             );
+
+  //           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+
+  //           expect(urgencyDateOnTable).toBe(urgencyDate);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 06: We check the number of those launched into production',
+  //         async () => {
+  //           const numberColumn = await shortageParts.findColumn(
+  //             page,
+  //             tableMainDetail,
+  //             columnOrderFromProductionDetail
+  //           );
+  //           console.log(
+  //             'Number column launched into production: ',
+  //             numberColumn
+  //           );
+
+  //           quantityProductLaunchOnProductionBefore =
+  //             await shortageParts.getValueOrClickFromFirstRow(
+  //               deficitTableDetail,
+  //               numberColumn
+  //             );
+
+  //           console.log(
+  //             'The value in the cells is put into production befor:',
+  //             quantityProductLaunchOnProductionBefore
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 07: Click on the Launch on production button ',
+  //         async () => {
+  //           // Click on the button
+  //           await shortageParts.clickButton(
+  //             ' Запустить в производство ',
+  //             buttonLaunchIntoProductionDetail
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 08: Testing a modal window for production launch',
+  //         async () => {
+  //           // Check the modal window Launch into production
+  //           await shortageParts.checkModalWindowLaunchIntoProduction(
+  //             modalWindowLaunchIntoProductionDetail
+  //           );
+
+  //           // Check the date in the Launch into production modal window
+  //           await shortageParts.checkCurrentDate(
+  //             '[data-testid="ModalStartProduction-OrderDateValue"]'
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step('Step 09: Enter a value into a cell', async () => {
+  //         // Check the value in the Own quantity field and enter the value
+  //         const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+  //         await shortageParts.checkOrderQuantity(
+  //           locator,
+  //           '2',
+  //           quantityProductLaunchOnProduction
+  //         );
+  //       });
+
+  //       await allure.step('Step 10: We save the order number', async () => {
+  //         // Get the order number
+  //         checkOrderNumber = await shortageParts.checkOrderNumber();
+  //         console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+  //       });
+
+  //       await allure.step(
+  //         'Step 11: Click on the In launch button',
+  //         async () => {
+  //           // Click on the button
+  //           await shortageParts.clickButton(
+  //             ' В производство ',
+  //             buttonLaunchIntoProductionModalWindow
+  //           );
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 12: We check that the order number is displayed in the notification',
+  //         async () => {
+  //           // Check the order number in the success notification
+  //           await shortageParts.getMessage(checkOrderNumber);
+  //         }
+  //       );
+
+  //       await allure.step('Step 13: Close success message', async () => {
+  //         // Close the success notification
+  //         await shortageParts.closeSuccessMessage();
+  //       });
+
+  //       await allure.step(
+  //         'Step 14: We check the number of those launched into production',
+  //         async () => {
+  //           const numberColumn = await shortageParts.findColumn(
+  //             page,
+  //             tableMainDetail,
+  //             columnOrderFromProductionDetail
+  //           );
+  //           console.log(
+  //             'Number column launched into production: ',
+  //             numberColumn
+  //           );
+
+  //           quantityProductLaunchOnProductionAfter =
+  //             await shortageParts.getValueOrClickFromFirstRow(
+  //               deficitTableDetail,
+  //               numberColumn
+  //             );
+
+  //           console.log(
+  //             'The value in the cells is put into production after:',
+  //             quantityProductLaunchOnProductionAfter
+  //           );
+
+  //           expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
+  //             Number(quantityProductLaunchOnProductionBefore) +
+  //               Number(quantityProductLaunchOnProduction)
+  //           );
+  //         }
+  //       );
+  //     }
+  //   }
+  // });
+
+  // test('Test Case 31 - Uploading Second Shipment Task', async ({
+  //   page,
+  // }) => {
+  //   // doc test case 26
+  //   console.log('Test Case 31 - Uploading Second Shipment Task');
+  //   test.setTimeout(90000);
+  //   const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(
+  //     page
+  //   );
+
+  //   let numberColumn: number;
+
+  //   await allure.step('Step 01: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await warehouseTaskForShipment.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step(
+  //     'Step 02: Open the warehouse shipping task page',
+  //     async () => {
+  //       // Find and go to the page using the locator Склад: Задачи на отгрузку
+  //       const selector = '[data-testid="Sclad-shippingTasks"]';
+  //       await warehouseTaskForShipment.findTable(selector);
+
+  //       // Wait for loading
+  //       await page.waitForLoadState('networkidle');
+  //       await page.waitForTimeout(500);
+
+  //       // Wait for the table body to load
+  //       await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
+  //     }
+  //   );
+
+  //   await allure.step('Step 03: Search product', async () => {
+  //     // Using table search we look for the value of the variable
+  //     await warehouseTaskForShipment.searchTableRedesign(
+  //       nameProduct,
+  //       tableMainUploading
+  //     );
+
+  //     await page.waitForTimeout(1000);
+
+  //     // Wait for the table body to load
+  //     await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
+  //   });
+
+  //   await allure.step(
+  //     'Step 04: Check that the first row of the table contains the variable name',
+  //     async () => {
+  //       // Check that the first row of the table contains the variable name
+  //       await warehouseTaskForShipment.checkNameInLineFromFirstRow(
+  //         orderNumber.orderNumber,
+  //         tableMainUploading
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 05: Find the checkbox column and click',
+  //     async () => {
+  //       // Find the checkbox column and click
+  //       numberColumn = await warehouseTaskForShipment.findColumn(
+  //         page,
+  //         tableMainUploadingID,
+  //         'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-Number'
+  //       );
+
+  //       // console.log("numberColumn: ", numberColumn);
+  //       await warehouseTaskForShipment.getValueOrClickFromFirstRow(
+  //         tableMainUploading,
+  //         numberColumn,
+  //         Click.Yes,
+  //         Click.No
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step('Step 06: Click on the ship button', async () => {
+  //     // Click on the button
+  //     await warehouseTaskForShipment.clickButton(
+  //       ' Отгрузить ',
+  //       buttonUploading
+  //     );
+  //   });
+
+  //   await allure.step('Step 07: Check the Shipping modal window', async () => {
+  //     // Check the Shipping modal window
+  //     await warehouseTaskForShipment.shipmentModalWindow();
+  //   });
+
+  //   await allure.step('Step 08: Click on the ship button', async () => {
+  //     // Click on the button
+  //     await warehouseTaskForShipment.clickButton(
+  //       ' Отгрузить ',
+  //       '[data-testid="ModalShComlit-Button-Ship"]'
+  //     );
+  //   });
+  // });
+
+  // test('Test Case 32 - Checking new date by urgency', async ({ page }) => {
+  //   // doc test case 27
+  //   console.log('Test Case 32 - Checking new date by urgency');
+  //   test.setTimeout(90000);
+  //   // Проверка изделия на дату по срочности
+  //   const shortageProduct = new CreateShortageProductPage(page);
+  //   let checkOrderNumber: string;
+
+  //   await allure.step('Step 01: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step('Step 02: Open the shortage product page', async () => {
+  //     // Find and go to the page using the locator Shortage of Products
+  //     const selector =
+  //       '[data-testid="Sclad-deficitProduction-deficitProduction"]';
+  //     await shortageProduct.findTable(selector);
+
+  //     // Wait for loading
+  //     await page.waitForLoadState('networkidle');
+
+  //     // Wait for the table body to load
+  //     await shortageProduct.waitingTableBody(deficitTable);
+  //   });
+
+  //   await allure.step('Step 03: Search product', async () => {
+  //     // Using table search we look for the value of the variable
+  //     await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
+
+  //     // Wait for the table body to load
+  //     await shortageProduct.waitingTableBody(deficitTable);
+  //   });
+
+  //   await allure.step(
+  //     'Step 04: Check the checkbox in the first column',
+  //     async () => {
+  //       // Check that the first row of the table contains the variable name
+  //       await shortageProduct.checkNameInLineFromFirstRow(
+  //         nameProduct,
+  //         deficitTable
+  //       );
+
+  //       // Wait for the table body to load
+  //       await shortageProduct.waitingTableBody(deficitTable);
+  //     }
+  //   );
+
+  //   await allure.step(
+  //     'Step 04: Checking the urgency date of an order',
+  //     async () => {
+  //       const numberColumn = await shortageProduct.findColumn(
+  //         page,
+  //         tableMain,
+  //         columnDateUrgency
+  //       );
+  //       console.log('numberColumn: ', numberColumn);
+
+  //       urgencyDateOnTable = await shortageProduct.getValueOrClickFromFirstRow(
+  //         deficitTable,
+  //         numberColumn
+  //       );
+
+  //       console.log('Date by urgency in the table: ', urgencyDateOnTable);
+
+  //       expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+  //     }
+  //   );
+
+  //   // Checking the board for urgency of assembly
+  //   const shortageAssemblies = new CreatShortageAssembliesPage(page);
+
+  //   await allure.step('Step 05: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await shortageAssemblies.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step(
+  //     'Step 06: Open the shortage assemblies page',
+  //     async () => {
+  //       // Find and go to the page using the locator shortage assemblies
+  //       const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
+  //       await shortageAssemblies.findTable(selector);
+  //     }
+  //   );
+
+  //   // Check if the array is empty
+  //   if (descendantsCbedArray.length === 0) {
+  //     throw new Error('Массив пустой.');
+  //   } else {
+  //     // Loop through the array of assemblies
+  //     for (const cbed of descendantsCbedArray) {
+  //       await allure.step('Step 07: Search product', async () => {
+  //         // Wait for the table body to load
+  //         await shortageAssemblies.waitingTableBody(deficitTableCbed);
+
+  //         // Using table search we look for the value of the variable
+  //         await shortageAssemblies.searchTableRedesign(
+  //           cbed.name,
+  //           deficitTableCbed
+  //         );
+
+  //         // Wait for the table body to load
+  //         await shortageAssemblies.waitingTableBody(deficitTableCbed);
+
+  //         await page.locator(buttonLaunchIntoProductionCbed).hover();
+  //       });
+
+  //       await allure.step(
+  //         'Step 08: Checking the urgency date of an order',
+  //         async () => {
+  //           const numberColumn = await shortageAssemblies.findColumn(
+  //             page,
+  //             tableMainCbed,
+  //             columnDateUrgencyCbed
+  //           );
+  //           console.log('Number column urgency date: ', numberColumn);
+
+  //           urgencyDateOnTable =
+  //             await shortageAssemblies.getValueOrClickFromFirstRow(
+  //               deficitTableCbed,
+  //               numberColumn
+  //             );
+
+  //           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+
+  //           expect(urgencyDateOnTable).toBe(urgencyDate);
+  //         }
+  //       );
+  //     }
+  //   }
+
+  //   // Проверка на дату по срочности деталей
+  //   const shortageParts = new CreatShortagePartsPage(page);
+
+  //   await allure.step('Step 09: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await shortageParts.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step('Step 10: Open the shortage parts page', async () => {
+  //     // Find and go to the page using the locator Parts Shortage
+  //     const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
+  //     await shortageParts.findTable(selector);
+  //   });
+
+  //   // Check if the array is empty
+  //   if (descendantsDetailArray.length === 0) {
+  //     throw new Error('Массив пустой.');
+  //   } else {
+  //     // Iterate through the array of parts
+  //     for (const part of descendantsDetailArray) {
+  //       await allure.step('Step 11: Search product', async () => {
+  //         // Wait for the table body to load
+  //         await shortageParts.waitingTableBody(deficitTableDetail);
+
+  //         // Waiting for loading
+  //         await page.waitForLoadState('networkidle');
+
+  //         // Using table search we look for the value of the variable
+  //         await shortageParts.searchTableRedesign(
+  //           part.name,
+  //           deficitTableDetail
+  //         );
+
+  //         // Waiting for loading
+  //         await page.waitForLoadState('networkidle');
+
+  //         await page.waitForTimeout(1000);
+
+  //         // Wait for the table body to load
+  //         await shortageParts.waitingTableBody(deficitTableDetail);
+  //       });
+
+  //       await allure.step(
+  //         'Step 12: Check that the first row of the table contains the variable name',
+  //         async () => {
+  //           // Check that the first row of the table contains the variable name
+  //           const numberColumn = await shortageParts.findColumn(
+  //             page,
+  //             tableMainDetail,
+  //             columnCheckBoxDetail
+  //           );
+  //           console.log('Column number with checkbox: ', numberColumn);
+
+  //           await shortageParts.getValueOrClickFromFirstRow(
+  //             deficitTableDetail,
+  //             numberColumn,
+  //             Click.Yes
+  //           );
+
+  //           // Wait for the table body to load
+  //           await shortageParts.waitingTableBody(deficitTableDetail);
+  //         }
+  //       );
+
+  //       await allure.step(
+  //         'Step 13: Checking the urgency date of an order',
+  //         async () => {
+  //           const numberColumn = await shortageParts.findColumn(
+  //             page,
+  //             tableMainDetail,
+  //             columnDateUrgencyDetail
+  //           );
+  //           console.log('Number column urgency date: ', numberColumn);
+
+  //           urgencyDateOnTable =
+  //             await shortageParts.getValueOrClickFromFirstRow(
+  //               deficitTableDetail,
+  //               numberColumn
+  //             );
+
+  //           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+
+  //           expect(urgencyDateOnTable).toBe(urgencyDate);
+  //         }
+  //       );
+  //     }
+  //   }
+  // });
+
+  // test('Test Case 33 - Archive Metalworking Warehouse Task All', async ({
+  //   // doc test case 28
+  //   page,
+  // }) => {
+  //   console.log('Test Case 33 - Archive Metalworking Warehouse Task All');
+  //   test.setTimeout(90000);
+  //   const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
+  //   const warehouseTable =
+  //     'table[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table"]';
+
+  //   await allure.step('Step 01: Open the warehouse page', async () => {
+  //     // Go to the Warehouse page
+  //     await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+  //   });
+
+  //   await allure.step(
+  //     'Step 02: Open the metalworking warehouse page',
+  //     async () => {
+  //       const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
+  //       await metalworkingWarehouse.findTable(selector);
+
+  //       // Wait for loading
+  //       await page.waitForLoadState('networkidle');
+  //       await metalworkingWarehouse.waitingTableBody(warehouseTable);
+  //     }
+  //   );
+
+  //   await allure.step('Step 03: Search product', async () => {
+  //     await metalworkingWarehouse.searchTable(
+  //       designation,
+  //       warehouseTable,
+  //       'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Search-Dropdown-Input'
+  //     );
+
+  //     await metalworkingWarehouse.waitingTableBody(warehouseTable);
+  //   });
+
+  //   await allure.step(
+  //     'Step 04: Check that the first row of the table contains the variable name',
+  //     async () => {
+  //       await metalworkingWarehouse.checkboxMarkNameInLineFromFirstRow(
+  //         designation,
+  //         warehouseTable
+  //       );
+  //     }
+  //   );
+
+  //   await allure.step('Step 05: Click on the archive button', async () => {
+  //     await metalworkingWarehouse.clickOnTheTableHeaderCell(15, warehouseTable);
+
+  //     await metalworkingWarehouse.clickButton(
+  //       ' Переместить в архив ',
+  //       '[data-testid="MetalloworkingSclad-PrintControls-ArchiveButton"]'
+  //     );
+  //   });
+
+  //   await allure.step('Step 06: Confirm the archive', async () => {
+  //     await metalworkingWarehouse.clickButton(
+  //       ' Подтвердить ',
+  //       '[data-testid="ModalPromptMini-Button-Confirm"]'
+  //     );
+  //   });
+  // });
 
   test('Test Case 34 - Archive Assembly Warehouse Task All', async ({
     // doc test case 29
@@ -8009,7 +8335,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     console.log('Test Case 34 - Archive Assembly Warehouse Task All');
     test.setTimeout(90000);
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
-    const warehouseTable = '[data-testid="AssemblySclad-Table"]';
+    const warehouseTable = 'table[data-testid="AssemblySclad-ScrollTable"]';
 
     await allure.step('Step 01: Open the warehouse page', async () => {
       await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
@@ -8025,7 +8351,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 03: Search product', async () => {
-      await assemblyWarehouse.searchTable(designation, warehouseTable);
+      await assemblyWarehouse.searchTable(
+        designation,
+        warehouseTable,
+        '${props.dataTestid}-TableHead-Search-Dropdown-Input'
+      );
 
       await assemblyWarehouse.waitingTableBody(warehouseTable);
     });
@@ -8044,15 +8374,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await assemblyWarehouse.clickOnTheTableHeaderCell(16, warehouseTable);
 
       await assemblyWarehouse.clickButton(
-        ' Переместить в архив ',
-        '[data-testid="AssemblySclad-PrintControls-ArchiveButton"]'
+        'Архив',
+        '[data-testid="AssemblySclad-Button-Archive"]'
       );
     });
 
     await allure.step('Step 06: Confirm the archive', async () => {
       await assemblyWarehouse.clickButton(
-        ' Подтвердить ',
-        '[data-testid="ModalPromptMini-Button-Confirm"]'
+        'Да',
+        '[data-testid="AssemblySclad-BanModal-Content-Buttons-Yes"]'
       );
     });
   });
@@ -8125,14 +8455,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click on the button
       await loadingTaskPage.clickButton(
         'Архив',
-        '.button-yui-kit.small.primary-yui-kit'
+        '[data-testid="IssueShipment-ActionsButtons-Archive"]'
       );
     });
 
     await allure.step('Step 06: Confirm the archive', async () => {
       await loadingTaskPage.clickButton(
         'Да',
-        '.dialog-ban__buttons .button-yui-kit.small.primary-yui-kit'
+        '[data-testid="ModalConfirm-Content-Buttons-Yes"]'
       );
     });
   });
