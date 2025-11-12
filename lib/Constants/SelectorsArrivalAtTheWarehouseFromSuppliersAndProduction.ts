@@ -20,3 +20,5 @@ export const BUTTON_ADD_TO_RECEIPT =
 
 export const MODAL_WINDOW_TABLE_SEARCH_INPUT =
   'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input';
+export const BUTTON_CREATE_RECEIPT =
+  'button[data-testid="ComingToSclad-Main-Content-Tooltip-Buttons-Parish"]';
