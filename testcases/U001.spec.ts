@@ -174,7 +174,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 02: Click on the Create order button', async () => {
       // Click on the button
       await loadingTaskPage.clickButton(
-        ' Создать заказ ',
+        'Создать заказ',
         LoadingTasksSelectors.buttonCreateOrder
       );
     });
@@ -183,7 +183,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click on the button
       await page
         .locator(LoadingTasksSelectors.buttonChoiceIzd, {
-          hasText: ' Выбрать ',
+          hasText: 'Выбрать',
         })
         .nth(0)
         .click();
@@ -217,7 +217,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await loadingTaskPage.clickButton(
-          ' Добавить ',
+          'Добавить',
           LoadingTasksSelectors.buttonChoiceIzd
         );
       }
@@ -985,7 +985,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 04: Click on the Create order button', async () => {
       // Click on the button
       await loadingTaskPage.clickButton(
-        ' Создать заказ ',
+        'Создать заказ',
         LoadingTasksSelectors.buttonCreateOrder
       );
     });
@@ -1057,7 +1057,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click on the button
       await page
         .locator(LoadingTasksSelectors.buttonChoiceIzd, {
-          hasText: ' Выбрать ',
+          hasText: 'Выбрать',
         })
         .nth(0)
         .click();
@@ -1193,7 +1193,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await loadingTaskPage.clickButton(
-          ' Добавить ',
+          'Добавить',
           LoadingTasksSelectors.buttonChoiceIzd
         );
       }
@@ -1205,18 +1205,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitForTimeout(500);
     });
 
-    await allure.step(
-      'Step 15: Click on the Select buyer button ',
-      async () => {
-        await loadingTaskPage.clickButton(
-          'Выбрать',
-          LoadingTasksSelectors.buttonChoiceBuyer
-        );
+    await allure.step('Step 15: Click on the Select buyer button', async () => {
+      await loadingTaskPage.clickButton(
+        'Выбрать',
+        LoadingTasksSelectors.buttonChoiceBuyer
+      );
 
-        // Wait for loading
-        await page.waitForLoadState('networkidle');
-      }
-    );
+      // Wait for loading
+      await page.waitForLoadState('networkidle');
+    });
 
     await allure.step('Step 16: Check modal window Company', async () => {
       // await loadingTaskPage.searchTable(nameBuyer, '.table-yui-kit__border.table-yui-kit-with-scroll')
@@ -1244,7 +1241,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await loadingTaskPage.clickButton(
-          ' Добавить ',
+          'Добавить',
           LoadingTasksSelectors.buttonAddBuyerOnModalWindow
         );
       }
@@ -1456,17 +1453,27 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 03: Checking the quantity in a task', async () => {
-      const numberColumn = await loadingTaskPage.findColumn(
-        page,
-        mainTableLoadingTask,
-        'IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Thead-QuanityPies'
-      );
-      console.log('Column number with quantity by task: ', numberColumn);
+      // Find the quantity cell using data-testid pattern
+      // Pattern: IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol{id}
+      const quantityCell = page
+        .locator(
+          '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]'
+        )
+        .first();
 
-      const quantityOnTable = await loadingTaskPage.getValueOrClickFromFirstRow(
-        LoadingTasksSelectors.loadingMainTable,
-        numberColumn
-      );
+      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
+      await quantityCell.scrollIntoViewIfNeeded();
+
+      // Highlight the quantity cell
+      await quantityCell.evaluate((el: HTMLElement) => {
+        el.style.backgroundColor = 'lightcyan';
+        el.style.border = '2px solid blue';
+      });
+
+      // Get the quantity value from the cell
+      const quantityValue = await quantityCell.textContent();
+      const quantityOnTable = quantityValue?.trim() || '';
+
       console.log(
         'Количество заказанных сущностей в заказе: ',
         quantityOnTable
@@ -1590,20 +1597,47 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 06: Check the checkbox in the first column',
       async () => {
-        // Find the variable name in the first line and check the checkbox
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnCheckbox
-        );
-        console.log('Column number with checkbox: ', numberColumn);
+        // Find the checkbox using data-testid
+        const checkboxCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-Checkbox"]')
+          .first();
 
-        await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
+        await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+        await checkboxCell.scrollIntoViewIfNeeded();
+
+        // Highlight the checkbox cell
+        await checkboxCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'yellow';
+          el.style.border = '2px solid red';
+        });
+
+        // Find the actual checkbox input inside the cell
+        const checkbox = checkboxCell.getByRole('checkbox').first();
+
+        // Check if the checkbox is disabled
+        const isDisabled = await checkbox.isDisabled();
+        if (isDisabled) {
+          throw new Error('Cannot check the checkbox. Checkbox is disabled.');
+        }
+
+        // Check if the checkbox is already checked
+        const isChecked = await checkbox.isChecked();
+        if (!isChecked) {
+          console.log('Checkbox is not checked, attempting to check it...');
+          await checkbox.click();
+          await page.waitForTimeout(300);
+
+          // Verify the checkbox is now checked
+          const isCheckedAfter = await checkbox.isChecked();
+          if (!isCheckedAfter) {
+            throw new Error(
+              'Failed to check the checkbox. Checkbox remains unchecked after click.'
+            );
+          }
+          console.log('Checkbox successfully checked');
+        } else {
+          console.log('Checkbox is already checked, skipping click');
+        }
 
         // Wait for the table body to load
         await shortageProduct.waitingTableBody(deficitTable);
@@ -1613,17 +1647,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 07: Checking the urgency date of an order',
       async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnDateUrgency
-        );
-        console.log('numberColumn: ', numberColumn);
+        // Find the urgency date cell using data-testid
+        const urgencyDateCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]')
+          .first();
 
-        urgencyDateOnTable = await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn
-        );
+        await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+        await urgencyDateCell.scrollIntoViewIfNeeded();
+
+        // Highlight the urgency date cell
+        await urgencyDateCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightyellow';
+          el.style.border = '2px solid orange';
+        });
+
+        // Get the urgency date value from the cell
+        const urgencyDateValue = await urgencyDateCell.textContent();
+        urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
         console.log('Date by urgency in the table: ', urgencyDateOnTable);
 
@@ -1634,17 +1674,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 08: We check the number of those launched into production',
       async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnOrderFromProduction
-        );
+        // Find the production ordered quantity cell using data-testid
+        const productionOrderedCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .first();
 
+        await productionOrderedCell.waitFor({
+          state: 'visible',
+          timeout: 10000,
+        });
+        await productionOrderedCell.scrollIntoViewIfNeeded();
+
+        // Highlight the production ordered quantity cell
+        await productionOrderedCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightcyan';
+          el.style.border = '2px solid blue';
+        });
+
+        // Get the production ordered quantity value from the cell
+        const productionOrderedValue =
+          await productionOrderedCell.textContent();
         quantityProductLaunchOnProductionBefore =
-          await shortageProduct.getValueOrClickFromFirstRow(
-            deficitTable,
-            numberColumn
-          );
+          productionOrderedValue?.trim() || '';
 
         console.log(
           'The value in the cells is put into production befor:',
@@ -1658,7 +1709,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await shortageProduct.clickButton(
-          ' Запустить в производство ',
+          'Запустить в производство',
           buttonLaunchIntoProduction
         );
       }
@@ -1671,32 +1722,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await shortageProduct.checkModalWindowLaunchIntoProduction(
           modalWindowLaunchIntoProduction
         );
-
-        // Check the date in the Launch into production modal window
-        // await shortageProduct.checkCurrentDate(
-        //   '[data-testid="ModalStartProduction-OrderDateValue"]'
-        // );//ERP-2366
       }
     );
-
-    // await allure.step("Step 11: Checking the main page headings", async () => {
-    //     const titles = testData1.elements.ModalWindowLaunchOnProduction.titles.map((title) => title.trim());
-    //     const h3Titles = await shortageProduct.getAllH3TitlesInModalClass(page, 'content-modal-right-menu');
-    //     const normalizedH3Titles = h3Titles.map((title) => title.trim());
-
-    //     // Wait for the page to stabilize
-    //     await page.waitForLoadState("networkidle");
-
-    //     // Log for debugging
-    //     console.log('Expected Titles:', titles);
-    //     console.log('Received Titles:', normalizedH3Titles);
-
-    //     // Validate length
-    //     expect(normalizedH3Titles.length).toBe(titles.length);
-
-    //     // Validate content and order
-    //     expect(normalizedH3Titles).toEqual(titles);
-    // })
 
     await allure.step(
       'Step 12: Checking the main buttons on the page',
@@ -1772,17 +1799,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 17: We check the number of those launched into production',
       async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnOrderFromProduction
-        );
+        // Find the production ordered quantity cell using data-testid
+        const productionOrderedCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .first();
 
+        await productionOrderedCell.waitFor({
+          state: 'visible',
+          timeout: 10000,
+        });
+        await productionOrderedCell.scrollIntoViewIfNeeded();
+
+        // Highlight the production ordered quantity cell
+        await productionOrderedCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightcyan';
+          el.style.border = '2px solid blue';
+        });
+
+        // Get the production ordered quantity value from the cell
+        const productionOrderedValue =
+          await productionOrderedCell.textContent();
         quantityProductLaunchOnProductionAfter =
-          await shortageProduct.getValueOrClickFromFirstRow(
-            deficitTable,
-            numberColumn
-          );
+          productionOrderedValue?.trim() || '';
 
         console.log(
           'The value in the cells is put into production after:',
@@ -1913,20 +1951,49 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           'Step 06: Check the checkbox in the first column',
           async () => {
             await page.waitForTimeout(1000);
-            // Find the variable name in the first line and check the checkbox
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnCheckboxCbed
-            );
-            console.log('Column number with checkbox: ', numberColumn);
+            // Find the checkbox using data-testid
+            const checkboxCell = page
+              .locator('[data-testid="DeficitCbed-TableBody-Select"]')
+              .first();
 
-            await shortageAssemblies.getValueOrClickFromFirstRow(
-              deficitTableCbed,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Find the actual checkbox input inside the cell
+            const checkbox = checkboxCell.getByRole('checkbox').first();
+
+            // Check if the checkbox is disabled
+            const isDisabled = await checkbox.isDisabled();
+            if (isDisabled) {
+              throw new Error(
+                'Cannot check the checkbox. Checkbox is disabled.'
+              );
+            }
+
+            // Check if the checkbox is already checked
+            const isChecked = await checkbox.isChecked();
+            if (!isChecked) {
+              console.log('Checkbox is not checked, attempting to check it...');
+              await checkbox.click();
+              await page.waitForTimeout(300);
+
+              // Verify the checkbox is now checked
+              const isCheckedAfter = await checkbox.isChecked();
+              if (!isCheckedAfter) {
+                throw new Error(
+                  'Failed to check the checkbox. Checkbox remains unchecked after click.'
+                );
+              }
+              console.log('Checkbox successfully checked');
+            } else {
+              console.log('Checkbox is already checked, skipping click');
+            }
 
             // Wait for the table body to load
             await shortageAssemblies.waitingTableBody(deficitTableCbed);
@@ -1936,18 +2003,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 07: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnDateUrgencyCbed
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Find the urgency date cell using data-testid
+            const urgencyDateCell = page
+              .locator('[data-testid="DeficitCbed-TableBody-UrgencyDate"]')
+              .first();
 
-            urgencyDateOnTable =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the urgency date cell
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightyellow';
+              el.style.border = '2px solid orange';
+            });
+
+            // Get the urgency date value from the cell
+            const urgencyDateValue = await urgencyDateCell.textContent();
+            urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -1958,21 +2030,24 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 08: We check the number of those launched into production',
           async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnOrderFromProductionCbed
-            );
-            console.log(
-              'Number column launched into production: ',
-              numberColumn
-            );
+            // Find the ordered quantity cell using data-testid
+            const orderedCell = page
+              .locator('[data-testid="DeficitCbed-TableBody-Ordered"]')
+              .first();
 
+            await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
+            await orderedCell.scrollIntoViewIfNeeded();
+
+            // Highlight the ordered cell
+            await orderedCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the ordered quantity value from the cell
+            const orderedValue = await orderedCell.textContent();
             quantityProductLaunchOnProductionBefore =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
+              orderedValue?.trim() || '';
 
             console.log(
               'The value in the cells is put into production befor:',
@@ -1986,7 +2061,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Click on the button
             await shortageAssemblies.clickButton(
-              ' Запустить в производство ',
+              'Запустить в производство',
               buttonLaunchIntoProductionCbed
             );
           }
@@ -2052,17 +2127,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 16: We check the number of those launched into production',
           async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnOrderFromProductionCbed
-            );
+            // Find the ordered quantity cell using data-testid
+            const orderedCell = page
+              .locator('[data-testid="DeficitCbed-TableBody-Ordered"]')
+              .first();
 
-            quantityProductLaunchOnProductionAfter =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
+            await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
+            await orderedCell.scrollIntoViewIfNeeded();
+
+            // Highlight the ordered cell
+            await orderedCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the ordered quantity value from the cell
+            const orderedValue = await orderedCell.textContent();
+            quantityProductLaunchOnProductionAfter = orderedValue?.trim() || '';
 
             console.log(
               'The value in the cells is put into production after:',
@@ -2193,20 +2274,49 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 06: Check that the first row of the table contains the variable name',
           async () => {
-            // Check that the first row of the table contains the variable name
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnCheckBoxDetail
-            );
-            console.log('Column number with checkbox: ', numberColumn);
+            // Find the checkbox using data-testid (starts with pattern)
+            const checkboxCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .first();
 
-            await shortageParts.getValueOrClickFromFirstRow(
-              deficitTableDetail,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Find the actual checkbox input inside the cell
+            const checkbox = checkboxCell.getByRole('checkbox').first();
+
+            // Check if the checkbox is disabled
+            const isDisabled = await checkbox.isDisabled();
+            if (isDisabled) {
+              throw new Error(
+                'Cannot check the checkbox. Checkbox is disabled.'
+              );
+            }
+
+            // Check if the checkbox is already checked
+            const isChecked = await checkbox.isChecked();
+            if (!isChecked) {
+              console.log('Checkbox is not checked, attempting to check it...');
+              await checkbox.click();
+              await page.waitForTimeout(300);
+
+              // Verify the checkbox is now checked
+              const isCheckedAfter = await checkbox.isChecked();
+              if (!isCheckedAfter) {
+                throw new Error(
+                  'Failed to check the checkbox. Checkbox remains unchecked after click.'
+                );
+              }
+              console.log('Checkbox successfully checked');
+            } else {
+              console.log('Checkbox is already checked, skipping click');
+            }
 
             // Wait for the table body to load
             await shortageParts.waitingTableBody(deficitTableDetail);
@@ -2216,18 +2326,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 07: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnDateUrgencyDetail
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Find the urgency date cell using data-testid (starts with pattern)
+            const urgencyDateCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .first();
 
-            urgencyDateOnTable =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the urgency date cell
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightyellow';
+              el.style.border = '2px solid orange';
+            });
+
+            // Get the urgency date value from the cell
+            const urgencyDateValue = await urgencyDateCell.textContent();
+            urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -2393,21 +2508,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 16: We check the number of those launched into production',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnOrderFromProductionDetail
-            );
-            console.log(
-              'Number column launched into production: ',
-              numberColumn
-            );
+            // Find the production ordered quantity cell using data-testid (starts with pattern)
+            const productionOrderedCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
+              .first();
 
+            await productionOrderedCell.waitFor({
+              state: 'visible',
+              timeout: 10000,
+            });
+            await productionOrderedCell.scrollIntoViewIfNeeded();
+
+            // Highlight the production ordered quantity cell
+            await productionOrderedCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the production ordered quantity value from the cell
+            const productionOrderedValue =
+              await productionOrderedCell.textContent();
             quantityProductLaunchOnProductionAfter =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
+              productionOrderedValue?.trim() || '';
 
             console.log(
               'The value in the cells is put into production after:',
@@ -2569,18 +2691,25 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 07: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await metalworkingWarehouse.findColumn(
-              page,
-              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WAREHOUSE_ID,
-              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_URGENCY
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-DateByUrgency
+            const urgencyDateCell = page
+              .locator(
+                '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-DateByUrgency"]'
+              )
+              .first();
 
-            urgencyDateOnTable =
-              await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the urgency date cell
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightyellow';
+              el.style.border = '2px solid orange';
+            });
+
+            // Get the urgency date value from the cell
+            const urgencyDateValue = await urgencyDateCell.textContent();
+            urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -2619,21 +2748,26 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 09: Find and click on the operation icon',
           async () => {
-            // Getting cell value by id
-            const numberColumn = await metalworkingWarehouse.findColumn(
-              page,
-              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WAREHOUSE_ID,
-              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_OPERATION
-            );
-            console.log('numberColumn: ', numberColumn);
+            // Get the operations cell using data-testid directly
+            // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-Operations
+            const operationsCell = page
+              .locator(
+                '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Operations"]'
+              )
+              .first();
 
-            // Click on the icon in the cell
-            await metalworkingWarehouse.getValueOrClickFromFirstRow(
-              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+            await operationsCell.waitFor({ state: 'visible', timeout: 10000 });
+            await operationsCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await operationsCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+              el.style.color = 'blue';
+            });
+
+            // Click the operations cell directly
+            await operationsCell.click();
 
             // Waiting for loading
             await page.waitForLoadState('networkidle');
@@ -2713,46 +2847,48 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 12: We find, get the value and click on the cell done pcs',
           async () => {
-            // Getting cell value by id
-            numberColumnQunatityMade = await metalworkingWarehouse.findColumn(
-              page,
-              ProductionPathSelectors.OPERATION_TABLE_ID,
-              'OperationPathInfo-Thead-Maked'
-            );
-            console.log(
-              'Column number pieces made: ',
-              numberColumnQunatityMade
-            );
+            // Get the done/made cell using data-testid directly
+            // Pattern: OperationPathInfo-tbodysdelano-sh{number}
+            const doneCell = page
+              .locator('[data-testid^="OperationPathInfo-tbodysdelano-sh"]')
+              .first();
+
+            await doneCell.waitFor({ state: 'visible', timeout: 10000 });
+            await doneCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await doneCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+              el.style.color = 'blue';
+            });
 
             // Click on the Done cell
-            await metalworkingWarehouse.getValueOrClickFromFirstRow(
-              ProductionPathSelectors.OPERATION_TABLE,
-              numberColumnQunatityMade,
-              Click.Yes
-            );
+            await doneCell.click();
           }
         );
 
         await allure.step(
           'Step 13: Find and get the value from the operation cell',
           async () => {
-            // Getting the value of the first operation
-            const numberColumnFirstOperation =
-              await metalworkingWarehouse.findColumn(
-                page,
-                ProductionPathSelectors.OPERATION_TABLE_ID,
-                'OperationPathInfo-Thead-Operation'
-              );
-            console.log(
-              'Operation column number: ',
-              numberColumnFirstOperation
-            );
+            // Get the operation cell using data-testid directly
+            const operationCell = page
+              .locator('[data-testid="OperationPathInfo-Tbody-FullName"]')
+              .first();
 
-            firstOperation =
-              await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                ProductionPathSelectors.OPERATION_TABLE,
-                numberColumnFirstOperation
-              );
+            await operationCell.waitFor({ state: 'visible', timeout: 10000 });
+            await operationCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await operationCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the operation value from the cell
+            const operationValue = await operationCell.textContent();
+            firstOperation = operationValue?.trim() || '';
+
             console.log(firstOperation);
             logger.info(firstOperation);
           }
@@ -3157,20 +3293,26 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             await page.waitForTimeout(2000);
 
-            // Checking a checkbox in a modal window
-            const numberColumn = await completingAssembliesToPlan.findColumn(
-              page,
-              SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ID,
-              SelectorsModalWindowConsignmentNote.TABLE_ORDERS_CHECKBOX_ID
-            );
-            console.log('Checkbox in a modal window: ', numberColumn);
+            // Check the checkbox in the modal using data-testid
+            // Pattern: ModalAddWaybill-ShipmentDetailsTable-Row{number}-SelectCell
+            const checkboxCell = page
+              .locator(
+                '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]'
+              )
+              .first();
 
-            await completingAssembliesToPlan.getValueOrClickFromFirstRow(
-              SelectorsModalWindowConsignmentNote.TABLE_ORDERS,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Click the checkbox cell
+            await checkboxCell.click();
+            await page.waitForTimeout(500);
 
             // Wait for loading
             await page.waitForLoadState('networkidle');
@@ -3343,19 +3485,24 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 06: We check the number of those launched into production',
           async () => {
-            const tableTestId = 'ComplectKit-Table-Main';
-            const numberColumn = await completeSets.findColumn(
-              page,
-              tableTestId,
-              'ComplectKit-TableHeader-Assembled'
-            );
-            console.log('numberColumn: ', numberColumn);
+            // Find the assembled quantity cell using data-testid
+            const assembledCell = page
+              .locator('[data-testid="ComplectKit-TableCell-Assembled"]')
+              .first();
 
-            qunatityCompleteSet =
-              await completeSets.getValueOrClickFromFirstRow(
-                completeSetsTable,
-                numberColumn
-              );
+            await assembledCell.waitFor({ state: 'visible', timeout: 10000 });
+            await assembledCell.scrollIntoViewIfNeeded();
+
+            // Highlight the assembled quantity cell
+            await assembledCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the assembled quantity value from the cell
+            const assembledValue = await assembledCell.textContent();
+            qunatityCompleteSet = assembledValue?.trim() || '';
+
             console.log('Количество собранных наборов: ', qunatityCompleteSet);
             await completeSets.checkNameInLineFromFirstRow(
               cbed.name,
@@ -3367,20 +3514,49 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 07: Look for the column with the checkbox and click on it',
           async () => {
-            const tableTestId = 'ComplectKit-Table-Main';
-            const numberColumn = await completeSets.findColumn(
-              page,
-              tableTestId,
-              'ComplectKit-TableHeader-Check'
-            );
-            console.log('numberColumn Check: ', numberColumn);
+            // Find the checkbox using data-testid
+            const checkboxCell = page
+              .locator('[data-testid="ComplectKit-TableCell-Checkbox"]')
+              .first();
 
-            await completeSets.getValueOrClickFromFirstRow(
-              completeSetsTable,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Find the actual checkbox input inside the cell
+            const checkbox = checkboxCell.getByRole('checkbox').first();
+
+            // Check if the checkbox is disabled
+            const isDisabled = await checkbox.isDisabled();
+            if (isDisabled) {
+              throw new Error(
+                'Cannot check the checkbox. Checkbox is disabled.'
+              );
+            }
+
+            // Check if the checkbox is already checked
+            const isChecked = await checkbox.isChecked();
+            if (!isChecked) {
+              console.log('Checkbox is not checked, attempting to check it...');
+              await checkbox.click();
+              await page.waitForTimeout(300);
+
+              // Verify the checkbox is now checked
+              const isCheckedAfter = await checkbox.isChecked();
+              if (!isCheckedAfter) {
+                throw new Error(
+                  'Failed to check the checkbox. Checkbox remains unchecked after click.'
+                );
+              }
+              console.log('Checkbox successfully checked');
+            } else {
+              console.log('Checkbox is already checked, skipping click');
+            }
           }
         );
 
@@ -3388,7 +3564,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           'Step 08: Click on the Submit for assembly button',
           async () => {
             await completeSets.clickButton(
-              ' Разкомплектовать ',
+              'Разкомплектовать',
               '[data-testid="ComplectKit-Button-Unassemble"]'
             );
             // Wait for the page to stabilize
@@ -3465,7 +3641,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           }
         );
 
-        await allure.step('Step 11: Check modal window ', async () => {
+        await allure.step('Step 11: Check modal window', async () => {
           await completeSets.disassemblyModalWindow(
             cbed.name,
             cbed.designation
@@ -3679,20 +3855,26 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             await page.waitForTimeout(2000);
 
-            // Checking a checkbox in a modal window
-            const numberColumn = await completingAssembliesToPlan.findColumn(
-              page,
-              SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ID,
-              SelectorsModalWindowConsignmentNote.TABLE_ORDERS_CHECKBOX_ID
-            );
-            console.log('Checkbox in a modal window: ', numberColumn);
+            // Check the checkbox in the modal using data-testid
+            // Pattern: ModalAddWaybill-ShipmentDetailsTable-Row{number}-SelectCell
+            const checkboxCell = page
+              .locator(
+                '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]'
+              )
+              .first();
 
-            await completingAssembliesToPlan.getValueOrClickFromFirstRow(
-              SelectorsModalWindowConsignmentNote.TABLE_ORDERS,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Click the checkbox cell
+            await checkboxCell.click();
+            await page.waitForTimeout(500);
 
             // Wait for loading
             await page.waitForLoadState('networkidle');
@@ -5416,7 +5598,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 12: Click on the ship button', async () => {
       // Click on the button
       await warehouseTaskForShipment.clickButton(
-        ' Отгрузить ',
+        'Отгрузить',
         '[data-testid="ModalShComlit-Button-Ship"]'
       );
     });
@@ -5482,14 +5664,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 05: Find the checkbox column and click',
       async () => {
-        // Find the checkbox column and click
-        // UPD:
-        // numberColumn = await warehouseTaskForShipment.findColumn(
-        //     page,
-        //     tableModalComing,
-        //     "ShipmentsTable-TableHead-Check"
-        // );
-
         // console.log("numberColumn: ", numberColumn);
         await warehouseTaskForShipment.getValueOrClickFromFirstRow(
           tableMainUploading,
@@ -5502,10 +5676,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 06: Click on the ship button', async () => {
       // Click on the button
-      await warehouseTaskForShipment.clickButton(
-        ' Отгрузить ',
-        buttonUploading
-      );
+      await warehouseTaskForShipment.clickButton('Отгрузить', buttonUploading);
     });
 
     await allure.step(
@@ -5514,21 +5685,25 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const tableBody = '[data-testid="ModalShComlit-TableScroll"]';
         await warehouseTaskForShipment.waitingTableBody(tableBody);
 
-        const modalWindowTable = 'ModalShComlit-Table';
-        numberColumn = await warehouseTaskForShipment.findColumn(
-          page,
-          modalWindowTable,
-          'ModalShComlit-TableHead-Shipped'
-        );
+        // Find the shipped quantity cell using data-testid
+        const shippedCell = page
+          .locator('[data-testid="ModalShComlit-TableBody-Shipped"]')
+          .first();
 
-        console.log('numberColumn: ', numberColumn);
-        const valueInShipped =
-          await warehouseTaskForShipment.getValueOrClickFromFirstRow(
-            tableBody,
-            numberColumn,
-            Click.Yes,
-            Click.No
-          );
+        await shippedCell.waitFor({ state: 'visible', timeout: 10000 });
+        await shippedCell.scrollIntoViewIfNeeded();
+
+        // Highlight the shipped quantity cell
+        await shippedCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightcyan';
+          el.style.border = '2px solid blue';
+        });
+
+        // Get the shipped quantity value from the cell
+        const shippedValue = await shippedCell.textContent();
+        const valueInShipped = shippedValue?.trim() || '';
+
+        console.log('Shipped quantity: ', valueInShipped);
 
         expect
           .soft(Number(valueInShipped))
@@ -5556,7 +5731,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 02: Click on the Create order button', async () => {
       // Click on the button
       await loadingTaskPage.clickButton(
-        ' Создать заказ ',
+        'Создать заказ',
         LoadingTasksSelectors.buttonCreateOrder
       );
     });
@@ -5565,7 +5740,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click on the button
       await page
         .locator(LoadingTasksSelectors.buttonChoiceIzd, {
-          hasText: ' Выбрать ',
+          hasText: 'Выбрать',
         })
         .nth(0)
         .click();
@@ -5598,7 +5773,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await loadingTaskPage.clickButton(
-          ' Добавить ',
+          'Добавить',
           LoadingTasksSelectors.buttonChoiceIzd
         );
       }
@@ -5644,7 +5819,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await loadingTaskPage.clickButton(
-          ' Добавить ',
+          'Добавить',
           LoadingTasksSelectors.buttonAddBuyerOnModalWindow
         );
       }
@@ -5959,43 +6134,48 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           'Step 09: We find, get the value and click on the cell done pcs',
           async () => {
             await page.waitForTimeout(1000);
-            // Getting cell value by id
-            numberColumnQunatityMade = await metalworkingWarehouse.findColumn(
-              page,
-              operationTable,
-              'OperationPathInfo-Thead-Maked'
-            );
-            console.log(
-              'Column number pieces made: ',
-              numberColumnQunatityMade
-            );
+            // Get the done/made cell using data-testid directly
+            // Pattern: OperationPathInfo-tbodysdelano-sh{number}
+            const doneCell = page
+              .locator('[data-testid^="OperationPathInfo-tbodysdelano-sh"]')
+              .first();
+
+            await doneCell.waitFor({ state: 'visible', timeout: 10000 });
+            await doneCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await doneCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+              el.style.color = 'blue';
+            });
 
             // Click on the Done cell
-            await metalworkingWarehouse.getValueOrClickFromFirstRow(
-              productionTable,
-              numberColumnQunatityMade,
-              Click.Yes
-            );
+            await doneCell.click();
           }
         );
 
         await allure.step(
           'Step 10: Find and get the value from the operation cell',
           async () => {
-            // Getting the value of the first operation
-            const numberColumnFirstOperation =
-              await metalworkingWarehouse.findColumn(
-                page,
-                operationTable,
-                'OperationPathInfo-Thead-Operation'
-              );
-            console.log('Operation column number: ', numberColumnQunatityMade);
+            // Get the operation cell using data-testid directly
+            const operationCell = page
+              .locator('[data-testid="OperationPathInfo-Tbody-FullName"]')
+              .first();
 
-            firstOperation =
-              await metalworkingWarehouse.getValueOrClickFromFirstRow(
-                productionTable,
-                numberColumnFirstOperation
-              );
+            await operationCell.waitFor({ state: 'visible', timeout: 10000 });
+            await operationCell.scrollIntoViewIfNeeded();
+
+            // Highlight the cell for visual confirmation
+            await operationCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the operation value from the cell
+            const operationValue = await operationCell.textContent();
+            firstOperation = operationValue?.trim() || '';
+
             console.log(firstOperation);
             logger.info(firstOperation);
           }
@@ -6105,17 +6285,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 05: Checking the urgency date of an order',
       async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnDateUrgency
-        );
-        console.log('numberColumn: ', numberColumn);
+        // Find the urgency date cell using data-testid
+        const urgencyDateCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]')
+          .first();
 
-        urgencyDateOnTable = await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn
-        );
+        await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+        await urgencyDateCell.scrollIntoViewIfNeeded();
+
+        // Highlight the urgency date cell
+        await urgencyDateCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightyellow';
+          el.style.border = '2px solid orange';
+        });
+
+        // Get the urgency date value from the cell
+        const urgencyDateValue = await urgencyDateCell.textContent();
+        urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
         console.log('Date by urgency in the table: ', urgencyDateOnTable);
 
@@ -6179,18 +6365,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 10: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnDateUrgencyCbed
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Find the urgency date cell using data-testid
+            const urgencyDateCell = page
+              .locator('[data-testid="DeficitCbed-TableBody-UrgencyDate"]')
+              .first();
 
-            urgencyDateOnTable =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the urgency date cell
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightyellow';
+              el.style.border = '2px solid orange';
+            });
+
+            // Get the urgency date value from the cell
+            const urgencyDateValue = await urgencyDateCell.textContent();
+            urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -6259,18 +6450,49 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 15: Check that the first row of the table contains the variable name',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnCheckBoxDetail
-            );
-            console.log('Column number with checkbox: ', numberColumn);
+            // Find the checkbox using data-testid (starts with pattern)
+            const checkboxCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .first();
 
-            await shortageParts.getValueOrClickFromFirstRow(
-              deficitTableDetail,
-              numberColumn,
-              Click.Yes
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Find the actual checkbox input inside the cell
+            const checkbox = checkboxCell.getByRole('checkbox').first();
+
+            // Check if the checkbox is disabled
+            const isDisabled = await checkbox.isDisabled();
+            if (isDisabled) {
+              throw new Error(
+                'Cannot check the checkbox. Checkbox is disabled.'
+              );
+            }
+
+            // Check if the checkbox is already checked
+            const isChecked = await checkbox.isChecked();
+            if (!isChecked) {
+              console.log('Checkbox is not checked, attempting to check it...');
+              await checkbox.click();
+              await page.waitForTimeout(300);
+
+              // Verify the checkbox is now checked
+              const isCheckedAfter = await checkbox.isChecked();
+              if (!isCheckedAfter) {
+                throw new Error(
+                  'Failed to check the checkbox. Checkbox remains unchecked after click.'
+                );
+              }
+              console.log('Checkbox successfully checked');
+            } else {
+              console.log('Checkbox is already checked, skipping click');
+            }
 
             // Wait for the table body to load
             await shortageParts.waitingTableBody(deficitTableDetail);
@@ -6280,18 +6502,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 16: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnDateUrgencyDetail
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Find the urgency date cell using data-testid (starts with pattern)
+            const urgencyDateCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .first();
 
-            urgencyDateOnTable =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the urgency date cell
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightyellow';
+              el.style.border = '2px solid orange';
+            });
+
+            // Get the urgency date value from the cell
+            const urgencyDateValue = await urgencyDateCell.textContent();
+            urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -8086,20 +8313,47 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 04: Check the checkbox in the first column',
       async () => {
         await page.waitForTimeout(500);
-        // Find the variable name in the first line and check the checkbox
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnCheckbox
-        );
-        console.log('Column number with checkbox: ', numberColumn);
+        // Find the checkbox using data-testid
+        const checkboxCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-Checkbox"]')
+          .first();
 
-        await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
+        await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+        await checkboxCell.scrollIntoViewIfNeeded();
+
+        // Highlight the checkbox cell
+        await checkboxCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'yellow';
+          el.style.border = '2px solid red';
+        });
+
+        // Find the actual checkbox input inside the cell
+        const checkbox = checkboxCell.getByRole('checkbox').first();
+
+        // Check if the checkbox is disabled
+        const isDisabled = await checkbox.isDisabled();
+        if (isDisabled) {
+          throw new Error('Cannot check the checkbox. Checkbox is disabled.');
+        }
+
+        // Check if the checkbox is already checked
+        const isChecked = await checkbox.isChecked();
+        if (!isChecked) {
+          console.log('Checkbox is not checked, attempting to check it...');
+          await checkbox.click();
+          await page.waitForTimeout(300);
+
+          // Verify the checkbox is now checked
+          const isCheckedAfter = await checkbox.isChecked();
+          if (!isCheckedAfter) {
+            throw new Error(
+              'Failed to check the checkbox. Checkbox remains unchecked after click.'
+            );
+          }
+          console.log('Checkbox successfully checked');
+        } else {
+          console.log('Checkbox is already checked, skipping click');
+        }
 
         // Wait for the table body to load
         await shortageProduct.waitingTableBody(deficitTable);
@@ -8109,17 +8363,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 05: Checking the urgency date of an order',
       async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnDateUrgency
-        );
-        console.log('numberColumn: ', numberColumn);
+        // Find the urgency date cell using data-testid
+        const urgencyDateCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]')
+          .first();
 
-        urgencyDateOnTable = await shortageProduct.getValueOrClickFromFirstRow(
-          deficitTable,
-          numberColumn
-        );
+        await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+        await urgencyDateCell.scrollIntoViewIfNeeded();
+
+        // Highlight the urgency date cell
+        await urgencyDateCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightyellow';
+          el.style.border = '2px solid orange';
+        });
+
+        // Get the urgency date value from the cell
+        const urgencyDateValue = await urgencyDateCell.textContent();
+        urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
         console.log('Date by urgency in the table: ', urgencyDateOnTable);
 
@@ -8130,17 +8390,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 06: We check the number of those launched into production',
       async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnOrderFromProduction
-        );
+        // Find the production ordered quantity cell using data-testid
+        const productionOrderedCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .first();
 
+        await productionOrderedCell.waitFor({
+          state: 'visible',
+          timeout: 10000,
+        });
+        await productionOrderedCell.scrollIntoViewIfNeeded();
+
+        // Highlight the production ordered quantity cell
+        await productionOrderedCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightcyan';
+          el.style.border = '2px solid blue';
+        });
+
+        // Get the production ordered quantity value from the cell
+        const productionOrderedValue =
+          await productionOrderedCell.textContent();
         quantityProductLaunchOnProductionBefore =
-          await shortageProduct.getValueOrClickFromFirstRow(
-            deficitTable,
-            numberColumn
-          );
+          productionOrderedValue?.trim() || '';
 
         console.log(
           'The value in the cells is put into production befor:',
@@ -8154,7 +8425,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click on the button
         await shortageProduct.clickButton(
-          ' Запустить в производство ',
+          'Запустить в производство',
           buttonLaunchIntoProduction
         );
       }
@@ -8210,17 +8481,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 13: We check the number of those launched into production',
       async () => {
-        const numberColumn = await shortageProduct.findColumn(
-          page,
-          tableMain,
-          columnOrderFromProduction
-        );
+        // Find the production ordered quantity cell using data-testid
+        const productionOrderedCell = page
+          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .first();
 
+        await productionOrderedCell.waitFor({
+          state: 'visible',
+          timeout: 10000,
+        });
+        await productionOrderedCell.scrollIntoViewIfNeeded();
+
+        // Highlight the production ordered quantity cell
+        await productionOrderedCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'lightcyan';
+          el.style.border = '2px solid blue';
+        });
+
+        // Get the production ordered quantity value from the cell
+        const productionOrderedValue =
+          await productionOrderedCell.textContent();
         quantityProductLaunchOnProductionAfter =
-          await shortageProduct.getValueOrClickFromFirstRow(
-            deficitTable,
-            numberColumn
-          );
+          productionOrderedValue?.trim() || '';
 
         console.log(
           'The value in the cells is put into production after:',
@@ -8475,17 +8757,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 14: We check the number of those launched into production',
           async () => {
-            const numberColumn = await shortageAssemblies.findColumn(
-              page,
-              tableMainCbed,
-              columnOrderFromProductionCbed
-            );
+            // Find the ordered quantity cell using data-testid
+            const orderedCell = page
+              .locator('[data-testid="DeficitCbed-TableBody-Ordered"]')
+              .first();
 
-            quantityProductLaunchOnProductionAfter =
-              await shortageAssemblies.getValueOrClickFromFirstRow(
-                deficitTableCbed,
-                numberColumn
-              );
+            await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
+            await orderedCell.scrollIntoViewIfNeeded();
+
+            // Highlight the ordered cell
+            await orderedCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the ordered quantity value from the cell
+            const orderedValue = await orderedCell.textContent();
+            quantityProductLaunchOnProductionAfter = orderedValue?.trim() || '';
 
             console.log(
               'The value in the cells is put into production after:',
@@ -8551,20 +8839,49 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 04: Check that the first row of the table contains the variable name',
           async () => {
-            // Check that the first row of the table contains the variable name
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnCheckBoxDetail
-            );
-            console.log('Column number with checkbox: ', numberColumn);
+            // Find the checkbox using data-testid (starts with pattern)
+            const checkboxCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .first();
 
-            await shortageParts.getValueOrClickFromFirstRow(
-              deficitTableDetail,
-              numberColumn,
-              Click.Yes,
-              Click.No
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Find the actual checkbox input inside the cell
+            const checkbox = checkboxCell.getByRole('checkbox').first();
+
+            // Check if the checkbox is disabled
+            const isDisabled = await checkbox.isDisabled();
+            if (isDisabled) {
+              throw new Error(
+                'Cannot check the checkbox. Checkbox is disabled.'
+              );
+            }
+
+            // Check if the checkbox is already checked
+            const isChecked = await checkbox.isChecked();
+            if (!isChecked) {
+              console.log('Checkbox is not checked, attempting to check it...');
+              await checkbox.click();
+              await page.waitForTimeout(300);
+
+              // Verify the checkbox is now checked
+              const isCheckedAfter = await checkbox.isChecked();
+              if (!isCheckedAfter) {
+                throw new Error(
+                  'Failed to check the checkbox. Checkbox remains unchecked after click.'
+                );
+              }
+              console.log('Checkbox successfully checked');
+            } else {
+              console.log('Checkbox is already checked, skipping click');
+            }
 
             // Wait for the table body to load
             await shortageParts.waitingTableBody(deficitTableDetail);
@@ -8574,18 +8891,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 05: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnDateUrgencyDetail
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Find the urgency date cell using data-testid (starts with pattern)
+            const urgencyDateCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .first();
 
-            urgencyDateOnTable =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the urgency date cell
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightyellow';
+              el.style.border = '2px solid orange';
+            });
+
+            // Get the urgency date value from the cell
+            const urgencyDateValue = await urgencyDateCell.textContent();
+            urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -8596,21 +8918,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 06: We check the number of those launched into production',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnOrderFromProductionDetail
-            );
-            console.log(
-              'Number column launched into production: ',
-              numberColumn
-            );
+            // Find the production ordered quantity cell using data-testid (starts with pattern)
+            const productionOrderedCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
+              .first();
 
+            await productionOrderedCell.waitFor({
+              state: 'visible',
+              timeout: 10000,
+            });
+            await productionOrderedCell.scrollIntoViewIfNeeded();
+
+            // Highlight the production ordered quantity cell
+            await productionOrderedCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the production ordered quantity value from the cell
+            const productionOrderedValue =
+              await productionOrderedCell.textContent();
             quantityProductLaunchOnProductionBefore =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
+              productionOrderedValue?.trim() || '';
 
             console.log(
               'The value in the cells is put into production befor:',
@@ -8624,7 +8953,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Click on the button
             await shortageParts.clickButton(
-              ' Запустить в производство ',
+              'Запустить в производство',
               buttonLaunchIntoProductionDetail
             );
           }
@@ -8666,7 +8995,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Click on the button
             await shortageParts.clickButton(
-              ' В производство ',
+              'В производство',
               buttonLaunchIntoProductionModalWindow
             );
           }
@@ -8688,21 +9017,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 14: We check the number of those launched into production',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnOrderFromProductionDetail
-            );
-            console.log(
-              'Number column launched into production: ',
-              numberColumn
-            );
+            // Find the production ordered quantity cell using data-testid (starts with pattern)
+            const productionOrderedCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
+              .first();
 
+            await productionOrderedCell.waitFor({
+              state: 'visible',
+              timeout: 10000,
+            });
+            await productionOrderedCell.scrollIntoViewIfNeeded();
+
+            // Highlight the production ordered quantity cell
+            await productionOrderedCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightcyan';
+              el.style.border = '2px solid blue';
+            });
+
+            // Get the production ordered quantity value from the cell
+            const productionOrderedValue =
+              await productionOrderedCell.textContent();
             quantityProductLaunchOnProductionAfter =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
+              productionOrderedValue?.trim() || '';
 
             console.log(
               'The value in the cells is put into production after:',
@@ -8777,29 +9113,33 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 05: Find the checkbox column and click',
       async () => {
-        // Find the checkbox column and click
-        numberColumn = await warehouseTaskForShipment.findColumn(
-          page,
-          tableMainUploadingID,
-          'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-Number'
-        );
+        // Click the first row cell using direct data-testid pattern
+        const firstRowCell = page
+          .locator(
+            '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Number"]'
+          )
+          .first();
 
-        // console.log("numberColumn: ", numberColumn);
-        await warehouseTaskForShipment.getValueOrClickFromFirstRow(
-          tableMainUploading,
-          numberColumn,
-          Click.Yes,
-          Click.No
-        );
+        // Wait for the cell to be visible
+        await firstRowCell.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRowCell.scrollIntoViewIfNeeded();
+
+        // Highlight the cell for debugging
+        await firstRowCell.evaluate((el: HTMLElement) => {
+          el.style.backgroundColor = 'yellow';
+          el.style.border = '2px solid red';
+        });
+        await page.waitForTimeout(500);
+
+        // Click the cell
+        await firstRowCell.click();
+        console.log('First row cell clicked');
       }
     );
 
     await allure.step('Step 06: Click on the ship button', async () => {
       // Click on the button
-      await warehouseTaskForShipment.clickButton(
-        ' Отгрузить ',
-        buttonUploading
-      );
+      await warehouseTaskForShipment.clickButton('Отгрузить', buttonUploading);
     });
 
     await allure.step('Step 07: Check the Shipping modal window', async () => {
@@ -8810,7 +9150,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 08: Click on the ship button', async () => {
       // Click on the button
       await warehouseTaskForShipment.clickButton(
-        ' Отгрузить ',
+        'Отгрузить',
         '[data-testid="ModalShComlit-Button-Ship"]'
       );
     });
@@ -9004,19 +9344,49 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 12: Check that the first row of the table contains the variable name',
           async () => {
-            // Check that the first row of the table contains the variable name
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnCheckBoxDetail
-            );
-            console.log('Column number with checkbox: ', numberColumn);
+            // Find the checkbox using data-testid (starts with pattern)
+            const checkboxCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .first();
 
-            await shortageParts.getValueOrClickFromFirstRow(
-              deficitTableDetail,
-              numberColumn,
-              Click.Yes
-            );
+            await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
+            await checkboxCell.scrollIntoViewIfNeeded();
+
+            // Highlight the checkbox cell
+            await checkboxCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'yellow';
+              el.style.border = '2px solid red';
+            });
+
+            // Find the actual checkbox input inside the cell
+            const checkbox = checkboxCell.getByRole('checkbox').first();
+
+            // Check if the checkbox is disabled
+            const isDisabled = await checkbox.isDisabled();
+            if (isDisabled) {
+              throw new Error(
+                'Cannot check the checkbox. Checkbox is disabled.'
+              );
+            }
+
+            // Check if the checkbox is already checked
+            const isChecked = await checkbox.isChecked();
+            if (!isChecked) {
+              console.log('Checkbox is not checked, attempting to check it...');
+              await checkbox.click();
+              await page.waitForTimeout(300);
+
+              // Verify the checkbox is now checked
+              const isCheckedAfter = await checkbox.isChecked();
+              if (!isCheckedAfter) {
+                throw new Error(
+                  'Failed to check the checkbox. Checkbox remains unchecked after click.'
+                );
+              }
+              console.log('Checkbox successfully checked');
+            } else {
+              console.log('Checkbox is already checked, skipping click');
+            }
 
             // Wait for the table body to load
             await shortageParts.waitingTableBody(deficitTableDetail);
@@ -9026,18 +9396,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step(
           'Step 13: Checking the urgency date of an order',
           async () => {
-            const numberColumn = await shortageParts.findColumn(
-              page,
-              tableMainDetail,
-              columnDateUrgencyDetail
-            );
-            console.log('Number column urgency date: ', numberColumn);
+            // Find the urgency date cell using data-testid (starts with pattern)
+            const urgencyDateCell = page
+              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .first();
 
-            urgencyDateOnTable =
-              await shortageParts.getValueOrClickFromFirstRow(
-                deficitTableDetail,
-                numberColumn
-              );
+            await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
+            await urgencyDateCell.scrollIntoViewIfNeeded();
+
+            // Highlight the urgency date cell
+            await urgencyDateCell.evaluate((el: HTMLElement) => {
+              el.style.backgroundColor = 'lightyellow';
+              el.style.border = '2px solid orange';
+            });
+
+            // Get the urgency date value from the cell
+            const urgencyDateValue = await urgencyDateCell.textContent();
+            urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
             console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -9639,7 +10014,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     }
   });
 
-  test.only('Test Case 37 - Delete Product after test', async ({ page }) => {
+  test('Test Case 37 - Delete Product after test', async ({ page }) => {
     console.log('Test Case 37 - Delete Product after test');
     test.setTimeout(90000);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
