@@ -517,28 +517,49 @@
         },
         "RevisionPage": {
             "titles":[
-                "Ревизия на складе",
-                "История изменений"
+                "Ревизия на складе"
             ],
             "filters": [
                 {
-                    "class": "[data-testid=\"MiniNavigation-POS-Data0\"]",
-                    "label": "Изделия",
+                    "class": "li.switch-yui-kit-item.switch-yui-kit-active",
+                    "datatestid": "Revision-Switch-Item0",
+                    "label": "Изделие",
                     "state": "true"
                 }, 
                 {
-                    "class": "[data-testid=\"MiniNavigation-POS-Data1\"]",
+                    "class": "li.switch-yui-kit-item",
+                    "datatestid": "Revision-Switch-Item1",
                     "label": "Сборки",
                     "state": "true"
                 }, 
                 {
-                    "class": "[data-testid=\"MiniNavigation-POS-Data2\"]",
+                    "class": "li.switch-yui-kit-item",
+                    "datatestid": "Revision-Switch-Item2",
                     "label": "Детали",
                     "state": "true"
                 }, 
                 {
-                    "class": "[data-testid=\"MiniNavigation-POS-Data3\"]",
+                    "class": "li.switch-yui-kit-item",
+                    "datatestid": "Revision-Switch-Item3",
                     "label": "Материалы",
+                    "state": "true"
+                }, 
+                {
+                    "class": "li.switch-yui-kit-item",
+                    "datatestid": "Revision-Switch-Item4",
+                    "label": "Инструмент",
+                    "state": "true"
+                }, 
+                {
+                    "class": "li.switch-yui-kit-item",
+                    "datatestid": "Revision-Switch-Item5",
+                    "label": "Оборудование",
+                    "state": "true"
+                }, 
+                {
+                    "class": "li.switch-yui-kit-item",
+                    "datatestid": "Revision-Switch-Item6",
+                    "label": "Техника и инвентарь",
                     "state": "true"
                 }
             ]
