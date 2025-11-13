@@ -572,6 +572,73 @@ export class PageObject extends AbstractPage {
   }
 
   /**
+   * Navigates to a page, finds a table element, waits for network idle, and waits for the table body to load.
+   * This is a common pattern used across many test cases.
+   * @param url - The URL to navigate to
+   * @param tableSelector - The selector for the table element to find and click
+   * @param tableBodySelector - The selector for the table body to wait for
+   * @param options - Optional configuration for waiting table body (minRows, timeoutMs)
+   */
+  async navigateToPageAndWaitForTable(
+    url: string,
+    tableSelector: string,
+    tableBodySelector: string,
+    options?: { minRows?: number; timeoutMs?: number }
+  ): Promise<void> {
+    await this.goto(url);
+    await this.findTable(tableSelector);
+    await this.page.waitForLoadState('networkidle');
+    await this.waitingTableBody(tableBodySelector, options);
+  }
+
+  /**
+   * Searches a table and waits for the table body to load.
+   * This is a common pattern used across many test cases.
+   * @param searchTerm - The search term to enter
+   * @param tableSelector - The selector for the table to search in
+   * @param tableBodySelector - The selector for the table body to wait for
+   * @param options - Optional configuration:
+   *   - useRedesign: If true, uses searchTableRedesign instead of searchTable (default: false)
+   *   - searchInputDataTestId: Optional data-testid for the search input (for searchTable method)
+   *   - timeoutBeforeWait: Optional timeout in ms before waiting for table body
+   *   - minRows: Minimum number of rows to wait for
+   *   - timeoutMs: Timeout in ms for waiting table body
+   */
+  async searchAndWaitForTable(
+    searchTerm: string,
+    tableSelector: string,
+    tableBodySelector: string,
+    options?: {
+      useRedesign?: boolean;
+      searchInputDataTestId?: string;
+      timeoutBeforeWait?: number;
+      minRows?: number;
+      timeoutMs?: number;
+    }
+  ): Promise<void> {
+    if (options?.useRedesign) {
+      await this.searchTableRedesign(searchTerm, tableSelector);
+      await this.page.waitForLoadState('networkidle');
+    } else {
+      await this.searchTable(
+        searchTerm,
+        tableSelector,
+        options?.searchInputDataTestId
+      );
+      // searchTable already includes waitForLoadState('networkidle')
+    }
+
+    if (options?.timeoutBeforeWait) {
+      await this.page.waitForTimeout(options.timeoutBeforeWait);
+    }
+
+    await this.waitingTableBody(tableBodySelector, {
+      minRows: options?.minRows,
+      timeoutMs: options?.timeoutMs,
+    });
+  }
+
+  /**
    * Pauses the test execution for a specified amount of time (in milliseconds).
    * @param ms - The duration in milliseconds to pause the execution. Defaults to 1000ms.
    */

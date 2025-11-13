@@ -1423,14 +1423,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Search product', async () => {
       // Using table search we look for the value of the variable
-      await loadingTaskPage.searchTableRedesign(
+      await loadingTaskPage.searchAndWaitForTable(
         nameProduct,
-        LoadingTasksSelectors.loadingMainTable
-      );
-
-      // Waiting for the table body
-      await loadingTaskPage.waitingTableBody(
-        LoadingTasksSelectors.loadingMainTable
+        LoadingTasksSelectors.loadingMainTable,
+        LoadingTasksSelectors.loadingMainTable,
+        { useRedesign: true }
       );
     });
 
@@ -1486,22 +1483,18 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     let checkOrderNumber: string;
 
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await shortageProduct.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step('Step 02: Open the shortage product page', async () => {
-      // Find and go to the page using the locator Shortage of Products
-      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION;
-      await shortageProduct.findTable(selector);
-
-      // Wait for loading
-      await page.waitForLoadState('networkidle');
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
-    });
+    await allure.step(
+      'Step 01-02: Open the warehouse page and shortage product page',
+      async () => {
+        // Find and go to the page using the locator Shortage of Products
+        const selector = SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION;
+        await shortageProduct.navigateToPageAndWaitForTable(
+          SELECTORS.MAINMENU.WAREHOUSE.URL,
+          selector,
+          deficitTable
+        );
+      }
+    );
 
     await allure.step('Step 03: Checking the main page headings', async () => {
       const titles = testData1.elements.ProductShortage.titles.map(title =>
@@ -1567,12 +1560,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 05: Search product', async () => {
       // Using table search we look for the value of the variable
-      await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
-
-      await page.waitForLoadState('networkidle');
-      // Wait for the table body to load
-      await page.waitForTimeout(2000);
-      await shortageProduct.waitingTableBody(deficitTable);
+      await shortageProduct.searchAndWaitForTable(
+        nameProduct,
+        deficitTable,
+        deficitTable,
+        { useRedesign: true, timeoutBeforeWait: 2000 }
+      );
     });
 
     await allure.step(
@@ -1913,17 +1906,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForTimeout(500);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchTableRedesign(
+          await shortageAssemblies.searchAndWaitForTable(
             cbed.name,
-            deficitTableCbed
+            deficitTableCbed,
+            deficitTableCbed,
+            { useRedesign: true, timeoutBeforeWait: 1000 }
           );
-
-          // Wait a moment for the search to complete and table to update
-          await page.waitForTimeout(1000);
           await page.waitForLoadState('domcontentloaded');
-
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -2238,18 +2227,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForTimeout(500);
 
           // Using table search we look for the value of the variable
-          await shortageParts.searchTableRedesign(
+          await shortageParts.searchAndWaitForTable(
             part.name,
-            deficitTableDetail
+            deficitTableDetail,
+            deficitTableDetail,
+            { useRedesign: true, timeoutBeforeWait: 1000 }
           );
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          await page.waitForTimeout(1000);
-
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
         await allure.step(
@@ -2638,18 +2621,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           await page.waitForTimeout(500);
           // Using table search we look for the value of the variable
-          await metalworkingWarehouse.searchTableRedesign(
+          await metalworkingWarehouse.searchAndWaitForTable(
             part.name,
-            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE
-          );
-
-          await page.waitForTimeout(500);
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          // Wait for the table body to load
-          await metalworkingWarehouse.waitingTableBody(
-            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE
+            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
+            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
+            { useRedesign: true, timeoutBeforeWait: 500 }
           );
         });
 
@@ -4139,16 +4115,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForLoadState('networkidle');
 
           // Using table search we look for the value of the variable
-          await stockReceipt.searchTableRedesign(
+          await stockReceipt.searchAndWaitForTable(
             detail.name,
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE
-          );
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          // Wait for the table body to load
-          await stockReceipt.waitingTableBody(
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
+            { useRedesign: true }
           );
         });
 
@@ -4820,22 +4791,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     const tableMainTable =
       SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION;
 
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      console.log('Step 01: Open the warehouse page');
-      // Go to the Warehouse page
-      await completingProductsToPlan.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
     await allure.step(
-      'Step 02: Open the completion product plan page',
+      'Step 01-02: Open the warehouse page and completion product plan page',
       async () => {
         // Find and go to the page using the locator Complete set of Products on the plan
         const selector =
           SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_PRODUCT_PLAN;
-        await completingProductsToPlan.findTable(selector);
-
-        // Wait for the table body to load
-        await completingProductsToPlan.waitingTableBody(tableMainTable);
+        await completingProductsToPlan.navigateToPageAndWaitForTable(
+          SELECTORS.MAINMENU.WAREHOUSE.URL,
+          selector,
+          tableMainTable
+        );
       }
     );
 
@@ -5367,24 +5333,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     );
     let numberColumn: number;
 
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      // Go to the Warehouse page
-      await warehouseTaskForShipment.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
     await allure.step(
-      'Step 02: Open the warehouse shipping task page',
+      'Step 01-02: Open the warehouse page and warehouse shipping task page',
       async () => {
         // Find and go to the page using the locator Склад: Задачи на отгрузку
         const selector = SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS;
-        await warehouseTaskForShipment.findTable(selector);
-
-        // Wait for loading
-        await page.waitForLoadState('networkidle');
+        await warehouseTaskForShipment.navigateToPageAndWaitForTable(
+          SELECTORS.MAINMENU.WAREHOUSE.URL,
+          selector,
+          tableMainUploading
+        );
         await page.waitForTimeout(500);
-
-        // Wait for the table body to load
-        await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
       }
     );
 
@@ -5454,16 +5413,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 05: Search product', async () => {
       // Using table search we look for the value of the variable
-
-      await warehouseTaskForShipment.searchTableRedesign(
+      await warehouseTaskForShipment.searchAndWaitForTable(
         nameProduct,
-        tableMainUploading
+        tableMainUploading,
+        tableMainUploading,
+        { useRedesign: true, timeoutBeforeWait: 1000 }
       );
-
-      await page.waitForTimeout(1000);
-
-      // Wait for the table body to load
-      await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
     });
 
     await allure.step(
@@ -5622,15 +5577,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 03: Search product', async () => {
       // Using table search we look for the value of the variable
 
-      await warehouseTaskForShipment.searchTableRedesign(
+      await warehouseTaskForShipment.searchAndWaitForTable(
         nameProduct,
-        tableMainUploading
+        tableMainUploading,
+        tableMainUploading,
+        { useRedesign: true, timeoutBeforeWait: 1000 }
       );
-
-      await page.waitForTimeout(1000);
-
-      // Wait for the table body to load
-      await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
     });
 
     await allure.step(
@@ -6234,10 +6186,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 03: Search product', async () => {
       // Using table search we look for the value of the variable
-      await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
+      await shortageProduct.searchAndWaitForTable(
+        nameProduct,
+        deficitTable,
+        deficitTable,
+        { useRedesign: true }
+      );
     });
 
     await allure.step(
@@ -6309,13 +6263,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchTableRedesign(
+          await shortageAssemblies.searchAndWaitForTable(
             cbed.name,
-            deficitTableCbed
+            deficitTableCbed,
+            deficitTableCbed,
+            { useRedesign: true }
           );
-
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -6391,18 +6344,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForLoadState('networkidle');
 
           // Using table search we look for the value of the variable
-          await shortageParts.searchTableRedesign(
+          await shortageParts.searchAndWaitForTable(
             part.name,
-            deficitTableDetail
+            deficitTableDetail,
+            deficitTableDetail,
+            { useRedesign: true, timeoutBeforeWait: 1000 }
           );
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          await page.waitForTimeout(1000);
-
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
         await allure.step(
@@ -8277,10 +8224,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 03: Search product', async () => {
       // Using table search we look for the value of the variable
-      await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
+      await shortageProduct.searchAndWaitForTable(
+        nameProduct,
+        deficitTable,
+        deficitTable,
+        { useRedesign: true }
+      );
     });
 
     await allure.step(
@@ -8525,13 +8474,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchTableRedesign(
+          await shortageAssemblies.searchAndWaitForTable(
             cbed.name,
-            deficitTableCbed
+            deficitTableCbed,
+            deficitTableCbed,
+            { useRedesign: true }
           );
-
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -8796,18 +8744,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForLoadState('networkidle');
 
           // Using table search we look for the value of the variable
-          await shortageParts.searchTableRedesign(
+          await shortageParts.searchAndWaitForTable(
             part.name,
-            deficitTableDetail
+            deficitTableDetail,
+            deficitTableDetail,
+            { useRedesign: true, timeoutBeforeWait: 1000 }
           );
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          await page.waitForTimeout(1000);
-
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
         await allure.step(
@@ -9062,15 +9004,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 03: Search product', async () => {
       // Using table search we look for the value of the variable
-      await warehouseTaskForShipment.searchTableRedesign(
+      await warehouseTaskForShipment.searchAndWaitForTable(
         nameProduct,
-        tableMainUploading
+        tableMainUploading,
+        tableMainUploading,
+        { useRedesign: true, timeoutBeforeWait: 1000 }
       );
-
-      await page.waitForTimeout(1000);
-
-      // Wait for the table body to load
-      await warehouseTaskForShipment.waitingTableBody(tableMainUploading);
     });
 
     await allure.step(
@@ -9155,10 +9094,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 03: Search product', async () => {
       // Using table search we look for the value of the variable
-      await shortageProduct.searchTableRedesign(nameProduct, deficitTable);
-
-      // Wait for the table body to load
-      await shortageProduct.waitingTableBody(deficitTable);
+      await shortageProduct.searchAndWaitForTable(
+        nameProduct,
+        deficitTable,
+        deficitTable,
+        { useRedesign: true }
+      );
     });
 
     await allure.step(
@@ -9230,13 +9171,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchTableRedesign(
+          await shortageAssemblies.searchAndWaitForTable(
             cbed.name,
-            deficitTableCbed
+            deficitTableCbed,
+            deficitTableCbed,
+            { useRedesign: true }
           );
-
-          // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -9298,18 +9238,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForLoadState('networkidle');
 
           // Using table search we look for the value of the variable
-          await shortageParts.searchTableRedesign(
+          await shortageParts.searchAndWaitForTable(
             part.name,
-            deficitTableDetail
+            deficitTableDetail,
+            deficitTableDetail,
+            { useRedesign: true, timeoutBeforeWait: 1000 }
           );
-
-          // Waiting for loading
-          await page.waitForLoadState('networkidle');
-
-          await page.waitForTimeout(1000);
-
-          // Wait for the table body to load
-          await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
         await allure.step(
@@ -9531,18 +9465,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
     const warehouseTable = 'table[data-testid="AssemblySclad-ScrollTable"]';
 
-    await allure.step('Step 01: Open the warehouse page', async () => {
-      await assemblyWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    });
-
-    await allure.step('Step 02: Open the assembly warehouse page', async () => {
-      const selector = '[data-testid="Sclad-stockOrderAssembly"]';
-      await assemblyWarehouse.findTable(selector);
-
-      // Wait for loading
-      await page.waitForLoadState('networkidle');
-      await assemblyWarehouse.waitingTableBody(warehouseTable);
-    });
+    await allure.step(
+      'Step 01-02: Open the warehouse page and assembly warehouse page',
+      async () => {
+        const selector = '[data-testid="Sclad-stockOrderAssembly"]';
+        await assemblyWarehouse.navigateToPageAndWaitForTable(
+          SELECTORS.MAINMENU.WAREHOUSE.URL,
+          selector,
+          warehouseTable
+        );
+      }
+    );
 
     await allure.step('Step 03: Search product', async () => {
       await assemblyWarehouse.searchTable(
