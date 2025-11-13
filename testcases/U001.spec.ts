@@ -7,6 +7,10 @@ import * as SelectorsModalWindowConsignmentNote from '../lib/Constants/Selectors
 import * as SelectorsAssemblyKittingOnThePlan from '../lib/Constants/SelectorsAssemblyKittingOnThePlan';
 import * as SelectorsRemainingProducts from '../lib/Constants/SelectorsRemainingProducts';
 import * as SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction from '../lib/Constants/SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction';
+import * as SelectorsCompleteSets from '../lib/Constants/SelectorsCompleteSets';
+import * as SelectorsWarehouseTaskForShipment from '../lib/Constants/SelectorsWarehouseTaskForShipment';
+import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages';
+import * as SelectorsShipmentTasks from '../lib/Constants/SelectorsShipmentTasks';
 
 let incomingQuantity = '1';
 let remainingStockBefore: string;
@@ -114,46 +118,44 @@ const choiceCbed =
   '[data-testid="Specification-Dialog-CardbaseOfAssemblyUnits0"]';
 const choiceDetail = '[data-testid="Specification-Dialog-CardbaseDetail1"]';
 
-// DeficitIzd
-const deficitTable = '[data-testid="DeficitIzd-Main-Table"]';
-const tableMain = 'DeficitIzd-Main-Table';
+// DeficitIzd - using constants from SelectorsShortagePages
+const deficitTable = SelectorsShortagePages.TABLE_DEFICIT_IZD;
+const tableMain = SelectorsShortagePages.TABLE_DEFICIT_IZD_ID;
 const columnCheckbox = 'DeficitIzdTable-HeadRow-TotalCheckbox';
 const columnDateUrgency = 'DeficitIzdTable-HeadRow-DateUrgency';
 const columnOrderFromProduction = 'DeficitIzdTable-HeadRow-OrderFromProduction';
 const buttonLaunchIntoProduction =
-  '[data-testid="DeficitIzd-Main-Footer-Button-IntoProduction"]';
+  SelectorsShortagePages.BUTTON_LAUNCH_INTO_PRODUCTION;
 const modalWindowLaunchIntoProduction =
-  '[data-testid="DeficitIzd-ModalStartProduction-ModalContent"]';
+  SelectorsShortagePages.MODAL_START_PRODUCTION;
 
-// DeficitCbed
-const deficitTableCbed = '[data-testid="DeficitCbed-Table"]';
-const tableMainCbed = 'DeficitCbed-Table';
+// DeficitCbed - using constants from SelectorsShortagePages
+const deficitTableCbed = SelectorsShortagePages.TABLE_DEFICIT_CBED;
+const tableMainCbed = SelectorsShortagePages.TABLE_DEFICIT_CBED_ID;
 const columnDateUrgencyCbed = 'DeficitCbed-TableHeader-ViewsDeficitsDuedate';
 const columnOrderFromProductionCbed =
   'DeficitCbed-TableHeader-ViewsDeficitsOrderedforproduction';
 const columnCheckboxCbed = 'DeficitCbed-TableHeader-SelectAll';
 const buttonLaunchIntoProductionCbed =
-  '[data-testid="DeficitCbed-StartButton"]';
+  SelectorsShortagePages.BUTTON_LAUNCH_INTO_PRODUCTION_CBED;
 const modalWindowLaunchIntoProductionCbed =
-  '[data-testid="DeficitCbed-StartProductionModal-ModalContent"]';
+  SelectorsShortagePages.MODAL_START_PRODUCTION_CBED;
 
-// DeficitDetail
-const deficitTableDetail = 'table[data-testid="DeficitIzd-Main-Table"]';
-const tableMainDetail = 'DeficitIzd-Main-Table';
+// DeficitDetail - using constants from SelectorsShortagePages
+const deficitTableDetail = `table${SelectorsShortagePages.TABLE_DEFICIT_IZD}`;
+const tableMainDetail = SelectorsShortagePages.TABLE_DEFICIT_IZD_ID;
 const columnDateUrgencyDetail = 'DeficitIzdTable-HeadRow-DateUrgency';
 const columnOrderFromProductionDetail =
   'DeficitIzdTable-HeadRow-OrderFromProduction';
 const columnCheckBoxDetail = 'DeficitIzdTable-HeadRow-TotalCheckbox';
-const buttonLaunchIntoProductionDetail =
-  'button[data-testid="DeficitIzd-Main-Footer-Button-IntoProduction"]';
+const buttonLaunchIntoProductionDetail = `button${SelectorsShortagePages.BUTTON_LAUNCH_INTO_PRODUCTION}`;
 const modalWindowLaunchIntoProductionDetail =
-  '[data-testid="DeficitIzd-ModalStartProduction-ModalContent"]';
+  SelectorsShortagePages.MODAL_START_PRODUCTION;
 
-// Uploading
-const tableMainUploading =
-  'table[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]';
-const tableMainUploadingID = 'Table';
-const buttonUploading = '[data-testid="IssueToPull-Button-Ship"]';
+// Uploading - using constants from SelectorsShipmentTasks
+const tableMainUploading = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE;
+const tableMainUploadingID = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE_ID;
+const buttonUploading = SelectorsShipmentTasks.BUTTON_SHIP;
 
 export const runU001 = (isSingleTest: boolean, iterations: number) => {
   console.log(
@@ -477,9 +479,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 04: Enter the name of the part', async () => {
-        const nameParts = page.locator(
-          '[data-testid="AddDetal-Information-Input-Input"]'
-        );
+        const nameParts = page.locator(PartsDBSelectors.INPUT_DETAIL_NAME);
 
         await page.waitForTimeout(500);
         await nameParts.fill(detail.name);
@@ -490,7 +490,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         'Step 05: Enter the designation of the part',
         async () => {
           const nameParts = page.locator(
-            '[data-testid="AddDetal-Designation-Input-Input"]'
+            PartsDBSelectors.INPUT_DETAIL_DESIGNATION
           );
 
           await nameParts.fill(detail.designation);
@@ -514,7 +514,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 08: Click on the Add Operation', async () => {
-        await page.waitForSelector('[data-testid="Modal-ModalContent"]');
+        await page.waitForSelector(PartsDBSelectors.MODAL_CONTENT);
         await partsDatabsePage.clickButton(
           'Добавить операцию',
           PartsDBSelectors.BUTTON_ADD_OPERATION
@@ -523,12 +523,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 09: Click on the type of operation', async () => {
         await page.waitForLoadState('networkidle');
-        await page.locator('[data-testid="BaseFilter-Title"]').click();
+        await page.locator(PartsDBSelectors.BASE_FILTER_TITLE).click();
       });
 
       await allure.step('Step 10: Search in dropdown menu', async () => {
         const searchTypeOperation = page.locator(
-          '[data-testid="BaseFilter-Search-Dropdown-Input"]'
+          PartsDBSelectors.BASE_FILTER_SEARCH_INPUT
         );
         const typeOperation = 'Сварочная';
 
@@ -537,15 +537,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 11: Choice type operation', async () => {
-        await page.locator('[data-testid="BaseFilter-Options-0"]').click();
+        await page.locator(PartsDBSelectors.BASE_FILTER_OPTION_FIRST).click();
       });
 
       await allure.step('Step 12: Click on the Save button', async () => {
         await page
-          .locator(
-            '[data-testid="EditDetal-ModalTechProcess-ModalAddOperation-SaveButton"]',
-            { hasText: 'Сохранить' }
-          )
+          .locator(PartsDBSelectors.BUTTON_ADD_OPERATION_SAVE, {
+            hasText: 'Сохранить',
+          })
           .last()
           .click();
         await page.waitForLoadState('networkidle');
@@ -581,7 +580,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(1000);
       // Wait for loading
       await partsDatabsePage.waitingTableBody(
-        '[data-testid="BasePaginationTable-Wrapper-cbed"]'
+        PartsDBSelectors.CBED_TABLE_WRAPPER
       );
     });
 
@@ -652,9 +651,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
 
       // Wait for loading
-      await partsDatabsePage.waitingTableBody(
-        '[data-testid="BasePaginationTable-Table-product"]'
-      );
+      await partsDatabsePage.waitingTableBody(PartsDBSelectors.PRODUCT_TABLE);
     });
 
     await allure.step('Step 02: Click on the Create button', async () => {
@@ -701,9 +698,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           )
           .isVisible();
         const modalWindowSearchCbed = page
-          .locator(
-            '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]'
-          )
+          .locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT)
           .last();
 
         await page.waitForTimeout(500);
@@ -718,14 +713,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(500);
         await partsDatabsePage.checkNameInLineFromFirstRow(
           cbed.name,
-          '[data-testid="BasePaginationTable-Table-cbed"]'
+          PartsDBSelectors.CBED_TABLE
         );
       });
       await allure.step('Step 09: Choice first row', async () => {
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(500);
         await partsDatabsePage.getValueOrClickFromFirstRow(
-          '[data-testid="BasePaginationTable-Table-cbed"]',
+          PartsDBSelectors.CBED_TABLE,
           1,
           Click.Yes,
           Click.No
@@ -735,7 +730,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 10: Click on the Add button', async () => {
         await page.waitForTimeout(500);
         await page
-          .locator('[data-testid="Specification-ModalBaseCbed-Select-Button"]')
+          .locator(PartsDBSelectors.BUTTON_SPECIFICATION_CBED_SELECT)
           .click();
       });
     }
@@ -743,7 +738,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 11: Click on the Add button', async () => {
       await page.waitForTimeout(500);
       await page
-        .locator('[data-testid="Specification-ModalBaseCbed-Add-Button"]')
+        .locator(PartsDBSelectors.BUTTON_SPECIFICATION_CBED_ADD)
         .click();
     });
 
@@ -769,9 +764,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           )
           .isVisible();
         const modalWindowSearchCbed = page
-          .locator(
-            '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]'
-          )
+          .locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT)
           .last();
 
         await page.waitForTimeout(500);
@@ -785,7 +778,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(1500);
         await partsDatabsePage.checkNameInLineFromFirstRow(
           detail.name,
-          '[data-testid="BasePaginationTable-Table-detal"]'
+          PartsDBSelectors.DETAIL_TABLE
         );
       });
 
@@ -793,7 +786,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(500);
         await partsDatabsePage.getValueOrClickFromFirstRow(
-          '[data-testid="BasePaginationTable-Table-detal"]',
+          PartsDBSelectors.DETAIL_TABLE,
           1,
           Click.Yes,
           Click.No
@@ -803,7 +796,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 16: Click on the Add button', async () => {
         await page.waitForTimeout(500);
         await page
-          .locator('[data-testid="Specification-ModalBaseDetal-Select-Button"]')
+          .locator(PartsDBSelectors.BUTTON_SPECIFICATION_DETAL_SELECT)
           .click();
       });
     }
@@ -811,7 +804,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 17: Click on the Add button', async () => {
       await page.waitForTimeout(500);
       await page
-        .locator('[data-testid="Specification-ModalBaseDetal-Add-Button"]', {
+        .locator(PartsDBSelectors.BUTTON_SPECIFICATION_DETAL_ADD, {
           hasText: 'Добавить',
         })
         .click();
@@ -879,15 +872,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(1000);
 
       // Кликаем по кнопке Архив
-      const archiveButton = page.locator(
-        '[data-testid="IssueShipment-ActionsButtons-Archive"]',
-        { hasText: 'Архив' }
-      );
+      const archiveButton = page.locator(LoadingTasksSelectors.buttonArchive, {
+        hasText: 'Архив',
+      });
       await archiveButton.click();
 
       // Ждем появления диалога подтверждения
       const dialog = page
-        .locator('[data-testid="ModalConfirm-Content"]')
+        .locator(PartsDBSelectors.MODAL_CONFIRM_CONTENT)
         .filter({
           hasText: `Вы уверены, что хотите перенести в архив "${orderNumber}"?`,
         });
@@ -1317,21 +1309,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 19: We set the date according to urgency',
       async () => {
         console.log('Step 19: We set the date according to urgency');
-        await page
-          .locator(
-            '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-HeaderBtn-Trigger"]'
-          )
-          .click();
-        await page
-          .locator(
-            '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Popover"]'
-          )
-          .isVisible();
+        await page.locator(LoadingTasksSelectors.calendarTrigger).click();
+        await page.locator(LoadingTasksSelectors.calendarPopover).isVisible();
 
         // Scope to the calendar component
-        const calendar = page.locator(
-          '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Component"]'
-        );
+        const calendar = page.locator(LoadingTasksSelectors.calendarComponent);
 
         // Open the years popup by clicking the header year button
         const yearButton = calendar
@@ -1511,8 +1493,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the shortage product page', async () => {
       // Find and go to the page using the locator Shortage of Products
-      const selector =
-        '[data-testid="Sclad-deficitProduction-deficitProduction"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION;
       await shortageProduct.findTable(selector);
 
       // Wait for loading
@@ -1599,7 +1580,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the checkbox using data-testid
         const checkboxCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-Checkbox"]')
+          .locator(SelectorsShortagePages.ROW_CHECKBOX)
           .first();
 
         await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -1649,7 +1630,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the urgency date cell using data-testid
         const urgencyDateCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]')
+          .locator(SelectorsShortagePages.ROW_DATE_URGENCY)
           .first();
 
         await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -1676,7 +1657,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the production ordered quantity cell using data-testid
         const productionOrderedCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED)
           .first();
 
         await productionOrderedCell.waitFor({
@@ -1766,7 +1747,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 13: Enter a value into a cell', async () => {
       // Check the value in the Own quantity field and enter the value
-      const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+      const locator = SelectorsShortagePages.MODAL_START_PRODUCTION;
       await shortageProduct.checkOrderQuantity(
         locator,
         '2',
@@ -1801,7 +1782,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the production ordered quantity cell using data-testid
         const productionOrderedCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED)
           .first();
 
         await productionOrderedCell.waitFor({
@@ -1850,7 +1831,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the shortage assemblies page',
       async () => {
         // Find and go to the page using the locator shortage assemblies
-        const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
+        const selector = SelectorsShortagePages.SELECTOR_DEFICIT_CBED_PAGE;
         await shortageAssemblies.findTable(selector);
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
@@ -1953,7 +1934,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForTimeout(1000);
             // Find the checkbox using data-testid
             const checkboxCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-Select"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_SELECT)
               .first();
 
             await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -2005,7 +1986,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid
             const urgencyDateCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-UrgencyDate"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -2032,7 +2013,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the ordered quantity cell using data-testid
             const orderedCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-Ordered"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_ORDERED)
               .first();
 
             await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -2085,7 +2066,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 11: Enter a value into a cell', async () => {
           // Check the value in the Own quantity field and enter the value
-          const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+          const locator = SelectorsShortagePages.ROW_PRODUCTION_INPUT;
           await shortageAssemblies.checkOrderQuantity(
             locator,
             '2',
@@ -2129,7 +2110,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the ordered quantity cell using data-testid
             const orderedCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-Ordered"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_ORDERED)
               .first();
 
             await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -2173,7 +2154,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the shortage parts page', async () => {
       // Find and go to the page using the locator Parts Shortage
-      const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_DETAL;
       await shortageParts.findTable(selector);
       // Wait for the page to stabilize
       await page.waitForLoadState('networkidle');
@@ -2276,7 +2257,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the checkbox using data-testid (starts with pattern)
             const checkboxCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .locator(SelectorsShortagePages.ROW_CHECKBOX_PATTERN)
               .first();
 
             await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -2328,7 +2309,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid (starts with pattern)
             const urgencyDateCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -2355,7 +2336,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Get the value using data-testid directly
             const quantityCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
+              .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED_PATTERN)
               .first();
             await quantityCell.evaluate((el: HTMLElement) => {
               el.style.backgroundColor = 'yellow';
@@ -2376,7 +2357,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           'Step 09: Click on the Launch on production button ',
           async () => {
             // Ensure at least one row is rendered
-            const rows = page.locator('[data-testid^="DeficitIzdTable-Row"]');
+            const rows = page.locator(SelectorsShortagePages.ROW_PATTERN);
             await rows.first().waitFor({ state: 'visible', timeout: 15000 });
 
             const firstRow = rows.first();
@@ -2468,7 +2449,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 11: Enter a value into a cell', async () => {
           // Check the value in the Own quantity field and enter the value
-          const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+          const locator = SelectorsShortagePages.MODAL_START_PRODUCTION;
           await shortageParts.checkOrderQuantity(
             locator,
             '2',
@@ -2510,7 +2491,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the production ordered quantity cell using data-testid (starts with pattern)
             const productionOrderedCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
+              .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED_PATTERN)
               .first();
 
             await productionOrderedCell.waitFor({
@@ -2559,8 +2540,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     test.setTimeout(500000);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
-    const productionTable =
-      '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
+    const productionTable = ProductionPathSelectors.OPERATION_TABLE;
     let numberColumnQunatityMade: number;
     let firstOperation: string;
 
@@ -2573,7 +2553,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the metalworking warehouse page',
       async () => {
         // Find and go to the page using the locator Order a warehouse for Metalworking
-        const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
+        const selector =
+          MetalWorkingWarhouseSelectors.SELECTOR_METAL_WORKING_WARHOUSE;
         await metalworkingWarehouse.findTable(selector);
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
@@ -2850,7 +2831,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Get the done/made cell using data-testid directly
             // Pattern: OperationPathInfo-tbodysdelano-sh{number}
             const doneCell = page
-              .locator('[data-testid^="OperationPathInfo-tbodysdelano-sh"]')
+              .locator(ProductionPathSelectors.OPERATION_ROW_DONE_PATTERN)
               .first();
 
             await doneCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -2873,7 +2854,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Get the operation cell using data-testid directly
             const operationCell = page
-              .locator('[data-testid="OperationPathInfo-Tbody-FullName"]')
+              .locator(ProductionPathSelectors.OPERATION_ROW_FULL_NAME)
               .first();
 
             await operationCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -3068,7 +3049,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the completion cbed plan page',
       async () => {
         // Find and go to the page using the locator Completing assemblies to plan
-        const selector = '[data-testid="Sclad-completionCbedPlan"]';
+        const selector =
+          SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_CBED_PLAN;
         await completingAssembliesToPlan.findTable(selector);
         await page.waitForLoadState('networkidle');
       }
@@ -3183,7 +3165,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             //   .first();
             const urgencyDateCell = page
               .locator(
-                '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
+                SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DATE_URGENCY_PATTERN
               )
               .nth(1); //ERP-2423
             await urgencyDateCell.evaluate((el: HTMLElement) => {
@@ -3206,7 +3188,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Get the designation cell using data-testid directly and double-click it
             const designationCell = page
               .locator(
-                '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+                SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DESIGNATION_PATTERN
               )
               .first();
             await designationCell.evaluate((el: HTMLElement) => {
@@ -3231,7 +3213,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             const h3Titles =
               await completingAssembliesToPlan.getAllH3TitlesInModalClassNew(
                 page,
-                '[data-testid="TableComplect-ModalAddWaybill"][open]'
+                SelectorsModalWindowConsignmentNote.MODAL_WINDOW_OPEN
               );
             const normalizedH3Titles = h3Titles.map(title => title.trim());
 
@@ -3297,7 +3279,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ModalAddWaybill-ShipmentDetailsTable-Row{number}-SelectCell
             const checkboxCell = page
               .locator(
-                '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]'
+                SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ROW_SELECT_CELL_PATTERN
               )
               .first();
 
@@ -3373,7 +3355,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     const completeSets = new CreateCompleteSetsPage(page);
-    const completeSetsTable = '[data-testid="ComplectKit-TableScroll"]';
+    const completeSetsTable = SelectorsCompleteSets.TABLE_SCROLL;
     const disassembly = '[data-testid^="ModalUncomplectKit-AssemblyBlock"]';
     let qunatityCompleteSet: string;
 
@@ -3384,7 +3366,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the shortage product page', async () => {
       // Find and go to the page using the locator Shortage of Products
-      const selector = '[data-testid="Sclad-completeSets"]';
+      const selector = SelectorsCompleteSets.SELECTOR_COMPLETE_SETS;
       await completeSets.findTable(selector);
 
       // Wait for the table body to load
@@ -3487,7 +3469,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the assembled quantity cell using data-testid
             const assembledCell = page
-              .locator('[data-testid="ComplectKit-TableCell-Assembled"]')
+              .locator(SelectorsCompleteSets.TABLE_CELL_ASSEMBLED)
               .first();
 
             await assembledCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -3516,7 +3498,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the checkbox using data-testid
             const checkboxCell = page
-              .locator('[data-testid="ComplectKit-TableCell-Checkbox"]')
+              .locator(SelectorsCompleteSets.TABLE_CELL_CHECKBOX)
               .first();
 
             await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -3565,7 +3547,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             await completeSets.clickButton(
               'Разкомплектовать',
-              '[data-testid="ComplectKit-Button-Unassemble"]'
+              SelectorsCompleteSets.BUTTON_UNASSEMBLE
             );
             // Wait for the page to stabilize
             await page.waitForLoadState('networkidle');
@@ -3580,7 +3562,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
             const h3Titles = await completeSets.getAllH3TitlesInModalClassNew(
               page,
-              '[data-testid="ModalUncomplectKit-RightContent"]'
+              SelectorsCompleteSets.MODAL_UNCOMPLECT_KIT_RIGHT_CONTENT
             );
             const normalizedH3Titles = h3Titles.map(title => title.trim());
 
@@ -3756,7 +3738,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the completion cbed plan page',
       async () => {
         // Find and go to the page using the locator Completing assemblies to plan
-        const selector = '[data-testid="Sclad-completionCbedPlan"]';
+        const selector =
+          SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_CBED_PLAN;
         await completingAssembliesToPlan.findTable(selector);
       }
     );
@@ -3804,7 +3787,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             //   .first(); //ERP-2423
             const urgencyDateCell = page
               .locator(
-                '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
+                SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DATE_URGENCY_PATTERN
               )
               .nth(1);
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -3828,7 +3811,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: CompletCbed-Content-Table-Table-TableRow{number}-Designation
             const designationCell = page
               .locator(
-                '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+                SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DESIGNATION_PATTERN
               )
               .first();
 
@@ -3859,7 +3842,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ModalAddWaybill-ShipmentDetailsTable-Row{number}-SelectCell
             const checkboxCell = page
               .locator(
-                '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]'
+                SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ROW_SELECT_CELL_PATTERN
               )
               .first();
 
@@ -4305,7 +4288,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
             const checkboxCell = page
               .locator(
-                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+                SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_CHECKBOX_PATTERN
               )
               .first();
 
@@ -4356,7 +4339,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           // Click on the Создать button
           await stockReceipt.clickButton(
             'Создать',
-            '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE
           );
         });
 
@@ -4493,7 +4476,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
             const checkboxCell = page
               .locator(
-                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+                SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_CHECKBOX_PATTERN
               )
               .first();
 
@@ -4520,7 +4503,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             console.log('Step 07a: Find the Кол-во на приход column and click');
             // Ensure the main modal is visible first
             const mainModal = page.locator(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_MAIN
             );
             await mainModal.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -4528,7 +4511,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdParish
             const prihodQuantityCell = page
               .locator(
-                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+                SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN
               )
               .first();
 
@@ -4554,7 +4537,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForTimeout(500);
             // Wait for the Completed sets modal to appear
             const completedSetsModal = page.locator(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST
             );
             await completedSetsModal.waitFor({
               state: 'visible',
@@ -4643,7 +4626,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             console.log('Step 10: Check the modal window Completed sets');
             // Ensure the Completed sets modal is visible
             const completedSetsModal = page.locator(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST
             );
             await completedSetsModal.waitFor({
               state: 'visible',
@@ -4652,7 +4635,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Check the modal window Completed sets
             await stockReceipt.completesSetsModalWindow();
             await stockReceipt.waitingTableBody(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST_TABLE
             );
           }
         );
@@ -4662,7 +4645,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Ensure the Completed sets modal is still visible
             const completedSetsModal = page.locator(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST
             );
             await completedSetsModal.waitFor({
               state: 'visible',
@@ -4695,7 +4678,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Enter the value into the input cell
 
             const inputlocator =
-              '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN;
 
             await page
               .locator(inputlocator)
@@ -4729,7 +4712,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Сохранить',
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE
             );
           }
         );
@@ -4742,7 +4725,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
             // Wait for the table body to load
             const tableSelectedItems =
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE;
             await stockReceipt.waitingTableBody(tableSelectedItems);
 
             // Check that the first row of the table contains the variable name
@@ -4761,7 +4744,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Добавить',
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_ADD
             );
           }
         );
@@ -4774,14 +4757,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Создать',
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE
             );
             // Wait for modal to close and page to stabilize
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(1000);
             // Ensure the modal is closed before proceeding
             const modal = page.locator(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_MAIN
             );
             await modal
               .waitFor({ state: 'hidden', timeout: 10000 })
@@ -4833,9 +4816,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     const completingProductsToPlan = new CreateCompletingProductsToPlanPage(
       page
     );
-    const tableComplect = '[data-testid="scroll-wrapper__slot"]';
+    const tableComplect = PartsDBSelectors.SCROLL_WRAPPER_SLOT;
     const tableMainTable =
-      'table[data-testid="CompletIzd-Content-Table-Table"]';
+      SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION;
 
     await allure.step('Step 01: Open the warehouse page', async () => {
       console.log('Step 01: Open the warehouse page');
@@ -4847,7 +4830,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the completion product plan page',
       async () => {
         // Find and go to the page using the locator Complete set of Products on the plan
-        const selector = '[data-testid="Sclad-completionProductPlan"]';
+        const selector =
+          SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_PRODUCT_PLAN;
         await completingProductsToPlan.findTable(selector);
 
         // Wait for the table body to load
@@ -4922,7 +4906,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await completingProductsToPlan.searchTable(
         nameProduct,
         tableMainTable,
-        'CompletIzd-Content-Table-Table-SearchInput-Dropdown-Input'
+        SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT
       );
 
       // Wait for the table body to load
@@ -4952,7 +4936,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         //   .first();
         const urgencyDateCell = page
           .locator(
-            '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
+            SelectorsAssemblyKittingOnThePlan.TABLE_ROW_PRODUCT_DATE_URGENCY_PATTERN
           )
           .nth(1); //          ERP-2423
 
@@ -4987,7 +4971,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Pattern: CompletIzd-Content-Table-Table-TableRow{number}-Designation
         const designationCell = page
           .locator(
-            '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+            SelectorsAssemblyKittingOnThePlan.TABLE_ROW_PRODUCT_DESIGNATION_PATTERN
           )
           .first();
 
@@ -5035,7 +5019,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Click on the button
         await completingProductsToPlan.clickButton(
           'Скомплектовать',
-          '[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]'
+          SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON
         );
 
         // Wait for loading
@@ -5056,8 +5040,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     );
     const stock = new CreateStockPage(page);
     const tableStockRecieptModalWindow =
-      '[data-testid="ModalComingTable-TableScroll"]';
-    const tableComplectsSets = '[data-testid="ModalKitsList-Table"]';
+      SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_MODAL_COMING_SCROLL;
+    const tableComplectsSets =
+      SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_REMAINING_PRODUCTS;
 
     await allure.step(
       'Step 01: Receiving quantities from balances',
@@ -5079,7 +5064,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 03: Open the stock receipt page', async () => {
       // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
       const selector =
-        '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
+        SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION;
       await stockReceipt.findTable(selector);
 
       // Waiting for loading
@@ -5255,7 +5240,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Click on the button
         await stockReceipt.clickButton(
           'Сохранить',
-          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save"]'
+          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE
         );
       }
     );
@@ -5302,7 +5287,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Click on the button
         await stockReceipt.clickButton(
           'Добавить',
-          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]'
+          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_ADD
         );
       }
     );
@@ -5315,14 +5300,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Click on the button
         await stockReceipt.clickButton(
           'Создать',
-          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
+          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE
         );
         // Wait for modal to close and page to stabilize
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(1000);
         // Ensure the modal is closed before proceeding
         const modal = page.locator(
-          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
+          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_MAIN
         );
         await modal
           .waitFor({ state: 'hidden', timeout: 10000 })
@@ -5391,7 +5376,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the warehouse shipping task page',
       async () => {
         // Find and go to the page using the locator Склад: Задачи на отгрузку
-        const selector = '[data-testid="Sclad-shippingTasks"]';
+        const selector = SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS;
         await warehouseTaskForShipment.findTable(selector);
 
         // Wait for loading
@@ -5497,9 +5482,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click the first row cell using direct data-testid pattern
         const firstRowCell = page
-          .locator(
-            '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Number"]'
-          )
+          .locator(SelectorsShipmentTasks.ROW_NUMBER_PATTERN)
           .first();
 
         // Wait for the cell to be visible
@@ -5599,7 +5582,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click on the button
       await warehouseTaskForShipment.clickButton(
         'Отгрузить',
-        '[data-testid="ModalShComlit-Button-Ship"]'
+        SelectorsWarehouseTaskForShipment.BUTTON_SHIP
       );
     });
   });
@@ -5624,7 +5607,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the warehouse shipping task page',
       async () => {
         // Find and go to the page using the locator Склад: Задачи на отгрузку
-        const selector = '[data-testid="Sclad-shippingTasks"]';
+        const selector = SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS;
         await warehouseTaskForShipment.findTable(selector);
 
         // Wait for loading
@@ -5682,12 +5665,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 07: Checking the number of shipped entities',
       async () => {
-        const tableBody = '[data-testid="ModalShComlit-TableScroll"]';
+        const tableBody = SelectorsWarehouseTaskForShipment.TABLE_SCROLL;
         await warehouseTaskForShipment.waitingTableBody(tableBody);
 
         // Find the shipped quantity cell using data-testid
         const shippedCell = page
-          .locator('[data-testid="ModalShComlit-TableBody-Shipped"]')
+          .locator(SelectorsWarehouseTaskForShipment.TABLE_BODY_SHIPPED)
           .first();
 
         await shippedCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -5828,21 +5811,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 11: We set the date according to urgency',
       async () => {
         console.log('Step 11: We set the date according to urgency');
-        await page
-          .locator(
-            '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-HeaderBtn-Trigger"]'
-          )
-          .click();
-        await page
-          .locator(
-            '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Popover"]'
-          )
-          .isVisible();
+        await page.locator(LoadingTasksSelectors.calendarTrigger).click();
+        await page.locator(LoadingTasksSelectors.calendarPopover).isVisible();
 
         // Scope to the calendar component
-        const calendar = page.locator(
-          '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Component"]'
-        );
+        const calendar = page.locator(LoadingTasksSelectors.calendarComponent);
 
         // Open the years popup by clicking the header year button
         const yearButton = calendar
@@ -5931,8 +5904,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
     const tableMetalworkingWarehouse =
       '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table"]';
-    const productionTable =
-      '[data-testid="ModalOperationPathMetaloworking-OperationTable"]';
+    const productionTable = ProductionPathSelectors.OPERATION_TABLE;
     let numberColumnQunatityMade: number;
     let firstOperation: string;
     const operationTable = 'OperationPathInfo-Table';
@@ -5947,7 +5919,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the metalworking warehouse page',
       async () => {
         // Find and go to the page using the locator Order a warehouse for Metalworking
-        const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
+        const selector =
+          MetalWorkingWarhouseSelectors.SELECTOR_METAL_WORKING_WARHOUSE;
         await metalworkingWarehouse.findTable(selector);
       }
     );
@@ -5978,7 +5951,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           const table = page.locator(tableMetalworkingWarehouse);
           const searchTable = table
             .locator(
-              '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Search-Dropdown-Input"]'
+              MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_SEARCH_INPUT_LOCATOR
             )
             .nth(0);
 
@@ -6137,7 +6110,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Get the done/made cell using data-testid directly
             // Pattern: OperationPathInfo-tbodysdelano-sh{number}
             const doneCell = page
-              .locator('[data-testid^="OperationPathInfo-tbodysdelano-sh"]')
+              .locator(ProductionPathSelectors.OPERATION_ROW_DONE_PATTERN)
               .first();
 
             await doneCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -6160,7 +6133,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Get the operation cell using data-testid directly
             const operationCell = page
-              .locator('[data-testid="OperationPathInfo-Tbody-FullName"]')
+              .locator(ProductionPathSelectors.OPERATION_ROW_FULL_NAME)
               .first();
 
             await operationCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -6249,8 +6222,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the shortage product page', async () => {
       // Find and go to the page using the locator Shortage of Products
-      const selector =
-        '[data-testid="Sclad-deficitProduction-deficitProduction"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION;
       await shortageProduct.findTable(selector);
 
       // Wait for loading
@@ -6287,7 +6259,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the urgency date cell using data-testid
         const urgencyDateCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]')
+          .locator(SelectorsShortagePages.ROW_DATE_URGENCY)
           .first();
 
         await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -6321,7 +6293,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 07: Open the shortage assemblies page',
       async () => {
         // Find and go to the page using the locator shortage assemblies
-        const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
+        const selector = SelectorsShortagePages.SELECTOR_DEFICIT_CBED_PAGE;
         await shortageAssemblies.findTable(selector);
       }
     );
@@ -6367,7 +6339,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid
             const urgencyDateCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-UrgencyDate"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -6401,7 +6373,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 12: Open the shortage parts page', async () => {
       // Find and go to the page using the locator Parts Shortage
-      const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_DETAL;
       await shortageParts.findTable(selector);
     });
 
@@ -6452,7 +6424,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the checkbox using data-testid (starts with pattern)
             const checkboxCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .locator(SelectorsShortagePages.ROW_CHECKBOX_PATTERN)
               .first();
 
             await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -6504,7 +6476,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid (starts with pattern)
             const urgencyDateCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -6568,7 +6540,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step('Step 03: Open the stock receipt page', async () => {
           // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
           const selectorstockReceipt =
-            '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION;
           await stockReceipt.findTable(selectorstockReceipt);
           // Waiting for loading
           await page.waitForLoadState('networkidle');
@@ -6673,7 +6645,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
             // Wait for the table body to load
             const tableSelectedItems =
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE;
             await stockReceipt.waitingTableBody(tableSelectedItems);
 
             // Check that the first row of the table contains the variable name
@@ -6692,7 +6664,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Добавить',
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_ADD
             );
           }
         );
@@ -6709,7 +6681,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click on the button
             await stockReceipt.clickButton(
               'Создать',
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE
             );
           }
         );
@@ -6757,9 +6729,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       page
     );
     const tableStockRecieptModalWindow =
-      '[data-testid="ModalComingTable-TableScroll"]';
+      SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_MODAL_COMING_SCROLL;
     const tableComplectsSets =
-      'table[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+      SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE;
 
     // Check if the array is empty
     if (descendantsCbedArray.length === 0) {
@@ -6787,7 +6759,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step('Step 03: Open the stock receipt page', async () => {
           // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
           const selectorstockReceipt =
-            '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION;
           await stockReceipt.findTable(selectorstockReceipt);
 
           // Waiting for loading
@@ -6841,7 +6813,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdParish
             const prihodQuantityCell = page
               .locator(
-                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+                SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN
               )
               .first();
 
@@ -6874,7 +6846,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 );
 
                 // Open the assembly kitting page
-                const selector = '[data-testid="Sclad-completionCbedPlan"]';
+                const selector =
+                  SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_CBED_PLAN;
                 await newCompletingAssembliesToPlan.findTable(selector);
                 await newPage.waitForLoadState('networkidle');
 
@@ -6890,7 +6863,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Double-click the designation cell to open the waybill modal
                 const designationCell = newPage
                   .locator(
-                    '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+                    SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DESIGNATION_PATTERN
                   )
                   .first();
                 await designationCell.waitFor({
@@ -6904,7 +6877,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
                 // Wait for the modal to appear
                 const waybillModal = newPage.locator(
-                  '[data-testid="TableComplect-ModalAddWaybill-Content"]'
+                  SelectorsModalWindowConsignmentNote.MODAL_WINDOW
                 );
                 await waybillModal.waitFor({
                   state: 'visible',
@@ -6914,7 +6887,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Check the checkbox in the modal
                 const checkboxCell = newPage
                   .locator(
-                    '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]'
+                    SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ROW_SELECT_CELL_PATTERN
                   )
                   .first();
                 await checkboxCell.waitFor({
@@ -6983,7 +6956,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Close the modal by clicking Cancel to force fresh data load
                 console.log('Closing modal to refresh data...');
                 const cancelButton = page.locator(
-                  '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Cancel"]'
+                  SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CANCEL
                 );
                 if (await cancelButton.isVisible().catch(() => false)) {
                   await cancelButton.click();
@@ -7009,7 +6982,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 // Check the updated quantity
                 const updatedPrihodQuantityCell = page
                   .locator(
-                    '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+                    SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN
                   )
                   .first();
                 await updatedPrihodQuantityCell.waitFor({
@@ -7050,7 +7023,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdParish
             const prihodQuantityCell = page
               .locator(
-                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]'
+                SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN
               )
               .first();
 
@@ -7074,7 +7047,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
             // Wait for the Скомплектованные наборы modal to appear
             const completedSetsModal = page.locator(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST
             );
             await completedSetsModal.waitFor({
               state: 'visible',
@@ -7094,7 +7067,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Wait directly for the input field to be available
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row{id}-TdCount-Label-Input-Input
             const inputlocator =
-              '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN;
             await page
               .locator(inputlocator)
               .first()
@@ -7109,7 +7082,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Find the Кол-во на отгрузку input field in the modal
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row{id}-TdCount-Label-Input-Input
             const inputlocator =
-              '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN;
 
             // Get the input field (it should already be visible from Step 06c)
             const quantityInput = page.locator(inputlocator).first();
@@ -7155,7 +7128,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click the Сохранить button (this is the save button in the modal)
             await stockReceipt.clickButton(
               'Сохранить',
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE
             );
             // Wait for modal to close and return to main table
             await page.waitForLoadState('networkidle');
@@ -7171,7 +7144,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
             const checkboxCell = page
               .locator(
-                '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]'
+                SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_CHECKBOX_PATTERN
               )
               .first();
 
@@ -7581,7 +7554,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the completion product plan page',
       async () => {
         // Find and go to the page using the locator Complete set of Products on the plan
-        const selector = '[data-testid="Sclad-completionProductPlan"]';
+        const selector =
+          SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_PRODUCT_PLAN;
         await completingProductsToPlan.findTable(selector);
 
         // Wait for the table body to load
@@ -7594,7 +7568,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await completingProductsToPlan.searchTable(
         nameProduct,
         TableComplect,
-        'CompletIzd-Content-Table-Table-SearchInput-Dropdown-Input'
+        SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT
       );
 
       // Wait for the table body to load
@@ -7619,7 +7593,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Pattern: CompletIzd-Content-Table-Table-TableRow{id}-Designation
         const designationCell = page
           .locator(
-            '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+            SelectorsAssemblyKittingOnThePlan.TABLE_ROW_PRODUCT_DESIGNATION_PATTERN
           )
           .first();
 
@@ -7666,7 +7640,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Click on the button
         await completingProductsToPlan.clickButton(
           'Скомплектовать',
-          '[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]'
+          SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON
         );
 
         // Wait for loading
@@ -7687,9 +7661,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     );
     const stock = new CreateStockPage(page);
     const tableStockRecieptModalWindow =
-      '[data-testid="ModalComingTable-TableScroll"]';
+      SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_MODAL_COMING_SCROLL;
     const tableComplectsSets =
-      'table[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table"]';
+      SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE;
 
     await allure.step(
       'Step 01: Receiving quantities from balances',
@@ -7711,7 +7685,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 03: Open the stock receipt page', async () => {
       // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
       const selector =
-        '[data-testid="Sclad-receiptsWarehouseForSuppliersAndProduction"]';
+        SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION;
       await stockReceipt.findTable(selector);
 
       // Waiting for loading
@@ -7799,7 +7773,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             );
 
             // Open the product kitting page
-            const selector = '[data-testid="Sclad-completionProductPlan"]';
+            const selector =
+              SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_PRODUCT_PLAN;
             await newCompletingProductsToPlan.findTable(selector);
             await newPage.waitForLoadState('networkidle');
 
@@ -7807,7 +7782,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await newCompletingProductsToPlan.searchTable(
               nameProduct,
               'table[data-testid="CompletIzd-Content-Table-Table"]',
-              'CompletIzd-Content-Table-Table-SearchInput-Dropdown-Input'
+              SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT
             );
             await newPage.waitForTimeout(1000);
             await newPage.waitForLoadState('networkidle');
@@ -7815,7 +7790,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Double-click the designation cell to open the waybill modal
             const designationCell = newPage
               .locator(
-                '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-Designation"]'
+                SelectorsAssemblyKittingOnThePlan.TABLE_ROW_PRODUCT_DESIGNATION_PATTERN
               )
               .first();
             await designationCell.waitFor({
@@ -7834,7 +7809,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
             // Wait for the modal to appear (Накладная на комплектацию Изделия)
             const waybillModal = newPage.locator(
-              '[data-testid="TableComplect-ModalAddWaybill"]'
+              SelectorsModalWindowConsignmentNote.MODAL_WINDOW_BASE
             );
             await waybillModal.waitFor({
               state: 'visible',
@@ -7845,7 +7820,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Check the checkbox in the modal
             const checkboxCell = newPage
               .locator(
-                '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]'
+                SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ROW_SELECT_CELL_PATTERN
               )
               .first();
             await checkboxCell.waitFor({
@@ -7864,7 +7839,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
             // Verify the "Скомплектовать" button is enabled before clicking
             const completeButton = newPage.locator(
-              '[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]'
+              SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON
             );
             await completeButton.waitFor({
               state: 'visible',
@@ -7884,7 +7859,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             // Click the "Скомплектовать" button
             await newCompletingProductsToPlan.clickButton(
               'Скомплектовать',
-              '[data-testid="ModalAddWaybill-ControlButtons-CompleteSetButton"]'
+              SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON
             );
 
             // Wait for modal to close
@@ -7906,7 +7881,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           // Close the modal by clicking Cancel to force fresh data load
           console.log('Closing modal to refresh data...');
           const cancelButton = page.locator(
-            '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Cancel"]'
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CANCEL
           );
           if (await cancelButton.isVisible().catch(() => false)) {
             // Highlight the cancel button
@@ -7919,7 +7894,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await page.waitForLoadState('networkidle');
             // Wait for the modal to fully close
             const mainModal = page.locator(
-              '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_MAIN
             );
             await mainModal
               .waitFor({ state: 'hidden', timeout: 10000 })
@@ -8127,7 +8102,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click the "Сохранить" button in the Скомплектованные наборы modal
         const saveButton = page.locator(
-          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save"]'
+          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE
         );
         await saveButton.waitFor({ state: 'visible', timeout: 10000 });
         // Highlight the save button
@@ -8139,7 +8114,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(300);
         await stockReceipt.clickButton(
           'Сохранить',
-          '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Buttons-Save"]'
+          SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE
         );
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(1000);
@@ -8290,8 +8265,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the shortage product page', async () => {
       // Find and go to the page using the locator Shortage of Products
-      const selector =
-        '[data-testid="Sclad-deficitProduction-deficitProduction"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION;
       await shortageProduct.findTable(selector);
 
       // Wait for loading
@@ -8315,7 +8289,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(500);
         // Find the checkbox using data-testid
         const checkboxCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-Checkbox"]')
+          .locator(SelectorsShortagePages.ROW_CHECKBOX)
           .first();
 
         await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8365,7 +8339,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the urgency date cell using data-testid
         const urgencyDateCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]')
+          .locator(SelectorsShortagePages.ROW_DATE_URGENCY)
           .first();
 
         await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8392,7 +8366,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the production ordered quantity cell using data-testid
         const productionOrderedCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED)
           .first();
 
         await productionOrderedCell.waitFor({
@@ -8448,7 +8422,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 09: Enter a value into a cell', async () => {
       // Check the value in the Own quantity field and enter the value
-      const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+      const locator = SelectorsShortagePages.MODAL_START_PRODUCTION;
       await shortageProduct.checkOrderQuantity(
         locator,
         '2',
@@ -8483,7 +8457,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the production ordered quantity cell using data-testid
         const productionOrderedCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-ProductionOrdered"]')
+          .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED)
           .first();
 
         await productionOrderedCell.waitFor({
@@ -8535,7 +8509,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the shortage assemblies page',
       async () => {
         // Find and go to the page using the locator shortage assemblies
-        const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
+        const selector = SelectorsShortagePages.SELECTOR_DEFICIT_CBED_PAGE;
         await shortageAssemblies.findTable(selector);
       }
     );
@@ -8567,7 +8541,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the checkbox using data-testid
             const checkboxCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-Select"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_SELECT)
               .first();
 
             await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8619,7 +8593,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid
             const urgencyDateCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-UrgencyDate"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8646,7 +8620,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the ordered quantity cell using data-testid
             const orderedCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-Ordered"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_ORDERED)
               .first();
 
             await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8714,7 +8688,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 09: Enter a value into a cell', async () => {
           // Check the value in the Own quantity field and enter the value
-          const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+          const locator = SelectorsShortagePages.ROW_PRODUCTION_INPUT;
           await shortageAssemblies.checkOrderQuantity(
             locator,
             '2',
@@ -8759,7 +8733,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the ordered quantity cell using data-testid
             const orderedCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-Ordered"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_ORDERED)
               .first();
 
             await orderedCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8804,7 +8778,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the shortage parts page', async () => {
       // Find and go to the page using the locator Parts Shortage
-      const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_DETAL;
       await shortageParts.findTable(selector);
     });
 
@@ -8841,7 +8815,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the checkbox using data-testid (starts with pattern)
             const checkboxCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .locator(SelectorsShortagePages.ROW_CHECKBOX_PATTERN)
               .first();
 
             await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8893,7 +8867,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid (starts with pattern)
             const urgencyDateCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8920,7 +8894,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the production ordered quantity cell using data-testid (starts with pattern)
             const productionOrderedCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
+              .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED_PATTERN)
               .first();
 
             await productionOrderedCell.waitFor({
@@ -8976,7 +8950,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 09: Enter a value into a cell', async () => {
           // Check the value in the Own quantity field and enter the value
-          const locator = '[data-testid="ModalStartProduction-ModalContent"]';
+          const locator = SelectorsShortagePages.MODAL_START_PRODUCTION;
           await shortageParts.checkOrderQuantity(
             locator,
             '2',
@@ -9019,7 +8993,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the production ordered quantity cell using data-testid (starts with pattern)
             const productionOrderedCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]')
+              .locator(SelectorsShortagePages.ROW_PRODUCTION_ORDERED_PATTERN)
               .first();
 
             await productionOrderedCell.waitFor({
@@ -9074,7 +9048,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 02: Open the warehouse shipping task page',
       async () => {
         // Find and go to the page using the locator Склад: Задачи на отгрузку
-        const selector = '[data-testid="Sclad-shippingTasks"]';
+        const selector = SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS;
         await warehouseTaskForShipment.findTable(selector);
 
         // Wait for loading
@@ -9115,9 +9089,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Click the first row cell using direct data-testid pattern
         const firstRowCell = page
-          .locator(
-            '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Number"]'
-          )
+          .locator(SelectorsShipmentTasks.ROW_NUMBER_PATTERN)
           .first();
 
         // Wait for the cell to be visible
@@ -9151,7 +9123,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click on the button
       await warehouseTaskForShipment.clickButton(
         'Отгрузить',
-        '[data-testid="ModalShComlit-Button-Ship"]'
+        SelectorsWarehouseTaskForShipment.BUTTON_SHIP
       );
     });
   });
@@ -9171,8 +9143,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the shortage product page', async () => {
       // Find and go to the page using the locator Shortage of Products
-      const selector =
-        '[data-testid="Sclad-deficitProduction-deficitProduction"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION;
       await shortageProduct.findTable(selector);
 
       // Wait for loading
@@ -9209,7 +9180,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       async () => {
         // Find the urgency date cell using data-testid in the first row
         const urgencyDateCell = page
-          .locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]')
+          .locator(SelectorsShortagePages.ROW_DATE_URGENCY)
           .first();
 
         await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -9243,7 +9214,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       'Step 06: Open the shortage assemblies page',
       async () => {
         // Find and go to the page using the locator shortage assemblies
-        const selector = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
+        const selector = SelectorsShortagePages.SELECTOR_DEFICIT_CBED_PAGE;
         await shortageAssemblies.findTable(selector);
       }
     );
@@ -9275,7 +9246,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid
             const urgencyDateCell = page
-              .locator('[data-testid="DeficitCbed-TableBody-UrgencyDate"]')
+              .locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -9309,7 +9280,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 10: Open the shortage parts page', async () => {
       // Find and go to the page using the locator Parts Shortage
-      const selector = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
+      const selector = SelectorsShortagePages.SELECTOR_DEFICIT_DETAL;
       await shortageParts.findTable(selector);
     });
 
@@ -9346,7 +9317,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the checkbox using data-testid (starts with pattern)
             const checkboxCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-Checkbox"]')
+              .locator(SelectorsShortagePages.ROW_CHECKBOX_PATTERN)
               .first();
 
             await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -9398,7 +9369,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           async () => {
             // Find the urgency date cell using data-testid (starts with pattern)
             const urgencyDateCell = page
-              .locator('[data-testid^="DeficitIzdTable-Row-DateUrgency"]')
+              .locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN)
               .first();
 
             await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -9441,7 +9412,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step(
       'Step 02: Open the metalworking warehouse page',
       async () => {
-        const selector = '[data-testid="Sclad-stockOrderMetalworking"]';
+        const selector =
+          MetalWorkingWarhouseSelectors.SELECTOR_METAL_WORKING_WARHOUSE;
         await metalworkingWarehouse.findTable(selector);
 
         // Wait for loading
@@ -9454,7 +9426,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await metalworkingWarehouse.searchTable(
         designation,
         warehouseTable,
-        'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Search-Dropdown-Input'
+        MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_SEARCH_INPUT
       );
 
       await metalworkingWarehouse.waitingTableBody(warehouseTable);
@@ -9498,7 +9470,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         // Highlight the archive button before clicking
         const archiveButton = page.locator(
-          '[data-testid="MetalloworkingSclad-Content-WithFilters-Buttons-ArchiveButton"]'
+          MetalWorkingWarhouseSelectors.BUTTON_ARCHIVE
         );
         await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
         await archiveButton.evaluate((el: HTMLElement) => {
@@ -9509,13 +9481,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await metalworkingWarehouse.clickButton(
           'Архив',
-          '[data-testid="MetalloworkingSclad-Content-WithFilters-Buttons-ArchiveButton"]'
+          MetalWorkingWarhouseSelectors.BUTTON_ARCHIVE
         );
 
         // Confirm the archive
-        const confirmButton = page.locator(
-          '[data-testid="ModalConfirm-Content-Buttons-Yes"]'
-        );
+        const confirmButton = page.locator(PartsDBSelectors.BUTTON_CONFIRM);
         await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
         await confirmButton.evaluate((el: HTMLElement) => {
           el.style.backgroundColor = 'lightgreen';
@@ -9525,7 +9495,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await metalworkingWarehouse.clickButton(
           'Да',
-          '[data-testid="ModalConfirm-Content-Buttons-Yes"]'
+          PartsDBSelectors.BUTTON_CONFIRM
         );
 
         // Wait for the modal to close and table to update
@@ -9682,9 +9652,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Click on the archive button
-        const archiveButton = page.locator(
-          '[data-testid="IssueShipment-ActionsButtons-Archive"]'
-        );
+        const archiveButton = page.locator(LoadingTasksSelectors.buttonArchive);
         await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
 
         // Highlight the archive button before clicking
@@ -9696,13 +9664,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await loadingTaskPage.clickButton(
           'Архив',
-          '[data-testid="IssueShipment-ActionsButtons-Archive"]'
+          LoadingTasksSelectors.buttonArchive
         );
 
         // Confirm the archive
-        const confirmButton = page.locator(
-          '[data-testid="ModalConfirm-Content-Buttons-Yes"]'
-        );
+        const confirmButton = page.locator(PartsDBSelectors.BUTTON_CONFIRM);
         await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
 
         // Highlight the confirm button before clicking
@@ -9714,7 +9680,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await loadingTaskPage.clickButton(
           'Да',
-          '[data-testid="ModalConfirm-Content-Buttons-Yes"]'
+          PartsDBSelectors.BUTTON_CONFIRM
         );
 
         // Wait for the modal to close and table to update
