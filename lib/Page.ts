@@ -11,6 +11,12 @@
 import { Page, expect, Locator, ElementHandle } from '@playwright/test'; // Import Playwright's Page class
 import { AbstractPage } from './AbstractPage'; // Import the base AbstractPage class
 import { ENV, SELECTORS, CONST } from '../config'; // Import environment and selector configurations
+import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase'; // Import Parts Database selectors
+import * as SelectorsModalWindowConsignmentNote from '../lib/Constants/SelectorsModalWindowConsignmentNote'; // Import Modal Window Consignment Note selectors
+import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction'; // Import Start Production selectors
+import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications'; // Import Notifications selectors
+import * as SelectorsSearchInputs from '../lib/Constants/SelectorsSearchInputs'; // Import Search Inputs selectors
+import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents'; // Import File Components selectors
 import { Input } from './Input'; // Import the Input helper class for handling input fields
 import { Button } from './Button'; // Import the Button helper class for handling button clicks
 import logger from './logger'; // Import logger utility for logging messages
@@ -49,7 +55,7 @@ export async function populateTestData(page: Page, skipNavigation = false) {
 
   // Get existing details
   try {
-    const detailTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`);
+    const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
     await detailTable.waitFor({ state: 'visible', timeout: 5000 });
     const detailRows = detailTable.locator('tbody tr');
     const detailCount = await detailRows.count();
@@ -73,7 +79,7 @@ export async function populateTestData(page: Page, skipNavigation = false) {
 
   // Get existing assemblies
   try {
-    const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
+    const cbedTable = page.locator(SelectorsPartsDataBase.CBED_TABLE);
     await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
     const cbedRows = cbedTable.locator('tbody tr');
     const cbedCount = await cbedRows.count();
@@ -98,12 +104,12 @@ export async function populateTestData(page: Page, skipNavigation = false) {
   // Get existing products by searching for them
   try {
     console.log('Looking for products table...');
-    const productTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"]`);
+    const productTable = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
     await productTable.waitFor({ state: 'visible', timeout: 5000 });
     console.log('Products table found, searching for products...');
 
     // Search for products that might exist (try common patterns)
-    const searchInput = page.locator(`[data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE}"] [data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT}"]`);
+    const searchInput = page.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} ${SelectorsPartsDataBase.SEARCH_PRODUCT_ATTRIBUT}`);
     await searchInput.waitFor({ state: 'visible', timeout: 5000 });
 
     // Try searching for products with common patterns
@@ -148,11 +154,11 @@ export async function populateTestData(page: Page, skipNavigation = false) {
   // Populate details array
   try {
     console.log('Looking for details table...');
-    const detailTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"]`);
+    const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
     await detailTable.waitFor({ state: 'visible', timeout: 5000 });
     console.log('Details table found, searching for details...');
 
-    const searchInput = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"] [data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT}"]`);
+    const searchInput = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE} ${SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT}`);
     await searchInput.waitFor({ state: 'visible', timeout: 5000 });
 
     const searchTerms = ['DEFAULT_DETAIL', 'Шток', 'поршнем'];
@@ -165,7 +171,7 @@ export async function populateTestData(page: Page, skipNavigation = false) {
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
 
-      const rows = page.locator(`[data-testid="${CONST.MAIN_PAGE_Д_TABLE}"] tbody tr`);
+      const rows = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE} tbody tr`);
       const rowCount = await rows.count();
 
       if (rowCount > 0) {
@@ -194,11 +200,11 @@ export async function populateTestData(page: Page, skipNavigation = false) {
   // Populate CBED array
   try {
     console.log('Looking for CBED table...');
-    const cbedTable = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"]`);
+    const cbedTable = page.locator(SelectorsPartsDataBase.CBED_TABLE);
     await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
     console.log('CBED table found, searching for CBEDs...');
 
-    const searchInput = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"] [data-testid="${CONST.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT}"]`);
+    const searchInput = page.locator(`${SelectorsPartsDataBase.CBED_TABLE} ${SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT}`);
     await searchInput.waitFor({ state: 'visible', timeout: 5000 });
 
     const searchTerms = ['DEFAULT_CBED', 'СБЕД', 'сборка'];
@@ -211,7 +217,7 @@ export async function populateTestData(page: Page, skipNavigation = false) {
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
 
-      const rows = page.locator(`[data-testid="${CONST.MAIN_PAGE_СБ_TABLE}"] tbody tr`);
+      const rows = page.locator(`${SelectorsPartsDataBase.CBED_TABLE} tbody tr`);
       const rowCount = await rows.count();
 
       if (rowCount > 0) {
@@ -1538,7 +1544,7 @@ export class PageObject extends AbstractPage {
    */
 
   async getMessage(orderNumber?: string) {
-    const successMessageLocator = this.page.locator('[data-testid="Notification-Notification-Description"]').last();
+    const successMessageLocator = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
     await expect(successMessageLocator).toBeVisible();
     if (orderNumber) {
       const successMessageText = (await successMessageLocator.textContent()) || '';
@@ -1577,7 +1583,7 @@ export class PageObject extends AbstractPage {
       el.style.color = 'blue';
     });
     const searchContainer = (
-      searchInputDataTestId ? table.locator(`[data-testid="${searchInputDataTestId}"]`) : table.locator(`[data-testid="${CONST.MAIN_SEARCH_COVER_INPUT}"]`)
+      searchInputDataTestId ? table.locator(`[data-testid="${searchInputDataTestId}"]`) : table.locator(SelectorsSearchInputs.MAIN_SEARCH_COVER_INPUT)
     ).nth(0);
 
     // Wait for search container to be visible
@@ -1670,7 +1676,7 @@ export class PageObject extends AbstractPage {
    */
   async searchTableByIcon(nameSearch: string, locator: string) {
     const table = this.page.locator(locator);
-    const searchTable = table.locator('[data-testid="Search-Cover-Input"]').nth(0);
+    const searchTable = table.locator(SelectorsSearchInputs.SEARCH_COVER_INPUT).nth(0);
     await searchTable.fill(nameSearch);
 
     expect(await searchTable.inputValue()).toBe(nameSearch);
@@ -2030,7 +2036,7 @@ export class PageObject extends AbstractPage {
     });
     expect(buttonLaunchProduction).toBeVisible();
 
-    await this.page.locator('[data-testid="ModalStartProduction-ModalContent"] table tbody tr').isVisible();
+    await this.page.locator(`${SelectorsStartProduction.MODAL_START_PRODUCTION_MODAL_CONTENT} table tbody tr`).isVisible();
   }
 
   /** Checks and enters the quantity in the "Start Production" modal window
@@ -2038,7 +2044,7 @@ export class PageObject extends AbstractPage {
    * @param quantityOrder - if this parameter is specified, enters this value in the input field
    */
   async checkOrderQuantityNew(qunatity: string, qunatityOrder?: string) {
-    const modalWindowLaunchIntoProduction = this.page.locator('[data-testid="ModalStartProduction-ModalContent"]');
+    const modalWindowLaunchIntoProduction = this.page.locator(SelectorsStartProduction.MODAL_START_PRODUCTION_MODAL_CONTENT);
     if (qunatityOrder) {
       await modalWindowLaunchIntoProduction.locator('input').fill(qunatityOrder);
     }
@@ -2063,7 +2069,7 @@ export class PageObject extends AbstractPage {
 
   // Save the order number from the "Start Production" modal window
   async checkOrderNumber() {
-    const orderNumberValue = this.page.locator('[data-testid="ModalStartProduction-OrderNumberValue"]');
+    const orderNumberValue = this.page.locator(SelectorsStartProduction.MODAL_START_PRODUCTION_ORDER_NUMBER_VALUE);
     await expect(orderNumberValue).toBeVisible();
     const orderNumberText = await orderNumberValue.textContent();
 
@@ -2431,7 +2437,7 @@ export class PageObject extends AbstractPage {
    * @param enterQuantity - Enter the quantity in the "Your Quantity" cell.
    */
   async assemblyInvoiceModalWindow(typeInvoice: TypeInvoice, checkbox: boolean, enterQuantity?: string) {
-    const modalWindow = await this.page.locator('[data-testid="ModalAddWaybill-WaybillDetails-Right"]');
+    const modalWindow = await this.page.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_RIGHT_INNER);
     await expect(modalWindow).toBeVisible();
     await this.page.waitForTimeout(3000);
 
@@ -2484,7 +2490,7 @@ export class PageObject extends AbstractPage {
       expect(configuration).toContain(productConfiguration);
     }
 
-    const yourQuantity = await modalWindow.locator('[data-testid="ModalAddWaybill-WaybillDetails-OwnQuantityInput-Input"]');
+    const yourQuantity = await modalWindow.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_OWN_QUANTITY_INPUT);
     const needQuantity = await this.getValueOrClickFromFirstRow('[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTable"]', 4);
     // expect(yourQuantity).toHaveValue(needQuantity);
     if (enterQuantity) {
@@ -2513,7 +2519,7 @@ export class PageObject extends AbstractPage {
     expect(await modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(2).textContent()).toContain('Покупные детали');
     expect(await modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(3).textContent()).toContain('Материалы');
     await this.clickButton('Отменить', '[data-testid="ModalAddWaybill-ControlButtons-CancelButton"]', Click.No);
-    await this.clickButton('Обновить', '[data-testid="ModalAddWaybill-ControlButtons-ActualizeButton"]', Click.No);
+    await this.clickButton('Обновить', SelectorsModalWindowConsignmentNote.CONTROL_BUTTONS_ACTUALIZE_BUTTON, Click.No);
     await this.clickButton('Печать', '[data-testid="ModalAddWaybill-ControlButtons-PrintButton"]', Click.No);
     await this.clickButton('Создать приход', '[data-testid="ModalAddWaybill-ControlButtons-CreateIncomeButton"]', Click.No);
   }
@@ -3092,7 +3098,7 @@ export class PageObject extends AbstractPage {
       row.style.border = '2px solid red';
       row.style.color = 'blue';
     });
-    const descLoc = container.locator('[data-testid="Notification-Notification-Description"]');
+    const descLoc = container.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION);
     await descLoc.evaluate(row => {
       row.style.backgroundColor = 'yellow';
       row.style.border = '2px solid red';
@@ -3507,7 +3513,7 @@ export class PageObject extends AbstractPage {
     await expect(row).toBeVisible();
     console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
 
-    const checkbox = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+    const checkbox = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_CHECKBOX_MAIN);
     await checkbox.evaluate(el => {
       el.style.backgroundColor = 'yellow';
       el.style.border = '2px solid red';
@@ -3537,7 +3543,7 @@ export class PageObject extends AbstractPage {
     await expect(row).toBeVisible();
     console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
 
-    const checkbox = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]');
+    const checkbox = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_CHECKBOX_MAIN);
 
     // Restore the styling
     await checkbox.evaluate(el => {
@@ -3582,7 +3588,7 @@ export class PageObject extends AbstractPage {
       await expect(row).toBeVisible();
       console.log(`Row for file ${i + 1} containing label 'Файл:' is visible.`);
 
-      const input = row.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]');
+      const input = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_INPUT_FILE_NAME_INPUT);
       await expect(input).toBeVisible();
       console.log(`Input field for file ${i + 1} is visible.`);
 
