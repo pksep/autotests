@@ -17,6 +17,7 @@ import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduc
 import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications'; // Import Notifications selectors
 import * as SelectorsSearchInputs from '../lib/Constants/SelectorsSearchInputs'; // Import Search Inputs selectors
 import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents'; // Import File Components selectors
+import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrderedFromSuppliers'; // Import Ordered From Suppliers selectors
 import { Input } from './Input'; // Import the Input helper class for handling input fields
 import { Button } from './Button'; // Import the Button helper class for handling button clicks
 import logger from './logger'; // Import logger utility for logging messages
@@ -563,10 +564,13 @@ export class PageObject extends AbstractPage {
       await this.page.waitForTimeout(options.timeoutBeforeWait);
     }
 
-    await this.waitingTableBody(tableBodySelector, {
-      minRows: options?.minRows,
-      timeoutMs: options?.timeoutMs,
-    });
+    // Only wait for table body if minRows is explicitly provided
+    if (options?.minRows !== undefined) {
+      await this.waitingTableBody(tableBodySelector, {
+        minRows: options.minRows,
+        timeoutMs: options?.timeoutMs,
+      });
+    }
   }
 
   /**
@@ -3413,6 +3417,407 @@ export class PageObject extends AbstractPage {
    * @param expectedTitles - An array of expected titles to validate against.
    * @returns Promise<void> - Validates the content and order of titles, applies styling, or throws an error if validation fails.
    */
+  /**
+   * Verifies that test data arrays are available and not empty.
+   * Used in U002 test suite to ensure test data has been prepared before running tests.
+   * @param testDataArray - The array to verify (e.g., arrayDetail, arrayCbed, arrayIzd)
+   * @param arrayName - Display name for the array (e.g., "DETAIL", "CBED", "IZD")
+   * @param allArrays - Optional object containing all arrays for logging purposes
+   */
+  async verifyTestDataAvailable<T>(testDataArray: T[], arrayName: string, allArrays?: { detail?: T[]; cbed?: T[]; izd?: T[] }): Promise<void> {
+    await allure.step('Verify test data is available', async () => {
+      if (allArrays) {
+        const detailCount = allArrays.detail?.length || 0;
+        const cbedCount = allArrays.cbed?.length || 0;
+        const izdCount = allArrays.izd?.length || 0;
+        console.log(`✅ Using test data - Details: ${detailCount}, CBED: ${cbedCount}, IZD: ${izdCount}`);
+      } else {
+        console.log(`✅ Using test data - ${arrayName}: ${testDataArray.length}`);
+      }
+    });
+
+    if (testDataArray.length === 0) {
+      throw new Error('Массив пустой.');
+    }
+  }
+
+  /**
+   * Finds the row index of an order by its order number in a modal orders list.
+   * Used in U002 test suite to locate specific orders in the orders modal.
+   * @param orderRowsLocator - Locator for the order number rows
+   * @param targetOrderNumber - The order number to find
+   * @param errorMessage - Custom error message if order not found (optional)
+   * @returns The index of the row containing the order number
+   * @throws Error if the order number is not found
+   */
+  async findOrderRowIndexByOrderNumber(orderRowsLocator: Locator, targetOrderNumber: string, errorMessage?: string): Promise<number> {
+    const orderCount = await orderRowsLocator.count();
+
+    for (let i = 0; i < orderCount; i++) {
+      const orderNumberCell = orderRowsLocator.nth(i);
+      const orderNumber = (await orderNumberCell.innerText()).trim();
+      if (orderNumber === targetOrderNumber) {
+        return i;
+      }
+    }
+
+    throw new Error(errorMessage || `Could not find order ${targetOrderNumber} in the orders list`);
+  }
+
+  /**
+   * Finds the checkbox index of an order by its order number in an edit modal.
+   * Used in U002 test suite to locate and select checkboxes for specific orders.
+   * @param checkboxesLocator - Locator for the checkboxes
+   * @param orderNumberCellsLocator - Locator for the order number cells (corresponding to checkboxes)
+   * @param targetOrderNumber - The order number to find
+   * @param errorMessage - Custom error message if order not found (optional)
+   * @returns The index of the checkbox for the order number
+   * @throws Error if the order number is not found
+   */
+  async findCheckboxIndexByOrderNumber(
+    checkboxesLocator: Locator,
+    orderNumberCellsLocator: Locator,
+    targetOrderNumber: string,
+    errorMessage?: string
+  ): Promise<number> {
+    const checkboxCount = await checkboxesLocator.count();
+
+    for (let i = 0; i < checkboxCount; i++) {
+      const orderNumberCell = orderNumberCellsLocator.nth(i);
+      const orderNumber = (await orderNumberCell.innerText()).trim();
+      if (orderNumber === targetOrderNumber) {
+        return i;
+      }
+    }
+
+    throw new Error(errorMessage || `Could not find checkbox for order ${targetOrderNumber}`);
+  }
+
+  /**
+   * Opens a context menu by clicking on a popover cell and then clicks on the 'Заказы' menu item.
+   * Used in U002 test suite to open orders modal from warehouse tables.
+   * @param popoverSelector - Selector for the popover/context menu cell
+   * @param menuItemSelector - Selector for the 'Заказы' menu item
+   * @param waitForModalSelector - Optional selector for the modal to wait for after clicking menu item
+   * @param popoverPosition - Optional position selector ('first', 'last', or number for nth()) - default: 'first'
+   */
+  async openContextMenuAndClickOrders(
+    popoverSelector: string,
+    menuItemSelector: string,
+    waitForModalSelector?: string,
+    popoverPosition: 'first' | 'last' | number = 'first'
+  ): Promise<void> {
+    await allure.step("Open context menu and click 'Заказы'", async () => {
+      // Click on the popover cell (ellipse with context menu)
+      let popoverCell = this.page.locator(popoverSelector);
+      if (popoverPosition === 'first') {
+        popoverCell = popoverCell.first();
+      } else if (popoverPosition === 'last') {
+        popoverCell = popoverCell.last();
+      } else if (typeof popoverPosition === 'number') {
+        popoverCell = popoverCell.nth(popoverPosition);
+      }
+
+      await popoverCell.waitFor({ state: 'visible', timeout: 5000 });
+
+      // Highlight the popover before clicking
+      await this.highlightElement(popoverCell, {
+        backgroundColor: 'yellow',
+        border: '2px solid red',
+        color: 'blue',
+      });
+
+      await popoverCell.click();
+      console.log('Clicked on popover cell');
+
+      // Click on 'Заказы' in context menu
+      const ordersMenuItem = this.page.locator(menuItemSelector).first();
+      await ordersMenuItem.waitFor({ state: 'visible', timeout: 5000 });
+
+      // Highlight the menu item before clicking
+      await this.highlightElement(ordersMenuItem, {
+        backgroundColor: 'yellow',
+        border: '2px solid red',
+        color: 'blue',
+      });
+
+      await ordersMenuItem.click();
+      console.log("Clicked on 'Заказы' menu item");
+
+      // Optionally wait for the orders modal to appear
+      if (waitForModalSelector) {
+        const ordersModal = this.page.locator(`${waitForModalSelector}[open]`);
+        await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
+      }
+    });
+  }
+
+  /**
+   * Verifies that the orders modal opens and contains the expected orders.
+   * Used in U002 test suite to verify orders are displayed correctly in the modal.
+   * @param modalSelector - Selector for the orders modal
+   * @param tableSelector - Selector for the orders table
+   * @param orderRowsSelector - Selector for order number rows (direct locator or within modal)
+   * @param quantityCellsSelector - Selector for quantity cells (direct locator or within order rows)
+   * @param expectedOrderNumbers - Array of expected order numbers to verify
+   * @param expectedQuantities - Array of expected quantities to verify
+   * @param itemTypeName - Optional name for logging (e.g., "DETAIL", "CBED", "IZD")
+   * @param useRowLocator - If true, quantity cells are located within order rows; if false, they use nth() index
+   * @param additionalWaitTimeout - Optional additional wait timeout (for IZD case)
+   */
+  async verifyOrdersModal(
+    modalSelector: string,
+    tableSelector: string,
+    orderRowsSelector: string,
+    quantityCellsSelector: string,
+    expectedOrderNumbers: string[],
+    expectedQuantities: string[],
+    itemTypeName?: string,
+    useRowLocator: boolean = false,
+    additionalWaitTimeout?: number
+  ): Promise<void> {
+    await allure.step(
+      itemTypeName ? `Verify orders modal opens and shows both ${itemTypeName} orders` : 'Verify orders modal opens and shows both orders',
+      async () => {
+        // Wait for the orders modal to appear
+        const ordersModal = this.page.locator(`${modalSelector}[open]`);
+        await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
+
+        // Highlight modal for IZD case
+        if (itemTypeName === 'IZD') {
+          await this.highlightElement(ordersModal, {
+            backgroundColor: 'yellow',
+            border: '2px solid red',
+            color: 'blue',
+          });
+        }
+
+        // Check the orders table
+        const ordersTable = this.page.locator(tableSelector);
+        await ordersTable.waitFor({ state: 'visible', timeout: 5000 });
+
+        // Get all order rows
+        const orderRows = useRowLocator ? ordersModal.locator(orderRowsSelector) : this.page.locator(orderRowsSelector);
+        const orderCount = await orderRows.count();
+        const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
+        console.log(`Found ${orderCount} ${logPrefix}orders in the modal`);
+
+        // Additional wait for IZD case
+        if (additionalWaitTimeout) {
+          await this.page.waitForTimeout(additionalWaitTimeout);
+        }
+
+        // Verify we have at least the expected number of orders
+        expect(orderCount).toBeGreaterThanOrEqual(expectedOrderNumbers.length);
+
+        // Get order numbers and quantities
+        const orderNumbers: string[] = [];
+        const quantities: string[] = [];
+
+        for (let i = 0; i < orderCount; i++) {
+          let orderNumberCell;
+          let quantityCell;
+
+          if (useRowLocator) {
+            // IZD case: order number and quantity are within the row
+            orderNumberCell = orderRows.nth(i).locator(SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER);
+            quantityCell = orderRows.nth(i).locator(quantityCellsSelector);
+
+            // Highlight cells for IZD case (different colors)
+            if (itemTypeName === 'IZD') {
+              await this.highlightElement(orderNumberCell, {
+                backgroundColor: 'red',
+                border: '2px solid yellow',
+                color: 'blue',
+              });
+              await this.highlightElement(quantityCell, {
+                backgroundColor: 'red',
+                border: '2px solid yellow',
+                color: 'blue',
+              });
+            }
+          } else {
+            // DETAIL/CBED case: order number from rows, quantity from separate locator with nth()
+            orderNumberCell = orderRows.nth(i);
+            quantityCell = this.page.locator(quantityCellsSelector).nth(i);
+          }
+
+          const orderNumber = (await orderNumberCell.innerText()).trim();
+          orderNumbers.push(orderNumber);
+
+          const quantity = (await quantityCell.innerText()).trim();
+          quantities.push(quantity);
+
+          if (itemTypeName === 'IZD') {
+            console.log(`${itemTypeName} Order ${i + 1}: Number="${orderNumber}", Quantity="${quantity}"`);
+          }
+        }
+
+        console.log(`${logPrefix}Order numbers: ${orderNumbers}`);
+        console.log(`${logPrefix}Quantities: ${quantities}`);
+
+        // Verify our orders are present
+        for (const expectedOrderNumber of expectedOrderNumbers) {
+          expect(orderNumbers).toContain(expectedOrderNumber);
+        }
+        for (const expectedQuantity of expectedQuantities) {
+          expect(quantities).toContain(expectedQuantity);
+        }
+      }
+    );
+  }
+
+  /**
+   * Gets a quantity cell, highlights it, and returns the quantity value.
+   * Used in U002 test suite to verify warehouse quantities.
+   * @param quantityCellSelector - Selector for the quantity cell (can be a simple selector or a complex one)
+   * @param expectedValue - Optional expected value to verify
+   * @param quantityType - Optional type description for logging (e.g., "Total ordered", "Remaining ordered")
+   * @param itemTypeName - Optional item type for logging (e.g., "DETAIL", "CBED", "IZD")
+   * @param useComplexSelector - If true, the selector is a complex pattern with prefix and suffix
+   * @param prefixSelector - Optional prefix selector for complex selectors (used with useComplexSelector)
+   * @param suffixSelector - Optional suffix selector for complex selectors (used with useComplexSelector)
+   * @returns The quantity value as a number
+   */
+  async getQuantityCellAndVerify(
+    quantityCellSelector: string,
+    expectedValue?: number,
+    quantityType: string = 'quantity',
+    itemTypeName?: string,
+    useComplexSelector: boolean = false,
+    prefixId?: string,
+    suffixId?: string
+  ): Promise<number> {
+    const stepName =
+      expectedValue === 55
+        ? `Verify total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55`
+        : `Verify ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5`;
+
+    return await allure.step(stepName, async () => {
+      // Build the selector based on type
+      let quantityCell: Locator;
+      if (useComplexSelector && prefixId && suffixId) {
+        // Build complex selector with prefix and suffix
+        quantityCell = this.page.locator(`[data-testid^="${prefixId}"][data-testid$="${suffixId}"]`).first();
+      } else {
+        quantityCell = this.page.locator(quantityCellSelector).first();
+      }
+
+      await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
+
+      // Highlight the quantity cell
+      await this.highlightElement(quantityCell, {
+        backgroundColor: 'yellow',
+        border: '2px solid red',
+        color: 'blue',
+      });
+
+      const quantity = Number((await quantityCell.innerText()).trim());
+      const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
+      const quantityTypeLabel = quantityType === 'Total ordered' ? 'Total ordered' : 'Remaining ordered';
+      console.log(`${logPrefix}${quantityTypeLabel} quantity: ${quantity}`);
+
+      // Verify expected value if provided
+      if (expectedValue !== undefined) {
+        expect(quantity).toBe(expectedValue);
+        const successMessage =
+          expectedValue === 55
+            ? `✅ Verified total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55 (50 + 5)`
+            : `✅ Verified ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5 - now showing ${quantity} instead of 55`;
+        console.log(successMessage);
+      }
+
+      return quantity;
+    });
+  }
+
+  /**
+   * Clicks on an order in the orders modal to open the edit dialog.
+   * Used in U002 test suite to open edit dialogs for specific orders.
+   * @param orderRowsSelector - Selector for order rows
+   * @param orderNumber - The order number to click on
+   * @param errorMessage - Optional custom error message if order not found
+   * @param itemTypeName - Optional item type for logging (e.g., "DETAIL", "CBED", "IZD")
+   */
+  async clickOrderToOpenEditDialog(orderRowsSelector: string, orderNumber: string, errorMessage?: string, itemTypeName?: string): Promise<void> {
+    await allure.step('Click on second order to open edit dialog', async () => {
+      // Find the row with the order and click on it
+      const orderRows = this.page.locator(orderRowsSelector);
+      const orderRowIndex = await this.findOrderRowIndexByOrderNumber(
+        orderRows,
+        orderNumber,
+        errorMessage || `Could not find ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber} in the orders list`
+      );
+
+      // Click on the order number cell to open edit dialog
+      const orderCell = orderRows.nth(orderRowIndex);
+      await this.highlightElement(orderCell, {
+        backgroundColor: 'yellow',
+        border: '2px solid red',
+        color: 'blue',
+      });
+
+      await orderCell.click();
+      const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
+      console.log(`Clicked on ${logPrefix}order ${orderNumber} to open edit dialog`);
+    });
+  }
+
+  /**
+   * Selects a checkbox for a specific order and archives it.
+   * Used in U002 test suite to archive orders from the edit dialog.
+   * @param orderNumber - The order number to archive
+   * @param checkboxesSelector - Selector for checkboxes
+   * @param orderNumberCellsSelector - Selector for order number cells
+   * @param archiveButtonSelector - Selector for the archive button
+   * @param confirmButtonSelector - Selector for the confirm button
+   * @param editModalSelector - Selector for the edit modal (to wait for it)
+   * @param errorMessage - Optional custom error message if checkbox not found
+   * @param itemTypeName - Optional item type for logging (e.g., "DETAIL", "CBED", "IZD")
+   */
+  async selectCheckboxAndArchiveOrder(
+    orderNumber: string,
+    checkboxesSelector: string,
+    orderNumberCellsSelector: string,
+    archiveButtonSelector: string,
+    confirmButtonSelector: string,
+    editModalSelector: string,
+    errorMessage?: string,
+    itemTypeName?: string
+  ): Promise<void> {
+    await allure.step('Select checkbox and archive the second order', async () => {
+      // Wait for the edit dialog to appear
+      const editModal = this.page.locator(`${editModalSelector}[open]`);
+      await editModal.waitFor({ state: 'visible', timeout: 10000 });
+
+      // Find the checkbox for the order
+      const checkboxes = this.page.locator(checkboxesSelector);
+      const orderNumberCells = this.page.locator(orderNumberCellsSelector);
+      const checkboxIndex = await this.findCheckboxIndexByOrderNumber(
+        checkboxes,
+        orderNumberCells,
+        orderNumber,
+        errorMessage || `Could not find checkbox for ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber}`
+      );
+
+      // Click the checkbox
+      const checkbox = checkboxes.nth(checkboxIndex);
+      await this.highlightElement(checkbox, {
+        backgroundColor: 'yellow',
+        border: '2px solid red',
+        color: 'blue',
+      });
+
+      await checkbox.click();
+      const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
+      console.log(`Selected checkbox for ${logPrefix}order ${orderNumber}`);
+
+      // Archive and confirm
+      await this.archiveAndConfirm(archiveButtonSelector, confirmButtonSelector);
+      console.log('Archived and confirmed');
+    });
+  }
+
   async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
     const locator = this.page.locator(`[data-testid="${testId}"] h3`); // Locate H3 elements within the section
     const actualTitles = await locator.allTextContents();

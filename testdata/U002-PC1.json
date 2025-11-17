@@ -6,41 +6,30 @@
             ],
             "buttons": [
                 {
-                    "class": "button.btn-small.btn-add",
+                    "class": "button.button-yui-kit.small.primary-yui-kit.order-suppliers__button",
                     "label": "Создать заказ",
-                    "datatestid": "OrderSuppliers-Main-Button"
+                    "datatestid": "OrderSuppliers-Main-Button",
+                    "state":"true"
                 }
             ],
             "switcher": [
                 {
-                    "class": "span.td-row.td-row-all",
-                    "label": "Все",
+                    "class": "li.switch-yui-kit-item.switch-yui-kit-active",
+                    "label": "Сборка",
                     "datatestid": "OrderSuppliers-Main-Content-Switch-Item0",
-                    "state": "false"
+                    "state": "true"
                 },
                 {
-                    "class": "span.td-row",
-                    "label": "От поставщика",
-                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item1",
-                    "state": "false"
-                },
-                {
-                    "class": "span.td-row",
-                    "label": "Только сборки",
-                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item2",
-                    "state": "false"
-                },
-                {
-                    "class": "span.td-row",
+                    "class": "li.switch-yui-kit-item",
                     "label": "Металлообработка",
-                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item3",
-                    "state": "false"
+                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item1",
+                    "state": "true"
                 },
                 {
-                    "class": "span.td-row",
-                    "label": "Архив",
-                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item4",
-                    "state": "false"
+                    "class": "li.switch-yui-kit-item",
+                    "label": "Компания",
+                    "datatestid": "OrderSuppliers-Main-Content-Switch-Item2",
+                    "state": "true"
                 }
             ]
         },
