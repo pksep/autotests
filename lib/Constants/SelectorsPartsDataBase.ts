@@ -26,6 +26,7 @@ export const BUTTON_ARCHIVE = '[data-testid="BaseProducts-Button-Archive"]';
 
 // Modal and Filter selectors
 export const MODAL_CONTENT = '[data-testid="Modal-ModalContent"]';
+export const DIALOG_CREATE_OPTIONS = '[data-testid="BaseProducts-Dialog-CreateOptions"]';
 export const BASE_FILTER_TITLE = '[data-testid="BaseFilter-Title"]';
 export const BASE_FILTER_SEARCH_INPUT = '[data-testid="BaseFilter-Search-Dropdown-Input"]';
 export const BASE_FILTER_OPTION_FIRST = '[data-testid="BaseFilter-Options-0"]';
@@ -46,6 +47,7 @@ export const SEARCH_DETAIL_ATTRIBUT = '[data-testid="BasePaginationTable-Thead-S
 
 export const INPUT_NAME_IZD = '[data-testid="Creator-Information-Input-Input"]';
 export const INPUT_DESUGNTATION_IZD = '[data-testid="Creator-Designation-Input-Input"]';
+export const INPUT_ARTICLE_NUMBER = '[data-testid="Creator-Article-Input-Input"]';
 export const INPUT_DETAIL_NAME = '[data-testid="AddDetal-Information-Input-Input"]';
 export const INPUT_DETAIL_DESIGNATION = '[data-testid="AddDetal-Designation-Input-Input"]';
 
