@@ -8,7 +8,7 @@
  * - 2025-01-20: Added logging, text normalization, and error message handling methods.
  */
 
-import { Page, expect, Locator, ElementHandle } from '@playwright/test'; // Import Playwright's Page class
+import { Page, expect, Locator, ElementHandle, TestInfo, TestInfoError } from '@playwright/test'; // Import Playwright's Page class
 import { AbstractPage } from './AbstractPage'; // Import the base AbstractPage class
 import { ENV, SELECTORS, CONST } from '../config'; // Import environment and selector configurations
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase'; // Import Parts Database selectors
@@ -242,6 +242,77 @@ export async function populateTestData(page: Page, skipNavigation = false) {
   } catch (error) {
     console.log('No CBEDs found, using default. Error:', error);
     arrayCbed = [{ name: 'DEFAULT_CBED', designation: '-' }];
+  }
+}
+
+/**
+ * Helper function to wrap expect.soft() with automatic screenshot capture
+ * This ensures screenshots are taken before every soft assertion for debugging purposes
+ *
+ * @param page - The Playwright Page object to capture screenshot from
+ * @param assertionFn - A function that contains the expect.soft() assertion
+ * @param description - Optional description for the assertion (used in logs and screenshot naming)
+ * @param testInfo - Optional TestInfo object to attach screenshot to test report
+ *
+ * @example
+ * await expectSoftWithScreenshot(page, () => {
+ *   expect.soft(actualValue).toBe(expectedValue);
+ * }, 'Verify quantity matches', test.info());
+ */
+export async function expectSoftWithScreenshot(page: Page, assertionFn: () => void | Promise<void>, description?: string, testInfo?: TestInfo): Promise<void> {
+  const errorsArray: TestInfoError[] | undefined = testInfo && (testInfo as any).errors;
+  const canDetectFailure = Array.isArray(errorsArray);
+  const getSoftErrorCount = (): number => {
+    if (canDetectFailure && errorsArray) {
+      return errorsArray.length;
+    }
+    return (page as any).__softAssertErrorCount ?? 0;
+  };
+
+  const beforeCount = getSoftErrorCount();
+  const result = assertionFn();
+  if (result instanceof Promise) {
+    await result;
+  }
+  const afterCount = getSoftErrorCount();
+  const assertionFailed = canDetectFailure ? afterCount > beforeCount : true;
+
+  if (!assertionFailed) {
+    if (!canDetectFailure) {
+      (page as any).__softAssertErrorCount = afterCount;
+    }
+    return;
+  }
+
+  const timestamp = Date.now();
+  const safeDescription = description ? description.replace(/[^a-zA-Z0-9]/g, '_') : 'assertion';
+  const screenshotPath = `test-results/soft-assert-${safeDescription}-${timestamp}.png`;
+  let screenshotAttached = false;
+
+  try {
+    await page.screenshot({ path: screenshotPath, fullPage: false, timeout: 5000 });
+
+    if (testInfo) {
+      try {
+        await testInfo.attach(`soft-assert-${description || 'screenshot'}`, {
+          path: screenshotPath,
+          contentType: 'image/png',
+        });
+        screenshotAttached = true;
+      } catch (attachError) {
+        console.log(`Could not attach screenshot to test report: ${attachError}`);
+      }
+    }
+
+    if (description) {
+      const attachmentNote = screenshotAttached ? ' (attached to test report - will appear in HTML report on failure)' : '';
+      console.log(`📸 Screenshot captured for soft assertion: ${description}`);
+      console.log(`   Screenshot path: ${screenshotPath}${attachmentNote}`);
+    }
+
+    (page as any).__lastSoftAssertScreenshot = screenshotPath;
+  } catch (error) {
+    console.log(`Could not capture screenshot for soft assertion: ${error}`);
   }
 }
 
@@ -3693,7 +3764,8 @@ export class PageObject extends AbstractPage {
         ? `Verify total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55`
         : `Verify ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5`;
 
-    return await allure.step(stepName, async () => {
+    let stepResult = 0;
+    await allure.step(stepName, async () => {
       // Build the selector based on type
       let quantityCell: Locator;
       if (useComplexSelector && prefixId && suffixId) {
@@ -3727,8 +3799,10 @@ export class PageObject extends AbstractPage {
         console.log(successMessage);
       }
 
-      return quantity;
+      stepResult = quantity;
     });
+
+    return stepResult;
   }
 
   /**
