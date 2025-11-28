@@ -122,7 +122,8 @@
             ],
             "buttons": [
                 {
-                    "class": "[data-testid=\"DeficitIzd-Main-Footer-Button-IntoProduction\"]",
+                    "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit.deficit-izd__button",
+                    "data-testid":"DeficitIzd-Main-Footer-Button-IntoProduction",
                     "label": "Запустить в производство",
                     "state": "false"
                 }
@@ -505,12 +506,21 @@
             ],
             "buttons": [
                 {
-                    "class": "[data-testid=\"ModalShComlit-Button-Cancel\"]",
+                    "class": "button.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "ModalShComlit-Button-Cancel",
                     "label": "Отменить",
                     "state": "true"
-                },                {
-                    "class": "[data-testid=\"ModalShComlit-Button-Ship\"]",
+                },                
+                {
+                    "class": "button.button-yui-kit.medium.primary-yui-kit",
+                    "datatestid":"ModalShComlit-Button-Ship",
                     "label": "Отгрузить",
+                    "state": "true"
+                },                
+                {
+                    "class": "button.button-yui-kit.medium.outline-yui-kit.print-button",
+                    "datatestid":"[data-testid^=\"IssueToPull-ShipmentDetails-ModalShComlit\"][data-testid$=\"-Button-Print\"]",
+                    "label": "Печать",
                     "state": "true"
                 }
             ]

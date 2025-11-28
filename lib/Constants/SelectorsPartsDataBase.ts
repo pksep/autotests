@@ -9,7 +9,7 @@ export const BUTTON_SAVE = '[data-testid="AddDetal-ButtonSaveAndCancel-ButtonsCe
 export const BUTTON_CANCEL = '[data-testid="EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
 export const BUTTON_OPERATION = '[data-testid="EditDetal-Buttons-TechProcess"]';
 export const BUTTON_OPERATION_PROCESS_ASSYMBLY = '[data-testid="Creator-Buttons-TechProcess"]';
-export const BUTTON_SAVE_CBED = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
+export const BUTTON_SAVE_CBED = 'button[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
 export const BUTTON_CANCEL_CBED = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
 export const TABLE_PROCESS_ID = '#operation-table';
 export const TABLE_PROCESS = '[data-testid="EditDetal-ModalTechProcess-Table-Wrapper"]';

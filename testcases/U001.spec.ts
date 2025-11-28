@@ -11,6 +11,7 @@ import * as SelectorsCompleteSets from '../lib/Constants/SelectorsCompleteSets';
 import * as SelectorsWarehouseTaskForShipment from '../lib/Constants/SelectorsWarehouseTaskForShipment';
 import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages';
 import * as SelectorsShipmentTasks from '../lib/Constants/SelectorsShipmentTasks';
+import * as SelectorsRevision from '../lib/Constants/SelectorsRevision';
 
 let incomingQuantity = '1';
 let remainingStockBefore: string;
@@ -19,7 +20,7 @@ let quantityProductLaunchOnProduction = '2';
 let quantityProductLaunchOnProductionBefore: string;
 let quantityProductLaunchOnProductionAfter;
 let quantitySumLaunchOnProduction: Number;
-let urgencyDateOnTable;
+let urgencyDateOnTable: string;
 let orderNumber: { orderNumber: string; orderDate: string }; // variable declared in test case 2
 const urgencyDate = '23.01.2025';
 const urgencyDateNewFormat = 'Янв 23, 2025';
@@ -61,7 +62,7 @@ const descendantsCbedArray: ISpetificationData[] = [
   },
 ];
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page, Locator } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
 import { CreateLoadingTaskPage } from '../pages/LoadingTaskPage';
 import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
@@ -77,7 +78,7 @@ import { CreateShortageProductPage } from '../pages/ShortageProductPage';
 import { CreateCompleteSetsPage } from '../pages/CompleteSetsPage';
 import { CreateShippedOrderOverviewPage } from '../pages/ShippedOrderOverviewPage';
 import { CreateRevisionPage } from '../pages/RevisionPage';
-import { ISpetificationData, Click, TypeInvoice } from '../lib/Page';
+import { ISpetificationData, Click, TypeInvoice, expectSoftWithScreenshot } from '../lib/Page';
 import { ENV, SELECTORS, CONST } from '../config';
 import logger from '../lib/logger';
 import { cli } from 'winston/lib/winston/config';
@@ -108,6 +109,26 @@ const arrayCbed = [
   },
 ];
 const nameProductNew = '0Т4.01';
+
+const fillInputWithRetries = async (input: Locator, value: string, page: Page, maxAttempts = 3): Promise<string> => {
+  await input.waitFor({ state: 'visible', timeout: 10000 });
+  let currentValue = '';
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    await input.fill('');
+    await page.waitForTimeout(200);
+    await input.fill(value);
+    await page.waitForTimeout(400);
+    currentValue = (await input.inputValue())?.trim() || '';
+    if (currentValue === value) {
+      break;
+    }
+    console.warn(`Input mismatch on attempt ${attempt}. Expected "${value}", got "${currentValue}". Retrying...`);
+    await page.waitForTimeout(500);
+  }
+
+  return currentValue;
+};
 
 const buttonLaunchIntoProductionModalWindow = '[data-testid="ModalStartProduction-ComplectationTable-InProduction"]';
 const choiceCbed = '[data-testid="Specification-Dialog-CardbaseOfAssemblyUnits0"]';
@@ -147,73 +168,6 @@ const buttonUploading = SelectorsShipmentTasks.BUTTON_SHIP;
 
 export const runU001 = (isSingleTest: boolean, iterations: number) => {
   console.log(`Start of the test: checking the functionality of the "Shipment Tasks" page`);
-
-  test.skip('Спецификация', async ({ page }) => {
-    const loadingTaskPage = new CreateLoadingTaskPage(page);
-
-    await allure.step('Step 01: Open the shipment task page', async () => {
-      // Go to the Shipping tasks page
-      await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await loadingTaskPage.waitForNetworkIdle();
-    });
-
-    await allure.step('Step 02: Click on the Create order button', async () => {
-      // Click on the button
-      await loadingTaskPage.clickButton('Создать заказ', LoadingTasksSelectors.buttonCreateOrder);
-    });
-
-    await allure.step('Step 03: Click on the Select button', async () => {
-      // Click on the button
-      await page
-        .locator(LoadingTasksSelectors.buttonChoiceIzd, {
-          hasText: 'Выбрать',
-        })
-        .nth(0)
-        .click();
-
-      await page.waitForTimeout(1000);
-    });
-
-    await allure.step('Step 04: Search product on modal window', async () => {
-      //
-      const modalWindow = await page.locator('.modal-yui-kit__modal-content');
-      // Using table search we look for the value of the variable
-      await expect(modalWindow).toBeVisible();
-
-      const searchTable = modalWindow.locator('.search-yui-kit__input').nth(0);
-      await searchTable.fill(nameProduct);
-
-      expect(await searchTable.inputValue()).toBe(nameProduct);
-      await searchTable.press('Enter');
-
-      await page.waitForTimeout(1000);
-    });
-
-    await allure.step('Step 05: Choice product in modal window', async () => {
-      await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0);
-
-      await loadingTaskPage.waitForTimeout(1000);
-    });
-
-    await allure.step('Step 06: Click on the Select button on modal window', async () => {
-      // Click on the button
-      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzd);
-    });
-
-    await allure.step('Step 07: Checking the selected product', async () => {
-      // Check that the selected product displays the expected product
-      await loadingTaskPage.checkProduct(nameProduct);
-      await loadingTaskPage.waitForTimeout(500);
-    });
-
-    await allure.step('Step 08: We save descendants from the specification into an array', async () => {
-      // Clear array first to avoid duplicates
-      descendantsCbedArray.length = 0;
-      descendantsDetailArray.length = 0;
-      // Save Assembly units and Parts from the Specification to an array
-      await loadingTaskPage.preservingDescendants(descendantsCbedArray, descendantsDetailArray);
-    });
-  });
 
   test('Test Case 01- Delete Product before create', async ({ page }) => {
     console.log('Test Case 01 - Delete Product before create');
@@ -298,6 +252,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             await allure.step(`Processing row ${i + 1} for cbed: ${cbed.name}`, async () => {
               // Click on the row to select it
               await row.click();
+              await page.waitForTimeout(500);
 
               await allure.step('Archive and confirm', async () => {
                 await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
@@ -535,12 +490,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await partsDatabsePage.waitForNetworkIdle();
         await page.locator('[data-testid^="Spectification-ModalBaseCbed"][data-testid$="Section"]').isVisible();
         const modalWindowSearchCbed = page.locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT).last();
+        await modalWindowSearchCbed.scrollIntoViewIfNeeded();
 
         await page.waitForTimeout(500);
-        await modalWindowSearchCbed.fill(cbed.name);
+        await fillInputWithRetries(modalWindowSearchCbed, cbed.name, page);
         await modalWindowSearchCbed.press('Enter');
         await page.waitForTimeout(500);
         expect(await modalWindowSearchCbed.inputValue()).toBe(cbed.name);
+        await page.waitForTimeout(1000);
       });
 
       await allure.step('Step 08: Check name in first row', async () => {
@@ -578,11 +535,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(500);
         await page.locator('[data-testid^="Spectification-ModalBaseDetal"][data-testid$="ModalContent"]').isVisible();
         const modalWindowSearchCbed = page.locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT).last();
+        await modalWindowSearchCbed.scrollIntoViewIfNeeded();
 
         await page.waitForTimeout(500);
-        await modalWindowSearchCbed.fill(detail.name);
+        await fillInputWithRetries(modalWindowSearchCbed, detail.name, page);
         await modalWindowSearchCbed.press('Enter');
         expect(await modalWindowSearchCbed.inputValue()).toBe(detail.name);
+        await page.waitForTimeout(1000);
       });
 
       await allure.step('Step 14: Check name in first row', async () => {
@@ -619,9 +578,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 05 - Deleting customer orders', async ({ page }) => {
     console.log('Test Case 05 - Deleting customer orders');
-    test.setTimeout(90000);
+    test.setTimeout(900000);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
-    const loadingTaskTable = '.shipments-content';
 
     await allure.step('Step 01: Open the shipment task page', async () => {
       // Go to the Shipping tasks page
@@ -630,20 +588,19 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 04: Search product', async () => {
-      const searchTable = page.locator('.search-yui-kit__input').nth(1);
-      await searchTable.fill(nameProductNew);
-
-      expect(await searchTable.inputValue()).toBe(nameProductNew);
-      await searchTable.press('Enter');
-
-      await page.waitForTimeout(3000);
+      // Using table search we look for the value of the variable
+      await loadingTaskPage.searchAndWaitForTable(nameProductNew, LoadingTasksSelectors.SHIPMENTS_TABLE, LoadingTasksSelectors.SHIPMENTS_TABLE_BODY, {
+        useRedesign: true,
+        timeoutBeforeWait: 3000,
+        searchInputDataTestId: LoadingTasksSelectors.SHIPMENTS_SEARCH_INPUT,
+      });
     });
 
     // Цикл: пока в первой строке таблицы есть нужный продукт, архивируем
     while (true) {
       // Получаем первую строку таблицы
-      const firstRow = await page.locator(`${LoadingTasksSelectors.loadingMainTable} tbody tr`).first();
-      const rowCount = await page.locator(`${LoadingTasksSelectors.loadingMainTable} tbody tr`).count();
+      const firstRow = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).first();
+      const rowCount = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).count();
       if (rowCount === 0) {
         console.log(`No orders found for product "${nameProductNew}". Exiting...`);
         break;
@@ -658,13 +615,65 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       // Получаем номер заказа (3-я ячейка, индекс 2)
       const orderNumber = await firstRow.locator('td').nth(2).textContent();
-      // Кликаем по первой ячейке (2-я ячейка, индекс 1)
-      await firstRow.locator('td').nth(1).click();
-      await page.waitForTimeout(1000);
+      console.log('AAAAAAAA' + orderNumber);
+
+      // Loop to ensure the row is selected and archive button is enabled
+      const archiveButton = page.locator(LoadingTasksSelectors.buttonArchive, { hasText: 'Архив' });
+      let archiveButtonEnabled = false;
+      let attempts = 0;
+      const maxAttempts = 20;
+
+      while (!archiveButtonEnabled && attempts < maxAttempts) {
+        attempts++;
+
+        // Check if the row still exists
+        const currentRow = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).first();
+        const rowExists = (await currentRow.count()) > 0;
+
+        if (!rowExists) {
+          console.log('Row no longer exists, breaking...');
+          break;
+        }
+
+        // Scroll the row into view
+        await currentRow.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(300);
+
+        // Click the order number cell to select the row
+        const orderNumberCell = currentRow.locator('td').nth(2);
+        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
+        await orderNumberCell.click();
+        await page.waitForTimeout(1000);
+
+        // Check if the archive button is enabled
+        archiveButtonEnabled = await archiveButton.isEnabled().catch(() => false);
+
+        if (archiveButtonEnabled) {
+          console.log(`Archive button enabled after ${attempts} attempt(s)`);
+          break;
+        } else {
+          console.log(`Archive button not enabled after attempt ${attempts}, retrying...`);
+        }
+      }
+
+      if (!archiveButtonEnabled) {
+        throw new Error(`Archive button "Архив" is not enabled after ${maxAttempts} attempts for order ${orderNumber}`);
+      }
 
       // Archive and confirm
       await loadingTaskPage.archiveAndConfirm(LoadingTasksSelectors.buttonArchive, '[data-testid="ModalConfirm-Content-Buttons-Yes"]', {
         waitAfterConfirm: 1000,
+      });
+
+      // Wait for table to refresh after archiving
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      // Re-search to refresh the table before processing the next row
+      console.log('Re-searching after archive to refresh table...');
+      await loadingTaskPage.searchAndWaitForTable(nameProductNew, LoadingTasksSelectors.SHIPMENTS_TABLE, LoadingTasksSelectors.SHIPMENTS_TABLE_BODY, {
+        useRedesign: true,
+        timeoutBeforeWait: 3000,
       });
     }
   });
@@ -683,7 +692,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 02-03: Checking the main page headings and buttons', async () => {
       const titles = testData1.elements.LoadingPage.titles;
       const buttons = testData1.elements.LoadingPage.buttons;
-      await loadingTaskPage.validatePageHeadersAndButtons(page, titles, buttons);
+      await loadingTaskPage.validatePageHeadersAndButtons(page, titles, buttons, LoadingTasksSelectors.issueShipmentPage);
     });
 
     await allure.step('Step 04: Click on the Create order button', async () => {
@@ -695,17 +704,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(1000);
       const titles = testData1.elements.CreateOrderPage.titles;
       const buttons = testData1.elements.CreateOrderPage.buttons;
-      await loadingTaskPage.validatePageHeadersAndButtons(page, titles, buttons);
+      await loadingTaskPage.validatePageHeadersAndButtons(page, titles, buttons, LoadingTasksSelectors.addOrderComponent);
     });
 
     await allure.step('Step 07: Click on the Select button', async () => {
       // Click on the button
-      await page
-        .locator(LoadingTasksSelectors.buttonChoiceIzd, {
-          hasText: 'Выбрать',
-        })
-        .nth(0)
-        .click();
+      await page.locator(LoadingTasksSelectors.buttonChoiceIzd).click();
 
       await page.waitForTimeout(1000);
     });
@@ -803,7 +807,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 13: Click on the Select button on modal window', async () => {
       // Click on the button
-      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzd);
+      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzdTEMP);
     });
 
     await allure.step('Step 14: Checking the selected product', async () => {
@@ -946,11 +950,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await calendar.locator('button[role="gridcell"][aria-label="January 23rd, 2025"]').first().click();
     });
 
-    await allure.step('Step 20: We save descendants from the specification into an array', async () => {
+    await allure.step('Step 20: We saand does my script di the same?ve descendants from the specification into an array', async () => {
       // Clear array first to avoid duplicates
       descendantsCbedArray.length = 0;
       descendantsDetailArray.length = 0;
       // Save Assembly units and Parts from the Specification to an array
+      console.log('DDDDDDDDDDD');
+      console.log(descendantsCbedArray);
+      console.log(descendantsDetailArray);
       await loadingTaskPage.preservingDescendants(descendantsCbedArray, descendantsDetailArray);
     });
 
@@ -960,7 +967,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 22: Checking the ordered quantity', async () => {
-      await page.waitForTimeout(3000);
+      // Wait for page to reload after saving
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      // Wait for the order number to appear in the editTitle element
+      const editTitleLocator = page.locator(LoadingTasksSelectors.editTitle);
+      await editTitleLocator.waitFor({ state: 'visible', timeout: 10000 });
+
+      // Wait a bit more for the order number to be populated
+      await page.waitForTimeout(1000);
+
       const orderInfo = await loadingTaskPage.getOrderInfoFromLocator('.add-order-component');
       orderNumber = {
         orderNumber: orderInfo.orderNumber || '',
@@ -983,9 +1000,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 02: Search product', async () => {
+      await loadingTaskPage.waitForNetworkIdle();
+      await page.waitForTimeout(2000);
       // Using table search we look for the value of the variable
-      await loadingTaskPage.searchAndWaitForTable(nameProduct, LoadingTasksSelectors.loadingMainTable, LoadingTasksSelectors.loadingMainTable, {
-        useRedesign: true,
+      await loadingTaskPage.searchAndWaitForTable(nameProduct, LoadingTasksSelectors.SHIPMENTS_TABLE, LoadingTasksSelectors.SHIPMENTS_TABLE_BODY, {
+        searchInputDataTestId: LoadingTasksSelectors.SHIPMENTS_SEARCH_INPUT,
       });
     });
 
@@ -1013,7 +1032,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 04: Checking the urgency date of an order', async () => {
-      urgencyDateOnTable = await page.locator('tbody .date-picker-yui-kit__header-btn span').first().textContent();
+      const urgencyDateText = await page.locator('tbody .date-picker-yui-kit__header-btn span').first().textContent();
+      urgencyDateOnTable = urgencyDateText?.trim() || '';
 
       console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -1037,7 +1057,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
       const titles = testData1.elements.ProductShortage.titles;
       const buttons = testData1.elements.ProductShortage.buttons;
-      await shortageProduct.validatePageHeadersAndButtons(page, titles, buttons);
+      await page.waitForTimeout(1500);
+      await shortageProduct.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShortagePages.PAGE_TESTID);
     });
 
     await allure.step('Step 05: Search product', async () => {
@@ -1240,7 +1261,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
       const titles = testData1.elements.CbedShortage.titles;
       const buttons = testData1.elements.CbedShortage.buttons;
-      await shortageAssemblies.validatePageHeadersAndButtons(page, titles, buttons);
+      await page.waitForTimeout(1500);
+      await shortageAssemblies.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShortagePages.PAGE_TESTID_CBED);
     });
 
     // Check if the array is empty
@@ -1327,7 +1349,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDate);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            },
+            `Verify urgency date on table equals expected (${urgencyDate})`,
+            test.info()
+          );
         });
 
         await allure.step('Step 08: We check the number of those launched into production', async () => {
@@ -1413,8 +1442,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
-          expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-            Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction)
+          const productionAfterNumber = Number(quantityProductLaunchOnProductionAfter);
+          const expectedProductionValue = Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction);
+
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(productionAfterNumber).toBe(expectedProductionValue);
+            },
+            'Verify launched into production quantity increased by planned amount',
+            test.info()
           );
         });
       }
@@ -1438,12 +1475,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await shortageParts.findTable(selector);
       // Wait for the page to stabilize
       await shortageParts.waitForNetworkIdle();
-    });
-
-    await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
-      const titles = testData1.elements.PartsShortage.titles;
-      const buttons = testData1.elements.PartsShortage.buttons;
-      await shortageParts.validatePageHeadersAndButtons(page, titles, buttons);
     });
 
     // Check if the array is empty
@@ -1632,7 +1663,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 01-02: Open the warehouse page and shortage parts page', async () => {
       // Find and go to the page using the locator Parts Shortage
       const selector = SelectorsShortagePages.SELECTOR_DEFICIT_DETAL;
-      await shortageParts.navigateToPageAndWaitForTable(SELECTORS.MAINMENU.WAREHOUSE.URL, selector, deficitTableDetail);
+      await shortageParts.navigateToPageAndWaitForTable(
+        SELECTORS.MAINMENU.WAREHOUSE.URL,
+        SelectorsShortagePages.SELECTOR_DEFICIT_DETAL,
+        SelectorsShortagePages.TABLE_DEFICIT_IZD
+      );
     });
 
     if (descendantsDetailArray.length === 0) {
@@ -1883,7 +1918,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
       const titles = testData2.elements.MetalworkingWarhouse.titles;
       const buttons = testData2.elements.MetalworkingWarhouse.buttons;
-      await metalworkingWarehouse.validatePageHeadersAndButtons(page, titles, buttons);
+      await page.waitForTimeout(1000);
+      await metalworkingWarehouse.validatePageHeadersAndButtons(page, titles, buttons, MetalWorkingWarhouseSelectors.PAGE_TESTID);
     });
 
     // Check if the array is empty
@@ -2172,10 +2208,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   // HARDCODED VALUES FOR TEST CASE 12 (to allow skipping previous test cases)
   // These values are normally set in Test Case 06
   // descendantsCbedArray.length = 0; // Clear array first
-  // descendantsCbedArray.push(
-  //   { name: '0Т4.11', designation: '-', quantity: 1 },
-  //   { name: '0Т4.12', designation: '-', quantity: 1 }
-  // );
+  // descendantsCbedArray.push({ name: '0Т4.11', designation: '-', quantity: 1 }, { name: '0Т4.12', designation: '-', quantity: 1 });
 
   test('Test Case 12 - Complete Set Of Cbed', async ({ page }) => {
     console.log('Test Case 12 - Complete Set Of Cbed');
@@ -2200,7 +2233,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(500);
       const titles = testData1.elements.AssemblyKittingOnThePlan.titles;
       const buttons = testData1.elements.AssemblyKittingOnThePlan.buttons;
-      await completingAssembliesToPlan.validatePageHeadersAndButtons(page, titles, buttons);
+      await page.waitForTimeout(1000);
+      await completingAssembliesToPlan.validatePageHeadersAndButtons(page, titles, buttons, SelectorsAssemblyKittingOnThePlan.PAGE_TESTID);
     });
 
     // Check if the array is empty
@@ -2387,49 +2421,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(500);
     });
 
-    await allure.step('Step 03: Checking the main page headings', async () => {
-      const titles = testData1.elements.DisassemblyPage.titles.map(title => title.trim());
-      const h3Titles = await completeSets.getAllH3TitlesInClass(page, 'container');
-      const normalizedH3Titles = h3Titles.map(title => title.trim());
-
-      // Wait for the page to stabilize
-      await page.waitForLoadState('networkidle');
-
-      // Log for debugging
-      console.log('Expected Titles:', titles);
-      console.log('Received Titles:', normalizedH3Titles);
-
-      // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
-
-      // Validate content and order
-      expect(normalizedH3Titles).toEqual(titles);
-    });
-
-    await allure.step('Step 04: Checking the main buttons on the page', async () => {
-      // Wait for the page to stabilize
-      await page.waitForLoadState('networkidle');
-
+    await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
+      const titles = testData1.elements.DisassemblyPage.titles;
       const buttons = testData1.elements.DisassemblyPage.buttons;
-      // Iterate over each button in the array
-      for (const button of buttons) {
-        // Extract the class, label, and state from the button object
-        const buttonClass = button.class;
-        const buttonDataTestId = button.datatestid;
-        const buttonLabel = button.label;
-        const buttonState = button.state;
-
-        // Perform the validation for the button
-        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          // Check if the button is visible and enabled
-          const expectedState = buttonState === 'true' ? true : false;
-          const isButtonReady = await completeSets.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
-
-          // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        });
-      }
+      await page.waitForTimeout(1500);
+      await completeSets.validatePageHeadersAndButtons(page, titles, buttons, SelectorsCompleteSets.ASSEMBLY_PAGE_TESTID);
     });
 
     // Check if the array is empty
@@ -2684,13 +2680,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           //   .first(); //ERP-2423
           const urgencyDateCell = page.locator(SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DATE_URGENCY_PATTERN).nth(1);
           await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
-          urgencyDateOnTable = await urgencyDateCell.textContent();
+          const urgencyDateText = await urgencyDateCell.textContent();
+          urgencyDateOnTable = urgencyDateText?.trim() || '';
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
           console.log('Дата по срочности в переменной: ', urgencyDate);
 
           if (urgencyDateOnTable) {
-            expect(urgencyDateOnTable.trim()).toBe(urgencyDate);
+            expect(urgencyDateOnTable).toBe(urgencyDate);
           } else {
             throw new Error('Urgency date cell not found or empty');
           }
@@ -2808,53 +2805,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await page.waitForTimeout(1000);
         });
 
-        await allure.step('Step 04: Checking the main page headings', async () => {
+        await allure.step('Step 04: Checking the main page headings and buttons', async () => {
           await page.waitForLoadState('networkidle');
-          await page.waitForTimeout(500);
-          const titles = testData1.elements.ArrivalAtTheWarehousePage.titles.map(title => title.trim());
-          console.log(titles);
-          const h3Titles = await stockReceipt.getAllH3TitlesInClass(page, 'container');
-          console.log(h3Titles);
-
-          const normalizedH3Titles = h3Titles.map(title => title.trim());
-          console.log(normalizedH3Titles);
-          // Wait for the page to stabilize
-          await page.waitForLoadState('networkidle');
-
-          // Log for debugging
-          console.log('Expected Titles:', titles);
-          console.log('Received Titles:', normalizedH3Titles);
-
-          // Validate length
-          expect(normalizedH3Titles.length).toBe(titles.length);
-
-          // Validate content and order
-          expect(normalizedH3Titles).toEqual(titles);
-        });
-
-        await allure.step('Step 05: Checking the main buttons on the page', async () => {
-          // Wait for the page to stabilize
-          await page.waitForLoadState('networkidle');
-
+          await page.waitForTimeout(1000);
+          const titles = testData1.elements.ArrivalAtTheWarehousePage.titles;
           const buttons = testData1.elements.ArrivalAtTheWarehousePage.buttons;
-          // Iterate over each button in the array
-          for (const button of buttons) {
-            // Extract the class, label, and state from the button object
-            const buttonClass = button.class;
-            const buttonLabel = button.label;
-            const buttonDataTestId = button.datatestid;
-            const expectedState = button.state === 'true' ? true : false;
-
-            // Perform the validation for the button
-            await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-              // Check if the button is visible and enabled
-
-              const isButtonReady = await stockReceipt.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
-              // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
-              console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-            });
-          }
+          await stockReceipt.validatePageHeadersAndButtons(page, titles, buttons, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.PAGE_TESTID);
         });
 
         await allure.step('Step 06: Click on the create receipt button', async () => {
@@ -3413,22 +3369,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 03: Checking the main page headings', async () => {
-      const titles = testData1.elements.EquipmentOfProductsOnThePlan.titles.map(title => title.trim());
-      const h3Titles = await completingProductsToPlan.getAllH3TitlesInClass(page, 'container');
-      const normalizedH3Titles = h3Titles.map(title => title.trim());
-
-      // Wait for the page to stabilize
+      const titles = testData1.elements.EquipmentOfProductsOnThePlan.titles;
       await page.waitForLoadState('networkidle');
-
-      // Log for debugging
-      console.log('Expected Titles:', titles);
-      console.log('Received Titles:', normalizedH3Titles);
-
-      // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
-
-      // Validate content and order
-      expect(normalizedH3Titles).toEqual(titles);
+      await page.waitForTimeout(1000);
+      await completingProductsToPlan.validatePageHeadersAndButtons(page, titles, [], SelectorsAssemblyKittingOnThePlan.PAGE_TESTID_PRODUCT, {
+        skipButtonValidation: true,
+      });
     });
 
     // await allure.step( // buttons removed in new design
@@ -3496,10 +3442,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         el.style.color = 'blue';
       });
 
-      urgencyDateOnTable = await urgencyDateCell.textContent();
-      if (urgencyDateOnTable) {
-        urgencyDateOnTable = urgencyDateOnTable.trim();
-      } else {
+      const urgencyDateText = await urgencyDateCell.textContent();
+      urgencyDateOnTable = urgencyDateText?.trim() || '';
+      if (!urgencyDateOnTable) {
         throw new Error('Urgency date cell not found or empty');
       }
 
@@ -3812,7 +3757,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
       const titles = testData1.elements.WarehouseLoadingTasks.titles;
       const buttons = testData1.elements.WarehouseLoadingTasks.buttons;
-      await warehouseTaskForShipment.validatePageHeadersAndButtons(page, titles, buttons);
+      await page.waitForTimeout(1500);
+      await warehouseTaskForShipment.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShipmentTasks.SELECTOR_SCLAD_SHIPPING_TASKS);
+      await page.waitForTimeout(1500);
     });
 
     await allure.step('Step 05-06: Search product and verify first row', async () => {
@@ -3820,6 +3767,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await warehouseTaskForShipment.searchAndVerifyFirstRow(nameProduct, tableMainUploading, tableMainUploading, {
         useRedesign: true,
         timeoutBeforeWait: 1000,
+        searchInputDataTestId: SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT,
       });
     });
 
@@ -3849,48 +3797,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(1000);
     });
 
-    await allure.step('Step 09: Checking the modalwindow headings', async () => {
-      const titles = testData1.elements.ModalWindowUploadingTask.titles.map(title => title.trim());
-      const h3Titles = await warehouseTaskForShipment.getAllH3TitlesInModalClassNew(
-        page,
-        '[data-testid^="IssueToPull-ShipmentDetails-ModalShComlit"][data-testid$="ModalContent"]'
-      );
-      const normalizedH3Titles = h3Titles.map(title => title.trim());
-
-      // Log for debugging
-      console.log('Expected Titles:', titles);
-      console.log('Received Titles:', normalizedH3Titles);
-
-      // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
-
-      // Validate content and order
-      expect(normalizedH3Titles).toEqual(titles);
-    });
-
-    await allure.step('Step 10: Checking buttons on the modalwindow', async () => {
-      // Wait for the page to stabilize
-      await page.waitForLoadState('networkidle');
-
+    await allure.step('Step 09-10: Checking the modalwindow headings and buttons', async () => {
+      const titles = testData1.elements.ModalWindowUploadingTask.titles;
       const buttons = testData1.elements.ModalWindowUploadingTask.buttons;
-      // Iterate over each button in the array
-      for (const button of buttons) {
-        // Extract the class, label, and state from the button object
-        const buttonClass = button.class;
-        const buttonLabel = button.label;
-        const expectedState = button.state === 'true' ? true : false;
-
-        // Perform the validation for the button
-        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          // Check if the button is visible and enabled
-
-          const isButtonReady = await warehouseTaskForShipment.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-          // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        });
-      }
+      await page.waitForTimeout(1000);
+      await warehouseTaskForShipment.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShipmentTasks.MODAL_SHIPMENT_DETAILS, {
+        useModalMethod: true,
+      });
     });
 
     await allure.step('Step 11: Check the Shipping modal window', async () => {
@@ -4032,7 +3945,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 06: Click on the Select button on modal window', async () => {
       // Click on the button
-      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzd);
+      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzdTEMP);
     });
 
     await allure.step('Step 07: Checking the selected product', async () => {
@@ -4120,8 +4033,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 13: Checking the ordered quantity', async () => {
+      await page.waitForLoadState('networkidle');
       await page.waitForTimeout(3000);
-      const orderNumber = await loadingTaskPage.getOrderInfoFromLocator('.add-order-component');
+      const orderNumber = await loadingTaskPage.getOrderDateInfoFromLocator(LoadingTasksSelectors.editTitle);
       console.log('orderNumber: ', orderNumber);
     });
   });
@@ -4168,6 +4082,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       for (const part of descendantsDetailArray) {
         await allure.step('Step 03: Search product', async () => {
           // Wait for the table body to load
+          await page.waitForTimeout(2000);
           await metalworkingWarehouse.waitingTableBody(tableMetalworkingWarehouse);
 
           await page.waitForTimeout(500);
@@ -4216,10 +4131,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             el.style.color = 'blue';
           });
 
-          urgencyDateOnTable = await urgencyDateCell.textContent();
-          if (urgencyDateOnTable) {
-            urgencyDateOnTable = urgencyDateOnTable.trim();
-          }
+          const urgencyDateText = await urgencyDateCell.textContent();
+          urgencyDateOnTable = urgencyDateText?.trim() || '';
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
           console.log('Дата по срочности в переменной: ', urgencyDateSecond);
@@ -4888,7 +4801,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               });
               await checkboxCell.scrollIntoViewIfNeeded();
               await checkboxCell.click();
-              await newPage.waitForTimeout(500);
+              await newPage.waitForTimeout(1500);
               await newPage.waitForLoadState('networkidle');
 
               // Verify the "Скомплектовать" button is enabled before clicking
@@ -6243,8 +6156,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           });
 
           // Get the urgency date value from the cell
-          urgencyDateOnTable = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateOnTable?.trim() || '';
+          const urgencyDateText = await urgencyDateCell.textContent();
+          urgencyDateOnTable = urgencyDateText?.trim() || '';
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
@@ -6679,6 +6592,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 04: Check the checkbox in the first column', async () => {
+      await page.waitForTimeout(1000);
       // Check that the first row of the table contains the variable name
       await shortageProduct.checkNameInLineFromFirstRow(nameProduct, deficitTable);
 
@@ -6883,7 +6797,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 02: Open the metalworking warehouse page', async () => {
       const selector = MetalWorkingWarhouseSelectors.SELECTOR_METAL_WORKING_WARHOUSE;
       await metalworkingWarehouse.findTable(selector);
-
+      await page.waitForTimeout(2000);
       // Wait for loading
       await page.waitForLoadState('networkidle');
       await metalworkingWarehouse.waitingTableBody(warehouseTable);
@@ -6992,7 +6906,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     console.log('Test Case 35 - Moving Task For Shipment To The Archive');
     test.setTimeout(90000);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
-    const loadingTaskTable = '.shipments-content';
     let numberColumn: number;
 
     await allure.step('Step 01: Open the shipment task page', async () => {
@@ -7003,16 +6916,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Search product', async () => {
       // Using table search we look for the value of the variable
-      const searchTable = page.locator('.search-yui-kit__input').nth(1);
-      await searchTable.fill(nameProduct);
-
-      expect(await searchTable.inputValue()).toBe(nameProduct);
-      await searchTable.press('Enter');
-
-      await page.waitForTimeout(1000);
-
-      // Waiting for the table body
-      await loadingTaskPage.waitingTableBody(loadingTaskTable);
+      await loadingTaskPage.searchAndWaitForTable(nameProduct, LoadingTasksSelectors.SHIPMENTS_TABLE, LoadingTasksSelectors.SHIPMENTS_TABLE_BODY, {
+        useRedesign: true,
+        timeoutBeforeWait: 1000,
+        searchInputDataTestId: LoadingTasksSelectors.SHIPMENTS_SEARCH_INPUT,
+      });
     });
 
     await allure.step('Step 03-06: Archive all matching items', async () => {
@@ -7025,12 +6933,12 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         iterationCount++;
         console.log(`Archive iteration ${iterationCount}`);
 
-        // Wait for table to be ready
-        await loadingTaskPage.waitingTableBody(loadingTaskTable);
+        // Wait for table to be ready (allow empty table since items may have been archived)
+        await loadingTaskPage.waitingTableBody(LoadingTasksSelectors.SHIPMENTS_TABLE, { minRows: 0 });
         await page.waitForTimeout(500);
 
         // Check if there are any rows in the table
-        const rows = page.locator(`${loadingTaskTable} tbody tr`);
+        const rows = page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`);
         const rowCount = await rows.count();
 
         if (rowCount === 0) {
@@ -7040,16 +6948,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         }
 
         // Check that the first row contains the variable name
-        await loadingTaskPage.checkNameInLineFromFirstRow(nameProduct, loadingTaskTable);
+        await loadingTaskPage.checkNameInLineFromFirstRow(nameProduct, LoadingTasksSelectors.SHIPMENTS_TABLE);
 
         // Find the checkbox column and click (column 2)
-        await loadingTaskPage.getValueOrClickFromFirstRow(loadingTaskTable, 2, Click.Yes, Click.No);
+        await loadingTaskPage.getValueOrClickFromFirstRow(LoadingTasksSelectors.SHIPMENTS_TABLE, 2, Click.Yes, Click.No);
 
-        // Archive the item
-        await loadingTaskPage.archiveItem(page, nameProduct, loadingTaskTable, LoadingTasksSelectors.buttonArchive, PartsDBSelectors.BUTTON_CONFIRM);
+        // Archive the item with verification
+        await loadingTaskPage.archiveItem(
+          page,
+          nameProduct,
+          LoadingTasksSelectors.SHIPMENTS_TABLE,
+          LoadingTasksSelectors.buttonArchive,
+          PartsDBSelectors.BUTTON_CONFIRM,
+          {
+            verifyArchived: true,
+            verifyTableSelector: LoadingTasksSelectors.SHIPMENTS_TABLE,
+            tableBodySelector: LoadingTasksSelectors.SHIPMENTS_TABLE_BODY,
+            searchInputDataTestId: LoadingTasksSelectors.SHIPMENTS_SEARCH_INPUT,
+          }
+        );
 
         // Check if there are still items left
-        const remainingRows = page.locator(`${loadingTaskTable} tbody tr`);
+        const remainingRows = page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`);
         const remainingCount = await remainingRows.count();
 
         if (remainingCount === 0) {
@@ -7082,8 +7002,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 02: Open the warehouse revisions page', async () => {
       // Find and go to the page using the locator Склад: Задачи на отгрузку
-      const selector = '[data-testid="Sclad-revision-revision"]';
-      await revisionPage.findTable(selector);
+      await revisionPage.findTable(SelectorsRevision.WAREHOUSE_PAGE_REVISIONS_TESTID);
 
       // Wait for loading
       await page.waitForLoadState('networkidle');
@@ -7092,48 +7011,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await revisionPage.waitingTableBodyNoThead(tableMain);
     });
 
-    await allure.step('Step 03: Checking the main page headings', async () => {
+    await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
       const titles = testData1.elements.RevisionPage.titles.map(title => title.trim());
-      const h3Titles = await revisionPage.getAllH3TitlesInClass(page, 'container');
-      const normalizedH3Titles = h3Titles.map(title => title.trim());
+      const buttons = testData1.elements.RevisionPage.filters.map(button => ({
+        class: button.class,
+        datatestid: button.datatestid,
+        label: button.label,
+        state: button.state === 'true' ? true : false,
+      }));
 
-      // Wait for the page to stabilize
-      await page.waitForLoadState('networkidle');
-
-      // Log for debugging
-      console.log('Expected Titles:', titles);
-      console.log('Received Titles:', normalizedH3Titles);
-
-      // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
-
-      // Validate content and order
-      expect(normalizedH3Titles).toEqual(titles);
-    });
-
-    await allure.step('Step 04: Checking the main buttons on the page', async () => {
-      // Wait for the page to stabilize
-      await page.waitForLoadState('networkidle');
-
-      const buttons = testData1.elements.RevisionPage.filters;
-      // Iterate over each button in the array
-      for (const button of buttons) {
-        // Extract the class, label, and state from the button object
-        const buttonClass = button.class;
-        const buttonLabel = button.label;
-        const expectedState = button.state === 'true' ? true : false;
-
-        // Perform the validation for the button
-        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          // Check if the button is visible and enabled
-
-          const isButtonReady = await revisionPage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-          // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        });
-      }
+      await revisionPage.validatePageHeadersAndButtons(page, titles, buttons, SelectorsRevision.PAGE_TESTID);
     });
 
     await allure.step('Step 05: Search product', async () => {

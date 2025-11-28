@@ -1,6 +1,7 @@
 // Shortage Pages (Product, Assembly, Parts)
 
 // Product Shortage (DeficitIzd)
+export const PAGE_TESTID = '[data-testid="DeficitIzd"]';
 export const TABLE_DEFICIT_IZD = '[data-testid="DeficitIzd-Main-Table"]';
 export const TABLE_DEFICIT_IZD_ID = 'DeficitIzd-Main-Table';
 export const BUTTON_LAUNCH_INTO_PRODUCTION = '[data-testid="DeficitIzd-Main-Footer-Button-IntoProduction"]';
@@ -16,6 +17,7 @@ export const ROW_PRODUCTION_INPUT = '[data-testid="ModalStartProduction-Complect
 export const ROW_PATTERN = '[data-testid^="DeficitIzdTable-Row"]';
 
 // Assembly Shortage (DeficitCbed)
+export const PAGE_TESTID_CBED = '[data-testid="DeficitCbed"]';
 export const TABLE_DEFICIT_CBED = '[data-testid="DeficitCbed-Table"]';
 export const TABLE_DEFICIT_CBED_ID = 'DeficitCbed-Table';
 export const BUTTON_LAUNCH_INTO_PRODUCTION_CBED = '[data-testid="DeficitCbed-StartButton"]';

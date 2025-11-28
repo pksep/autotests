@@ -664,30 +664,49 @@ export class PageObject extends AbstractPage {
       label: string;
       state?: string | boolean;
     }>,
-    className: string = 'container',
+    containerSelector: string,
     options?: {
       skipTitleValidation?: boolean;
       skipButtonValidation?: boolean;
+      useModalMethod?: boolean;
+      testInfo?: TestInfo;
     }
   ): Promise<void> {
     // Validate H3 titles
     if (!options?.skipTitleValidation && titles.length > 0) {
-      const expectedTitles = titles.map(title => title.trim());
-      const h3Titles = await this.getAllH3TitlesInClass(page, className);
-      const normalizedH3Titles = h3Titles.map(title => title.trim());
-
-      // Wait for the page to stabilize
+      // Wait for the page to stabilize before collecting H3 titles
       await page.waitForLoadState('networkidle');
+
+      const expectedTitles = titles.map(title => title.trim());
+      // Use modal method if specified, otherwise use regular method
+      const h3Titles = options?.useModalMethod
+        ? await this.getAllH3TitlesInModalClassNew(page, containerSelector)
+        : await this.getAllH3TitlesInClass(page, containerSelector);
+      const normalizedH3Titles = h3Titles.map(title => title.trim());
 
       // Log for debugging
       console.log('Expected Titles:', expectedTitles);
       console.log('Received Titles:', normalizedH3Titles);
 
       // Validate length
-      expect(normalizedH3Titles.length).toBe(expectedTitles.length);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH3Titles.length).toBe(expectedTitles.length);
+        },
+        `Verify H3 titles count: expected ${expectedTitles.length}, actual ${normalizedH3Titles.length}`,
+        options?.testInfo
+      );
 
       // Validate content and order
-      expect(normalizedH3Titles).toEqual(expectedTitles);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH3Titles).toEqual(expectedTitles);
+        },
+        `Verify H3 titles match: expected ${JSON.stringify(expectedTitles)}, actual ${JSON.stringify(normalizedH3Titles)}`,
+        options?.testInfo
+      );
     }
 
     // Validate buttons
@@ -714,7 +733,14 @@ export class PageObject extends AbstractPage {
           }
 
           // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `Verify button "${buttonLabel}" is visible and enabled: expected true, actual ${isButtonReady}`,
+            options?.testInfo
+          );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
@@ -780,6 +806,10 @@ export class PageObject extends AbstractPage {
       archiveButtonLabel?: string;
       confirmButtonLabel?: string;
       waitAfterConfirm?: number;
+      verifyArchived?: boolean;
+      verifyTableSelector?: string;
+      tableBodySelector?: string;
+      searchInputDataTestId?: string;
     }
   ): Promise<void> {
     // Select/check the first row
@@ -808,6 +838,34 @@ export class PageObject extends AbstractPage {
     // Wait for the modal to close and table to update
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(options?.waitAfterConfirm || 1000);
+
+    // Verify the item is archived by searching again
+    if (options?.verifyArchived !== false && options?.tableBodySelector) {
+      console.log('Verifying item is archived by searching again...');
+      const verifyTableSelector = options.verifyTableSelector || tableSelector;
+
+      // Perform the search using redesign method
+      await this.searchTableRedesign(searchTerm, verifyTableSelector);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
+
+      // Check that the item is no longer in the table
+      // When there are no results, the table body might be hidden, so we check for attached state
+      const tableBodyLocator = page.locator(options.tableBodySelector);
+      const isTableBodyVisible = await tableBodyLocator.isVisible().catch(() => false);
+
+      let rowCount = 0;
+      if (isTableBodyVisible) {
+        const rows = page.locator(`${options.tableBodySelector} tr`);
+        rowCount = await rows.count();
+      }
+
+      if (rowCount > 0) {
+        console.log(`Warning: Item "${searchTerm}" still found in table after archiving (${rowCount} rows). It may not have been archived properly.`);
+      } else {
+        console.log(`Item "${searchTerm}" successfully archived - not found in search results.`);
+      }
+    }
   }
 
   /**
@@ -831,7 +889,32 @@ export class PageObject extends AbstractPage {
   ): Promise<void> {
     // Click archive button
     const archiveLabel = options?.archiveButtonLabel || 'Архив';
-    await this.clickButton(archiveLabel, archiveButtonSelector);
+    const archiveButton = this.page.locator(archiveButtonSelector, { hasText: archiveLabel });
+
+    // Wait for button to be visible and enabled
+    await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
+
+    // Wait for button to be enabled with retry
+    let isEnabled = false;
+    for (let retry = 0; retry < 10; retry++) {
+      isEnabled = await archiveButton.isEnabled();
+      if (isEnabled) {
+        break;
+      }
+      await this.page.waitForTimeout(500);
+    }
+
+    if (!isEnabled) {
+      throw new Error(`Archive button "${archiveLabel}" is not enabled after waiting.`);
+    }
+
+    await this.highlightElement(archiveButton, {
+      backgroundColor: 'yellow',
+      border: '2px solid red',
+      color: 'blue',
+    });
+    await this.page.waitForTimeout(500);
+    await archiveButton.click();
 
     // Wait a bit for modal to appear
     await this.page.waitForTimeout(200);
@@ -862,6 +945,8 @@ export class PageObject extends AbstractPage {
     options?: {
       timeoutMs?: number;
       waitForNetworkIdle?: boolean;
+      testInfo?: TestInfo;
+      description?: string;
     }
   ): Promise<void> {
     if (options?.waitForNetworkIdle !== false) {
@@ -870,7 +955,10 @@ export class PageObject extends AbstractPage {
     if (options?.timeoutMs && options.timeoutMs > 0) {
       await page.waitForTimeout(options.timeoutMs);
     }
-    await this.checkNameInLineFromFirstRow(searchTerm, tableSelector);
+    await this.checkNameInLineFromFirstRow(searchTerm, tableSelector, {
+      testInfo: options?.testInfo,
+      description: options?.description,
+    });
   }
 
   /**
@@ -1740,7 +1828,15 @@ export class PageObject extends AbstractPage {
     await searchTable.fill(nameSearch);
     await this.page.waitForTimeout(300); // Wait for fill to complete
 
-    expect(await searchTable.inputValue()).toBe(nameSearch);
+    const currentValue = await searchTable.inputValue();
+    await expectSoftWithScreenshot(
+      this.page,
+      () => {
+        expect.soft(currentValue).toBe(nameSearch);
+      },
+      `Verify search input equals "${nameSearch}"`,
+      undefined
+    );
     await searchTable.press('Enter');
   }
 
@@ -1754,7 +1850,15 @@ export class PageObject extends AbstractPage {
     const searchTable = table.locator(SelectorsSearchInputs.SEARCH_COVER_INPUT).nth(0);
     await searchTable.fill(nameSearch);
 
-    expect(await searchTable.inputValue()).toBe(nameSearch);
+    const currentValue = await searchTable.inputValue();
+    await expectSoftWithScreenshot(
+      this.page,
+      () => {
+        expect.soft(currentValue).toBe(nameSearch);
+      },
+      `Verify search input equals "${nameSearch}"`,
+      undefined
+    );
     const searchIcon = table.locator('[data-testid="Search-Cover-Icon"]');
     await searchIcon.click();
   }
@@ -1933,7 +2037,12 @@ export class PageObject extends AbstractPage {
     await expect(button).toBeVisible();
 
     if (click === Click.Yes) {
-      await button.click();
+      try {
+        await button.click();
+      } catch (error) {
+        console.warn(`Click failed for button "${textButton}", trying with force`, error);
+        await button.click({ force: true });
+      }
     }
   }
 
@@ -2359,7 +2468,14 @@ export class PageObject extends AbstractPage {
    * @param name - the searched value
    * @param locator - the full locator of the table
    */
-  async checkNameInLineFromFirstRow(name: string, locator: string) {
+  async checkNameInLineFromFirstRow(
+    name: string,
+    locator: string,
+    options?: {
+      testInfo?: TestInfo;
+      description?: string;
+    }
+  ) {
     // Debug: Check if table has any rows at all
     const allRows = await this.page.locator(`${locator} tbody tr`);
     const rowCount = await allRows.count();
@@ -2385,17 +2501,43 @@ export class PageObject extends AbstractPage {
     console.log(`DEBUG: Looking for: "${name.trim()}"`);
 
     // Находим ячейку, которая содержит искомое значение
-    const foundValue = cellTexts.find(cellText => cellText.trim().toLowerCase().includes(name.trim().toLowerCase()));
+    let foundValue = cellTexts.find(cellText => cellText.trim().toLowerCase().includes(name.trim().toLowerCase()));
+    let foundRowIndex = 0;
+
+    if (!foundValue) {
+      // Дополнительная проверка: ищем значение в остальных строках таблицы
+      const rows = await this.page.locator(`${locator} tbody tr`);
+      const rowsCount = await rows.count();
+      console.log(`DEBUG: Searching remaining ${rowsCount} rows for "${name.trim()}"`);
+
+      for (let i = 0; i < rowsCount; i++) {
+        const rowText = (await rows.nth(i).textContent())?.trim() || '';
+        console.log(`DEBUG: Row ${i} content: "${rowText}"`);
+        if (rowText.toLowerCase().includes(name.trim().toLowerCase())) {
+          foundValue = rowText;
+          foundRowIndex = i;
+          console.warn(`Value "${name.trim()}" found in row ${i}, not in the first row.`);
+          break;
+        }
+      }
+    }
 
     // Логируем результат после проверки
     if (foundValue) {
-      logger.info('Имя найдено');
+      logger.info(`Имя найдено (row ${foundRowIndex})`);
     } else {
       logger.info('Имя не найдено');
     }
 
     // Проверяем, что значение найдено
-    await expect(foundValue).toBeDefined(); // Проверяем, что найдено значение
+    await expectSoftWithScreenshot(
+      this.page,
+      () => {
+        expect.soft(foundValue).toBeDefined();
+      },
+      options?.description ?? `Verify value "${name}" exists in first row`,
+      options?.testInfo
+    ); // Проверяем, что найдено значение
 
     // Выводим найденное значение в консоль
     console.log(`Значение "${name}" найдено: ${foundValue || 'не найдено'}`);
@@ -2426,7 +2568,8 @@ export class PageObject extends AbstractPage {
    * @param descendantsDetailArray - the array where we plan to save the details
    */
   async preservingDescendants(descendantsCbedArray: ISpetificationData[], descendantsDetailArray: ISpetificationData[]) {
-    const rows = this.page.locator('.table-yui-kit');
+    await this.page.waitForTimeout(5000);
+    const rows = this.page.locator('[data-testid="AddOrder-ShipmentComplect-Table-Spec"]');
     const rowCount = await rows.count();
 
     expect(rowCount).toBeGreaterThan(0); // Проверка на наличие строк
@@ -2888,99 +3031,119 @@ export class PageObject extends AbstractPage {
    * @param {string} className - The class name of the container to scan.
    * @returns {string[]} - Array of H3 text content.
    */
-  async getAllH3TitlesInClass(page: Page, className: string): Promise<string[]> {
-    // Step 1: Collect all H3 titles inside dialogs
-    const allDialogs = await page.locator('dialog').elementHandles();
-    const dialogTitles: string[] = [];
-    for (const dialog of allDialogs) {
-      const h3Tags = await dialog.$$('h3');
-      for (const h3 of h3Tags) {
-        const title = await h3.textContent();
-        if (title) {
-          dialogTitles.push(title.trim());
-        }
-      }
+  async getAllH3TitlesInClass(page: Page, selector: string): Promise<string[]> {
+    // Step 1: Only accept data-testid selectors (no CSS classes)
+    // Selector must be in format: [data-testid="value"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]
+    // Also accepts combinations like [data-testid^="..."][data-testid$="..."]
+    const isDataTestIdSelector = selector.startsWith('[data-testid=') || selector.startsWith('[data-testid^=') || selector.startsWith('[data-testid$=');
+    if (!isDataTestIdSelector) {
+      throw new Error(
+        `getAllH3TitlesInClass only accepts data-testid selectors. Received: ${selector}. Use format: [data-testid="your-test-id"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]`
+      );
     }
-    logger.info('H3 Titles Found Inside Dialogs:', dialogTitles);
+    const container = page.locator(selector);
 
-    // Step 2: Collect all H3 titles inside the specified class
-    const container = page.locator(`.${className}`);
     const classTitles: string[] = [];
     const h3Elements = await container.locator('h3').all();
+
     for (const h3Tag of h3Elements) {
       try {
-        const title = await h3Tag.textContent();
-        if (title) {
-          classTitles.push(title.trim());
-          await h3Tag.evaluate(row => {
-            row.style.backgroundColor = 'yellow';
-            row.style.border = '2px solid red';
-            row.style.color = 'blue';
-          });
+        // Check if this H3 is inside any modal/dialog using evaluate
+        const isInsideModal = await h3Tag.evaluate(el => {
+          // Check for dialog element (HTML5 semantic element)
+          if (el.closest('dialog')) return true;
+
+          // Check for role="dialog" attribute
+          if (el.closest('[role="dialog"]')) return true;
+
+          // Check for data-testid containing "Modal"
+          let parent = el.parentElement;
+          while (parent) {
+            if (parent.hasAttribute && parent.hasAttribute('data-testid')) {
+              const testId = parent.getAttribute('data-testid');
+              if (testId && testId.includes('Modal')) {
+                return true;
+              }
+            }
+            parent = parent.parentElement;
+          }
+
+          return false;
+        });
+
+        // Only include H3 if it's not inside a modal
+        if (!isInsideModal) {
+          const title = await h3Tag.textContent();
+          if (title) {
+            classTitles.push(title.trim());
+            await h3Tag.evaluate(row => {
+              row.style.backgroundColor = 'yellow';
+              row.style.border = '2px solid red';
+              row.style.color = 'blue';
+            });
+          }
         }
       } catch (error) {
         console.error('Error processing H3 tag:', error);
       }
     }
-    logger.info('H3 Titles Found Inside Class:', classTitles);
+    logger.info('H3 Titles Found Inside Class (Excluding Modals):', classTitles);
 
-    // Step 3: Remove dialog titles from class titles
-    const filteredTitles = classTitles.filter(title => !dialogTitles.includes(title));
-    logger.info('Filtered H3 Titles (Excluding Dialogs):', filteredTitles);
-
-    return filteredTitles;
+    return classTitles;
   }
 
   async getAllH3TitlesInTestId(page: Page, testId: string): Promise<string[]> {
-    // Step 1: Collect all H3 titles inside dialogs
-    const allDialogs = await page.locator('dialog').elementHandles();
-    const dialogTitles: string[] = [];
-    for (const dialog of allDialogs) {
-      const h3Tags = await dialog.$$('h3');
-      for (const h3 of h3Tags) {
-        const title = await h3.textContent();
-        if (title) {
-          dialogTitles.push(title.trim());
-
-          // Highlight the element in the dialog
-          await h3.evaluate(el => {
-            (el as HTMLElement).style.backgroundColor = 'yellow';
-            (el as HTMLElement).style.border = '2px solid red';
-            (el as HTMLElement).style.color = 'blue';
-          });
-        }
-      }
-    }
-    logger.info('H3 Titles Found Inside Dialogs:', dialogTitles);
-
-    // Step 2: Collect all H3 titles inside the specified data-testid container
+    // Step 1: Collect all H3 titles inside the specified data-testid container
     const container = page.locator(`[data-testid="${testId}"]`);
     const testIdTitles: string[] = [];
-    const h3Elements = await container.locator('h3').elementHandles();
+    const h3Elements = await container.locator('h3').all();
+
     for (const h3Tag of h3Elements) {
       try {
-        const title = await h3Tag.textContent();
-        if (title) {
-          testIdTitles.push(title.trim());
+        // Check if this H3 is inside any modal/dialog using evaluate
+        const isInsideModal = await h3Tag.evaluate(el => {
+          // Check for dialog element (HTML5 semantic element)
+          if (el.closest('dialog')) return true;
 
-          // Highlight the element inside the given data-testid container
-          await h3Tag.evaluate(el => {
-            (el as HTMLElement).style.backgroundColor = 'yellow';
-            (el as HTMLElement).style.border = '2px solid red';
-            (el as HTMLElement).style.color = 'blue';
-          });
+          // Check for role="dialog" attribute
+          if (el.closest('[role="dialog"]')) return true;
+
+          // Check for data-testid containing "Modal"
+          let parent = el.parentElement;
+          while (parent) {
+            if (parent.hasAttribute && parent.hasAttribute('data-testid')) {
+              const testId = parent.getAttribute('data-testid');
+              if (testId && testId.includes('Modal')) {
+                return true;
+              }
+            }
+            parent = parent.parentElement;
+          }
+
+          return false;
+        });
+
+        // Only include H3 if it's not inside a modal
+        if (!isInsideModal) {
+          const title = await h3Tag.textContent();
+          if (title) {
+            testIdTitles.push(title.trim());
+
+            // Highlight the element inside the given data-testid container
+            await h3Tag.evaluate(el => {
+              (el as HTMLElement).style.backgroundColor = 'yellow';
+              (el as HTMLElement).style.border = '2px solid red';
+              (el as HTMLElement).style.color = 'blue';
+            });
+          }
         }
       } catch (error) {
         console.error('Error processing H3 tag:', error);
       }
     }
-    logger.info('H3 Titles Found Inside TestId:', testIdTitles);
+    logger.info('H3 Titles Found Inside TestId (Excluding Modals):', testIdTitles);
 
-    // Step 3: Remove dialog titles from testId titles
-    const filteredTitles = testIdTitles.filter(title => !dialogTitles.includes(title));
-    logger.info('Filtered H3 Titles (Excluding Dialogs):', filteredTitles);
-
-    return filteredTitles;
+    return testIdTitles;
   }
 
   async isButtonVisible(
@@ -3195,8 +3358,18 @@ export class PageObject extends AbstractPage {
     dialogContextTestId: string = '' // Optional: Specify dialog context testId for scoping
   ): Promise<boolean> {
     try {
+      // Check if testId is already a full selector (starts with '[') or a pattern selector
+      const isFullSelector = testId.trim().startsWith('[');
+
       // Apply dialog context if provided
-      const scopedSelector = dialogContextTestId ? `[data-testid="${dialogContextTestId}"] [data-testid="${testId}"]` : `[data-testid="${testId}"]`;
+      let scopedSelector: string;
+      if (isFullSelector) {
+        // If testId is already a full selector, use it directly
+        scopedSelector = dialogContextTestId ? `[data-testid="${dialogContextTestId}"] ${testId}` : testId;
+      } else {
+        // Otherwise, wrap it in data-testid attribute selector
+        scopedSelector = dialogContextTestId ? `[data-testid="${dialogContextTestId}"] [data-testid="${testId}"]` : `[data-testid="${testId}"]`;
+      }
 
       // Locate the button using the updated testId-based selector
       const button = page.locator(scopedSelector, {

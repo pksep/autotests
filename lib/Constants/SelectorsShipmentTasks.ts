@@ -6,3 +6,6 @@ export const ROW_ORDER_NUMBER_PATTERN = '[data-testid^="IssueToPull-ShipmentsTab
 export const ROW_PRODUCT_NAME_PATTERN = '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]';
 export const BUTTON_SHIP = '[data-testid="IssueToPull-Button-Ship"]';
 export const SELECTOR_SHIPPING_TASKS = '[data-testid="Sclad-shippingTasks"]';
+export const SELECTOR_SCLAD_SHIPPING_TASKS = '[data-testid="IssueToPull"]';
+export const SHIPMENTS_SEARCH_INPUT = 'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input';
+export const MODAL_SHIPMENT_DETAILS = '[data-testid^="IssueToPull-ShipmentDetails-ModalShComlit"][data-testid$="-Content"]';

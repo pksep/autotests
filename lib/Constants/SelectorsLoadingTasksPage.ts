@@ -1,6 +1,7 @@
 // Loading tasks Page
 export const buttonCreateOrder = '[data-testid="IssueShipment-ActionsButtons-AddOrder"]';
-export const buttonChoiceIzd = '.button-yui-kit.medium.primary-yui-kit';
+export const buttonChoiceIzd = 'button[data-testid="AddOrder-AttachmentsButtons-Select"]';
+export const buttonChoiceIzdTEMP = 'button[data-testid="Button"]';
 export const buttonChoiceBuyer = '[data-testid="AddOrder-OpenBuyersButton"]';
 export const buttonAddBuyerOnModalWindow = '[data-testid="AddOrder-ModalListBuyer-ButtonsReturn-Add"]';
 export const buttonSaveOrder = '[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]';
@@ -25,11 +26,11 @@ export const addOrderComponent = '[data-testid="AddOrder"]';
 export const issueShipmentPage = '[data-testid="IssueShipment"]';
 const ISSUE_SHIPMENT_TABLE_PREFIX = 'IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable';
 export const SHIPMENTS_TABLE = `[data-testid="${ISSUE_SHIPMENT_TABLE_PREFIX}-Table"]`;
-export const SHIPMENTS_TABLE_BODY = `${SHIPMENTS_TABLE} tbody`;
+export const SHIPMENTS_TABLE_BODY = `[data-testid="${ISSUE_SHIPMENT_TABLE_PREFIX}-Table-Tbody"]`;
 export const SHIPMENTS_SEARCH_INPUT = `${ISSUE_SHIPMENT_TABLE_PREFIX}-Thead-SearchInput`;
+export const SHIPMENTS_SEARCH_INPUT_SELECTOR = `[data-testid="${ISSUE_SHIPMENT_TABLE_PREFIX}-Thead-SearchInput-Dropdown-Input"]`;
 export const SHIPMENTS_ORDER_NUMBER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-NumberOrder"]`;
 export const SHIPMENTS_ARTICLE_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Article"]`;
 export const SHIPMENTS_PRODUCT_NAME_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Name"]`;
 export const SHIPMENTS_PRODUCT_QUANTITY_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-Kol"]`;
 export const SHIPMENTS_URGENCY_DATE_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-DateByUrgency"]`;
-export const SHIPMENTS_SEARCH_INPUT_SELECTOR = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Thead-SearchInput"]`;

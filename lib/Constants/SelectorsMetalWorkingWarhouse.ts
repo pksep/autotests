@@ -1,4 +1,5 @@
 // MetalWorkingWarhouse
+export const PAGE_TESTID = '[data-testid="MetalloworkingSclad"]';
 export const SELECTOR_METAL_WORKING_WARHOUSE = '[data-testid="Sclad-stockOrderMetalworking"]';
 
 export const TABLE_METAL_WORKING_WARHOUSE = '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table"]';
