@@ -1826,7 +1826,7 @@ export class PageObject extends AbstractPage {
     await searchTable.evaluate((el: HTMLInputElement) => (el.value = ''));
     await this.page.waitForTimeout(200);
     await searchTable.fill(nameSearch);
-    await this.page.waitForTimeout(300); // Wait for fill to complete
+    await this.page.waitForTimeout(1000); // Wait for fill to complete
 
     const currentValue = await searchTable.inputValue();
     await expectSoftWithScreenshot(
@@ -1880,20 +1880,25 @@ export class PageObject extends AbstractPage {
       return { success: true };
     }
 
+    // Check if the locator is already a tbody selector (contains "Tbody" or "tbody")
+    const isTbodySelector = /Tbody|tbody/i.test(locator);
+    const rowSelector = isTbodySelector ? `${locator} tr` : `${locator} tbody tr`;
+
     if (minRows === 1) {
       // Preserve legacy behavior exactly
-      await this.page.waitForSelector(`${locator} tbody tr`, {
+      await this.page.waitForSelector(rowSelector, {
         state: 'attached',
         timeout: timeoutMs,
       });
     } else {
       // Wait for at least minRows visible rows or timeout
       await this.page.waitForFunction(
-        (args: { sel: string; expected: number }) => {
-          const { sel, expected } = args;
+        (args: { sel: string; expected: number; isTbody: boolean }) => {
+          const { sel, expected, isTbody } = args;
           const root = document.querySelector(sel);
           if (!root) return false;
-          const allRows = root.querySelectorAll('tbody tr');
+          const rowSelector = isTbody ? 'tr' : 'tbody tr';
+          const allRows = root.querySelectorAll(rowSelector);
           let visible = 0;
           for (let i = 0; i < allRows.length; i++) {
             const row = allRows[i] as HTMLElement;
@@ -1902,7 +1907,7 @@ export class PageObject extends AbstractPage {
           }
           return false;
         },
-        { sel: locator, expected: minRows },
+        { sel: locator, expected: minRows, isTbody: isTbodySelector },
         { timeout: timeoutMs }
       );
     }
