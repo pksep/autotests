@@ -13412,7 +13412,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 5: Убедиться, что задача отсутствует в списке', async () => {
-      await searchOrder(productNameValue);
+      await searchOrder(productNameValue, false); // Don't require rows - should be empty
       await waitForShipmentsTableReady();
       const remainingRows = tableBody.locator('tr').filter({ hasText: productNameValue });
       const rowCount = await remainingRows.count();
