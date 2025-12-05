@@ -1,6 +1,6 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, Locator, expect, TestInfo } from '@playwright/test';
 
-import { PageObject } from '../lib/Page';
+import { PageObject, expectSoftWithScreenshot } from '../lib/Page';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { ENV, SELECTORS, CONST } from '../config';
 import logger from '../lib/logger';
@@ -4055,5 +4055,214 @@ export class CreatePartsDatabasePage extends PageObject {
     } else {
       console.log(`Item "${itemName}" not found in table for archiving`);
     }
+  }
+
+  /**
+   * Archives all test products matching the given search prefix.
+   * Searches for products, selects the last row, archives it, and repeats until no more products are found.
+   * @param searchPrefix - The search prefix to match products (e.g., 'TEST_PRODUCT')
+   * @param options - Optional configuration:
+   *   - maxIterations: Maximum number of archive operations (default: 100)
+   */
+  async archiveAllTestProductsByPrefix(searchPrefix: string, options?: { maxIterations?: number }): Promise<number> {
+    const maxIterations = options?.maxIterations || 100;
+    let iteration = 0;
+    let archivedCount = 0;
+
+    // Navigate to parts database page
+    await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+    await this.waitForNetworkIdle();
+
+    while (iteration < maxIterations) {
+      iteration++;
+      console.log(`Archive iteration ${iteration} for products with prefix: ${searchPrefix}`);
+
+      // Search for products
+      const table = this.page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
+      const searchInput = table.locator('[data-testid*="SearchInput"] input').first();
+      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+      await searchInput.clear();
+      await searchInput.fill(searchPrefix);
+      await searchInput.press('Enter');
+      await this.page.waitForTimeout(1000);
+      await this.waitForNetworkIdle();
+      await this.page.waitForTimeout(1000);
+
+      // Get rows
+      const tableBody = table.locator('tbody');
+      await tableBody.waitFor({ state: 'attached', timeout: 10000 }).catch(() => {});
+      const rows = tableBody.locator('tr');
+      const rowCount = await rows.count();
+
+      if (rowCount === 0) {
+        console.log(`✅ No more products found with prefix "${searchPrefix}"`);
+        break;
+      }
+
+      // Delete from bottom up - select the last row
+      const lastRow = rows.nth(rowCount - 1);
+      await lastRow.scrollIntoViewIfNeeded();
+
+      // Re-fetch the row to avoid stale element
+      const currentRows = tableBody.locator('tr');
+      const currentRowCount = await currentRows.count();
+      if (currentRowCount === 0) {
+        console.log('Table became empty during operation');
+        break;
+      }
+
+      const targetRow = currentRows.nth(currentRowCount - 1);
+      await targetRow.scrollIntoViewIfNeeded();
+
+      try {
+        await targetRow.click({ timeout: 5000 });
+      } catch (error) {
+        console.log(`Row click failed (may have been deleted): ${error}`);
+        // Re-search and continue
+        continue;
+      }
+
+      // Archive
+      const archiveButton = this.page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
+      await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
+      if (!(await archiveButton.isEnabled())) {
+        console.log('Archive button is disabled, stopping');
+        break;
+      }
+      await archiveButton.click();
+
+      // Confirm archive
+      const confirmButton = this.page.locator(SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON).filter({ hasText: 'Да' });
+      await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
+      await confirmButton.click();
+
+      archivedCount++;
+      await this.page.waitForTimeout(1000);
+      await this.waitForNetworkIdle();
+    }
+
+    if (iteration >= maxIterations) {
+      console.warn(`⚠️ Reached maximum iterations (${maxIterations}) for archiving products with prefix "${searchPrefix}"`);
+    } else {
+      console.log(`✅ Completed archiving products with prefix "${searchPrefix}" after ${iteration} iterations`);
+    }
+
+    return archivedCount;
+  }
+
+  /**
+   * Saves the current product being created/edited
+   * @returns true if save was successful, false otherwise
+   */
+  async saveProduct(): Promise<boolean> {
+    try {
+      const saveButton = this.page.locator(SelectorsPartsDataBase.BUTTON_SAVE_CBED);
+      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
+      await this.clickButton('Сохранить', SelectorsPartsDataBase.BUTTON_SAVE_CBED);
+      await this.waitForNetworkIdle();
+
+      // Wait for loader to disappear (indicates save operation completed)
+      const loaderDialog = this.page.locator('[data-testid="Creator-Loader"]');
+      await loaderDialog.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      await this.page.waitForTimeout(1000); // Give UI time to update
+
+      // Verify save was successful by checking if we're still on the edit page
+      // Check for cancel button visibility (indicates we're still on edit page after save)
+      const cancelButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CANCEL_CBED);
+      const isCancelVisible = await cancelButton.isVisible({ timeout: 5000 }).catch(() => false);
+
+      // Also verify we're NOT back on the list page (create button should not be visible)
+      const createButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
+      const isCreateVisible = await createButton.isVisible({ timeout: 2000 }).catch(() => false);
+
+      // Save is successful if cancel button is visible AND we're not back on list page
+      return isCancelVisible && !isCreateVisible;
+    } catch (error) {
+      logger.error(`Failed to save product: ${error}`);
+      return false;
+    }
+  }
+
+  /**
+   * Cancels the current product creation/edit and returns to the list page
+   * @returns true if cancel was successful and we're back on the list page, false otherwise
+   */
+  async cancelProductCreation(): Promise<boolean> {
+    try {
+      // Wait for loader to disappear
+      const loaderDialog = this.page.locator('[data-testid="Creator-Loader"]');
+      await loaderDialog.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      await this.page.waitForTimeout(500);
+
+      const cancelButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CANCEL_CBED);
+      await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
+      await this.clickButton('Отменить', SelectorsPartsDataBase.BUTTON_CANCEL_CBED);
+
+      // Verify we're back on the Parts Database page
+      await this.waitForNetworkIdle();
+      const createButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
+      await createButton.waitFor({ state: 'visible', timeout: 10000 });
+      const isCreateButtonVisible = await createButton.isVisible();
+
+      return isCreateButtonVisible;
+    } catch (error) {
+      logger.error(`Failed to cancel product creation: ${error}`);
+      return false;
+    }
+  }
+
+  /**
+   * Verifies that all test products matching the given search prefix have been deleted.
+   * @param searchPrefix - The search prefix to match products (e.g., 'TEST_PRODUCT')
+   * @param testInfo - Optional TestInfo for screenshot attachments
+   */
+  async verifyAllTestProductsDeleted(searchPrefix: string, testInfo?: TestInfo): Promise<number> {
+    const page = this.page;
+
+    // Navigate to parts database
+    await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+    await this.waitForNetworkIdle();
+
+    // Verify page loaded by checking for the create button
+    const createButton = page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
+    await createButton.waitFor({ state: 'visible', timeout: 3000 });
+    expect.soft(await createButton.isVisible()).toBe(true);
+
+    // Search for products with the given prefix
+    // When all items are deleted, the table might be empty - this is a success condition
+    const tableBodySelector = `${SelectorsPartsDataBase.PRODUCT_TABLE} tbody`;
+    try {
+      await this.searchAndWaitForTable(searchPrefix, SelectorsPartsDataBase.PRODUCT_TABLE, tableBodySelector, {
+        useRedesign: true,
+        timeoutBeforeWait: 2000,
+        minRows: 0, // Expect 0 rows after deletion - this is success
+      });
+    } catch (error) {
+      // If search fails because table is empty/hidden (no results), this is actually success
+      console.log(`Search completed - table may be empty (success condition): ${String(error)}`);
+      await page.waitForTimeout(1000); // Give time for any UI updates
+    }
+
+    const table = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
+    const rows = table.locator('tbody tr');
+    const remainingCount = await rows.count().catch(() => 0); // If table doesn't exist, count is 0 (success)
+    console.log(`Verify products: found ${remainingCount} test products with prefix "${searchPrefix}"`);
+
+    await expectSoftWithScreenshot(
+      page,
+      () => {
+        expect.soft(remainingCount).toBe(0);
+      },
+      `Verify all test products are deleted: expected 0, found ${remainingCount}`,
+      testInfo
+    );
+
+    if (remainingCount === 0) {
+      console.log(`✅ Все тестовые изделия с префиксом "${searchPrefix}" успешно удалены.`);
+    } else {
+      console.warn(`⚠️ Осталось ${remainingCount} изделий с префиксом "${searchPrefix}" после удаления.`);
+    }
+
+    return remainingCount;
   }
 }

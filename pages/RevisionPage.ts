@@ -12,14 +12,39 @@ export class CreateRevisionPage extends PageObject {
     this.page = page;
   }
 
-  async changeWarehouseBalances(quantity: string) {
-    await this.page.locator('[data-testid="InputNumber-Input"]').fill(quantity);
-    await this.page.locator('[data-testid="InputNumber-Input"]').press('Enter');
+  async changeWarehouseBalances(quantity: string, tableSelector?: string) {
+    // If table selector is provided, scope to first row of that table
+    // Otherwise, use the generic selector (for backward compatibility)
+    let inputLocator;
+    if (tableSelector) {
+      // Find the input within the first row of the specified table
+      const table = this.page.locator(tableSelector);
+      const firstRow = table.locator('tbody tr').first();
+      inputLocator = firstRow.locator('[data-testid="InputNumber-Input"]');
+    } else {
+      inputLocator = this.page.locator('[data-testid="InputNumber-Input"]').first();
+    }
+
+    await inputLocator.waitFor({ state: 'visible', timeout: 10000 });
+    await inputLocator.fill(quantity);
+    await inputLocator.press('Enter');
   }
 
-  async checkWarehouseBalances(quantity: string) {
+  async checkWarehouseBalances(quantity: string, tableSelector?: string) {
     await this.page.waitForTimeout(1000);
-    const checkBalanceCell = this.page.locator('[data-testid="TableRevisionPagination-TableData-Current"]');
+
+    // If table selector is provided, scope to first row of that table
+    // Otherwise, use the generic selector (for backward compatibility)
+    let checkBalanceCell;
+    if (tableSelector) {
+      // Find the balance cell within the first row of the specified table
+      const table = this.page.locator(tableSelector);
+      const firstRow = table.locator('tbody tr').first();
+      checkBalanceCell = firstRow.locator('[data-testid="TableRevisionPagination-TableData-Current"]');
+    } else {
+      checkBalanceCell = this.page.locator('[data-testid="TableRevisionPagination-TableData-Current"]').first();
+    }
+
     await checkBalanceCell.waitFor({ state: 'visible', timeout: 10000 });
     await checkBalanceCell.scrollIntoViewIfNeeded();
 
@@ -60,8 +85,8 @@ export class CreateRevisionPage extends PageObject {
     // Check that the first row contains the search term
     await this.checkNameInLineFromFirstRow(searchTerm, tableSelector);
 
-    // Change warehouse balances
-    await this.changeWarehouseBalances(balanceValue);
+    // Change warehouse balances - pass table selector to scope to first row
+    await this.changeWarehouseBalances(balanceValue, tableSelector);
 
     // Confirm the archive
     await this.clickButton('Да', confirmButtonSelector);
@@ -87,7 +112,47 @@ export class CreateRevisionPage extends PageObject {
       await this.page.waitForTimeout(1000);
     }
 
-    // Check that the balance is now the expected value
-    await this.checkWarehouseBalances(balanceValue);
+    // Check that the balance is now the expected value - pass table selector to scope to first row
+    await this.checkWarehouseBalances(balanceValue, tableSelector);
+  }
+
+  /**
+   * Sets the warehouse revision balance to 0 for a single product
+   * in the revisions table.
+   *
+   * This encapsulates the "search + wait + changeBalanceAndConfirmArchive"
+   * pattern used in U003 Test Case 10.
+   * @returns true if the operation was successful, false otherwise
+   */
+  async setRevisionBalanceToZeroForProduct(
+    productName: string,
+    tableSelector: string,
+    options?: {
+      searchInputDataTestId?: string;
+      confirmButtonSelector?: string;
+      refreshAndSearchAfter?: boolean;
+      waitAfterConfirm?: number;
+    }
+  ): Promise<boolean> {
+    try {
+      const searchInputTestId = options?.searchInputDataTestId || 'TableRevisionPagination-SearchInput-Dropdown-Input';
+      const confirmButtonSelector = options?.confirmButtonSelector || '[data-testid="TableRevisionPagination-ConfirmDialog-Approve"]';
+
+      // Search for the product in the revisions table
+      await this.searchTable(productName, tableSelector, searchInputTestId);
+      await this.waitingTableBodyNoThead(tableSelector);
+
+      // Change balance to 0 and confirm archive, with optional refresh/search
+      await this.changeBalanceAndConfirmArchive(productName, tableSelector, '0', confirmButtonSelector, {
+        refreshAndSearchAfter: options?.refreshAndSearchAfter ?? true,
+        searchInputDataTestId: searchInputTestId,
+        waitAfterConfirm: options?.waitAfterConfirm ?? 1000,
+      });
+
+      return true;
+    } catch (error) {
+      console.error(`Failed to set revision balance to 0 for product "${productName}": ${error}`);
+      return false;
+    }
   }
 }

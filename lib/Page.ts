@@ -1838,6 +1838,7 @@ export class PageObject extends AbstractPage {
       undefined
     );
     await searchTable.press('Enter');
+    await this.page.waitForTimeout(1000); // Wait 1 second after pressing Enter before verifying results
   }
 
   /**

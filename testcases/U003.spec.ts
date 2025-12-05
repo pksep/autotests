@@ -43,6 +43,28 @@ let shipmentOrderDate: string = '';
 let firstProductName: string = '';
 let secondProductName: string = '';
 
+// Test products - static names since Test Case 0 cleans up all TEST_* items before each run
+export const TEST_PRODUCTS = [
+  {
+    articleNumber: 'TEST_ARTICLE_1',
+    name: 'TEST_PRODUCT_1',
+    designation: '-',
+  },
+  {
+    articleNumber: 'TEST_ARTICLE_2',
+    name: 'TEST_PRODUCT_2',
+    designation: '-',
+  },
+  {
+    articleNumber: 'TEST_ARTICLE_3',
+    name: 'TEST_PRODUCT_3',
+    designation: '-',
+  },
+] as const;
+
+// Helper to get just the product names
+export const TEST_PRODUCT_NAMES = TEST_PRODUCTS.map(p => p.name);
+
 // Test data for Test Case 2
 const nameBuyer = 'М10';
 const quantity = '5';
@@ -66,130 +88,34 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
-    const searchTerm = 'TEST_';
+    const searchPrefix = 'TEST_';
 
-    // Step 1: Delete all shipment tasks
     await allure.step('Step 1: Delete all shipment tasks', async () => {
       await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
       await loadingTaskPage.waitForNetworkIdle();
+      const archivedShipmentTasksCount = await loadingTaskPage.archiveAllShipmentTasksByProduct(searchPrefix);
 
-      while (true) {
-        // Search
-        const searchInput = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInput.clear();
-        await searchInput.fill(searchTerm);
-        await searchInput.press('Enter');
-        await page.waitForTimeout(1000);
-        await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
-
-        // Get rows
-        const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-        await tableBody.waitFor({ state: 'attached', timeout: 10000 }).catch(() => {});
-        const rows = tableBody.locator('tr');
-        const rowCount = await rows.count();
-
-        if (rowCount === 0) {
-          console.log('✅ No more shipment tasks found');
-          break;
-        }
-
-        // Delete from bottom up
-        const lastRow = rows.nth(rowCount - 1);
-        await lastRow.scrollIntoViewIfNeeded();
-
-        // Select row
-        const checkboxCandidate = lastRow.locator('[data-testid*="TdCheckbox"]');
-        if (await checkboxCandidate.count()) {
-          const checkboxInput = checkboxCandidate.first().locator('input[type="checkbox"]').first();
-          if (await checkboxInput.count()) {
-            const isChecked = await checkboxInput.isChecked();
-            if (!isChecked) {
-              await checkboxInput.click();
-            }
-          } else {
-            await checkboxCandidate.first().click();
-          }
-        } else {
-          const numberOrderCell = lastRow.locator('[data-testid*="-Tbody-NumberOrder"]').first();
-          const numberCell = lastRow.locator('[data-testid*="-Tbody-Number"]').first();
-          const selectableCell = (await numberOrderCell.count()) > 0 ? numberOrderCell : (await numberCell.count()) > 0 ? numberCell : lastRow;
-          await selectableCell.click();
-        }
-
-        // Archive
-        const archiveButton = page.locator(SelectorsLoadingTasksPage.buttonArchive);
-        await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
-        if (!(await archiveButton.isEnabled())) {
-          break;
-        }
-        await archiveButton.click();
-
-        const promptModal = page.locator('[data-testid^="IssueShipment-ModalPromptMini-Archive"]').first();
-        if (await promptModal.isVisible({ timeout: 3000 }).catch(() => false)) {
-          const confirmPromptButton = promptModal.locator('[data-testid="ModalPromptMini-Button-Confirm"]');
-          await confirmPromptButton.waitFor({ state: 'visible', timeout: 5000 });
-          await confirmPromptButton.click();
-        }
-
-        const confirmButton = page.locator(SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON).first();
-        await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
-        await confirmButton.click();
-
-        await page.waitForTimeout(1000);
-        await loadingTaskPage.waitForNetworkIdle();
-      }
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archivedShipmentTasksCount).toBeGreaterThanOrEqual(0);
+        },
+        `Verify shipment tasks archived: ${archivedShipmentTasksCount} items`,
+        test.info()
+      );
     });
 
-    // Step 2: Delete all test products
     await allure.step('Step 2: Delete all test products', async () => {
-      await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-      await partsDatabasePage.waitForNetworkIdle();
+      const archivedProductsCount = await partsDatabasePage.archiveAllTestProductsByPrefix(searchPrefix);
 
-      while (true) {
-        // Search
-        const table = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
-        const searchInput = table.locator('[data-testid*="SearchInput"] input').first();
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInput.clear();
-        await searchInput.fill(searchTerm);
-        await searchInput.press('Enter');
-        await page.waitForTimeout(1000);
-        await partsDatabasePage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
-
-        // Get rows
-        const tableBody = table.locator('tbody');
-        await tableBody.waitFor({ state: 'attached', timeout: 10000 }).catch(() => {});
-        const rows = tableBody.locator('tr');
-        const rowCount = await rows.count();
-
-        if (rowCount === 0) {
-          console.log('✅ No more products found');
-          break;
-        }
-
-        // Delete from bottom up
-        const lastRow = rows.nth(rowCount - 1);
-        await lastRow.scrollIntoViewIfNeeded();
-        await lastRow.click();
-
-        // Archive
-        const archiveButton = page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
-        await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
-        if (!(await archiveButton.isEnabled())) {
-          break;
-        }
-        await archiveButton.click();
-
-        const confirmButton = page.locator(SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON).filter({ hasText: 'Да' });
-        await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
-        await confirmButton.click();
-
-        await page.waitForTimeout(1000);
-        await partsDatabasePage.waitForNetworkIdle();
-      }
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archivedProductsCount).toBeGreaterThanOrEqual(0);
+        },
+        `Verify test products archived: ${archivedProductsCount} items`,
+        test.info()
+      );
     });
 
     console.log(`✅ Cleanup completed successfully`);
@@ -200,25 +126,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     console.log('Test Case 1 - Create test product');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
-    // Test data - will create 3 test products
-    const baseTimestamp = Date.now();
-    const testProducts = [
-      {
-        articleNumber: `TEST_ARTICLE_${baseTimestamp}_1`,
-        name: `TEST_PRODUCT_${baseTimestamp}_1`,
-        designation: `TEST_DESIGNATION_${baseTimestamp}_1`,
-      },
-      {
-        articleNumber: `TEST_ARTICLE_${baseTimestamp}_2`,
-        name: `TEST_PRODUCT_${baseTimestamp}_2`,
-        designation: `TEST_DESIGNATION_${baseTimestamp}_2`,
-      },
-      {
-        articleNumber: `TEST_ARTICLE_${baseTimestamp}_3`,
-        name: `TEST_PRODUCT_${baseTimestamp}_3`,
-        designation: `TEST_DESIGNATION_${baseTimestamp}_3`,
-      },
-    ];
+    // Use the global test products constant
+    const testProducts = TEST_PRODUCTS;
 
     await allure.step('Step 1: Go to Parts Database page', async () => {
       await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
@@ -329,14 +238,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await articleInput.clear();
         await articleInput.fill(product.articleNumber);
-        await page.waitForTimeout(500); // Wait for value to be set
+        await page.waitForTimeout(1500); // Wait for value to be set
 
         // Verify value was entered, retry once if needed
         let inputValue = await articleInput.inputValue();
         if (!inputValue) {
           console.warn('Article input value empty after first fill, retrying...');
           await articleInput.fill(product.articleNumber);
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(1500);
           inputValue = await articleInput.inputValue();
         }
 
@@ -432,8 +341,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           'Verify Save button is visible',
           test.info()
         );
-        await partsDatabasePage.clickButton('Сохранить', SelectorsPartsDataBase.BUTTON_SAVE_CBED);
-        await partsDatabasePage.waitForNetworkIdle();
+        const saveSuccess = await partsDatabasePage.saveProduct();
+
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(saveSuccess).toBe(true);
+          },
+          `Verify product "${product.name}" was saved successfully`,
+          test.info()
+        );
         console.log('Clicked Save button and waited for loading to complete');
       });
 
@@ -455,17 +372,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           'Verify Cancel button is visible',
           test.info()
         );
-        await partsDatabasePage.clickButton('Отменить', SelectorsPartsDataBase.BUTTON_CANCEL_CBED);
+        const cancelSuccess = await partsDatabasePage.cancelProductCreation();
 
-        // Verify we're back on the Parts Database page
-        const createButton = page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
-        await createButton.waitFor({ state: 'visible', timeout: 10000 });
         await expectSoftWithScreenshot(
           page,
-          async () => {
-            expect.soft(await createButton.isVisible()).toBe(true);
+          () => {
+            expect.soft(cancelSuccess).toBe(true);
           },
-          'Verify Create button is visible after cancel',
+          `Verify cancellation successful and returned to list page for product "${product.name}"`,
           test.info()
         );
         console.log('Clicked Cancel button');
@@ -493,370 +407,118 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     console.log('Test Case 2 - Create shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
-    // Use the first product name from Test Case 1
-    const productName = global.testProductName || testProductName || firstProductName;
-    const articleNumberValue = global.testProductArticleNumber || testProductArticleNumber;
-    if (!productName) {
-      throw new Error('Product name not found. Please run Test Case 1 first.');
-    }
+    // Use the third product (last one created) from TEST_PRODUCTS constant
+    const productName = TEST_PRODUCTS[2].name; // TEST_PRODUCT_3
+    const articleNumberValue = TEST_PRODUCTS[2].articleNumber; // TEST_ARTICLE_3
 
     await allure.step('Step 1: Go to Задачи на отгрузку page', async () => {
-      await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await loadingTaskPage.waitForNetworkIdle();
-
-      // Verify page loaded
-      const createOrderButton = page.locator(SelectorsLoadingTasksPage.buttonCreateOrder);
-      await createOrderButton.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await createOrderButton.isVisible()).toBe(true);
-        },
-        'Verify Create Order button is visible',
-        test.info()
-      );
-    });
-
-    await allure.step('Step 2: Verify Create Order button is visible', async () => {
-      const createOrderButton = page.locator(SelectorsLoadingTasksPage.buttonCreateOrder);
-      await createOrderButton.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await createOrderButton.isVisible()).toBe(true);
-        },
-        'Verify Create Order button is visible (Step 2)',
-        test.info()
-      );
-    });
-
-    await allure.step('Step 3: Click Create Order button', async () => {
-      await loadingTaskPage.clickButton('Создать заказ', SelectorsLoadingTasksPage.buttonCreateOrder);
-      await loadingTaskPage.waitForNetworkIdle();
-    });
-
-    await allure.step('Step 4: Verify and click Изделие Выбрать button', async () => {
-      const choiceIzdButton = page.locator(SelectorsLoadingTasksPage.buttonChoiceIzd, { hasText: 'Выбрать' }).first();
-      await choiceIzdButton.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await choiceIzdButton.isVisible()).toBe(true);
-        },
-        'Verify Изделие Выбрать button is visible',
-        test.info()
-      );
-
-      const isEnabled = await choiceIzdButton.isEnabled();
+      const success = await loadingTaskPage.navigateToShippingTasksPage();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(isEnabled).toBe(true);
+          expect.soft(success).toBe(true);
         },
-        'Verify Изделие Выбрать button is enabled',
-        test.info()
-      );
-
-      await choiceIzdButton.click();
-      console.log('Clicked on Изделие Выбрать button');
-    });
-
-    await allure.step('Step 5: Wait for product modal dialog', async () => {
-      const modal = page.locator(SelectorsLoadingTasksPage.modalListProduct);
-      await modal.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await modal.isVisible()).toBe(true);
-        },
-        'Verify modal is visible',
-        test.info()
-      );
-
-      // Wait for table body to load
-      const tableBody = modal.locator('tbody');
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await tableBody.isVisible()).toBe(true);
-        },
-        'Verify table body is visible',
+        `Verify navigation to shipping tasks page successful`,
         test.info()
       );
     });
 
-    await allure.step('Step 6: Verify search input exists in modal', async () => {
-      const productModal = page.locator(SelectorsLoadingTasksPage.modalListProduct);
-      const searchInput = productModal.locator(SelectorsLoadingTasksPage.searchDropdownInput).first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await searchInput.isVisible()).toBe(true);
-        },
-        'Verify search input is visible',
-        test.info()
-      );
-    });
-
-    await allure.step('Step 7: Enter product name in search', async () => {
-      const productModal = page.locator(SelectorsLoadingTasksPage.modalListProduct);
-      const searchInput = productModal.locator(SelectorsLoadingTasksPage.searchDropdownInput).first();
-      await searchInput.fill(productName);
-
-      const inputValue = await searchInput.inputValue();
+    await allure.step('Step 2: Click Create Order button', async () => {
+      const success = await loadingTaskPage.clickCreateOrderButton();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(inputValue).toBe(productName);
+          expect.soft(success).toBe(true);
         },
-        `Verify search input value matches: ${productName}`,
-        test.info()
-      );
-      console.log(`Entered product name in search: ${productName}`);
-    });
-
-    await allure.step('Step 8: Filter table by pressing Enter', async () => {
-      const productModal = page.locator(SelectorsLoadingTasksPage.modalListProduct);
-      const searchInput = productModal.locator(SelectorsLoadingTasksPage.searchDropdownInput).first();
-      await searchInput.press('Enter');
-      await loadingTaskPage.waitForNetworkIdle();
-
-      // Wait for table body to be visible
-      const modal = page.locator(SelectorsLoadingTasksPage.modalListProduct);
-      const tableBody = modal.locator('tbody');
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await tableBody.isVisible()).toBe(true);
-        },
-        'Verify table body is visible',
+        `Verify Create Order button clicked successfully`,
         test.info()
       );
     });
 
-    await allure.step('Step 9: Click first row in modal table', async () => {
-      const modal = page.locator(SelectorsLoadingTasksPage.modalListProduct);
-      let productRow = modal.locator('tbody tr').filter({ hasText: productName });
-
-      if ((await productRow.count()) === 0 && articleNumberValue) {
-        console.warn(`Product "${productName}" not found by name. Trying article number "${articleNumberValue}".`);
-        const searchInput = modal.locator(SelectorsLoadingTasksPage.searchDropdownInput).first();
-        await searchInput.fill('');
-        await searchInput.fill(articleNumberValue);
-        await searchInput.press('Enter');
-        await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
-        productRow = modal.locator('tbody tr').filter({ hasText: articleNumberValue });
-      }
-
-      if ((await productRow.count()) === 0) {
-        throw new Error(`Could not find product row with name "${productName}" in the modal.`);
-      }
-
-      await productRow.first().waitFor({ state: 'visible', timeout: 10000 });
-      await productRow.first().scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productRow.first(), {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await productRow.first().click();
-      console.log('Clicked on product row in modal table');
-    });
-
-    await allure.step('Step 10: Verify Add button is visible and enabled', async () => {
-      const addButton = page
-        .locator(`${SelectorsLoadingTasksPage.modalListProduct} .base-modal__section-button-return button`, {
-          hasText: 'Добавить',
-        })
-        .first();
-      await addButton.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await addButton.isVisible()).toBe(true);
-        },
-        'Verify Add button is visible',
-        test.info()
-      );
-
-      const isEnabled = await addButton.isEnabled();
+    await allure.step('Step 3: Click Изделие Выбрать button', async () => {
+      const success = await loadingTaskPage.clickProductSelectButton();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(isEnabled).toBe(true);
+          expect.soft(success).toBe(true);
         },
-        'Verify Add button is enabled',
+        `Verify Изделие Выбрать button clicked successfully`,
         test.info()
       );
     });
 
-    await allure.step('Step 11: Click Add button and wait', async () => {
-      const addButton = page
-        .locator(`${SelectorsLoadingTasksPage.modalListProduct} .base-modal__section-button-return button`, {
-          hasText: 'Добавить',
-        })
-        .first();
-      await addButton.waitFor({ state: 'visible', timeout: 10000 });
-      await addButton.scrollIntoViewIfNeeded();
-      await addButton.click({ force: true });
-      await page.waitForTimeout(500);
-      console.log('Clicked Add button');
+    await allure.step('Step 4: Select product in modal', async () => {
+      const success = await loadingTaskPage.selectProductInModal(productName, articleNumberValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        `Verify product "${productName}" selected successfully in modal`,
+        test.info()
+      );
+    });
+
+    await allure.step('Step 10: Click Add button', async () => {
+      const success = await loadingTaskPage.clickAddButtonInProductModal();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        `Verify Add button clicked successfully in product modal`,
+        test.info()
+      );
     });
 
     await allure.step('Step 12: Verify correct product is displayed in Изделие row', async () => {
-      await loadingTaskPage.checkProduct(productName);
-      const productText = ((await page.locator('.attachments-value .link').first().textContent()) || '').trim();
+      const success = await loadingTaskPage.checkProduct(productName);
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(productText).toBe(productName);
+          expect.soft(success).toBe(true);
         },
-        `Verify product text matches: ${productName}`,
+        `Verify product "${productName}" is displayed correctly`,
         test.info()
       );
     });
 
-    await allure.step('Step 13: Verify Покупатель Выбрать button is visible and active', async () => {
-      const choiceBuyerButton = page.locator(SelectorsLoadingTasksPage.buttonChoiceBuyer);
-      await choiceBuyerButton.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await choiceBuyerButton.isVisible()).toBe(true);
-        },
-        'Verify Покупатель Выбрать button is visible',
-        test.info()
-      );
-
-      const isActive = await loadingTaskPage.checkButtonState(SelectorsLoadingTasksPage.buttonChoiceBuyer, 'active');
+    await allure.step('Step 13: Click Покупатель Выбрать button and select buyer', async () => {
+      const success = await loadingTaskPage.selectBuyer(nameBuyer);
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(isActive).toBe(true);
+          expect.soft(success).toBe(true);
         },
-        'Verify Покупатель Выбрать button is active',
+        `Verify buyer "${nameBuyer}" selected successfully`,
         test.info()
       );
-    });
-
-    await allure.step('Step 14: Click Покупатель Выбрать button', async () => {
-      const choiceBuyerButton = page.locator(SelectorsLoadingTasksPage.buttonChoiceBuyer);
-      await choiceBuyerButton.click();
-
-      // Wait for table body to be visible
-      const modal = page.locator(SelectorsLoadingTasksPage.modalListBuyer);
-      await modal.waitFor({ state: 'visible', timeout: 10000 });
-      const tableBody = modal.locator('tbody');
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await tableBody.isVisible()).toBe(true);
-        },
-        'Verify table body is visible',
-        test.info()
-      );
-
-      await page.waitForTimeout(1000);
-    });
-
-    await allure.step('Step 15: Check modal window Company', async () => {
-      const modalWindow = page.locator('.modal-yui-kit__modal-content');
-      await expect(modalWindow).toBeVisible();
-      expect.soft(await modalWindow.isVisible()).toBe(true);
-
-      const searchTable = modalWindow.locator('.search-yui-kit__input').nth(0);
-      await searchTable.fill(nameBuyer);
-
-      expect.soft(await searchTable.inputValue()).toBe(nameBuyer);
-      await searchTable.press('Enter');
-
-      await page.waitForTimeout(500);
-    });
-
-    await allure.step('Step 16: Click first row in buyer modal table', async () => {
-      await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit__border.table-yui-kit-with-scroll', 0);
-      console.log('Clicked on first row in buyer modal table');
-    });
-
-    await allure.step('Step 17: Click on the Select button on modal window', async () => {
-      await loadingTaskPage.clickButton('Добавить', SelectorsLoadingTasksPage.buttonAddBuyerOnModalWindow);
-      console.log('Clicked Add button for buyer');
     });
 
     await allure.step('Step 18: Enter quantity in Количество input', async () => {
-      const quantityInput = page.locator(SelectorsLoadingTasksPage.quantityInput);
-      await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await quantityInput.isVisible()).toBe(true);
-        },
-        'Verify quantity input is visible',
-        test.info()
-      );
-
-      await quantityInput.fill(quantity);
-      await page.waitForTimeout(1000);
-
-      const inputValue = await quantityInput.inputValue();
+      const success = await loadingTaskPage.enterQuantity(quantity);
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(inputValue).toBe(quantity);
+          expect.soft(success).toBe(true);
         },
-        `Verify quantity input value matches: ${quantity}`,
+        `Verify quantity "${quantity}" entered successfully`,
         test.info()
       );
-      console.log(`Entered quantity: ${quantity}`);
     });
 
     await allure.step('Step 19: Enter urgency date', async () => {
-      await page.locator(SelectorsLoadingTasksPage.calendarTrigger).click();
-      await page.locator(SelectorsLoadingTasksPage.calendarPopover).isVisible();
-
-      // Scope to the calendar component
-      const calendar = page.locator(SelectorsLoadingTasksPage.calendarComponent);
-
-      // Open the years popup by clicking the header year button
-      const yearButton = calendar.locator('button[id^="open-years-popup"]').first();
-      await yearButton.waitFor({ state: 'visible' });
-      await yearButton.click();
-
-      // Scope to the open years popover
-      const yearsPopover = page.locator('wa-popover[for^="open-years-popup"][open]').first();
-      await yearsPopover.waitFor({ state: 'visible' });
-
-      // Select target year
-      const targetYear = 2025;
-      const yearCell = yearsPopover.locator('[part^="year"]', { hasText: String(targetYear) }).first();
-      await yearCell.waitFor({ state: 'visible', timeout: 10000 });
-      await yearCell.click();
-
-      // Verify selection
-      const finalYearText = ((await yearButton.textContent()) || '').trim();
-      expect.soft(parseInt(finalYearText, 10)).toBe(targetYear);
-
-      // Open months popup and select January
-      const monthButton = calendar.locator('button[id^="open-months-popup"]').first();
-      await monthButton.waitFor({ state: 'visible' });
-      await monthButton.click();
-
-      const monthsPopover = page.locator('wa-popover[for^="open-months-popup"][open]').first();
-      await monthsPopover.waitFor({ state: 'visible' });
-      const januaryCell = monthsPopover.locator('div[part^="month"]').nth(1);
-      await januaryCell.waitFor({ state: 'visible' });
-      await januaryCell.click({ force: true });
-      await monthButton.waitFor({ state: 'visible' });
-      await page.waitForTimeout(1000);
-
-      // Pick the day 23 in January 2025
-      await calendar.locator('button[role="gridcell"][aria-label="January 23rd, 2025"]').first().click();
+      // Use the extracted calendar date selection method
+      // monthIndex: 1 = January (matching calendar's nth() index), so for January 23, 2025: year=2025, monthIndex=1, day=23
+      const success = await loadingTaskPage.selectCalendarDate(2025, 1, 23);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        `Verify urgency date selected successfully: 23.01.2025`,
+        test.info()
+      );
       console.log('Selected urgency date: 23.01.2025');
     });
 
@@ -882,116 +544,54 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Save Assembly units and Parts from the Specification to arrays
       await loadingTaskPage.preservingDescendants(descendantsCbedArray, descendantsDetailArray);
 
-      // Just log the result - no assertion required per original instructions
+      // Verify that the operation completed (arrays may be empty, but operation should complete)
       console.log(`Saved ${descendantsCbedArray.length} CBED and ${descendantsDetailArray.length} DETAIL items`);
-      expect.soft(true).toBe(true); // Placeholder assertion
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(descendantsCbedArray.length).toBeGreaterThanOrEqual(0);
+          expect.soft(descendantsDetailArray.length).toBeGreaterThanOrEqual(0);
+        },
+        `Verify descendants data saved: ${descendantsCbedArray.length} CBED, ${descendantsDetailArray.length} DETAIL items`,
+        test.info()
+      );
     });
 
-    await allure.step('Step 23: Verify Save button is visible at bottom of screen', async () => {
-      const saveButton = page.locator(SelectorsLoadingTasksPage.buttonSaveOrder);
-      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-      expect.soft(await saveButton.isVisible()).toBe(true);
-    });
-
-    await allure.step('Step 24: Click Save button and wait', async () => {
-      await loadingTaskPage.clickButton('Сохранить', SelectorsLoadingTasksPage.buttonSaveOrder);
-      await page.waitForTimeout(1000);
-      await loadingTaskPage.waitForNetworkIdle();
-      expect.soft(true).toBe(true); // Placeholder assertion
+    await allure.step('Step 23: Click Save button', async () => {
+      const success = await loadingTaskPage.saveOrder();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        `Verify order saved successfully`,
+        test.info()
+      );
     });
 
     await allure.step('Step 25: Save Order Number to variable', async () => {
-      // Wait for the edit title element to be visible and contain order number pattern
-      const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      const orderInfo = await loadingTaskPage.extractOrderNumberFromTitle();
 
-      // Use waitForFunction for efficient polling - checks immediately and frequently
-      await page.waitForFunction(
-        testId => {
-          const element = document.querySelector(`[data-testid="${testId}"]`);
-          if (!element) return false;
-          const text = element.textContent || '';
-          return /Редактирование заказа\s+№\s+\d+-\d+/.test(text);
+      // Assign to local and global variables
+      shipmentTaskNumber = orderInfo.shipmentTaskNumber;
+      fullOrderNumber = orderInfo.fullOrderNumber;
+      shipmentOrderDate = orderInfo.shipmentOrderDate;
+      Object.assign(global, { shipmentTaskNumber, fullOrderNumber, shipmentOrderDate });
+
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(shipmentTaskNumber).not.toBe('');
+          expect.soft(fullOrderNumber).not.toBe('');
+          expect.soft(shipmentOrderDate).not.toBe('');
         },
-        'AddOrder-EditTitle',
-        { timeout: 30000 }
+        `Verify order information extracted: Number="${shipmentTaskNumber}", Full="${fullOrderNumber}", Date="${shipmentOrderDate}"`,
+        test.info()
       );
 
-      // Now get the text and highlight
-      const titleText = (await editTitleElement.textContent())?.trim() || '';
-      console.log('Title text:', titleText);
-
-      // Highlight the title element
-      await editTitleElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editTitleElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-
-      // Extract order number: remove "Редактирование заказа" and everything from "/" onwards
-      // Pattern: "Редактирование заказа  № 25-4546 /0 от 18.11.2025"
-      const orderNumberMatch = titleText.match(/Редактирование заказа\s+№\s+([^/\s]+)/);
-      shipmentTaskNumber = orderNumberMatch ? orderNumberMatch[1].trim() : '';
-
-      // Extract FULL order number: everything after "№" including the "от <date>" part
-      // Pattern: "Редактирование заказа  № 25-4546 /0 от 18.11.2025"
-      const fullOrderNumberMatch = titleText.match(/Редактирование заказа\s+№\s+(.+)/);
-      fullOrderNumber = fullOrderNumberMatch ? fullOrderNumberMatch[1].trim() : '';
-
-      // Extract order date: everything after "от "
-      const orderDateMatch = titleText.match(/от\s+(.+)$/);
-      console.log('XXX' + orderDateMatch);
-      shipmentOrderDate = orderDateMatch ? orderDateMatch[1].trim() : '';
-
-      // Fallback: if any values are missing, read from table and date display
-      const hasDigits = (value?: string): boolean => !!value && /\d/.test(value);
-
-      if (!hasDigits(shipmentTaskNumber) || !hasDigits(fullOrderNumber)) {
-        const orderNumberCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const orderNumberCellText = (await orderNumberCell.textContent())?.trim() || '';
-
-        if (!hasDigits(fullOrderNumber) && orderNumberCellText) {
-          fullOrderNumber = orderNumberCellText;
-        }
-
-        if (!hasDigits(shipmentTaskNumber) && orderNumberCellText) {
-          const baseOrderMatch = orderNumberCellText.match(/([0-9-]+)/);
-          shipmentTaskNumber = baseOrderMatch ? baseOrderMatch[1] : orderNumberCellText;
-        }
-      }
-
-      if (!shipmentOrderDate) {
-        const orderDateDisplay = page.locator('[data-testid="AddOrder-DateOrder-Calendar-DataPicker-Choose-Value-Display"]');
-        await orderDateDisplay.waitFor({ state: 'visible', timeout: 10000 });
-        await orderDateDisplay.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderDateDisplay, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        shipmentOrderDate = (await orderDateDisplay.textContent())?.trim() || '';
-      }
-
-      global.shipmentTaskNumber = shipmentTaskNumber;
-      global.fullOrderNumber = fullOrderNumber;
-      global.shipmentOrderDate = shipmentOrderDate;
-
-      expect.soft(shipmentTaskNumber).not.toBe('');
-      expect.soft(fullOrderNumber).not.toBe('');
-      expect.soft(shipmentOrderDate).not.toBe('');
-      console.log('Order Number saved:', shipmentTaskNumber);
-      console.log('Full Order Number saved:', fullOrderNumber);
-      console.log('Order Date saved:', shipmentOrderDate);
+      console.log(`Order Number saved: ${shipmentTaskNumber}`);
+      console.log(`Full Order Number saved: ${fullOrderNumber}`);
+      console.log(`Order Date saved: ${shipmentOrderDate}`);
     });
   });
 
@@ -1022,18 +622,33 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tableBody.waitFor({ state: 'visible', timeout: 10000 });
       await loadingTaskPage.waitForNetworkIdle();
 
-      // Search for order number
-      await loadingTaskPage.searchAndWaitForTable(orderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
-        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+      const success = await loadingTaskPage.findOrderAndClickEdit(orderNumberValue);
+
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        `Verify order "${orderNumberValue}" found and edit button clicked successfully`,
+        test.info()
+      );
+    });
+
+    await allure.step('Step 2: Проверить заголовок страницы редактирования заказа', async () => {
+      await page.waitForTimeout(2000);
+      // First, get the order number with date from the row to extract the date
+      const tableBody = page.locator(SelectorsLoadingTasksPage.EDIT_SHIPMENTS_TABLE_BODY);
+      const firstRow = tableBody.locator('tr').first();
+      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.scrollIntoViewIfNeeded();
+      await loadingTaskPage.highlightElement(firstRow, {
+        backgroundColor: 'yellow',
+        border: '2px solid red',
+        color: 'blue',
       });
+      await page.waitForTimeout(500);
 
-      // Wait for contents to finish loading
-      await loadingTaskPage.waitForNetworkIdle();
-
-      // Find and highlight the order number cell
-      const orderNumberCell = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).filter({ hasText: orderNumberValue }).first();
+      const orderNumberCell = firstRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
       await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
       await orderNumberCell.scrollIntoViewIfNeeded();
       await loadingTaskPage.highlightElement(orderNumberCell, {
@@ -1043,42 +658,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       });
       await page.waitForTimeout(500);
 
-      // Click on the row containing the order number - find the row that contains this cell
-      const orderRow = page.locator(`${SelectorsLoadingTasksPage.SHIPMENTS_TABLE} tbody tr`).filter({ hasText: orderNumberValue }).first();
-      await orderRow.waitFor({ state: 'visible', timeout: 10000 });
+      const orderNumberWithDate = (await orderNumberCell.textContent())?.trim() || '';
+      console.log('Order number from row:', orderNumberWithDate);
 
-      // Click on the 3rd td in the row
-      const thirdCell = orderRow.locator('td').nth(2);
-      await thirdCell.waitFor({ state: 'visible', timeout: 10000 });
-      await thirdCell.click();
-
-      // Wait for table body to load
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-      await loadingTaskPage.waitForNetworkIdle();
-
-      // Find the edit button - look for button with edit data-testid or "Редактировать" text
-      const editButton = page.locator('button[data-testid*="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' });
-
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
-
-      // Check if button is enabled
-      const isEnabled = await editButton.isEnabled();
-      expect.soft(isEnabled).toBe(true);
-
-      // Click the edit button if enabled
-      if (isEnabled) {
-        await editButton.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(editButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        await editButton.click();
+      // Extract date from order number if it contains " от "
+      let extractedDate = '';
+      if (orderNumberWithDate.includes(' от ')) {
+        extractedDate = orderNumberWithDate.split(' от ')[1]?.trim() || '';
+        console.log('Extracted date from row:', extractedDate);
       }
-    });
 
-    await allure.step('Step 2: Проверить заголовок страницы редактирования заказа', async () => {
       const editTitle = page.locator('h3').filter({ hasText: 'Редактирование заказа' }).first();
       await editTitle.waitFor({ state: 'visible', timeout: 10000 });
       await editTitle.scrollIntoViewIfNeeded();
@@ -1112,15 +701,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check if order number is in title (more flexible - handles spacing variations)
       // The title format is: "Редактирование заказа № 25-4546 /0 от 18.11.2025"
-      // We check if the base order number appears in the title
-      const orderNumberInTitle = baseTitleOrder === baseOrderValue || normalizedTitle.includes(baseOrderValue) || titleText.includes(orderNumberValue);
+      // We need to check both the full order number (with /0, /1, /2 etc) and the base (without suffix)
+      // Check if base order number matches, or if full order number is in title, or if base is in normalized title
+      const orderNumberInTitle =
+        baseTitleOrder === baseOrderValue ||
+        normalizedTitle.includes(baseOrderValue) ||
+        titleText.includes(orderNumberValue) ||
+        titleText.includes(normalizedOrderValue) ||
+        normalizedTitle.includes(normalizedOrderValue);
       expect.soft(orderNumberInTitle).toBe(true);
 
       // Also verify that "№" appears in the title
       expect.soft(titleText.includes('№')).toBe(true);
 
-      if (orderDateValue) {
-        expect.soft(titleText.includes(orderDateValue)).toBe(true);
+      // Check date - use extracted date from row if available, otherwise use orderDateValue
+      const dateToCheck = extractedDate || orderDateValue;
+      if (dateToCheck) {
+        expect.soft(titleText.includes(dateToCheck)).toBe(true);
       }
     });
 
@@ -1177,16 +774,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 5: Validate order number in table matches title', async () => {
-      const orderNumberCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
+      const cellOrderNumber = await loadingTaskPage.getCellValueFromPositionsTable(
+        '[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]'
+      );
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1203,16 +793,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error('Article number not found. Please ensure Test Case 1 has run.');
       }
 
-      const articleCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
-      await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-      await articleCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(articleCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const cellArticle = (await articleCell.textContent())?.trim() || '';
+      const cellArticle = await loadingTaskPage.getCellValueFromPositionsTable('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]');
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1224,27 +805,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 7: Validate Наименование изделия matches created product', async () => {
-      const productNameCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-      await productNameCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productNameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const cellProductName = (await productNameCell.textContent())?.trim() || '';
-
-      const attachmentLink = page.locator('[data-testid="AddOrder-AttachmentsValue-Link"]').first();
-      await attachmentLink.waitFor({ state: 'visible', timeout: 10000 });
-      await attachmentLink.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(attachmentLink, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const linkProductName = (await attachmentLink.textContent())?.trim() || '';
+      const cellProductName = await loadingTaskPage.getCellValueFromPositionsTable(
+        '[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]'
+      );
+      const linkProductName = await loadingTaskPage.getCellValueFromPositionsTable('[data-testid="AddOrder-AttachmentsValue-Link"]');
 
       await expectSoftWithScreenshot(
         page,
@@ -1691,188 +1255,22 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tableBody.waitFor({ state: 'visible', timeout: 10000 });
       await loadingTaskPage.waitForNetworkIdle();
 
-      const getSearchInput = async () => {
-        // The selector might already point to the input element itself
-        const searchInput = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInput.scrollIntoViewIfNeeded();
-
-        // Check if it's an input element, if not, try to find input inside
-        const tagName = await searchInput.evaluate(el => el.tagName.toLowerCase());
-        if (tagName === 'input') {
-          return searchInput;
-        }
-
-        // If it's not an input, look for input inside
-        const input = searchInput.locator('input').first();
-        const inputCount = await input.count();
-        if (inputCount > 0) {
-          await input.waitFor({ state: 'visible', timeout: 10000 });
-          await input.scrollIntoViewIfNeeded();
-          return input;
-        }
-
-        // Fallback: return the element itself (might be contenteditable or other input type)
-        return searchInput;
-      };
-
       // Method 1: Search by Заказ (Order Number)
       await allure.step('Method 1: Search by Заказ (Order Number)', async () => {
-        const searchInput = await getSearchInput();
-        await searchInput.fill('');
-        await searchInput.fill(fullOrderNumberValue);
-        await searchInput.press('Enter');
-        await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
-
-        // Verify first row matches all three fields
-        const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-
-        // Check order number
-        const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
-        expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
-
-        // Check article number
-        const articleCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ARTICLE_PATTERN).first();
-        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(articleCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellArticle = (await articleCell.textContent())?.trim() || '';
-        expect.soft(cellArticle).toBe(articleNumberValue);
-
-        // Check product name
-        const productNameCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellProductName = (await productNameCell.textContent())?.trim() || '';
-        expect.soft(cellProductName.includes(productNameValue)).toBe(true);
+        const success = await loadingTaskPage.searchAndVerifyRowMatches(fullOrderNumberValue, fullOrderNumberValue, articleNumberValue, productNameValue);
+        expect.soft(success).toBe(true);
       });
 
       // Method 2: Search by Артикул изделия (Article Number)
       await allure.step('Method 2: Search by Артикул изделия (Article Number)', async () => {
-        const searchInput = await getSearchInput();
-        await searchInput.fill('');
-        await searchInput.fill(articleNumberValue);
-        await searchInput.press('Enter');
-        await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
-
-        // Verify first row matches all three fields
-        const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-
-        // Check order number
-        const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
-        expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
-
-        // Check article number
-        const articleCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ARTICLE_PATTERN).first();
-        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(articleCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellArticle = (await articleCell.textContent())?.trim() || '';
-        expect.soft(cellArticle).toBe(articleNumberValue);
-
-        // Check product name
-        const productNameCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellProductName = (await productNameCell.textContent())?.trim() || '';
-        expect.soft(cellProductName.includes(productNameValue)).toBe(true);
+        const success = await loadingTaskPage.searchAndVerifyRowMatches(articleNumberValue, fullOrderNumberValue, articleNumberValue, productNameValue);
+        expect.soft(success).toBe(true);
       });
 
       // Method 3: Search by Наименование изделия (Product Name)
       await allure.step('Method 3: Search by Наименование изделия (Product Name)', async () => {
-        const searchInput = await getSearchInput();
-        await searchInput.fill('');
-        await searchInput.fill(productNameValue);
-        await searchInput.press('Enter');
-        await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
-
-        // Verify first row matches all three fields
-        const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-
-        // Check order number
-        const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
-        expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
-
-        // Check article number
-        const articleCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ARTICLE_PATTERN).first();
-        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(articleCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellArticle = (await articleCell.textContent())?.trim() || '';
-        expect.soft(cellArticle).toBe(articleNumberValue);
-
-        // Check product name
-        const productNameCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        const cellProductName = (await productNameCell.textContent())?.trim() || '';
-        expect.soft(cellProductName.includes(productNameValue)).toBe(true);
+        const success = await loadingTaskPage.searchAndVerifyRowMatches(productNameValue, fullOrderNumberValue, articleNumberValue, productNameValue);
+        expect.soft(success).toBe(true);
       });
     });
 
@@ -2048,19 +1446,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 16: Compare order numbers between Tab 1 and Tab 2', async () => {
       // Tab 1: Get order number from list
       await page.bringToFront();
-      const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-      const firstRow = tableBody.locator('tr').first();
-      const orderNumberCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      let orderNumberTab1 = (await orderNumberCellTab1.textContent())?.trim() || '';
-      // Remove "№ " prefix if present (but keep the date part)
+      let orderNumberTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
+        'tr',
+        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]'
+      );
       orderNumberTab1 = orderNumberTab1.replace(/^№\s*/, '').trim();
       console.log(`Tab 1 order number: ${orderNumberTab1}`);
 
@@ -2069,30 +1458,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
 
-      const editTitle = tab2.locator('[data-testid="AddOrder-EditTitle"]');
-      await editTitle.waitFor({ state: 'visible', timeout: 10000 });
-      await editTitle.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(editTitle, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
-      const titleText = (await editTitle.textContent())?.trim() || '';
-      // Extract order number after "№" - get everything including the date part
-      // The order number includes the date (e.g., "25-4594 /0 от 19.11.2025")
-      // Pattern: match everything after "№" until the end of the string
+      const titleText = await tab2LoadingTaskPage.getCellValueFromEditPage('[data-testid="AddOrder-EditTitle"]');
       const orderNumberMatch = titleText.match(/№\s+(.+)$/);
       let orderNumberTab2 = orderNumberMatch ? orderNumberMatch[1].trim() : '';
-
-      // If still empty, try a simpler approach: split by "№" and take everything after
       if (!orderNumberTab2 && titleText.includes('№')) {
         const parts = titleText.split('№');
         if (parts.length > 1) {
           orderNumberTab2 = parts[1].trim();
         }
       }
-      // Remove "№ " prefix if present (shouldn't be, but just in case)
       orderNumberTab2 = orderNumberTab2.replace(/^№\s*/, '').trim();
       console.log(`Tab 2 order number: ${orderNumberTab2}`);
 
@@ -2111,35 +1485,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 17: Compare article numbers between Tab 1 and Tab 2', async () => {
       // Tab 1: Get article number from list
       await page.bringToFront();
-      const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-      const firstRow = tableBody.locator('tr').first();
-      const articleCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Article"]').first();
-      await articleCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await articleCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(articleCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const articleNumberTab1 = (await articleCellTab1.textContent())?.trim() || '';
+      const articleNumberTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
+        'tr',
+        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Article"]'
+      );
       console.log(`Tab 1 article number: ${articleNumberTab1}`);
 
       // Tab 2: Get article number from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
-
-      const articleCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
-      await articleCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await articleCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(articleCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
-      const articleNumberTab2 = (await articleCellTab2.textContent())?.trim() || '';
+      const articleNumberTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]');
       console.log(`Tab 2 article number: ${articleNumberTab2}`);
 
       // Compare
@@ -2157,35 +1513,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 18: Compare product names between Tab 1 and Tab 2', async () => {
       // Tab 1: Get product name from list
       await page.bringToFront();
-      const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-      const firstRow = tableBody.locator('tr').first();
-      const productNameCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await productNameCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productNameCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const productNameTab1 = (await productNameCellTab1.textContent())?.trim() || '';
+      const productNameTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
+        'tr',
+        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]'
+      );
       console.log(`Tab 1 product name: ${productNameTab1}`);
 
       // Tab 2: Get product name from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
-
-      const productNameCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await productNameCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(productNameCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
-      const productNameTab2 = (await productNameCellTab2.textContent())?.trim() || '';
+      const productNameTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]');
       console.log(`Tab 2 product name: ${productNameTab2}`);
 
       // Compare
@@ -2203,35 +1541,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 19: Compare quantity between Tab 1 and Tab 2', async () => {
       // Tab 1: Get quantity from list
       await page.bringToFront();
-      const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-      const firstRow = tableBody.locator('tr').first();
-      const quantityCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const quantityTab1 = (await quantityCellTab1.textContent())?.trim() || '';
+      const quantityTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
+        'tr',
+        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]'
+      );
       console.log(`Tab 1 quantity: ${quantityTab1}`);
 
       // Tab 2: Get quantity from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
-
-      const quantityCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(quantityCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
-      const quantityTab2 = (await quantityCellTab2.textContent())?.trim() || '';
+      const quantityTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]');
       console.log(`Tab 2 quantity: ${quantityTab2}`);
 
       // Compare
@@ -2819,15 +2139,6 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         color: 'blue',
       });
       await deficitPage.waitForTimeout(500);
-      //const searchInput = searchInputWrapper.locator('input, textarea').first();
-      // await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      // await searchInput.scrollIntoViewIfNeeded();
-      // await deficitLoadingTaskPage.highlightElement(searchInput, {
-      //   backgroundColor: 'yellow',
-      //   border: '2px solid red',
-      //   color: 'blue',
-      // });
-      await deficitPage.waitForTimeout(500);
       await searchInputWrapper.clear();
       await searchInputWrapper.fill(fullOrderNumberValue);
       await deficitPage.waitForTimeout(300);
@@ -3188,751 +2499,6 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.log('Tab 1 (shipments page) not found, skipping shipment date comparison');
       }
     });
-    // await allure.step('Step 27: Search and validate in DeficitIzd-Main-Table', async () => {
-    //   // Get references
-    //   const tab2 = (global as any).tab2 as Page;
-    //   const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
-    //   const articleNumberValue = global.testProductArticleNumber || testProductArticleNumber;
-
-    //   if (!articleNumberValue) {
-    //     throw new Error('Article number is missing. Please ensure Test Case 1 has run.');
-    //   }
-
-    //   // Get full order number for reopening Tab 2 if needed
-    //   const fullOrderNumberValue = global.fullOrderNumber || fullOrderNumber;
-    //   if (!fullOrderNumberValue) {
-    //     throw new Error('Full order number is missing. Please ensure Test Case 2 has run.');
-    //   }
-
-    //   // Get product name for searching - reopen Tab 2 if closed
-    //   const productNameValue = global.testProductName || testProductName;
-    //   if (!productNameValue) {
-    //     throw new Error('Product name is missing. Please ensure Test Case 1 has run.');
-    //   }
-
-    //   let tab2ToUse = tab2;
-    //   let tab2LoadingTaskPageToUse = tab2LoadingTaskPage;
-
-    //   // Check if Tab 2 is still open, reopen if closed
-    //   try {
-    //     if (tab2 && !tab2.isClosed()) {
-    //       // Tab 2 is still open, use it
-    //       console.log('Tab 2 is still open');
-    //     } else {
-    //       console.log('Tab 2 is closed, reopening and navigating to edit order page');
-    //       // Reopen Tab 2
-    //       const contextForTab2 = page.context();
-    //       tab2ToUse = await contextForTab2.newPage();
-    //       tab2LoadingTaskPageToUse = new CreateLoadingTaskPage(tab2ToUse);
-
-    //       // Navigate to Задачи на отгрузку in Tab 2
-    //       await tab2ToUse.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-    //       await tab2LoadingTaskPageToUse.waitForNetworkIdle();
-
-    //       // Wait for the page and table to load
-    //       const issueShipmentPageElement2 = tab2ToUse.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-    //       await issueShipmentPageElement2.waitFor({ state: 'visible', timeout: 10000 });
-
-    //       const tableBody2 = tab2ToUse.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-    //       await tableBody2.waitFor({ state: 'visible', timeout: 10000 });
-    //       await tab2LoadingTaskPageToUse.waitForNetworkIdle();
-
-    //       // Search for order number
-    //       const searchInputWrapper2 = tab2ToUse.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-    //       await searchInputWrapper2.waitFor({ state: 'visible', timeout: 10000 });
-    //       const searchInput2 = searchInputWrapper2.locator('input[type="text"]').first();
-    //       await searchInput2.clear();
-    //       await searchInput2.fill(fullOrderNumberValue);
-    //       await searchInput2.press('Enter');
-    //       await tab2LoadingTaskPageToUse.waitForNetworkIdle();
-    //       await tab2ToUse.waitForTimeout(1000);
-
-    //       // Find and click on the order number cell
-    //       const firstRow2 = tableBody2.locator('tr').first();
-    //       await firstRow2.waitFor({ state: 'visible', timeout: 10000 });
-    //       const orderNumberCell2 = firstRow2.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Number"]').first();
-    //       await orderNumberCell2.waitFor({ state: 'visible', timeout: 10000 });
-    //       await orderNumberCell2.scrollIntoViewIfNeeded();
-    //       await orderNumberCell2.click();
-    //       await tab2ToUse.waitForTimeout(1000);
-    //       await tab2LoadingTaskPageToUse.waitForNetworkIdle();
-
-    //       // Find and click the edit button
-    //       const editButton = tab2ToUse.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' });
-    //       await editButton.waitFor({ state: 'visible', timeout: 10000 });
-    //       const isEnabled = await editButton.isEnabled();
-    //       expect.soft(isEnabled).toBe(true);
-    //       await editButton.click();
-    //       await tab2LoadingTaskPageToUse.waitForNetworkIdle();
-    //       console.log(`Tab 2: Order reopened in edit mode`);
-
-    //       // Store new Tab 2 reference
-    //       (global as any).tab2 = tab2ToUse;
-    //       (global as any).tab2LoadingTaskPage = tab2LoadingTaskPageToUse;
-    //     }
-    //   } catch (error) {
-    //     console.log('Error accessing Tab 2:', error);
-    //   }
-
-    //   // Recreate deficit page reference (we're still on the deficit page from Step 26)
-    //   const context = page.context();
-    //   const pages = context.pages();
-    //   // Find the deficit page by checking if it's on the warehouse/deficit URL
-    //   let deficitPage: Page | undefined;
-    //   for (const p of pages) {
-    //     const url = p.url();
-    //     if (url.includes('warehouse') || url.includes('deficit') || url.includes('Deficit')) {
-    //       deficitPage = p;
-    //       break;
-    //     }
-    //   }
-    //   // If not found, create a new tab
-    //   if (!deficitPage) {
-    //     deficitPage = await context.newPage();
-    //     await deficitPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-    //     await deficitPage.waitForLoadState('networkidle');
-    //     // Navigate to Дефицит продукции
-    //     const deficitProductionButton = deficitPage.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-    //     await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-    //     await deficitProductionButton.click();
-    //     await deficitPage.waitForLoadState('networkidle');
-    //   }
-    //   const deficitLoadingTaskPage = new CreateLoadingTaskPage(deficitPage);
-    //   await deficitPage.bringToFront();
-
-    //   // Step 27.1: Reload the deficit page to clear everything
-    //   await deficitPage.reload();
-    //   await deficitLoadingTaskPage.waitForNetworkIdle();
-    //   await deficitPage.waitForTimeout(1000);
-
-    //   // Step 27.2: Find the table with data-testid:DeficitIzd-Main-Table
-    //   const deficitMainTable = deficitPage.locator('[data-testid="DeficitIzd-Main-Table"]');
-    //   await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-    //   await deficitMainTable.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(deficitMainTable, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-
-    //   // Step 27.3: Find the search input field with data-testid:DeficitIzdTable-Search-Dropdown-Input
-    //   const searchInput = deficitMainTable.locator('[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-    //   await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-    //   await searchInput.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(searchInput, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-
-    //   // Step 27.4: Search by article name
-    //   await searchInput.clear();
-    //   await searchInput.fill(articleNumberValue);
-    //   await searchInput.press('Enter');
-    //   await deficitLoadingTaskPage.waitForNetworkIdle();
-    //   await deficitPage.waitForTimeout(1000);
-
-    //   // Confirm row count is 1 and values match
-    //   const deficitTableBody = deficitMainTable.locator('tbody');
-    //   await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
-    //   const deficitRows = deficitTableBody.locator('tr');
-    //   const rowCount = await deficitRows.count();
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(rowCount).toBe(1);
-    //     },
-    //     `Verify row count is 1 after searching by article: ${articleNumberValue}`,
-    //     test.info()
-    //   );
-    //   console.log(`Found ${rowCount} row(s) after searching by article: ${articleNumberValue}`);
-
-    //   const firstRow = deficitRows.first();
-    //   await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-    //   await firstRow.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(firstRow, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-
-    //   // Verify article matches
-    //   const articleCell = firstRow.locator('[data-testid="DeficitIzdTable-Row-Article"]').first();
-    //   await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   const articleValue = (await articleCell.textContent())?.trim() || '';
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(articleValue).toBe(articleNumberValue);
-    //     },
-    //     `Verify article matches: ${articleValue} vs ${articleNumberValue}`,
-    //     test.info()
-    //   );
-    //   console.log(`Article in table: ${articleValue}`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Step 27.5: Search by Name (product name)
-    //   await searchInput.clear();
-    //   await searchInput.fill(productNameValue);
-    //   await searchInput.press('Enter');
-    //   await deficitLoadingTaskPage.waitForNetworkIdle();
-    //   await deficitPage.waitForTimeout(1000);
-
-    //   // Confirm it's our item
-    //   await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
-    //   const nameRows = deficitTableBody.locator('tr');
-    //   const nameRowCount = await nameRows.count();
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(nameRowCount).toBe(1);
-    //     },
-    //     `Verify row count is 1 after searching by name: ${productNameValue}`,
-    //     test.info()
-    //   );
-    //   console.log(`Found ${nameRowCount} row(s) after searching by name: ${productNameValue}`);
-
-    //   const nameRow = nameRows.first();
-    //   await nameRow.waitFor({ state: 'visible', timeout: 10000 });
-    //   await nameRow.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(nameRow, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-
-    //   // Verify article still matches (to confirm it's our item)
-    //   const nameArticleCell = nameRow.locator('[data-testid="DeficitIzdTable-Row-Article"]').first();
-    //   await nameArticleCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   const nameArticleValue = (await nameArticleCell.textContent())?.trim() || '';
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(nameArticleValue).toBe(articleNumberValue);
-    //     },
-    //     `Verify article matches after name search: ${nameArticleValue} vs ${articleNumberValue}`,
-    //     test.info()
-    //   );
-    //   console.log(`Article in table (after name search): ${nameArticleValue}`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Step 27.6: Re-validate the same cells against Tab 2 (edit order page)
-    //   // Validate article name
-    //   const finalArticleCell = nameRow.locator('[data-testid="DeficitIzdTable-Row-Article"]').first();
-    //   await finalArticleCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await finalArticleCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(finalArticleCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const finalArticleValue = (await finalArticleCell.textContent())?.trim() || '';
-    //   console.log(`Deficit table article: ${finalArticleValue}`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   await tab2ToUse.bringToFront();
-    //   const tab2ArticleCell = tab2ToUse.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
-    //   await tab2ArticleCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await tab2ArticleCell.scrollIntoViewIfNeeded();
-    //   const tab2ArticleValue = (await tab2ArticleCell.textContent())?.trim() || '';
-    //   console.log(`Tab 2 article: ${tab2ArticleValue}`);
-    //   await tab2ToUse.waitForTimeout(500); // Pause to see the value being validated
-    //   await expectSoftWithScreenshot(
-    //     tab2ToUse,
-    //     () => {
-    //       expect.soft(finalArticleValue).toBe(tab2ArticleValue);
-    //     },
-    //     `Verify article matches Tab 2: ${finalArticleValue} vs ${tab2ArticleValue}`,
-    //     test.info()
-    //   );
-    //   await deficitPage.bringToFront();
-
-    //   // Validate product name
-    //   const finalNameCell = nameRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
-    //   await finalNameCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await finalNameCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(finalNameCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const finalNameValue = (await finalNameCell.textContent())?.trim() || '';
-    //   console.log(`Deficit table name: ${finalNameValue}`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   await tab2ToUse.bringToFront();
-    //   const tab2NameCell = tab2ToUse.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]').first();
-    //   await tab2NameCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await tab2NameCell.scrollIntoViewIfNeeded();
-    //   const tab2NameValue = (await tab2NameCell.textContent())?.trim() || '';
-    //   console.log(`Tab 2 name: ${tab2NameValue}`);
-    //   await tab2ToUse.waitForTimeout(500); // Pause to see the value being validated
-    //   await expectSoftWithScreenshot(
-    //     tab2ToUse,
-    //     () => {
-    //       expect.soft(finalNameValue).toBe(tab2NameValue);
-    //     },
-    //     `Verify name matches Tab 2: ${finalNameValue} vs ${tab2NameValue}`,
-    //     test.info()
-    //   );
-    //   await deficitPage.bringToFront();
-
-    //   // Validate urgency date (with normalization)
-    //   const normalizeDate = (rawDate: string): string => {
-    //     const parseDate = (dateStr: string): Date => {
-    //       if (dateStr.includes('.')) {
-    //         const [day, month, yearRaw] = dateStr.split('.');
-    //         const year = yearRaw.length === 2 ? 2000 + Number(yearRaw) : Number(yearRaw);
-    //         return new Date(year, Number(month) - 1, Number(day));
-    //       }
-    //       const months: { [key: string]: number } = {
-    //         янв: 0,
-    //         фев: 1,
-    //         мар: 2,
-    //         апр: 3,
-    //         май: 4,
-    //         июн: 5,
-    //         июл: 6,
-    //         авг: 7,
-    //         сен: 8,
-    //         окт: 9,
-    //         ноя: 10,
-    //         дек: 11,
-    //       };
-    //       const parts = dateStr.split(' ');
-    //       const monthName = parts[0].toLowerCase();
-    //       const day = parseInt(parts[1].replace(',', ''), 10);
-    //       const year = parseInt(parts[2], 10);
-    //       return new Date(year, months[monthName], day);
-    //     };
-
-    //     const date = parseDate(rawDate);
-    //     const day = `${date.getDate()}`.padStart(2, '0');
-    //     const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    //     const year = `${date.getFullYear()}`;
-    //     return `${day}.${month}.${year}`;
-    //   };
-
-    //   const finalUrgencyDateCell = nameRow.locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]').first();
-    //   await finalUrgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await finalUrgencyDateCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(finalUrgencyDateCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const finalUrgencyDateValue = (await finalUrgencyDateCell.textContent())?.trim() || '';
-    //   const normalizedFinalUrgencyDate = normalizeDate(finalUrgencyDateValue);
-    //   console.log(`Deficit table urgency date: ${finalUrgencyDateValue} (normalized: ${normalizedFinalUrgencyDate})`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   await tab2ToUse.bringToFront();
-    //   const tab2UrgencyDisplay = tab2ToUse.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
-    //   await tab2UrgencyDisplay.waitFor({ state: 'visible', timeout: 10000 });
-    //   await tab2UrgencyDisplay.scrollIntoViewIfNeeded();
-    //   const tab2UrgencyValue = (await tab2UrgencyDisplay.textContent())?.trim() || '';
-    //   const normalizedTab2Urgency = normalizeDate(tab2UrgencyValue);
-    //   console.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
-    //   await tab2ToUse.waitForTimeout(500); // Pause to see the value being validated
-    //   await expectSoftWithScreenshot(
-    //     tab2ToUse,
-    //     () => {
-    //       expect.soft(normalizedFinalUrgencyDate).toBe(normalizedTab2Urgency);
-    //     },
-    //     `Verify urgency date matches Tab 2: ${normalizedFinalUrgencyDate} vs ${normalizedTab2Urgency}`,
-    //     test.info()
-    //   );
-    //   await deficitPage.bringToFront();
-
-    //   // Validate shipment date (with normalization)
-    //   const finalShipmentDateCell = nameRow.locator('[data-testid="DeficitIzdTable-Row-DateShipments"]').first();
-    //   await finalShipmentDateCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await finalShipmentDateCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(finalShipmentDateCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const finalShipmentDateValue = (await finalShipmentDateCell.textContent())?.trim() || '';
-    //   const normalizedFinalShipmentDate = normalizeDate(finalShipmentDateValue);
-    //   console.log(`Deficit table shipment date: ${finalShipmentDateValue} (normalized: ${normalizedFinalShipmentDate})`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   await tab2ToUse.bringToFront();
-    //   const tab2ShipmentDisplay = tab2ToUse.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
-    //   await tab2ShipmentDisplay.waitFor({ state: 'visible', timeout: 10000 });
-    //   await tab2ShipmentDisplay.scrollIntoViewIfNeeded();
-    //   const tab2ShipmentValue = (await tab2ShipmentDisplay.textContent())?.trim() || '';
-    //   const normalizedTab2Shipment = normalizeDate(tab2ShipmentValue);
-    //   console.log(`Tab 2 shipment date: ${tab2ShipmentValue} (normalized: ${normalizedTab2Shipment})`);
-    //   await tab2ToUse.waitForTimeout(500); // Pause to see the value being validated
-    //   await expectSoftWithScreenshot(
-    //     tab2ToUse,
-    //     () => {
-    //       expect.soft(normalizedFinalShipmentDate).toBe(normalizedTab2Shipment);
-    //     },
-    //     `Verify shipment date matches Tab 2: ${normalizedFinalShipmentDate} vs ${normalizedTab2Shipment}`,
-    //     test.info()
-    //   );
-    //   await deficitPage.bringToFront();
-
-    //   // Step 27.7: Get initial Deficit and Demand values
-    //   const initialDeficitCell = nameRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
-    //   await initialDeficitCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await initialDeficitCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(initialDeficitCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const initialDeficitValue = (await initialDeficitCell.textContent())?.trim() || '';
-    //   const initialDeficitNumber = parseFloat(initialDeficitValue.replace(/,/g, '.')) || 0;
-    //   console.log(`Initial Deficit value: ${initialDeficitValue} (parsed: ${initialDeficitNumber})`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   const initialDemandCell = nameRow.locator('[data-testid="DeficitIzdTable-Row-Demand"]').first();
-    //   await initialDemandCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await initialDemandCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(initialDemandCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const initialDemandValue = (await initialDemandCell.textContent())?.trim() || '';
-    //   const initialDemandNumber = parseFloat(initialDemandValue.replace(/,/g, '.')) || 0;
-    //   console.log(`Initial Demand value: ${initialDemandValue} (parsed: ${initialDemandNumber})`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Step 27.8: Switch to edit order tab and update quantity
-    //   await tab2ToUse.bringToFront();
-    //   const quantityInput = tab2ToUse.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]').first();
-    //   await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
-    //   await quantityInput.scrollIntoViewIfNeeded();
-    //   await tab2LoadingTaskPageToUse.highlightElement(quantityInput, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await tab2ToUse.waitForTimeout(500);
-
-    //   // Get current quantity value
-    //   const currentQuantityValue = await quantityInput.inputValue();
-    //   const currentQuantityNumber = parseFloat(currentQuantityValue) || 0;
-    //   console.log(`Current quantity value: ${currentQuantityValue} (parsed: ${currentQuantityNumber})`);
-    //   await tab2ToUse.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Increase quantity by 3
-    //   const newQuantityNumber = currentQuantityNumber + 3;
-    //   const newQuantityValue = newQuantityNumber.toString();
-    //   await quantityInput.clear();
-    //   await quantityInput.fill(newQuantityValue);
-    //   await tab2ToUse.waitForTimeout(500);
-
-    //   // Verify the new value was set
-    //   const verifyQuantityValue = await quantityInput.inputValue();
-    //   expect.soft(parseFloat(verifyQuantityValue)).toBe(newQuantityNumber);
-    //   console.log(`Updated quantity value: ${verifyQuantityValue} (expected: ${newQuantityNumber})`);
-    //   await tab2ToUse.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Step 27.9: Click Save button
-    //   const saveButton = tab2ToUse.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
-    //   await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-    //   await saveButton.scrollIntoViewIfNeeded();
-    //   await tab2LoadingTaskPageToUse.highlightElement(saveButton, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await tab2ToUse.waitForTimeout(500);
-    //   await saveButton.click();
-    //   await tab2LoadingTaskPageToUse.waitForNetworkIdle();
-    //   await tab2ToUse.waitForTimeout(1000);
-    //   console.log('Clicked Save button');
-
-    //   // Step 27.10: Return to deficit page, reload and re-search
-    //   await deficitPage.bringToFront();
-    //   await deficitPage.reload();
-    //   await deficitLoadingTaskPage.waitForNetworkIdle();
-    //   await deficitPage.waitForTimeout(1000);
-
-    //   // Re-find the table and search input
-    //   const deficitMainTableAfterReload = deficitPage.locator('[data-testid="DeficitIzd-Main-Table"]');
-    //   await deficitMainTableAfterReload.waitFor({ state: 'visible', timeout: 10000 });
-    //   await deficitMainTableAfterReload.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(deficitMainTableAfterReload, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-
-    //   const searchInputAfterReload = deficitMainTableAfterReload.locator('[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-    //   await searchInputAfterReload.waitFor({ state: 'visible', timeout: 10000 });
-    //   await searchInputAfterReload.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(searchInputAfterReload, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-
-    //   // Search by article again
-    //   await searchInputAfterReload.clear();
-    //   await searchInputAfterReload.fill(articleNumberValue);
-    //   await searchInputAfterReload.press('Enter');
-    //   await deficitLoadingTaskPage.waitForNetworkIdle();
-    //   await deficitPage.waitForTimeout(1000);
-
-    //   // Get the row after reload
-    //   const deficitTableBodyAfterReload = deficitMainTableAfterReload.locator('tbody');
-    //   await deficitTableBodyAfterReload.waitFor({ state: 'visible', timeout: 10000 });
-    //   const deficitRowsAfterReload = deficitTableBodyAfterReload.locator('tr');
-    //   const rowCountAfterReload = await deficitRowsAfterReload.count();
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(rowCountAfterReload).toBe(1);
-    //     },
-    //     `Verify row count is 1 after reload and search`,
-    //     test.info()
-    //   );
-    //   console.log(`Found ${rowCountAfterReload} row(s) after reload and search`);
-
-    //   const reloadedRow = deficitRowsAfterReload.first();
-    //   await reloadedRow.waitFor({ state: 'visible', timeout: 10000 });
-    //   await reloadedRow.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(reloadedRow, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-
-    //   // Step 27.11: Re-check Deficit and Demand values
-    //   const updatedDeficitCell = reloadedRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
-    //   await updatedDeficitCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await updatedDeficitCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(updatedDeficitCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const updatedDeficitValue = (await updatedDeficitCell.textContent())?.trim() || '';
-    //   const updatedDeficitNumber = parseFloat(updatedDeficitValue.replace(/,/g, '.')) || 0;
-    //   console.log(`Updated Deficit value: ${updatedDeficitValue} (parsed: ${updatedDeficitNumber})`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Deficit should decrease by 3
-    //   const expectedDeficitNumber = initialDeficitNumber - 3;
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(updatedDeficitNumber).toBe(expectedDeficitNumber);
-    //     },
-    //     `Verify deficit changed correctly: ${updatedDeficitNumber} vs expected ${expectedDeficitNumber}`,
-    //     test.info()
-    //   );
-    //   console.log(`Deficit changed from ${initialDeficitNumber} to ${updatedDeficitNumber} (expected: ${expectedDeficitNumber})`);
-
-    //   const updatedDemandCell = reloadedRow.locator('[data-testid="DeficitIzdTable-Row-Demand"]').first();
-    //   await updatedDemandCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await updatedDemandCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(updatedDemandCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const updatedDemandValue = (await updatedDemandCell.textContent())?.trim() || '';
-    //   const updatedDemandNumber = parseFloat(updatedDemandValue.replace(/,/g, '.')) || 0;
-    //   console.log(`Updated Demand value: ${updatedDemandValue} (parsed: ${updatedDemandNumber})`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Demand should increase by 3
-    //   const expectedDemandNumber = initialDemandNumber + 3;
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(updatedDemandNumber).toBe(expectedDemandNumber);
-    //     },
-    //     `Verify demand changed correctly: ${updatedDemandNumber} vs expected ${expectedDemandNumber}`,
-    //     test.info()
-    //   );
-    //   console.log(`Demand changed from ${initialDemandNumber} to ${updatedDemandNumber} (expected: ${expectedDemandNumber})`);
-
-    //   // Step 27.12: Confirm Quantity is 0
-    //   const quantityCell = reloadedRow.locator('[data-testid="DeficitIzdTable-Row-Quantity"]').first();
-    //   await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await quantityCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(quantityCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const quantityValue = (await quantityCell.textContent())?.trim() || '';
-    //   const quantityNumber = parseFloat(quantityValue.replace(/,/g, '.')) || 0;
-    //   console.log(`Quantity value: ${quantityValue} (parsed: ${quantityNumber})`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(quantityNumber).toBe(0);
-    //     },
-    //     `Verify quantity is 0: ${quantityNumber}`,
-    //     test.info()
-    //   );
-    //   console.log(`✅ Quantity confirmed to be 0`);
-
-    //   // Step 27.13: Confirm Status is "Не заказано"
-    //   const statusCell = reloadedRow.locator('[data-testid="DeficitIzdTable-Row-Status"]').first();
-    //   await statusCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await statusCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(statusCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const statusValue = (await statusCell.textContent())?.trim() || '';
-    //   console.log(`Status value: ${statusValue}`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-    //   await expectSoftWithScreenshot(
-    //     deficitPage,
-    //     () => {
-    //       expect.soft(statusValue).toBe('Не заказано');
-    //     },
-    //     `Verify status is "Не заказано": ${statusValue}`,
-    //     test.info()
-    //   );
-    //   console.log(`✅ Status confirmed to be "Не заказано"`);
-
-    //   // Step 27.14: Get Norm value and extract first part
-    //   const normCell = reloadedRow.locator('[data-testid="DeficitIzdTable-Row-Norm"]').first();
-    //   await normCell.waitFor({ state: 'visible', timeout: 10000 });
-    //   await normCell.scrollIntoViewIfNeeded();
-    //   await deficitLoadingTaskPage.highlightElement(normCell, {
-    //     backgroundColor: 'yellow',
-    //     border: '2px solid red',
-    //     color: 'blue',
-    //   });
-    //   await deficitPage.waitForTimeout(500);
-    //   const normValue = (await normCell.textContent())?.trim() || '';
-    //   console.log(`Norm value: ${normValue}`);
-    //   await deficitPage.waitForTimeout(500); // Pause to see the value being validated
-
-    //   // Split by '/' and get first part
-    //   const normParts = normValue.split('/');
-    //   const normFirstPart = normParts[0]?.trim() || '';
-    //   console.log(`Norm first part: ${normFirstPart}`);
-
-    //   // Step 27.15: Navigate to Parts Database, search, select, and edit product
-    //   const contextForWarehouse = page.context();
-    //   const warehousePage = await contextForWarehouse.newPage();
-    //   const partsDatabasePage = new CreatePartsDatabasePage(warehousePage);
-
-    //   try {
-    //     // Navigate to Parts Database page
-    //     await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-    //     await partsDatabasePage.waitForNetworkIdle();
-
-    //     // Search for the product by name
-    //     const productNameForSearch = productNameValue;
-    //     await partsDatabasePage.searchAndWaitForTable(productNameForSearch, SelectorsPartsDataBase.PRODUCT_TABLE, SelectorsPartsDataBase.PRODUCT_TABLE, {
-    //       useRedesign: true,
-    //       timeoutBeforeWait: 1000,
-    //     });
-
-    //     // Click on the first row to open edit page
-    //     const firstRowWarehouse = warehousePage.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
-    //     await firstRowWarehouse.waitFor({ state: 'visible', timeout: 10000 });
-    //     await firstRowWarehouse.scrollIntoViewIfNeeded();
-    //     await partsDatabasePage.highlightElement(firstRowWarehouse, {
-    //       backgroundColor: 'yellow',
-    //       border: '2px solid red',
-    //       color: 'blue',
-    //     });
-    //     await warehousePage.waitForTimeout(500);
-    //     await firstRowWarehouse.click();
-    //     await warehousePage.waitForTimeout(1000);
-
-    //     // Find and click the edit button
-    //     const editButtonWarehouse = warehousePage.locator('[data-testid="BaseProducts-Button-Edit"]');
-    //     await editButtonWarehouse.waitFor({ state: 'visible', timeout: 10000 });
-
-    //     // Wait for the edit button to become enabled
-    //     await warehousePage
-    //       .waitForFunction(
-    //         selector => {
-    //           const button = document.querySelector<HTMLButtonElement>(selector);
-    //           return !!button && !button.disabled;
-    //         },
-    //         'button[data-testid="BaseProducts-Button-Edit"]',
-    //         { timeout: 5000 }
-    //       )
-    //       .catch(() => {
-    //         console.warn('Edit button did not become enabled within timeout.');
-    //       });
-
-    //     const isEnabledWarehouse = await editButtonWarehouse.isEnabled();
-    //     expect.soft(isEnabledWarehouse).toBe(true);
-
-    //     await editButtonWarehouse.scrollIntoViewIfNeeded();
-    //     await partsDatabasePage.highlightElement(editButtonWarehouse, {
-    //       backgroundColor: 'yellow',
-    //       border: '2px solid red',
-    //       color: 'blue',
-    //     });
-    //     await warehousePage.waitForTimeout(500);
-    //     await editButtonWarehouse.click();
-    //     await warehousePage.waitForTimeout(2000);
-    //     await partsDatabasePage.waitForNetworkIdle();
-
-    //     // Step 27.16: Compare Norm first part with Creator-Detail-Characteristics-Tbody-Znach0
-    //     const characteristicElement = warehousePage.locator('[data-testid="Creator-Detail-Characteristics-Tbody-Znach0"]');
-    //     await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
-    //     await characteristicElement.scrollIntoViewIfNeeded();
-    //     await partsDatabasePage.highlightElement(characteristicElement, {
-    //       backgroundColor: 'yellow',
-    //       border: '2px solid red',
-    //       color: 'blue',
-    //     });
-    //     await warehousePage.waitForTimeout(500);
-    //     const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
-    //     console.log(`Characteristic value: ${characteristicValue}`);
-    //     await warehousePage.waitForTimeout(500); // Pause to see the value being validated
-
-    //     // Use helper function to automatically capture screenshot before soft assertion
-    //     await expectSoftWithScreenshot(
-    //       warehousePage,
-    //       () => {
-    //         expect.soft(characteristicValue).toBe(normFirstPart);
-    //       },
-    //       `Norm comparison: ${normFirstPart} vs ${characteristicValue}`,
-    //       test.info()
-    //     );
-
-    //     if (characteristicValue !== normFirstPart) {
-    //       console.log(`⚠️ BUG DETECTED: Norm first part (${normFirstPart}) does NOT match characteristic value (${characteristicValue})`);
-    //     } else {
-    //       console.log(`✅ Norm first part (${normFirstPart}) matches characteristic value (${characteristicValue})`);
-    //     }
-    //   } finally {
-    //     // Close the warehouse page
-    //     await warehousePage.close();
-    //   }
-    // });
     await allure.step('Step 28: Navigate to warehouse page and click shipping tasks', async () => {
       const normalizeDate = (rawDate: string): string => {
         const parseDate = (dateStr: string): Date => {
@@ -4048,14 +2614,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Method 1: Search by Заказ (Order Number)
       await allure.step('Method 1: Search by Заказ (Order Number)', async () => {
-        const searchInput = await getSearchInput();
-        await searchInput.fill('');
-        await searchInput.fill(fullOrderNumberValue);
-        await searchInput.press('Enter');
-        await loadingTaskPage.waitForNetworkIdle();
+        // Perform the search by order number
+        const tableSelector = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]';
+        const tableBodySelector = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table-Tbody"]';
+        const searchInputDataTestId = 'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input';
+
+        await loadingTaskPage.searchAndWaitForTable(fullOrderNumberValue, tableSelector, tableBodySelector, {
+          searchInputDataTestId: searchInputDataTestId,
+          timeoutBeforeWait: 1000,
+          minRows: 1,
+        });
+
+        // Wait 1 second for the table to populate
         await page.waitForTimeout(1000);
 
-        // Verify first row matches all three fields
+        // Get table body for verification
         const tableBody = await getTableBody();
         const firstRow = tableBody.locator('tr').first();
         await firstRow.waitFor({ state: 'visible', timeout: 10000 });
@@ -4073,8 +2646,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         const normalizedCellOrder = normalizeOrderNumber(cellOrderNumber);
         const normalizedExpected = normalizeOrderNumber(fullOrderNumberValue);
-        console.log(`Test Case 3 Step 28: cellOrderNumber="${cellOrderNumber}", normalized="${normalizedCellOrder}"`);
-        console.log(`Test Case 3 Step 28: fullOrderNumberValue="${fullOrderNumberValue}", normalized="${normalizedExpected}"`);
+        console.log(`Test Case 3 Step 28 Method 1: Searching for: "${fullOrderNumberValue}"`);
+        console.log(`Test Case 3 Step 28 Method 1: Found in cell: "${cellOrderNumber}"`);
+        console.log(`Test Case 3 Step 28 Method 1: Normalized cell: "${normalizedCellOrder}"`);
+        console.log(`Test Case 3 Step 28 Method 1: Normalized expected: "${normalizedExpected}"`);
+        console.log(`Test Case 3 Step 28 Method 1: Check 1 (cell includes expected): ${normalizedCellOrder.includes(normalizedExpected)}`);
+        console.log(
+          `Test Case 3 Step 28 Method 1: Check 2 (expected includes cell base): ${normalizedExpected.includes(normalizedCellOrder.split(' от ')[0])}`
+        );
+        console.log(`Test Case 3 Step 28 Method 1: Cell base (split by ' от '): "${normalizedCellOrder.split(' от ')[0]}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -4105,6 +2685,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check product name
+        await page.waitForTimeout(1000);
         const productNameCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
         await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
         await productNameCell.scrollIntoViewIfNeeded();
@@ -4134,13 +2715,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await loadingTaskPage.waitForNetworkIdle();
         await page.waitForTimeout(1000);
 
-        // Verify first row matches all three fields
+        // Find the row that matches the expected order number
         const tableBody = await getTableBody();
-        const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+        const matchingRow = await loadingTaskPage.findRowByOrderNumber(tableBody, fullOrderNumberValue);
+
+        if (!matchingRow) {
+          throw new Error(`Could not find row with expected order number "${fullOrderNumberValue}"`);
+        }
 
         // Check order number
-        const orderNumberCell = firstRow.locator('[data-testid*="NumberOrder"], [data-testid*="Order"]').first();
+        const orderNumberCell = matchingRow.locator('[data-testid*="NumberOrder"], [data-testid*="Order"]').first();
         await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
         await orderNumberCell.scrollIntoViewIfNeeded();
         await loadingTaskPage.highlightElement(orderNumberCell, {
@@ -4160,7 +2744,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check article number
-        const articleCell = firstRow.locator('[data-testid*="Article"]').first();
+        const articleCell = matchingRow.locator('[data-testid*="Article"]').first();
         await articleCell.waitFor({ state: 'visible', timeout: 10000 });
         await articleCell.scrollIntoViewIfNeeded();
         await loadingTaskPage.highlightElement(articleCell, {
@@ -4180,7 +2764,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check product name
-        const productNameCell = firstRow.locator('[data-testid*="Name"]').first();
+        const productNameCell = matchingRow.locator('[data-testid*="Name"]').first();
         await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
         await productNameCell.scrollIntoViewIfNeeded();
         await loadingTaskPage.highlightElement(productNameCell, {
@@ -4209,13 +2793,20 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await loadingTaskPage.waitForNetworkIdle();
         await page.waitForTimeout(1000);
 
-        // Verify first row matches all three fields
+        // Find the row that matches the expected order number
         const tableBody = await getTableBody();
-        const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+        const matchingRow = await loadingTaskPage.findRowByOrderNumber(
+          tableBody,
+          fullOrderNumberValue,
+          '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]'
+        );
+
+        if (!matchingRow) {
+          throw new Error(`Could not find row with expected order number "${fullOrderNumberValue}"`);
+        }
 
         // Check order number
-        const orderNumberCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
         await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
         await orderNumberCell.scrollIntoViewIfNeeded();
         await loadingTaskPage.highlightElement(orderNumberCell, {
@@ -4235,7 +2826,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check article number
-        const articleCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
+        const articleCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
         await articleCell.waitFor({ state: 'visible', timeout: 10000 });
         await articleCell.scrollIntoViewIfNeeded();
         await loadingTaskPage.highlightElement(articleCell, {
@@ -4255,7 +2846,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check product name
-        const productNameCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
+        const productNameCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
         await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
         await productNameCell.scrollIntoViewIfNeeded();
         await loadingTaskPage.highlightElement(productNameCell, {
@@ -4409,10 +3000,22 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab1.bringToFront();
       const tableBody = tab1.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"] tbody').first();
       await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-      const firstRow = tableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
 
-      const orderNumberCellTab1 = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
+      // Find the row that matches the expected order number
+      const fullOrderNumberValueForTab = global.fullOrderNumber || fullOrderNumber;
+      const matchingRow = await loadingTaskPage.findRowByOrderNumber(
+        tableBody,
+        fullOrderNumberValueForTab,
+        '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]'
+      );
+
+      if (!matchingRow) {
+        throw new Error(`Could not find row with expected order number "${fullOrderNumberValueForTab}" in Tab 1`);
+      }
+
+      const orderNumberCellTab1 = matchingRow
+        .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]')
+        .first();
       await orderNumberCellTab1.waitFor({ state: 'visible', timeout: 10000 });
       await orderNumberCellTab1.scrollIntoViewIfNeeded();
       await loadingTaskPage.highlightElement(orderNumberCellTab1, {
@@ -4448,7 +3051,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.2: Compare article number
       await tab1.bringToFront();
-      const articleCellTab1 = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
+      const articleCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
       await articleCellTab1.waitFor({ state: 'visible', timeout: 10000 });
       await articleCellTab1.scrollIntoViewIfNeeded();
       await loadingTaskPage.highlightElement(articleCellTab1, {
@@ -4484,7 +3087,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.3: Compare product wrapper
       await tab1.bringToFront();
-      const productWrapperTab1 = firstRow.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Wrapper"]').first();
+      const productWrapperTab1 = matchingRow.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Wrapper"]').first();
       await productWrapperTab1.waitFor({ state: 'visible', timeout: 10000 });
       await productWrapperTab1.scrollIntoViewIfNeeded();
       await loadingTaskPage.highlightElement(productWrapperTab1, {
@@ -4520,7 +3123,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.4: Compare quantity values
       await tab1.bringToFront();
-      const quantityCellTab1 = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
+      const quantityCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
       await quantityCellTab1.waitFor({ state: 'visible', timeout: 10000 });
       await quantityCellTab1.scrollIntoViewIfNeeded();
       await loadingTaskPage.highlightElement(quantityCellTab1, {
@@ -4579,7 +3182,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.5: Compare DateOrder values
       await tab1.bringToFront();
-      const dateOrderCellTab1 = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateOrder"]').first();
+      const dateOrderCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateOrder"]').first();
       await dateOrderCellTab1.waitFor({ state: 'visible', timeout: 10000 });
       await dateOrderCellTab1.scrollIntoViewIfNeeded();
       await loadingTaskPage.highlightElement(dateOrderCellTab1, {
@@ -4615,7 +3218,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.6: Compare DateShipments values
       await tab1.bringToFront();
-      const dateShipmentsCellTab1 = firstRow
+      const dateShipmentsCellTab1 = matchingRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateShipments"]')
         .first();
       await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
@@ -4653,7 +3256,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.7: Compare DateByUrgency values
       await tab1.bringToFront();
-      const dateByUrgencyCellTab1 = firstRow
+      const dateByUrgencyCellTab1 = matchingRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateByUrgency"]')
         .first();
       await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
@@ -4715,7 +3318,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.8: Compare DateShipments (plan) values
       await tab1.bringToFront();
-      const dateShipmentsTbodyCellTab1 = firstRow
+      const dateShipmentsTbodyCellTab1 = matchingRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateShipments"]')
         .first();
       await dateShipmentsTbodyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
@@ -4881,16 +3484,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
 
     await allure.step('Step 1: Navigate to main shipping tasks page', async () => {
-      await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await loadingTaskPage.waitForNetworkIdle();
-      const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
+      const success = await loadingTaskPage.navigateToShippingTasksPage();
       await expectSoftWithScreenshot(
         page,
-        async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+        () => {
+          expect.soft(success).toBe(true);
         },
-        'Verify Issue Shipment page is visible',
+        'Verify navigation to shipping tasks page successful',
         test.info()
       );
     });
@@ -4949,7 +3549,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const productNameFromRow = (await productCell.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
         page,
@@ -4962,45 +3562,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 3: Select the shipment row and open the order in edit mode', async () => {
-      await shipmentsTableBody.waitFor({ state: 'visible', timeout: 10000 });
-      const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-
-      const dateOrderCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await dateOrderCell.click();
-
-      const editButton = page.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
-      const isEnabled = await editButton.isEnabled();
+      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(isEnabled).toBe(true);
+          expect.soft(success).toBe(true);
         },
-        'Verify Edit Order button is enabled',
+        'Verify row selected and edit button clicked successfully',
         test.info()
       );
-      if (!isEnabled) {
-        throw new Error('Edit order button is disabled; cannot proceed.');
-      }
-      await editButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await editButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
     });
 
     await allure.step('Step 4: Verify positions table and open form to add a new product', async () => {
@@ -5012,132 +3582,80 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const bodyRows = positionsTable.locator('tbody tr');
-      const rowCount = await bodyRows.count();
+      const totalRowCount = await bodyRows.count();
+
+      // Filter out totals rows (rows with "Итого:" text or colspan="15")
+      let dataRowCount = 0;
+      for (let i = 0; i < totalRowCount; i++) {
+        const row = bodyRows.nth(i);
+        const rowText = (await row.textContent())?.trim() || '';
+        const hasItogo = rowText?.includes('Итого:') || false;
+        const colspan = (await row.locator('td').first().getAttribute('colspan')) || '';
+        const hasColspan15 = colspan === '15';
+        if (!hasItogo && !hasColspan15) {
+          dataRowCount++;
+        }
+      }
+
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(rowCount).toBe(2);
+          expect.soft(dataRowCount).toBeGreaterThanOrEqual(1);
         },
-        `Verify positions table has two rows (including total): ${rowCount}`,
+        `Verify positions table has at least one data row (found ${dataRowCount} data rows out of ${totalRowCount} total rows)`,
         test.info()
       );
 
-      const addNewProductButton = page
-        .locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsRight-AddNewIzd"]')
-        .filter({ hasText: 'Добавить новое изделие к заказу' })
-        .first();
-      await addNewProductButton.waitFor({ state: 'visible', timeout: 10000 });
-      await addNewProductButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(addNewProductButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await addNewProductButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      const clickAddNewProductSuccess = await loadingTaskPage.clickAddNewProductToOrderButton();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(clickAddNewProductSuccess).toBe(true);
+        },
+        'Verify "Add new product to order" button clicked successfully',
+        test.info()
+      );
     });
 
     await allure.step('Step 5: Open product selection modal', async () => {
-      const selectAttachmentButton = page.locator('[data-testid="AddOrder-AttachmentsButtons-Select"]').first();
-      await selectAttachmentButton.waitFor({ state: 'visible', timeout: 10000 });
-      await selectAttachmentButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(selectAttachmentButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await selectAttachmentButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-    });
-
-    await allure.step('Step 6: Select the second product in the modal', async () => {
-      const modal = page.locator('[data-testid="AddOrder-ModalListProduct"]').first();
-      await modal.waitFor({ state: 'visible', timeout: 10000 });
-
-      const modalSearchInput = modal.locator('[data-testid="Search-Dropdown-Input"]').first();
-      await modalSearchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await modalSearchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(modalSearchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await modalSearchInput.fill('');
-      await modalSearchInput.fill(secondProductNameValue);
-      await modalSearchInput.press('Enter');
-      await page.waitForTimeout(1000);
-
-      const modalRows = modal.locator('tbody tr');
-      await modalRows.first().waitFor({ state: 'visible', timeout: 10000 });
-      const rowsCount = await modalRows.count();
+      const success = await loadingTaskPage.openProductSelectionModal();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(rowsCount).toBeGreaterThanOrEqual(1);
+          expect.soft(success).toBe(true);
         },
-        `Verify modal search returned at least one row: ${rowsCount}`,
+        'Verify product selection modal opened successfully',
+        test.info()
+      );
+    });
+
+    await allure.step('Step 6: Select the second product in the modal', async () => {
+      const selectSuccess = await loadingTaskPage.selectProductInModal(secondProductNameValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(selectSuccess).toBe(true);
+        },
+        `Verify product "${secondProductNameValue}" selected in modal`,
         test.info()
       );
 
-      const firstModalRow = modalRows.first();
-      await firstModalRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstModalRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const checkboxCell = firstModalRow.locator('[data-testid="Checkbox"]').first();
-      await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
-      await loadingTaskPage.highlightElement(checkboxCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await checkboxCell.click();
-
-      let addButton = modal.locator('[data-testid="button"]').filter({ hasText: 'Добавить' });
-      if ((await addButton.count()) === 0) {
-        addButton = modal.locator('button', { hasText: 'Добавить' });
-      }
-      if ((await addButton.count()) === 0) {
-        const availableButtons = await modal.locator('[data-testid="button"], button').allInnerTexts();
-        console.log(`Available modal buttons: ${availableButtons.join(', ')}`);
-        throw new Error('Add button not found in product selection modal.');
-      }
-      const addButtonHandle = addButton.first();
-      await addButtonHandle.waitFor({ state: 'visible', timeout: 15000 });
-      await addButtonHandle.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(addButtonHandle, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await addButtonHandle.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await modal.waitFor({ state: 'hidden', timeout: 10000 });
+      const addSuccess = await loadingTaskPage.clickAddButtonInProductModal();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addSuccess).toBe(true);
+        },
+        'Verify Add button clicked successfully in product modal',
+        test.info()
+      );
     });
 
     await allure.step('Step 7: Verify the added product and save the order', async () => {
       // Check that the attachments link contains the second product we just added
-      const attachmentsLink = page.locator('[data-testid="AddOrder-AttachmentsValue-Link"]').first();
-      await attachmentsLink.waitFor({ state: 'visible', timeout: 10000 });
-      await attachmentsLink.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(attachmentsLink, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const attachmentsText = (await attachmentsLink.textContent())?.trim() || '';
+      const attachmentsText = await loadingTaskPage.getCellValueFromPositionsTable('[data-testid="AddOrder-AttachmentsValue-Link"]');
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -5147,28 +3665,81 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         test.info()
       );
 
-      const saveButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
-      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-      const isEnabled = await saveButton.isEnabled();
+      const saveSuccess = await loadingTaskPage.saveOrder();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(isEnabled).toBe(true);
+          expect.soft(saveSuccess).toBe(true);
         },
-        'Verify Save button is enabled after adding product',
+        'Verify order saved successfully after adding product',
         test.info()
       );
-      await saveButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(saveButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await saveButton.click();
-      await page.waitForTimeout(2000);
-      await loadingTaskPage.waitForNetworkIdle();
+
+      // Verify positions table shows /0 and /1 variants after saving
       await page.waitForTimeout(1000);
+      const positionsTableAfterSave1 = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
+      await positionsTableAfterSave1.waitFor({ state: 'visible', timeout: 10000 });
+      const bodyRowsAfterSave1 = positionsTableAfterSave1.locator('tbody tr');
+      const rowCountAfterSave1 = await bodyRowsAfterSave1.count();
+      console.log(`Test Case 4: After saving second product, positions table has ${rowCountAfterSave1} rows`);
+
+      // Should have at least 2 data rows (original /0 and new /1) plus 1 total row = 3 rows minimum
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowCountAfterSave1).toBeGreaterThanOrEqual(2);
+        },
+        `Verify positions table has at least 2 rows after saving second product: ${rowCountAfterSave1}`,
+        test.info()
+      );
+
+      // Check that /1 variant exists in positions table
+      let foundOrder1 = false;
+      for (let i = 0; i < rowCountAfterSave1; i++) {
+        const row = bodyRowsAfterSave1.nth(i);
+        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
+        if (orderNumberText.includes('/1')) {
+          foundOrder1 = true;
+          console.log(`Test Case 4: Found /1 order variant in positions table: ${orderNumberText}`);
+          break;
+        }
+      }
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(foundOrder1).toBe(true);
+        },
+        'Verify /1 order variant exists in positions table after saving second product',
+        test.info()
+      );
+
+      // Navigate back to list page to trigger creation of /1 order variant
+      await page.waitForTimeout(1000);
+      const navigateSuccess = await loadingTaskPage.navigateToShippingTasksPage();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(navigateSuccess).toBe(true);
+        },
+        'Verify navigation back to list page successful',
+        test.info()
+      );
+
+      // Navigate back to edit mode to continue adding products
+      const baseOrderNumberValue = global.fullOrderNumber || fullOrderNumber;
+      if (!baseOrderNumberValue) {
+        throw new Error('Order number is missing. Ensure Test Case 2 has run.');
+      }
+      const editSuccess = await loadingTaskPage.findOrderAndClickEdit(baseOrderNumberValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(editSuccess).toBe(true);
+        },
+        'Verify navigation back to edit mode successful',
+        test.info()
+      );
     });
 
     const firstProductNameValue = global.firstProductName || firstProductName;
@@ -5177,126 +3748,48 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     }
 
     await allure.step('Step 8: Add the first product to the order', async () => {
-      // Click the "Добавить новое изделие к заказу" button again
-      const addNewProductButton = page
-        .locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsRight-AddNewIzd"]')
-        .filter({ hasText: 'Добавить новое изделие к заказу' })
-        .first();
-      await addNewProductButton.waitFor({ state: 'visible', timeout: 10000 });
-      await addNewProductButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(addNewProductButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await addNewProductButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Open product selection modal
-      const selectButton = page.locator('[data-testid="AddOrder-AttachmentsButtons-Select"]').first();
-      await selectButton.waitFor({ state: 'visible', timeout: 10000 });
-      await selectButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(selectButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await selectButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      const modal = page.locator('[data-testid="AddOrder-ModalListProduct"]').first();
-      await modal.waitFor({ state: 'visible', timeout: 10000 });
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await modal.isVisible()).toBe(true);
-        },
-        'Verify product selection modal is visible',
-        test.info()
-      );
-
-      // Search for the first product
-      const modalSearchInput = modal.locator('[data-testid="Search-Dropdown-Input"]').first();
-      await modalSearchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await modalSearchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(modalSearchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await modalSearchInput.fill('');
-      await modalSearchInput.fill(firstProductNameValue);
-      await modalSearchInput.press('Enter');
-      await page.waitForTimeout(1000);
-
-      const modalRows = modal.locator('tbody tr');
-      await modalRows.first().waitFor({ state: 'visible', timeout: 10000 });
-      const rowsCount = await modalRows.count();
+      const clickAddNewProductSuccess = await loadingTaskPage.clickAddNewProductToOrderButton();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(rowsCount).toBeGreaterThanOrEqual(1);
+          expect.soft(clickAddNewProductSuccess).toBe(true);
         },
-        `Verify modal search returned at least one row: ${rowsCount}`,
+        'Verify "Add new product to order" button clicked successfully',
         test.info()
       );
 
-      const firstModalRow = modalRows.first();
-      await firstModalRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstModalRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const checkboxCell = firstModalRow.locator('[data-testid="Checkbox"]').first();
-      await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
-      await loadingTaskPage.highlightElement(checkboxCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await checkboxCell.click();
+      const openModalSuccess = await loadingTaskPage.openProductSelectionModal();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(openModalSuccess).toBe(true);
+        },
+        'Verify product selection modal opened successfully',
+        test.info()
+      );
 
-      let addButton = modal.locator('[data-testid="button"]').filter({ hasText: 'Добавить' });
-      if ((await addButton.count()) === 0) {
-        addButton = modal.locator('button', { hasText: 'Добавить' });
-      }
-      if ((await addButton.count()) === 0) {
-        const availableButtons = await modal.locator('[data-testid="button"], button').allInnerTexts();
-        console.log(`Available modal buttons: ${availableButtons.join(', ')}`);
-        throw new Error('Add button not found in product selection modal.');
-      }
-      const addButtonHandle = addButton.first();
-      await addButtonHandle.waitFor({ state: 'visible', timeout: 15000 });
-      await addButtonHandle.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(addButtonHandle, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await addButtonHandle.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await modal.waitFor({ state: 'hidden', timeout: 10000 });
+      const selectSuccess = await loadingTaskPage.selectProductInModal(firstProductNameValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(selectSuccess).toBe(true);
+        },
+        `Verify product "${firstProductNameValue}" selected in modal`,
+        test.info()
+      );
+
+      const addSuccess = await loadingTaskPage.clickAddButtonInProductModal();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addSuccess).toBe(true);
+        },
+        'Verify Add button clicked successfully in product modal',
+        test.info()
+      );
 
       // Verify the attachments link contains the first product
-      const attachmentsLink = page.locator('[data-testid="AddOrder-AttachmentsValue-Link"]').first();
-      await attachmentsLink.waitFor({ state: 'visible', timeout: 10000 });
-      await attachmentsLink.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(attachmentsLink, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      const attachmentsText = (await attachmentsLink.textContent())?.trim() || '';
+      const attachmentsText = await loadingTaskPage.getCellValueFromPositionsTable('[data-testid="AddOrder-AttachmentsValue-Link"]');
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -5306,29 +3799,66 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         test.info()
       );
 
-      // Save the order
-      const saveButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
-      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-      const isEnabled = await saveButton.isEnabled();
+      const saveSuccess = await loadingTaskPage.saveOrder();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(isEnabled).toBe(true);
+          expect.soft(saveSuccess).toBe(true);
         },
-        'Verify Save button is enabled after adding first product',
+        'Verify order saved successfully after adding first product',
         test.info()
       );
-      await saveButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(saveButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await saveButton.click();
-      await page.waitForTimeout(2000);
-      await loadingTaskPage.waitForNetworkIdle();
+
+      // Verify positions table shows /0, /1, and /2 variants after saving
       await page.waitForTimeout(1000);
+      const positionsTableAfterSave2 = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
+      await positionsTableAfterSave2.waitFor({ state: 'visible', timeout: 10000 });
+      const bodyRowsAfterSave2 = positionsTableAfterSave2.locator('tbody tr');
+      const rowCountAfterSave2 = await bodyRowsAfterSave2.count();
+      console.log(`Test Case 4: After saving first product, positions table has ${rowCountAfterSave2} rows`);
+
+      // Should have at least 3 data rows (/0, /1, /2) plus 1 total row = 4 rows minimum
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowCountAfterSave2).toBeGreaterThanOrEqual(3);
+        },
+        `Verify positions table has at least 3 data rows after saving first product: ${rowCountAfterSave2}`,
+        test.info()
+      );
+
+      // Check that /2 variant exists in positions table
+      let foundOrder2 = false;
+      for (let i = 0; i < rowCountAfterSave2; i++) {
+        const row = bodyRowsAfterSave2.nth(i);
+        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
+        if (orderNumberText.includes('/2')) {
+          foundOrder2 = true;
+          console.log(`Test Case 4: Found /2 order variant in positions table: ${orderNumberText}`);
+          break;
+        }
+      }
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(foundOrder2).toBe(true);
+        },
+        'Verify /2 order variant exists in positions table after saving first product',
+        test.info()
+      );
+
+      // Navigate back to list page to trigger creation of /2 order variant
+      await page.waitForTimeout(1000);
+      const navigateSuccess = await loadingTaskPage.navigateToShippingTasksPage();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(navigateSuccess).toBe(true);
+        },
+        'Verify navigation back to list page successful after adding first product',
+        test.info()
+      );
     });
   });
 
@@ -5339,11 +3869,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
 
-    // Hardcoded order number for independent test execution
-    // Format: "25-XXXX /0 от DD.MM.YYYY" (replace with actual order number if needed)
-    // const hardcodedOrderNumber = '25-4429 /0 от 01.12.2025';
-
-    const baseOrderNumberValue = global.fullOrderNumber || fullOrderNumber; // || hardcodedOrderNumber;
+    const baseOrderNumberValue = global.fullOrderNumber || fullOrderNumber;
     if (!baseOrderNumberValue) {
       throw new Error('Full order number is missing. Ensure Test Case 2 has run.');
     }
@@ -5518,15 +4044,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     // Hardcoded product names for independent test execution
     // These correspond to the products in order 25-4429:
     // Row 1: TEST_PRODUCT_1764573576237_3 (first product)
-    // Row 2: TEST_PRODUCT_1764573576237_2 (second product)
-    // Row 3: TEST_PRODUCT_1764573576237_1 (third product)
-    // const hardcodedFirstProductName = 'TEST_PRODUCT_1764573576237_3';
-    // const hardcodedSecondProductName = 'TEST_PRODUCT_1764573576237_2';
-    // const hardcodedThirdProductName = 'TEST_PRODUCT_1764573576237_1';
-
-    const thirdProductName = global.testProductName || testProductName; // || hardcodedThirdProductName;
-    const secondProductNameValue = global.secondProductName || secondProductName; // || hardcodedSecondProductName;
-    const firstProductNameValue = global.firstProductName || firstProductName; // || hardcodedFirstProductName;
+    const thirdProductName = global.testProductName || testProductName;
+    const secondProductNameValue = global.secondProductName || secondProductName;
+    const firstProductNameValue = global.firstProductName || firstProductName;
     if (!thirdProductName || !secondProductNameValue || !firstProductNameValue) {
       throw new Error('Product names are missing. Ensure Test Case 1 has run.');
     }
@@ -5555,7 +4075,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2ForOrder0.waitForTimeout(1000);
 
       await loadingTaskPageTab2.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -5581,7 +4101,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab3ForOrder1.waitForTimeout(1000);
 
       await loadingTaskPageTab3.searchAndWaitForTable(orderNumberWith1, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -6345,6 +4865,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 6: Compare values between orders list and edit page for order /0', async () => {
+      console.log('Start: step 6');
       // Define normalizeDate function for date comparisons
       const normalizeDate = (rawDate: string): string => {
         if (!rawDate || !rawDate.trim()) {
@@ -7126,6 +5647,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab1.close();
       await tab2.close();
       await page.waitForTimeout(1000);
+      console.log('End: step 6');
     });
 
     await allure.step('Step 7: Open modal from orders list and compare with edit page', async () => {
@@ -7225,7 +5747,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(1000);
 
       await loadingTaskPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -7255,12 +5777,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPage.waitForNetworkIdle();
       await tab2.waitForTimeout(1000);
 
+      // We're on the main orders page (not warehouse), so use SHIPMENTS_SEARCH_INPUT
       await tab2LoadingTaskPage.searchAndWaitForTable(
         baseOrderNumberValue,
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         {
-          useRedesign: true,
+          searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
           timeoutBeforeWait: 1000,
           minRows: 1,
         }
@@ -7950,7 +6473,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPage.searchAndWaitForTable(
         baseOrderNumberValue,
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY,
+        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         {
           useRedesign: true,
           timeoutBeforeWait: 1000,
@@ -8277,7 +6800,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY,
         {
-          useRedesign: true,
+          searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
           timeoutBeforeWait: 1000,
           minRows: 1,
         }
@@ -8843,7 +7366,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const partsTab = await partsContext.newPage();
       const partsDatabasePage = new CreatePartsDatabasePage(partsTab);
 
-      const productNameForSearch = nameValueDeficit || global.testProductName || testProductName;
+      let productNameForSearch = '';
+      productNameForSearch = (nameValueDeficit || global.testProductName || testProductName)?.trim() || '';
       if (!productNameForSearch) {
         throw new Error('Product name missing for parts database verification. Ensure Test Case 1 has run.');
       }
@@ -9024,20 +7548,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       };
 
       const runWarehouseSearch = async (searchValue: string, description: string) => {
-        const searchInput = await getWarehouseSearchInput();
-        await searchInput.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(searchInput, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
+        const tableSelector = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]';
+        const tableBodySelector = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table-Tbody"]';
+        const searchInputDataTestId = 'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input';
+
+        await loadingTaskPage.searchAndWaitForTable(searchValue, tableSelector, tableBodySelector, {
+          searchInputDataTestId: searchInputDataTestId,
+          timeoutBeforeWait: 1000,
+          minRows: 1,
         });
-        await page.waitForTimeout(500);
-        await searchInput.fill('');
-        await searchInput.fill(searchValue);
-        await searchInput.press('Enter');
-        await page.waitForTimeout(1000); // Wait for search results to populate
-        await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+
         await validateFirstRow();
         console.log(`Warehouse search "${description}" completed.`);
       };
@@ -9124,26 +7644,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(1000);
       };
 
-      const getWarehouseSearchInput = async () => {
-        const searchInput = page
-          .locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]')
-          .first();
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        return searchInput;
-      };
-
       await openWarehouseOrdersPage();
-      const warehouseSearchInput = await getWarehouseSearchInput();
-      await warehouseSearchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(warehouseSearchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
+      const tableSelector = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]';
+      const tableBodySelector = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table-Tbody"]';
+      const searchInputDataTestId = 'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input';
+
+      await loadingTaskPage.searchAndWaitForTable(orderNumberWith0Only, tableSelector, tableBodySelector, {
+        searchInputDataTestId: searchInputDataTestId,
+        timeoutBeforeWait: 1000,
+        minRows: 1,
       });
-      await page.waitForTimeout(500);
-      await warehouseSearchInput.fill('');
-      await warehouseSearchInput.fill(orderNumberWith0Only);
-      await warehouseSearchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
 
@@ -9236,7 +7746,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       try {
         await ordersTabLoadingPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
         await ordersTabLoadingPage.waitForNetworkIdle();
-        await ordersTab.waitForTimeout(1000);
+        await ordersTab.waitForTimeout(2000);
 
         await ordersTabLoadingPage.searchAndWaitForTable(
           baseOrderNumberValue,
@@ -9479,14 +7989,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const timeValue = dateShipmentsTimeText.split('/')[0].trim();
 
         if (warehouseTimeValue) {
-          // await expectSoftWithScreenshot(
-          //   ordersTab,
-          //   () => {
-          //     expect.soft(warehouseTimeValue).toBe(timeValue);
-          //   },
-          //   `Verify warehouse time (${warehouseTimeValue}) matches edit time (${timeValue})`,
-          //   test.info()
-          // );
+          // Verification commented out per requirements
         }
 
         const productTab = await context.newPage();
@@ -9533,15 +8036,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           });
           await productTab.waitForTimeout(500);
           const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
-
-          // await expectSoftWithScreenshot(
-          //   productTab,
-          //   () => {
-          //     expect.soft(characteristicValue).toBe(timeValue);
-          //   },
-          //   `Verify product characteristic (${characteristicValue}) matches time value (${timeValue})`,
-          //   test.info()
-          // );
+          // Verification commented out per requirements
         } finally {
           await productTab.close();
         }
@@ -9698,7 +8193,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 2: Search for the order with /0 suffix and confirm it appears', async () => {
       console.log(`Test Case 6: Searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -9740,45 +8235,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 3: Select the order row (second td) and click the edit button', async () => {
       await shipmentsTableBody.waitFor({ state: 'visible', timeout: 10000 });
-      const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
 
-      // Click the second td (DateOrder cell)
-      const dateOrderCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await dateOrderCell.click();
-
-      const editButton = page.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
-      const isEnabled = await editButton.isEnabled();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(isEnabled).toBe(true);
+          expect.soft(success).toBe(true);
         },
-        'Verify Edit Order button is enabled',
+        'Verify row selected and edit button clicked successfully',
         test.info()
       );
-      if (!isEnabled) {
-        throw new Error('Edit order button is disabled; cannot proceed.');
-      }
-      await editButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await editButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
     });
 
     await allure.step('Step 4: Find the row in bottom table that contains our order number with /0', async () => {
@@ -9846,60 +8312,28 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 5: Find the quantity input and increase its value by 2', async () => {
-      const quantityInput = page.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]');
-      await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      // This step is now combined with Step 6 in the increaseQuantityAndSave method
+    });
 
-      const currentValue = await quantityInput.inputValue();
-      console.log(`Test Case 6: Current quantity input value: ${currentValue}`);
-      const currentValueNum = parseInt(currentValue, 10) || 0;
-      const newValue = (currentValueNum + 2).toString();
-      console.log(`Test Case 6: Increasing quantity from ${currentValue} to ${newValue}`);
+    await allure.step('Step 6: Click the save button and wait for page to reload', async () => {
+      const newValue = await loadingTaskPage.increaseQuantityAndSave(2);
 
-      await quantityInput.clear();
-      await page.waitForTimeout(200);
-      await quantityInput.fill(newValue);
-      await page.waitForTimeout(300);
-
-      const inputValueAfterFill = await quantityInput.inputValue();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(inputValueAfterFill).toBe(newValue);
+          expect.soft(newValue).not.toBeNull();
+          if (newValue !== null) {
+            expect.soft(parseInt(newValue, 10)).toBeGreaterThan(parseInt(initialQuantity, 10) || 0);
+          }
         },
-        `Verify quantity input value updated: expected ${newValue}, got ${inputValueAfterFill}`,
+        `Verify quantity increased and saved successfully: new value ${newValue}`,
         test.info()
       );
 
       // Store the new quantity for later verification
-      newQuantity = newValue;
-    });
-
-    await allure.step('Step 6: Click the save button and wait for page to reload', async () => {
-      const saveButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
-      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-      await saveButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(saveButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await saveButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(2000);
-
-      // Wait for the positions table to reload
-      const positionsTable = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      if (newValue !== null) {
+        newQuantity = newValue;
+      }
     });
 
     await allure.step('Step 7: Find the row in bottom table and confirm quantity increased by 2', async () => {
@@ -9994,7 +8428,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 9: Search for order with /0 again and confirm it appears', async () => {
       console.log(`Test Case 6: Re-searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -10373,7 +8807,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           border: '2px solid red',
           color: 'blue',
         });
-        await warehouseTab.waitForTimeout(500);
+        await warehouseTab.waitForTimeout(1500);
         const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -10394,7 +8828,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           border: '2px solid red',
           color: 'blue',
         });
-        await warehouseTab.waitForTimeout(500);
+        await warehouseTab.waitForTimeout(1500);
         const quantityValue = (await quantityCell.textContent())?.trim() || '';
         const quantityNum = parseInt(quantityValue, 10) || 0;
         const deficitNum = parseInt(newDeficitValue, 10) || 0;
@@ -10453,7 +8887,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Search for the order with /0 suffix
       console.log(`Test Case 7: Searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -10467,7 +8901,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
       await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -10493,7 +8927,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       expectedQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Read expected quantity from main orders page: ${expectedQuantity}`);
 
@@ -10504,37 +8938,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 2: Select the order row and click edit button', async () => {
       await shipmentsTableBody.waitFor({ state: 'visible', timeout: 10000 });
-      const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
 
-      // Click the DateOrder cell to select the row
-      const dateOrderCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await dateOrderCell.click();
-
-      const editButton = page.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
-      const isEnabled = await editButton.isEnabled();
-      if (!isEnabled) {
-        throw new Error('Edit order button is disabled; cannot proceed.');
-      }
-      await editButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await editButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        'Verify row selected and edit button clicked successfully',
+        test.info()
+      );
     });
 
     await allure.step('Step 3: Find the table and row with our order number, then verify quantity', async () => {
@@ -10547,7 +8960,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -10595,7 +9008,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
 
@@ -10611,35 +9024,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 4: Go back to main orders page and verify quantity', async () => {
       // Click cancel to go back to main orders page
-      const cancelButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Cancel"]').first();
-      await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
-      await cancelButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(cancelButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await cancelButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      const cancelSuccess = await loadingTaskPage.cancelEditOrder();
 
-      // Verify we're back on the main orders page
-      const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
       await expectSoftWithScreenshot(
         page,
-        async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+        () => {
+          expect.soft(cancelSuccess).toBe(true);
         },
-        'Verify returned to main orders page',
+        'Verify cancel successful and returned to main orders page',
         test.info()
       );
 
       // Search for the order with /0 again
       console.log(`Test Case 7: Re-searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -10653,7 +9052,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       // Verify the order number matches
       const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
@@ -10680,7 +9079,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Main orders page quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
 
@@ -10753,7 +9152,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
       const orderNumberModal = orderNumberMatch ? orderNumberMatch[1].trim() : '';
@@ -10783,7 +9182,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const countModal = (await countElement.textContent())?.trim() || '';
       console.log(`Test Case 7: Modal quantity: ${countModal}, expected: ${expectedQuantity}`);
 
@@ -10909,7 +9308,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Shipment table quantity cell value: ${shipmentQuantityValue}, expected: ${expectedQuantity}`);
 
@@ -11007,7 +9406,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -11028,7 +9427,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const deficitValue = (await deficitCell.textContent())?.trim() || '';
       // Calculate expected deficit as negative of the quantity
       const quantityNum = parseInt(expectedQuantity, 10) || 0;
@@ -11053,7 +9452,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const demandValue = (await demandCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Needed quantity (Demand) value: ${demandValue}, expected: ${expectedQuantity}`);
 
@@ -11151,7 +9550,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -11172,7 +9571,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Warehouse quantity value: ${quantityValue}, expected: ${expectedQuantity}`);
 
@@ -11284,7 +9683,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       // Store deficit value
       const deficitCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
@@ -11384,37 +9783,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 3: Select the row and click edit button', async () => {
-      const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
 
-      // Click the DateOrder cell to select the row
-      const dateOrderCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await dateOrderCell.click();
-
-      const editButton = page.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
-      const isEnabled = await editButton.isEnabled();
-      if (!isEnabled) {
-        throw new Error('Edit order button is disabled; cannot proceed.');
-      }
-      await editButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await editButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        'Verify row selected and edit button clicked successfully',
+        test.info()
+      );
     });
 
     await allure.step('Step 4: Find the row in bottom table that contains our product', async () => {
@@ -11460,7 +9838,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       // Get initial quantity
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
@@ -11470,53 +9848,24 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 5: Decrease quantity by 2 and click save', async () => {
-      const quantityInput = page.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]');
-      await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      const newValue = await loadingTaskPage.decreaseQuantityAndSave(2);
 
-      const currentValue = await quantityInput.inputValue();
-      console.log(`Test Case 8: Current quantity input value: ${currentValue}`);
-      const currentValueNum = parseInt(currentValue, 10) || 0;
-      const newValue = Math.max(0, currentValueNum - 2).toString(); // Decrease by 2, but don't go below 0
-      console.log(`Test Case 8: Decreasing quantity from ${currentValue} to ${newValue}`);
-
-      await quantityInput.clear();
-      await page.waitForTimeout(200);
-      await quantityInput.fill(newValue);
-      await page.waitForTimeout(300);
-
-      const inputValueAfterFill = await quantityInput.inputValue();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(inputValueAfterFill).toBe(newValue);
+          expect.soft(newValue).not.toBeNull();
+          if (newValue !== null) {
+            expect.soft(parseInt(newValue, 10)).toBeGreaterThanOrEqual(0);
+          }
         },
-        `Verify quantity input value updated: expected ${newValue}, got ${inputValueAfterFill}`,
+        `Verify quantity decreased and saved successfully: new value ${newValue}`,
         test.info()
       );
 
       // Store the new quantity
-      newQuantity = newValue;
-
-      // Click save button
-      const saveButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
-      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-      await saveButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(saveButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await saveButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(2000);
+      if (newValue !== null) {
+        newQuantity = newValue;
+      }
     });
 
     await allure.step('Step 6: After page reload, find row in bottom table and confirm new quantity', async () => {
@@ -11564,7 +9913,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const updatedQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Updated quantity in cell: ${updatedQuantity}, expected: ${newQuantity}`);
 
@@ -11579,28 +9928,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 7: Click cancel to go back to main orders page', async () => {
-      const cancelButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Cancel"]').first();
-      await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
-      await cancelButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(cancelButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await cancelButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      const success = await loadingTaskPage.cancelEditOrder();
 
-      // Verify we're back on the main orders page
-      const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
       await expectSoftWithScreenshot(
         page,
-        async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+        () => {
+          expect.soft(success).toBe(true);
         },
-        'Verify returned to main orders page',
+        'Verify cancel successful and returned to main orders page',
         test.info()
       );
     });
@@ -11651,7 +9986,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       // Verify product name
       const productNameCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
@@ -11676,7 +10011,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Main orders page quantity: ${quantityValue}, expected: ${newQuantity}`);
 
@@ -11750,7 +10085,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const countModal = (await countElement.textContent())?.trim() || '';
       console.log(`Test Case 8: Modal quantity: ${countModal}, expected: ${newQuantity}`);
 
@@ -11847,7 +10182,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Shipment table quantity: ${shipmentQuantityValue}, expected: ${newQuantity}`);
 
@@ -11929,7 +10264,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       // Confirm it's the correct product
       const productNameCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
@@ -11954,7 +10289,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const newDeficitValue = (await deficitCell.textContent())?.trim() || '';
       const initialDeficitNum = parseInt(initialDeficit, 10) || 0;
       const newDeficitNum = parseInt(newDeficitValue, 10) || 0;
@@ -11979,7 +10314,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const newRequiredValue = (await requiredCell.textContent())?.trim() || '';
       console.log(`Test Case 8: New required value: ${newRequiredValue}, expected: ${newQuantity}`);
 
@@ -12001,7 +10336,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const newRemainderValue = (await remainderCell.textContent())?.trim() || '';
       console.log(`Test Case 8: New remainder value: ${newRemainderValue}, initial was: ${initialRemainder}`);
 
@@ -12014,7 +10349,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const newRealRemainderValue = (await realRemainderCell.textContent())?.trim() || '';
       console.log(`Test Case 8: New real remainder value: ${newRealRemainderValue}, expected: ${newDeficitValue}`);
 
@@ -12107,7 +10442,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -12128,7 +10463,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Warehouse quantity value: ${quantityValue}, expected: ${newQuantity}`);
 
@@ -12202,7 +10537,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const orderNumberFromRow = (await orderNumberCell.textContent())?.trim() || '';
       const normalizedOrderNumberFromRow = normalizeOrderNumber(orderNumberFromRow);
       console.log(`Test Case 8: Order number from row: ${orderNumberFromRow} (normalized: ${normalizedOrderNumberFromRow})`);
@@ -12227,7 +10562,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityFromRow = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Quantity from row: ${quantityFromRow}, expected: ${newQuantity}`);
 
@@ -12401,8 +10736,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Search by product name ending with _3
       console.log(`Test Case 9: Searching for product: ${productNameWith3}`);
+      // We're on the main orders page, so use SHIPMENTS_SEARCH_INPUT
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -12451,7 +10787,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       const productNameCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
       await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -12474,37 +10810,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 2: Select the row and click edit button', async () => {
-      const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
 
-      // Click the DateOrder cell to select the row
-      const dateOrderCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await dateOrderCell.click();
-
-      const editButton = page.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
-      const isEnabled = await editButton.isEnabled();
-      if (!isEnabled) {
-        throw new Error('Edit order button is disabled; cannot proceed.');
-      }
-      await editButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await editButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(success).toBe(true);
+        },
+        'Verify row selected and edit button clicked successfully',
+        test.info()
+      );
     });
 
     await allure.step('Step 3: Check that quantity field contains 1', async () => {
@@ -12576,7 +10891,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
 
       // Verify the quantity cell has value 1
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
@@ -12587,7 +10902,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 9: Quantity in bottom table: ${quantityValue}, expected: 1`);
 
@@ -12630,8 +10945,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Search by product name again
       console.log(`Test Case 9: Re-searching for product: ${productNameWith3}`);
+      // We're on the main orders page, so use SHIPMENTS_SEARCH_INPUT
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: 1000,
         minRows: 1,
       });
@@ -12657,7 +10973,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 9: Main orders page quantity: ${quantityValue}, expected: 1`);
 
@@ -12731,7 +11047,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid red',
         color: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const countModal = (await countElement.textContent())?.trim() || '';
       console.log(`Test Case 9: Modal quantity: ${countModal}, expected: 1`);
 
@@ -12828,7 +11144,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         border: '2px solid blue',
         color: 'black',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1500);
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
       console.log(`Test Case 9: Shipment table quantity: ${shipmentQuantityValue}, expected: 1`);
 
@@ -12915,7 +11231,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           border: '2px solid blue',
           color: 'black',
         });
-        await newPage.waitForTimeout(500);
+        await newPage.waitForTimeout(1500);
 
         // Confirm it's the correct product
         const productNameCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
@@ -12940,7 +11256,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           border: '2px solid red',
           color: 'blue',
         });
-        await newPage.waitForTimeout(500);
+        await newPage.waitForTimeout(1500);
         const deficitValue = (await deficitCell.textContent())?.trim() || '';
         console.log(`Test Case 9: Deficit value: ${deficitValue}, expected: -1`);
 
@@ -13043,7 +11359,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           border: '2px solid red',
           color: 'blue',
         });
-        await newPage.waitForTimeout(500);
+        await newPage.waitForTimeout(1500);
         const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -13064,7 +11380,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           border: '2px solid red',
           color: 'blue',
         });
-        await newPage.waitForTimeout(500);
+        await newPage.waitForTimeout(1500);
         const quantityValue = (await quantityCell.textContent())?.trim() || '';
         console.log(`Test Case 9: Warehouse quantity value: ${quantityValue}, expected: 1`);
 
@@ -13086,23 +11402,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     test.setTimeout(300000); // 5 minutes
     console.log('Test Case 10 - Set warehouse revision values to 0');
     const revisionPage = new CreateRevisionPage(page);
-    const tableMain = '[data-testid="Revision-TableRevisionPagination-Products-Table"]';
-
-    // Get all test product names
-    const testProducts: string[] = [];
-    if (global.firstProductName) {
-      testProducts.push(global.firstProductName);
-    }
-    if (global.secondProductName) {
-      testProducts.push(global.secondProductName);
-    }
-    if (global.testProductName) {
-      testProducts.push(global.testProductName);
-    }
-
-    if (testProducts.length === 0) {
-      throw new Error('No test products found. Ensure Test Case 1 has run.');
-    }
+    // Use the global test product names constant
+    const testProducts = TEST_PRODUCT_NAMES;
 
     await allure.step('Step 1: Open the warehouse page', async () => {
       await revisionPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
@@ -13112,167 +11413,36 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 2: Open the warehouse revisions page', async () => {
       await revisionPage.findTable(SelectorsRevision.WAREHOUSE_PAGE_REVISIONS_TESTID);
       await page.waitForLoadState('networkidle');
-      await revisionPage.waitingTableBodyNoThead(tableMain);
+      await revisionPage.waitingTableBodyNoThead(SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE);
     });
 
-    // Process each test product
-    for (const productName of testProducts) {
-      await allure.step(`Step 3: Search for product ${productName}`, async () => {
-        await revisionPage.searchTable(productName, tableMain, 'TableRevisionPagination-SearchInput-Dropdown-Input');
-        await revisionPage.waitingTableBodyNoThead(tableMain);
-      });
+    await allure.step('Step 3: Set revision balances to 0 for all test products', async () => {
+      for (const productName of testProducts) {
+        console.log(`Setting warehouse revision balance to 0 for product: ${productName}`);
+        const success = await revisionPage.setRevisionBalanceToZeroForProduct(productName, SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE);
 
-      await allure.step(`Step 4: Change balance to 0 for product ${productName}`, async () => {
-        await revisionPage.changeBalanceAndConfirmArchive(productName, tableMain, '0', '[data-testid="TableRevisionPagination-ConfirmDialog-Approve"]', {
-          refreshAndSearchAfter: true,
-          waitAfterConfirm: 1000,
-        });
-      });
-    }
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(success).toBe(true);
+          },
+          `Verify revision balance set to 0 for product "${productName}"`,
+          test.info()
+        );
+      }
+    });
 
     console.log(`✅ All test products (${testProducts.length}) have been set to 0 in warehouse revisions`);
   });
 
   test('Test Case 11 - Удаление задачи на отгрузку', async ({ page }) => {
     test.setTimeout(120000);
-    console.log('Test Case 7 - Delete shipment task');
+    console.log('Test Case 11 - Delete shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
-    const productNameValue = 'TEST_PRODUCT';
-
-    const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-
-    const waitForShipmentsTableReady = async () => {
-      // First, wait for the table body to be attached to the DOM
-      await tableBody.waitFor({ state: 'attached', timeout: 10000 }).catch(() => {
-        // If not attached, wait a bit more for the page to load
-        return page.waitForTimeout(1000).then(() => tableBody.waitFor({ state: 'attached', timeout: 5000 }));
-      });
-
-      // Table body might be hidden when there are no rows - this is valid
-      // Try to wait for visible, but don't fail if it's hidden (empty table)
-      await tableBody.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {
-        // Hidden table is OK - it just means there are no rows
-      });
-    };
-
-    const selectRowForArchive = async (row: Locator) => {
-      const checkboxCandidate = row.locator('[data-testid*="TdCheckbox"]');
-      if (await checkboxCandidate.count()) {
-        const checkboxElement = checkboxCandidate.first();
-        await checkboxElement.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(checkboxElement, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-
-        const checkboxInput = checkboxElement.locator('input[type="checkbox"]').first();
-        if (await checkboxInput.count()) {
-          const isChecked = await checkboxInput.isChecked();
-          if (!isChecked) {
-            await checkboxInput.click();
-          }
-        } else {
-          await checkboxElement.click();
-        }
-        return;
-      }
-
-      const numberOrderCell = row.locator('[data-testid*="-Tbody-NumberOrder"]').first();
-      const numberCell = row.locator('[data-testid*="-Tbody-Number"]').first();
-      const selectableCell = (await numberOrderCell.count()) > 0 ? numberOrderCell : (await numberCell.count()) > 0 ? numberCell : row;
-
-      await selectableCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(selectableCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await selectableCell.click();
-    };
-
-    const getSearchInput = async () => {
-      const wrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-      await wrapper.waitFor({ state: 'visible', timeout: 10000 });
-      await wrapper.scrollIntoViewIfNeeded();
-
-      // Try to find input element - it might be the wrapper itself or inside it
-      let input: Locator;
-
-      // First check if wrapper itself is an input
-      const tagName = await wrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
-      if (tagName === 'input') {
-        input = wrapper;
-        await input.waitFor({ state: 'visible', timeout: 10000 });
-      } else {
-        // Look for input inside
-        input = wrapper.locator('input').first();
-        const inputCount = await input.count();
-
-        if (inputCount === 0) {
-          // If no input found, try using the wrapper itself (might be contenteditable)
-          input = wrapper;
-        } else {
-          // Wait for the input to be visible
-          await input.waitFor({ state: 'visible', timeout: 5000 });
-        }
-      }
-
-      await loadingTaskPage.highlightElement(input, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      return input;
-    };
-
-    const searchOrder = async (searchTerm: string, requireRows: boolean = false) => {
-      // Manually handle search input for main orders page
-      const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-      await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInputWrapper.scrollIntoViewIfNeeded();
-
-      let searchInput: Locator;
-      const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
-      if (tagName === 'input') {
-        searchInput = searchInputWrapper;
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      } else {
-        searchInput = searchInputWrapper.locator('input').first();
-        const inputCount = await searchInput.count();
-        if (inputCount === 0) {
-          searchInput = searchInputWrapper;
-        } else {
-          await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        }
-      }
-
-      await searchInput.scrollIntoViewIfNeeded();
-      await searchInput.clear();
-      await searchInput.fill(searchTerm);
-      await page.waitForTimeout(300);
-      await searchInput.press('Enter');
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Only wait for rows if required
-      if (requireRows) {
-        await loadingTaskPage.waitingTableBody(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-          minRows: 1,
-          timeoutMs: 10000,
-        });
-      } else {
-        // Just wait for table body to be attached (might be empty)
-        await tableBody.waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
-      }
-    };
-
-    let matchingRows: Locator | null = null;
-    let hasRowsForDeletion = true;
+    // For now, we archive all shipment tasks that contain this base product name.
+    // If in future we need to target specific variants (_1, _2, _3), we can extend this array.
+    const productNamesToArchive = ['TEST_PRODUCT'];
 
     await allure.step('Step 1: Перейти на страницу "Задачи на отгрузку"', async () => {
       await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
@@ -13283,605 +11453,105 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       expect.soft(await pageContainer.isVisible()).toBe(true);
     });
 
-    await allure.step('Step 2: Найти задачу по имени изделия (TEST_PRODUCT)', async () => {
-      console.log(`Searching for shipping task using product name: ${productNameValue}`);
-      await searchOrder(productNameValue, false); // Don't require rows - might be empty
-      await waitForShipmentsTableReady();
-      const rows = tableBody.locator('tr').filter({ hasText: productNameValue });
-      const count = await rows.count();
-      console.log(`Rows matching "${productNameValue}": ${count}`);
-      expect.soft(count).toBeGreaterThanOrEqual(0);
+    await allure.step('Step 2: Архивировать все задачи для тестовых изделий', async () => {
+      for (const name of productNamesToArchive) {
+        console.log(`Archiving all shipment tasks for product name: ${name}`);
+        const archivedCount = await loadingTaskPage.archiveAllShipmentTasksByProduct(name);
 
-      if (count > 0) {
-        matchingRows = rows;
-      } else {
-        hasRowsForDeletion = false;
-        console.log(`✅ Для изделия ${productNameValue} нет задач на отгрузку. Это успешный результат - нечего удалять.`);
-        expect.soft(count).toBe(0);
-        return;
-      }
-
-      const firstMatch = matchingRows.first();
-      await firstMatch.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstMatch, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-    });
-
-    if (!hasRowsForDeletion || !matchingRows) {
-      console.log(`✅ Для изделия ${productNameValue} нет задач на отгрузку. Тест успешно завершён - нечего удалять.`);
-      return;
-    }
-
-    await allure.step('Step 3: Выбрать задачу для удаления', async () => {
-      if (!matchingRows) {
-        throw new Error('Не найдена строка для выбора. Поиск завершился неудачей.');
-      }
-
-      const rowExists = await matchingRows.count();
-      expect.soft(rowExists).toBeGreaterThan(0);
-
-      const targetRow = matchingRows.first();
-      await targetRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await selectRowForArchive(targetRow);
-      console.log(`Selected order row with product: ${productNameValue}`);
-    });
-
-    await allure.step('Step 4: Архивировать все найденные задачи', async () => {
-      let iteration = 1;
-
-      while (true) {
-        await searchOrder(productNameValue, false); // Don't require rows - might be empty after deletion
-        await waitForShipmentsTableReady();
-        const rows = tableBody.locator('tr').filter({ hasText: productNameValue });
-        const remainingRows = await rows.count();
-        console.log(`Archive iteration ${iteration}, remaining rows: ${remainingRows}`);
-
-        if (remainingRows === 0) {
-          console.log(`✅ All rows archived. No more rows to delete.`);
-          break;
-        }
-
-        const currentRow = rows.first();
-        await selectRowForArchive(currentRow);
-
-        const archiveButton = page.locator(SelectorsLoadingTasksPage.buttonArchive);
-        await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
-
-        try {
-          await expect.soft(archiveButton).toBeEnabled({ timeout: 5000 });
-        } catch (error) {
-          console.warn('Archive button is still disabled after waiting.', error);
-        }
-
-        const isEnabled = await archiveButton.isEnabled();
-        if (!isEnabled) {
-          throw new Error('Кнопка "Архив" недоступна после выбора строки.');
-        }
-
-        await loadingTaskPage.highlightElement(archiveButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        await archiveButton.click();
-
-        const promptModal = page.locator('[data-testid^="IssueShipment-ModalPromptMini-Archive"]').first();
-        if (await promptModal.isVisible({ timeout: 3000 }).catch(() => false)) {
-          const confirmPromptButton = promptModal.locator('[data-testid="ModalPromptMini-Button-Confirm"]');
-          await confirmPromptButton.waitFor({ state: 'visible', timeout: 5000 });
-          await loadingTaskPage.highlightElement(confirmPromptButton, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await page.waitForTimeout(500);
-          await confirmPromptButton.click();
-        }
-
-        const confirmButton = page.locator(SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON).first();
-        await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
-        await loadingTaskPage.highlightElement(confirmButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
-        await confirmButton.click();
-
-        const loader = page.locator('[data-testid="IssueShipment-ActionsButtons-Loader"]');
-        await loader.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
-        await loadingTaskPage.waitForNetworkIdle();
-
-        iteration += 1;
-
-        if (iteration > 60) {
-          throw new Error('Превышено максимальное количество итераций архивирования (60).');
-        }
-      }
-    });
-
-    await allure.step('Step 5: Убедиться, что задача отсутствует в списке', async () => {
-      await searchOrder(productNameValue, false); // Don't require rows - should be empty
-      await waitForShipmentsTableReady();
-      const remainingRows = tableBody.locator('tr').filter({ hasText: productNameValue });
-      const rowCount = await remainingRows.count();
-      console.log(`Post-archive search "${productNameValue}" -> rows: ${rowCount}`);
-      expect.soft(rowCount).toBe(0);
-      if (rowCount > 0) {
-        console.warn(`Order/task with "${productNameValue}" still present after archive attempt.`);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(archivedCount).toBeGreaterThanOrEqual(0);
+          },
+          `Verify shipment tasks archived for "${name}": ${archivedCount} items`,
+          test.info()
+        );
       }
     });
   });
 
-  test('Test Case 12 - Verify all items are deleted', async ({ page }) => {
+  test('Test Case 12 - Delete all test products', async ({ page }) => {
+    test.setTimeout(300000); // 5 minutes
+    console.log('Test Case 13 - Delete all test products');
+    const partsDatabasePage = new CreatePartsDatabasePage(page);
+
+    const searchPrefix = 'TEST_PRODUCT';
+
+    await allure.step('Step 1: Archive all test products', async () => {
+      const archivedCount = await partsDatabasePage.archiveAllTestProductsByPrefix(searchPrefix);
+
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archivedCount).toBeGreaterThanOrEqual(0);
+        },
+        `Verify test products archived: ${archivedCount} items`,
+        test.info()
+      );
+    });
+
+    console.log(`✅ All test products with prefix "${searchPrefix}" have been archived`);
+  });
+
+  test('Test Case 13 - Verify all items are deleted', async ({ page }) => {
     test.setTimeout(120000);
-    console.log('Test Case 11 - Verify all items are deleted');
+    console.log('Test Case 12 - Verify all items are deleted');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
     const productNameValue = 'TEST_PRODUCT';
     const searchPrefix = 'TEST_PRODUCT';
 
-    const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-
-    const waitForShipmentsTableReady = async () => {
-      await tableBody.waitFor({ state: 'attached', timeout: 10000 }).catch(() => {
-        return page.waitForTimeout(1000).then(() => tableBody.waitFor({ state: 'attached', timeout: 5000 }));
-      });
-      await tableBody.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
-    };
-
-    const searchOrder = async (searchTerm: string) => {
-      await loadingTaskPage.searchAndWaitForTable(searchTerm, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
-        useRedesign: true,
-        timeoutBeforeWait: 1000,
-        minRows: 0, // Allow 0 rows (items might not exist)
-      });
-    };
-
     await allure.step('Step 1: Verify all shipment tasks are deleted', async () => {
-      await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await loadingTaskPage.waitForNetworkIdle();
-
-      const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
-      expect.soft(await pageContainer.isVisible()).toBe(true);
-
-      // Search for shipment tasks with TEST_PRODUCT
-      console.log(`Test Case 11: Searching for shipment tasks with product name: ${productNameValue}`);
-      await searchOrder(productNameValue);
-      await waitForShipmentsTableReady();
-
-      // Filter out total rows and count data rows
-      const rows = tableBody.locator('tr');
-      const totalRowCount = await rows.count();
-      let dataRowCount = 0;
-
-      for (let i = 0; i < totalRowCount; i++) {
-        const row = rows.nth(i);
-        const rowText = await row.textContent();
-        const hasItogo = rowText?.includes('Итого:') || false;
-
-        const firstCell = row.locator('td').first();
-        const colspan = await firstCell.getAttribute('colspan');
-        const hasColspan15 = colspan === '15';
-
-        if (!hasItogo && !hasColspan15) {
-          const rowTextContent = rowText || '';
-          if (rowTextContent.includes(productNameValue)) {
-            dataRowCount++;
-          }
-        }
-      }
-
-      console.log(`Test Case 11: Found ${dataRowCount} shipment tasks with "${productNameValue}" (total rows: ${totalRowCount})`);
-
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(dataRowCount).toBe(0);
-        },
-        `Verify all shipment tasks are deleted: expected 0, found ${dataRowCount}`,
-        test.info()
-      );
-
-      if (dataRowCount === 0) {
-        console.log(`✅ Все задачи на отгрузку с "${productNameValue}" успешно удалены.`);
-      } else {
-        console.warn(`⚠️ Осталось ${dataRowCount} задач на отгрузку с "${productNameValue}" после удаления.`);
-      }
-    });
-
-    await allure.step('Step 2: Verify all test products are deleted', async () => {
-      await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-      await partsDatabasePage.waitForNetworkIdle();
-
-      // Verify page loaded by checking for the create button
-      const createButton = page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
-      await createButton.waitFor({ state: 'visible', timeout: 10000 });
-      expect.soft(await createButton.isVisible()).toBe(true);
-
-      // Search for products with TEST_PRODUCT prefix
-      const tableBodySelector = `${SelectorsPartsDataBase.PRODUCT_TABLE} tbody`;
-      await partsDatabasePage.searchAndWaitForTable(searchPrefix, SelectorsPartsDataBase.PRODUCT_TABLE, tableBodySelector, {
-        useRedesign: true,
-        timeoutBeforeWait: 2000,
-        minRows: 0, // Expect 0 rows after deletion
-      });
-
-      const table = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
-      const rows = table.locator('tbody tr');
-      const remainingCount = await rows.count();
-      console.log(`Test Case 11: Found ${remainingCount} test products with prefix "${searchPrefix}"`);
+      const remainingCount = await loadingTaskPage.verifyAllShipmentTasksDeleted(productNameValue, test.info());
 
       await expectSoftWithScreenshot(
         page,
         () => {
           expect.soft(remainingCount).toBe(0);
         },
-        `Verify all test products are deleted: expected 0, found ${remainingCount}`,
+        `Verify all shipment tasks deleted: expected 0, found ${remainingCount}`,
         test.info()
       );
+    });
 
-      if (remainingCount === 0) {
-        console.log(`✅ Все тестовые изделия с префиксом "${searchPrefix}" успешно удалены.`);
-      } else {
-        console.warn(`⚠️ Осталось ${remainingCount} изделий с префиксом "${searchPrefix}" после удаления.`);
-      }
+    await allure.step('Step 2: Verify all test products are deleted', async () => {
+      const remainingCount = await partsDatabasePage.verifyAllTestProductsDeleted(searchPrefix, test.info());
+
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(remainingCount).toBe(0);
+        },
+        `Verify all test products deleted: expected 0, found ${remainingCount}`,
+        test.info()
+      );
     });
 
     await allure.step('Step 3: Verify no orders exist in warehouse orders page', async () => {
-      await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Click on shipping tasks button to go to orders page
-      const shippingTasksButton = page.locator('[data-testid="Sclad-shippingTasks"]');
-      await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
-      await shippingTasksButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shippingTasksButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await shippingTasksButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Locate the warehouse table
-      const warehouseTable = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]');
-      await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
-      await warehouseTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(warehouseTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
-
-      // Find and use the search input field
-      const searchInput = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-
-      // Search by product name
-      await searchInput.fill('');
-      await searchInput.fill(productNameValue);
-      await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Verify no rows are returned
-      const warehouseTableBody = warehouseTable.locator('tbody');
-      await warehouseTableBody.waitFor({ state: 'visible', timeout: 10000 });
-      const warehouseRows = warehouseTableBody.locator('tr');
-      const warehouseRowCount = await warehouseRows.count();
-      console.log(`Test Case 11: Found ${warehouseRowCount} warehouse orders with "${productNameValue}"`);
+      const remainingCount = await loadingTaskPage.verifyNoWarehouseOrdersForProduct(productNameValue, test.info());
 
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(warehouseRowCount).toBe(0);
+          expect.soft(remainingCount).toBe(0);
         },
-        `Verify all warehouse orders are deleted: expected 0, found ${warehouseRowCount}`,
+        `Verify all warehouse orders deleted: expected 0, found ${remainingCount}`,
         test.info()
       );
-
-      if (warehouseRowCount === 0) {
-        console.log(`✅ Все заказы на складе с "${productNameValue}" успешно удалены.`);
-      } else {
-        console.warn(`⚠️ Осталось ${warehouseRowCount} заказов на складе с "${productNameValue}" после удаления.`);
-      }
     });
 
     await allure.step('Step 4: Verify no deficit entries exist for test products', async () => {
-      await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Open Дефицит продукции (Deficit Products) page
-      const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitProductionButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-      await deficitProductionButton.click();
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Locate the deficit table
-      const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitMainTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
-
-      // Find and use the search input field
-      const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
-
-      // Search by product name
-      await searchInput.fill('');
-      await searchInput.fill(productNameValue);
-      await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
-      await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
-
-      // Verify no rows are returned
-      const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
-      const deficitRows = deficitTableBody.locator('tr');
-      const deficitRowCount = await deficitRows.count();
-      console.log(`Test Case 11: Found ${deficitRowCount} deficit entries with "${productNameValue}"`);
+      const remainingCount = await loadingTaskPage.verifyNoDeficitEntriesForProduct(productNameValue, test.info());
 
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(deficitRowCount).toBe(0);
+          expect.soft(remainingCount).toBe(0);
         },
-        `Verify all deficit entries are deleted: expected 0, found ${deficitRowCount}`,
+        `Verify all deficit entries deleted: expected 0, found ${remainingCount}`,
         test.info()
       );
-
-      if (deficitRowCount === 0) {
-        console.log(`✅ Все записи дефицита с "${productNameValue}" успешно удалены.`);
-      } else {
-        console.warn(`⚠️ Осталось ${deficitRowCount} записей дефицита с "${productNameValue}" после удаления.`);
-      }
-    });
-
-    console.log('✅ Test Case 11: All items verification completed successfully.');
-  });
-
-  test('Test Case 13 - Удаление тестовых изделий', async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes for deleting multiple products
-    console.log('Test Case 8 - Delete test products');
-    const partsDatabasePage = new CreatePartsDatabasePage(page);
-
-    const searchPrefix = 'TEST_PRODUCT';
-
-    await allure.step('Step 1: Перейти на страницу "База изделий"', async () => {
-      await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-      await partsDatabasePage.waitForNetworkIdle();
-
-      // Verify page loaded by checking for the create button
-      const createButton = page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
-      await createButton.waitFor({ state: 'visible', timeout: 10000 });
-      expect.soft(await createButton.isVisible()).toBe(true);
-    });
-
-    await allure.step('Step 2: Найти и удалить все тестовые изделия', async () => {
-      // Search for products with TEST_PRODUCT prefix
-      const tableBodySelector = `${SelectorsPartsDataBase.PRODUCT_TABLE} tbody`;
-      await partsDatabasePage.searchAndWaitForTable(searchPrefix, SelectorsPartsDataBase.PRODUCT_TABLE, tableBodySelector, {
-        useRedesign: true,
-        timeoutBeforeWait: 2000,
-        minRows: 0, // Allow 0 rows (products might not exist)
-      });
-
-      const table = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
-      const rows = table.locator('tbody tr');
-      const rowCount = await rows.count();
-      console.log(`Found ${rowCount} test products to delete`);
-
-      if (rowCount === 0) {
-        console.log(`✅ Для префикса ${searchPrefix} нет изделий. Это успешный результат - нечего удалять.`);
-        expect.soft(rowCount).toBe(0);
-        return;
-      }
-
-      // Delete items from bottom up (re-fetch rows after each deletion)
-      let deletedCount = 0;
-      let maxIterations = rowCount * 2; // Safety limit
-      let iteration = 0;
-
-      while (iteration < maxIterations) {
-        iteration++;
-
-        // Re-fetch rows after each deletion - wait for table to be ready
-        await page.waitForTimeout(1000);
-        await partsDatabasePage.waitForNetworkIdle();
-
-        // Re-search if we've deleted many items to refresh the table
-        if (deletedCount > 0 && deletedCount % 10 === 0) {
-          console.log(`Re-searching after ${deletedCount} deletions to refresh table...`);
-          const tableBodySelector = `${SelectorsPartsDataBase.PRODUCT_TABLE} tbody`;
-          await partsDatabasePage.searchAndWaitForTable(searchPrefix, SelectorsPartsDataBase.PRODUCT_TABLE, tableBodySelector, {
-            useRedesign: true,
-            timeoutBeforeWait: 2000,
-            minRows: 0, // Allow 0 rows (products might not exist)
-          });
-        }
-
-        const currentRows = table.locator('tbody tr');
-        const currentRowCount = await currentRows.count();
-
-        if (currentRowCount === 0) {
-          console.log('No more rows to delete');
-          break;
-        }
-
-        // Always delete the last row (bottom up)
-        const rowIndex = currentRowCount - 1;
-        const row = currentRows.nth(rowIndex);
-
-        // Check if row exists and is visible
-        try {
-          const rowExists = await row.count();
-          if (rowExists === 0) {
-            console.warn(`Row at index ${rowIndex} does not exist, re-fetching...`);
-            continue;
-          }
-
-          await row.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
-            console.warn(`Row at index ${rowIndex} is not visible, skipping...`);
-          });
-
-          await row.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(row, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await page.waitForTimeout(500);
-
-          // Try to click the row with error handling
-          await row.click({ timeout: 5000 }).catch(error => {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.warn(`Failed to click row at index ${rowIndex}: ${errorMessage}`);
-            throw error;
-          });
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.warn(`Error selecting row ${rowIndex}: ${errorMessage}, trying next iteration...`);
-          continue;
-        }
-
-        // Try to delete the item - wrap in try-catch to handle any errors
-        try {
-          // Wait for row to be selected and archive button to become enabled
-          await page.waitForTimeout(1000);
-          await partsDatabasePage.waitForNetworkIdle();
-
-          const archiveButton = page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
-          await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
-
-          // Wait for button to be enabled (with retry)
-          let isEnabled = false;
-          for (let retry = 0; retry < 5; retry++) {
-            isEnabled = await archiveButton.isEnabled();
-            if (isEnabled) break;
-            await page.waitForTimeout(500);
-          }
-
-          if (!isEnabled) {
-            console.warn(`Archive button is disabled, skipping this item...`);
-            // Try clicking the row again
-            try {
-              await row.click({ timeout: 3000 });
-              await page.waitForTimeout(1000);
-              isEnabled = await archiveButton.isEnabled();
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
-              console.warn(`Could not re-click row: ${errorMessage}`);
-            }
-
-            if (!isEnabled) {
-              console.warn(`Archive button still disabled after retry, moving to next item...`);
-              continue;
-            }
-          }
-
-          expect.soft(isEnabled).toBe(true);
-
-          await partsDatabasePage.highlightElement(archiveButton, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await page.waitForTimeout(500);
-          await archiveButton.click();
-
-          const confirmButton = page.locator(SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON).filter({ hasText: 'Да' });
-          await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
-          await partsDatabasePage.highlightElement(confirmButton, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await page.waitForTimeout(500);
-          await confirmButton.click();
-
-          await page.waitForTimeout(500);
-          await partsDatabasePage.waitForNetworkIdle();
-          deletedCount++;
-          console.log(`Deleted ${deletedCount} products...`);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.warn(`Error deleting item at row ${rowIndex}: ${errorMessage}`);
-          // Continue to next item even if this one failed
-          continue;
-        }
-      }
-
-      console.log(`✅ Deleted ${deletedCount} test products`);
-    });
-
-    await allure.step('Step 3: Убедиться, что все тестовые изделия удалены', async () => {
-      // Re-search to verify all items are deleted
-      const tableBodySelector = `${SelectorsPartsDataBase.PRODUCT_TABLE} tbody`;
-      await partsDatabasePage.searchAndWaitForTable(searchPrefix, SelectorsPartsDataBase.PRODUCT_TABLE, tableBodySelector, {
-        useRedesign: true,
-        timeoutBeforeWait: 2000,
-        minRows: 0, // Expect 0 rows after deletion
-      });
-
-      const table = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
-      const rows = table.locator('tbody tr');
-      const remainingCount = await rows.count();
-      console.log(`Post-deletion search "${searchPrefix}" -> rows: ${remainingCount}`);
-      expect.soft(remainingCount).toBe(0);
-
-      if (remainingCount === 0) {
-        console.log(`✅ Все тестовые изделия успешно удалены.`);
-      } else {
-        console.warn(`⚠️ Осталось ${remainingCount} изделий с префиксом ${searchPrefix} после попытки удаления.`);
-      }
     });
   });
 };

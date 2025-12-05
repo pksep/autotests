@@ -16,17 +16,21 @@ export const loadingMainTable = '.scroll-wrapper__slot';
 
 // Modal selectors
 export const modalListProduct = '[data-testid="AddOrder-ModalListProduct"]';
+export const modalListProductNew = 'dialog[data-testid="AddOrder-ModalListProduct-Modal"][open]';
 export const modalListBuyer = '[data-testid="AddOrder-ModalListBuyer"]';
 export const searchDropdownInput = '[data-testid="Search-Dropdown-Input"]';
+export const searchDropdownInputNew = '[data-testid="AddOrder-ModalListProduct-Search-Dropdown-Input"]';
 export const quantityInput = '[data-testid="AddOrder-Quantity-InputNumber-Input"]';
 export const editTitle = '[data-testid="AddOrder-EditTitle"]';
 export const addOrderComponent = '[data-testid="AddOrder"]';
+export const addOrderComponentCheckboxNew = 'input[data-testid="AddOrder-ModalListProduct-ProductCheckbox-2"]';
 
 // IssueShipment page and table selectors
 export const issueShipmentPage = '[data-testid="IssueShipment"]';
 const ISSUE_SHIPMENT_TABLE_PREFIX = 'IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable';
 export const SHIPMENTS_TABLE = `[data-testid="${ISSUE_SHIPMENT_TABLE_PREFIX}-Table"]`;
 export const SHIPMENTS_TABLE_BODY = `[data-testid="${ISSUE_SHIPMENT_TABLE_PREFIX}-Table-Tbody"]`;
+export const EDIT_SHIPMENTS_TABLE_BODY = `[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table-Tbody"]`;
 export const SHIPMENTS_SEARCH_INPUT = `${ISSUE_SHIPMENT_TABLE_PREFIX}-Thead-SearchInput`;
 export const SHIPMENTS_SEARCH_INPUT_SELECTOR = `[data-testid="${ISSUE_SHIPMENT_TABLE_PREFIX}-Thead-SearchInput-Dropdown-Input"]`;
 export const SHIPMENTS_ORDER_NUMBER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-NumberOrder"]`;
