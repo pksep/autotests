@@ -479,18 +479,18 @@ export class CreateLoadingTaskPage extends PageObject {
         });
         await page.waitForTimeout(500);
 
-        // Click on column 2 (3rd column, 0-indexed) of the last data row
-        const column2 = lastRow.locator('td').nth(2);
+        // Click the DateOrder cell to select the row (same approach as selectRowAndClickEdit)
+        const dateOrderCell = lastRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
 
-        const column2Exists = await column2.count();
-        if (column2Exists === 0) {
-          logger.warn('Column 2 does not exist, row may have been deleted.');
+        const dateOrderCellExists = await dateOrderCell.count();
+        if (dateOrderCellExists === 0) {
+          logger.warn('DateOrder cell does not exist, row may have been deleted.');
           return false;
         }
 
-        await column2.waitFor({ state: 'visible', timeout: 10000 });
-        await column2.scrollIntoViewIfNeeded();
-        await this.highlightElement(column2, {
+        await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
+        await dateOrderCell.scrollIntoViewIfNeeded();
+        await this.highlightElement(dateOrderCell, {
           backgroundColor: 'cyan',
           border: '2px solid blue',
           color: 'black',
@@ -499,11 +499,14 @@ export class CreateLoadingTaskPage extends PageObject {
 
         // Try normal click first, then force click if needed
         try {
-          await column2.click({ timeout: 10000 });
+          await dateOrderCell.click({ timeout: 10000 });
         } catch {
           // If normal click fails, try force click
-          await column2.click({ force: true, timeout: 10000 });
+          await dateOrderCell.click({ force: true, timeout: 10000 });
         }
+
+        // Wait a bit for row selection to register
+        await page.waitForTimeout(500);
 
         const archiveButton = page.locator(LoadingTasksSelectors.buttonArchive);
         await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -592,13 +595,44 @@ export class CreateLoadingTaskPage extends PageObject {
       // If result is present, archive last item
       const archived = await archiveLastItem(lastRow);
       if (!archived) {
-        logger.warn(`Failed to archive item at iteration ${iteration}. Breaking to avoid infinite loop.`);
-        break;
+        logger.warn(`Failed to archive item at iteration ${iteration}. Re-searching to check if item was actually archived...`);
+        // Re-search to see if the item was actually archived despite the error
+        await searchByProductName();
+        const { count: remainingAfterFailed, lastRow: remainingRow } = await getMatchingRows();
+        if (remainingAfterFailed === 0 || remainingRow === null) {
+          // Item was actually archived, just the button state check failed
+          logger.info('Item was actually archived despite button state check failure.');
+          archivedCount++;
+          break;
+        }
+        // If item still exists and we can't archive it, try one more time with a longer wait
+        if (remainingAfterFailed === remainingRows) {
+          logger.warn('Item still exists after failed archive attempt. Waiting longer and retrying...');
+          await page.waitForTimeout(2000);
+          await searchByProductName();
+          const { count: retryRemaining, lastRow: retryRow } = await getMatchingRows();
+          if (retryRemaining > 0 && retryRow !== null) {
+            const retryArchived = await archiveLastItem(retryRow);
+            if (!retryArchived) {
+              logger.error(`Failed to archive item after retry. Breaking to avoid infinite loop.`);
+              break;
+            }
+            archivedCount++;
+          } else {
+            // Item was archived during the wait
+            archivedCount++;
+            break;
+          }
+        } else {
+          // Item count changed, continue
+          archivedCount++;
+        }
+      } else {
+        archivedCount++;
       }
 
-      archivedCount++;
       iteration += 1;
-      logger.info(`Completed archive iteration ${iteration}. Re-running search to refresh the table...`);
+      logger.info(`Completed archive iteration ${iteration - 1}. Re-running search to refresh the table...`);
 
       if (iteration > maxIterations) {
         throw new Error(
@@ -744,7 +778,7 @@ export class CreateLoadingTaskPage extends PageObject {
 
     // Locate the warehouse table
     const warehouseTable = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]');
-    await warehouseTable.waitFor({ state: 'visible', timeout: 3000 });
+    await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
     await warehouseTable.scrollIntoViewIfNeeded();
     await this.highlightElement(warehouseTable, {
       backgroundColor: 'cyan',
@@ -753,9 +787,23 @@ export class CreateLoadingTaskPage extends PageObject {
     });
     await page.waitForTimeout(500);
 
-    // Find and use the search input field
-    const searchInput = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]').first();
-    await searchInput.waitFor({ state: 'visible', timeout: 3000 });
+    // Find and use the search input field (manual approach like Test Case 3)
+    const searchInput = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]');
+
+    // Wait for search input with longer timeout and try multiple approaches
+    try {
+      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+    } catch (error) {
+      // If not visible, try attached state
+      try {
+        await searchInput.waitFor({ state: 'attached', timeout: 5000 });
+        logger.info('Search input found in DOM but not visible, attempting to interact anyway');
+      } catch (e) {
+        logger.error(`Could not find search input: ${error}`);
+        throw new Error(`Search input not found on warehouse orders page: ${error}`);
+      }
+    }
+
     await searchInput.scrollIntoViewIfNeeded();
     await this.highlightElement(searchInput, {
       backgroundColor: 'yellow',
@@ -764,28 +812,45 @@ export class CreateLoadingTaskPage extends PageObject {
     });
     await page.waitForTimeout(500);
 
-    // Search by product name
-    await searchInput.fill('');
-    await searchInput.fill(productName);
-    await searchInput.press('Enter');
-
-    // Wait for search to complete and table to update
-    await this.waitForNetworkIdle();
-
-    // Verify search was applied by checking the input value
+    // Try clicking the container first (for dropdown inputs)
     try {
-      await page.waitForFunction(
-        (expectedValue: string) => {
-          const selector = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]';
-          const input = document.querySelector(selector) as HTMLInputElement;
-          return input && input.value === expectedValue;
-        },
-        productName,
-        { timeout: 5000 }
-      );
-    } catch {
-      logger.warn('Could not verify search input value, continuing anyway');
+      await searchInput.click({ timeout: 2000 });
+      await page.waitForTimeout(300);
+    } catch (e) {
+      // Container might already be open, continue
+      logger.info('Search input container might already be open');
     }
+
+    // Find the actual input element inside the container
+    let actualInput = searchInput.locator('input').first();
+    const inputCount = await actualInput.count();
+    if (inputCount === 0) {
+      // If no input inside, try using the container itself
+      actualInput = searchInput;
+    }
+
+    // Wait for input to be ready
+    await actualInput.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
+      // Try attached state if not visible
+      return actualInput.waitFor({ state: 'attached', timeout: 5000 });
+    });
+
+    // Search by product name
+    await actualInput.fill('');
+    await page.waitForTimeout(200);
+    await actualInput.fill(productName);
+    await page.waitForTimeout(300);
+
+    const currentValue = await actualInput.inputValue();
+    logger.info(`Search field value before Enter: "${currentValue}"`);
+
+    await actualInput.press('Enter');
+    await this.waitForNetworkIdle();
+    await page.waitForTimeout(1000);
+
+    const finalValue = await actualInput.inputValue();
+    logger.info(`Search field value after Enter: "${finalValue}"`);
+    logger.info(`Search performed for: "${productName}"`);
 
     // Additional 1 second pause after searching before checking results
     await page.waitForTimeout(1000);
@@ -1764,10 +1829,7 @@ export class CreateLoadingTaskPage extends PageObject {
       await tableBody.waitFor({ state: 'visible', timeout: 10000 });
 
       // Normalize expected order number (remove "№" and extra spaces)
-      const normalizeOrderNumber = (orderNum: string): string => {
-        return orderNum.replace(/^№\s*/, '').trim();
-      };
-      const normalizedExpected = normalizeOrderNumber(expectedOrderNumber);
+      const normalizedExpected = this.normalizeOrderNumber(expectedOrderNumber);
 
       // Find the row that matches the expected order number
       const rows = tableBody.locator('tr');
@@ -1780,7 +1842,7 @@ export class CreateLoadingTaskPage extends PageObject {
         if ((await orderNumberCell.count()) > 0) {
           await orderNumberCell.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
           const cellOrderNumber = ((await orderNumberCell.textContent()) || '').trim();
-          const normalizedCell = normalizeOrderNumber(cellOrderNumber);
+          const normalizedCell = this.normalizeOrderNumber(cellOrderNumber);
 
           // Check if this row matches the expected order number
           if (normalizedCell.includes(normalizedExpected) || normalizedExpected.includes(normalizedCell.split(' от ')[0])) {
@@ -1826,9 +1888,6 @@ export class CreateLoadingTaskPage extends PageObject {
    * @param orderNum - The order number to normalize
    * @returns Normalized order number
    */
-  private normalizeOrderNumber(orderNum: string): string {
-    return orderNum.replace(/^№\s*/, '').trim();
-  }
 
   /**
    * Finds a row in a table that matches the expected order number
@@ -1904,6 +1963,140 @@ export class CreateLoadingTaskPage extends PageObject {
     });
     await this.page.waitForTimeout(500);
     return ((await cell.textContent()) || '').trim();
+  }
+
+  /**
+   * Opens an order in a new tab and returns the page
+   * @param orderNumber - The order number to search for and open
+   * @returns The new Page instance with the order opened in edit mode
+   */
+  async openOrderInNewTab(orderNumber: string): Promise<Page> {
+    const context = this.page.context();
+    const newPage = await context.newPage();
+    const newPageLoadingTaskPage = new CreateLoadingTaskPage(newPage);
+
+    try {
+      await newPageLoadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
+      await newPageLoadingTaskPage.waitForNetworkIdle();
+      await newPage.waitForTimeout(1000);
+
+      const success = await newPageLoadingTaskPage.findOrderAndClickEdit(orderNumber);
+      if (!success) {
+        throw new Error(`Failed to open order ${orderNumber} in new tab`);
+      }
+
+      return newPage;
+    } catch (error) {
+      await newPage.close().catch(() => {});
+      throw error;
+    }
+  }
+
+  /**
+   * Verifies a row in the positions table matches expected values
+   * @param rowIndex - The index of the row to verify (0-based)
+   * @param expectedOrderSuffix - Expected order suffix (e.g., '/0', '/1', '/2')
+   * @param expectedProductName - Expected product name (partial match)
+   * @param expectedArticleNumber - Optional expected article number (exact match)
+   * @returns true if all verifications pass, false otherwise
+   */
+  async verifyPositionsTableRow(rowIndex: number, expectedOrderSuffix: string, expectedProductName: string, expectedArticleNumber?: string): Promise<boolean> {
+    try {
+      const positionsTable = this.page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
+      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
+      const bodyRows = positionsTable.locator('tbody tr');
+      const row = bodyRows.nth(rowIndex);
+      await row.waitFor({ state: 'visible', timeout: 10000 });
+
+      // Verify order number contains expected suffix
+      const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+      if ((await orderNumberCell.count()) === 0) {
+        logger.error(`Row ${rowIndex}: Order number cell not found`);
+        return false;
+      }
+      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
+      const orderNumberText = ((await orderNumberCell.textContent()) || '').trim();
+      if (!orderNumberText.includes(expectedOrderSuffix)) {
+        logger.error(`Row ${rowIndex}: Order number "${orderNumberText}" does not contain suffix "${expectedOrderSuffix}"`);
+        return false;
+      }
+
+      // Verify product name
+      const productNameCell = row.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
+      if ((await productNameCell.count()) === 0) {
+        logger.error(`Row ${rowIndex}: Product name cell not found`);
+        return false;
+      }
+      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
+      const productNameText = ((await productNameCell.textContent()) || '').trim();
+      if (!productNameText.includes(expectedProductName)) {
+        logger.error(`Row ${rowIndex}: Product name "${productNameText}" does not include "${expectedProductName}"`);
+        return false;
+      }
+
+      // Verify article number if provided
+      if (expectedArticleNumber) {
+        const articleCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
+        if ((await articleCell.count()) === 0) {
+          logger.error(`Row ${rowIndex}: Article cell not found`);
+          return false;
+        }
+        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
+        const articleText = ((await articleCell.textContent()) || '').trim();
+        if (articleText !== expectedArticleNumber) {
+          logger.error(`Row ${rowIndex}: Article number "${articleText}" does not match expected "${expectedArticleNumber}"`);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      logger.error(`Failed to verify positions table row ${rowIndex}: ${error}`);
+      return false;
+    }
+  }
+
+  /**
+   * Compares cell values between two tabs/pages
+   * @param tab1 - First page/tab
+   * @param tab2 - Second page/tab
+   * @param tab1Selector - Selector for the cell in tab1
+   * @param tab2Selector - Selector for the cell in tab2
+   * @param normalizeFn - Optional normalization function to apply to both values before comparison
+   * @returns Object with tab1Value, tab2Value, and match boolean
+   */
+  async compareCellValueBetweenTabs(
+    tab1: Page,
+    tab2: Page,
+    tab1Selector: string,
+    tab2Selector: string,
+    normalizeFn?: (val: string) => string
+  ): Promise<{ tab1Value: string; tab2Value: string; match: boolean }> {
+    try {
+      // Get value from tab1
+      await tab1.bringToFront();
+      const tab1Cell = tab1.locator(tab1Selector).first();
+      await tab1Cell.waitFor({ state: 'visible', timeout: 10000 });
+      let tab1Value = ((await tab1Cell.textContent()) || '').trim();
+
+      // Get value from tab2
+      await tab2.bringToFront();
+      const tab2Cell = tab2.locator(tab2Selector).first();
+      await tab2Cell.waitFor({ state: 'visible', timeout: 10000 });
+      let tab2Value = ((await tab2Cell.textContent()) || '').trim();
+
+      // Normalize if function provided
+      if (normalizeFn) {
+        tab1Value = normalizeFn(tab1Value);
+        tab2Value = normalizeFn(tab2Value);
+      }
+
+      const match = tab1Value === tab2Value;
+      return { tab1Value, tab2Value, match };
+    } catch (error) {
+      logger.error(`Failed to compare cell values between tabs: ${error}`);
+      return { tab1Value: '', tab2Value: '', match: false };
+    }
   }
 }
 

@@ -4125,10 +4125,44 @@ export class CreatePartsDatabasePage extends PageObject {
       // Archive
       const archiveButton = this.page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
       await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
-      if (!(await archiveButton.isEnabled())) {
-        console.log('Archive button is disabled, stopping');
+
+      // Check if button is enabled, retry a few times if needed
+      let isEnabled = await archiveButton.isEnabled();
+      if (!isEnabled) {
+        // Retry enabling state a few times
+        for (let retry = 0; retry < 5; retry++) {
+          isEnabled = await archiveButton.isEnabled();
+          if (isEnabled) break;
+          await this.page.waitForTimeout(500);
+        }
+      }
+
+      if (!isEnabled) {
+        console.log('Archive button is disabled after retries. Re-checking if item still exists...');
+        // Re-search to see if the item was actually archived or if it still exists
+        await this.page.waitForTimeout(1000);
+        const recheckTable = this.page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
+        const recheckTableBody = recheckTable.locator('tbody');
+        await recheckTableBody.waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
+        const recheckRows = recheckTableBody.locator('tr');
+        const recheckRowCount = await recheckRows.count();
+
+        if (recheckRowCount === 0) {
+          console.log('Item was actually archived (table is now empty).');
+          archivedCount++;
+          break;
+        }
+
+        if (recheckRowCount < rowCount) {
+          console.log('Item count decreased, item may have been archived. Continuing...');
+          archivedCount++;
+          continue;
+        }
+
+        console.log('Archive button is disabled and item still exists, stopping');
         break;
       }
+
       await archiveButton.click();
 
       // Confirm archive

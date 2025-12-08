@@ -543,6 +543,81 @@ export class PageObject extends AbstractPage {
   }
 
   /**
+   * Normalizes order numbers by removing "№" symbol and trimming whitespace
+   * @param orderNum - The order number string to normalize
+   * @returns Normalized order number without "№" symbol
+   */
+  normalizeOrderNumber(orderNum: string): string {
+    return orderNum.replace(/^№\s*/, '').trim();
+  }
+
+  /**
+   * Normalizes date strings to DD.MM.YYYY format
+   * Handles formats: DD.MM.YYYY, DD.MM.YY, and month names (янв, фев, etc.)
+   * @param rawDate - The raw date string to normalize
+   * @returns Normalized date string in DD.MM.YYYY format, or original string if it's just a number
+   */
+  normalizeDate(rawDate: string): string {
+    if (!rawDate || !rawDate.trim()) {
+      logger.warn('normalizeDate: Empty or undefined date string');
+      return rawDate || '';
+    }
+
+    const trimmedDate = rawDate.trim();
+
+    // Skip normalization if it's just a number (like "0" for DateOrder)
+    if (/^\d+$/.test(trimmedDate)) {
+      return trimmedDate;
+    }
+
+    const parseDate = (dateStr: string): Date => {
+      if (!dateStr || !dateStr.trim()) {
+        throw new Error('Empty date string');
+      }
+
+      if (dateStr.includes('.')) {
+        const parts = dateStr.split('.');
+        if (parts.length >= 3) {
+          const [day, month, yearStr] = parts;
+          const year = yearStr && yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr || '0', 10);
+          return new Date(year, Number(month) - 1, Number(day));
+        }
+      }
+
+      const months: { [key: string]: number } = {
+        янв: 0,
+        фев: 1,
+        мар: 2,
+        апр: 3,
+        май: 4,
+        июн: 5,
+        июл: 6,
+        авг: 7,
+        сен: 8,
+        окт: 9,
+        ноя: 10,
+        дек: 11,
+      };
+      const parts = dateStr.split(' ');
+      const monthName = parts[0].toLowerCase();
+      const day = parseInt(parts[1].replace(',', ''), 10);
+      const year = parseInt(parts[2], 10);
+      return new Date(year, months[monthName], day);
+    };
+
+    try {
+      const date = parseDate(trimmedDate);
+      const day = `${date.getDate()}`.padStart(2, '0');
+      const month = `${date.getMonth() + 1}`.padStart(2, '0');
+      const year = `${date.getFullYear()}`;
+      return `${day}.${month}.${year}`;
+    } catch (error) {
+      logger.warn(`Failed to normalize date "${rawDate}": ${error}`);
+      return rawDate;
+    }
+  }
+
+  /**
    * Retrieves and normalizes the text content of a specified selector.
    * @param selector - The CSS selector for the element to retrieve text from.
    * @returns The normalized text content of the element or null if the element doesn't exist.
