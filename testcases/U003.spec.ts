@@ -646,24 +646,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // First, get the order number with date from the row to extract the date
       const tableBody = page.locator(SelectorsLoadingTasksPage.EDIT_SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstRow);
 
       const orderNumberCell = firstRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderNumberCell);
 
       const orderNumberWithDate = (await orderNumberCell.textContent())?.trim() || '';
       console.log('Order number from row:', orderNumberWithDate);
@@ -676,14 +662,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const editTitle = page.locator('h3').filter({ hasText: 'Редактирование заказа' }).first();
-      await editTitle.waitFor({ state: 'visible', timeout: 10000 });
-      await editTitle.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editTitle, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(editTitle);
 
       const titleText = (await editTitle.textContent())?.trim() || '';
       console.log('Title text:', titleText);
@@ -833,25 +812,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 8: Validate amount in table matches quantity input', async () => {
       const quantityInput = page.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]');
-      await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityInput);
       const inputQuantity = await quantityInput.inputValue();
 
       const quantityCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell);
       const cellQuantity = (await quantityCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -866,25 +831,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 9: Validate Кол-во дней matches date difference', async () => {
       const shipmentPlanDateElement = page.locator('[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]');
-      await shipmentPlanDateElement.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentPlanDateElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentPlanDateElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shipmentPlanDateElement);
       const shipmentPlanDateText = (await shipmentPlanDateElement.textContent())?.trim() || '';
 
       const orderDateElement = page.locator('[data-testid="AddOrder-DateOrder-Calendar-DataPicker-Choose-Value-Display"]');
-      await orderDateElement.waitFor({ state: 'visible', timeout: 10000 });
-      await orderDateElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderDateElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderDateElement);
       const orderDateText = (await orderDateElement.textContent())?.trim() || '';
 
       // Parse dates and calculate difference
@@ -923,14 +874,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       const daysCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
-      await daysCell.waitFor({ state: 'visible', timeout: 10000 });
-      await daysCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(daysCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(daysCell);
       const cellDays = (await daysCell.textContent())?.trim() || '';
       const cellDaysNumber = parseInt(cellDays) || 0;
 
@@ -946,25 +890,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 10: Validate buyer matches selected buyer', async () => {
       const buyerSpan = page.locator('[data-testid="AddOrder-Buyer-SelectedCompany"]');
-      await buyerSpan.waitFor({ state: 'visible', timeout: 10000 });
-      await buyerSpan.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(buyerSpan, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(buyerSpan);
       const selectedBuyer = (await buyerSpan.textContent())?.trim() || '';
 
       const buyerCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]').first();
-      await buyerCell.waitFor({ state: 'visible', timeout: 10000 });
-      await buyerCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(buyerCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(buyerCell);
       const cellBuyer = (await buyerCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -979,25 +909,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 11: Validate Дата по срочности matches calendar display', async () => {
       const urgencyDateDisplay = page.locator('[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]');
-      await urgencyDateDisplay.waitFor({ state: 'visible', timeout: 10000 });
-      await urgencyDateDisplay.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(urgencyDateDisplay, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(urgencyDateDisplay);
       const displayUrgencyDate = (await urgencyDateDisplay.textContent())?.trim() || '';
 
       const urgencyDateCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateByUrgency"]').first();
-      await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
-      await urgencyDateCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(urgencyDateCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(urgencyDateCell);
       const cellUrgencyDate = (await urgencyDateCell.textContent())?.trim() || '';
 
       // Log the date values for debugging
@@ -1031,25 +947,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Note: User specified AddOrder-DateByUrgency but this should likely be AddOrder-DateShippingPlan
       // Using what user specified - can be corrected if needed
       const shipmentPlanDisplay = page.locator('[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]');
-      await shipmentPlanDisplay.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentPlanDisplay.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentPlanDisplay, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shipmentPlanDisplay);
       const displayShipmentDate = (await shipmentPlanDisplay.textContent())?.trim() || '';
 
       const shipmentDateCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateShipments"]').first();
-      await shipmentDateCell.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentDateCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentDateCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shipmentDateCell);
       const cellShipmentDate = (await shipmentDateCell.textContent())?.trim() || '';
 
       const normalizedDisplayDate = loadingTaskPage.normalizeDate(displayShipmentDate);
@@ -1067,26 +969,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 13: Validate StartComplete by checking product characteristic in warehouse', async () => {
       // Get the product name from the table cell we validated earlier
       const productNameCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-      await productNameCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productNameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(productNameCell);
       const cellProductName = (await productNameCell.textContent())?.trim() || '';
 
       // Get the StartComplete value from the table
       const startCompleteCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-StartComplete"]').first();
-      await startCompleteCell.waitFor({ state: 'visible', timeout: 10000 });
-      await startCompleteCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(startCompleteCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(startCompleteCell);
       const startCompleteValue = (await startCompleteCell.textContent())?.trim() || '';
 
       // Open new page context to navigate to products warehouse
@@ -1133,13 +1021,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Click the edit button if enabled
         if (isEnabled) {
-          await editButton.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(editButton, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await newPage.waitForTimeout(500);
+          await partsDatabasePage.waitAndHighlight(editButton);
           await editButton.click();
         } else {
           console.warn('Edit button is disabled. Skipping click and proceeding with available data.');
@@ -1154,14 +1036,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Use soft check for waitFor - if element not found, continue anyway
         try {
-          await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
-          await characteristicElement.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(characteristicElement, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await newPage.waitForTimeout(1500);
+          await partsDatabasePage.waitAndHighlight(characteristicElement, { waitAfter: 1500 });
         } catch (error) {
           console.log('Characteristic element not found within timeout, continuing...');
         }
@@ -1312,13 +1187,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 2: Open new tab, search for order, click on order number cell, then click edit button
       await allure.step('Tab 2: Open new tab, search, select order, and open edit mode', async () => {
         // Create a new page context for Tab 2
-        const context = page.context();
-        const tab2 = await context.newPage();
-        const tab2LoadingTaskPage = new CreateLoadingTaskPage(tab2);
-
-        // Navigate to Задачи на отгрузку in Tab 2
-        await tab2.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-        await tab2LoadingTaskPage.waitForNetworkIdle();
+        const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+          SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+          CreateLoadingTaskPage
+        );
 
         // Wait for the page and table to load
         const issueShipmentPageElement2 = tab2.locator(SelectorsLoadingTasksPage.issueShipmentPage);
@@ -1366,14 +1238,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const firstRow2 = tableBody2.locator('tr').first();
         await firstRow2.waitFor({ state: 'visible', timeout: 10000 });
         const orderNumberCell2 = firstRow2.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Number"]').first();
-        await orderNumberCell2.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(orderNumberCell2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(orderNumberCell2);
         await orderNumberCell2.click();
         await tab2.waitForTimeout(1000);
         await tab2LoadingTaskPage.waitForNetworkIdle();
@@ -1391,12 +1256,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           test.info()
         );
 
-        await tab2LoadingTaskPage.highlightElement(editButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(editButton);
         await editButton.click();
         await tab2LoadingTaskPage.waitForNetworkIdle();
         console.log(`Tab 2: Order opened in edit mode`);
@@ -1556,14 +1416,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
       const dateOrderCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateOrderCellTab1);
       const dateOrderTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
 
@@ -1573,14 +1426,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
 
       const dateOrderCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(dateOrderCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateOrderCellTab2);
       const dateOrderTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
 
@@ -1602,14 +1448,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
       const dateShipmentsCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]').first();
-      await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateShipmentsCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
 
@@ -1619,14 +1458,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
 
       const dateShipmentsCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').first();
-      await dateShipmentsCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(dateShipmentsCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab2);
       const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
 
@@ -1648,14 +1480,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
       const buyersCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Buyers"]').first();
-      await buyersCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await buyersCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(buyersCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(buyersCellTab1);
       const buyersTab1 = (await buyersCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 Buyers: ${buyersTab1}`);
 
@@ -1665,14 +1490,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
 
       const buyersCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]').first();
-      await buyersCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await buyersCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(buyersCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(buyersCellTab2);
       const buyersTab2 = (await buyersCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 Buyers: ${buyersTab2}`);
 
@@ -1698,14 +1516,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find the calendar display element within the cell
       const calendarDisplayTab1 = dateByUrgencyCellTab1.locator('[data-testid="Calendar-DataPicker-Choose-Value-Display"]').first();
-      await calendarDisplayTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await calendarDisplayTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(calendarDisplayTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(calendarDisplayTab1);
       const dateByUrgencyTab1 = (await calendarDisplayTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1}`);
 
@@ -1715,14 +1526,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
 
       const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await dateByUrgencyDisplayTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(dateByUrgencyDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2);
       const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateByUrgency: ${dateByUrgencyTab2}`);
 
@@ -1748,14 +1552,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
       const dateShipmentsCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-DateShipments"]').first();
-      await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateShipmentsCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
 
@@ -1765,14 +1562,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
 
       const dateShipmentsDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsDisplayTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(dateShipmentsDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2);
       const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
 
@@ -1800,14 +1590,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsTimeCellTab1 = firstRow
         .locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]')
         .first();
-      await dateShipmentsTimeCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsTimeCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateShipmentsTimeCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateShipmentsTimeCellTab1);
       const dateShipmentsTimeTab1 = (await dateShipmentsTimeCellTab1.textContent())?.trim() || '';
       // Split by '/' and take first part
       const timeValue = dateShipmentsTimeTab1.split('/')[0].trim();
@@ -1862,13 +1645,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Click the edit button if enabled
         if (isEnabled) {
-          await editButton.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(editButton, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await newPage.waitForTimeout(500);
+          await partsDatabasePage.waitAndHighlight(editButton);
           await editButton.click();
         } else {
           console.warn('Edit button is disabled. Skipping click and proceeding with available data.');
@@ -1883,14 +1660,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Use soft check for waitFor - if element not found, continue anyway
         try {
-          await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
-          await characteristicElement.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(characteristicElement, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await newPage.waitForTimeout(500);
+          await partsDatabasePage.waitAndHighlight(characteristicElement);
         } catch (error) {
           console.log('Characteristic element not found within timeout, continuing...');
         }
@@ -1949,37 +1719,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Create a new tab for the deficit page to preserve Tab 1
-      const context = page.context();
-      const deficitPage = await context.newPage();
-      const deficitLoadingTaskPage = new CreateLoadingTaskPage(deficitPage);
-
       // Navigate to Дефицит продукции page in the new tab
-      await deficitPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-      await deficitLoadingTaskPage.waitForNetworkIdle();
+      const { page: deficitPage, pageObject: deficitLoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.WAREHOUSE.URL,
+        CreateLoadingTaskPage
+      );
 
       // Step 26.1: Open Дефицит продукции
       const deficitProductionButton = deficitPage.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitProductionButton.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await deficitLoadingTaskPage.waitForNetworkIdle();
 
       // Step 26.2: Locate the order filter
       const orderFilter = deficitPage.locator('[data-testid="DeficitIzd-Main-OrderFilter-OrderFilter"]');
-      await orderFilter.waitFor({ state: 'visible', timeout: 10000 });
-      await orderFilter.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(orderFilter, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(orderFilter);
 
       // Step 26.3: Click the filter
       await orderFilter.click();
@@ -1987,38 +1741,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 26.4: Click the label OrderFilterSettings-Chip-Buyer
       const buyerChip = deficitPage.locator('[data-testid="OrderFilterSettings-Chip-Buyer"]').first();
-      await buyerChip.waitFor({ state: 'visible', timeout: 10000 });
-      await buyerChip.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(buyerChip, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(buyerChip);
       await buyerChip.click();
       await deficitLoadingTaskPage.waitForNetworkIdle();
 
       // Step 26.5: Find the table with data-testid:OrderFilterSettings-Table-OrderFilterTable
       const orderFilterTable = deficitPage.locator('[data-testid="OrderFilterSettings-Table-OrderFilterTable"]');
-      await orderFilterTable.waitFor({ state: 'visible', timeout: 10000 });
-      await orderFilterTable.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(orderFilterTable, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(orderFilterTable);
 
       // Step 26.6: Inside the table find the input with data-testid:OrderFilterSettings-Table-Search-Dropdown-Input
       const searchInputWrapper = orderFilterTable.locator('input[data-testid="OrderFilterSettings-Table-Search-Dropdown-Input"]').first();
-      await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInputWrapper.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(searchInputWrapper, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(searchInputWrapper);
       await searchInputWrapper.clear();
       await searchInputWrapper.fill(fullOrderNumberValue);
       await deficitPage.waitForTimeout(300);
@@ -2030,14 +1763,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Confirm that the search results show a single row with our order number
       const tableBody = orderFilterTable.locator('tbody');
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-      await tableBody.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(tableBody, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(tableBody);
       const rows = tableBody.locator('tr');
       const rowCount = await rows.count();
       expect.soft(rowCount).toBe(1);
@@ -2045,25 +1771,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get the first row
       const firstRow = rows.first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(firstRow);
 
       // Verify order number in cell with testid starting with:OrderFilterTableRow-Name-
       const orderNumberCell = firstRow.locator('[data-testid^="OrderFilterTableRow-Name-"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(orderNumberCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(orderNumberCell);
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
       console.log(`Order number in table: ${cellOrderNumber}`);
       await deficitPage.waitForTimeout(500); // Pause to see the value being validated
@@ -2071,14 +1783,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Cross-check on Tab 2 (edit order page)
       await tab2.bringToFront();
       const editTitleTab2 = tab2.locator('[data-testid="AddOrder-EditTitle"]').first();
-      await editTitleTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await editTitleTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(editTitleTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(editTitleTab2);
       const editTitleText = (await editTitleTab2.textContent())?.trim() || '';
       console.log(`Tab 2 edit title: ${editTitleText}`);
       await tab2.waitForTimeout(500); // Pause to see the value being validated
@@ -2087,14 +1792,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify urgency date in cell with testid starting with:OrderFilterTableRow-UrgentDate-
       const urgencyDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-UrgentDate-"]').first();
-      await urgencyDateCell.waitFor({ state: 'visible', timeout: 10000 });
-      await urgencyDateCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(urgencyDateCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(urgencyDateCell);
       const urgencyDateValue = (await urgencyDateCell.textContent())?.trim() || '';
       const normalizedUrgencyDateFromTable = deficitLoadingTaskPage.normalizeDate(urgencyDateValue);
       console.log(`Urgency date in table: ${urgencyDateValue} (normalized: ${normalizedUrgencyDateFromTable})`);
@@ -2111,14 +1809,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Cross-check urgency date on Tab 2
       await tab2.bringToFront();
       const tab2UrgencyDisplay = tab2.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await tab2UrgencyDisplay.waitFor({ state: 'visible', timeout: 10000 });
-      await tab2UrgencyDisplay.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(tab2UrgencyDisplay, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(tab2UrgencyDisplay);
       const tab2UrgencyValue = (await tab2UrgencyDisplay.textContent())?.trim() || '';
       const normalizedTab2Urgency = tab2LoadingTaskPage.normalizeDate(tab2UrgencyValue);
       console.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
@@ -2135,14 +1826,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify shipment plan date in cell with testid starting with:OrderFilterTableRow-PlaneDate-
       const shipmentPlanDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-PlaneDate-"]').first();
-      await shipmentPlanDateCell.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentPlanDateCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(shipmentPlanDateCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(shipmentPlanDateCell);
       const shipmentPlanDateValue = (await shipmentPlanDateCell.textContent())?.trim() || '';
       const normalizedShipmentPlanDateFromTable = deficitLoadingTaskPage.normalizeDate(shipmentPlanDateValue);
       console.log(`Shipment plan date in table: ${shipmentPlanDateValue} (normalized: ${normalizedShipmentPlanDateFromTable})`);
@@ -2159,14 +1843,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Cross-check plan date on Tab 2
       await tab2.bringToFront();
       const tab2PlanDisplay = tab2.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await tab2PlanDisplay.waitFor({ state: 'visible', timeout: 10000 });
-      await tab2PlanDisplay.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPage.highlightElement(tab2PlanDisplay, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(tab2PlanDisplay);
       const tab2PlanValue = (await tab2PlanDisplay.textContent())?.trim() || '';
       const normalizedTab2Plan = tab2LoadingTaskPage.normalizeDate(tab2PlanValue);
       console.log(`Tab 2 plan shipment date: ${tab2PlanValue} (normalized: ${normalizedTab2Plan})`);
@@ -2183,28 +1860,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 26.7: Click checkbox in the row to show item in right side table
       const dataCell = firstRow.locator('[data-testid="DataCell"]').first();
-      await dataCell.waitFor({ state: 'visible', timeout: 10000 });
-      await dataCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(dataCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(dataCell);
       await dataCell.click();
       await deficitLoadingTaskPage.waitForNetworkIdle();
       await deficitPage.waitForTimeout(1000);
 
       // Step 26.8: Find the table on the right side with testid:DeficitIzd-Main-Table
       const deficitMainTable = deficitPage.locator('[data-testid="DeficitIzd-Main-Table"]');
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitMainTable.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(deficitMainTable);
 
       // Get the first data row (skip header)
       const deficitTableBody = deficitMainTable.locator('tbody');
@@ -2222,25 +1885,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Found ${deficitRowCount} row(s) in DeficitIzd-Main-Table`);
 
       const firstDeficitRow = deficitRows.first();
-      await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDeficitRow.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(firstDeficitRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(firstDeficitRow);
 
       // Step 26.9: Validate article name
       const deficitArticleCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Article"]').first();
-      await deficitArticleCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitArticleCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(deficitArticleCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(deficitArticleCell);
       const deficitArticleValue = (await deficitArticleCell.textContent())?.trim() || '';
       console.log(`Deficit table article: ${deficitArticleValue}`);
       await deficitPage.waitForTimeout(500); // Pause to see the value being validated
@@ -2269,14 +1918,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 26.10: Validate product name
       const deficitNameCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
-      await deficitNameCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitNameCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(deficitNameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(deficitNameCell);
       const deficitNameValue = (await deficitNameCell.textContent())?.trim() || '';
       console.log(`Deficit table name: ${deficitNameValue}`);
       await deficitPage.waitForTimeout(500); // Pause to see the value being validated
@@ -2305,14 +1947,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 26.11: Validate urgency date
       const deficitDateUrgencyCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]').first();
-      await deficitDateUrgencyCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitDateUrgencyCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(deficitDateUrgencyCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(deficitDateUrgencyCell);
       const deficitDateUrgencyValue = (await deficitDateUrgencyCell.textContent())?.trim() || '';
       const normalizedDeficitDateUrgency = deficitLoadingTaskPage.normalizeDate(deficitDateUrgencyValue);
       console.log(`Deficit table urgency date: ${deficitDateUrgencyValue} (normalized: ${normalizedDeficitDateUrgency})`);
@@ -2343,14 +1978,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 26.12: Validate shipment date
       const deficitDateShipmentsCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-DateShipments"]').first();
-      await deficitDateShipmentsCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitDateShipmentsCell.scrollIntoViewIfNeeded();
-      await deficitLoadingTaskPage.highlightElement(deficitDateShipmentsCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await deficitPage.waitForTimeout(500);
+      await deficitLoadingTaskPage.waitAndHighlight(deficitDateShipmentsCell);
       const deficitDateShipmentsValue = (await deficitDateShipmentsCell.textContent())?.trim() || '';
       const normalizedDeficitDateShipments = deficitLoadingTaskPage.normalizeDate(deficitDateShipmentsValue);
       console.log(`Deficit table shipment date: ${deficitDateShipmentsValue} (normalized: ${normalizedDeficitDateShipments})`);
@@ -2442,14 +2070,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.3: Find and click the element with testid: Sclad-shippingTasks
       const shippingTasksElement = page.locator('[data-testid="Sclad-shippingTasks"]');
-      await shippingTasksElement.waitFor({ state: 'visible', timeout: 10000 });
-      await shippingTasksElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shippingTasksElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shippingTasksElement);
       await shippingTasksElement.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -2540,14 +2161,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check order number
         const orderNumberCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(1500);
+        await loadingTaskPage.waitAndHighlight(orderNumberCell, { waitAfter: 1500 });
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         const normalizedCellOrder = loadingTaskPage.normalizeOrderNumber(cellOrderNumber);
         const normalizedExpected = loadingTaskPage.normalizeOrderNumber(fullOrderNumberValue);
@@ -2571,14 +2185,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check article number
         const articleCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
-        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(articleCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(articleCell);
         const cellArticle = (await articleCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2592,14 +2199,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Check product name
         await page.waitForTimeout(1000);
         const productNameCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(productNameCell);
         const cellProductName = (await productNameCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2630,14 +2230,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check order number
         const orderNumberCell = matchingRow.locator('[data-testid*="NumberOrder"], [data-testid*="Order"]').first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(orderNumberCell);
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2650,14 +2243,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check article number
         const articleCell = matchingRow.locator('[data-testid*="Article"]').first();
-        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(articleCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(articleCell);
         const cellArticle = (await articleCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2670,14 +2256,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check product name
         const productNameCell = matchingRow.locator('[data-testid*="Name"]').first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(productNameCell);
         const cellProductName = (await productNameCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2712,14 +2291,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check order number
         const orderNumberCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(orderNumberCell);
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2732,14 +2304,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check article number
         const articleCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
-        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(articleCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(articleCell);
         const cellArticle = (await articleCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2752,14 +2317,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check product name
         const productNameCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(productNameCell);
         const cellProductName = (await productNameCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -2778,15 +2336,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Reuse context from Step 28.1
-      const tab2 = await context.newPage();
-      const tab2LoadingTaskPage = new CreateLoadingTaskPage(tab2);
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+        CreateLoadingTaskPage
+      );
 
       try {
-        // Navigate to Задачи на отгрузку page in Tab 2
-        await tab2.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-        await tab2LoadingTaskPage.waitForNetworkIdle();
-        await tab2.waitForTimeout(1000);
-
         // Wait for the page and table to load
         const issueShipmentPageElement = tab2.locator(SelectorsLoadingTasksPage.issueShipmentPage);
         await issueShipmentPageElement.waitFor({ state: 'visible', timeout: 10000 });
@@ -2798,14 +2353,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Search for order number
         const searchInputWrapper = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInputWrapper.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(searchInputWrapper, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(searchInputWrapper);
 
         // Try to find input element - it might be the wrapper itself or inside it
         let searchInput: Locator;
@@ -2840,14 +2388,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const firstRow = tableBody.locator('tr').first();
         await firstRow.waitFor({ state: 'visible', timeout: 10000 });
         const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Number"]').first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(orderNumberCell);
         await orderNumberCell.click();
         await tab2.waitForTimeout(1000);
         await tab2LoadingTaskPage.waitForNetworkIdle();
@@ -2856,12 +2397,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const editButton = tab2.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' });
         await editButton.waitFor({ state: 'visible', timeout: 10000 });
         await editButton.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(editButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(editButton);
 
         const isEnabled = await editButton.isEnabled();
         await expectSoftWithScreenshot(
@@ -2921,27 +2457,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const orderNumberCellTab1 = matchingRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]')
         .first();
-      await orderNumberCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderNumberCellTab1);
       const orderNumberTab1 = (await orderNumberCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 order number: ${orderNumberTab1}`);
 
       await tab2ForCompare.bringToFront();
       const editTitleTab2 = tab2ForCompare.locator('[data-testid="AddOrder-EditTitle"]').first();
-      await editTitleTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await editTitleTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(editTitleTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(editTitleTab2);
       const editTitleTextTab2 = (await editTitleTab2.textContent())?.trim() || '';
       console.log(`Tab 2 edit title: ${editTitleTextTab2}`);
 
@@ -2957,27 +2479,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Step 28.7.2: Compare article number
       await tab1.bringToFront();
       const articleCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
-      await articleCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await articleCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(articleCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(articleCellTab1);
       const articleTab1 = (await articleCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 article: ${articleTab1}`);
 
       await tab2ForCompare.bringToFront();
       const articleCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
-      await articleCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await articleCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(articleCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(articleCellTab2);
       const articleTab2 = (await articleCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 article: ${articleTab2}`);
 
@@ -2993,27 +2501,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Step 28.7.3: Compare product wrapper
       await tab1.bringToFront();
       const productWrapperTab1 = matchingRow.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Wrapper"]').first();
-      await productWrapperTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await productWrapperTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productWrapperTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(productWrapperTab1);
       const productWrapperValueTab1 = (await productWrapperTab1.textContent())?.trim() || '';
       console.log(`Tab 1 product wrapper: ${productWrapperValueTab1}`);
 
       await tab2ForCompare.bringToFront();
       const productWrapperTab2 = tab2ForCompare.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
-      await productWrapperTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await productWrapperTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(productWrapperTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(productWrapperTab2);
       const productWrapperValueTab2 = (await productWrapperTab2.textContent())?.trim() || '';
       console.log(`Tab 2 product wrapper: ${productWrapperValueTab2}`);
 
@@ -3029,14 +2523,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Step 28.7.4: Compare quantity values
       await tab1.bringToFront();
       const quantityCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
-      await quantityCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCellTab1);
       const quantityTab1 = (await quantityCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 quantity: ${quantityTab1}`);
 
@@ -3044,13 +2531,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare with input field
       const quantityInputTab2 = tab2ForCompare.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]').first();
       await quantityInputTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityInputTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(quantityInputTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityInputTab2);
       const quantityInputValueTab2 = (await quantityInputTab2.inputValue())?.trim() || '';
       console.log(`Tab 2 quantity input: ${quantityInputValueTab2}`);
 
@@ -3065,14 +2546,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Compare with table cell
       const quantityCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(quantityCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityCellTab2);
       const quantityCellValueTab2 = (await quantityCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 quantity cell: ${quantityCellValueTab2}`);
 
@@ -3088,27 +2562,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Step 28.7.5: Compare DateOrder values
       await tab1.bringToFront();
       const dateOrderCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateOrderCellTab1);
       const dateOrderTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
 
       await tab2ForCompare.bringToFront();
       const dateOrderCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(dateOrderCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateOrderCellTab2);
       const dateOrderTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
 
@@ -3126,27 +2586,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsCellTab1 = matchingRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateShipments"]')
         .first();
-      await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateShipmentsCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
 
       await tab2ForCompare.bringToFront();
       const dateShipmentsCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').first();
-      await dateShipmentsCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsCellTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(dateShipmentsCellTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipmentsCellTab2);
       const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
 
@@ -3164,28 +2610,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateByUrgencyCellTab1 = matchingRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateByUrgency"]')
         .first();
-      await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateByUrgencyCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateByUrgencyCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateByUrgencyCellTab1);
       const dateByUrgencyTab1Raw = (await dateByUrgencyCellTab1.textContent())?.trim() || '';
       const dateByUrgencyTab1 = normalizeDate(dateByUrgencyTab1Raw);
       console.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1Raw} (normalized: ${dateByUrgencyTab1})`);
 
       await tab2ForCompare.bringToFront();
       const dateByUrgencyDisplayLocator = tab2ForCompare.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await dateByUrgencyDisplayLocator.waitFor({ state: 'visible', timeout: 10000 });
-      await dateByUrgencyDisplayLocator.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(dateByUrgencyDisplayLocator, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyDisplayLocator);
       const dateByUrgencyDisplayTab2Raw = (await dateByUrgencyDisplayLocator.textContent())?.trim() || '';
       const dateByUrgencyDisplayTab2Normalized = normalizeDate(dateByUrgencyDisplayTab2Raw);
       console.log(`Tab 2 DateByUrgency display: ${dateByUrgencyDisplayTab2Raw} (normalized: ${dateByUrgencyDisplayTab2Normalized})`);
@@ -3200,14 +2632,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       const dateByUrgencyCellTab2Locator = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateByUrgency"]').first();
-      await dateByUrgencyCellTab2Locator.waitFor({ state: 'visible', timeout: 10000 });
-      await dateByUrgencyCellTab2Locator.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(dateByUrgencyCellTab2Locator, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyCellTab2Locator);
       const dateByUrgencyCellTab2Raw = (await dateByUrgencyCellTab2Locator.textContent())?.trim() || '';
       const dateByUrgencyCellTab2Value = normalizeDate(dateByUrgencyCellTab2Raw);
       console.log(`Tab 2 DateByUrgency cell: ${dateByUrgencyCellTab2Raw} (normalized: ${dateByUrgencyCellTab2Value})`);
@@ -3226,28 +2651,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsTbodyCellTab1 = matchingRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateShipments"]')
         .first();
-      await dateShipmentsTbodyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsTbodyCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateShipmentsTbodyCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateShipmentsTbodyCellTab1);
       const dateShipmentsTbodyTab1Raw = (await dateShipmentsTbodyCellTab1.textContent())?.trim() || '';
       const dateShipmentsTbodyTab1 = normalizeDate(dateShipmentsTbodyTab1Raw);
       console.log(`Tab 1 DateShipments (tbody): ${dateShipmentsTbodyTab1Raw} (normalized: ${dateShipmentsTbodyTab1})`);
 
       await tab2ForCompare.bringToFront();
       const dateShipPlanDisplayLocator = tab2ForCompare.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await dateShipPlanDisplayLocator.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipPlanDisplayLocator.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(dateShipPlanDisplayLocator, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipPlanDisplayLocator);
       const dateShipPlanDisplayTab2Raw = (await dateShipPlanDisplayLocator.textContent())?.trim() || '';
       const dateShipPlanDisplayTab2Value = normalizeDate(dateShipPlanDisplayTab2Raw);
       console.log(`Tab 2 DateShipments display: ${dateShipPlanDisplayTab2Raw} (normalized: ${dateShipPlanDisplayTab2Value})`);
@@ -3264,14 +2675,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsTbodyCellTab2Locator = tab2ForCompare
         .locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateShipments"]')
         .first();
-      await dateShipmentsTbodyCellTab2Locator.waitFor({ state: 'visible', timeout: 10000 });
-      await dateShipmentsTbodyCellTab2Locator.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(dateShipmentsTbodyCellTab2Locator, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipmentsTbodyCellTab2Locator);
       const dateShipmentsTbodyCellTab2Raw = (await dateShipmentsTbodyCellTab2Locator.textContent())?.trim() || '';
       const dateShipmentsTbodyCellTab2Value = normalizeDate(dateShipmentsTbodyCellTab2Raw);
       console.log(`Tab 2 DateShipments cell: ${dateShipmentsTbodyCellTab2Raw} (normalized: ${dateShipmentsTbodyCellTab2Value})`);
@@ -3286,27 +2690,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Step 28.7.9: Change quantity to 10 and save
-      await quantityInputTab2.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(quantityInputTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityInputTab2);
       await quantityInputTab2.clear();
       await quantityInputTab2.fill('10');
       await tab2ForCompare.waitForTimeout(500);
       console.log('Changed quantity to 10');
 
       const saveButton = tab2ForCompare.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
-      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-      await saveButton.scrollIntoViewIfNeeded();
-      await tab2LoadingTaskPageForCompare.highlightElement(saveButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2LoadingTaskPageForCompare.waitAndHighlight(saveButton);
       await saveButton.click();
       await tab2LoadingTaskPageForCompare.waitForNetworkIdle();
       await tab2ForCompare.waitForTimeout(1000);
@@ -3317,14 +2708,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const searchInputTab1 = tab1
         .locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]')
         .first();
-      await searchInputTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInputTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInputTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInputTab1);
 
       // Get the search value (use order number or article number)
       const searchOrderNumber = global.fullOrderNumber || fullOrderNumber;
@@ -3350,14 +2734,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const updatedQuantityCellTab1 = refreshedFirstRow
         .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]')
         .first();
-      await updatedQuantityCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await updatedQuantityCellTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(updatedQuantityCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab1.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(updatedQuantityCellTab1);
       const updatedQuantityTab1 = (await updatedQuantityCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 updated quantity: ${updatedQuantityTab1}`);
 
@@ -3439,22 +2816,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify the product appears in the search results
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstRow);
       const productCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Wrapper"]').first();
-      await productCell.waitFor({ state: 'visible', timeout: 10000 });
-      await productCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await loadingTaskPage.waitAndHighlight(productCell);
       await page.waitForTimeout(1500);
       const productNameFromRow = (await productCell.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
@@ -3481,13 +2845,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 4: Verify positions table and open form to add a new product', async () => {
       const positionsTable = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
-      await positionsTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(positionsTable, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await loadingTaskPage.waitAndHighlight(positionsTable);
       await page.waitForTimeout(1500);
       const bodyRows = positionsTable.locator('tbody tr');
       const totalRowCount = await bodyRows.count();
@@ -3894,14 +3252,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
 
       const positionsTable = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
-      await positionsTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(positionsTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(positionsTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -3956,14 +3307,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Verify DateByUrgency: compare row cell with date picker display from the appropriate tab
         const dateByUrgencyCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateByUrgency"]').first();
-        await dateByUrgencyCell.waitFor({ state: 'visible', timeout: 10000 });
-        await dateByUrgencyCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(dateByUrgencyCell, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(dateByUrgencyCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
         const dateByUrgencyCellValue = (await dateByUrgencyCell.textContent())?.trim() || '';
         console.log(`Row ${expected.rowIndex + 1}: DateByUrgency (cell) = "${dateByUrgencyCellValue}"`);
 
@@ -3984,14 +3328,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         await comparisonTab.bringToFront();
         const dateByUrgencyDisplay = comparisonTab.locator('[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
-        await dateByUrgencyDisplay.waitFor({ state: 'visible', timeout: 10000 });
-        await dateByUrgencyDisplay.scrollIntoViewIfNeeded();
-        await comparisonLoadingTaskPage.highlightElement(dateByUrgencyDisplay, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await comparisonTab.waitForTimeout(500);
+        await comparisonLoadingTaskPage.waitAndHighlight(dateByUrgencyDisplay);
         const dateByUrgencyDisplayValue = (await dateByUrgencyDisplay.textContent())?.trim() || '';
         console.log(`Row ${expected.rowIndex + 1}: DateByUrgency (display from tab ${expected.orderSuffix}) = "${dateByUrgencyDisplayValue}"`);
 
@@ -4013,28 +3350,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Verify DateShipments: compare row cell with date picker display from the appropriate tab
         const dateShipmentsCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateShipments"]').first();
-        await dateShipmentsCell.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(dateShipmentsCell, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(dateShipmentsCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
         const dateShipmentsCellValue = (await dateShipmentsCell.textContent())?.trim() || '';
         console.log(`Row ${expected.rowIndex + 1}: DateShipments (cell) = "${dateShipmentsCellValue}"`);
 
         // Use the same comparison tab as determined above
         await comparisonTab.bringToFront();
         const dateShipmentsDisplay = comparisonTab.locator('[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
-        await dateShipmentsDisplay.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsDisplay.scrollIntoViewIfNeeded();
-        await comparisonLoadingTaskPage.highlightElement(dateShipmentsDisplay, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await comparisonTab.waitForTimeout(500);
+        await comparisonLoadingTaskPage.waitAndHighlight(dateShipmentsDisplay);
         const dateShipmentsDisplayValue = (await dateShipmentsDisplay.textContent())?.trim() || '';
         console.log(`Row ${expected.rowIndex + 1}: DateShipments (display from tab ${expected.orderSuffix}) = "${dateShipmentsDisplayValue}"`);
 
@@ -4056,14 +3379,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Verify time: extract time from Product-DateShipments cell and compare with product characteristic
         const dateShipmentsTimeCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').nth(2);
-        await dateShipmentsTimeCell.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsTimeCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(dateShipmentsTimeCell, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
+        await loadingTaskPage.waitAndHighlight(dateShipmentsTimeCell, {
+          highlightColor: 'cyan',
+          highlightBorder: '2px solid blue',
+          highlightTextColor: 'black',
         });
-        await page.waitForTimeout(500);
         const dateShipmentsTimeValue = (await dateShipmentsTimeCell.textContent())?.trim() || '';
         // Split by '/' and take first part
         const timeValue = dateShipmentsTimeValue.split('/')[0].trim();
@@ -4087,14 +3407,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           // Click on the first row to select it
           const firstRowProduct = partsDatabaseTab.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
-          await firstRowProduct.waitFor({ state: 'visible', timeout: 10000 });
-          await firstRowProduct.scrollIntoViewIfNeeded();
-          await partsDatabasePageForTime.highlightElement(firstRowProduct, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await partsDatabaseTab.waitForTimeout(500);
+          await partsDatabasePageForTime.waitAndHighlight(firstRowProduct);
           await firstRowProduct.click();
 
           // Find the edit button and make sure it's enabled, then click it
@@ -4126,13 +3439,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           );
 
           if (isEnabled) {
-            await editButton.scrollIntoViewIfNeeded();
-            await partsDatabasePageForTime.highlightElement(editButton, {
-              backgroundColor: 'yellow',
-              border: '2px solid red',
-              color: 'blue',
-            });
-            await partsDatabaseTab.waitForTimeout(500);
+            await partsDatabasePageForTime.waitAndHighlight(editButton);
             await editButton.click();
           } else {
             console.warn('Edit button is disabled. Skipping click and proceeding with available data.');
@@ -4148,13 +3455,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // Use soft check for waitFor - if element not found, continue anyway
           try {
             await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
-            await characteristicElement.scrollIntoViewIfNeeded();
-            await partsDatabasePageForTime.highlightElement(characteristicElement, {
-              backgroundColor: 'yellow',
-              border: '2px solid red',
-              color: 'blue',
-            });
-            await partsDatabaseTab.waitForTimeout(500);
+            await partsDatabasePageForTime.waitAndHighlight(characteristicElement);
           } catch (error) {
             console.log('Characteristic element not found within timeout, continuing...');
           }
@@ -4407,12 +3708,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       };
 
       // Create Tab 1: Orders page, search for order with /0
-      const context = page.context();
-      const tab1 = await context.newPage();
-      const tab1LoadingTaskPage = new CreateLoadingTaskPage(tab1);
-      await tab1LoadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await tab1LoadingTaskPage.waitForNetworkIdle();
-      await tab1.waitForTimeout(1000);
+      const { page: tab1, pageObject: tab1LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+        CreateLoadingTaskPage
+      );
 
       await tab1LoadingTaskPage.searchAndWaitForTable(
         baseOrderNumberValue,
@@ -4431,11 +3730,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log('Tab 1: Order /0 found in list');
 
       // Create Tab 2: Orders page, search for order with /0, select and edit
-      const tab2 = await context.newPage();
-      const tab2LoadingTaskPage = new CreateLoadingTaskPage(tab2);
-      await tab2LoadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+        CreateLoadingTaskPage
+      );
 
       await tab2LoadingTaskPage.searchAndWaitForTable(
         baseOrderNumberValue,
@@ -4464,27 +3762,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Compare order numbers between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
         const orderNumberCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-        await orderNumberCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(orderNumberCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(orderNumberCellTab1);
         let orderNumberTab1 = (await orderNumberCellTab1.textContent())?.trim() || '';
         orderNumberTab1 = orderNumberTab1.replace(/^№\s*/, '').trim();
 
         await tab2.bringToFront();
         const editTitleTab2 = tab2.locator('[data-testid="AddOrder-EditTitle"]');
-        await editTitleTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await editTitleTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(editTitleTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(editTitleTab2);
         const titleText = (await editTitleTab2.textContent())?.trim() || '';
         const orderNumberMatch = titleText.match(/№\s+(.+)$/);
         let orderNumberTab2 = orderNumberMatch ? orderNumberMatch[1].trim() : '';
@@ -4510,26 +3794,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Compare article numbers between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
         const articleCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Article"]').first();
-        await articleCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(articleCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(articleCellTab1);
         const articleNumberTab1 = (await articleCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
         const articleCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
-        await articleCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCellTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(articleCellTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(articleCellTab2);
         const articleNumberTab2 = (await articleCellTab2.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -4546,26 +3816,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Compare product names between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
         const productNameCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-        await productNameCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(productNameCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(productNameCellTab1);
         const productNameTab1 = (await productNameCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
         const productNameCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
-        await productNameCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCellTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(productNameCellTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(productNameCellTab2);
         const productNameTab2 = (await productNameCellTab2.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -4582,26 +3838,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Compare quantity between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
         const quantityCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-        await quantityCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await quantityCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(quantityCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(quantityCellTab1);
         const quantityTab1 = (await quantityCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
         const quantityCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-        await quantityCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await quantityCellTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(quantityCellTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(quantityCellTab2);
         const quantityTab2 = (await quantityCellTab2.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -4624,27 +3866,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Get order date from date picker
         const orderDateElement = tab2.locator('[data-testid="AddOrder-DateOrder-Calendar-DataPicker-Choose-Value-Display"]');
-        await orderDateElement.waitFor({ state: 'visible', timeout: 10000 });
-        await orderDateElement.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(orderDateElement, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(orderDateElement);
         const orderDateText = (await orderDateElement.textContent())?.trim() || '';
         console.log(`Tab 2 Order Date (from picker): ${orderDateText}`);
 
         // Get shipment plan date from date picker
         const shipmentPlanDateElement = tab2.locator('[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]');
-        await shipmentPlanDateElement.waitFor({ state: 'visible', timeout: 10000 });
-        await shipmentPlanDateElement.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(shipmentPlanDateElement, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(shipmentPlanDateElement);
         const shipmentPlanDateText = (await shipmentPlanDateElement.textContent())?.trim() || '';
         console.log(`Tab 2 Shipment Plan Date (from picker): ${shipmentPlanDateText}`);
 
@@ -4687,14 +3915,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Get number of days from Tab 1 (main table) - DateOrder cell contains the number
         await tab1.bringToFront();
         const dateOrderCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-        await dateOrderCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await dateOrderCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(dateOrderCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(dateOrderCellTab1);
         const daysFromTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
         const daysNumberTab1 = parseInt(daysFromTab1) || 0;
         console.log(`Tab 1 Кол-во дней (number): ${daysNumberTab1}`);
@@ -4702,14 +3923,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Get number of days from Tab 2 (bottom table) - DateOrder cell contains the number
         await tab2.bringToFront();
         const dateOrderCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
-        await dateOrderCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await dateOrderCellTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(dateOrderCellTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(dateOrderCellTab2);
         const daysFromTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
         const daysNumberTab2 = parseInt(daysFromTab2) || 0;
         console.log(`Tab 2 Кол-во дней (number): ${daysNumberTab2}`);
@@ -4751,25 +3965,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           .locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]')
           .first();
         await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(dateShipmentsCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
         const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
         const dateShipmentsCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').first();
-        await dateShipmentsCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsCellTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(dateShipmentsCellTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab2);
         const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -4786,26 +3987,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Compare Buyers between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
         const buyersCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Buyers"]').first();
-        await buyersCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await buyersCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(buyersCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(buyersCellTab1);
         const buyersTab1 = (await buyersCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
         const buyersCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]').first();
-        await buyersCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await buyersCellTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(buyersCellTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(buyersCellTab2);
         const buyersTab2 = (await buyersCellTab2.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -4826,26 +4013,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           .first();
         await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
         const calendarDisplayTab1 = dateByUrgencyCellTab1.locator('[data-testid="Calendar-DataPicker-Choose-Value-Display"]').first();
-        await calendarDisplayTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await calendarDisplayTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(calendarDisplayTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(calendarDisplayTab1);
         const dateByUrgencyTab1 = (await calendarDisplayTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
         const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
-        await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await dateByUrgencyDisplayTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(dateByUrgencyDisplayTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2);
         const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
         const normalizedDateTab1 = normalizeDate(dateByUrgencyTab1);
@@ -4871,13 +4044,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           .locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]')
           .first();
         await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsCellTab1.scrollIntoViewIfNeeded();
-        await tab1LoadingTaskPage.highlightElement(dateShipmentsCellTab1, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab1.waitForTimeout(500);
+        await tab1LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
         const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
         console.log(`Tab 1 DateShipments (days until shipment): ${dateShipmentsTab1}`);
 
@@ -4894,14 +4061,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Get actual shipment plan date from Tab 2 (edit page) date picker
         await tab2.bringToFront();
         const dateShipmentsDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
-        await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsDisplayTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(dateShipmentsDisplayTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2);
         const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
         console.log(`Tab 2 DateShippingPlan (from picker): ${dateShipmentsTab2}`);
 
@@ -4961,12 +4121,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const dateShipmentsTimeCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').nth(2);
         await dateShipmentsTimeCellTab2.waitFor({ state: 'visible', timeout: 10000 });
         await dateShipmentsTimeCellTab2.scrollIntoViewIfNeeded();
-        await tab2LoadingTaskPage.highlightElement(dateShipmentsTimeCellTab2, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsTimeCellTab2);
         const dateShipmentsTimeTab2 = (await dateShipmentsTimeCellTab2.textContent())?.trim() || '';
         const timeValue = dateShipmentsTimeTab2.split('/')[0].trim();
 
@@ -4989,14 +4144,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           });
 
           const firstRowProduct = productTab.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
-          await firstRowProduct.waitFor({ state: 'visible', timeout: 10000 });
-          await firstRowProduct.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(firstRowProduct, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await productTab.waitForTimeout(500);
+          await partsDatabasePage.waitAndHighlight(firstRowProduct);
           // Wait for element to be stable before clicking
           await firstRowProduct.waitFor({ state: 'visible', timeout: 5000 });
 
@@ -5026,13 +4174,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           }
 
           if (isEnabled) {
-            await editButton.scrollIntoViewIfNeeded();
-            await partsDatabasePage.highlightElement(editButton, {
-              backgroundColor: 'yellow',
-              border: '2px solid red',
-              color: 'blue',
-            });
-            await productTab.waitForTimeout(500);
+            await partsDatabasePage.waitAndHighlight(editButton);
 
             // Wait for button to be stable before clicking
             try {
@@ -5051,14 +4193,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           const characteristicElement = productTab.locator('[data-testid="Creator-Detail-Characteristics-ZnachText0"]');
           try {
-            await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
-            await characteristicElement.scrollIntoViewIfNeeded();
-            await partsDatabasePage.highlightElement(characteristicElement, {
-              backgroundColor: 'yellow',
-              border: '2px solid red',
-              color: 'blue',
-            });
-            await productTab.waitForTimeout(500);
+            await partsDatabasePage.waitAndHighlight(characteristicElement);
           } catch (error) {
             console.log('Characteristic element not found within timeout, continuing...');
           }
@@ -5095,15 +4230,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 7: Open modal from orders list and compare with edit page', async () => {
-      // Helper function to scroll into view and then scroll down a bit more for smaller viewports
-      const scrollIntoViewWithExtra = async (element: any, pageInstance: Page) => {
-        await element.scrollIntoViewIfNeeded();
-        // Scroll down an additional 100px to ensure element is fully visible in smaller viewports
-        await pageInstance.evaluate(() => {
-          window.scrollBy(0, 100);
-        });
-        await pageInstance.waitForTimeout(200); // Small delay for scroll to complete
-      };
+      // Use scrollIntoViewWithExtra from PageObject base class
 
       // Define normalizeDate function for date comparisons
       const normalizeDate = (rawDate: string): string => {
@@ -5214,12 +4341,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Tab 2: Open new tab, search for order with /0, and edit it
-      const context = page.context();
-      const tab2 = await context.newPage();
-      const tab2LoadingTaskPage = new CreateLoadingTaskPage(tab2);
-      await tab2LoadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+        CreateLoadingTaskPage
+      );
 
       // We're on the main orders page (not warehouse), so use SHIPMENTS_SEARCH_INPUT
       await tab2LoadingTaskPage.searchAndWaitForTable(
@@ -5246,13 +4371,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Back to Tab 1: Double-click the row to open modal
       await page.bringToFront();
-      await firstRowTab1.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRowTab1, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstRowTab1, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Try double-clicking a cell in the row instead of the whole row
       const dateOrderCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
@@ -5291,24 +4410,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (modalCount === 0) {
         throw new Error('Modal did not open after double-clicking the row');
       }
-      await modal.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(modal, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(modal, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Compare order number: Get from h3 in modal (after "Заказ №")
       const orderNumberH3 = modal.locator('h3').first();
       await orderNumberH3.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(orderNumberH3, page);
-      await loadingTaskPage.highlightElement(orderNumberH3, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderNumberH3, { scrollExtra: true });
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
       const orderNumberModal = orderNumberMatch ? orderNumberMatch[1].trim() : '';
@@ -5317,13 +4424,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
       const editTitleTab2 = tab2.locator('[data-testid="AddOrder-EditTitle"]');
       await editTitleTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(editTitleTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(editTitleTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(editTitleTab2, { scrollExtra: true });
       const titleTextTab2 = (await editTitleTab2.textContent())?.trim() || '';
       const titleOrderMatch = titleTextTab2.replace(/^Редактирование\s+заказа\s+№\s*/, '').trim();
       const orderNumberEdit = titleOrderMatch;
@@ -5343,25 +4444,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         .locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]')
         .first();
       await countElement.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(countElement, page);
-      await loadingTaskPage.highlightElement(countElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(countElement, { scrollExtra: true });
       const countModal = (await countElement.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const quantityInputTab2 = tab2.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]');
       await quantityInputTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(quantityInputTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(quantityInputTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(quantityInputTab2, { scrollExtra: true });
       const quantityTab2 = await quantityInputTab2.inputValue();
 
       await expectSoftWithScreenshot(
@@ -5379,25 +4468,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         .locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-OneShipments-Date"]')
         .first();
       await dateOrderModal.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateOrderModal, page);
-      await loadingTaskPage.highlightElement(dateOrderModal, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateOrderModal, { scrollExtra: true });
       const dateOrderModalValue = (await dateOrderModal.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const dateOrderDisplayTab2 = tab2.locator('[data-testid="AddOrder-DateOrder-Calendar-DataPicker-Choose-Value-Display"]');
       await dateOrderDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateOrderDisplayTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(dateOrderDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateOrderDisplayTab2, { scrollExtra: true });
       const dateOrderTab2Value = (await dateOrderDisplayTab2.textContent())?.trim() || '';
 
       const normalizedDateOrderModal = normalizeDate(dateOrderModalValue);
@@ -5440,24 +4517,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         dateShipmentsModalValue = (await dateShipmentsModal.textContent())?.trim() || '';
       }
 
-      await scrollIntoViewWithExtra(dateShipmentsModal, page);
-      await loadingTaskPage.highlightElement(dateShipmentsModal, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateShipmentsModal, { scrollExtra: true });
 
       await tab2.bringToFront();
       const dateShipmentsDisplayTab2 = tab2.locator('[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]');
       await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateShipmentsDisplayTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(dateShipmentsDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2, { scrollExtra: true });
       const dateShipmentsTab2Value = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
 
       const normalizedDateShipmentsModal = normalizeDate(dateShipmentsModalValue);
@@ -5478,13 +4543,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         .locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateByUrgency-Wrapper"]')
         .first();
       await dateByUrgencyModal.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateByUrgencyModal, page);
-      await loadingTaskPage.highlightElement(dateByUrgencyModal, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateByUrgencyModal, { scrollExtra: true });
       let dateByUrgencyModalValue = (await dateByUrgencyModal.textContent())?.trim() || '';
       // Remove leading text "Дата по срочности:" if present
       dateByUrgencyModalValue = dateByUrgencyModalValue.replace(/^Дата\s+по\s+срочности\s*:\s*/i, '').trim();
@@ -5492,13 +4551,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
       const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]');
       await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateByUrgencyDisplayTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(dateByUrgencyDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2, { scrollExtra: true });
       const dateByUrgencyTab2Value = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
       const normalizedDateByUrgencyModal = normalizeDate(dateByUrgencyModalValue);
@@ -5517,25 +4570,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const productNameModal = modal.locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-Product-Name"]').first();
       await productNameModal.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(productNameModal, page);
-      await loadingTaskPage.highlightElement(productNameModal, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(productNameModal, { scrollExtra: true });
       const productNameModalValue = (await productNameModal.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const attachmentsLinkTab2 = tab2.locator('[data-testid="AddOrder-AttachmentsValue-Link"]');
       await attachmentsLinkTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(attachmentsLinkTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(attachmentsLinkTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(attachmentsLinkTab2, { scrollExtra: true });
       const attachmentsLinkTab2Value = (await attachmentsLinkTab2.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -5572,13 +4613,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (matchingRow) {
         const productWrapperCell = matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]');
         await productWrapperCell.waitFor({ state: 'visible', timeout: 10000 });
-        await scrollIntoViewWithExtra(productWrapperCell, tab2);
-        await tab2LoadingTaskPage.highlightElement(productWrapperCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(productWrapperCell, { scrollExtra: true });
         const productWrapperValue = (await productWrapperCell.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -5595,26 +4630,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const companyNameModal = modal.locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-Company-Name"]').first();
       await companyNameModal.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(companyNameModal, page);
-      await loadingTaskPage.highlightElement(companyNameModal, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(companyNameModal, { scrollExtra: true });
       const companyNameModalValue = (await companyNameModal.textContent())?.trim() || '';
 
       if (matchingRow) {
         await tab2.bringToFront();
         const buyersCell = matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]');
         await buyersCell.waitFor({ state: 'visible', timeout: 10000 });
-        await scrollIntoViewWithExtra(buyersCell, tab2);
-        await tab2LoadingTaskPage.highlightElement(buyersCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await tab2.waitForTimeout(500);
+        await tab2LoadingTaskPage.waitAndHighlight(buyersCell, { scrollExtra: true });
         const buyersCellValue = (await buyersCell.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -5630,13 +4653,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.bringToFront();
       const buyerSelectedCompany = tab2.locator('[data-testid="AddOrder-Buyer-SelectedCompany"]');
       await buyerSelectedCompany.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(buyerSelectedCompany, tab2);
-      await tab2LoadingTaskPage.highlightElement(buyerSelectedCompany, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(buyerSelectedCompany, { scrollExtra: true });
       const buyerSelectedCompanyValue = (await buyerSelectedCompany.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -5654,13 +4671,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const orderNumberInRowCell = matchingRow.locator('[data-testid^="Shipment-Tbody-NumberOrder"]');
         if ((await orderNumberInRowCell.count()) > 0) {
           await orderNumberInRowCell.waitFor({ state: 'visible', timeout: 10000 });
-          await scrollIntoViewWithExtra(orderNumberInRowCell, tab2);
-          await tab2LoadingTaskPage.highlightElement(orderNumberInRowCell, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await tab2.waitForTimeout(500);
+          await tab2LoadingTaskPage.waitAndHighlight(orderNumberInRowCell, { scrollExtra: true });
           const orderNumberInRow = (await orderNumberInRowCell.textContent())?.trim() || '';
 
           await page.bringToFront();
@@ -5692,14 +4703,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 8: Navigate to deficit products page and compare with edit order page', async () => {
       // Helper function to scroll into view and then scroll down a bit more for smaller viewports
-      const scrollIntoViewWithExtra = async (element: any, pageInstance: Page) => {
-        await element.scrollIntoViewIfNeeded();
-        // Scroll down an additional 100px to ensure element is fully visible in smaller viewports
-        await pageInstance.evaluate(() => {
-          window.scrollBy(0, 100);
-        });
-        await pageInstance.waitForTimeout(200); // Small delay for scroll to complete
-      };
+      // Use scrollIntoViewWithExtra from PageObject base class
 
       // Define normalizeDate function for date comparisons
       const normalizeDate = (rawDate: string): string => {
@@ -5789,13 +4793,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to Дефицит продукции page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
       await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitProductionButton, page);
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitProductionButton, { scrollExtra: true });
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -5803,24 +4801,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the table with testid:DeficitIzd-Main-Table
       const deficitMainTable = page.locator('[data-testid="DeficitIzd-Main-Table"]');
       await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitMainTable, page);
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(deficitMainTable, {
+        scrollExtra: true,
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
       });
-      await page.waitForTimeout(500);
 
       // Click the filter label with testid:DeficitIzd-Main-OrderFilter-Label
       const orderFilterLabel = page.locator('[data-testid="DeficitIzd-Main-OrderFilter-Label"]');
       await orderFilterLabel.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(orderFilterLabel, page);
-      await loadingTaskPage.highlightElement(orderFilterLabel, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderFilterLabel, { scrollExtra: true });
       await orderFilterLabel.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -5830,13 +4821,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await orderFilterTypes.waitFor({ state: 'visible', timeout: 10000 });
       const buyerChip = orderFilterTypes.locator('[data-testid="OrderFilterSettings-Chip-Buyer"]').first();
       await buyerChip.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(buyerChip, page);
-      await loadingTaskPage.highlightElement(buyerChip, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(buyerChip, { scrollExtra: true });
       await buyerChip.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -5844,24 +4829,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the table with testid:OrderFilterSettings-Table-OrderFilterTable
       const orderFilterTable = page.locator('[data-testid="OrderFilterSettings-Table-OrderFilterTable"]');
       await orderFilterTable.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(orderFilterTable, page);
-      await loadingTaskPage.highlightElement(orderFilterTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(orderFilterTable, {
+        scrollExtra: true,
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
       });
-      await page.waitForTimeout(500);
 
       // Find and click the input with testid:OrderFilterSettings-Table-Search-Dropdown-Input
       const orderFilterSearchInput = orderFilterTable.locator('input[data-testid="OrderFilterSettings-Table-Search-Dropdown-Input"]').first();
       await orderFilterSearchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(orderFilterSearchInput, page);
-      await loadingTaskPage.highlightElement(orderFilterSearchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderFilterSearchInput, { scrollExtra: true });
       await orderFilterSearchInput.clear();
       await page.waitForTimeout(300);
 
@@ -5878,23 +4856,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await orderFilterTableBody.waitFor({ state: 'visible', timeout: 10000 });
       const firstRow = orderFilterTableBody.locator('tr').first();
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(firstRow, page);
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstRow, {
+        scrollExtra: true,
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
       });
-      await page.waitForTimeout(500);
 
       const orderNameCell = firstRow.locator('[data-testid^="OrderFilterTableRow-Name-"]');
       await orderNameCell.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(orderNameCell, page);
-      await loadingTaskPage.highlightElement(orderNameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderNameCell, { scrollExtra: true });
       const orderNameValue = (await orderNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -5908,11 +4879,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Create Tab 2: Go to orders page, search for order, select it, click edit
       const context = page.context();
-      const tab2 = await context.newPage();
-      const tab2LoadingTaskPage = new CreateLoadingTaskPage(tab2);
-      await tab2LoadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+        CreateLoadingTaskPage
+      );
 
       await tab2LoadingTaskPage.searchAndWaitForTable(
         baseOrderNumberValue,
@@ -5940,25 +4910,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const urgentDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-UrgentDate-"]');
       await urgentDateCell.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(urgentDateCell, page);
-      await loadingTaskPage.highlightElement(urgentDateCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(urgentDateCell, { scrollExtra: true });
       const urgentDateValue = (await urgentDateCell.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]');
       await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateByUrgencyDisplayTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(dateByUrgencyDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2, { scrollExtra: true });
       const dateByUrgencyTab2Value = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
       const normalizedUrgentDate = normalizeDate(urgentDateValue);
@@ -5977,25 +4935,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const planeDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-PlaneDate-"]');
       await planeDateCell.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(planeDateCell, page);
-      await loadingTaskPage.highlightElement(planeDateCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(planeDateCell, { scrollExtra: true });
       const planeDateValue = (await planeDateCell.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const dateShippingPlanDisplayTab2 = tab2.locator('[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]');
       await dateShippingPlanDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateShippingPlanDisplayTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(dateShippingPlanDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateShippingPlanDisplayTab2, { scrollExtra: true });
       const dateShippingPlanTab2Value = (await dateShippingPlanDisplayTab2.textContent())?.trim() || '';
 
       const normalizedPlaneDate = normalizeDate(planeDateValue);
@@ -6014,13 +4960,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const dataCell = firstRow.locator('[data-testid="DataCell"]');
       await dataCell.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dataCell, page);
-      await loadingTaskPage.highlightElement(dataCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dataCell, { scrollExtra: true });
       await dataCell.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -6049,14 +4989,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 9: Search deficit products by article and designation, then verify order details', async () => {
       console.log('Step 9: Search deficit products by article and designation, then verify order details');
       // Helper function to scroll into view and then scroll down a bit more for smaller viewports
-      const scrollIntoViewWithExtra = async (element: any, pageInstance: Page) => {
-        await element.scrollIntoViewIfNeeded();
-        // Scroll down an additional 100px to ensure element is fully visible in smaller viewports
-        await pageInstance.evaluate(() => {
-          window.scrollBy(0, 100);
-        });
-        await pageInstance.waitForTimeout(200); // Small delay for scroll to complete
-      };
+      // Use scrollIntoViewWithExtra from PageObject base class
 
       // Helper function to normalize dates to DD.MM.YYYY format
       const normalizeDate = (rawDate: string): string => {
@@ -6119,13 +5052,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
       await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitProductionButton, page);
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitProductionButton, { scrollExtra: true });
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -6133,24 +5060,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the main table with testid:DeficitIzd-Main-Table
       const deficitMainTable = page.locator('[data-testid="DeficitIzd-Main-Table"]');
       await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitMainTable, page);
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(deficitMainTable, {
+        scrollExtra: true,
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
       });
-      await page.waitForTimeout(500);
 
       // Find and use the search input field:DeficitIzdTable-Search-Dropdown-Input
       const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
       await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(searchInput, page);
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput, { scrollExtra: true });
 
       // Search by article number
       await searchInput.fill('');
@@ -6177,23 +5097,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Check the article cell contains our article
       const firstDeficitRow = deficitRows.first();
       await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(firstDeficitRow, page);
-      await loadingTaskPage.highlightElement(firstDeficitRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstDeficitRow, {
+        scrollExtra: true,
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
       });
-      await page.waitForTimeout(500);
 
       const articleCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Article"]').first();
       await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(articleCell, page);
-      await loadingTaskPage.highlightElement(articleCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(articleCell, { scrollExtra: true });
       const articleCellValue = (await articleCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -6208,36 +5121,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Get the designation (Обозначение) from the deficit row
       const designationCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Designation"]').first();
       await designationCell.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(designationCell, page);
-      await loadingTaskPage.highlightElement(designationCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(designationCell, { scrollExtra: true });
       const designationValue = (await designationCell.textContent())?.trim() || '';
       console.log(`Deficit page designation: ${designationValue}`);
 
       // Get the Name (Наименование) from the deficit row
       const nameCellDeficit = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
       await nameCellDeficit.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(nameCellDeficit, page);
-      await loadingTaskPage.highlightElement(nameCellDeficit, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(nameCellDeficit, { scrollExtra: true });
       const nameValueDeficit = (await nameCellDeficit.textContent())?.trim() || '';
       console.log(`Deficit page name: ${nameValueDeficit}`);
 
       // Open Tab 2 and go to orders page, search for order with /0, edit it
       const context = page.context();
-      const tab2 = await context.newPage();
-      const tab2LoadingTaskPage = new CreateLoadingTaskPage(tab2);
-      await tab2LoadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
-      await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+        CreateLoadingTaskPage
+      );
 
       await tab2LoadingTaskPage.searchAndWaitForTable(
         baseOrderNumberValue,
@@ -6284,52 +5184,28 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // Get Article cell
           articleCellTab2 = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
           await articleCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-          await scrollIntoViewWithExtra(articleCellTab2, tab2);
-          await tab2LoadingTaskPage.highlightElement(articleCellTab2, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await tab2.waitForTimeout(500);
+          await tab2LoadingTaskPage.waitAndHighlight(articleCellTab2, { scrollExtra: true });
           const articleCellValueTab2 = (await articleCellTab2.textContent())?.trim() || '';
           console.log(`Found Article cell value in /0 row: ${articleCellValueTab2}`);
 
           // Get Name cell
           nameCellTab2 = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]').first();
           await nameCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-          await scrollIntoViewWithExtra(nameCellTab2, tab2);
-          await tab2LoadingTaskPage.highlightElement(nameCellTab2, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await tab2.waitForTimeout(500);
+          await tab2LoadingTaskPage.waitAndHighlight(nameCellTab2, { scrollExtra: true });
           const nameCellValueTab2 = (await nameCellTab2.textContent())?.trim() || '';
           console.log(`Found Name cell value in /0 row: ${nameCellValueTab2}`);
 
           // Get Product Wrapper cell
           productWrapperCellTab2 = row.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
           await productWrapperCellTab2.waitFor({ state: 'visible', timeout: 10000 });
-          await scrollIntoViewWithExtra(productWrapperCellTab2, tab2);
-          await tab2LoadingTaskPage.highlightElement(productWrapperCellTab2, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await tab2.waitForTimeout(500);
+          await tab2LoadingTaskPage.waitAndHighlight(productWrapperCellTab2, { scrollExtra: true });
           const productWrapperValueTab2 = (await productWrapperCellTab2.textContent())?.trim() || '';
           console.log(`Found Product Wrapper value in /0 row: ${productWrapperValueTab2}`);
 
           // Get AttachmentsValue-Link element (outside the table)
           const attachmentsValueLink = tab2.locator('[data-testid="AddOrder-AttachmentsValue-Link"]').first();
           await attachmentsValueLink.waitFor({ state: 'visible', timeout: 10000 });
-          await scrollIntoViewWithExtra(attachmentsValueLink, tab2);
-          await tab2LoadingTaskPage.highlightElement(attachmentsValueLink, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await tab2.waitForTimeout(500);
+          await tab2LoadingTaskPage.waitAndHighlight(attachmentsValueLink, { scrollExtra: true });
           const attachmentsValueLinkValue = (await attachmentsValueLink.textContent())?.trim() || '';
           console.log(`Found AttachmentsValue-Link value: ${attachmentsValueLinkValue}`);
 
@@ -6376,26 +5252,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const dateUrgencyCellTab1 = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-DateUrgency"]').first();
       await dateUrgencyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateUrgencyCellTab1, page);
-      await loadingTaskPage.highlightElement(dateUrgencyCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateUrgencyCellTab1, { scrollExtra: true });
       const dateUrgencyValueTab1 = (await dateUrgencyCellTab1.textContent())?.trim() || '';
 
       // Tab 2: Compare with DateByUrgency
       await tab2.bringToFront();
       const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
       await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateByUrgencyDisplayTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(dateByUrgencyDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2, { scrollExtra: true });
       const dateByUrgencyValueTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
       await page.bringToFront();
@@ -6413,26 +5277,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 1: Get DateShipments from deficit row
       const dateShipmentsCellTab1 = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-DateShipments"]').first();
       await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateShipmentsCellTab1, page);
-      await loadingTaskPage.highlightElement(dateShipmentsCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1, { scrollExtra: true });
       const dateShipmentsValueTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
 
       // Tab 2: Compare with DateShippingPlan
       await tab2.bringToFront();
       const dateShippingPlanDisplayTab2 = tab2.locator('[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
       await dateShippingPlanDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(dateShippingPlanDisplayTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(dateShippingPlanDisplayTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(dateShippingPlanDisplayTab2, { scrollExtra: true });
       const dateShippingPlanValueTab2 = (await dateShippingPlanDisplayTab2.textContent())?.trim() || '';
 
       await page.bringToFront();
@@ -6450,13 +5302,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 1: Get Demand-Link from deficit row
       const demandLinkCellTab1 = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Demand-Link"]').first();
       await demandLinkCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(demandLinkCellTab1, page);
-      await loadingTaskPage.highlightElement(demandLinkCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(demandLinkCellTab1, { scrollExtra: true });
       const demandValueTab1 = (await demandLinkCellTab1.textContent())?.trim() || '';
       const demandValueTab1Number = parseInt(demandValueTab1, 10) || 0;
       console.log(`Tab 1 Demand value: ${demandValueTab1} (parsed: ${demandValueTab1Number})`);
@@ -6472,13 +5318,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         if (orderNumberTextTab2.includes('/0')) {
           const quantityKolCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
           await quantityKolCell.waitFor({ state: 'visible', timeout: 10000 });
-          await scrollIntoViewWithExtra(quantityKolCell, tab2);
-          await tab2LoadingTaskPage.highlightElement(quantityKolCell, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await tab2.waitForTimeout(500);
+          await tab2LoadingTaskPage.waitAndHighlight(quantityKolCell, { scrollExtra: true });
           quantityKolValueTab2 = (await quantityKolCell.textContent())?.trim() || '';
           break;
         }
@@ -6487,13 +5327,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 2: Get Quantity from InputNumber-Input
       const quantityInputTab2 = tab2.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]').first();
       await quantityInputTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(quantityInputTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(quantityInputTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(quantityInputTab2, { scrollExtra: true });
       const quantityInputValueTab2 = (await quantityInputTab2.inputValue())?.trim() || '';
 
       // Compare Demand with both quantity values
@@ -6519,13 +5353,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 1: Get Deficit value and verify it's the opposite of Demand
       const deficitCellTab1 = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
       await deficitCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitCellTab1, page);
-      await loadingTaskPage.highlightElement(deficitCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitCellTab1, { scrollExtra: true });
       const deficitValueTab1 = (await deficitCellTab1.textContent())?.trim() || '';
       const deficitValueTab1Number = parseInt(deficitValueTab1, 10) || 0;
       const expectedDeficitValue = -demandValueTab1Number;
@@ -6549,13 +5377,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const saveButtonTab2 = tab2.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
       await saveButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(saveButtonTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(saveButtonTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(saveButtonTab2, { scrollExtra: true });
       await saveButtonTab2.click();
       await tab2.waitForTimeout(2000); // Wait 2 seconds after clicking save
       await tab2LoadingTaskPage.waitForNetworkIdle();
@@ -6569,23 +5391,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const deficitMainTableAfterReload = page.locator('[data-testid="DeficitIzd-Main-Table"]');
       await deficitMainTableAfterReload.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitMainTableAfterReload, page);
-      await loadingTaskPage.highlightElement(deficitMainTableAfterReload, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(deficitMainTableAfterReload, {
+        scrollExtra: true,
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
       });
-      await page.waitForTimeout(500);
 
       const searchInputAfterReload = deficitMainTableAfterReload.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
       await searchInputAfterReload.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(searchInputAfterReload, page);
-      await loadingTaskPage.highlightElement(searchInputAfterReload, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInputAfterReload, { scrollExtra: true });
       await searchInputAfterReload.fill('');
       await searchInputAfterReload.fill(articleNumberValue);
       await searchInputAfterReload.press('Enter');
@@ -6601,25 +5416,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const demandLinkCellTab1AfterUpdate = firstDeficitRowAfterUpdate.locator('[data-testid="DeficitIzdTable-Row-Demand-Link"]').first();
       await demandLinkCellTab1AfterUpdate.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(demandLinkCellTab1AfterUpdate, page);
-      await loadingTaskPage.highlightElement(demandLinkCellTab1AfterUpdate, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(demandLinkCellTab1AfterUpdate, { scrollExtra: true });
       const demandValueTab1AfterUpdate = (await demandLinkCellTab1AfterUpdate.textContent())?.trim() || '';
       const demandValueTab1NumberAfterUpdate = parseInt(demandValueTab1AfterUpdate, 10) || 0;
 
       const deficitCellTab1AfterUpdate = firstDeficitRowAfterUpdate.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
       await deficitCellTab1AfterUpdate.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitCellTab1AfterUpdate, page);
-      await loadingTaskPage.highlightElement(deficitCellTab1AfterUpdate, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitCellTab1AfterUpdate, { scrollExtra: true });
       const deficitValueTab1AfterUpdate = (await deficitCellTab1AfterUpdate.textContent())?.trim() || '';
       const deficitValueTab1NumberAfterUpdate = parseInt(deficitValueTab1AfterUpdate, 10) || 0;
 
@@ -6653,13 +5456,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2.waitForTimeout(500);
 
       await saveButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(saveButtonTab2, tab2);
-      await tab2LoadingTaskPage.highlightElement(saveButtonTab2, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await tab2.waitForTimeout(500);
+      await tab2LoadingTaskPage.waitAndHighlight(saveButtonTab2, { scrollExtra: true });
       await saveButtonTab2.click();
       await tab2.waitForTimeout(2000); // Wait 2 seconds after clicking save
       await tab2LoadingTaskPage.waitForNetworkIdle();
@@ -6674,23 +5471,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Re-locate the deficit table and search input after reload
       const deficitMainTableAfterDecrease = page.locator('[data-testid="DeficitIzd-Main-Table"]');
       await deficitMainTableAfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitMainTableAfterDecrease, page);
-      await loadingTaskPage.highlightElement(deficitMainTableAfterDecrease, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(deficitMainTableAfterDecrease, {
+        scrollExtra: true,
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
       });
-      await page.waitForTimeout(500);
 
       const searchInputAfterDecrease = deficitMainTableAfterDecrease.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
       await searchInputAfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(searchInputAfterDecrease, page);
-      await loadingTaskPage.highlightElement(searchInputAfterDecrease, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInputAfterDecrease, { scrollExtra: true });
 
       // Re-search by article
       await searchInputAfterDecrease.fill('');
@@ -6708,25 +5498,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const demandLinkCellTab1AfterDecrease = firstDeficitRowAfterDecrease.locator('[data-testid="DeficitIzdTable-Row-Demand-Link"]').first();
       await demandLinkCellTab1AfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(demandLinkCellTab1AfterDecrease, page);
-      await loadingTaskPage.highlightElement(demandLinkCellTab1AfterDecrease, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(demandLinkCellTab1AfterDecrease, { scrollExtra: true });
       const demandValueTab1AfterDecrease = (await demandLinkCellTab1AfterDecrease.textContent())?.trim() || '';
       const demandValueTab1NumberAfterDecrease = parseInt(demandValueTab1AfterDecrease, 10) || 0;
 
       const deficitCellTab1AfterDecrease = firstDeficitRowAfterDecrease.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
       await deficitCellTab1AfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(deficitCellTab1AfterDecrease, page);
-      await loadingTaskPage.highlightElement(deficitCellTab1AfterDecrease, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitCellTab1AfterDecrease, { scrollExtra: true });
       const deficitValueTab1AfterDecrease = (await deficitCellTab1AfterDecrease.textContent())?.trim() || '';
       const deficitValueTab1NumberAfterDecrease = parseInt(deficitValueTab1AfterDecrease, 10) || 0;
 
@@ -6755,13 +5533,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 1: Verify Quantity and Status
       const quantityCellTab1 = firstDeficitRowAfterDecrease.locator('[data-testid="DeficitIzdTable-Row-Quantity"]').first();
       await quantityCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(quantityCellTab1, page);
-      await loadingTaskPage.highlightElement(quantityCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCellTab1, { scrollExtra: true });
       const quantityValueTab1 = (await quantityCellTab1.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -6775,13 +5547,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const statusCellTab1 = firstDeficitRowAfterDecrease.locator('[data-testid="DeficitIzdTable-Row-Status-Badges-BadgesText"]').first();
       await statusCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(statusCellTab1, page);
-      await loadingTaskPage.highlightElement(statusCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(statusCellTab1, { scrollExtra: true });
       const statusValueTab1 = (await statusCellTab1.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -6795,13 +5561,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const normCellTab1 = firstDeficitRowAfterDecrease.locator('[data-testid="DeficitIzdTable-Row-Norm"]').first();
       await normCellTab1.waitFor({ state: 'visible', timeout: 10000 });
-      await scrollIntoViewWithExtra(normCellTab1, page);
-      await loadingTaskPage.highlightElement(normCellTab1, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(normCellTab1, { scrollExtra: true });
       const normValueRaw = (await normCellTab1.textContent())?.trim() || '';
       const normFirstPart = normValueRaw.split('/')[0]?.trim() || '';
 
@@ -6827,37 +5587,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         const partsTableFirstRow = partsTab.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
         await partsTableFirstRow.waitFor({ state: 'visible', timeout: 10000 });
-        await scrollIntoViewWithExtra(partsTableFirstRow, partsTab);
-        await partsDatabasePage.highlightElement(partsTableFirstRow, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await partsTab.waitForTimeout(500);
+        await partsDatabasePage.waitAndHighlight(partsTableFirstRow, { scrollExtra: true });
         await partsTableFirstRow.click();
 
         const editButtonParts = partsTab.locator('[data-testid="BaseProducts-Button-Edit"]').first();
         await editButtonParts.waitFor({ state: 'visible', timeout: 10000 });
-        await scrollIntoViewWithExtra(editButtonParts, partsTab);
-        await partsDatabasePage.highlightElement(editButtonParts, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await partsTab.waitForTimeout(500);
+        await partsDatabasePage.waitAndHighlight(editButtonParts, { scrollExtra: true });
         await editButtonParts.click();
         await partsDatabasePage.waitForNetworkIdle();
         await partsTab.waitForTimeout(2000);
 
         const characteristicElement = partsTab.locator('[data-testid="Creator-Detail-Characteristics-Tbody-Znach0"]').first();
         await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
-        await scrollIntoViewWithExtra(characteristicElement, partsTab);
-        await partsDatabasePage.highlightElement(characteristicElement, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await partsTab.waitForTimeout(500);
+        await partsDatabasePage.waitAndHighlight(characteristicElement, { scrollExtra: true });
         const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -6893,26 +5635,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const shippingTasksButton = page.locator('[data-testid="Sclad-shippingTasks"]');
       await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
-      await shippingTasksButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shippingTasksButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shippingTasksButton);
       await shippingTasksButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
 
       const warehouseTable = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]');
       await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
-      await warehouseTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(warehouseTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const getWarehouseSearchInput = async () => {
         const searchInput = page
@@ -6934,14 +5664,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await firstRow.waitFor({ state: 'visible', timeout: 10000 });
 
         const orderNumberCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-        await orderNumberCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(orderNumberCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(orderNumberCell);
         const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -6953,14 +5676,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         const articleCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
-        await articleCell.waitFor({ state: 'visible', timeout: 10000 });
-        await articleCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(articleCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(articleCell);
         const articleText = (await articleCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -6972,14 +5688,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         const productNameCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(productNameCell);
         const productNameText = (await productNameCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           page,
@@ -7076,13 +5785,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         const shippingTasksButton = page.locator('[data-testid="Sclad-shippingTasks"]');
         await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
-        await shippingTasksButton.scrollIntoViewIfNeeded();
-        await loadingTaskPage.highlightElement(shippingTasksButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(shippingTasksButton);
         await shippingTasksButton.click();
         await loadingTaskPage.waitForNetworkIdle();
         await page.waitForTimeout(1000);
@@ -7106,24 +5809,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const warehouseRow = warehouseTableBody.locator('tr').first();
       await warehouseRow.waitFor({ state: 'visible', timeout: 10000 });
 
-      const scrollIntoViewWithExtra = async (targetLocator: Locator, targetPage: Page) => {
-        await targetLocator.scrollIntoViewIfNeeded();
-        await targetPage.waitForTimeout(200);
-        await targetPage.evaluate(() => {
-          window.scrollBy(0, -100);
-        });
-        await targetPage.waitForTimeout(200);
-      };
+      // Use scrollIntoViewWithExtra from PageObject base class
 
       const readWarehouseCell = async (locator: Locator, description: string) => {
         await locator.waitFor({ state: 'visible', timeout: 10000 });
-        await scrollIntoViewWithExtra(locator, page);
-        await loadingTaskPage.highlightElement(locator, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await page.waitForTimeout(500);
+        await loadingTaskPage.waitAndHighlight(locator, { scrollExtra: true });
         const value = (await locator.textContent())?.trim() || '';
         console.log(`Warehouse ${description}: ${value}`);
         return value;
@@ -7185,10 +5875,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       const context = page.context();
-      const ordersTab = await context.newPage();
-      const ordersTabLoadingPage = new CreateLoadingTaskPage(ordersTab);
+      const { page: ordersTab, pageObject: ordersTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+        CreateLoadingTaskPage
+      );
       try {
-        await ordersTabLoadingPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
         await ordersTabLoadingPage.waitForNetworkIdle();
         await ordersTab.waitForTimeout(2000);
 
@@ -7237,26 +5928,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         const editButtonOrders = ordersTab.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' }).first();
         await editButtonOrders.waitFor({ state: 'visible', timeout: 10000 });
-        await editButtonOrders.scrollIntoViewIfNeeded();
-        await ordersTabLoadingPage.highlightElement(editButtonOrders, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await ordersTab.waitForTimeout(500);
+        await ordersTabLoadingPage.waitAndHighlight(editButtonOrders);
         await editButtonOrders.click();
         await ordersTabLoadingPage.waitForNetworkIdle();
         await ordersTab.waitForTimeout(1000);
 
         const editTitle = ordersTab.locator('[data-testid="AddOrder-EditTitle"]').first();
         await editTitle.waitFor({ state: 'visible', timeout: 10000 });
-        await editTitle.scrollIntoViewIfNeeded();
-        await ordersTabLoadingPage.highlightElement(editTitle, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await ordersTab.waitForTimeout(500);
+        await ordersTabLoadingPage.waitAndHighlight(editTitle);
         const editTitleText = (await editTitle.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
           ordersTab,
@@ -7287,13 +5966,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         const readOrdersCell = async (locator: Locator, description: string, highlightPage: CreateLoadingTaskPage = ordersTabLoadingPage) => {
           await locator.waitFor({ state: 'visible', timeout: 10000 });
-          await scrollIntoViewWithExtra(locator, ordersTab);
-          await highlightPage.highlightElement(locator, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await ordersTab.waitForTimeout(500);
+          await highlightPage.waitAndHighlight(locator, { scrollExtra: true });
           const value = (await locator.textContent())?.trim() || '';
           console.log(`Edit page ${description}: ${value}`);
           return value;
@@ -7338,13 +6011,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         const ordersQuantityInputLocator = ordersTab.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]').first();
         await ordersQuantityInputLocator.waitFor({ state: 'visible', timeout: 10000 });
-        await ordersQuantityInputLocator.scrollIntoViewIfNeeded();
-        await ordersTabLoadingPage.highlightElement(ordersQuantityInputLocator, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await ordersTab.waitForTimeout(500);
+        await ordersTabLoadingPage.waitAndHighlight(ordersQuantityInputLocator);
         const ordersQuantityInput = (await ordersQuantityInputLocator.inputValue())?.trim() || '';
 
         const ordersDateOrder = await readOrdersCell(
@@ -7422,13 +6089,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const timeCellCount = await dateShipmentsTimeCells.count();
         const dateShipmentsTimeCell = timeCellCount > 2 ? dateShipmentsTimeCells.nth(2) : dateShipmentsTimeCells.first();
         await dateShipmentsTimeCell.waitFor({ state: 'visible', timeout: 10000 });
-        await dateShipmentsTimeCell.scrollIntoViewIfNeeded();
-        await ordersTabLoadingPage.highlightElement(dateShipmentsTimeCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await ordersTab.waitForTimeout(500);
+        await ordersTabLoadingPage.waitAndHighlight(dateShipmentsTimeCell);
         const dateShipmentsTimeText = (await dateShipmentsTimeCell.textContent())?.trim() || '';
         const timeValue = dateShipmentsTimeText.split('/')[0].trim();
 
@@ -7447,38 +6108,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           });
 
           const firstRowProduct = productTab.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
-          await firstRowProduct.waitFor({ state: 'visible', timeout: 10000 });
-          await firstRowProduct.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(firstRowProduct, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await productTab.waitForTimeout(500);
+          await partsDatabasePage.waitAndHighlight(firstRowProduct);
           await firstRowProduct.click();
 
           const editButtonProduct = productTab.locator('[data-testid="BaseProducts-Button-Edit"]');
           await editButtonProduct.waitFor({ state: 'visible', timeout: 10000 });
-          await editButtonProduct.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(editButtonProduct, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await productTab.waitForTimeout(500);
+          await partsDatabasePage.waitAndHighlight(editButtonProduct);
           await editButtonProduct.click();
           await partsDatabasePage.waitForNetworkIdle();
           await productTab.waitForTimeout(1000);
 
           const characteristicElement = productTab.locator('[data-testid="Creator-Detail-Characteristics-ZnachText0"]');
           await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
-          await characteristicElement.scrollIntoViewIfNeeded();
-          await partsDatabasePage.highlightElement(characteristicElement, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-          await productTab.waitForTimeout(500);
+          await partsDatabasePage.waitAndHighlight(characteristicElement);
           const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
           // Verification commented out per requirements
         } finally {
@@ -7538,13 +6180,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
       await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitProductionButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -7552,24 +6188,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
       await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitMainTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
       const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput);
 
       // Search by product name
       await searchInput.fill('');
@@ -7600,24 +6223,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const firstDeficitRow = deficitRows.first();
       await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDeficitRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstDeficitRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstDeficitRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Get the deficit column value
       const deficitCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
       await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitCell);
       initialDeficitValue = (await deficitCell.textContent())?.trim() || '';
       console.log(`Test Case 6: Initial deficit value stored: ${initialDeficitValue}`);
 
@@ -7636,12 +6247,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitForNetworkIdle();
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
       await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
-      await loadingTaskPage.highlightElement(pageContainer, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(pageContainer, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -7663,23 +6269,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Verify the order appears in the search results
       const firstRow = shipmentsTableBody.locator('tr').first();
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderNumberCell);
 
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
       console.log(`Test Case 6: Found order number cell text: ${cellOrderNumber}`);
@@ -7711,14 +6304,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 4: Find the row in bottom table that contains our order number with /0', async () => {
       const positionsTable = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
-      await positionsTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(positionsTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(positionsTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -7760,24 +6346,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing order number with /0: ${orderNumberWith0}`);
       }
 
-      await targetRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(targetRow);
 
       // Check the value in the quantity cell
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
       await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       initialQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 6: Initial quantity in cell: ${initialQuantity}`);
 
@@ -7855,24 +6429,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing order number with /0 after save: ${orderNumberWith0}`);
       }
 
-      await targetRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(targetRow);
 
       // Check the quantity cell value
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
       await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       const updatedQuantity = (await quantityCell.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
       console.log(`Test Case 6: Updated quantity in cell: ${updatedQuantity}, expected: ${expectedQuantity}`);
@@ -7890,13 +6452,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 8: Click cancel to go back to main orders page', async () => {
       const cancelButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Cancel"]').first();
       await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
-      await cancelButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(cancelButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(cancelButton);
       await cancelButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -7924,13 +6480,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const firstRow = shipmentsTableBody.locator('tr').first();
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
       await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -7952,14 +6502,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
 
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell);
       const quantityCellValue = (await quantityCell.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
       console.log(`Test Case 6: Quantity cell value: ${quantityCellValue}, expected: ${expectedQuantity}`);
@@ -7979,14 +6522,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
 
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
       await page.waitForTimeout(2000);
       await loadingTaskPage.waitForNetworkIdle();
@@ -8024,24 +6560,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (modalCount === 0) {
         throw new Error('Modal did not open after clicking the quantity cell');
       }
-      await modal.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(modal, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(modal, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Check that the title of the modal contains our order number
       const orderNumberH3 = modal.locator('h3').first();
       await orderNumberH3.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberH3.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberH3, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(orderNumberH3);
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
       const orderNumberModal = orderNumberMatch ? orderNumberMatch[1].trim() : '';
@@ -8065,13 +6589,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         .locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]')
         .first();
       await countElement.waitFor({ state: 'visible', timeout: 10000 });
-      await countElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(countElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(countElement);
       const countModal = (await countElement.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
       console.log(`Test Case 6: Modal quantity: ${countModal}, expected: ${expectedQuantity}`);
@@ -8100,13 +6618,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
       await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitProductionButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -8114,24 +6626,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
       await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitMainTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
       const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput);
 
       // Search by product name
       await searchInput.fill('');
@@ -8153,24 +6652,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const firstDeficitRow = deficitRows.first();
       await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDeficitRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstDeficitRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstDeficitRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Get the new deficit column value
       const deficitCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
       await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitCell);
       newDeficitValue = (await deficitCell.textContent())?.trim() || '';
       console.log(`Test Case 6: New deficit value after quantity change: ${newDeficitValue}`);
       console.log(`Test Case 6: Initial deficit value was: ${initialDeficitValue}`);
@@ -8193,13 +6680,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Check that the RealBalance cell has the same value as the Deficit cell
       const realBalanceCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-RealBalance"]').first();
       await realBalanceCell.waitFor({ state: 'visible', timeout: 10000 });
-      await realBalanceCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(realBalanceCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(realBalanceCell);
       const realBalanceValue = (await realBalanceCell.textContent())?.trim() || '';
       console.log(`Test Case 6: RealBalance value: ${realBalanceValue}, Deficit value: ${newDeficitValue}`);
 
@@ -8220,26 +6701,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Create a new tab
-      const context = page.context();
-      const warehouseTab = await context.newPage();
-      const warehouseTabLoadingPage = new CreateLoadingTaskPage(warehouseTab);
+      const { page: warehouseTab, pageObject: warehouseTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.WAREHOUSE.URL,
+        CreateLoadingTaskPage
+      );
 
       try {
-        // Navigate to warehouse page
-        await warehouseTabLoadingPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        await warehouseTabLoadingPage.waitForNetworkIdle();
         await warehouseTab.waitForTimeout(1000);
 
         // Click on shipping tasks button to go to orders page
         const shippingTasksButton = warehouseTab.locator('[data-testid="Sclad-shippingTasks"]');
         await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
-        await shippingTasksButton.scrollIntoViewIfNeeded();
-        await warehouseTabLoadingPage.highlightElement(shippingTasksButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await warehouseTab.waitForTimeout(500);
+        await warehouseTabLoadingPage.waitAndHighlight(shippingTasksButton);
         await shippingTasksButton.click();
         await warehouseTabLoadingPage.waitForNetworkIdle();
         await warehouseTab.waitForTimeout(1000);
@@ -8247,26 +6720,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Locate the warehouse table
         const warehouseTable = warehouseTab.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]');
         await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
-        await warehouseTable.scrollIntoViewIfNeeded();
-        await warehouseTabLoadingPage.highlightElement(warehouseTable, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
+        await warehouseTabLoadingPage.waitAndHighlight(warehouseTable, {
+          highlightColor: 'cyan',
+          highlightBorder: '2px solid blue',
+          highlightTextColor: 'black',
         });
-        await warehouseTab.waitForTimeout(500);
 
         // Find and use the search input field
         const searchInput = warehouseTab
           .locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]')
           .first();
         await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInput.scrollIntoViewIfNeeded();
-        await warehouseTabLoadingPage.highlightElement(searchInput, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await warehouseTab.waitForTimeout(500);
+        await warehouseTabLoadingPage.waitAndHighlight(searchInput);
 
         // Search by product name (same product as in the order)
         await searchInput.fill('');
@@ -8288,24 +6753,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         const firstWarehouseRow = warehouseRows.first();
         await firstWarehouseRow.waitFor({ state: 'visible', timeout: 10000 });
-        await firstWarehouseRow.scrollIntoViewIfNeeded();
-        await warehouseTabLoadingPage.highlightElement(firstWarehouseRow, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
+        await warehouseTabLoadingPage.waitAndHighlight(firstWarehouseRow, {
+          highlightColor: 'cyan',
+          highlightBorder: '2px solid blue',
+          highlightTextColor: 'black',
         });
-        await warehouseTab.waitForTimeout(500);
 
         // Confirm it's the correct product by checking the product name cell
         const productNameCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
         await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await warehouseTabLoadingPage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await warehouseTab.waitForTimeout(1500);
+        await warehouseTabLoadingPage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
         const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -8320,13 +6777,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Check that the quantity cell matches the deficit value (deficit is negative, so we compare absolute values)
         const quantityCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
         await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-        await quantityCell.scrollIntoViewIfNeeded();
-        await warehouseTabLoadingPage.highlightElement(quantityCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await warehouseTab.waitForTimeout(1500);
+        await warehouseTabLoadingPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
         const quantityValue = (await quantityCell.textContent())?.trim() || '';
         const quantityNum = parseInt(quantityValue, 10) || 0;
         const deficitNum = parseInt(newDeficitValue, 10) || 0;
@@ -8401,14 +6852,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify the order appears in the search results
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstRow, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
 
       const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
       await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -8427,14 +6876,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Read the actual quantity from the main orders page to use as expected value
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       expectedQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Read expected quantity from main orders page: ${expectedQuantity}`);
 
@@ -8469,14 +6911,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 3: Find the table and row with our order number, then verify quantity', async () => {
       // Find the positions table
       const positionsTable = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
-      await positionsTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(positionsTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(positionsTable, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -8516,24 +6956,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing order number with /0: ${orderNumberWith0}`);
       }
 
-      await targetRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(targetRow);
 
       // Check the value in the quantity cell
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(quantityCell, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
 
@@ -8570,14 +7002,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get the first row and verify the quantity
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstRow, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
 
       // Verify the order number matches
       const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
@@ -8597,14 +7027,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check the quantity cell in the main orders table
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Main orders page quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
 
@@ -8624,14 +7047,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
 
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
       await page.waitForTimeout(2000);
       await loadingTaskPage.waitForNetworkIdle();
@@ -8669,24 +7085,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (modalCount === 0) {
         throw new Error('Modal did not open after double clicking the quantity cell');
       }
-      await modal.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(modal, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(modal, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Verify the modal title contains our order number
       const orderNumberH3 = modal.locator('h3').first();
-      await orderNumberH3.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberH3.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberH3, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(orderNumberH3, { waitAfter: 1500 });
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
       const orderNumberModal = orderNumberMatch ? orderNumberMatch[1].trim() : '';
@@ -8709,14 +7112,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const countElement = modal
         .locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]')
         .first();
-      await countElement.waitFor({ state: 'visible', timeout: 10000 });
-      await countElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(countElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(countElement, { waitAfter: 1500 });
       const countModal = (await countElement.textContent())?.trim() || '';
       console.log(`Test Case 7: Modal quantity: ${countModal}, expected: ${expectedQuantity}`);
 
@@ -8732,13 +7128,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the table with testid: Shipment-Table
       const shipmentTable = modal.locator('[data-testid="Shipment-Table"]').first();
       await shipmentTable.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shipmentTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find the row with our order number
       const shipmentTableBody = shipmentTable.locator('tbody');
@@ -8825,24 +7215,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing order number with /0 in Shipment-Table: ${orderNumberWith0}`);
       }
 
-      await targetShipmentRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetShipmentRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(targetShipmentRow);
 
       // Verify the quantity in the shipment table row
       const shipmentQuantityCell = targetShipmentRow.locator('[data-testid^="Shipment-Product-Kol"]').first();
-      await shipmentQuantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentQuantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentQuantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(shipmentQuantityCell, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Shipment table quantity cell value: ${shipmentQuantityValue}, expected: ${expectedQuantity}`);
 
@@ -8870,13 +7252,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
       await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitProductionButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -8884,24 +7260,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
       await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitMainTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
       const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput);
 
       // Search by product name
       await searchInput.fill('');
@@ -8932,24 +7295,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const firstDeficitRow = deficitRows.first();
       await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDeficitRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstDeficitRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstDeficitRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Confirm it's the correct product by checking the product name cell
       const productNameCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-      await productNameCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productNameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -8963,14 +7313,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get the deficit value and verify it's correct (should be negative of the quantity)
       const deficitCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
-      await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(deficitCell, { waitAfter: 1500 });
       const deficitValue = (await deficitCell.textContent())?.trim() || '';
       // Calculate expected deficit as negative of the quantity
       const quantityNum = parseInt(expectedQuantity, 10) || 0;
@@ -8988,14 +7331,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get the needed quantity (Demand) value and verify it matches the expected quantity
       const demandCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Demand-Link"]').first();
-      await demandCell.waitFor({ state: 'visible', timeout: 10000 });
-      await demandCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(demandCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(demandCell, { waitAfter: 1500 });
       const demandValue = (await demandCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Needed quantity (Demand) value: ${demandValue}, expected: ${expectedQuantity}`);
 
@@ -9023,13 +7359,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Click on shipping tasks button to go to orders page
       const shippingTasksButton = page.locator('[data-testid="Sclad-shippingTasks"]');
       await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
-      await shippingTasksButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shippingTasksButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shippingTasksButton);
       await shippingTasksButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -9037,24 +7367,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Locate the warehouse table
       const warehouseTable = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]');
       await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
-      await warehouseTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(warehouseTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
       const searchInput = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput);
 
       // Search by product name
       await searchInput.fill('');
@@ -9084,25 +7401,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstWarehouseRow = warehouseRows.first();
-      await firstWarehouseRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstWarehouseRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstWarehouseRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstWarehouseRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Confirm it's the correct product by checking the product name cell
       const productNameCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-      await productNameCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productNameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -9116,14 +7419,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check that the quantity cell has the correct value
       const quantityCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Warehouse quantity value: ${quantityValue}, expected: ${expectedQuantity}`);
 
@@ -9176,13 +7472,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
       await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitProductionButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -9190,24 +7480,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
       await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitMainTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
       const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput);
 
       // Search by product name ending with _3
       await searchInput.fill('');
@@ -9237,14 +7514,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstDeficitRow = deficitRows.first();
-      await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDeficitRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstDeficitRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstDeficitRow, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
 
       // Store deficit value
       const deficitCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
@@ -9379,14 +7654,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 4: Find the row in bottom table that contains our product', async () => {
       const positionsTable = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
-      await positionsTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(positionsTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(positionsTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -9423,13 +7691,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing product: ${productNameWith3}`);
       }
 
-      await targetRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(targetRow, { waitAfter: 1500 });
 
       // Get initial quantity
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
@@ -9505,24 +7767,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing product after save: ${productNameWith3}`);
       }
 
-      await targetRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(targetRow);
 
       // Verify the quantity cell has the new value
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(quantityCell, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
       const updatedQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Updated quantity in cell: ${updatedQuantity}, expected: ${newQuantity}`);
 
@@ -9588,14 +7842,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get the first row and verify
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstRow, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
 
       // Verify product name
       const productNameCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
@@ -9613,14 +7865,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify quantity
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Main orders page quantity: ${quantityValue}, expected: ${newQuantity}`);
 
@@ -9639,14 +7884,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
 
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
       await page.waitForTimeout(2000);
       await loadingTaskPage.waitForNetworkIdle();
@@ -9684,26 +7922,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (modalCount === 0) {
         throw new Error('Modal did not open after double clicking the quantity cell');
       }
-      await modal.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(modal, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(modal, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Verify the quantity in the modal header
       const countElement = modal
         .locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]')
         .first();
-      await countElement.waitFor({ state: 'visible', timeout: 10000 });
-      await countElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(countElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(countElement, { waitAfter: 1500 });
       const countModal = (await countElement.textContent())?.trim() || '';
       console.log(`Test Case 8: Modal quantity: ${countModal}, expected: ${newQuantity}`);
 
@@ -9719,13 +7944,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the table with testid: Shipment-Table
       const shipmentTable = modal.locator('[data-testid="Shipment-Table"]').first();
       await shipmentTable.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shipmentTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find the row with our product
       const shipmentTableBody = shipmentTable.locator('tbody');
@@ -9792,24 +8011,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing product in Shipment-Table: ${productNameWith3}`);
       }
 
-      await targetShipmentRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetShipmentRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(targetShipmentRow);
 
       // Verify the quantity in the shipment table row
       const shipmentQuantityCell = targetShipmentRow.locator('[data-testid^="Shipment-Product-Kol"]').first();
-      await shipmentQuantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentQuantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentQuantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(shipmentQuantityCell, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Shipment table quantity: ${shipmentQuantityValue}, expected: ${newQuantity}`);
 
@@ -9832,13 +8043,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
       await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitProductionButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitProductionButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -9846,24 +8051,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
       await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitMainTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitMainTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
       const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput);
 
       // Search by product name
       await searchInput.fill('');
@@ -9893,14 +8085,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstDeficitRow = deficitRows.first();
-      await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDeficitRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstDeficitRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstDeficitRow, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
 
       // Confirm it's the correct product
       const productNameCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
@@ -9918,14 +8108,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify deficit value changed (should increase by 2 since we decreased quantity by 2)
       const deficitCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
-      await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
-      await deficitCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(deficitCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(deficitCell, { waitAfter: 1500 });
       const newDeficitValue = (await deficitCell.textContent())?.trim() || '';
       const initialDeficitNum = parseInt(initialDeficit, 10) || 0;
       const newDeficitNum = parseInt(newDeficitValue, 10) || 0;
@@ -9943,14 +8126,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify required (Demand) value changed
       const requiredCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Demand-Link"]').first();
-      await requiredCell.waitFor({ state: 'visible', timeout: 10000 });
-      await requiredCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(requiredCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(requiredCell, { waitAfter: 1500 });
       const newRequiredValue = (await requiredCell.textContent())?.trim() || '';
       console.log(`Test Case 8: New required value: ${newRequiredValue}, expected: ${newQuantity}`);
 
@@ -9965,27 +8141,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify remainder (Quantity) value changed
       const remainderCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Quantity"]').first();
-      await remainderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await remainderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(remainderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(remainderCell, { waitAfter: 1500 });
       const newRemainderValue = (await remainderCell.textContent())?.trim() || '';
       console.log(`Test Case 8: New remainder value: ${newRemainderValue}, initial was: ${initialRemainder}`);
 
       // Verify real remainder (RealBalance) value changed
       const realRemainderCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-RealBalance"]').first();
-      await realRemainderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await realRemainderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(realRemainderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(realRemainderCell, { waitAfter: 1500 });
       const newRealRemainderValue = (await realRemainderCell.textContent())?.trim() || '';
       console.log(`Test Case 8: New real remainder value: ${newRealRemainderValue}, expected: ${newDeficitValue}`);
 
@@ -10008,13 +8170,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Click on shipping tasks button to go to orders page
       const shippingTasksButton = page.locator('[data-testid="Sclad-shippingTasks"]');
       await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
-      await shippingTasksButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shippingTasksButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shippingTasksButton);
       await shippingTasksButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -10022,24 +8178,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Locate the warehouse table
       const warehouseTable = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]');
       await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
-      await warehouseTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(warehouseTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
       const searchInput = page.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]').first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-      await searchInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(searchInput);
 
       // Search by product name ending with _3
       await searchInput.fill('');
@@ -10069,25 +8212,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstWarehouseRow = warehouseRows.first();
-      await firstWarehouseRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstWarehouseRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstWarehouseRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstWarehouseRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Confirm it's the correct product by checking the product name cell
       const productNameCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-      await productNameCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(productNameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -10101,14 +8230,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check that the quantity cell has the correct value
       const quantityCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Warehouse quantity value: ${quantityValue}, expected: ${newQuantity}`);
 
@@ -10164,25 +8286,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error('No data row found after filtering out total rows');
       }
 
-      await firstDataRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDataRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstDataRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstDataRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Get order number from the row
       const orderNumberCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
-      await orderNumberCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(orderNumberCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(orderNumberCell, { waitAfter: 1500 });
       const orderNumberFromRow = (await orderNumberCell.textContent())?.trim() || '';
       const normalizedOrderNumberFromRow = normalizeOrderNumber(orderNumberFromRow);
       console.log(`Test Case 8: Order number from row: ${orderNumberFromRow} (normalized: ${normalizedOrderNumberFromRow})`);
@@ -10200,14 +8308,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get quantity from the row
       const quantityCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityFromRow = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Quantity from row: ${quantityFromRow}, expected: ${newQuantity}`);
 
@@ -10223,14 +8324,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Select the row and click edit button
       const dateOrderCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
-      await dateOrderCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(dateOrderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(dateOrderCell);
       await dateOrderCell.click();
 
       const editButton = page.locator('[data-testid="IssueShipment-ActionsButtons-EditOrder"]').filter({ hasText: 'Редактировать' }).first();
@@ -10239,13 +8333,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (!isEnabled) {
         throw new Error('Edit order button is disabled; cannot proceed.');
       }
-      await editButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(editButton);
       await editButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -10266,13 +8354,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const titleText = (await editTitleElement.textContent())?.trim() || '';
       console.log(`Test Case 8: Edit page title: ${titleText}`);
 
-      await editTitleElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(editTitleElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(editTitleElement);
 
       // Extract order number from title
       const fullOrderNumberMatch = titleText.match(/Редактирование заказа\s+№\s+(.+)/);
@@ -10296,14 +8378,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check that the quantity is correct in the edit page
       const quantityInput = page.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]');
-      await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityInput);
       const quantityInInput = await quantityInput.inputValue();
       console.log(`Test Case 8: Quantity in edit page input: ${quantityInInput}, expected: ${newQuantity}`);
 
@@ -10334,14 +8409,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Click save button
       const saveButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]').first();
-      await saveButton.waitFor({ state: 'visible', timeout: 10000 });
-      await saveButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(saveButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(saveButton);
       await saveButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(2000);
@@ -10434,14 +8502,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Verify the product name in the row
-      await firstDataRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstDataRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstDataRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(firstDataRow, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
 
       const productNameCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
       await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
@@ -10487,14 +8553,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 3: Check that quantity field contains 1', async () => {
       const quantityInput = page.locator('[data-testid="AddOrder-Quantity-InputNumber-Input"]');
-      await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityInput.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityInput);
       const quantityInInput = await quantityInput.inputValue();
       console.log(`Test Case 9: Quantity in edit page input: ${quantityInInput}, expected: 1`);
 
@@ -10510,14 +8569,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 4: In bottom table, find row with order number and confirm quantity is 1', async () => {
       const positionsTable = page.locator('[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table"]').first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
-      await positionsTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(positionsTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(positionsTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -10557,24 +8609,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing order number: ${orderNumberFromRow}`);
       }
 
-      await targetRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(targetRow, { waitAfter: 1500 });
 
       // Verify the quantity cell has value 1
       const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(quantityCell, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 9: Quantity in bottom table: ${quantityValue}, expected: 1`);
 
@@ -10592,13 +8636,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Click cancel to go back to main orders page
       const cancelButton = page.locator('[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Cancel"]').first();
       await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
-      await cancelButton.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(cancelButton, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(cancelButton);
       await cancelButton.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(1000);
@@ -10628,24 +8666,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 6: Confirm quantity cell contains 1', async () => {
       const firstRow = shipmentsTableBody.locator('tr').first();
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      await firstRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(firstRow, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(firstRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Verify quantity
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 9: Main orders page quantity: ${quantityValue}, expected: 1`);
 
@@ -10664,14 +8689,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await firstRow.waitFor({ state: 'visible', timeout: 10000 });
 
       const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await quantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
       await page.waitForTimeout(2000);
       await loadingTaskPage.waitForNetworkIdle();
@@ -10709,26 +8727,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (modalCount === 0) {
         throw new Error('Modal did not open after double clicking the quantity cell');
       }
-      await modal.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(modal, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(modal, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Verify the quantity in the modal header
       const countElement = modal
         .locator('[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]')
         .first();
-      await countElement.waitFor({ state: 'visible', timeout: 10000 });
-      await countElement.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(countElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(1500);
+      await loadingTaskPage.waitAndHighlight(countElement, { waitAfter: 1500 });
       const countModal = (await countElement.textContent())?.trim() || '';
       console.log(`Test Case 9: Modal quantity: ${countModal}, expected: 1`);
 
@@ -10744,13 +8749,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the table with testid: Shipment-Table
       const shipmentTable = modal.locator('[data-testid="Shipment-Table"]').first();
       await shipmentTable.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentTable.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentTable, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(shipmentTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find the row with our product
       const shipmentTableBody = shipmentTable.locator('tbody');
@@ -10808,24 +8807,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row containing product in Shipment-Table: ${productNameWith3}`);
       }
 
-      await targetShipmentRow.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(targetShipmentRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-      await page.waitForTimeout(500);
+      await loadingTaskPage.waitAndHighlight(targetShipmentRow);
 
       // Verify the quantity in the shipment table row
       const shipmentQuantityCell = targetShipmentRow.locator('[data-testid^="Shipment-Product-Kol"]').first();
-      await shipmentQuantityCell.waitFor({ state: 'visible', timeout: 10000 });
-      await shipmentQuantityCell.scrollIntoViewIfNeeded();
-      await loadingTaskPage.highlightElement(shipmentQuantityCell, {
-        backgroundColor: 'cyan',
-        border: '2px solid blue',
-        color: 'black',
+      await loadingTaskPage.waitAndHighlight(shipmentQuantityCell, {
+        highlightColor: 'cyan',
+        highlightBorder: '2px solid blue',
+        highlightTextColor: 'black',
+        waitAfter: 1500,
       });
-      await page.waitForTimeout(1500);
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
       console.log(`Test Case 9: Shipment table quantity: ${shipmentQuantityValue}, expected: 1`);
 
@@ -10840,26 +8831,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 8: Open new tab, go to deficit products page, search for product, and verify deficit is -1', async () => {
-      const context = page.context();
-      const newPage = await context.newPage();
-      const deficitPage = new CreateLoadingTaskPage(newPage);
+      const { page: newPage, pageObject: deficitPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.WAREHOUSE.URL, CreateLoadingTaskPage);
 
       try {
-        // Navigate to warehouse page
-        await deficitPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        await deficitPage.waitForNetworkIdle();
         await newPage.waitForTimeout(1000);
 
         // Open Дефицит продукции (Deficit Products) page
         const deficitProductionButton = newPage.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-        await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
-        await deficitProductionButton.scrollIntoViewIfNeeded();
-        await deficitPage.highlightElement(deficitProductionButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await newPage.waitForTimeout(500);
+        await deficitPage.waitAndHighlight(deficitProductionButton);
         await deficitProductionButton.click();
         await deficitPage.waitForNetworkIdle();
         await newPage.waitForTimeout(1000);
@@ -10867,24 +8846,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Locate the deficit table
         const deficitMainTable = newPage.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
         await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
-        await deficitMainTable.scrollIntoViewIfNeeded();
-        await deficitPage.highlightElement(deficitMainTable, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
-        });
-        await newPage.waitForTimeout(500);
+        await deficitPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
         // Find and use the search input field
         const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInput.scrollIntoViewIfNeeded();
-        await deficitPage.highlightElement(searchInput, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await newPage.waitForTimeout(500);
+        await deficitPage.waitAndHighlight(searchInput);
 
         // Search by product name
         await searchInput.fill('');
@@ -10914,14 +8880,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         const firstDeficitRow = deficitRows.first();
-        await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
-        await firstDeficitRow.scrollIntoViewIfNeeded();
-        await deficitPage.highlightElement(firstDeficitRow, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
+        await deficitPage.waitAndHighlight(firstDeficitRow, {
+          highlightColor: 'cyan',
+          highlightBorder: '2px solid blue',
+          highlightTextColor: 'black',
+          waitAfter: 1500,
         });
-        await newPage.waitForTimeout(1500);
 
         // Confirm it's the correct product
         const productNameCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Name"]').first();
@@ -10939,14 +8903,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Verify deficit value is -1
         const deficitCell = firstDeficitRow.locator('[data-testid="DeficitIzdTable-Row-Deficit"]').first();
-        await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
-        await deficitCell.scrollIntoViewIfNeeded();
-        await deficitPage.highlightElement(deficitCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await newPage.waitForTimeout(1500);
+        await deficitPage.waitAndHighlight(deficitCell, { waitAfter: 1500 });
         const deficitValue = (await deficitCell.textContent())?.trim() || '';
         console.log(`Test Case 9: Deficit value: ${deficitValue}, expected: -1`);
 
@@ -10964,26 +8921,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 9: Open new tab, go to warehouse orders page, search for product, and verify quantity is 1', async () => {
-      const context = page.context();
-      const newPage = await context.newPage();
-      const warehousePage = new CreateLoadingTaskPage(newPage);
+      const { page: newPage, pageObject: warehousePage } = await loadingTaskPage.createNewTabAndNavigate(
+        SELECTORS.MAINMENU.WAREHOUSE.URL,
+        CreateLoadingTaskPage
+      );
 
       try {
-        // Navigate to warehouse page
-        await warehousePage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
-        await warehousePage.waitForNetworkIdle();
         await newPage.waitForTimeout(1000);
 
         // Click on shipping tasks button to go to orders page
         const shippingTasksButton = newPage.locator('[data-testid="Sclad-shippingTasks"]');
-        await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
-        await shippingTasksButton.scrollIntoViewIfNeeded();
-        await warehousePage.highlightElement(shippingTasksButton, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await newPage.waitForTimeout(500);
+        await warehousePage.waitAndHighlight(shippingTasksButton);
         await shippingTasksButton.click();
         await warehousePage.waitForNetworkIdle();
         await newPage.waitForTimeout(1000);
@@ -10991,26 +8939,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Locate the warehouse table
         const warehouseTable = newPage.locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table"]');
         await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
-        await warehouseTable.scrollIntoViewIfNeeded();
-        await warehousePage.highlightElement(warehouseTable, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
-        });
-        await newPage.waitForTimeout(500);
+        await warehousePage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
         // Find and use the search input field
         const searchInput = newPage
           .locator('[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input"]')
           .first();
         await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInput.scrollIntoViewIfNeeded();
-        await warehousePage.highlightElement(searchInput, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await newPage.waitForTimeout(500);
+        await warehousePage.waitAndHighlight(searchInput);
 
         // Search by product name ending with _3
         await searchInput.fill('');
@@ -11031,25 +8967,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         const firstWarehouseRow = warehouseRows.first();
-        await firstWarehouseRow.waitFor({ state: 'visible', timeout: 10000 });
-        await firstWarehouseRow.scrollIntoViewIfNeeded();
-        await warehousePage.highlightElement(firstWarehouseRow, {
-          backgroundColor: 'cyan',
-          border: '2px solid blue',
-          color: 'black',
-        });
-        await newPage.waitForTimeout(500);
+        await warehousePage.waitAndHighlight(firstWarehouseRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
         // Confirm it's the correct product by checking the product name cell
         const productNameCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
-        await productNameCell.scrollIntoViewIfNeeded();
-        await warehousePage.highlightElement(productNameCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await newPage.waitForTimeout(1500);
+        await warehousePage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
         const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -11063,14 +8985,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Check that the quantity cell has the value 1
         const quantityCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
-        await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
-        await quantityCell.scrollIntoViewIfNeeded();
-        await warehousePage.highlightElement(quantityCell, {
-          backgroundColor: 'yellow',
-          border: '2px solid red',
-          color: 'blue',
-        });
-        await newPage.waitForTimeout(1500);
+        await warehousePage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
         const quantityValue = (await quantityCell.textContent())?.trim() || '';
         console.log(`Test Case 9: Warehouse quantity value: ${quantityValue}, expected: 1`);
 

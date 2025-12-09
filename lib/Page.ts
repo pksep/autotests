@@ -637,6 +637,87 @@ export class PageObject extends AbstractPage {
   }
 
   /**
+   * Scrolls an element into view and then scrolls down an additional 100px to ensure element is fully visible in smaller viewports
+   * @param element - The locator element to scroll into view
+   * @param pageInstance - The page instance to perform the scroll on
+   */
+  async scrollIntoViewWithExtra(element: Locator, pageInstance: Page): Promise<void> {
+    await element.scrollIntoViewIfNeeded();
+    // Scroll down an additional 100px to ensure element is fully visible in smaller viewports
+    await pageInstance.evaluate(() => {
+      window.scrollBy(0, 100);
+    });
+    await pageInstance.waitForTimeout(200); // Small delay for scroll to complete
+  }
+
+  /**
+   * Waits for element, scrolls into view, highlights it, and optionally waits
+   * Combines common UI interaction patterns into a single method
+   * @param locator - The locator to interact with
+   * @param options - Optional configuration
+   * @param options.timeout - Timeout for wait operations (default: 10000)
+   * @param options.highlight - Whether to highlight the element (default: true)
+   * @param options.highlightColor - Highlight background color (default: 'yellow')
+   * @param options.highlightBorder - Highlight border style (default: '2px solid red')
+   * @param options.highlightTextColor - Highlight text color (default: 'blue')
+   * @param options.waitAfter - Milliseconds to wait after highlighting (default: 500)
+   * @param options.scrollExtra - Whether to use scrollIntoViewWithExtra (default: false)
+   */
+  async waitAndHighlight(
+    locator: Locator,
+    options?: {
+      timeout?: number;
+      highlight?: boolean;
+      highlightColor?: string;
+      highlightBorder?: string;
+      highlightTextColor?: string;
+      waitAfter?: number;
+      scrollExtra?: boolean;
+    }
+  ): Promise<void> {
+    const timeout = options?.timeout ?? 10000;
+    const shouldHighlight = options?.highlight ?? true;
+    const waitAfter = options?.waitAfter ?? 500;
+    const scrollExtra = options?.scrollExtra ?? false;
+
+    await locator.waitFor({ state: 'visible', timeout });
+
+    if (scrollExtra) {
+      await this.scrollIntoViewWithExtra(locator, this.page);
+    } else {
+      await locator.scrollIntoViewIfNeeded();
+    }
+
+    if (shouldHighlight) {
+      await this.highlightElement(locator, {
+        backgroundColor: options?.highlightColor ?? 'yellow',
+        border: options?.highlightBorder ?? '2px solid red',
+        color: options?.highlightTextColor ?? 'blue',
+      });
+    }
+
+    if (waitAfter > 0) {
+      await this.page.waitForTimeout(waitAfter);
+    }
+  }
+
+  /**
+   * Creates a new tab, navigates to the specified URL, and returns both the page and a new PageObject instance
+   * @param url - The URL to navigate to in the new tab
+   * @param PageObjectClass - The PageObject class constructor to instantiate (e.g., CreateLoadingTaskPage)
+   * @returns An object containing the new page and page object instance
+   */
+  async createNewTabAndNavigate<T extends PageObject>(url: string, PageObjectClass: new (page: Page) => T): Promise<{ page: Page; pageObject: T }> {
+    const context = this.page.context();
+    const newPage = await context.newPage();
+    const pageObject = new PageObjectClass(newPage);
+    await pageObject.goto(url);
+    await pageObject.waitForNetworkIdle();
+    await newPage.waitForTimeout(1000);
+    return { page: newPage, pageObject };
+  }
+
+  /**
    * Opens the specified URL or the default base URL if none is provided.
    * @param url - The URL to navigate to. Defaults to BASE_URL from ENV if not provided.
    */
