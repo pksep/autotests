@@ -86,31 +86,33 @@
             "filters": [
                 {
                     "class": ".filters__btn",
-                    "datatestid": "Filter-SortByAttention",
+                    "datatestid": "AddOrder-ModalListProduct-Filter-SortByAttention",
                     "label": "Фильтровать по отметке",
                     "state": "true"
                 },
                 {
                     "class": ".filters__btn",
-                    "datatestid": "Filter-SortByDate",
+                    "datatestid": "AddOrder-ModalListProduct-Filter-SortByDate",
                     "label": "Сортировать по дате создания",
                     "state": "true"
                 },
                 {
                     "class": ".filters__btn",
-                    "datatestid": "Filter-SortByOwn",
+                    "datatestid": "AddOrder-ModalListProduct-Filter-SortByOwn",
                     "label": "Показать мои",
                     "state": "false"
                 }
             ],
             "buttons": [
                 {
-                    "class": ".base-modal__section-button-return .button-yui-kit.medium.outline-yui-kit",
+                    "class": "bu8tton.button-yui-kit.medium.outline-yui-kit",
+                    "datatestid": "AddOrder-ModalListProduct-CancelButton",
                     "label": "Отменить",
                     "state": "true"
                 },
                 {
-                    "class": ".base-modal__section-button-return .button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "class": "button.button-yui-kit.medium.disabled-yui-kit.primary-yui-kit",
+                    "datatestid": "AddOrder-ModalListProduct-AddButton",
                     "label": "Добавить",
                     "state": "false"
                 }

@@ -322,6 +322,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 04: Enter the name of the part', async () => {
+        await page.waitForTimeout(1000);
         const nameParts = page.locator(PartsDBSelectors.INPUT_DETAIL_NAME);
 
         await page.waitForTimeout(500);
@@ -743,12 +744,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         // Extract the class, label, and state from the button object
         const buttonClass = button.class;
         const buttonLabel = button.label;
+        const buttonDatatestId = button.datatestid;
         const expectedState = button.state === 'true' ? true : false;
 
         // Perform the validation for the button
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          // Check if the button is visible and enabled
-          const isButtonReady = await loadingTaskPage.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
+          // Check if the button is visible and enabled using data-testid
+          if (!buttonDatatestId) {
+            throw new Error(`Button "${buttonLabel}" does not have a data-testid`);
+          }
+          const isButtonReady = await loadingTaskPage.isButtonVisibleTestId(page, buttonDatatestId, buttonLabel, expectedState);
 
           // Validate the button's visibility and state
           expect(isButtonReady).toBeTruthy();
@@ -807,7 +812,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 13: Click on the Select button on modal window', async () => {
       // Click on the button
-      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzdTEMP);
+      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzdTEMPU001);
     });
 
     await allure.step('Step 14: Checking the selected product', async () => {
@@ -1273,14 +1278,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       for (const cbed of descendantsCbedArray) {
         await allure.step('Step 05: Search product', async () => {
           // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
+          await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
           await page.waitForTimeout(500);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(cbed.name, deficitTableCbed, deficitTableCbed, {
-            useRedesign: true,
-            timeoutBeforeWait: 1000,
-          });
+          await shortageAssemblies.searchAndWaitForTable(
+            cbed.name,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE_TBODY,
+            {
+              useRedesign: true,
+              timeoutBeforeWait: 1000,
+              searchInputDataTestId: SelectorsShortagePages.TABLE_SEARCH_INPUT,
+            }
+          );
           await page.waitForLoadState('domcontentloaded');
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
@@ -1288,8 +1299,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 06: Check the checkbox in the first column', async () => {
           await page.waitForTimeout(1000);
-          // Find the checkbox using data-testid
-          const checkboxCell = page.locator(SelectorsShortagePages.CBED_TABLE_BODY_SELECT).first();
+          // Find the checkbox in the first cell of the first row
+          const tableBody = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE_TBODY);
+          const firstRow = tableBody.locator('tr').first();
+          const checkboxCell = firstRow.locator('td').first();
 
           await checkboxCell.waitFor({ state: 'visible', timeout: 10000 });
           await checkboxCell.scrollIntoViewIfNeeded();
@@ -1327,7 +1340,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           }
 
           // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
+          await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
         });
 
         await allure.step('Step 07: Checking the urgency date of an order', async () => {
@@ -3945,7 +3958,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 06: Click on the Select button on modal window', async () => {
       // Click on the button
-      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzdTEMP);
+      await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonChoiceIzdTEMPU001);
     });
 
     await allure.step('Step 07: Checking the selected product', async () => {
@@ -4366,22 +4379,27 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       for (const cbed of descendantsCbedArray) {
         await allure.step('Step 08: Search product', async () => {
           // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
+          await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(cbed.name, deficitTableCbed, deficitTableCbed, {
-            useRedesign: true,
-          });
+          await shortageAssemblies.searchAndWaitForTable(
+            cbed.name,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
+            {
+              useRedesign: true,
+            }
+          );
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
 
         await allure.step('Step 09: Check the checkbox in the first column', async () => {
           // Check that the first row of the table contains the variable name
-          await shortageProduct.checkNameInLineFromFirstRow(cbed.name, deficitTableCbed);
+          await shortageProduct.checkNameInLineFromFirstRow(cbed.name, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
 
           // Wait for the table body to load
-          await shortageProduct.waitingTableBody(deficitTableCbed);
+          await shortageProduct.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
         });
 
         await allure.step('Step 10: Checking the urgency date of an order', async () => {
@@ -6089,12 +6107,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       for (const cbed of descendantsCbedArray) {
         await allure.step('Step 03: Search product', async () => {
           // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
+          await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(cbed.name, deficitTableCbed, deficitTableCbed, {
-            useRedesign: true,
-          });
+          await shortageAssemblies.searchAndWaitForTable(
+            cbed.name,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
+            {
+              useRedesign: true,
+            }
+          );
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -6139,7 +6162,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           }
 
           // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
+          await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
         });
 
         await allure.step('Step 05: Checking the urgency date of an order', async () => {
@@ -6644,12 +6667,17 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       for (const cbed of descendantsCbedArray) {
         await allure.step('Step 07: Search product', async () => {
           // Wait for the table body to load
-          await shortageAssemblies.waitingTableBody(deficitTableCbed);
+          await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(cbed.name, deficitTableCbed, deficitTableCbed, {
-            useRedesign: true,
-          });
+          await shortageAssemblies.searchAndWaitForTable(
+            cbed.name,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
+            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
+            {
+              useRedesign: true,
+            }
+          );
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });

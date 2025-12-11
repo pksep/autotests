@@ -2,6 +2,8 @@
 export const buttonCreateOrder = '[data-testid="IssueShipment-ActionsButtons-AddOrder"]';
 export const buttonChoiceIzd = 'button[data-testid="AddOrder-AttachmentsButtons-Select"]';
 export const buttonChoiceIzdTEMP = 'button[data-testid="Button"]';
+export const buttonChoiceIzdTEMPU001 = 'button[data-testid="AddOrder-ModalListProduct-AddButton"]';
+
 export const buttonChoiceBuyer = '[data-testid="AddOrder-OpenBuyersButton"]';
 export const buttonAddBuyerOnModalWindow = '[data-testid="AddOrder-ModalListBuyer-ButtonsReturn-Add"]';
 export const buttonSaveOrder = '[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Save"]';
