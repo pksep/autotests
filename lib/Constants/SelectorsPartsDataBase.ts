@@ -79,3 +79,71 @@ export const ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = BUTTON_SAVE;
 export const EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = BUTTON_CANCEL;
 export const CREATOR_INFORMATION_INPUT = INPUT_NAME_IZD;
 export const TABLE_PROCESS_ASSYMBLY_NAME = TABLE_PROCESS_NAME_OPERATION_ASS;
+
+// U004 main page selectors (fully qualified data-testid selectors)
+export const MAIN_PAGE_TITLE_ID = '[data-testid="BaseProducts-Container-MainContainer-Title"]';
+export const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = '[data-testid="BasePaginationTable-Table-product"]';
+export const MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
+export const MAIN_PAGE_EDIT_BUTTON = '[data-testid="BaseProducts-Button-Edit"]';
+export const MAIN_PAGE_СБ_TABLE = '[data-testid="BasePaginationTable-Table-cbed"]';
+export const MAIN_PAGE_Д_TABLE = '[data-testid="BasePaginationTable-Table-detal"]';
+export const MAIN_PAGE_MAIN_DIV = '[data-testid="BaseProducts-Container-MainContainer"]';
+export const MAIN_PAGE_SMALL_DIALOG_СБ = 'div[data-testid="Specification-Dialog-CardbaseOfAssemblyUnits0"]';
+export const MAIN_PAGE_SMALL_DIALOG_Д = 'div[data-testid="Specification-Dialog-CardbaseDetail1"]';
+export const MAIN_PAGE_SMALL_DIALOG_ПД = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials2"]';
+export const MAIN_PAGE_SMALL_DIALOG_РМ = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials3"]';
+export const TABLE_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
+export const TABLE_FIRST_ROW_SELECTOR = 'tbody tr:first-child';
+export const TABLE_FIRST_CELL_SELECTOR = 'tbody tr:first-child td:nth-child(1)';
+export const TABLE_SECOND_CELL_SELECTOR = 'tbody tr:first-child td:nth-child(2)';
+export const BASE_DETAIL_CB_TABLE_SEARCH = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
+
+// U004 dialogs (СБ)
+export const EDIT_PAGE_ADD_BUTTON = '[data-testid="Specification-Buttons-addingSpecification"]';
+export const EDIT_PAGE_MAIN_ID = '[data-testid="Creator"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG = 'Specification-ModalBaseCbed';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="Specification-ModalBaseCbed"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="Specification-ModalBaseCbed"][open]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE = 'table[data-testid="Specification-ModalBaseCbed-Table"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_STARTS_WITH = 'table[data-testid^="Specification-ModalBaseCbed-Table"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="Specification-ModalBaseCbed-Select-Button"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="Specification-ModalBaseCbed-Add-Button"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Specification-ModalBaseCbed-Cancel-Button"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE = '[data-testid="Specification-ModalCbed-AccordionCbed-Table"]';
+
+// U004 dialogs (Д)
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG = 'Specification-ModalBaseDetal';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="Specification-ModalBaseDetal"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="Specification-ModalBaseDetal"][open]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE = '[data-testid="BasePaginationTable-Table-detal"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="Specification-ModalBaseDetal-Table"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="Specification-ModalBaseDetal-Select-Button"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="Specification-ModalBaseDetal-Add-Button"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Specification-ModalBaseDetal-Cancel-Button"]';
+
+// U004 dialogs (ПД)
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG = 'ModalBaseMaterial';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="ModalBaseMaterial"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="ModalBaseMaterial"][open]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = '[data-testid="ModalBaseMaterial-TableList-Table-Item"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="ModalBaseMaterial-Table"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="ModalBaseMaterial-Select-Button"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT =
+  '[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]';
+
+// U004 dialogs (РМ) — share ModalBaseMaterial
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG = 'ModalBaseMaterial';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="ModalBaseMaterial"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="ModalBaseMaterial"][open]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE = '[data-testid="ModalBaseMaterial-TableList-Table-Item"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="ModalBaseMaterial-Table"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="ModalBaseMaterial-Select-Button"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
+
+// Buttons / tables common
+export const EDIT_PAGE_SPECIFICATIONS_TABLE = '[data-testid="Editor-TableSpecification-Product"]';
+export const MAIN_PAGE_SAVE_BUTTON_STARTS_WITH = '[data-testid^="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
+export const MAIN_TABLE_TEST_ID = '[data-testid="Editor-TableSpecification-Product"]';

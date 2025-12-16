@@ -3255,8 +3255,17 @@ export class PageObject extends AbstractPage {
   }
 
   async getAllH3TitlesInTestId(page: Page, testId: string): Promise<string[]> {
+    // Normalize: accept raw testId or a full selector containing data-testid
+    let selector = testId;
+    const match = testId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
+    if (match && match[1]) {
+      selector = `[data-testid="${match[1]}"]`;
+    } else if (!testId.includes('data-testid')) {
+      selector = `[data-testid="${testId}"]`;
+    }
+
     // Step 1: Collect all H3 titles inside the specified data-testid container
-    const container = page.locator(`[data-testid="${testId}"]`);
+    const container = page.locator(selector);
     const testIdTitles: string[] = [];
     const h3Elements = await container.locator('h3').all();
 
@@ -3810,8 +3819,15 @@ export class PageObject extends AbstractPage {
     await this.page.waitForTimeout(500);
     await this.page.waitForLoadState('networkidle');
 
-    // Validate the presence of an element using data-testid
-    const locator = this.page.locator(`[data-testid="${dataTestId}"]`);
+    // Validate the presence of an element using data-testid (accept either raw id or full selector)
+    let selector = dataTestId;
+    const match = dataTestId.match(/data-testid\s*=\s*["']([^"']+)["']/);
+    if (match && match[1]) {
+      selector = `[data-testid="${match[1]}"]`;
+    } else if (!dataTestId.includes('data-testid')) {
+      selector = `[data-testid="${dataTestId}"]`;
+    }
+    const locator = this.page.locator(selector);
     await locator.waitFor({ state: 'visible' });
     const isVisible = await locator.isVisible();
     expect(isVisible).toBeTruthy();
@@ -4228,7 +4244,16 @@ export class PageObject extends AbstractPage {
   }
 
   async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
-    const locator = this.page.locator(`[data-testid="${testId}"] h3`); // Locate H3 elements within the section
+    // Normalize: accept raw testId or a full selector containing data-testid
+    let selector = testId;
+    const match = testId.match(/data-testid\s*=\s*["']([^"']+)["']/);
+    if (match && match[1]) {
+      selector = `[data-testid="${match[1]}"]`;
+    } else if (!testId.includes('data-testid')) {
+      selector = `[data-testid="${testId}"]`;
+    }
+
+    const locator = this.page.locator(`${selector} h3`); // Locate H3 elements within the section
     const actualTitles = await locator.allTextContents();
     const normalizedTitles = actualTitles.map(title => title.trim());
 
@@ -4258,11 +4283,21 @@ export class PageObject extends AbstractPage {
    */
   async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
     await this.page.waitForTimeout(500);
-    const tableLocator = this.page.locator(`[data-testid="${tableTestId}"] tbody tr`);
+
+    // Normalize selector: accept raw testId or full selector
+    let selector = tableTestId;
+    const match = tableTestId.match(/data-testid\s*=\s*["']([^"']+)["']/);
+    if (match && match[1]) {
+      selector = `[data-testid="${match[1]}"]`;
+    } else if (!tableTestId.includes('data-testid')) {
+      selector = `[data-testid="${tableTestId}"]`;
+    }
+
+    const tableLocator = this.page.locator(`${selector} tbody tr`);
     const rowCount = await tableLocator.count();
 
     // Highlight the table for debugging
-    await this.page.locator(`[data-testid="${tableTestId}"]`).evaluate(table => {
+    await this.page.locator(selector).evaluate(table => {
       table.style.border = '2px solid green';
       table.style.backgroundColor = 'lightyellow';
     });

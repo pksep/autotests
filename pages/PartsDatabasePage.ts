@@ -11,9 +11,7 @@ import { allure } from 'allure-playwright';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 
-// Constants
-const EDIT_PAGE_ADD_BUTTON = 'Specification-Buttons-addingSpecification';
-const MAIN_TABLE_TEST_ID = 'Editor-TableSpecification-Product';
+const MAIN_TABLE_TEST_ID = SelectorsPartsDataBase.MAIN_TABLE_TEST_ID;
 const MODAL_CONFIRM_DIALOG_YES_BUTTON = 'ModalConfirm-Content-Buttons-Yes';
 
 const TABLE_TEST_IDS = [
@@ -1375,7 +1373,7 @@ export class CreatePartsDatabasePage extends PageObject {
   }
 
   async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
-    const table = page.locator(`[data-testid="${tableTestId}"]`);
+    const table = page.locator(`${tableTestId}`);
     await table.locator('tr').first().waitFor({ state: 'visible' });
 
     const rows = await table.locator('tbody > tr').elementHandles();
@@ -1476,7 +1474,7 @@ export class CreatePartsDatabasePage extends PageObject {
       logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
       logger.warn('Continuing without waiting.');
     }
-    const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+    const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
     try {
       await addButton.click();
     } catch (error) {
@@ -1492,7 +1490,15 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
     // Step 2: Click the small dialog button
-    const dialogButton = page.locator(`div[data-testid="${smallDialogButtonId}"]`);
+    // Normalize small dialog selector: accept full selector or raw data-testid
+    let smallDialogSelector = smallDialogButtonId;
+    const smallDialogMatch = smallDialogButtonId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
+    if (smallDialogMatch && smallDialogMatch[1]) {
+      smallDialogSelector = smallDialogButtonId;
+    } else {
+      smallDialogSelector = `div[data-testid="${smallDialogButtonId}"]`;
+    }
+    const dialogButton = page.locator(smallDialogSelector);
     try {
       await dialogButton.click();
     } catch (error) {
@@ -1508,7 +1514,21 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
     // Step 3: Wait for the modal/dialog to load **before checking item existence**
-    const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
+    // Normalize dialog selector: accept full selector or raw id
+    let modalSelector = dialogTestId;
+    if (dialogTestId.includes('data-testid')) {
+      const dlgMatch = dialogTestId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
+      if (dialogTestId.includes('dialog')) {
+        modalSelector = dialogTestId.includes('[open]') ? dialogTestId : `${dialogTestId}[open]`;
+      } else if (dlgMatch && dlgMatch[1]) {
+        modalSelector = `dialog[data-testid="${dlgMatch[1]}"][open]`;
+      } else {
+        modalSelector = `dialog${dialogTestId.includes('[open]') ? dialogTestId : `${dialogTestId}[open]`}`;
+      }
+    } else {
+      modalSelector = `dialog[data-testid^="${dialogTestId}"][open]`;
+    }
+    const modal = page.locator(modalSelector);
     try {
       await expect(modal).toBeVisible(); // Validate modal is visible
     } catch (error) {
@@ -1532,8 +1552,15 @@ export class CreatePartsDatabasePage extends PageObject {
       // }
 
       // Step 5: Search for the item in the search table
-      await modal.locator(`table[data-testid="${searchTableTestId}"]`).waitFor({ state: 'visible' });
-      const itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+      let searchTableSelector = searchTableTestId;
+      const searchTableMatch = searchTableTestId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
+      if (searchTableMatch && searchTableMatch[1]) {
+        searchTableSelector = searchTableTestId.includes('data-testid') ? searchTableTestId : `[data-testid="${searchTableMatch[1]}"]`;
+      } else if (!searchTableTestId.includes('data-testid')) {
+        searchTableSelector = `[data-testid="${searchTableTestId}"]`;
+      }
+      await modal.locator(searchTableSelector).waitFor({ state: 'visible' });
+      const itemTableLocator = modal.locator(searchTableSelector);
       await itemTableLocator.evaluate((element: HTMLElement) => {
         element.style.border = '3px solid red'; // Highlight
         element.style.backgroundColor = 'yellow';
@@ -1599,7 +1626,10 @@ export class CreatePartsDatabasePage extends PageObject {
       }
 
       // Step 7: Add the item to the bottom table
-      const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
+      const addToBottomButtonSelector = addToBottomButtonTestId.includes('data-testid')
+        ? addToBottomButtonTestId
+        : `[data-testid="${addToBottomButtonTestId}"]`;
+      const addToBottomButton = modal.locator(addToBottomButtonSelector);
       try {
         await addToBottomButton.click();
       } catch (error) {
@@ -1615,7 +1645,14 @@ export class CreatePartsDatabasePage extends PageObject {
       }
 
       // Step 8: Validate the item in the bottom table
-      const bottomTableLocator = modal.locator(`table[data-testid="${bottomTableTestId}"]`);
+      let bottomTableSelector = bottomTableTestId;
+      const bottomTableMatch = bottomTableTestId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
+      if (bottomTableMatch && bottomTableMatch[1]) {
+        bottomTableSelector = bottomTableTestId.includes('data-testid') ? bottomTableTestId : `[data-testid="${bottomTableMatch[1]}"]`;
+      } else if (!bottomTableTestId.includes('data-testid')) {
+        bottomTableSelector = `[data-testid="${bottomTableTestId}"]`;
+      }
+      const bottomTableLocator = modal.locator(bottomTableSelector);
       const rows = bottomTableLocator.locator('tbody tr');
       const rowCount = await rows.count();
 
@@ -1641,7 +1678,8 @@ export class CreatePartsDatabasePage extends PageObject {
       }
     }
     // Step 9: Commit additions (or close modal if nothing to add)
-    const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
+    const addToMainButtonSelector = addToMainButtonTestId.includes('data-testid') ? addToMainButtonTestId : `[data-testid="${addToMainButtonTestId}"]`;
+    const addToMainButton = modal.locator(addToMainButtonSelector);
     await addToMainButton.waitFor({ state: 'visible', timeout: 10000 });
 
     let isButtonEnabled = false;
@@ -1710,7 +1748,7 @@ export class CreatePartsDatabasePage extends PageObject {
     try {
       await page.waitForLoadState('networkidle', { timeout: 10000 });
     } catch {}
-    const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+    const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
     await addButton.click().catch(() => {});
     await page.waitForTimeout(300).catch(() => {});
 
@@ -1792,7 +1830,8 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
     // Finalize: add all from bottom to main
-    const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
+    const addToMainButtonSelector = addToMainButtonTestId.includes('data-testid') ? addToMainButtonTestId : `[data-testid="${addToMainButtonTestId}"]`;
+    const addToMainButton = modal.locator(addToMainButtonSelector);
     await addToMainButton.waitFor({ state: 'visible', timeout: 10000 });
     const enabled = await addToMainButton.isEnabled();
     if (enabled) {
@@ -1915,7 +1954,8 @@ export class CreatePartsDatabasePage extends PageObject {
       }
 
       // Finalize: add all from bottom to main
-      const addToMainButton = modal.locator(`[data-testid="${addToMainButtonTestId}"]`);
+      const addToMainButtonSelector = addToMainButtonTestId.includes('data-testid') ? addToMainButtonTestId : `[data-testid="${addToMainButtonTestId}"]`;
+      const addToMainButton = modal.locator(addToMainButtonSelector);
       await addToMainButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
       const enabled = await addToMainButton.isEnabled();
       if (enabled) {
@@ -2031,7 +2071,7 @@ export class CreatePartsDatabasePage extends PageObject {
     // Step 1: Wait for the page to stabilize, then click the "Добавить" button
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
-    const addButton = page.locator(`[data-testid="${EDIT_PAGE_ADD_BUTTON}"]`);
+    const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
     await addButton.evaluate(el => {
       el.style.backgroundColor = 'black';
       el.style.border = '2px solid red';
@@ -2882,16 +2922,32 @@ export class CreatePartsDatabasePage extends PageObject {
   async checkItemExistsInBottomTable(page: Page, selectedPartName: string, modalTestId: string, bottomTableTestId: string): Promise<boolean> {
     await page.waitForLoadState('networkidle');
 
+    // Normalize modal test id: accept raw id or full selector
+    let modalId = modalTestId;
+    const modalMatch = modalTestId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
+    if (modalMatch && modalMatch[1]) {
+      modalId = modalMatch[1];
+    }
+
     // Locate the specific modal containing the table
-    const modal = page.locator(`dialog[data-testid^="${modalTestId}"]`);
+    const modal = page.locator(`dialog[data-testid^="${modalId}"]`);
     await modal.waitFor({ state: 'attached', timeout: 15000 });
     await modal.waitFor({ state: 'visible', timeout: 15000 });
     logger.info('Modal located successfully.');
 
     await page.waitForTimeout(1500);
 
+    // Normalize bottom table selector: accept raw id or full selector
+    let bottomTableSelector = bottomTableTestId;
+    const tableMatch = bottomTableTestId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
+    if (tableMatch && tableMatch[1]) {
+      bottomTableSelector = `[data-testid="${tableMatch[1]}"]`;
+    } else if (!bottomTableTestId.includes('data-testid')) {
+      bottomTableSelector = `[data-testid="${bottomTableTestId}"]`;
+    }
+
     // Locate the bottom table dynamically within the modal
-    const bottomTableLocator = modal.locator(`[data-testid="${bottomTableTestId}"]`);
+    const bottomTableLocator = modal.locator(bottomTableSelector);
 
     // **Check if the bottom table exists**
     const isTableVisible = await bottomTableLocator.isVisible();
