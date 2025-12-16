@@ -2,6 +2,7 @@ import { test, expect, Locator } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
 import { ENV, SELECTORS, CONST, PRODUCT_SPECS } from '../config';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
+import { expectSoftWithScreenshot } from '../lib/Page';
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
@@ -37,6 +38,10 @@ export const runU004_1 = () => {
   test('TestCase 01 - Редактирование изделия - добавление потомка (СБ) (Editing a product - adding a descendant (СБ))', async ({ browser, page }) => {
     test.setTimeout(240000);
     const shortagePage = new CreatePartsDatabasePage(page);
+    const leftTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+    let firstCellValue = '';
+    let secondCellValue = '';
+    let thirdCellValue = '';
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
       console.log('Setup: Clean up Т15 product specifications');
@@ -58,7 +63,6 @@ export const runU004_1 = () => {
       await shortagePage.validatePageTitlesWithStyling(SelectorsPartsDataBase.MAIN_PAGE_MAIN_DIV, expectedTitles);
     });
 
-    const leftTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
     await allure.step('Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)', async () => {
       console.log('Step 03: Verify that the table body is displayed');
       await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
@@ -69,30 +73,44 @@ export const runU004_1 = () => {
       async () => {
         console.log("Step 04: Ensure search functionality in the first table 'Products' is available");
         await page.waitForLoadState('networkidle');
-        await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible(); //DATA_TESTID
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
+          },
+          'Verify products table search input is visible'
+        );
       }
     );
     await allure.step('Step 05: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
       console.log("Step 05: Enter a variable value in the 'Products' table search");
-      // Locate the search field within the left table and fill it
-      await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT); //DATA_TESTID
+      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(CONST.TEST_PRODUCT);
       await page.waitForLoadState('networkidle');
-      // Optionally, validate that the search input is visible
-      await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
+        },
+        'Search input remains visible after fill'
+      );
     });
     await allure.step(
       'Step 06: Проверяем, что введенное значение в поиске совпадает с переменной. (Verify the entered search value matches the variable)',
       async () => {
         console.log('Step 06: Verify the entered search value matches the variable');
         await page.waitForLoadState('networkidle');
-        // Locate the search field within the left table and validate its value
-        await expect(leftTable.locator('input.search-yui-kit__input')).toHaveValue(CONST.TEST_PRODUCT); //DATA-TESTID
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(CONST.TEST_PRODUCT);
+          },
+          'Search input value matches test product'
+        );
       }
     );
     await allure.step('Step 07: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)', async () => {
       console.log('Step 07: Filter the table using the Enter key');
-      // Simulate pressing "Enter" in the search field
-      await leftTable.locator('input.search-yui-kit__input').press('Enter'); //DATA-TESTID
+      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).press('Enter');
       await page.waitForLoadState('networkidle');
     });
     await allure.step('Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)', async () => {
@@ -100,9 +118,6 @@ export const runU004_1 = () => {
       await page.waitForTimeout(1500);
       await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
     });
-    let firstCellValue = '';
-    let secondCellValue = '';
-    let thirdCellValue = '';
 
     await allure.step(
       'Step 09: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable.)',
@@ -122,7 +137,13 @@ export const runU004_1 = () => {
         thirdCellValue = thirdCellValue.trim();
 
         // Confirm that the first cell contains the search term
-        expect(secondCellValue).toContain(CONST.TEST_PRODUCT); // Validate that the value matches the search term
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(secondCellValue).toContain(CONST.TEST_PRODUCT);
+          },
+          'Validate first row second cell contains search term'
+        );
       }
     );
     await allure.step('Step 10: Нажимаем по найденной строке (Click on the found row in the table)', async () => {
@@ -131,7 +152,7 @@ export const runU004_1 = () => {
       await page.waitForLoadState('networkidle');
       // Find the first row in the table
       const firstRow = leftTable.locator('tbody tr:first-child');
-      await firstRow.evaluate(row => {
+      await firstRow.evaluate((row: HTMLElement) => {
         row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
         row.style.border = '2px solid red'; // Add a red border for extra visibility
         row.style.color = 'blue'; // Change text color to blue
@@ -342,10 +363,22 @@ export const runU004_1 = () => {
       }
 
       // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(normalizedH3Titles.length).toBe(titles.length);
+        },
+        'Validate edit-page H3 count'
+      );
 
       // Validate content and order
-      expect(normalizedH3Titles).toEqual(titles);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(normalizedH3Titles).toEqual(titles);
+        },
+        'Validate edit-page H3 titles order'
+      );
     });
     await allure.step('Step 14: Проверяем наличие кнопок на странице (Check for the visibility of action buttons on the page)', async () => {
       console.log('Step 14: Check for the visibility of action buttons on the page');
@@ -371,17 +404,35 @@ export const runU004_1 = () => {
         // Get the value of the first input field
         const firstInputValue = await inputFields.nth(0).inputValue(); //DATATESTID
 
-        expect(firstInputValue).toBe(secondCellValue);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(firstInputValue).toBe(secondCellValue);
+          },
+          'First input matches second cell value'
+        );
         logger.info(`Value in first input field: ${firstInputValue}`);
 
         // Get the value of the second input field
         const secondInputValue = await inputFields.nth(1).inputValue(); //DATATESTID
-        expect(secondInputValue).toBe(firstCellValue);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(secondInputValue).toBe(firstCellValue);
+          },
+          'Second input matches first cell value'
+        );
         logger.info(`Value in second input field: ${secondInputValue}`);
         // Get the value of the third input field
 
         const thirdInputValue = await inputFields.nth(2).inputValue(); //DATATESTID
-        expect(thirdInputValue).toBe(thirdCellValue);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(thirdInputValue).toBe(thirdCellValue);
+          },
+          'Third input matches third cell value'
+        );
         logger.info(`Value in third input field: ${thirdInputValue}`);
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(500);
@@ -398,7 +449,13 @@ export const runU004_1 = () => {
         tableData_original = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         detailvalue_original_before_changequantity = await shortagePage.getQuantityByLineItem(tableData_original, CONST.TESTCASE_2_PRODUCT_Д);
 
-        expect(tableData_original.length).toBeGreaterThan(0); // Ensure groups are present
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(tableData_original.length).toBeGreaterThan(0); // Ensure groups are present
+          },
+          'Specification table has groups before add'
+        );
 
         const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
         await addButton.evaluate(row => {
@@ -433,7 +490,13 @@ export const runU004_1 = () => {
           });
           // Check if the card is present
           const isCardPresent = (await cardElement.count()) > 0;
-          expect(isCardPresent).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isCardPresent).toBeTruthy();
+            },
+            `Card ${cardDataTestId} is present`
+          );
           logger.info(`Card with data-testid "${cardDataTestId}" is present.`);
 
           // Extract the text content of the card and trim whitespace
@@ -441,7 +504,13 @@ export const runU004_1 = () => {
           logger.info(`Card text: "${cardText}"`);
 
           // Validate the text content matches the expected label
-          expect(cardText).toBe(cardLabel);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(cardText).toBe(cardLabel);
+            },
+            `Card ${cardDataTestId} label matches`
+          );
           logger.info(`Card with data-testid "${cardDataTestId}" has the correct label: "${cardLabel}".`);
         });
       }
@@ -498,10 +567,22 @@ export const runU004_1 = () => {
         }
 
         // Validate length
-        expect(normalizedH3Titles.length).toBe(titles.length);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(normalizedH3Titles.length).toBe(titles.length);
+          },
+          'Validate modal СБ H3 count'
+        );
 
         // Validate content and order
-        expect(normalizedH3Titles).toEqual(titles);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(normalizedH3Titles).toEqual(titles);
+          },
+          'Validate modal СБ H3 titles order'
+        );
         await page.waitForLoadState('networkidle');
       }
     );
@@ -532,8 +613,20 @@ export const runU004_1 = () => {
       table2Locator = page.locator(SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE); // Adjust the selector as needed for the second table
 
       // Assert that both tables are visible
-      await expect(table1Locator).toBeVisible();
-      await expect(table2Locator).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await table1Locator?.isVisible()).toBe(true);
+        },
+        'Modal table1 is visible'
+      );
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await table2Locator?.isVisible()).toBe(true);
+        },
+        'Modal table2 is visible'
+      );
     });
 
     await allure.step('Step 22a: Проверяем, что тела таблиц отображаются. (Check that table bodies are displayed)', async () => {
@@ -543,14 +636,26 @@ export const runU004_1 = () => {
 
       if (table1Locator) {
         const rowCount1 = await table1Locator.locator('tbody tr').count();
-        expect(rowCount1).toBeGreaterThan(0);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount1).toBeGreaterThan(0);
+          },
+          'Table1 has rows'
+        );
       } else {
         throw new Error('table1Locator is null');
       }
 
       if (table2Locator) {
         const rowCount2 = await table2Locator.locator('tbody tr').count();
-        expect(rowCount2).toBeGreaterThan(0);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount2).toBeGreaterThan(0);
+          },
+          'Table2 has rows'
+        );
       } else {
         throw new Error('table2Locator is null');
       }
@@ -592,7 +697,13 @@ export const runU004_1 = () => {
             buttonLabel,
             expectedState
           );
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `"${buttonLabel}" button initially ready`
+          );
           logger.info(`Is the "${buttonLabel}" button visible and enabled initially?`, isButtonReady);
         });
 
@@ -620,7 +731,13 @@ export const runU004_1 = () => {
             buttonLabel,
             expectedState
           );
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `"${buttonLabel}" button after selection ready`
+          );
           logger.info(`Is the "${buttonLabel}" button visible and enabled after selection?`, isButtonReady);
         });
       });
@@ -640,7 +757,13 @@ export const runU004_1 = () => {
           const isInputPresent = await inputLocator.isVisible();
 
           // Assert that the input is visible
-          expect(isInputPresent).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isInputPresent).toBeTruthy();
+            },
+            'Modal table2 search input visible'
+          );
         }
       );
       await allure.step(
@@ -654,7 +777,13 @@ export const runU004_1 = () => {
           await page.waitForTimeout(1000);
 
           // Optionally, validate that the search input is visible
-          await expect(table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT)).toBeVisible(); //DATATESTID
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              await expect.soft(table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT)).toBeVisible(); //DATATESTID
+            },
+            'Modal table2 search input visible after fill'
+          );
         }
       );
       await allure.step(
@@ -663,7 +792,13 @@ export const runU004_1 = () => {
           console.log('Step 26: We check that in the search of the second table of the modal window the entered value matches the variable.');
           await page.waitForLoadState('networkidle');
           // Locate the search field within the left table and validate its value
-          await expect(table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT)).toHaveValue(CONST.TEST_PRODUCT_СБ); //DATATESTID
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              await expect.soft(table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT)).toHaveValue(CONST.TEST_PRODUCT_СБ); //DATATESTID
+            },
+            'Modal table2 search value matches'
+          );
         }
       );
       await allure.step('Step 27: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)', async () => {
@@ -681,7 +816,13 @@ export const runU004_1 = () => {
         await page.waitForTimeout(2000);
         const rowCount = await table2Locator!.locator('tbody tr').count();
         console.log('results rowCount:' + rowCount);
-        expect(rowCount).toBeGreaterThan(0); // Asserts that the row count is greater than 0
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount).toBeGreaterThan(0); // Asserts that the row count is greater than 0
+          },
+          'Modal table2 has rows after filter'
+        );
       });
       let firstCell: Locator | null = null;
       await allure.step(
@@ -711,7 +852,13 @@ export const runU004_1 = () => {
           });
           secondCellValue = secondCellValue.trim();
           // Confirm that the first cell contains the search term
-          expect(secondCellValue).toContain(CONST.TEST_PRODUCT_СБ);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(secondCellValue).toContain(CONST.TEST_PRODUCT_СБ);
+            },
+            'Modal table2 first row contains search term'
+          );
         }
       );
 
@@ -736,7 +883,13 @@ export const runU004_1 = () => {
         });
 
         // Assert that the row contains the class
-        expect(hasActiveClass).toBeTruthy();
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(hasActiveClass).toBeTruthy();
+          },
+          'Modal table2 first row has active class'
+        );
 
         console.log(`✅ First row has 'active' class: ${hasActiveClass}`);
       });
@@ -763,7 +916,13 @@ export const runU004_1 = () => {
             expectedState
           );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `"${buttonLabel}" button ready before add`
+          );
         });
 
         // Highlight button for debugging
@@ -816,7 +975,13 @@ export const runU004_1 = () => {
         const rowsLocator = bottomTableLocator.locator('tbody tr');
         const rowCount = await rowsLocator.count();
         console.log(rowCount);
-        expect(rowCount).toBeGreaterThan(0); // Ensure there are rows in the table
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount).toBeGreaterThan(0); // Ensure there are rows in the table
+          },
+          'Bottom table has rows after add'
+        );
         logger.info(`Found ${rowCount} rows in the bottom table.`);
 
         let isRowFound = false;
@@ -855,7 +1020,13 @@ export const runU004_1 = () => {
         }
 
         // Assert that the selected row is present in the table
-        expect(isRowFound).toBeTruthy();
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(isRowFound).toBeTruthy();
+          },
+          'Selected row found in bottom table'
+        );
         logger.info(`The selected row with PartNumber="${selectedPartNumber}" and PartName="${selectedPartName}" is present in the bottom table.`);
       });
       await allure.step('Step 33: Нажимаем по кнопке "Добавить" в модальном окне (Click on the "Добавить" button in the modal window)', async () => {
@@ -883,7 +1054,13 @@ export const runU004_1 = () => {
             buttonLabel,
             expectedState
           );
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `"${buttonLabel}" button ready before add-to-main`
+          );
           logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
 
@@ -922,7 +1099,13 @@ export const runU004_1 = () => {
         await page.waitForTimeout(1500);
         tableData1 = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         // Example assertion
-        expect(tableData1.length).toBeGreaterThan(0); // Ensure groups are present
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(tableData1.length).toBeGreaterThan(0); // Ensure groups are present
+          },
+          'Parsed tableData1 has groups'
+        );
       }
     );
     await allure.step('Step 35: Нажимаем на кнопку "Сохранить". (Press the save button)', async () => {
@@ -957,7 +1140,13 @@ export const runU004_1 = () => {
         await page.waitForTimeout(5000);
         tableData2 = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         // Example assertion
-        expect(tableData2.length).toBeGreaterThan(0); // Ensure groups are present
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(tableData2.length).toBeGreaterThan(0); // Ensure groups are present
+          },
+          'Parsed tableData2 has groups'
+        );
       }
     );
     await allure.step('Step 37: Сравниваем массивы Array1 и Array2. (Compare arrays Array1 and Array2.)', async () => {
@@ -967,7 +1156,13 @@ export const runU004_1 = () => {
       const identical = await shortagePage.compareTableData(tableData1, tableData2);
 
       logger.info(`Are tableData1 and tableData2 identical? ${identical}`);
-      expect(identical).toBe(true); // Assertion
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(identical).toBe(true); // Assertion
+        },
+        'tableData1 vs tableData2 identical'
+      );
     });
     await allure.step(
       'Step 38: перейдите в сторону и вернитесь назад, затем перепроверьте arrays Array1 and Array3. (navigate away and back then recheck table arrays Array1 and Array3.)',
@@ -978,13 +1173,19 @@ export const runU004_1 = () => {
         await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
         await page.waitForTimeout(1000);
         await page.waitForLoadState('networkidle');
-        await expect(leftTable.locator('input.search-yui-kit__input')).toBeVisible(); //DATATESTID
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(leftTable.locator('input.search-yui-kit__input')).toBeVisible(); //DATATESTID
+          },
+          'Search input visible after navigation back'
+        );
         await leftTable.locator('input.search-yui-kit__input').fill(CONST.TEST_PRODUCT); //DATATESTID
         await leftTable.locator('input.search-yui-kit__input').press('Enter'); //DATATESTID
         await page.waitForLoadState('networkidle');
         // Optionally, validate that the search input is visible
         const firstRow = leftTable.locator('tbody tr:first-child');
-        await firstRow.evaluate(row => {
+        await firstRow.evaluate((row: HTMLElement) => {
           row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
           row.style.border = '2px solid red'; // Add a red border for extra visibility
           row.style.color = 'blue'; // Change text color to blue
@@ -1011,7 +1212,13 @@ export const runU004_1 = () => {
         const identical = await shortagePage.compareTableData(tableData1, tableData2);
 
         logger.info(`Are tableData1 and tableData3 identical? ${identical}`);
-        expect(identical).toBe(true); // Assertion
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(identical).toBe(true); // Assertion
+          },
+          'tableData1 vs tableData3 identical'
+        );
       }
     );
     await allure.step('Step 39: Очистка после теста. (Cleanup after test)', async () => {
@@ -1053,7 +1260,13 @@ export const runU004_1 = () => {
         // Locate all rows in the table body
         const rowsLocator = bottomTableLocator.locator('tbody tr');
         const rowCount = await rowsLocator.count();
-        expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+          },
+          'Cleanup modal bottom table has rows'
+        );
 
         let isRowFound = false;
 
@@ -1131,7 +1344,13 @@ export const runU004_1 = () => {
             buttonLabel,
             expectedState
           );
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            'Cleanup modal add button ready'
+          );
           logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
         const buttonLocator2 = page.locator(`${dialogSelector} ${buttonSelector}`);

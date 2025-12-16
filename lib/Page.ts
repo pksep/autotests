@@ -3828,7 +3828,7 @@ export class PageObject extends AbstractPage {
       selector = `[data-testid="${dataTestId}"]`;
     }
     const locator = this.page.locator(selector);
-    await locator.waitFor({ state: 'visible' });
+    await locator.waitFor({ state: 'visible', timeout: 20000 });
     const isVisible = await locator.isVisible();
     expect(isVisible).toBeTruthy();
     console.log(`Navigation to ${url} and validation of element with data-testid: "${dataTestId}" completed.`);
