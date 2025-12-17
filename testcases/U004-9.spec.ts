@@ -62,6 +62,13 @@ export const runU004_9 = () => {
     // Placeholder for test logic: Open the parts database page
     await allure.step('Step 01: Открываем страницу базы деталей (Open the parts database page)', async () => {
       await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
+        },
+        'Step 01 complete'
+      );
     });
 
     const leftTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
@@ -71,6 +78,14 @@ export const runU004_9 = () => {
 
     await allure.step('Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)', async () => {
       await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          const rowCount = await leftTable.locator('tbody tr').count();
+          expect.soft(rowCount).toBeGreaterThan(0);
+        },
+        'Step 02 complete'
+      );
     });
     await allure.step(
       'Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)',
@@ -97,35 +112,61 @@ export const runU004_9 = () => {
         },
         'Verify main table search input remains visible after fill'
       );
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await expect.soft(leftTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT)).toHaveValue(CONST.TEST_PRODUCT);
+        },
+        'Step 04 complete'
+      );
     });
     await allure.step('Step 05: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)', async () => {
       // Simulate pressing "Enter" in the search field
       await leftTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).press('Enter');
       await page.waitForLoadState('networkidle');
+      await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          const rowCount = await leftTable.locator('tbody tr').count();
+          expect.soft(rowCount).toBeGreaterThan(0);
+        },
+        'Step 05 complete'
+      );
     });
     await allure.step('Step 06: Нажимаем по найденной строке (Click on the found row in the table)', async () => {
       // Wait for loading
       await page.waitForLoadState('networkidle');
       // Find the first row in the table
       const firstRow = leftTable.locator(SelectorsPartsDataBase.TABLE_FIRST_ROW_SELECTOR);
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-        row.style.border = '2px solid red'; // Add a red border for extra visibility
-        row.style.color = 'blue'; // Change text color to blue
-      });
-      // Wait for the row to be visible and click on it
-      await firstRow.waitFor({ state: 'visible' });
-      await firstRow.hover();
-      await firstRow.click();
+      await shortagePage.waitAndHighlight(firstRow);
+      await firstRow.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await firstRow.click({ force: true });
       await page.waitForTimeout(500);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await firstRow.isVisible()).toBe(true);
+        },
+        'Step 06 complete'
+      );
     });
     await allure.step('Step 07: Найдите кнопку «Редактировать» и нажмите ее. (Find the edit button and click it)', async () => {
       const firstRow = leftTable.locator(SelectorsPartsDataBase.TABLE_FIRST_ROW_SELECTOR);
       // Locate the "Редактировать" button
       const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
 
-      editButton.click();
-      await page.waitForTimeout(500);
+      await shortagePage.waitAndHighlight(editButton, { timeout: 20000 });
+      await editButton.click();
+      await page.waitForURL('**/edit/**', { timeout: 15000 }).catch(() => {});
+      await page.waitForLoadState('networkidle');
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(page.url()).toContain('/edit');
+        },
+        'Step 07 complete'
+      );
     });
     await allure.step(
       'Step 08: Нажимаем по кнопки "Добавить" (под таблицей комплектации)Click on the button "Добавить" (above the комплектации table)',
@@ -150,13 +191,17 @@ export const runU004_9 = () => {
       async () => {
         await page.waitForLoadState('networkidle');
         const addButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_СБ);
-        await addButton.evaluate(row => {
-          row.style.backgroundColor = 'green';
-          row.style.border = '2px solid red';
-          row.style.color = 'red';
-        });
+        await shortagePage.waitAndHighlight(addButton);
         addButton.click();
         await page.waitForTimeout(500);
+        const modal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_DIALOG);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await modal.isVisible()).toBe(true);
+          },
+          'Step 09 complete'
+        );
       }
     );
     const modalСБ = await page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_DIALOG);
@@ -166,21 +211,12 @@ export const runU004_9 = () => {
       await modalСБ.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
 
       // Highlight modal and pause
-      await modalСБ.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-      console.log('111111');
-      await page.waitForTimeout(1000);
+      await shortagePage.waitAndHighlight(modalСБ);
+      await page.waitForTimeout(500);
 
       // Highlight the СБ table and pause
-      await table2Locator!.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-      await page.waitForTimeout(1000);
+      await shortagePage.waitAndHighlight(table2Locator!);
+      await page.waitForTimeout(500);
       console.log('22222');
       // Ensure search input is visible and ready
       // Prefer the table-scoped input for СБ – it's consistently present; add robust fallbacks
@@ -204,32 +240,19 @@ export const runU004_9 = () => {
         searchInput = modalСБ.locator(`${SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE} ${SelectorsPartsDataBase.TABLE_SEARCH_INPUT}`).first();
         //highlight the input field here
         candidatesCount = await searchInput.count();
-        await searchInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await shortagePage.waitAndHighlight(searchInput, { waitAfter: 50 });
       }
       console.log('55555');
       if (candidatesCount === 0) {
         // Last resort: any visible contenteditable in the modal header area
         searchInput = modalСБ.locator('[contenteditable="true"]').first();
-        await searchInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await shortagePage.waitAndHighlight(searchInput, { waitAfter: 50 });
       }
       console.log('66666');
       await searchInput.waitFor({ state: 'visible', timeout: 20000 });
 
       // Highlight search input and pause
-      await searchInput.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-      await page.waitForTimeout(1000);
+      await shortagePage.waitAndHighlight(searchInput, { waitAfter: 50 });
       console.log('77777');
       // Clear any existing content and close history overlay
       await searchInput.fill('');
@@ -283,6 +306,14 @@ export const runU004_9 = () => {
           expect.soft(await table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).isVisible()).toBe(true);
         },
         'Verify search input in top modal table is visible'
+      );
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          const inputValue = await searchInput.inputValue().catch(() => '');
+          expect.soft(inputValue).toContain(CONST.TESTCASE_2_PRODUCT_СБ);
+        },
+        'Step 10 complete'
       );
 
       // Detect if the search returned zero results in the top table
@@ -1690,31 +1721,41 @@ export const runU004_9 = () => {
         });
         const buttonLocator2 = page.locator(`${dialogSelector} ${buttonDataTestId}`);
         // Highlight button for debugging
-        await buttonLocator2.evaluate(button => {
-          button.style.backgroundColor = 'green';
-          button.style.border = '2px solid red';
-          button.style.color = 'blue';
-        });
+        await shortagePage.waitAndHighlight(buttonLocator2);
 
         // Perform click actions
         await buttonLocator2.click();
         await page.waitForTimeout(500);
+        await page.waitForLoadState('networkidle');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            // After clicking "Добавить", we should still be on the edit page
+            expect.soft(page.url()).toContain('/edit');
+          },
+          'Step 41 complete'
+        );
       }
     );
 
     await allure.step('Step 42: Нажимаем по кнопке "Сохранить"  (Click on the "Сохранить" button in the main window)', async () => {
       await page.waitForLoadState('networkidle');
       const button = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
-      await button.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.waitAndHighlight(button);
 
       button.click();
       await page.waitForTimeout(500);
       button.click();
+      await page.waitForURL('**/baseproducts**', { timeout: 15000 }).catch(() => {});
+      await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2000);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(page.url()).toContain('/baseproducts');
+        },
+        'Step 42 complete'
+      );
     });
     await allure.step(
       'Step 43: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)',
@@ -1790,6 +1831,15 @@ export const runU004_9 = () => {
         standardParts: T15_STANDARD_PARTS,
         consumables: T15_CONSUMABLES,
       });
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(page.url()).toContain('/baseproducts');
+        },
+        'Cleanup done (TestCase 19)'
+      );
     });
   });
 };

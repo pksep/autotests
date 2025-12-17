@@ -4459,12 +4459,41 @@ export class PageObject extends AbstractPage {
    * @param element - The Playwright locator to highlight
    * @param customStyles - Optional custom styles to apply
    */
-  async highlightElement(element: Locator, customStyles?: { backgroundColor?: string; border?: string; color?: string }): Promise<void> {
-    await element.evaluate((el: HTMLElement, styles: { backgroundColor?: string; border?: string; color?: string }) => {
-      el.style.backgroundColor = styles?.backgroundColor || 'yellow';
-      el.style.border = styles?.border || '2px solid red';
-      el.style.color = styles?.color || 'blue';
-    }, customStyles || {});
+  async highlightElement(
+    element: Locator,
+    customStyles?: {
+      backgroundColor?: string;
+      border?: string;
+      color?: string;
+      outline?: string;
+      boxShadow?: string;
+      zIndex?: string;
+      transition?: string;
+    }
+  ): Promise<void> {
+    await element.evaluate(
+      (
+        el: HTMLElement,
+        styles: {
+          backgroundColor?: string;
+          border?: string;
+          color?: string;
+          outline?: string;
+          boxShadow?: string;
+          zIndex?: string;
+          transition?: string;
+        }
+      ) => {
+        el.style.backgroundColor = styles?.backgroundColor || 'green';
+        el.style.border = styles?.border || '2px solid red';
+        el.style.color = styles?.color || 'blue';
+        el.style.outline = styles?.outline || '3px solid magenta';
+        el.style.boxShadow = styles?.boxShadow || '0 0 0 4px rgba(255, 0, 255, 0.4)';
+        el.style.zIndex = styles?.zIndex || '2147483647';
+        el.style.transition = styles?.transition || 'none';
+      },
+      customStyles || {}
+    );
   }
   /**
    * Locates an element by data-testid, highlights it, and waits for it to be visible.

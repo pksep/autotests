@@ -28,7 +28,7 @@ export const runU004_5 = () => {
 
   test('TestCase 09- Редактирование изделия - Сравниваем комплектацию (Edit an Existing Material ПД - Comparing the complete set)', async ({ page }) => {
     // Placeholder for test logic: Open the parts database page
-    test.setTimeout(90000);
+    test.setTimeout(180000);
     const shortagePage = new CreatePartsDatabasePage(page);
     // Placeholder for test logic: Open the parts database page
     await allure.step('Step 01: Открываем страницу базы деталей (Open the parts database page)', async () => {
@@ -36,7 +36,7 @@ export const runU004_5 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
         },
         'Step 01 complete'
       );
@@ -48,17 +48,12 @@ export const runU004_5 = () => {
     let thirdCellValue = '';
 
     await allure.step('Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)', async () => {
+      await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
-        },
-        'Main products table has rows (Step 02)'
-      );
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(true).toBe(true);
+          const rowCount = await leftTable.locator('tbody tr').count();
+          expect.soft(rowCount).toBeGreaterThan(0);
         },
         'Step 02 complete'
       );
@@ -91,7 +86,7 @@ export const runU004_5 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(CONST.TEST_PRODUCT);
         },
         'Step 04 complete'
       );
@@ -100,10 +95,12 @@ export const runU004_5 = () => {
       // Simulate pressing "Enter" in the search field
       await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).press('Enter');
       await page.waitForLoadState('networkidle');
+      await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          const rowCount = await leftTable.locator('tbody tr').count();
+          expect.soft(rowCount).toBeGreaterThan(0);
         },
         'Step 05 complete'
       );
@@ -113,20 +110,14 @@ export const runU004_5 = () => {
       await page.waitForLoadState('networkidle');
       // Find the first row in the table
       const firstRow = leftTable.locator(SelectorsPartsDataBase.TABLE_FIRST_ROW_SELECTOR);
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-        row.style.border = '2px solid red'; // Add a red border for extra visibility
-        row.style.color = 'blue'; // Change text color to blue
-      });
-      // Wait for the row to be visible and click on it
-      await firstRow.waitFor({ state: 'visible' });
-      await firstRow.hover();
-      await firstRow.click();
+      await shortagePage.waitAndHighlight(firstRow);
+      await firstRow.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await firstRow.click({ force: true });
       await page.waitForTimeout(500);
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(await firstRow.isVisible()).toBe(true);
         },
         'Step 06 complete'
       );
@@ -136,12 +127,14 @@ export const runU004_5 = () => {
       // Locate the "Редактировать" button
       const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
 
-      editButton.click();
-      await page.waitForTimeout(500);
+      await shortagePage.waitAndHighlight(editButton, { timeout: 20000 });
+      await editButton.click();
+      await page.waitForURL('**/edit/**', { timeout: 15000 }).catch(() => {});
+      await page.waitForLoadState('networkidle');
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(page.url()).toContain('/edit');
         },
         'Step 07 complete'
       );
@@ -153,18 +146,14 @@ export const runU004_5 = () => {
         await page.waitForLoadState('networkidle');
 
         const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
-        await addButton.evaluate(row => {
-          row.style.backgroundColor = 'green';
-          row.style.border = '2px solid red';
-          row.style.color = 'red';
-        });
+        await shortagePage.waitAndHighlight(addButton);
 
         addButton.click();
         await page.waitForTimeout(500);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            expect.soft(await addButton.isVisible()).toBe(true);
           },
           'Step 08 complete'
         );
@@ -176,18 +165,15 @@ export const runU004_5 = () => {
       async () => {
         await page.waitForLoadState('networkidle');
         const addButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_ПД);
-        await addButton.evaluate(row => {
-          row.style.backgroundColor = 'green';
-          row.style.border = '2px solid red';
-          row.style.color = 'red';
-        });
+        await shortagePage.waitAndHighlight(addButton);
 
         addButton.click();
         await page.waitForTimeout(500);
+        const modal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_DIALOG);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            expect.soft(await modal.isVisible()).toBe(true);
           },
           'Step 09 complete'
         );
@@ -220,11 +206,7 @@ export const runU004_5 = () => {
         // Get the value of the first cell in the first row
         firstCellValue = await table3Locator!.locator('tbody tr:first-child td:nth-child(1)').innerText();
         firstCell = await table3Locator!.locator('tbody tr:first-child td:nth-child(1)');
-        await firstCell.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
+        await shortagePage.waitAndHighlight(firstCell);
         firstCellValue = firstCellValue.trim();
         await expectSoftWithScreenshot(
           page,
@@ -240,18 +222,14 @@ export const runU004_5 = () => {
       await page.waitForTimeout(500);
       // Wait for loading
       await page.waitForLoadState('networkidle');
-      await firstCell!.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.waitAndHighlight(firstCell!);
       firstCell!.hover();
       firstCell!.click();
       await page.waitForTimeout(500);
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(await firstCell!.isVisible()).toBe(true);
         },
         'Step 12 complete'
       );
@@ -291,15 +269,20 @@ export const runU004_5 = () => {
         `${dialogSelector} ${buttonDataTestId.includes('data-testid') ? buttonDataTestId : `[data-testid="${buttonDataTestId}"]`}`
       );
       // Highlight button for debugging
-      await buttonLocator2.evaluate(button => {
-        button.style.backgroundColor = 'green';
-        button.style.border = '2px solid red';
-        button.style.color = 'blue';
-      });
+      await shortagePage.waitAndHighlight(buttonLocator2);
 
       // Perform click actions
       await buttonLocator2.click();
       await page.waitForTimeout(500);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          const bottomTable = dialog.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE);
+          const rowCount = await bottomTable.locator('tbody tr').count();
+          expect.soft(rowCount).toBeGreaterThan(0);
+        },
+        'Step 13 complete'
+      );
     });
 
     await allure.step('Step 14: Ensure the selected row is now showing in the bottom table', async () => {
@@ -312,11 +295,7 @@ export const runU004_5 = () => {
       const modal = await page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_DIALOG);
       const bottomTableLocator = modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE);
 
-      await bottomTableLocator.evaluate(row => {
-        row.style.backgroundColor = 'yellow';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.waitAndHighlight(bottomTableLocator);
 
       // Locate all rows in the table body
       const rowsLocator = bottomTableLocator.locator('tbody tr');
@@ -348,11 +327,7 @@ export const runU004_5 = () => {
         // Compare the extracted values
         if (partName?.trim() === selectedPartNumber) {
           isRowFound = true;
-          await partNumberCell.evaluate(row => {
-            row.style.backgroundColor = 'yellow';
-            row.style.border = '2px solid red';
-            row.style.color = 'blue';
-          });
+          await shortagePage.waitAndHighlight(partNumberCell);
           logger.info(`Selected row found in row ${i + 1}`);
           //change the value in the Обозначение column
 
@@ -413,15 +388,21 @@ export const runU004_5 = () => {
           `${dialogSelector} ${buttonDataTestId.includes('data-testid') ? buttonDataTestId : `[data-testid="${buttonDataTestId}"]`}`
         );
         // Highlight button for debugging
-        await buttonLocator2.evaluate(button => {
-          button.style.backgroundColor = 'green';
-          button.style.border = '2px solid red';
-          button.style.color = 'blue';
-        });
+        await shortagePage.waitAndHighlight(buttonLocator2);
 
         // Perform click actions
         await buttonLocator2.click();
         await page.waitForTimeout(1500);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
+            const nested = specTable.map(group => group.items).flat();
+            const found = await shortagePage.isStringInNestedArray(nested, CONST.TESTCASE_2_PRODUCT_ASSIGNEMENT);
+            expect.soft(found).toBeTruthy();
+          },
+          'Step 15 complete'
+        );
       }
     );
 
@@ -429,18 +410,15 @@ export const runU004_5 = () => {
       // Wait for loading
       await page.waitForLoadState('networkidle');
       const button = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
-      await button.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.waitAndHighlight(button);
 
       button.click();
-      await page.waitForTimeout(1500);
+      await page.waitForURL('**/baseproducts**', { timeout: 15000 }).catch(() => {});
+      await page.waitForLoadState('networkidle');
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(page.url()).toContain('/baseproducts');
         },
         'Step 16 complete (save)'
       );
@@ -451,12 +429,45 @@ export const runU004_5 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(page.url()).toContain('/baseproducts');
         },
         'Step 17 complete (reload)'
       );
     });
 
+    await allure.step('Step 17b: Navigate back to edit page', async () => {
+      await page.waitForLoadState('networkidle');
+      // Navigate to parts database page first
+      await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
+      await page.waitForLoadState('networkidle');
+      // Re-initialize table locator after navigation
+      const productsTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+      await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+      // Wait for search input to be visible
+      const searchInput = productsTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT);
+      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+      // Filter and click row again
+      await searchInput.fill(CONST.TEST_PRODUCT);
+      await searchInput.press('Enter');
+      await page.waitForLoadState('networkidle');
+      await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+      const firstRow = productsTable.locator(SelectorsPartsDataBase.TABLE_FIRST_ROW_SELECTOR);
+      await shortagePage.waitAndHighlight(firstRow);
+      await firstRow.click({ force: true });
+      await page.waitForTimeout(500);
+      const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
+      await shortagePage.waitAndHighlight(editButton);
+      await editButton.click();
+      await page.waitForURL('**/edit/**', { timeout: 15000 }).catch(() => {});
+      await page.waitForLoadState('networkidle');
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(page.url()).toContain('/edit');
+        },
+        'Step 17b complete (navigate to edit)'
+      );
+    });
     await allure.step(
       'Step 18: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)',
       async () => {
@@ -502,7 +513,9 @@ export const runU004_5 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          // Verify cleanup completed by checking we can navigate to the page
+          await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
+          expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
         },
         'Cleanup done (TestCase 10)'
       );

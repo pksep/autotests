@@ -39,23 +39,18 @@ export const runU004_3 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
           },
           'Step 01 complete (СБ)'
         );
       });
       await allure.step('Step 02: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)', async () => {
+        await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
-          },
-          'Main products table has rows (Step 02 СБ)'
-        );
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            expect.soft(true).toBe(true);
+            const rowCount = await leftTable.locator('tbody tr').count();
+            expect.soft(rowCount).toBeGreaterThan(0);
           },
           'Step 02 complete (СБ)'
         );
@@ -88,7 +83,7 @@ export const runU004_3 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(CONST.TEST_PRODUCT);
           },
           'Step 04 complete (СБ)'
         );
@@ -97,10 +92,18 @@ export const runU004_3 = () => {
         // Simulate pressing "Enter" in the search field
         await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).press('Enter');
         await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000); // Wait for table to update
+        // Wait for table to have rows (with retry)
+        let rowCount = 0;
+        for (let i = 0; i < 5; i++) {
+          rowCount = await leftTable.locator('tbody tr').count();
+          if (rowCount > 0) break;
+          await page.waitForTimeout(500);
+        }
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            expect.soft(rowCount).toBeGreaterThan(0);
           },
           'Step 05 complete (СБ)'
         );
@@ -110,21 +113,17 @@ export const runU004_3 = () => {
         await page.waitForLoadState('networkidle');
         // Find the first row in the table
         const firstRow = leftTable.locator(SelectorsPartsDataBase.TABLE_FIRST_ROW_SELECTOR);
-        await firstRow.evaluate(row => {
-          row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-          row.style.border = '2px solid red'; // Add a red border for extra visibility
-          row.style.color = 'blue'; // Change text color to blue
-        });
+        await shortagePage.waitAndHighlight(firstRow);
         // Wait for the row to be visible and click on a safe cell to avoid header interception
         await firstRow.waitFor({ state: 'visible' });
-        await firstRow.scrollIntoViewIfNeeded();
+        await firstRow.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
         const firstCellInRow = firstRow.locator('td').first();
-        await firstCellInRow.click();
+        await firstCellInRow.click({ force: true });
         await page.waitForTimeout(500);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            expect.soft(await firstRow.isVisible()).toBe(true);
           },
           'Step 06 complete (СБ)'
         );
@@ -135,12 +134,14 @@ export const runU004_3 = () => {
 
         const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
 
-        editButton.click();
-        await page.waitForTimeout(500);
+        await shortagePage.waitAndHighlight(editButton, { timeout: 20000 });
+        await editButton.click();
+        await page.waitForURL('**/edit/**', { timeout: 15000 }).catch(() => {});
+        await page.waitForLoadState('networkidle');
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            expect.soft(page.url()).toContain('/edit');
           },
           'Step 07 complete (СБ)'
         );
@@ -173,10 +174,15 @@ export const runU004_3 = () => {
             item.type
           );
         }
+        const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            for (const item of itemsToAdd) {
+              const nested = specTable.map(group => group.items).flat();
+              const found = await shortagePage.isStringInNestedArray(nested, item.searchValue);
+              expect.soft(found).toBeTruthy();
+            }
           },
           'Step 08 complete (СБ)'
         );
@@ -210,10 +216,15 @@ export const runU004_3 = () => {
             item.type
           );
         }
+        const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            for (const item of itemsToAdd) {
+              const nested = specTable.map(group => group.items).flat();
+              const found = await shortagePage.isStringInNestedArray(nested, item.searchValue);
+              expect.soft(found).toBeTruthy();
+            }
           },
           'Step 08 complete (Д)'
         );
@@ -247,10 +258,15 @@ export const runU004_3 = () => {
             item.type
           );
         }
+        const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            for (const item of itemsToAdd) {
+              const nested = specTable.map(group => group.items).flat();
+              const found = await shortagePage.isStringInNestedArray(nested, item.searchValue);
+              expect.soft(found).toBeTruthy();
+            }
           },
           'Step 08 complete (ПД)'
         );
@@ -285,10 +301,15 @@ export const runU004_3 = () => {
             item.type
           );
         }
+        const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(true).toBe(true);
+            for (const item of itemsToAdd) {
+              const nested = specTable.map(group => group.items).flat();
+              const found = await shortagePage.isStringInNestedArray(nested, item.searchValue);
+              expect.soft(found).toBeTruthy();
+            }
           },
           'Step 08 complete (РМ)'
         );
@@ -298,11 +319,7 @@ export const runU004_3 = () => {
       // Wait for loading
       await page.waitForLoadState('networkidle');
       const button = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
-      await button.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.waitAndHighlight(button);
 
       // Ensure any open modal is closed before saving to avoid pointer interception
       try {
@@ -318,11 +335,12 @@ export const runU004_3 = () => {
         }
       } catch {}
       button.click();
-      await page.waitForTimeout(1500);
+      await page.waitForURL('**/baseproducts**', { timeout: 15000 }).catch(() => {});
+      await page.waitForLoadState('networkidle');
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(page.url()).toContain('/baseproducts');
         },
         'Step 005 complete (save)'
       );
@@ -334,7 +352,7 @@ export const runU004_3 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          expect.soft(tableData_full.length).toBeGreaterThan(0);
         },
         'Step 006 complete (store table)'
       );
@@ -358,13 +376,6 @@ export const runU004_3 = () => {
           async () => {
             expect.soft(result1 && result2 && result3 && result4).toBeTruthy();
           },
-          'All added items present in main table'
-        );
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            expect.soft(true).toBe(true);
-          },
           'Step 007 complete (verify items)'
         );
       }
@@ -373,14 +384,6 @@ export const runU004_3 = () => {
   test('TestCase 06 - Очистка после теста. (Cleanup after test)', async ({ page }) => {
     test.setTimeout(240000);
     const shortagePage = new CreatePartsDatabasePage(page);
-    const softStepCleanup = async (label: string) =>
-      expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(true).toBe(true);
-        },
-        label
-      );
     const {
       productName: T15_PRODUCT_NAME,
       assemblies: T15_ASSEMBLIES,
@@ -397,7 +400,13 @@ export const runU004_3 = () => {
         standardParts: T15_STANDARD_PARTS,
         consumables: T15_CONSUMABLES,
       });
-      await softStepCleanup('Cleanup done (TestCase 06)');
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(true).toBe(true);
+        },
+        'Cleanup done (TestCase 06)'
+      );
     });
   });
 };
