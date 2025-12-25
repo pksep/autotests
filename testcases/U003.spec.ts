@@ -2037,40 +2037,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
     });
     await allure.step('Step 28: Navigate to warehouse page and click shipping tasks', async () => {
-      const normalizeDate = (rawDate: string): string => {
-        const parseDate = (dateStr: string): Date => {
-          if (dateStr.includes('.')) {
-            const [day, month, yearRaw] = dateStr.split('.');
-            const year = yearRaw.length === 2 ? 2000 + Number(yearRaw) : Number(yearRaw);
-            return new Date(year, Number(month) - 1, Number(day));
-          }
-          const months: { [key: string]: number } = {
-            янв: 0,
-            фев: 1,
-            мар: 2,
-            апр: 3,
-            май: 4,
-            июн: 5,
-            июл: 6,
-            авг: 7,
-            сен: 8,
-            окт: 9,
-            ноя: 10,
-            дек: 11,
-          };
-          const parts = dateStr.split(' ');
-          const monthName = parts[0].toLowerCase();
-          const day = parseInt(parts[1].replace(',', ''), 10);
-          const year = parseInt(parts[2], 10);
-          return new Date(year, months[monthName], day);
-        };
-
-        const date = parseDate(rawDate);
-        const day = `${date.getDate()}`.padStart(2, '0');
-        const month = `${date.getMonth() + 1}`.padStart(2, '0');
-        const year = `${date.getFullYear()}`;
-        return `${day}.${month}.${year}`;
-      };
+      // Use normalizeDate from page class
+      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
       // Step 28.1: Close all open tabs except the main page
       const context = page.context();
       const allPages = context.pages();
@@ -3875,101 +3843,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 6: Compare values between orders list and edit page for order /0', async () => {
       console.log('Start: step 6');
-      // Define normalizeDate function for date comparisons
-      const normalizeDate = (rawDate: string): string => {
-        if (!rawDate || !rawDate.trim()) {
-          console.warn('normalizeDate: Empty or undefined date string');
-          return rawDate || '';
-        }
-
-        const trimmedDate = rawDate.trim();
-
-        // Skip normalization if it's just a number (like "0" for DateOrder)
-        if (/^\d+$/.test(trimmedDate)) {
-          return trimmedDate;
-        }
-
-        const parseDate = (dateStr: string): Date => {
-          if (!dateStr || !dateStr.trim()) {
-            throw new Error('Empty date string');
-          }
-
-          if (dateStr.includes('.')) {
-            const parts = dateStr.split('.');
-            if (parts.length >= 3) {
-              const [day, month, yearStr] = parts;
-              const year = yearStr && yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr || '0', 10);
-              return new Date(year, Number(month) - 1, Number(day));
-            }
-          }
-
-          const months: { [key: string]: number } = {
-            янв: 0,
-            фев: 1,
-            мар: 2,
-            апр: 3,
-            май: 4,
-            июн: 5,
-            июл: 6,
-            авг: 7,
-            сен: 8,
-            окт: 9,
-            ноя: 10,
-            дек: 11,
-          };
-
-          const parts = dateStr.split(' ');
-          if (parts.length < 3) {
-            console.warn(`normalizeDate: Unexpected date format: "${dateStr}"`);
-            throw new Error(`Unexpected date format: "${dateStr}"`);
-          }
-
-          // Convert month name to lowercase
-          const monthName = parts[0]?.toLowerCase() || '';
-          const dayStr = parts[1]?.replace(',', '') || '';
-          const yearStr = parts[2] || '';
-
-          if (!monthName) {
-            console.warn(`normalizeDate: Missing month name in: "${dateStr}"`);
-            throw new Error(`Missing month name in: "${dateStr}"`);
-          }
-
-          if (!dayStr || !yearStr) {
-            console.warn(`normalizeDate: Missing date parts in: "${dateStr}"`);
-            throw new Error(`Missing date parts in: "${dateStr}"`);
-          }
-
-          const day = parseInt(dayStr, 10);
-          const year = parseInt(yearStr, 10);
-
-          const monthIndex = months[monthName];
-          if (monthIndex === undefined) {
-            console.warn(
-              `normalizeDate: Unknown month name: "${monthName}" (original: "${parts[0]}") in date: "${dateStr}". Available months: ${Object.keys(months).join(
-                ', '
-              )}`
-            );
-            throw new Error(`Unknown month name: "${monthName}"`);
-          }
-
-          return new Date(year, monthIndex, day);
-        };
-
-        try {
-          const date = parseDate(trimmedDate);
-          if (isNaN(date.getTime())) {
-            console.warn(`normalizeDate: Invalid date parsed from: "${rawDate}"`);
-            return rawDate; // Return original if parsing fails
-          }
-          const day = `${date.getDate()}`.padStart(2, '0');
-          const month = `${date.getMonth() + 1}`.padStart(2, '0');
-          const year = `${date.getFullYear()}`;
-          return `${day}.${month}.${year}`;
-        } catch (error) {
-          console.warn(`normalizeDate: Error parsing date "${rawDate}":`, error);
-          return rawDate; // Return original if parsing fails
-        }
-      };
+      // Use normalizeDate from page class
+      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
 
       // Create Tab 1: Orders page, search for order with /0
       const { page: tab1, pageObject: tab1LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
@@ -4497,85 +4372,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 7: Open modal from orders list and compare with edit page', async () => {
       // Use scrollIntoViewWithExtra from PageObject base class
 
-      // Define normalizeDate function for date comparisons
-      const normalizeDate = (rawDate: string): string => {
-        if (!rawDate || !rawDate.trim()) {
-          return rawDate || '';
-        }
-
-        const trimmedDate = rawDate.trim();
-
-        // Skip normalization if it's just a number
-        if (/^\d+$/.test(trimmedDate)) {
-          return trimmedDate;
-        }
-
-        const parseDate = (dateStr: string): Date => {
-          if (!dateStr || !dateStr.trim()) {
-            throw new Error('Empty date string');
-          }
-
-          if (dateStr.includes('.')) {
-            const parts = dateStr.split('.');
-            if (parts.length >= 3) {
-              const [day, month, yearStr] = parts;
-              const year = yearStr && yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr || '0', 10);
-              return new Date(year, Number(month) - 1, Number(day));
-            }
-          }
-
-          const months: { [key: string]: number } = {
-            янв: 0,
-            фев: 1,
-            мар: 2,
-            апр: 3,
-            май: 4,
-            июн: 5,
-            июл: 6,
-            авг: 7,
-            сен: 8,
-            окт: 9,
-            ноя: 10,
-            дек: 11,
-          };
-
-          const parts = dateStr.split(' ');
-          if (parts.length < 3) {
-            throw new Error(`Unexpected date format: "${dateStr}"`);
-          }
-
-          const monthName = parts[0]?.toLowerCase() || '';
-          const dayStr = parts[1]?.replace(',', '') || '';
-          const yearStr = parts[2] || '';
-
-          if (!monthName || !dayStr || !yearStr) {
-            throw new Error(`Missing date parts in: "${dateStr}"`);
-          }
-
-          const day = parseInt(dayStr, 10);
-          const year = parseInt(yearStr, 10);
-
-          const monthIndex = months[monthName];
-          if (monthIndex === undefined) {
-            throw new Error(`Unknown month name: "${monthName}"`);
-          }
-
-          return new Date(year, monthIndex, day);
-        };
-
-        try {
-          const date = parseDate(trimmedDate);
-          if (isNaN(date.getTime())) {
-            return rawDate;
-          }
-          const day = `${date.getDate()}`.padStart(2, '0');
-          const month = `${date.getMonth() + 1}`.padStart(2, '0');
-          const year = `${date.getFullYear()}`;
-          return `${day}.${month}.${year}`;
-        } catch (error) {
-          return rawDate;
-        }
-      };
+      // Use normalizeDate from page class
+      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
 
       // Tab 1: Go to main orders page and search for order with /0
       await page.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
@@ -4962,85 +4760,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Helper function to scroll into view and then scroll down a bit more for smaller viewports
       // Use scrollIntoViewWithExtra from PageObject base class
 
-      // Define normalizeDate function for date comparisons
-      const normalizeDate = (rawDate: string): string => {
-        if (!rawDate || !rawDate.trim()) {
-          return rawDate || '';
-        }
-
-        const trimmedDate = rawDate.trim();
-
-        // Skip normalization if it's just a number
-        if (/^\d+$/.test(trimmedDate)) {
-          return trimmedDate;
-        }
-
-        const parseDate = (dateStr: string): Date => {
-          if (!dateStr || !dateStr.trim()) {
-            throw new Error('Empty date string');
-          }
-
-          if (dateStr.includes('.')) {
-            const parts = dateStr.split('.');
-            if (parts.length >= 3) {
-              const [day, month, yearStr] = parts;
-              const year = yearStr && yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr || '0', 10);
-              return new Date(year, Number(month) - 1, Number(day));
-            }
-          }
-
-          const months: { [key: string]: number } = {
-            янв: 0,
-            фев: 1,
-            мар: 2,
-            апр: 3,
-            май: 4,
-            июн: 5,
-            июл: 6,
-            авг: 7,
-            сен: 8,
-            окт: 9,
-            ноя: 10,
-            дек: 11,
-          };
-
-          const parts = dateStr.split(' ');
-          if (parts.length < 3) {
-            throw new Error(`Unexpected date format: "${dateStr}"`);
-          }
-
-          const monthName = parts[0]?.toLowerCase() || '';
-          const dayStr = parts[1]?.replace(',', '') || '';
-          const yearStr = parts[2] || '';
-
-          if (!monthName || !dayStr || !yearStr) {
-            throw new Error(`Missing date parts in: "${dateStr}"`);
-          }
-
-          const day = parseInt(dayStr, 10);
-          const year = parseInt(yearStr, 10);
-
-          const monthIndex = months[monthName];
-          if (monthIndex === undefined) {
-            throw new Error(`Unknown month name: "${monthName}"`);
-          }
-
-          return new Date(year, monthIndex, day);
-        };
-
-        try {
-          const date = parseDate(trimmedDate);
-          if (isNaN(date.getTime())) {
-            return rawDate;
-          }
-          const day = `${date.getDate()}`.padStart(2, '0');
-          const month = `${date.getMonth() + 1}`.padStart(2, '0');
-          const year = `${date.getFullYear()}`;
-          return `${day}.${month}.${year}`;
-        } catch (error) {
-          return rawDate;
-        }
-      };
+      // Use normalizeDate from page class
+      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
 
       // Navigate to warehouse page first
       await page.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
@@ -5249,49 +4970,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Helper function to scroll into view and then scroll down a bit more for smaller viewports
       // Use scrollIntoViewWithExtra from PageObject base class
 
-      // Helper function to normalize dates to DD.MM.YYYY format
-      const normalizeDate = (rawDate: string): string => {
-        if (!rawDate || rawDate.trim() === '') {
-          return rawDate;
-        }
-        const parseDate = (dateStr: string): Date => {
-          if (dateStr.includes('.')) {
-            const [day, month, year] = dateStr.split('.');
-            const yearNum = year.length === 2 ? 2000 + parseInt(year, 10) : parseInt(year, 10);
-            return new Date(yearNum, Number(month) - 1, Number(day));
-          }
-          const months: { [key: string]: number } = {
-            янв: 0,
-            фев: 1,
-            мар: 2,
-            апр: 3,
-            май: 4,
-            июн: 5,
-            июл: 6,
-            авг: 7,
-            сен: 8,
-            окт: 9,
-            ноя: 10,
-            дек: 11,
-          };
-          const parts = dateStr.split(' ');
-          const monthName = parts[0].toLowerCase();
-          const day = parseInt(parts[1].replace(',', ''), 10);
-          const year = parseInt(parts[2], 10);
-          return new Date(year, months[monthName] || 0, day);
-        };
-
-        try {
-          const date = parseDate(rawDate);
-          const day = `${date.getDate()}`.padStart(2, '0');
-          const month = `${date.getMonth() + 1}`.padStart(2, '0');
-          const year = `${date.getFullYear()}`;
-          return `${day}.${month}.${year}`;
-        } catch (error) {
-          console.warn(`normalizeDate: Failed to parse date "${rawDate}", returning original`);
-          return rawDate;
-        }
-      };
+      // Use normalizeDate from page class
+      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
 
       // Get article number for the /0 order (first product - after ordering change: /0 = PRODUCT_1)
       const articleNumberValue = TEST_PRODUCTS[0].articleNumber; // TEST_ARTICLE_1
@@ -5980,55 +5660,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 11: Compare warehouse order row with edit page and validate time in parts database', async () => {
-      const normalizeDate = (rawDate: string): string => {
-        if (!rawDate || !rawDate.trim()) {
-          return rawDate || '';
-        }
-        const trimmedDate = rawDate.trim();
-        if (/^\d+$/.test(trimmedDate)) {
-          return trimmedDate;
-        }
-        const parseDate = (dateStr: string): Date => {
-          if (dateStr.includes('.')) {
-            const [day, month, yearStr] = dateStr.split('.');
-            const year = yearStr.length === 2 ? 2000 + Number(yearStr) : Number(yearStr);
-            return new Date(year, Number(month) - 1, Number(day));
-          }
-          const months: { [key: string]: number } = {
-            янв: 0,
-            фев: 1,
-            мар: 2,
-            апр: 3,
-            май: 4,
-            июн: 5,
-            июл: 6,
-            авг: 7,
-            сен: 8,
-            окт: 9,
-            ноя: 10,
-            дек: 11,
-          };
-          const parts = dateStr.split(' ');
-          if (parts.length < 3) {
-            return new Date(NaN);
-          }
-          const monthIndex = months[parts[0].toLowerCase()];
-          if (monthIndex === undefined) {
-            return new Date(NaN);
-          }
-          const day = parseInt(parts[1].replace(',', ''), 10);
-          const year = parseInt(parts[2], 10);
-          return new Date(year, monthIndex, day);
-        };
-        const date = parseDate(trimmedDate);
-        if (isNaN(date.getTime())) {
-          return rawDate;
-        }
-        const day = `${date.getDate()}`.padStart(2, '0');
-        const month = `${date.getMonth() + 1}`.padStart(2, '0');
-        const year = `${date.getFullYear()}`;
-        return `${day}.${month}.${year}`;
-      };
+      // Use normalizeDate from page class
+      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
 
       const articleNumberValue = global.testProductArticleNumber || testProductArticleNumber;
       const productNameValue = global.testProductName || testProductName;
