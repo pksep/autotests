@@ -11,6 +11,14 @@ export const BUTTON_OPERATION = '[data-testid="EditDetal-Buttons-TechProcess"]';
 export const BUTTON_OPERATION_PROCESS_ASSYMBLY = '[data-testid="Creator-Buttons-TechProcess"]';
 export const BUTTON_SAVE_CBED = 'button[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
 export const BUTTON_CANCEL_CBED = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
+export const CREATOR_LOADER = '[data-testid="Creator-Loader"]';
+
+// BaseProducts edit button
+export const BASE_PRODUCTS_BUTTON_EDIT = '[data-testid="BaseProducts-Button-Edit"]';
+
+// Creator characteristics selectors
+export const CREATOR_DETAIL_CHARACTERISTICS_TBODY_ZNACH0 = '[data-testid="Creator-Detail-Characteristics-Tbody-Znach0"]';
+export const CREATOR_DETAIL_CHARACTERISTICS_ZNACH_TEXT0 = '[data-testid="Creator-Detail-Characteristics-ZnachText0"]';
 export const TABLE_PROCESS_ID = '#operation-table';
 export const TABLE_PROCESS = '[data-testid="EditDetal-ModalTechProcess-Table-Wrapper"]';
 export const TABLE_PROCESS_NAME_OPERATION = 'EditDetal-ModalTechProcess-Thead-NameOperation';
@@ -25,6 +33,7 @@ export const BUTTON_SPECIFICATION_DETAL_ADD = '[data-testid="Specification-Modal
 export const BUTTON_ARCHIVE = '[data-testid="BaseProducts-Button-Archive"]';
 
 // Modal and Filter selectors
+export const MODAL = '[data-testid="Modal"][open]';
 export const MODAL_CONTENT = '[data-testid="Modal-ModalContent"]';
 export const DIALOG_CREATE_OPTIONS = '[data-testid="BaseProducts-Dialog-CreateOptions"]';
 export const BASE_FILTER_TITLE = '[data-testid="BaseFilter-Title"]';

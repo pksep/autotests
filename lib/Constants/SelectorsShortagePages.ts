@@ -13,9 +13,27 @@ export const ROW_CHECKBOX = '[data-testid="DeficitIzdTable-Row-Checkbox"]';
 export const ROW_CHECKBOX_PATTERN = '[data-testid^="DeficitIzdTable-Row-Checkbox"]';
 export const ROW_DATE_URGENCY = '[data-testid="DeficitIzdTable-Row-DateUrgency"]';
 export const ROW_DATE_URGENCY_PATTERN = '[data-testid^="DeficitIzdTable-Row-DateUrgency"]';
+export const ROW_DATE_SHIPMENTS = '[data-testid="DeficitIzdTable-Row-DateShipments"]';
+export const ROW_ARTICLE = '[data-testid="DeficitIzdTable-Row-Article"]';
+export const ROW_NAME = '[data-testid="DeficitIzdTable-Row-Name"]';
+export const ROW_DESIGNATION = '[data-testid="DeficitIzdTable-Row-Designation"]';
+export const ROW_DEMAND_LINK = '[data-testid="DeficitIzdTable-Row-Demand-Link"]';
+export const ROW_DEFICIT = '[data-testid="DeficitIzdTable-Row-Deficit"]';
+export const ROW_QUANTITY = '[data-testid="DeficitIzdTable-Row-Quantity"]';
+export const ROW_STATUS_BADGES_TEXT = '[data-testid="DeficitIzdTable-Row-Status-Badges-BadgesText"]';
+export const ROW_NORM = '[data-testid="DeficitIzdTable-Row-Norm"]';
+export const ROW_REAL_BALANCE = '[data-testid="DeficitIzdTable-Row-RealBalance"]';
 export const ROW_PRODUCTION_ORDERED = '[data-testid="DeficitIzdTable-Row-ProductionOrdered"]';
 export const ROW_PRODUCTION_ORDERED_PATTERN = '[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]';
 export const ROW_PRODUCTION_INPUT = '[data-testid="ModalStartProduction-ComplectationTable-ShipmentsCenter"]';
+export const DEFICIT_TABLE_SEARCH_INPUT = '[data-testid="DeficitIzdTable-Search-Dropdown-Input"]';
+export const ORDER_FILTER_ORDER_FILTER = '[data-testid="DeficitIzd-Main-OrderFilter-OrderFilter"]';
+export const ORDER_FILTER_LABEL = '[data-testid="DeficitIzd-Main-OrderFilter-Label"]';
+export const ORDER_FILTER_SETTINGS_TYPES = '[data-testid="OrderFilterSettings-Types"]';
+export const ORDER_FILTER_SETTINGS_CHIP_BUYER = '[data-testid="OrderFilterSettings-Chip-Buyer"]';
+export const ORDER_FILTER_SETTINGS_TABLE = '[data-testid="OrderFilterSettings-Table-OrderFilterTable"]';
+export const ORDER_FILTER_SETTINGS_TABLE_SEARCH_INPUT = '[data-testid="OrderFilterSettings-Table-Search-Dropdown-Input"]';
+export const ORDER_FILTER_DATA_CELL = '[data-testid="DataCell"]';
 
 export const ROW_PATTERN = '[data-testid^="DeficitIzdTable-Row"]';
 
