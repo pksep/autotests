@@ -51,3 +51,8 @@ export const CBED_TABLE_BODY_ORDERED = '[data-testid^="DeficitCbed-Section-Table
 export const SELECTOR_DEFICIT_PRODUCTION = '[data-testid="Sclad-deficitProduction-deficitProduction"]';
 export const SELECTOR_DEFICIT_CBED_PAGE = '[data-testid="Sclad-deficitCbed-deficitCbed"]';
 export const SELECTOR_DEFICIT_DETAL = '[data-testid="Sclad-deficitDetal-deficitDetal"]';
+
+// OrderFilter table pattern selectors
+export const ORDER_FILTER_TABLE_ROW_NAME_PATTERN = '[data-testid^="OrderFilterTableRow-Name-"]';
+export const ORDER_FILTER_TABLE_ROW_URGENT_DATE_PATTERN = '[data-testid^="OrderFilterTableRow-UrgentDate-"]';
+export const ORDER_FILTER_TABLE_ROW_PLANE_DATE_PATTERN = '[data-testid^="OrderFilterTableRow-PlaneDate-"]';

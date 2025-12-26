@@ -24,7 +24,8 @@ export const modalListBuyer = '[data-testid="AddOrder-ModalListBuyer"]';
 export const searchDropdownInput = '[data-testid="Search-Dropdown-Input"]';
 export const searchDropdownInputNew = '[data-testid="AddOrder-ModalListProduct-Search-Dropdown-Input"]';
 export const quantityInput = '[data-testid="AddOrder-Quantity-InputNumber-Input"]';
-export const editTitle = '[data-testid="AddOrder-EditTitle"]';
+export const EDIT_TITLE_TESTID = 'AddOrder-EditTitle';
+export const editTitle = `[data-testid="${EDIT_TITLE_TESTID}"]`;
 export const addOrderComponent = '[data-testid="AddOrder"]';
 export const addOrderComponentCheckboxNew = 'input[data-testid="AddOrder-ModalListProduct-ProductCheckbox-2"]';
 
@@ -41,6 +42,12 @@ export const SHIPMENTS_ARTICLE_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_
 export const SHIPMENTS_PRODUCT_NAME_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Name"]`;
 export const SHIPMENTS_PRODUCT_QUANTITY_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-Kol"]`;
 export const SHIPMENTS_URGENCY_DATE_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-DateByUrgency"]`;
+export const SHIPMENTS_TBODY_NUMBER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Number"]`;
+export const SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-DateOrder"]`;
+export const SHIPMENTS_PRODUCT_DATE_SHIPMENTS_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-DateShipments"]`;
+export const SHIPMENTS_TBODY_BUYERS_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Buyers"]`;
+export const SHIPMENTS_TBODY_DATE_SHIPMENTS_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-DateShipments"]`;
+export const SHIPMENTS_MODAL_SHIPMENT_TBODY_NUMBER_ORDER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-ModalShipment-Tbody-NumberOrder"]`;
 export const SHIPMENTS_PRODUCT_WRAPPER = `[data-testid="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-Wrapper"]`;
 
 // AddOrder position table selectors
@@ -48,6 +55,21 @@ export const ADD_ORDER_POSITIONS_TABLE = '[data-testid="AddOrder-PositionInAccou
 export const ADD_ORDER_POSITIONS_TABLE_BODY = '[data-testid="AddOrder-PositionInAccount-ShipmentsTable-Table-Tbody"]';
 export const ADD_ORDER_ATTACHMENTS_VALUE_LINK = '[data-testid="AddOrder-AttachmentsValue-Link"]';
 export const ADD_ORDER_PRODUCT_WRAPPER = '[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]';
+
+// AddOrder position table pattern selectors (using ^= for dynamic IDs)
+const ADD_ORDER_POSITIONS_TABLE_PREFIX = 'AddOrder-PositionInAccount-ShipmentsTable';
+export const ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-NumberOrder"]`;
+export const ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-Article"]`;
+export const ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-Name"]`;
+export const ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-Kol"]`;
+export const ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-DateOrder"]`;
+export const ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-DateShipments"]`;
+export const ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-Buyers"]`;
+export const ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-DateByUrgency"]`;
+export const ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-DateShipments"]`;
+export const ADD_ORDER_POSITIONS_TBODY_START_COMPLETE_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-StartComplete"]`;
+export const ADD_ORDER_POSITIONS_TBODY_NUMBER_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-Number"]`;
+export const ADD_ORDER_POSITIONS_PRODUCT_NAME_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-Name"]`;
 
 // AddOrder date selectors
 export const ADD_ORDER_DATE_BY_URGENCY_DISPLAY = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]';

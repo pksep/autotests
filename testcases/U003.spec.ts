@@ -1,4 +1,4 @@
-import { test, expect, Page, Locator } from '@playwright/test';
+import { test, expect, Page, Locator, TestInfo } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
 import { ENV, SELECTORS, LOGIN_TEST_CONFIG } from '../config';
 import { allure } from 'allure-playwright';
@@ -79,11 +79,168 @@ const descendantsDetailArray: ISpetificationData[] = [];
 const deficitTable = SelectorsShortagePages.TABLE_DEFICIT_IZD;
 const tableMainUploading = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE;
 
+// Timeout constants (in milliseconds)
+const TIMEOUTS = {
+  VERY_SHORT: 200, // Quick pauses
+  SHORT: 300, // Brief waits
+  MEDIUM: 500, // Standard wait / pause for validation
+  STANDARD: 1000, // Common wait / page render
+  INPUT_SET: 1500, // Input value setting
+  LONG: 2000, // Longer operations
+  EXTENDED: 3000, // Extended waits for async processing
+  VERY_LONG: 5000, // Very long waits for complex operations
+} as const;
+
+// Wait timeout constants for waitFor() operations (in milliseconds)
+const WAIT_TIMEOUTS = {
+  VERY_SHORT: 2000, // 2 seconds - very quick element waits
+  SHORT: 5000, // 5 seconds - quick element waits
+  STANDARD: 10000, // 10 seconds - standard element waits
+  LONG: 15000, // 15 seconds - longer element waits
+  PAGE_RELOAD: 30000, // 30 seconds - page reload operations
+} as const;
+
+// Test timeout constants (in milliseconds)
+const TEST_TIMEOUTS = {
+  SHORT: 120000, // 2 minutes - quick tests
+  MEDIUM_SHORT: 180000, // 3 minutes - medium-short tests
+  MEDIUM: 300000, // 5 minutes - medium tests
+  LONG: 600000, // 10 minutes - long tests
+  VERY_LONG: 900000, // 15 minutes - very long tests
+  EXTENDED: 920000, // ~15.3 minutes - extended tests
+} as const;
+
+/**
+ * Helper function to validate cell values with highlighting and soft assertions
+ * @param cellLocator - The locator for the cell element
+ * @param expectedValue - Either a string to check if text includes, or a function that returns boolean
+ * @param description - Description for the assertion (will include actual value)
+ * @param page - Playwright Page object
+ * @param loadingTaskPage - LoadingTaskPage instance for highlighting
+ * @param testInfo - TestInfo for screenshot capture
+ * @returns The text content of the cell
+ */
+async function validateCellValue(
+  cellLocator: Locator,
+  expectedValue: string | ((text: string) => boolean),
+  description: string,
+  page: Page,
+  loadingTaskPage: CreateLoadingTaskPage,
+  testInfo: TestInfo
+): Promise<string> {
+  await loadingTaskPage.waitAndHighlight(cellLocator);
+  const text = (await cellLocator.textContent())?.trim() || '';
+
+  await expectSoftWithScreenshot(
+    page,
+    () => {
+      if (typeof expectedValue === 'function') {
+        expect.soft(expectedValue(text)).toBe(true);
+      } else {
+        expect.soft(text.includes(expectedValue)).toBe(true);
+      }
+    },
+    `${description}: actual "${text}"`,
+    testInfo
+  );
+
+  return text;
+}
+
+/**
+ * Helper function to validate cell value with exact match
+ * @param cellLocator - The locator for the cell element
+ * @param expectedValue - Exact string value to match
+ * @param description - Description for the assertion
+ * @param page - Playwright Page object
+ * @param loadingTaskPage - LoadingTaskPage instance for highlighting
+ * @param testInfo - TestInfo for screenshot capture
+ * @returns The text content of the cell
+ */
+async function validateCellValueExact(
+  cellLocator: Locator,
+  expectedValue: string,
+  description: string,
+  page: Page,
+  loadingTaskPage: CreateLoadingTaskPage,
+  testInfo: TestInfo
+): Promise<string> {
+  await loadingTaskPage.waitAndHighlight(cellLocator);
+  const text = (await cellLocator.textContent())?.trim() || '';
+
+  await expectSoftWithScreenshot(
+    page,
+    () => {
+      expect.soft(text).toBe(expectedValue);
+    },
+    `${description}: expected "${expectedValue}", actual "${text}"`,
+    testInfo
+  );
+
+  return text;
+}
+
+/**
+ * Helper function to fill input and wait for value to be set (replaces waitForTimeout after fill)
+ * @param inputLocator - The input locator
+ * @param value - Value to fill
+ * @param timeout - Maximum time to wait (default: TIMEOUTS.MEDIUM)
+ */
+async function fillInputAndWaitForValue(inputLocator: Locator, value: string, timeout: number = TIMEOUTS.MEDIUM): Promise<void> {
+  await inputLocator.fill(value);
+  // For search inputs, just wait a brief moment for the value to be set
+  // The actual search will be validated by waiting for network idle and table results
+  await inputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+}
+
+/**
+ * Helper function to wait for network idle and remove redundant waitForTimeout
+ * @param page - Playwright Page object
+ * @param loadingTaskPage - LoadingTaskPage instance
+ */
+async function waitForNetworkStable(page: Page, loadingTaskPage: CreateLoadingTaskPage): Promise<void> {
+  await loadingTaskPage.waitForNetworkIdle();
+  // Network idle is sufficient, no need for additional timeout
+}
+
+/**
+ * Helper function to find the actual search input element (handles wrapper vs direct input)
+ * @param page - Playwright Page object
+ * @param searchInputSelector - Selector for the search input wrapper
+ * @param timeout - Timeout for waiting (default: WAIT_TIMEOUTS.STANDARD)
+ * @returns The actual input locator to use
+ */
+async function findSearchInput(page: Page, searchInputSelector: string, timeout: number = WAIT_TIMEOUTS.STANDARD): Promise<Locator> {
+  const searchInputWrapper = page.locator(searchInputSelector).first();
+  await searchInputWrapper.waitFor({ state: 'visible', timeout });
+  await searchInputWrapper.scrollIntoViewIfNeeded();
+
+  // Check if wrapper itself is an input
+  const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
+  if (tagName === 'input') {
+    await searchInputWrapper.waitFor({ state: 'visible', timeout });
+    return searchInputWrapper;
+  }
+
+  // Look for input inside wrapper
+  const searchInput = searchInputWrapper.locator('input').first();
+  const inputCount = await searchInput.count();
+
+  if (inputCount === 0) {
+    // If no input found, try using the wrapper itself (might be contenteditable)
+    return searchInputWrapper;
+  }
+
+  // Wait for the input to be visible
+  await searchInput.waitFor({ state: 'visible', timeout });
+  return searchInput;
+}
+
 export const runU003 = (isSingleTest: boolean, iterations: number) => {
   console.log(`Starting test: U003 - Shipment Tasks Management`);
 
   test('Test Case 0 - Cleanup: Delete all test items', async ({ page }) => {
-    test.setTimeout(600000); // 10 minutes for cleanup
+    test.setTimeout(TEST_TIMEOUTS.LONG); // 10 minutes for cleanup
     console.log('Test Case 0 - Cleanup: Delete all test items');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const partsDatabasePage = new CreatePartsDatabasePage(page);
@@ -122,7 +279,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 1 - Создать тестовое изделие', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 1 - Create test product');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
@@ -135,7 +292,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify page loaded
       const createButton = page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
-      await createButton.waitFor({ state: 'visible', timeout: 10000 });
+      await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -149,7 +306,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     for (const product of testProducts) {
       await allure.step('Step 2: Click on Create button', async () => {
         const createButton = page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
-        await createButton.waitFor({ state: 'visible', timeout: 10000 });
+        await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Verify button is enabled
         const isEnabled = await createButton.isEnabled();
@@ -169,7 +326,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 3: Wait for dialog and click on Изделие', async () => {
         // Wait for dialog to appear (using the data-testid specified)
         const dialog = page.locator(SelectorsPartsDataBase.DIALOG_CREATE_OPTIONS);
-        await dialog.waitFor({ state: 'visible', timeout: 10000 });
+        await dialog.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -181,7 +338,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Find and click on Изделие button with specific data-testid
         const productButton = page.locator(SelectorsPartsDataBase.BUTTON_PRODUCT).filter({ hasText: 'Изделие' });
-        await productButton.waitFor({ state: 'visible', timeout: 10000 });
+        await productButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -199,7 +356,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_CBED).first();
 
         try {
-          await h3Title.waitFor({ state: 'visible', timeout: 10000 });
+          await h3Title.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await expectSoftWithScreenshot(
             page,
             async () => {
@@ -210,7 +367,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           );
         } catch (error) {
           console.warn('Creation page header not visible within timeout, falling back to Save button check', error);
-          await saveButton.waitFor({ state: 'visible', timeout: 10000 });
+          await saveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await expectSoftWithScreenshot(
             page,
             async () => {
@@ -227,7 +384,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 5: Enter article number (Артикул)', async () => {
         const articleInput = page.locator(SelectorsPartsDataBase.INPUT_ARTICLE_NUMBER);
-        await articleInput.waitFor({ state: 'visible', timeout: 10000 });
+        await articleInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -238,14 +395,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await articleInput.clear();
         await articleInput.fill(product.articleNumber);
-        await page.waitForTimeout(1500); // Wait for value to be set
+        await page.waitForTimeout(TIMEOUTS.INPUT_SET); // Wait for value to be set
 
         // Verify value was entered, retry once if needed
         let inputValue = await articleInput.inputValue();
         if (!inputValue) {
           console.warn('Article input value empty after first fill, retrying...');
           await articleInput.fill(product.articleNumber);
-          await page.waitForTimeout(1500);
+          await page.waitForTimeout(TIMEOUTS.INPUT_SET);
           inputValue = await articleInput.inputValue();
         }
 
@@ -262,7 +419,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 6: Enter name (Наименование)', async () => {
         const nameInput = page.locator(SelectorsPartsDataBase.INPUT_NAME_IZD);
-        await nameInput.waitFor({ state: 'visible', timeout: 10000 });
+        await nameInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -273,14 +430,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await nameInput.clear();
         await nameInput.fill(product.name);
-        await page.waitForTimeout(500); // Wait for value to be set
+        await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for value to be set
 
         // Verify value was entered, retry once if needed
         let inputValue = await nameInput.inputValue();
         if (!inputValue) {
           console.warn('Name input value empty after first fill, retrying...');
           await nameInput.fill(product.name);
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
           inputValue = await nameInput.inputValue();
         }
 
@@ -297,7 +454,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 7: Enter designation (Обозначение)', async () => {
         const designationInput = page.locator(SelectorsPartsDataBase.INPUT_DESUGNTATION_IZD);
-        await designationInput.waitFor({ state: 'visible', timeout: 10000 });
+        await designationInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -308,14 +465,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await designationInput.clear();
         await designationInput.fill(product.designation);
-        await page.waitForTimeout(500); // Wait for value to be set
+        await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for value to be set
 
         // Verify value was entered, retry once if needed
         let inputValue = await designationInput.inputValue();
         if (!inputValue) {
           console.warn('Designation input value empty after first fill, retrying...');
           await designationInput.fill(product.designation);
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
           inputValue = await designationInput.inputValue();
         }
 
@@ -332,7 +489,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 8: Click Save button', async () => {
         const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_CBED);
-        await saveButton.waitFor({ state: 'visible', timeout: 10000 });
+        await saveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -357,13 +514,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 9: Click Cancel button', async () => {
         // Wait for loader to disappear
         const loaderDialog = page.locator(SelectorsPartsDataBase.CREATOR_LOADER);
-        await loaderDialog.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {
+        await loaderDialog.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.LONG }).catch(() => {
           // If loader doesn't exist or is already hidden, continue
         });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         const cancelButton = page.locator(SelectorsPartsDataBase.BUTTON_CANCEL_CBED);
-        await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
+        await cancelButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -410,7 +567,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 2 - Создать Задачу на отгрузку', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 2 - Create shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
@@ -603,7 +760,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 3 - Проверить создание Задачи на отгрузку', async ({ page }) => {
-    test.setTimeout(920000);
+    test.setTimeout(TEST_TIMEOUTS.EXTENDED);
     console.log('Test Case 3 - Verify shipment task creation (edit verification)');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -624,11 +781,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Wait for IssueShipment page to load
       const issueShipmentPage = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await issueShipmentPage.waitFor({ state: 'visible', timeout: 10000 });
+      await issueShipmentPage.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Wait for table body to load
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitForNetworkIdle();
 
       const success = await loadingTaskPage.findOrderAndClickEdit(orderNumberValue);
@@ -644,13 +801,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 2: Проверить заголовок страницы редактирования заказа', async () => {
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       // First, get the order number with date from the row to extract the date
       const tableBody = page.locator(SelectorsLoadingTasksPage.EDIT_SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
       await loadingTaskPage.waitAndHighlight(firstRow);
 
-      const orderNumberCell = firstRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+      const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(orderNumberCell);
 
       const orderNumberWithDate = (await orderNumberCell.textContent())?.trim() || '';
@@ -707,14 +864,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 3: Wait for "Все позиции по заказу" table to load', async () => {
       const positionsTable = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE);
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       expect.soft(await positionsTable.isVisible()).toBe(true);
 
       // Wait for table body to finish loading
       const tableBody = positionsTable.locator('tbody');
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
     });
 
     await allure.step('Step 4: Confirm table has a single row in body section', async () => {
@@ -758,9 +915,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 5: Validate order number in table matches title', async () => {
-      const cellOrderNumber = await loadingTaskPage.getCellValueFromPositionsTable(
-        '[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]'
-      );
+      const cellOrderNumber = await loadingTaskPage.getCellValueFromPositionsTable(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -777,7 +932,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error('Article number not found. Please ensure Test Case 1 has run.');
       }
 
-      const cellArticle = await loadingTaskPage.getCellValueFromPositionsTable('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]');
+      const cellArticle = await loadingTaskPage.getCellValueFromPositionsTable(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -789,9 +944,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 7: Validate Наименование изделия matches created product', async () => {
-      const cellProductName = await loadingTaskPage.getCellValueFromPositionsTable(
-        '[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]'
-      );
+      const cellProductName = await loadingTaskPage.getCellValueFromPositionsTable(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER);
       const linkProductName = await loadingTaskPage.getCellValueFromPositionsTable(SelectorsLoadingTasksPage.ADD_ORDER_ATTACHMENTS_VALUE_LINK);
 
       await expectSoftWithScreenshot(
@@ -817,7 +970,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(quantityInput);
       const inputQuantity = await quantityInput.inputValue();
 
-      const quantityCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell);
       const cellQuantity = (await quantityCell.textContent())?.trim() || '';
 
@@ -875,7 +1028,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const diffTime = shipmentDate.getTime() - orderDate.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      const daysCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
+      const daysCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(daysCell);
       const cellDays = (await daysCell.textContent())?.trim() || '';
       const cellDaysNumber = parseInt(cellDays) || 0;
@@ -895,7 +1048,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(buyerSpan);
       const selectedBuyer = (await buyerSpan.textContent())?.trim() || '';
 
-      const buyerCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]').first();
+      const buyerCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(buyerCell);
       const cellBuyer = (await buyerCell.textContent())?.trim() || '';
 
@@ -914,7 +1067,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(urgencyDateDisplay);
       const displayUrgencyDate = (await urgencyDateDisplay.textContent())?.trim() || '';
 
-      const urgencyDateCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateByUrgency"]').first();
+      const urgencyDateCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(urgencyDateCell);
       const cellUrgencyDate = (await urgencyDateCell.textContent())?.trim() || '';
 
@@ -952,7 +1105,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(shipmentPlanDisplay);
       const displayShipmentDate = (await shipmentPlanDisplay.textContent())?.trim() || '';
 
-      const shipmentDateCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateShipments"]').first();
+      const shipmentDateCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(shipmentDateCell);
       const cellShipmentDate = (await shipmentDateCell.textContent())?.trim() || '';
 
@@ -970,12 +1123,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 13: Validate StartComplete by checking product characteristic in warehouse', async () => {
       // Get the product name from the table cell we validated earlier
-      const productNameCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
+      const productNameCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
       await loadingTaskPage.waitAndHighlight(productNameCell);
       const cellProductName = (await productNameCell.textContent())?.trim() || '';
 
       // Get the StartComplete value from the table
-      const startCompleteCell = page.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-StartComplete"]').first();
+      const startCompleteCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_START_COMPLETE_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(startCompleteCell);
       const startCompleteValue = (await startCompleteCell.textContent())?.trim() || '';
 
@@ -992,17 +1145,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Search for the product
         await partsDatabasePage.searchAndWaitForTable(cellProductName, SelectorsPartsDataBase.PRODUCT_TABLE, SelectorsPartsDataBase.PRODUCT_TABLE, {
           useRedesign: true,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
         });
 
         // Click on the first row to open edit page (clicking row opens edit directly)
         const firstRow = newPage.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await firstRow.click();
 
         // Find the edit button and make sure it's enabled, then click it
         const editButton = newPage.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
-        await editButton.waitFor({ state: 'visible', timeout: 10000 });
+        await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Wait for the edit button to become enabled
         await newPage
@@ -1012,7 +1165,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               return !!button && !button.disabled;
             },
             SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
-            { timeout: 5000 }
+            { timeout: WAIT_TIMEOUTS.SHORT }
           )
           .catch(() => {
             console.warn('Edit button did not become enabled within timeout.');
@@ -1030,7 +1183,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         // Wait for edit page to load
-        await newPage.waitForTimeout(2000);
+        await newPage.waitForTimeout(TIMEOUTS.LONG);
         await partsDatabasePage.waitForNetworkIdle();
 
         // Find and verify the characteristic value
@@ -1095,10 +1248,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Wait for the page and table to load
       const issueShipmentPageElement = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await issueShipmentPageElement.waitFor({ state: 'visible', timeout: 10000 });
+      await issueShipmentPageElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitForNetworkIdle();
 
       // Method 1: Search by Заказ (Order Number)
@@ -1133,51 +1286,24 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Wait for the page and table to load
         const issueShipmentPageElement = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-        await issueShipmentPageElement.waitFor({ state: 'visible', timeout: 10000 });
+        await issueShipmentPageElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-        await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+        await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await loadingTaskPage.waitForNetworkIdle();
 
         // Search for order number
-        const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInputWrapper.scrollIntoViewIfNeeded();
-
-        // Try to find input element - it might be the wrapper itself or inside it
-        let searchInput: Locator;
-
-        // First check if wrapper itself is an input
-        const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
-        if (tagName === 'input') {
-          searchInput = searchInputWrapper;
-          await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-        } else {
-          // Look for input inside
-          searchInput = searchInputWrapper.locator('input').first();
-          const inputCount = await searchInput.count();
-
-          if (inputCount === 0) {
-            // If no input found, try using the wrapper itself (might be contenteditable)
-            searchInput = searchInputWrapper;
-          } else {
-            // Wait for the input to be visible
-            await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-          }
-        }
-
-        await searchInput.scrollIntoViewIfNeeded();
+        const searchInput = await findSearchInput(page, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
         await searchInput.clear();
         await searchInput.fill(fullOrderNumberValue);
         await searchInput.press('Enter');
-        await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+        await waitForNetworkStable(page, loadingTaskPage);
 
         // Confirm order is present in results
         const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
+        await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
         console.log(`Tab 1: Order ${fullOrderNumberValue} found in results`);
@@ -1196,58 +1322,31 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Wait for the page and table to load
         const issueShipmentPageElement2 = tab2.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-        await issueShipmentPageElement2.waitFor({ state: 'visible', timeout: 10000 });
+        await issueShipmentPageElement2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         const tableBody2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-        await tableBody2.waitFor({ state: 'visible', timeout: 10000 });
+        await tableBody2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab2LoadingTaskPage.waitForNetworkIdle();
 
         // Search for order number
-        const searchInputWrapper2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInputWrapper2.waitFor({ state: 'visible', timeout: 10000 });
-        await searchInputWrapper2.scrollIntoViewIfNeeded();
-
-        // Try to find input element - it might be the wrapper itself or inside it
-        let searchInput2: Locator;
-
-        // First check if wrapper itself is an input
-        const tagName2 = await searchInputWrapper2.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
-        if (tagName2 === 'input') {
-          searchInput2 = searchInputWrapper2;
-          await searchInput2.waitFor({ state: 'visible', timeout: 10000 });
-        } else {
-          // Look for input inside
-          searchInput2 = searchInputWrapper2.locator('input').first();
-          const inputCount2 = await searchInput2.count();
-
-          if (inputCount2 === 0) {
-            // If no input found, try using the wrapper itself (might be contenteditable)
-            searchInput2 = searchInputWrapper2;
-          } else {
-            // Wait for the input to be visible
-            await searchInput2.waitFor({ state: 'visible', timeout: 10000 });
-          }
-        }
-
-        await searchInput2.scrollIntoViewIfNeeded();
+        const searchInput2 = await findSearchInput(tab2, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
         await searchInput2.clear();
         await searchInput2.fill(fullOrderNumberValue);
         await searchInput2.press('Enter');
-        await tab2LoadingTaskPage.waitForNetworkIdle();
-        await tab2.waitForTimeout(1000);
+        await waitForNetworkStable(tab2, tab2LoadingTaskPage);
 
         // Find and click on the order number cell
         const firstRow2 = tableBody2.locator('tr').first();
-        await firstRow2.waitFor({ state: 'visible', timeout: 10000 });
-        const orderNumberCell2 = firstRow2.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Number"]').first();
+        await firstRow2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        const orderNumberCell2 = firstRow2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_NUMBER_PATTERN).first();
         await tab2LoadingTaskPage.waitAndHighlight(orderNumberCell2);
         await orderNumberCell2.click();
-        await tab2.waitForTimeout(1000);
+        await tab2.waitForTimeout(TIMEOUTS.STANDARD);
         await tab2LoadingTaskPage.waitForNetworkIdle();
 
         // Find and click the edit button
         const editButton = tab2.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' });
-        await editButton.waitFor({ state: 'visible', timeout: 10000 });
+        await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const isEnabled = await editButton.isEnabled();
         await expectSoftWithScreenshot(
           tab2,
@@ -1277,10 +1376,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 16: Compare order numbers between Tab 1 and Tab 2', async () => {
       // Tab 1: Get order number from list
       await page.bringToFront();
-      let orderNumberTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
-        'tr',
-        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]'
-      );
+      let orderNumberTab1 = await loadingTaskPage.getCellValueFromShipmentsTable('tr', SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN);
       orderNumberTab1 = orderNumberTab1.replace(/^№\s*/, '').trim();
       // Remove date part if present (format: "25-4746 /0 от 05.12.2025" -> "25-4746 /0")
       if (orderNumberTab1.includes(' от ')) {
@@ -1299,11 +1395,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       let orderNumberTab2 = '';
 
       try {
-        await editTitle.waitFor({ state: 'visible', timeout: 10000 });
+        await editTitle.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         // Fallback to h3 selector
         editTitle = tab2.locator('h3').filter({ hasText: 'Редактирование заказа' }).first();
-        await editTitle.waitFor({ state: 'visible', timeout: 10000 });
+        await editTitle.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       }
 
       // Wait for title to contain complete order number pattern and extract it
@@ -1335,7 +1431,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           },
           {
             message: 'Title should contain complete order number',
-            timeout: 15000,
+            timeout: WAIT_TIMEOUTS.LONG,
           }
         )
         .toBeTruthy();
@@ -1355,17 +1451,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 17: Compare article numbers between Tab 1 and Tab 2', async () => {
       // Tab 1: Get article number from list
       await page.bringToFront();
-      const articleNumberTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
-        'tr',
-        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Article"]'
-      );
+      const articleNumberTab1 = await loadingTaskPage.getCellValueFromShipmentsTable('tr', SelectorsLoadingTasksPage.SHIPMENTS_ARTICLE_PATTERN);
       console.log(`Tab 1 article number: ${articleNumberTab1}`);
 
       // Tab 2: Get article number from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
-      const articleNumberTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]');
+      const articleNumberTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN);
       console.log(`Tab 2 article number: ${articleNumberTab2}`);
 
       // Compare
@@ -1383,17 +1476,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 18: Compare product names between Tab 1 and Tab 2', async () => {
       // Tab 1: Get product name from list
       await page.bringToFront();
-      const productNameTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
-        'tr',
-        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]'
-      );
+      const productNameTab1 = await loadingTaskPage.getCellValueFromShipmentsTable('tr', SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN);
       console.log(`Tab 1 product name: ${productNameTab1}`);
 
       // Tab 2: Get product name from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
-      const productNameTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]');
+      const productNameTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN);
       console.log(`Tab 2 product name: ${productNameTab2}`);
 
       // Compare
@@ -1411,17 +1501,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 19: Compare quantity between Tab 1 and Tab 2', async () => {
       // Tab 1: Get quantity from list
       await page.bringToFront();
-      const quantityTab1 = await loadingTaskPage.getCellValueFromShipmentsTable(
-        'tr',
-        '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]'
-      );
+      const quantityTab1 = await loadingTaskPage.getCellValueFromShipmentsTable('tr', SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN);
       console.log(`Tab 1 quantity: ${quantityTab1}`);
 
       // Tab 2: Get quantity from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
-      const quantityTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]');
+      const quantityTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN);
       console.log(`Tab 2 quantity: ${quantityTab2}`);
 
       // Compare
@@ -1441,7 +1528,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
-      const dateOrderCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+      const dateOrderCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateOrderCellTab1);
       const dateOrderTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
@@ -1451,7 +1538,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
 
-      const dateOrderCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
+      const dateOrderCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateOrderCellTab2);
       const dateOrderTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
@@ -1473,7 +1560,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
-      const dateShipmentsCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]').first();
+      const dateShipmentsCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
@@ -1483,7 +1570,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
 
-      const dateShipmentsCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').first();
+      const dateShipmentsCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab2);
       const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
@@ -1505,7 +1592,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
-      const buyersCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Buyers"]').first();
+      const buyersCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_BUYERS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(buyersCellTab1);
       const buyersTab1 = (await buyersCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 Buyers: ${buyersTab1}`);
@@ -1515,7 +1602,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
 
-      const buyersCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]').first();
+      const buyersCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first();
       await tab2LoadingTaskPage.waitAndHighlight(buyersCellTab2);
       const buyersTab2 = (await buyersCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 Buyers: ${buyersTab2}`);
@@ -1537,8 +1624,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
-      const dateByUrgencyCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-DateByUrgency"]').first();
-      await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      const dateByUrgencyCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_URGENCY_DATE_PATTERN).first();
+      await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Find the calendar display element within the cell
       const calendarDisplayTab1 = dateByUrgencyCellTab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
@@ -1551,7 +1638,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
 
-      const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
+      const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2);
       const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateByUrgency: ${dateByUrgencyTab2}`);
@@ -1577,7 +1664,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
-      const dateShipmentsCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-DateShipments"]').first();
+      const dateShipmentsCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
@@ -1587,7 +1674,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
 
-      const dateShipmentsDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
+      const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2);
       const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
@@ -1613,9 +1700,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRow = tableBody.locator('tr').first();
-      const dateShipmentsTimeCellTab1 = firstRow
-        .locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]')
-        .first();
+      const dateShipmentsTimeCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsTimeCellTab1);
       const dateShipmentsTimeTab1 = (await dateShipmentsTimeCellTab1.textContent())?.trim() || '';
       // Split by '/' and take first part
@@ -1623,8 +1708,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Tab 1 time value (first part): ${timeValue}`);
 
       // Get product name for searching
-      const productNameCellTab1 = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      const productNameCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+      await productNameCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const productName = (await productNameCellTab1.textContent())?.trim() || '';
 
       // Open new tab and navigate to products warehouse
@@ -1640,17 +1725,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Search for the product
         await partsDatabasePage.searchAndWaitForTable(productName, SelectorsPartsDataBase.PRODUCT_TABLE, SelectorsPartsDataBase.PRODUCT_TABLE, {
           useRedesign: true,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
         });
 
         // Click on the first row to open edit page
         const firstRowProduct = newPage.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
-        await firstRowProduct.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRowProduct.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await firstRowProduct.click();
 
         // Find the edit button and make sure it's enabled, then click it
         const editButton = newPage.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
-        await editButton.waitFor({ state: 'visible', timeout: 10000 });
+        await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Wait for the edit button to become enabled
         await newPage
@@ -1660,7 +1745,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               return !!button && !button.disabled;
             },
             SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
-            { timeout: 5000 }
+            { timeout: WAIT_TIMEOUTS.SHORT }
           )
           .catch(() => {
             console.warn('Edit button did not become enabled within timeout.');
@@ -1678,7 +1763,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         // Wait for edit page to load
-        await newPage.waitForTimeout(2000);
+        await newPage.waitForTimeout(TIMEOUTS.LONG);
         await partsDatabasePage.waitForNetworkIdle();
 
         // Find and verify the characteristic value
@@ -1717,14 +1802,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get urgency date from Tab 2
       await tab2.bringToFront();
-      const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
+      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateByUrgency (for comparison): ${dateByUrgencyTab2}`);
 
       // Get shipment plan date from Tab 2
-      const dateShipmentsDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
-      await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
+      await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateShipments (for comparison): ${dateShipmentsTab2}`);
 
@@ -1780,12 +1865,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(searchInputWrapper);
       await searchInputWrapper.clear();
       await searchInputWrapper.fill(fullOrderNumberValue);
-      await deficitPage.waitForTimeout(300);
+      await deficitPage.waitForTimeout(TIMEOUTS.SHORT);
       searchInputWrapper.press('Enter');
 
       await deficitLoadingTaskPage.waitForNetworkIdle();
 
-      await deficitPage.waitForTimeout(1000);
+      await deficitPage.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Confirm that the search results show a single row with our order number
       const tableBody = orderFilterTable.locator('tbody');
@@ -1800,11 +1885,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(firstRow);
 
       // Verify order number in cell with testid starting with:OrderFilterTableRow-Name-
-      const orderNumberCell = firstRow.locator('[data-testid^="OrderFilterTableRow-Name-"]').first();
+      const orderNumberCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_NAME_PATTERN).first();
       await deficitLoadingTaskPage.waitAndHighlight(orderNumberCell);
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
       console.log(`Order number in table: ${cellOrderNumber}`);
-      await deficitPage.waitForTimeout(500); // Pause to see the value being validated
       expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
       // Cross-check on Tab 2 (edit order page)
       await tab2.bringToFront();
@@ -1812,18 +1896,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPage.waitAndHighlight(editTitleTab2);
       const editTitleText = (await editTitleTab2.textContent())?.trim() || '';
       console.log(`Tab 2 edit title: ${editTitleText}`);
-      await tab2.waitForTimeout(500); // Pause to see the value being validated
       expect.soft(editTitleText.includes(cellOrderNumber)).toBe(true);
       await deficitPage.bringToFront();
 
       // Verify urgency date in cell with testid starting with:OrderFilterTableRow-UrgentDate-
-      const urgencyDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-UrgentDate-"]').first();
+      const urgencyDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_URGENT_DATE_PATTERN).first();
       await deficitLoadingTaskPage.waitAndHighlight(urgencyDateCell);
       const urgencyDateValue = (await urgencyDateCell.textContent())?.trim() || '';
       const normalizedUrgencyDateFromTable = deficitLoadingTaskPage.normalizeDate(urgencyDateValue);
       console.log(`Urgency date in table: ${urgencyDateValue} (normalized: ${normalizedUrgencyDateFromTable})`);
       console.log(`Expected urgency date: ${normalizedUrgencyDate}`);
-      await deficitPage.waitForTimeout(500); // Pause to see the value being validated
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1834,12 +1916,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
       // Cross-check urgency date on Tab 2
       await tab2.bringToFront();
-      const tab2UrgencyDisplay = tab2.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
+      const tab2UrgencyDisplay = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(tab2UrgencyDisplay);
       const tab2UrgencyValue = (await tab2UrgencyDisplay.textContent())?.trim() || '';
       const normalizedTab2Urgency = tab2LoadingTaskPage.normalizeDate(tab2UrgencyValue);
       console.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
-      await tab2.waitForTimeout(500); // Pause to see the value being validated
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1851,13 +1932,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitPage.bringToFront();
 
       // Verify shipment plan date in cell with testid starting with:OrderFilterTableRow-PlaneDate-
-      const shipmentPlanDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-PlaneDate-"]').first();
+      const shipmentPlanDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_PLANE_DATE_PATTERN).first();
       await deficitLoadingTaskPage.waitAndHighlight(shipmentPlanDateCell);
       const shipmentPlanDateValue = (await shipmentPlanDateCell.textContent())?.trim() || '';
       const normalizedShipmentPlanDateFromTable = deficitLoadingTaskPage.normalizeDate(shipmentPlanDateValue);
       console.log(`Shipment plan date in table: ${shipmentPlanDateValue} (normalized: ${normalizedShipmentPlanDateFromTable})`);
       console.log(`Expected shipment plan date: ${normalizedShipmentPlanDate}`);
-      await deficitPage.waitForTimeout(500); // Pause to see the value being validated
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1869,12 +1949,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
       // Cross-check plan date on Tab 2
       await tab2.bringToFront();
-      const tab2PlanDisplay = tab2.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
+      const tab2PlanDisplay = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(tab2PlanDisplay);
       const tab2PlanValue = (await tab2PlanDisplay.textContent())?.trim() || '';
       const normalizedTab2Plan = tab2LoadingTaskPage.normalizeDate(tab2PlanValue);
       console.log(`Tab 2 plan shipment date: ${tab2PlanValue} (normalized: ${normalizedTab2Plan})`);
-      await tab2.waitForTimeout(500); // Pause to see the value being validated
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1891,7 +1970,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(dataCell);
       await dataCell.click();
       await deficitLoadingTaskPage.waitForNetworkIdle();
-      await deficitPage.waitForTimeout(1000);
+      await deficitPage.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Step 26.8: Find the table on the right side with testid:DeficitIzd-Main-Table
       const deficitMainTable = deficitPage.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
@@ -1899,7 +1978,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get the first data row (skip header)
       const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
       await expectSoftWithScreenshot(
@@ -1920,17 +1999,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(deficitArticleCell);
       const deficitArticleValue = (await deficitArticleCell.textContent())?.trim() || '';
       console.log(`Deficit table article: ${deficitArticleValue}`);
-      await deficitPage.waitForTimeout(500); // Pause to see the value being validated
 
       // Switch to orders page (Tab 1 - shipments page) to compare
       if (tab1) {
         await tab1.bringToFront();
-        const shipmentsArticleCell = tab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Article"]').first();
-        await shipmentsArticleCell.waitFor({ state: 'visible', timeout: 10000 });
+        const shipmentsArticleCell = tab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_ARTICLE_PATTERN).first();
+        await shipmentsArticleCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsArticleCell.scrollIntoViewIfNeeded();
         const shipmentsArticleValue = (await shipmentsArticleCell.textContent())?.trim() || '';
         console.log(`Shipments table article: ${shipmentsArticleValue}`);
-        await tab1.waitForTimeout(500); // Pause to see the value being validated
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -1949,17 +2026,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(deficitNameCell);
       const deficitNameValue = (await deficitNameCell.textContent())?.trim() || '';
       console.log(`Deficit table name: ${deficitNameValue}`);
-      await deficitPage.waitForTimeout(500); // Pause to see the value being validated
 
       // Switch to orders page to compare
       if (tab1) {
         await tab1.bringToFront();
         const shipmentsNameWrapper = tab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_WRAPPER).first();
-        await shipmentsNameWrapper.waitFor({ state: 'visible', timeout: 10000 });
+        await shipmentsNameWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsNameWrapper.scrollIntoViewIfNeeded();
         const shipmentsNameValue = (await shipmentsNameWrapper.textContent())?.trim() || '';
         console.log(`Shipments table name: ${shipmentsNameValue}`);
-        await tab1.waitForTimeout(500); // Pause to see the value being validated
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -1979,18 +2054,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const deficitDateUrgencyValue = (await deficitDateUrgencyCell.textContent())?.trim() || '';
       const normalizedDeficitDateUrgency = deficitLoadingTaskPage.normalizeDate(deficitDateUrgencyValue);
       console.log(`Deficit table urgency date: ${deficitDateUrgencyValue} (normalized: ${normalizedDeficitDateUrgency})`);
-      await deficitPage.waitForTimeout(500); // Pause to see the value being validated
 
       // Switch to orders page to compare
       if (tab1) {
         await tab1.bringToFront();
         const shipmentsDateUrgencyDisplay = tab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
-        await shipmentsDateUrgencyDisplay.waitFor({ state: 'visible', timeout: 10000 });
+        await shipmentsDateUrgencyDisplay.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsDateUrgencyDisplay.scrollIntoViewIfNeeded();
         const shipmentsDateUrgencyValue = (await shipmentsDateUrgencyDisplay.textContent())?.trim() || '';
         const normalizedShipmentsDateUrgency = loadingTaskPage.normalizeDate(shipmentsDateUrgencyValue);
         console.log(`Shipments table urgency date: ${shipmentsDateUrgencyValue} (normalized: ${normalizedShipmentsDateUrgency})`);
-        await tab1.waitForTimeout(500); // Pause to see the value being validated
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -2010,18 +2083,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const deficitDateShipmentsValue = (await deficitDateShipmentsCell.textContent())?.trim() || '';
       const normalizedDeficitDateShipments = deficitLoadingTaskPage.normalizeDate(deficitDateShipmentsValue);
       console.log(`Deficit table shipment date: ${deficitDateShipmentsValue} (normalized: ${normalizedDeficitDateShipments})`);
-      await deficitPage.waitForTimeout(500); // Pause to see the value being validated
 
       // Switch to orders page to compare
       if (tab1) {
         await tab1.bringToFront();
-        const shipmentsDateShipmentsCell = tab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-DateShipments"]').first();
-        await shipmentsDateShipmentsCell.waitFor({ state: 'visible', timeout: 10000 });
+        const shipmentsDateShipmentsCell = tab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_DATE_SHIPMENTS_PATTERN).first();
+        await shipmentsDateShipmentsCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsDateShipmentsCell.scrollIntoViewIfNeeded();
         const shipmentsDateShipmentsValue = (await shipmentsDateShipmentsCell.textContent())?.trim() || '';
         const normalizedShipmentsDateShipments = loadingTaskPage.normalizeDate(shipmentsDateShipmentsValue);
         console.log(`Shipments table shipment date: ${shipmentsDateShipmentsValue} (normalized: ${normalizedShipmentsDateShipments})`);
-        await tab1.waitForTimeout(500); // Pause to see the value being validated
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -2058,19 +2129,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Ensure we're on the main page
       await page.bringToFront();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Step 28.2: Navigate to main warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000); // Give page time to render
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Give page time to render
 
       // Step 28.3: Find and click the element with testid: Sclad-shippingTasks
       const shippingTasksElement = page.locator(SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS);
       await loadingTaskPage.waitAndHighlight(shippingTasksElement);
       await shippingTasksElement.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       console.log('Clicked on Sclad-shippingTasks element');
 
       // Step 28.4: Get the values we need for searching (Test Case 2 now uses PRODUCT_1)
@@ -2082,18 +2153,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Step 28.5: Wait for the table to load
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Find the table
       const shipmentsTable = page.locator(SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE);
-      await shipmentsTable.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentsTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await shipmentsTable.scrollIntoViewIfNeeded();
 
       // Find the search input
       const getSearchInput = async () => {
         const searchInput = page.locator(SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT_SELECTOR);
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await searchInput.scrollIntoViewIfNeeded();
         return searchInput;
       };
@@ -2101,7 +2172,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the table body
       const getTableBody = async () => {
         const tableBody = shipmentsTable.locator('tbody');
-        await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+        await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         return tableBody;
       };
 
@@ -2110,11 +2181,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // First, clear any existing search to ensure we start fresh
         const searchInput = page.locator(SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT_SELECTOR);
         try {
-          await searchInput.waitFor({ state: 'visible', timeout: 5000 });
+          await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
           // Try clicking the container first (for dropdown inputs)
           try {
-            await searchInput.click({ timeout: 2000 });
-            await page.waitForTimeout(300);
+            await searchInput.click({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+            await page.waitForTimeout(TIMEOUTS.SHORT);
           } catch {
             // Container might already be open
           }
@@ -2124,14 +2195,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           if (inputCount === 0) {
             actualInput = searchInput;
           }
-          await actualInput.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
-            return actualInput.waitFor({ state: 'attached', timeout: 5000 });
+          await actualInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {
+            return actualInput.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
           });
           // Clear the input
           await actualInput.fill('');
           await actualInput.press('Enter');
           await loadingTaskPage.waitForNetworkIdle();
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
           console.log('Cleared existing search before performing new search');
         } catch (error) {
           console.log('Could not clear existing search, continuing with new search:', error);
@@ -2144,20 +2215,20 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         await loadingTaskPage.searchAndWaitForTable(fullOrderNumberValue, tableSelector, tableBodySelector, {
           searchInputDataTestId: searchInputDataTestId,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
         });
 
         // Wait 1 second for the table to populate
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Get table body for verification
         const tableBody = await getTableBody();
         const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Check order number
-        const orderNumberCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = firstRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(orderNumberCell, { waitAfter: 1500 });
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         const normalizedCellOrder = loadingTaskPage.normalizeOrderNumber(cellOrderNumber);
@@ -2181,7 +2252,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check article number
-        const articleCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
+        const articleCell = firstRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(articleCell);
         const cellArticle = (await articleCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2194,8 +2265,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check product name
-        await page.waitForTimeout(1000);
-        const productNameCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        const productNameCell = firstRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(productNameCell);
         const cellProductName = (await productNameCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2215,7 +2286,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await searchInput.fill(articleNumberValue);
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Find the row that matches the expected order number
         const tableBody = await getTableBody();
@@ -2226,7 +2297,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         // Check order number
-        const orderNumberCell = matchingRow.locator('[data-testid*="NumberOrder"], [data-testid*="Order"]').first();
+        const orderNumberCell = matchingRow
+          .locator(`${SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN}, ${SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN}`)
+          .first();
         await loadingTaskPage.waitAndHighlight(orderNumberCell);
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2239,7 +2312,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check article number
-        const articleCell = matchingRow.locator('[data-testid*="Article"]').first();
+        const articleCell = matchingRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(articleCell);
         const cellArticle = (await articleCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2252,7 +2325,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check product name
-        const productNameCell = matchingRow.locator('[data-testid*="Name"]').first();
+        const productNameCell = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(productNameCell);
         const cellProductName = (await productNameCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2272,22 +2345,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await searchInput.fill(productNameValue);
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Find the row that matches the expected order number
         const tableBody = await getTableBody();
-        const matchingRow = await loadingTaskPage.findRowByOrderNumber(
-          tableBody,
-          fullOrderNumberValue,
-          '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]'
-        );
+        const matchingRow = await loadingTaskPage.findRowByOrderNumber(tableBody, fullOrderNumberValue, SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN);
 
         if (!matchingRow) {
           throw new Error(`Could not find row with expected order number "${fullOrderNumberValue}"`);
         }
 
         // Check order number
-        const orderNumberCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = matchingRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(orderNumberCell);
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2300,7 +2369,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check article number
-        const articleCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
+        const articleCell = matchingRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(articleCell);
         const cellArticle = (await articleCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2313,7 +2382,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check product name
-        const productNameCell = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
+        const productNameCell = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(productNameCell);
         const cellProductName = (await productNameCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2341,11 +2410,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       try {
         // Wait for the page and table to load
         const issueShipmentPageElement = tab2.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-        await issueShipmentPageElement.waitFor({ state: 'visible', timeout: 10000 });
+        await issueShipmentPageElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await issueShipmentPageElement.scrollIntoViewIfNeeded();
 
         const tableBody = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-        await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+        await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab2LoadingTaskPage.waitForNetworkIdle();
 
         // Search for order number
@@ -2359,7 +2428,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
         if (tagName === 'input') {
           searchInput = searchInputWrapper;
-          await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+          await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         } else {
           // Look for input inside
           searchInput = searchInputWrapper.locator('input').first();
@@ -2370,7 +2439,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             searchInput = searchInputWrapper;
           } else {
             // Wait for the input to be visible
-            await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+            await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           }
         }
 
@@ -2379,20 +2448,20 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await searchInput.fill(fullOrderNumberValue);
         await searchInput.press('Enter');
         await tab2LoadingTaskPage.waitForNetworkIdle();
-        await tab2.waitForTimeout(1000);
+        await tab2.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Find and click on the order number cell to select the row
         const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-        const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Number"]').first();
+        await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_NUMBER_PATTERN).first();
         await tab2LoadingTaskPage.waitAndHighlight(orderNumberCell);
         await orderNumberCell.click();
-        await tab2.waitForTimeout(1000);
+        await tab2.waitForTimeout(TIMEOUTS.STANDARD);
         await tab2LoadingTaskPage.waitForNetworkIdle();
 
         // Find and click the edit button
         const editButton = tab2.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' });
-        await editButton.waitFor({ state: 'visible', timeout: 10000 });
+        await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await editButton.scrollIntoViewIfNeeded();
         await tab2LoadingTaskPage.waitAndHighlight(editButton);
 
@@ -2409,7 +2478,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         if (isEnabled) {
           await editButton.click();
           await tab2LoadingTaskPage.waitForNetworkIdle();
-          await tab2.waitForTimeout(1000);
+          await tab2.waitForTimeout(TIMEOUTS.STANDARD);
           console.log('Clicked edit button in Tab 2');
         } else {
           console.warn('Edit button is disabled. Skipping click.');
@@ -2437,23 +2506,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Step 28.7.1: Compare order number
       await tab1.bringToFront();
       const tableBody = tab1.locator(`${SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE} tbody`).first();
-      await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Find the row that matches the expected order number
       const fullOrderNumberValueForTab = global.fullOrderNumber || fullOrderNumber;
-      const matchingRow = await loadingTaskPage.findRowByOrderNumber(
-        tableBody,
-        fullOrderNumberValueForTab,
-        '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]'
-      );
+      const matchingRow = await loadingTaskPage.findRowByOrderNumber(tableBody, fullOrderNumberValueForTab, SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN);
 
       if (!matchingRow) {
         throw new Error(`Could not find row with expected order number "${fullOrderNumberValueForTab}" in Tab 1`);
       }
 
-      const orderNumberCellTab1 = matchingRow
-        .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]')
-        .first();
+      const orderNumberCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(orderNumberCellTab1);
       const orderNumberTab1 = (await orderNumberCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 order number: ${orderNumberTab1}`);
@@ -2475,13 +2538,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.2: Compare article number
       await tab1.bringToFront();
-      const articleCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
+      const articleCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(articleCellTab1);
       const articleTab1 = (await articleCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 article: ${articleTab1}`);
 
       await tab2ForCompare.bringToFront();
-      const articleCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
+      const articleCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(articleCellTab2);
       const articleTab2 = (await articleCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 article: ${articleTab2}`);
@@ -2519,7 +2582,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.4: Compare quantity values
       await tab1.bringToFront();
-      const quantityCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
+      const quantityCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCellTab1);
       const quantityTab1 = (await quantityCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 quantity: ${quantityTab1}`);
@@ -2527,7 +2590,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2ForCompare.bringToFront();
       // Compare with input field
       const quantityInputTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.quantityInput).first();
-      await quantityInputTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await quantityInputTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityInputTab2);
       const quantityInputValueTab2 = (await quantityInputTab2.inputValue())?.trim() || '';
       console.log(`Tab 2 quantity input: ${quantityInputValueTab2}`);
@@ -2542,7 +2605,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Compare with table cell
-      const quantityCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
+      const quantityCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityCellTab2);
       const quantityCellValueTab2 = (await quantityCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 quantity cell: ${quantityCellValueTab2}`);
@@ -2558,13 +2621,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.5: Compare DateOrder values
       await tab1.bringToFront();
-      const dateOrderCellTab1 = matchingRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateOrder"]').first();
+      const dateOrderCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_ORDER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateOrderCellTab1);
       const dateOrderTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
 
       await tab2ForCompare.bringToFront();
-      const dateOrderCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
+      const dateOrderCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateOrderCellTab2);
       const dateOrderTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
@@ -2580,15 +2643,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.6: Compare DateShipments values
       await tab1.bringToFront();
-      const dateShipmentsCellTab1 = matchingRow
-        .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateShipments"]')
-        .first();
+      const dateShipmentsCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
 
       await tab2ForCompare.bringToFront();
-      const dateShipmentsCellTab2 = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').first();
+      const dateShipmentsCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipmentsCellTab2);
       const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
       console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
@@ -2604,16 +2665,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.7: Compare DateByUrgency values
       await tab1.bringToFront();
-      const dateByUrgencyCellTab1 = matchingRow
-        .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateByUrgency"]')
-        .first();
+      const dateByUrgencyCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateByUrgencyCellTab1);
       const dateByUrgencyTab1Raw = (await dateByUrgencyCellTab1.textContent())?.trim() || '';
       const dateByUrgencyTab1 = normalizeDate(dateByUrgencyTab1Raw);
       console.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1Raw} (normalized: ${dateByUrgencyTab1})`);
 
       await tab2ForCompare.bringToFront();
-      const dateByUrgencyDisplayLocator = tab2ForCompare.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
+      const dateByUrgencyDisplayLocator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyDisplayLocator);
       const dateByUrgencyDisplayTab2Raw = (await dateByUrgencyDisplayLocator.textContent())?.trim() || '';
       const dateByUrgencyDisplayTab2Normalized = normalizeDate(dateByUrgencyDisplayTab2Raw);
@@ -2628,7 +2687,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         test.info()
       );
 
-      const dateByUrgencyCellTab2Locator = tab2ForCompare.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateByUrgency"]').first();
+      const dateByUrgencyCellTab2Locator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyCellTab2Locator);
       const dateByUrgencyCellTab2Raw = (await dateByUrgencyCellTab2Locator.textContent())?.trim() || '';
       const dateByUrgencyCellTab2Value = normalizeDate(dateByUrgencyCellTab2Raw);
@@ -2645,16 +2704,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Step 28.7.8: Compare DateShipments (plan) values
       await tab1.bringToFront();
-      const dateShipmentsTbodyCellTab1 = matchingRow
-        .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateShipments"]')
-        .first();
+      const dateShipmentsTbodyCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsTbodyCellTab1);
       const dateShipmentsTbodyTab1Raw = (await dateShipmentsTbodyCellTab1.textContent())?.trim() || '';
       const dateShipmentsTbodyTab1 = normalizeDate(dateShipmentsTbodyTab1Raw);
       console.log(`Tab 1 DateShipments (tbody): ${dateShipmentsTbodyTab1Raw} (normalized: ${dateShipmentsTbodyTab1})`);
 
       await tab2ForCompare.bringToFront();
-      const dateShipPlanDisplayLocator = tab2ForCompare.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
+      const dateShipPlanDisplayLocator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipPlanDisplayLocator);
       const dateShipPlanDisplayTab2Raw = (await dateShipPlanDisplayLocator.textContent())?.trim() || '';
       const dateShipPlanDisplayTab2Value = normalizeDate(dateShipPlanDisplayTab2Raw);
@@ -2669,9 +2726,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         test.info()
       );
 
-      const dateShipmentsTbodyCellTab2Locator = tab2ForCompare
-        .locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateShipments"]')
-        .first();
+      const dateShipmentsTbodyCellTab2Locator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipmentsTbodyCellTab2Locator);
       const dateShipmentsTbodyCellTab2Raw = (await dateShipmentsTbodyCellTab2Locator.textContent())?.trim() || '';
       const dateShipmentsTbodyCellTab2Value = normalizeDate(dateShipmentsTbodyCellTab2Raw);
@@ -2690,14 +2745,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityInputTab2);
       await quantityInputTab2.clear();
       await quantityInputTab2.fill('10');
-      await tab2ForCompare.waitForTimeout(500);
+      await tab2ForCompare.waitForTimeout(TIMEOUTS.MEDIUM);
       console.log('Changed quantity to 10');
 
       const saveButton = tab2ForCompare.locator(SelectorsLoadingTasksPage.buttonSaveOrder).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(saveButton);
       await saveButton.click();
       await tab2LoadingTaskPageForCompare.waitForNetworkIdle();
-      await tab2ForCompare.waitForTimeout(1000);
+      await tab2ForCompare.waitForTimeout(TIMEOUTS.STANDARD);
       console.log('Clicked save button');
 
       // Step 28.7.10: Switch back to Tab 1, search again, and verify the quantity has changed
@@ -2717,18 +2772,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInputTab1.fill(searchValue);
       await searchInputTab1.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
-      await tab1.waitForTimeout(1000);
+      await tab1.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Wait for table to refresh
       const refreshedTableBody = tab1.locator(`${SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE} tbody`).first();
-      await refreshedTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await refreshedTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const refreshedFirstRow = refreshedTableBody.locator('tr').first();
-      await refreshedFirstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await refreshedFirstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Check the updated quantity
-      const updatedQuantityCellTab1 = refreshedFirstRow
-        .locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]')
-        .first();
+      const updatedQuantityCellTab1 = refreshedFirstRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(updatedQuantityCellTab1);
       const updatedQuantityTab1 = (await updatedQuantityCellTab1.textContent())?.trim() || '';
       console.log(`Tab 1 updated quantity: ${updatedQuantityTab1}`);
@@ -2763,7 +2816,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   // ============================================
 
   test('Test Case 4 - Добавить два изделия к задаче на отгрузку', async ({ page }) => {
-    test.setTimeout(180000);
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
     console.log('Test Case 4 - Add two products to shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
@@ -2799,19 +2852,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get search input using the same approach as searchAndVerifyRowMatches
       const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-      await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
+      await searchInputWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await searchInputWrapper.scrollIntoViewIfNeeded();
 
       let searchInput: Locator;
       const tagName = await searchInputWrapper.evaluate((el: HTMLElement) => el.tagName.toLowerCase()).catch(() => '');
       if (tagName === 'input') {
         searchInput = searchInputWrapper;
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } else {
         searchInput = searchInputWrapper.locator('input').first();
         const inputCount = await searchInput.count();
         if (inputCount > 0) {
-          await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+          await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await searchInput.scrollIntoViewIfNeeded();
         } else {
           searchInput = searchInputWrapper;
@@ -2820,13 +2873,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Perform search - click first to focus, then clear and type
       await searchInput.click();
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       await searchInput.fill('');
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
       // Type the search term character by character to ensure it's entered
       await searchInput.type(firstProductNameValue, { delay: 50 });
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
 
       // Verify the value was set
       const valueAfterType = await searchInput.inputValue();
@@ -2834,18 +2887,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await searchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Wait for the search results to actually appear - verify the first row contains the searched product
       const firstRow = shipmentsTableBody.locator('tr').first();
-      const productCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
+      const productCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
 
       // Wait for the product cell to contain the searched product name (this ensures search has completed)
-      await expect(productCell).toContainText(firstProductNameValue, { timeout: 15000 });
+      await expect(productCell).toContainText(firstProductNameValue, { timeout: WAIT_TIMEOUTS.LONG });
 
       await loadingTaskPage.waitAndHighlight(firstRow);
       await loadingTaskPage.waitAndHighlight(productCell);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       const productNameFromRow = (await productCell.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
@@ -2870,19 +2923,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Wait for page to load after navigation (similar to Step 7 before Step 8)
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Reload page to ensure it's fully loaded and stable
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000);
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
     });
 
     await allure.step('Step 4: Verify positions table and open form to add a new product', async () => {
       const positionsTable = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
       await loadingTaskPage.waitAndHighlight(positionsTable);
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       const bodyRows = positionsTable.locator('tbody tr');
       const totalRowCount = await bodyRows.count();
 
@@ -2920,14 +2973,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Wait for navigation to complete and new page to load
       // The new page should have a "Select" button - wait for it to appear and be ready
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Wait for the "Select" button on the new page to be visible and ready
       // This ensures navigation has completed and we're on the new page
       const selectButton = page.locator(SelectorsLoadingTasksPage.buttonChoiceIzd).first();
-      await selectButton.waitFor({ state: 'visible', timeout: 10000 });
-      await page.waitForTimeout(1000); // Additional wait to ensure page is fully stable
+      await selectButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Additional wait to ensure page is fully stable
     });
 
     await allure.step('Step 5: Open product selection modal', async () => {
@@ -2987,20 +3040,20 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Wait 1 second before reload to ensure PRODUCT_3 is visible in the bottom table
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // First reload to trigger backend processing
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000); // Wait for page to fully load
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG); // Wait for page to fully load
       await loadingTaskPage.waitForNetworkIdle();
 
       // Second reload to ensure PRODUCT_3 is visible in the bottom table
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000); // Wait for page to fully load after second reload
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG); // Wait for page to fully load after second reload
       await loadingTaskPage.waitForNetworkIdle();
 
       // Navigate back to list page to trigger creation of /1 order variant
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       const navigateSuccess = await loadingTaskPage.navigateToShippingTasksPage();
       await expectSoftWithScreenshot(
         page,
@@ -3027,18 +3080,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Wait for page to load after navigation
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Reload page to ensure /1 variant is created and visible
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000);
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Verify positions table shows at least 2 rows after adding second product
       // (original /0 with PRODUCT_1 and new row with PRODUCT_2 creating /1)
       const positionsTableAfterSave1 = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
-      await positionsTableAfterSave1.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTableAfterSave1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const bodyRowsAfterSave1 = positionsTableAfterSave1.locator('tbody tr');
 
       // Wait for table to have at least 2 rows using expect.poll
@@ -3050,7 +3103,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           },
           {
             message: 'Table should have at least 2 rows after adding second product',
-            timeout: 15000,
+            timeout: WAIT_TIMEOUTS.LONG,
           }
         )
         .toBeTruthy();
@@ -3132,21 +3185,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Wait 1 second before reload to ensure PRODUCT_3 is visible in the bottom table
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // First reload to trigger backend processing
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000); // Wait for page to fully load
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG); // Wait for page to fully load
       await loadingTaskPage.waitForNetworkIdle();
 
       // Second reload to ensure all products (/0, /1, /2) are visible in the positions table
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000); // Wait for page to fully load after second reload
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG); // Wait for page to fully load after second reload
       await loadingTaskPage.waitForNetworkIdle();
 
       // Verify positions table shows /0, /1, and /2 variants after saving and reloading
       const positionsTableAfterSave2 = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
-      await positionsTableAfterSave2.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTableAfterSave2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const bodyRowsAfterSave2 = positionsTableAfterSave2.locator('tbody tr');
       const rowCountAfterSave2 = await bodyRowsAfterSave2.count();
       console.log(`Test Case 4: After saving first product and reloading twice, positions table has ${rowCountAfterSave2} rows`);
@@ -3168,7 +3221,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Note: /2 variant may not appear in positions table immediately
       // It will be verified in Test Case 5 when searching the main shipments list
       // Navigate back to list page to trigger creation of /2 order variant
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       const navigateSuccess = await loadingTaskPage.navigateToShippingTasksPage();
       await expectSoftWithScreenshot(
         page,
@@ -3195,21 +3248,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Wait for page to load after navigation
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // First reload to trigger /2 variant creation (similar to how /1 is created)
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000);
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Second reload to ensure /2 variant is fully created and visible
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(2000);
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Navigate away to main list to trigger /2 to appear in the main shipments list
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       const navigateSuccess2 = await loadingTaskPage.navigateToShippingTasksPage();
       await expectSoftWithScreenshot(
         page,
@@ -3221,25 +3274,25 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Wait for backend to process /2 creation - may take time for async processing
-      await page.waitForTimeout(5000); // Initial wait
+      await page.waitForTimeout(TIMEOUTS.VERY_LONG); // Initial wait
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(3000); // Additional wait after network idle
+      await page.waitForTimeout(TIMEOUTS.EXTENDED); // Additional wait after network idle
 
       // First reload the main list page to ensure /2 appears in the shipments list
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(3000);
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.EXTENDED);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Second reload to give backend more time to process /2 creation
-      await page.reload({ waitUntil: 'load', timeout: 30000 });
-      await page.waitForTimeout(5000); // Longer wait after second reload
+      await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.VERY_LONG); // Longer wait after second reload
       await loadingTaskPage.waitForNetworkIdle();
 
       // Search for the order to trigger backend processing and ensure /2 appears
       const baseOrderNumberValue3 = global.fullOrderNumber || fullOrderNumber;
       if (baseOrderNumberValue3) {
         const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInputWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         let searchInput: Locator;
         const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
         if (tagName === 'input') {
@@ -3253,20 +3306,20 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
         await searchInput.clear();
         await searchInput.fill(baseOrderNumberValue3);
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(TIMEOUTS.SHORT);
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
         console.log(`Test Case 4: Searched for order ${baseOrderNumberValue3} to trigger /2 creation`);
 
         // Navigate back to edit mode one more time after search (similar to how /1 is created)
         const editSuccess3 = await loadingTaskPage.findOrderAndClickEdit(baseOrderNumberValue3);
         if (editSuccess3) {
-          await page.waitForTimeout(2000);
+          await page.waitForTimeout(TIMEOUTS.LONG);
           await loadingTaskPage.waitForNetworkIdle();
           // Reload to ensure /2 variant is created and visible
-          await page.reload({ waitUntil: 'load', timeout: 30000 });
-          await page.waitForTimeout(2000);
+          await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+          await page.waitForTimeout(TIMEOUTS.LONG);
           await loadingTaskPage.waitForNetworkIdle();
           console.log(`Test Case 4: Navigated back to edit mode and reloaded to trigger /2 creation`);
         }
@@ -3277,7 +3330,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 5 - Добавление количества экземпляров в заказе', async ({ page }) => {
-    test.setTimeout(900000); // 5 minutes - increased due to multiple tab operations and comparisons
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG); // 5 minutes - increased due to multiple tab operations and comparisons
     console.log('Test Case 5 - Increase quantity of instances in order');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -3329,7 +3382,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             // Search for the base order number to find all variants (/0, /1, /2)
             // First, perform the search manually to see what appears
             const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-            await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
+            await searchInputWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
             let searchInput: Locator;
             const tagName = await searchInputWrapper.evaluate((el: HTMLElement) => el.tagName.toLowerCase()).catch(() => '');
             if (tagName === 'input') {
@@ -3341,11 +3394,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             await searchInput.fill(baseOrderNumberOnly);
             await searchInput.press('Enter');
             await loadingTaskPage.waitForNetworkIdle();
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(TIMEOUTS.LONG);
 
             // Check what order numbers are in the results
             const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-            await tableBody.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+            await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => null);
             const rows = tableBody.locator('tr');
             const rowCount = await rows.count();
             console.log(`Test Case 5: Found ${rowCount} rows when searching for base order number: ${baseOrderNumberOnly}`);
@@ -3375,7 +3428,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           },
           {
             message: `Waiting for /2 order variant (${orderNumberForCase5}) to appear in shipments list`,
-            timeout: 30000, // Wait up to 30 seconds for /2 to be created (increased for async backend processing)
+            timeout: WAIT_TIMEOUTS.PAGE_RELOAD, // Wait up to 30 seconds for /2 to be created (increased for async backend processing)
             intervals: [2000, 3000, 5000], // Check every 2-5 seconds
           }
         )
@@ -3406,7 +3459,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           },
           {
             message: `Waiting for /2 order variant (${orderNumberForSearch}) to be findable and openable`,
-            timeout: 15000, // Wait up to 15 seconds for /2 to be created
+            timeout: WAIT_TIMEOUTS.LONG, // Wait up to 15 seconds for /2 to be created
             intervals: [1000, 2000, 3000], // Check every 1-3 seconds
           }
         )
@@ -3533,12 +3586,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Get row for date comparisons and extract product name for later use
         const row = bodyRows.nth(expected.rowIndex);
-        await row.waitFor({ state: 'visible', timeout: 10000 });
+        await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const productNameCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
         const productNameText = ((await productNameCell.textContent()) || '').trim();
 
         // Verify DateByUrgency: compare row cell with date picker display from the appropriate tab
-        const dateByUrgencyCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateByUrgency"]').first();
+        const dateByUrgencyCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(dateByUrgencyCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
         const dateByUrgencyCellValue = (await dateByUrgencyCell.textContent())?.trim() || '';
         console.log(`Row ${expected.rowIndex + 1}: DateByUrgency (cell) = "${dateByUrgencyCellValue}"`);
@@ -3581,7 +3634,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Verify DateShipments: compare row cell with date picker display from the appropriate tab
-        const dateShipmentsCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateShipments"]').first();
+        const dateShipmentsCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(dateShipmentsCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
         const dateShipmentsCellValue = (await dateShipmentsCell.textContent())?.trim() || '';
         console.log(`Row ${expected.rowIndex + 1}: DateShipments (cell) = "${dateShipmentsCellValue}"`);
@@ -3610,7 +3663,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Verify time: extract time from Product-DateShipments cell and compare with product characteristic
-        const dateShipmentsTimeCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').nth(2);
+        const dateShipmentsTimeCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).nth(2);
         await loadingTaskPage.waitAndHighlight(dateShipmentsTimeCell, {
           highlightColor: 'cyan',
           highlightBorder: '2px solid blue',
@@ -3634,7 +3687,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // Search for the product using the product name from this row
           await partsDatabasePageForTime.searchAndWaitForTable(productNameText, SelectorsPartsDataBase.PRODUCT_TABLE, SelectorsPartsDataBase.PRODUCT_TABLE, {
             useRedesign: true,
-            timeoutBeforeWait: 1000,
+            timeoutBeforeWait: TIMEOUTS.STANDARD,
           });
 
           // Click on the first row to select it
@@ -3644,7 +3697,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           // Find the edit button and make sure it's enabled, then click it
           const editButton = partsDatabaseTab.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
-          await editButton.waitFor({ state: 'visible', timeout: 10000 });
+          await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
           // Wait for the edit button to become enabled
           await partsDatabaseTab
@@ -3654,7 +3707,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
                 return !!button && !button.disabled;
               },
               SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
-              { timeout: 5000 }
+              { timeout: WAIT_TIMEOUTS.SHORT }
             )
             .catch(() => {
               console.warn('Edit button did not become enabled within timeout.');
@@ -3678,7 +3731,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           }
 
           // Wait for edit page to load
-          await partsDatabaseTab.waitForTimeout(2000);
+          await partsDatabaseTab.waitForTimeout(TIMEOUTS.LONG);
           await partsDatabasePageForTime.waitForNetworkIdle();
 
           // Find and verify the characteristic value
@@ -3686,7 +3739,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           // Use soft check for waitFor - if element not found, continue anyway
           try {
-            await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
+            await characteristicElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
             await partsDatabasePageForTime.waitAndHighlight(characteristicElement);
           } catch (error) {
             console.log('Characteristic element not found within timeout, continuing...');
@@ -3721,13 +3774,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Additional verification: ensure rows are not mixed up
       // Extract all values and verify they're in the correct rows
       const row1Order =
-        (await bodyRows.nth(0).locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first().textContent())?.trim() || '';
+        (await bodyRows.nth(0).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
       const row1Product = (await bodyRows.nth(0).locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first().textContent())?.trim() || '';
       const row2Order =
-        (await bodyRows.nth(1).locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first().textContent())?.trim() || '';
+        (await bodyRows.nth(1).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
       const row2Product = (await bodyRows.nth(1).locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first().textContent())?.trim() || '';
       const row3Order =
-        (await bodyRows.nth(2).locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first().textContent())?.trim() || '';
+        (await bodyRows.nth(2).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
       const row3Product = (await bodyRows.nth(2).locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first().textContent())?.trim() || '';
 
       console.log('=== Final Verification Values ===');
@@ -3858,14 +3911,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         {
           useRedesign: true,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
         }
       );
 
       const tableBodyTab1 = tab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab1 = tableBodyTab1.locator('tr').first();
-      await firstRowTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRowTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       console.log('Tab 1: Order /0 found in list');
 
       // Create Tab 2: Orders page, search for order with /0, select and edit
@@ -3880,27 +3933,27 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         {
           useRedesign: true,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
         }
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
-      await firstRowTab2.waitFor({ state: 'visible', timeout: 10000 });
-      const dateOrderCellTab2 = firstRowTab2.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+      await firstRowTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const dateOrderCellTab2 = firstRowTab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
       await dateOrderCellTab2.click();
       const editButtonTab2 = tab2.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
-      await editButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await editButtonTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await editButtonTab2.click();
       await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      await tab2.waitForTimeout(TIMEOUTS.STANDARD);
       console.log('Tab 2: Order /0 opened in edit mode');
 
       // Compare order numbers
       await allure.step('Compare order numbers between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
-        const orderNumberCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
         await tab1LoadingTaskPage.waitAndHighlight(orderNumberCellTab1);
         let orderNumberTab1 = (await orderNumberCellTab1.textContent())?.trim() || '';
         orderNumberTab1 = orderNumberTab1.replace(/^№\s*/, '').trim();
@@ -3932,12 +3985,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare article numbers
       await allure.step('Compare article numbers between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
-        const articleCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Article"]').first();
+        const articleCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_ARTICLE_PATTERN).first();
         await tab1LoadingTaskPage.waitAndHighlight(articleCellTab1);
         const articleNumberTab1 = (await articleCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
-        const articleCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
+        const articleCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN).first();
         await tab2LoadingTaskPage.waitAndHighlight(articleCellTab2);
         const articleNumberTab2 = (await articleCellTab2.textContent())?.trim() || '';
 
@@ -3954,12 +4007,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare product names
       await allure.step('Compare product names between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
-        const productNameCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
+        const productNameCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
         await tab1LoadingTaskPage.waitAndHighlight(productNameCellTab1);
         const productNameTab1 = (await productNameCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
-        const productNameCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
+        const productNameCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
         await tab2LoadingTaskPage.waitAndHighlight(productNameCellTab2);
         const productNameTab2 = (await productNameCellTab2.textContent())?.trim() || '';
 
@@ -3976,12 +4029,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare quantity
       await allure.step('Compare quantity between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
-        const quantityCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+        const quantityCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
         await tab1LoadingTaskPage.waitAndHighlight(quantityCellTab1);
         const quantityTab1 = (await quantityCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
-        const quantityCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
+        const quantityCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
         await tab2LoadingTaskPage.waitAndHighlight(quantityCellTab2);
         const quantityTab2 = (await quantityCellTab2.textContent())?.trim() || '';
 
@@ -4053,7 +4106,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Get number of days from Tab 1 (main table) - DateOrder cell contains the number
         await tab1.bringToFront();
-        const dateOrderCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+        const dateOrderCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
         await tab1LoadingTaskPage.waitAndHighlight(dateOrderCellTab1);
         const daysFromTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
         const daysNumberTab1 = parseInt(daysFromTab1) || 0;
@@ -4061,7 +4114,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Get number of days from Tab 2 (bottom table) - DateOrder cell contains the number
         await tab2.bringToFront();
-        const dateOrderCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first();
+        const dateOrderCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first();
         await tab2LoadingTaskPage.waitAndHighlight(dateOrderCellTab2);
         const daysFromTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
         const daysNumberTab2 = parseInt(daysFromTab2) || 0;
@@ -4100,15 +4153,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare DateShipments (Дата плановой отгрузки)
       await allure.step('Compare DateShipments between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
-        const dateShipmentsCellTab1 = firstRowTab1
-          .locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]')
-          .first();
-        await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+        const dateShipmentsCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
+        await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab1LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
         const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
-        const dateShipmentsCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').first();
+        const dateShipmentsCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
         await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab2);
         const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
 
@@ -4125,12 +4176,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare Buyers (Покупатель)
       await allure.step('Compare Buyers between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
-        const buyersCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Buyers"]').first();
+        const buyersCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_BUYERS_PATTERN).first();
         await tab1LoadingTaskPage.waitAndHighlight(buyersCellTab1);
         const buyersTab1 = (await buyersCellTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
-        const buyersCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]').first();
+        const buyersCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first();
         await tab2LoadingTaskPage.waitAndHighlight(buyersCellTab2);
         const buyersTab2 = (await buyersCellTab2.textContent())?.trim() || '';
 
@@ -4147,16 +4198,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare DateByUrgency (with normalization)
       await allure.step('Compare DateByUrgency between Tab 1 and Tab 2', async () => {
         await tab1.bringToFront();
-        const dateByUrgencyCellTab1 = firstRowTab1
-          .locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-DateByUrgency"]')
-          .first();
-        await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+        const dateByUrgencyCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_URGENCY_DATE_PATTERN).first();
+        await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const calendarDisplayTab1 = dateByUrgencyCellTab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
         await tab1LoadingTaskPage.waitAndHighlight(calendarDisplayTab1);
         const dateByUrgencyTab1 = (await calendarDisplayTab1.textContent())?.trim() || '';
 
         await tab2.bringToFront();
-        const dateByUrgencyDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first();
+        const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
         await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2);
         const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
@@ -4180,10 +4229,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Compare DateShippingPlan between Tab 1 and Tab 2', async () => {
         // Get number of days from Tab 1 - this cell shows days until shipment plan date
         await tab1.bringToFront();
-        const dateShipmentsCellTab1 = firstRowTab1
-          .locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateShipments"]')
-          .first();
-        await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+        const dateShipmentsCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
+        await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab1LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
         const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
         console.log(`Tab 1 DateShipments (days until shipment): ${dateShipmentsTab1}`);
@@ -4200,7 +4247,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Get actual shipment plan date from Tab 2 (edit page) date picker
         await tab2.bringToFront();
-        const dateShipmentsDisplayTab2 = tab2.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first();
+        const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
         await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2);
         const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
         console.log(`Tab 2 DateShippingPlan (from picker): ${dateShipmentsTab2}`);
@@ -4258,16 +4305,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Compare time from DateShipments with product characteristic', async () => {
         // Extract time from Tab 2 (edit page) using nth(2), as per Step 4
         await tab2.bringToFront();
-        const dateShipmentsTimeCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').nth(2);
-        await dateShipmentsTimeCellTab2.waitFor({ state: 'visible', timeout: 10000 });
+        const dateShipmentsTimeCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).nth(2);
+        await dateShipmentsTimeCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await dateShipmentsTimeCellTab2.scrollIntoViewIfNeeded();
         await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsTimeCellTab2);
         const dateShipmentsTimeTab2 = (await dateShipmentsTimeCellTab2.textContent())?.trim() || '';
         const timeValue = dateShipmentsTimeTab2.split('/')[0].trim();
 
         // Get product name for searching from Tab 2
-        const productNameCellTab2 = tab2.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]').first();
-        await productNameCellTab2.waitFor({ state: 'visible', timeout: 10000 });
+        const productNameCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
+        await productNameCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const productNameForSearch = (await productNameCellTab2.textContent())?.trim() || '';
 
         // Open new tab for product page
@@ -4280,37 +4327,37 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           await partsDatabasePage.searchAndWaitForTable(productNameForSearch, SelectorsPartsDataBase.PRODUCT_TABLE, SelectorsPartsDataBase.PRODUCT_TABLE, {
             useRedesign: true,
-            timeoutBeforeWait: 1000,
+            timeoutBeforeWait: TIMEOUTS.STANDARD,
           });
 
           const firstRowProduct = productTab.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
           await partsDatabasePage.waitAndHighlight(firstRowProduct);
           // Wait for element to be stable before clicking
-          await firstRowProduct.waitFor({ state: 'visible', timeout: 5000 });
+          await firstRowProduct.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
 
           try {
-            await firstRowProduct.click({ timeout: 10000 });
-            await productTab.waitForTimeout(1000);
+            await firstRowProduct.click({ timeout: WAIT_TIMEOUTS.STANDARD });
+            await productTab.waitForTimeout(TIMEOUTS.STANDARD);
             await partsDatabasePage.waitForNetworkIdle();
           } catch (error) {
             console.warn('Failed to click product row, trying alternative approach:', error);
             // Try clicking a cell within the row instead
             const firstCell = firstRowProduct.locator('td').first();
-            await firstCell.waitFor({ state: 'visible', timeout: 5000 });
-            await firstCell.click({ timeout: 10000 });
-            await productTab.waitForTimeout(1000);
+            await firstCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+            await firstCell.click({ timeout: WAIT_TIMEOUTS.STANDARD });
+            await productTab.waitForTimeout(TIMEOUTS.STANDARD);
             await partsDatabasePage.waitForNetworkIdle();
           }
 
           const editButton = productTab.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
-          await editButton.waitFor({ state: 'visible', timeout: 10000 });
+          await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
           // Wait for button to be enabled with retry
           let isEnabled = false;
           for (let retry = 0; retry < 10; retry++) {
             isEnabled = await editButton.isEnabled();
             if (isEnabled) break;
-            await productTab.waitForTimeout(500);
+            await productTab.waitForTimeout(TIMEOUTS.MEDIUM);
           }
 
           if (isEnabled) {
@@ -4318,17 +4365,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
             // Wait for button to be stable before clicking
             try {
-              await editButton.waitFor({ state: 'visible', timeout: 5000 });
-              await editButton.click({ timeout: 10000, force: false });
+              await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+              await editButton.click({ timeout: WAIT_TIMEOUTS.STANDARD, force: false });
             } catch (error) {
               console.warn('Failed to click edit button normally, trying force click:', error);
-              await editButton.click({ timeout: 5000, force: true });
+              await editButton.click({ timeout: WAIT_TIMEOUTS.SHORT, force: true });
             }
           } else {
             console.warn('Edit button is disabled, skipping click and proceeding with available data.');
           }
 
-          await productTab.waitForTimeout(2000);
+          await productTab.waitForTimeout(TIMEOUTS.LONG);
           await partsDatabasePage.waitForNetworkIdle();
 
           const characteristicElement = productTab.locator(SelectorsPartsDataBase.CREATOR_DETAIL_CHARACTERISTICS_ZNACH_TEXT0);
@@ -4365,7 +4412,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Cleanup: Close tabs
       await tab1.close();
       await tab2.close();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       console.log('End: step 6');
     });
 
@@ -4378,21 +4425,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 1: Go to main orders page and search for order with /0
       await page.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       await loadingTaskPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
       const tableBodyTab1 = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab1 = tableBodyTab1.locator('tr').first();
-      await firstRowTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRowTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Verify the row is the correct one
-      const orderNumberCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      const orderNumberCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+      await orderNumberCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const orderNumberTextTab1 = (await orderNumberCellTab1.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
         page,
@@ -4416,31 +4463,31 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         {
           searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
         }
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
-      await firstRowTab2.waitFor({ state: 'visible', timeout: 10000 });
-      const dateOrderCellTab2 = firstRowTab2.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+      await firstRowTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const dateOrderCellTab2 = firstRowTab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
       await dateOrderCellTab2.click();
       const editButtonTab2 = tab2.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
-      await editButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await editButtonTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await editButtonTab2.click();
       await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      await tab2.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Back to Tab 1: Double-click the row to open modal
       await page.bringToFront();
       await loadingTaskPage.waitAndHighlight(firstRowTab1, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Try double-clicking a cell in the row instead of the whole row
-      const dateOrderCellTab1 = firstRowTab1.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      const dateOrderCellTab1 = firstRowTab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
+      await dateOrderCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await dateOrderCellTab1.dblclick();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Wait for modal to open - try multiple selectors
@@ -4448,23 +4495,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // First try to wait for attached state
       try {
-        await modal.waitFor({ state: 'attached', timeout: 5000 });
+        await modal.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
       } catch (error) {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
       // Then wait for visible
       try {
-        await modal.waitFor({ state: 'visible', timeout: 10000 });
+        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         // Try without filter
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           // Try alternative selectors
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -4477,7 +4524,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Compare order number: Get from h3 in modal (after "Заказ №")
       const orderNumberH3 = modal.locator('h3').first();
-      await orderNumberH3.waitFor({ state: 'visible', timeout: 10000 });
+      await orderNumberH3.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(orderNumberH3, { scrollExtra: true });
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
@@ -4486,7 +4533,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Get order number from Tab 2 edit title (after "Редактирование заказа №")
       await tab2.bringToFront();
       const editTitleTab2 = tab2.locator(SelectorsLoadingTasksPage.editTitle);
-      await editTitleTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await editTitleTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(editTitleTab2, { scrollExtra: true });
       const titleTextTab2 = (await editTitleTab2.textContent())?.trim() || '';
       const titleOrderMatch = titleTextTab2.replace(/^Редактирование\s+заказа\s+№\s*/, '').trim();
@@ -4504,13 +4551,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare count: Modal vs Quantity input
       await page.bringToFront();
       const countElement = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT).first();
-      await countElement.waitFor({ state: 'visible', timeout: 10000 });
+      await countElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(countElement, { scrollExtra: true });
       const countModal = (await countElement.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const quantityInputTab2 = tab2.locator(SelectorsLoadingTasksPage.quantityInput);
-      await quantityInputTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await quantityInputTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(quantityInputTab2, { scrollExtra: true });
       const quantityTab2 = await quantityInputTab2.inputValue();
 
@@ -4526,13 +4573,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare DateOrder: Modal vs DateOrder display
       await page.bringToFront();
       const dateOrderModal = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_ONE_SHIPMENTS_DATE).first();
-      await dateOrderModal.waitFor({ state: 'visible', timeout: 10000 });
+      await dateOrderModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(dateOrderModal, { scrollExtra: true });
       const dateOrderModalValue = (await dateOrderModal.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const dateOrderDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_ORDER_DISPLAY);
-      await dateOrderDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await dateOrderDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(dateOrderDisplayTab2, { scrollExtra: true });
       const dateOrderTab2Value = (await dateOrderDisplayTab2.textContent())?.trim() || '';
 
@@ -4552,7 +4599,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.bringToFront();
       // Get all matching elements and find the one with an actual date value
       const dateShipmentsModalElements = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_SHIPMENTS_DATE);
-      await dateShipmentsModalElements.first().waitFor({ state: 'visible', timeout: 10000 });
+      await dateShipmentsModalElements.first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Find the element that has a valid date (not "-" or empty)
       const count = await dateShipmentsModalElements.count();
@@ -4578,7 +4625,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await tab2.bringToFront();
       const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY);
-      await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2, { scrollExtra: true });
       const dateShipmentsTab2Value = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
 
@@ -4597,7 +4644,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare DateByUrgency: Modal vs DateByUrgency display
       await page.bringToFront();
       const dateByUrgencyModal = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_BY_URGENCY_WRAPPER).first();
-      await dateByUrgencyModal.waitFor({ state: 'visible', timeout: 10000 });
+      await dateByUrgencyModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(dateByUrgencyModal, { scrollExtra: true });
       let dateByUrgencyModalValue = (await dateByUrgencyModal.textContent())?.trim() || '';
       // Remove leading text "Дата по срочности:" if present
@@ -4605,7 +4652,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await tab2.bringToFront();
       const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY);
-      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2, { scrollExtra: true });
       const dateByUrgencyTab2Value = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
@@ -4624,13 +4671,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare Product Name: Modal vs AttachmentsValue-Link and table row
       await page.bringToFront();
       const productNameModal = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_PRODUCT_NAME).first();
-      await productNameModal.waitFor({ state: 'visible', timeout: 10000 });
+      await productNameModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(productNameModal, { scrollExtra: true });
       const productNameModalValue = (await productNameModal.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const attachmentsLinkTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_ATTACHMENTS_VALUE_LINK);
-      await attachmentsLinkTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await attachmentsLinkTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(attachmentsLinkTab2, { scrollExtra: true });
       const attachmentsLinkTab2Value = (await attachmentsLinkTab2.textContent())?.trim() || '';
 
@@ -4645,7 +4692,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find the row in the table with matching order number
       const positionsTable = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE);
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const tableRows = positionsTable.locator('tbody tr');
       const rowCount = await tableRows.count();
 
@@ -4654,7 +4701,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       for (let i = 0; i < rowCount; i++) {
         const row = tableRows.nth(i);
-        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]');
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN);
         if ((await orderNumberCell.count()) > 0) {
           const orderNumberInRow = (await orderNumberCell.textContent())?.trim() || '';
           if (orderNumberInRow.includes(orderNumberWith0)) {
@@ -4666,8 +4713,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       if (matchingRow) {
-        const productWrapperCell = matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper"]');
-        await productWrapperCell.waitFor({ state: 'visible', timeout: 10000 });
+        const productWrapperCell = matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER);
+        await productWrapperCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab2LoadingTaskPage.waitAndHighlight(productWrapperCell, { scrollExtra: true });
         const productWrapperValue = (await productWrapperCell.textContent())?.trim() || '';
 
@@ -4684,14 +4731,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Compare Company Name: Modal vs Buyers cell and Buyer-SelectedCompany
       await page.bringToFront();
       const companyNameModal = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_COMPANY_NAME).first();
-      await companyNameModal.waitFor({ state: 'visible', timeout: 10000 });
+      await companyNameModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(companyNameModal, { scrollExtra: true });
       const companyNameModalValue = (await companyNameModal.textContent())?.trim() || '';
 
       if (matchingRow) {
         await tab2.bringToFront();
-        const buyersCell = matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]');
-        await buyersCell.waitFor({ state: 'visible', timeout: 10000 });
+        const buyersCell = matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN);
+        await buyersCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab2LoadingTaskPage.waitAndHighlight(buyersCell, { scrollExtra: true });
         const buyersCellValue = (await buyersCell.textContent())?.trim() || '';
 
@@ -4707,7 +4754,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await tab2.bringToFront();
       const buyerSelectedCompany = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_BUYER_SELECTED_COMPANY);
-      await buyerSelectedCompany.waitFor({ state: 'visible', timeout: 10000 });
+      await buyerSelectedCompany.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(buyerSelectedCompany, { scrollExtra: true });
       const buyerSelectedCompanyValue = (await buyerSelectedCompany.textContent())?.trim() || '';
 
@@ -4723,9 +4770,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Verify order number in row is found in h3 of dialog
       if (matchingRow) {
         await tab2.bringToFront();
-        const orderNumberInRowCell = matchingRow.locator('[data-testid^="Shipment-Tbody-NumberOrder"]');
+        const orderNumberInRowCell = matchingRow.locator(SelectorsShipmentTasks.SHIPMENT_TBODY_NUMBER_ORDER_PATTERN);
         if ((await orderNumberInRowCell.count()) > 0) {
-          await orderNumberInRowCell.waitFor({ state: 'visible', timeout: 10000 });
+          await orderNumberInRowCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(orderNumberInRowCell, { scrollExtra: true });
           const orderNumberInRow = (await orderNumberInRowCell.textContent())?.trim() || '';
 
@@ -4748,7 +4795,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         .first();
       if ((await closeButton.count()) > 0) {
         await closeButton.click();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
       // Cleanup: Close tab2
@@ -4766,19 +4813,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page first
       await page.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Navigate to Дефицит продукции page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitProductionButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitProductionButton, { scrollExtra: true });
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Find the table with testid:DeficitIzd-Main-Table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTable, {
         scrollExtra: true,
         highlightColor: 'cyan',
@@ -4788,25 +4835,25 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Click the filter label with testid:DeficitIzd-Main-OrderFilter-Label
       const orderFilterLabel = page.locator(SelectorsShortagePages.ORDER_FILTER_LABEL);
-      await orderFilterLabel.waitFor({ state: 'visible', timeout: 10000 });
+      await orderFilterLabel.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(orderFilterLabel, { scrollExtra: true });
       await orderFilterLabel.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Find element with testid:OrderFilterSettings-Types, inside it find and click OrderFilterSettings-Chip-Buyer
       const orderFilterTypes = page.locator(SelectorsShortagePages.ORDER_FILTER_SETTINGS_TYPES);
-      await orderFilterTypes.waitFor({ state: 'visible', timeout: 10000 });
+      await orderFilterTypes.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const buyerChip = orderFilterTypes.locator(SelectorsShortagePages.ORDER_FILTER_SETTINGS_CHIP_BUYER).first();
-      await buyerChip.waitFor({ state: 'visible', timeout: 10000 });
+      await buyerChip.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(buyerChip, { scrollExtra: true });
       await buyerChip.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Find the table with testid:OrderFilterSettings-Table-OrderFilterTable
       const orderFilterTable = page.locator(SelectorsShortagePages.ORDER_FILTER_SETTINGS_TABLE);
-      await orderFilterTable.waitFor({ state: 'visible', timeout: 10000 });
+      await orderFilterTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(orderFilterTable, {
         scrollExtra: true,
         highlightColor: 'cyan',
@@ -4816,24 +4863,24 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find and click the input with testid:OrderFilterSettings-Table-Search-Dropdown-Input
       const orderFilterSearchInput = orderFilterTable.locator(`input${SelectorsShortagePages.ORDER_FILTER_SETTINGS_TABLE_SEARCH_INPUT}`).first();
-      await orderFilterSearchInput.waitFor({ state: 'visible', timeout: 10000 });
+      await orderFilterSearchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(orderFilterSearchInput, { scrollExtra: true });
       await orderFilterSearchInput.clear();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
 
       // Enter order number with /0 and press Enter
       const orderNumberWith0 = baseOrderNumberValue; // This has /0
       await orderFilterSearchInput.fill(orderNumberWith0);
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
       await orderFilterSearchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Confirm that the first row matches our order number
       const orderFilterTableBody = orderFilterTable.locator('tbody');
-      await orderFilterTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await orderFilterTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const firstRow = orderFilterTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(firstRow, {
         scrollExtra: true,
         highlightColor: 'cyan',
@@ -4841,8 +4888,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         highlightTextColor: 'black',
       });
 
-      const orderNameCell = firstRow.locator('[data-testid^="OrderFilterTableRow-Name-"]');
-      await orderNameCell.waitFor({ state: 'visible', timeout: 10000 });
+      const orderNameCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_NAME_PATTERN);
+      await orderNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(orderNameCell, { scrollExtra: true });
       const orderNameValue = (await orderNameCell.textContent())?.trim() || '';
 
@@ -4868,32 +4915,32 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
         {
           useRedesign: true,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
         }
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
-      await firstRowTab2.waitFor({ state: 'visible', timeout: 10000 });
-      const dateOrderCellTab2 = firstRowTab2.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+      await firstRowTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const dateOrderCellTab2 = firstRowTab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
       await dateOrderCellTab2.click();
       const editButtonTab2 = tab2.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
-      await editButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await editButtonTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await editButtonTab2.click();
       await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      await tab2.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Compare UrgentDate from Tab 1 row with Tab 2
       await page.bringToFront();
-      const urgentDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-UrgentDate-"]');
-      await urgentDateCell.waitFor({ state: 'visible', timeout: 10000 });
+      const urgentDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_URGENT_DATE_PATTERN);
+      await urgentDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(urgentDateCell, { scrollExtra: true });
       const urgentDateValue = (await urgentDateCell.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY);
-      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2, { scrollExtra: true });
       const dateByUrgencyTab2Value = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
@@ -4911,14 +4958,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Compare PlaneDate from Tab 1 row with Tab 2
       await page.bringToFront();
-      const planeDateCell = firstRow.locator('[data-testid^="OrderFilterTableRow-PlaneDate-"]');
-      await planeDateCell.waitFor({ state: 'visible', timeout: 10000 });
+      const planeDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_PLANE_DATE_PATTERN);
+      await planeDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(planeDateCell, { scrollExtra: true });
       const planeDateValue = (await planeDateCell.textContent())?.trim() || '';
 
       await tab2.bringToFront();
       const dateShippingPlanDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY);
-      await dateShippingPlanDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await dateShippingPlanDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(dateShippingPlanDisplayTab2, { scrollExtra: true });
       const dateShippingPlanTab2Value = (await dateShippingPlanDisplayTab2.textContent())?.trim() || '';
 
@@ -4938,17 +4985,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Back on Tab 1, click the cell with data-testid:DataCell in the row
       await page.bringToFront();
       const dataCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_DATA_CELL);
-      await dataCell.waitFor({ state: 'visible', timeout: 10000 });
+      await dataCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(dataCell, { scrollExtra: true });
       await dataCell.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Confirm that DeficitIzd-Main-Table tbody contains 1 tr
       const deficitMainTableAfterClick = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTableAfterClick.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTableAfterClick.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitTableBody = deficitMainTableAfterClick.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
 
@@ -4987,18 +5034,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to deficit products page via warehouse
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitProductionButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitProductionButton, { scrollExtra: true });
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Find the main table with testid:DeficitIzd-Main-Table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTable, {
         scrollExtra: true,
         highlightColor: 'cyan',
@@ -5008,7 +5055,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find and use the search input field:DeficitIzdTable-Search-Dropdown-Input
       const searchInput = deficitMainTable.locator(`input${SelectorsShortagePages.DEFICIT_TABLE_SEARCH_INPUT}`).first();
-      await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+      await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(searchInput, { scrollExtra: true });
 
       // Search by article number
@@ -5016,11 +5063,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill(articleNumberValue);
       await searchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify one row is returned
       const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
 
@@ -5035,7 +5082,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check the article cell contains our article
       const firstDeficitRow = deficitRows.first();
-      await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstDeficitRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(firstDeficitRow, {
         scrollExtra: true,
         highlightColor: 'cyan',
@@ -5044,7 +5091,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       });
 
       const articleCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_ARTICLE).first();
-      await articleCell.waitFor({ state: 'visible', timeout: 10000 });
+      await articleCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(articleCell, { scrollExtra: true });
       const articleCellValue = (await articleCell.textContent())?.trim() || '';
 
@@ -5059,14 +5106,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Get the designation (Обозначение) from the deficit row
       const designationCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DESIGNATION).first();
-      await designationCell.waitFor({ state: 'visible', timeout: 10000 });
+      await designationCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(designationCell, { scrollExtra: true });
       const designationValue = (await designationCell.textContent())?.trim() || '';
       console.log(`Deficit page designation: ${designationValue}`);
 
       // Get the Name (Наименование) from the deficit row
       const nameCellDeficit = firstDeficitRow.locator(SelectorsShortagePages.ROW_NAME).first();
-      await nameCellDeficit.waitFor({ state: 'visible', timeout: 10000 });
+      await nameCellDeficit.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(nameCellDeficit, { scrollExtra: true });
       const nameValueDeficit = (await nameCellDeficit.textContent())?.trim() || '';
       console.log(`Deficit page name: ${nameValueDeficit}`);
@@ -5084,28 +5131,28 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY,
         {
           searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
         }
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
-      await firstRowTab2.waitFor({ state: 'visible', timeout: 10000 });
-      const dateOrderCellTab2 = firstRowTab2.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+      await firstRowTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const dateOrderCellTab2 = firstRowTab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
       await dateOrderCellTab2.click();
       const editButtonTab2 = tab2.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
-      await editButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await editButtonTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await editButtonTab2.click();
       await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      await tab2.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Check the element with testid starting with:AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name
       // in the first row of the table, which has our /0 order number
       const positionsTableTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE);
-      await positionsTableTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTableTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const positionsTableBodyTab2 = positionsTableTab2.locator('tbody');
-      await positionsTableBodyTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTableBodyTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const positionsRowsTab2 = positionsTableBodyTab2.locator('tr');
 
       // Find the row with /0 order number
@@ -5115,35 +5162,35 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const positionsRowCountTab2 = await positionsRowsTab2.count();
       for (let i = 0; i < positionsRowCountTab2; i++) {
         const row = positionsRowsTab2.nth(i);
-        const orderNumberCellTab2 = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
-        await orderNumberCellTab2.waitFor({ state: 'visible', timeout: 10000 });
+        const orderNumberCellTab2 = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
+        await orderNumberCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const orderNumberTextTab2 = (await orderNumberCellTab2.textContent())?.trim() || '';
         if (orderNumberTextTab2.includes('/0')) {
           // Found the row with /0 order number
           // Get Article cell
-          articleCellTab2 = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first();
-          await articleCellTab2.waitFor({ state: 'visible', timeout: 10000 });
+          articleCellTab2 = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN).first();
+          await articleCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(articleCellTab2, { scrollExtra: true });
           const articleCellValueTab2 = (await articleCellTab2.textContent())?.trim() || '';
           console.log(`Found Article cell value in /0 row: ${articleCellValueTab2}`);
 
           // Get Name cell
-          nameCellTab2 = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]').first();
-          await nameCellTab2.waitFor({ state: 'visible', timeout: 10000 });
+          nameCellTab2 = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN).first();
+          await nameCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(nameCellTab2, { scrollExtra: true });
           const nameCellValueTab2 = (await nameCellTab2.textContent())?.trim() || '';
           console.log(`Found Name cell value in /0 row: ${nameCellValueTab2}`);
 
           // Get Product Wrapper cell
           productWrapperCellTab2 = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
-          await productWrapperCellTab2.waitFor({ state: 'visible', timeout: 10000 });
+          await productWrapperCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(productWrapperCellTab2, { scrollExtra: true });
           const productWrapperValueTab2 = (await productWrapperCellTab2.textContent())?.trim() || '';
           console.log(`Found Product Wrapper value in /0 row: ${productWrapperValueTab2}`);
 
           // Get AttachmentsValue-Link element (outside the table)
           const attachmentsValueLink = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_ATTACHMENTS_VALUE_LINK).first();
-          await attachmentsValueLink.waitFor({ state: 'visible', timeout: 10000 });
+          await attachmentsValueLink.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(attachmentsValueLink, { scrollExtra: true });
           const attachmentsValueLinkValue = (await attachmentsValueLink.textContent())?.trim() || '';
           console.log(`Found AttachmentsValue-Link value: ${attachmentsValueLinkValue}`);
@@ -5190,14 +5237,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 1: Get DateUrgency from deficit row
       await page.bringToFront();
       const dateUrgencyCellTab1 = firstDeficitRow.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
-      await dateUrgencyCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await dateUrgencyCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(dateUrgencyCellTab1, { scrollExtra: true });
       const dateUrgencyValueTab1 = (await dateUrgencyCellTab1.textContent())?.trim() || '';
 
       // Tab 2: Compare with DateByUrgency
       await tab2.bringToFront();
       const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
-      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2, { scrollExtra: true });
       const dateByUrgencyValueTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
 
@@ -5215,14 +5262,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Tab 1: Get DateShipments from deficit row
       const dateShipmentsCellTab1 = firstDeficitRow.locator(SelectorsShortagePages.ROW_DATE_SHIPMENTS).first();
-      await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1, { scrollExtra: true });
       const dateShipmentsValueTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
 
       // Tab 2: Compare with DateShippingPlan
       await tab2.bringToFront();
       const dateShippingPlanDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
-      await dateShippingPlanDisplayTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await dateShippingPlanDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(dateShippingPlanDisplayTab2, { scrollExtra: true });
       const dateShippingPlanValueTab2 = (await dateShippingPlanDisplayTab2.textContent())?.trim() || '';
 
@@ -5241,7 +5288,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Tab 1: Get Demand-Link from deficit row
       const demandLinkCellTab1 = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEMAND_LINK).first();
-      await demandLinkCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await demandLinkCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(demandLinkCellTab1, { scrollExtra: true });
       const demandValueTab1 = (await demandLinkCellTab1.textContent())?.trim() || '';
       const demandValueTab1Number = parseInt(demandValueTab1, 10) || 0;
@@ -5253,11 +5300,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const positionsRowCountTab2ForQuantity = await positionsRowsTab2.count();
       for (let i = 0; i < positionsRowCountTab2ForQuantity; i++) {
         const row = positionsRowsTab2.nth(i);
-        const orderNumberCellTab2 = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCellTab2 = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
         const orderNumberTextTab2 = (await orderNumberCellTab2.textContent())?.trim() || '';
         if (orderNumberTextTab2.includes('/0')) {
-          const quantityKolCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-          await quantityKolCell.waitFor({ state: 'visible', timeout: 10000 });
+          const quantityKolCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
+          await quantityKolCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(quantityKolCell, { scrollExtra: true });
           quantityKolValueTab2 = (await quantityKolCell.textContent())?.trim() || '';
           break;
@@ -5266,7 +5313,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Tab 2: Get Quantity from InputNumber-Input
       const quantityInputTab2 = tab2.locator(SelectorsLoadingTasksPage.quantityInput).first();
-      await quantityInputTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await quantityInputTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(quantityInputTab2, { scrollExtra: true });
       const quantityInputValueTab2 = (await quantityInputTab2.inputValue())?.trim() || '';
 
@@ -5292,7 +5339,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Tab 1: Get Deficit value and verify it's the opposite of Demand
       const deficitCellTab1 = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEFICIT).first();
-      await deficitCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitCellTab1, { scrollExtra: true });
       const deficitValueTab1 = (await deficitCellTab1.textContent())?.trim() || '';
       const deficitValueTab1Number = parseInt(deficitValueTab1, 10) || 0;
@@ -5313,24 +5360,24 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const newQuantityValue = (parseInt(quantityInputValueTab2, 10) || 0) + 1;
       await quantityInputTab2.fill('');
       await quantityInputTab2.fill(newQuantityValue.toString());
-      await tab2.waitForTimeout(500);
+      await tab2.waitForTimeout(TIMEOUTS.MEDIUM);
 
       const saveButtonTab2 = tab2.locator(SelectorsLoadingTasksPage.buttonSaveOrder).first();
-      await saveButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await saveButtonTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(saveButtonTab2, { scrollExtra: true });
       await saveButtonTab2.click();
-      await tab2.waitForTimeout(2000); // Wait 2 seconds after clicking save
+      await tab2.waitForTimeout(TIMEOUTS.LONG); // Wait 2 seconds after clicking save
       await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      await tab2.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Tab 1: Reload the deficit page, re-search, and verify values have changed
       await page.bringToFront();
       await page.reload();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const deficitMainTableAfterReload = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTableAfterReload.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTableAfterReload.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTableAfterReload, {
         scrollExtra: true,
         highlightColor: 'cyan',
@@ -5339,29 +5386,29 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       });
 
       const searchInputAfterReload = deficitMainTableAfterReload.locator(`input${SelectorsShortagePages.DEFICIT_TABLE_SEARCH_INPUT}`).first();
-      await searchInputAfterReload.waitFor({ state: 'visible', timeout: 10000 });
+      await searchInputAfterReload.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(searchInputAfterReload, { scrollExtra: true });
       await searchInputAfterReload.fill('');
       await searchInputAfterReload.fill(articleNumberValue);
       await searchInputAfterReload.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Get updated values from Tab 1
       const deficitTableBodyAfterUpdate = deficitMainTableAfterReload.locator('tbody');
-      await deficitTableBodyAfterUpdate.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBodyAfterUpdate.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRowsAfterUpdate = deficitTableBodyAfterUpdate.locator('tr');
       const firstDeficitRowAfterUpdate = deficitRowsAfterUpdate.first();
-      await firstDeficitRowAfterUpdate.waitFor({ state: 'visible', timeout: 10000 });
+      await firstDeficitRowAfterUpdate.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       const demandLinkCellTab1AfterUpdate = firstDeficitRowAfterUpdate.locator(SelectorsShortagePages.ROW_DEMAND_LINK).first();
-      await demandLinkCellTab1AfterUpdate.waitFor({ state: 'visible', timeout: 10000 });
+      await demandLinkCellTab1AfterUpdate.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(demandLinkCellTab1AfterUpdate, { scrollExtra: true });
       const demandValueTab1AfterUpdate = (await demandLinkCellTab1AfterUpdate.textContent())?.trim() || '';
       const demandValueTab1NumberAfterUpdate = parseInt(demandValueTab1AfterUpdate, 10) || 0;
 
       const deficitCellTab1AfterUpdate = firstDeficitRowAfterUpdate.locator(SelectorsShortagePages.ROW_DEFICIT).first();
-      await deficitCellTab1AfterUpdate.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitCellTab1AfterUpdate.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitCellTab1AfterUpdate, { scrollExtra: true });
       const deficitValueTab1AfterUpdate = (await deficitCellTab1AfterUpdate.textContent())?.trim() || '';
       const deficitValueTab1NumberAfterUpdate = parseInt(deficitValueTab1AfterUpdate, 10) || 0;
@@ -5393,24 +5440,24 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const decreasedQuantityValue = demandValueTab1NumberAfterUpdate - 1;
       await quantityInputTab2.fill('');
       await quantityInputTab2.fill(decreasedQuantityValue.toString());
-      await tab2.waitForTimeout(500);
+      await tab2.waitForTimeout(TIMEOUTS.MEDIUM);
 
-      await saveButtonTab2.waitFor({ state: 'visible', timeout: 10000 });
+      await saveButtonTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPage.waitAndHighlight(saveButtonTab2, { scrollExtra: true });
       await saveButtonTab2.click();
-      await tab2.waitForTimeout(2000); // Wait 2 seconds after clicking save
+      await tab2.waitForTimeout(TIMEOUTS.LONG); // Wait 2 seconds after clicking save
       await tab2LoadingTaskPage.waitForNetworkIdle();
-      await tab2.waitForTimeout(1000);
+      await tab2.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Tab 1: Reload page, re-search and verify values have changed
       await page.bringToFront();
       await page.reload();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Re-locate the deficit table and search input after reload
       const deficitMainTableAfterDecrease = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTableAfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTableAfterDecrease.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTableAfterDecrease, {
         scrollExtra: true,
         highlightColor: 'cyan',
@@ -5419,7 +5466,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       });
 
       const searchInputAfterDecrease = deficitMainTableAfterDecrease.locator(`input${SelectorsShortagePages.DEFICIT_TABLE_SEARCH_INPUT}`).first();
-      await searchInputAfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
+      await searchInputAfterDecrease.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(searchInputAfterDecrease, { scrollExtra: true });
 
       // Re-search by article
@@ -5427,23 +5474,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInputAfterDecrease.fill(articleNumberValue);
       await searchInputAfterDecrease.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Get updated values from Tab 1 after decrease
       const deficitTableBodyAfterDecrease = deficitMainTableAfterDecrease.locator('tbody');
-      await deficitTableBodyAfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBodyAfterDecrease.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRowsAfterDecrease = deficitTableBodyAfterDecrease.locator('tr');
       const firstDeficitRowAfterDecrease = deficitRowsAfterDecrease.first();
-      await firstDeficitRowAfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
+      await firstDeficitRowAfterDecrease.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       const demandLinkCellTab1AfterDecrease = firstDeficitRowAfterDecrease.locator(SelectorsShortagePages.ROW_DEMAND_LINK).first();
-      await demandLinkCellTab1AfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
+      await demandLinkCellTab1AfterDecrease.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(demandLinkCellTab1AfterDecrease, { scrollExtra: true });
       const demandValueTab1AfterDecrease = (await demandLinkCellTab1AfterDecrease.textContent())?.trim() || '';
       const demandValueTab1NumberAfterDecrease = parseInt(demandValueTab1AfterDecrease, 10) || 0;
 
       const deficitCellTab1AfterDecrease = firstDeficitRowAfterDecrease.locator(SelectorsShortagePages.ROW_DEFICIT).first();
-      await deficitCellTab1AfterDecrease.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitCellTab1AfterDecrease.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitCellTab1AfterDecrease, { scrollExtra: true });
       const deficitValueTab1AfterDecrease = (await deficitCellTab1AfterDecrease.textContent())?.trim() || '';
       const deficitValueTab1NumberAfterDecrease = parseInt(deficitValueTab1AfterDecrease, 10) || 0;
@@ -5472,7 +5519,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Tab 1: Verify Quantity and Status
       const quantityCellTab1 = firstDeficitRowAfterDecrease.locator(SelectorsShortagePages.ROW_QUANTITY).first();
-      await quantityCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await quantityCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(quantityCellTab1, { scrollExtra: true });
       const quantityValueTab1 = (await quantityCellTab1.textContent())?.trim() || '';
 
@@ -5486,7 +5533,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       const statusCellTab1 = firstDeficitRowAfterDecrease.locator(SelectorsShortagePages.ROW_STATUS_BADGES_TEXT).first();
-      await statusCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await statusCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(statusCellTab1, { scrollExtra: true });
       const statusValueTab1 = (await statusCellTab1.textContent())?.trim() || '';
 
@@ -5500,7 +5547,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       const normCellTab1 = firstDeficitRowAfterDecrease.locator(SelectorsShortagePages.ROW_NORM).first();
-      await normCellTab1.waitFor({ state: 'visible', timeout: 10000 });
+      await normCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(normCellTab1, { scrollExtra: true });
       const normValueRaw = (await normCellTab1.textContent())?.trim() || '';
       const normFirstPart = normValueRaw.split('/')[0]?.trim() || '';
@@ -5522,23 +5569,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         await partsDatabasePage.searchAndWaitForTable(productNameForSearch, SelectorsPartsDataBase.PRODUCT_TABLE, SelectorsPartsDataBase.PRODUCT_TABLE, {
           useRedesign: true,
-          timeoutBeforeWait: 1000,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
         });
 
         const partsTableFirstRow = partsTab.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
-        await partsTableFirstRow.waitFor({ state: 'visible', timeout: 10000 });
+        await partsTableFirstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await partsDatabasePage.waitAndHighlight(partsTableFirstRow, { scrollExtra: true });
         await partsTableFirstRow.click();
 
         const editButtonParts = partsTab.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT).first();
-        await editButtonParts.waitFor({ state: 'visible', timeout: 10000 });
+        await editButtonParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await partsDatabasePage.waitAndHighlight(editButtonParts, { scrollExtra: true });
         await editButtonParts.click();
         await partsDatabasePage.waitForNetworkIdle();
-        await partsTab.waitForTimeout(2000);
+        await partsTab.waitForTimeout(TIMEOUTS.LONG);
 
         const characteristicElement = partsTab.locator(SelectorsPartsDataBase.CREATOR_DETAIL_CHARACTERISTICS_TBODY_ZNACH0).first();
-        await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
+        await characteristicElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await partsDatabasePage.waitAndHighlight(characteristicElement, { scrollExtra: true });
         const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
 
@@ -5572,69 +5619,63 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const shippingTasksButton = page.locator(SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS);
-      await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
+      await shippingTasksButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(shippingTasksButton);
       await shippingTasksButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const warehouseTable = page.locator(SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE);
-      await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
+      await warehouseTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       const getWarehouseSearchInput = async () => {
         const searchInput = page.locator(SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         return searchInput;
       };
 
       const getWarehouseTableBody = async () => {
         const tableBody = warehouseTable.locator('tbody');
-        await tableBody.waitFor({ state: 'visible', timeout: 10000 });
+        await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         return tableBody;
       };
 
       const validateFirstRow = async () => {
         const tableBody = await getWarehouseTableBody();
         const firstRow = tableBody.locator('tr').first();
-        await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-        const orderNumberCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
-        await loadingTaskPage.waitAndHighlight(orderNumberCell);
-        const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
-        await expectSoftWithScreenshot(
+        const orderNumberCell = firstRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
+        await validateCellValue(
+          orderNumberCell,
+          orderNumberWith0Only,
+          `Warehouse order number should contain ${orderNumberWith0Only}`,
           page,
-          () => {
-            expect.soft(orderNumberText.includes(orderNumberWith0Only)).toBe(true);
-          },
-          `Warehouse order number should contain ${orderNumberWith0Only}: actual "${orderNumberText}"`,
+          loadingTaskPage,
           test.info()
         );
 
-        const articleCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first();
-        await loadingTaskPage.waitAndHighlight(articleCell);
-        const articleText = (await articleCell.textContent())?.trim() || '';
-        await expectSoftWithScreenshot(
+        const articleCell = firstRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
+        await validateCellValueExact(
+          articleCell,
+          articleNumberValue,
+          `Warehouse article should match ${articleNumberValue}`,
           page,
-          () => {
-            expect.soft(articleText).toBe(articleNumberValue);
-          },
-          `Warehouse article should match ${articleNumberValue}: actual "${articleText}"`,
+          loadingTaskPage,
           test.info()
         );
 
-        const productNameCell = firstRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-        await loadingTaskPage.waitAndHighlight(productNameCell);
-        const productNameText = (await productNameCell.textContent())?.trim() || '';
-        await expectSoftWithScreenshot(
+        const productNameCell = firstRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
+        await validateCellValue(
+          productNameCell,
+          productNameValue,
+          `Warehouse product name should include ${productNameValue}`,
           page,
-          () => {
-            expect.soft(productNameText.includes(productNameValue)).toBe(true);
-          },
-          `Warehouse product name should include ${productNameValue}: actual "${productNameText}"`,
+          loadingTaskPage,
           test.info()
         );
       };
@@ -5642,13 +5683,42 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const runWarehouseSearch = async (searchValue: string, description: string) => {
         const tableSelector = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE;
         const tableBodySelector = SelectorsShipmentTasks.SHIPMENTS_TABLE_BODY;
-        const searchInputDataTestId = 'IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Thead-SearchInput-Dropdown-Input';
+        // Clear search field first to ensure we start fresh
+        const searchInputWrapper = page.locator(SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
+        await searchInputWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        const actualInput = searchInputWrapper.locator('input').first();
+        const inputCount = await actualInput.count();
+        const inputToUse = inputCount > 0 ? actualInput : searchInputWrapper;
 
+        // Clear any existing search value
+        await inputToUse.click();
+        await inputToUse.fill('');
+        await page.keyboard.press('Enter');
+        await waitForNetworkStable(page, loadingTaskPage);
+
+        // Now perform the actual search
         await loadingTaskPage.searchAndWaitForTable(searchValue, tableSelector, tableBodySelector, {
-          searchInputDataTestId: searchInputDataTestId,
-          timeoutBeforeWait: 1000,
+          searchInputDataTestId: SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT,
+          timeoutBeforeWait: TIMEOUTS.LONG, // Increased wait time
           minRows: 1,
         });
+
+        // Verify the search actually executed by checking the input value
+        const currentSearchValue = await inputToUse.inputValue();
+        if (!currentSearchValue.includes(searchValue)) {
+          console.warn(`Search value mismatch: expected to contain "${searchValue}", got "${currentSearchValue}". Retrying search...`);
+          // Retry the search
+          await inputToUse.fill('');
+          await fillInputAndWaitForValue(inputToUse, searchValue);
+          await inputToUse.press('Enter');
+          await waitForNetworkStable(page, loadingTaskPage);
+        }
+
+        // Wait for search results to be fully populated
+        await waitForNetworkStable(page, loadingTaskPage);
+        // Wait for table body to be visible with results
+        const tableBody = await getWarehouseTableBody();
+        await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         await validateFirstRow();
         console.log(`Warehouse search "${description}" completed.`);
@@ -5673,14 +5743,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const openWarehouseOrdersPage = async () => {
         await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         const shippingTasksButton = page.locator(SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS);
-        await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
+        await shippingTasksButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await loadingTaskPage.waitAndHighlight(shippingTasksButton);
         await shippingTasksButton.click();
         await loadingTaskPage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
       };
 
       await openWarehouseOrdersPage();
@@ -5690,14 +5760,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0Only, tableSelector, tableBodySelector, {
         searchInputDataTestId: searchInputDataTestId,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const warehouseTableBody = page.locator(`${SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE} tbody`).first();
-      await warehouseTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await warehouseTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Find the row that matches the expected order number
       const warehouseRows = warehouseTableBody.locator('tr');
@@ -5707,8 +5777,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       for (let i = 0; i < rowCount; i++) {
         const row = warehouseRows.nth(i);
-        await row.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
-        const orderNumberCell = row.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
+        await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => null);
+        const orderNumberCell = row.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
         const orderNumberText = (await orderNumberCell.textContent().catch(() => ''))?.trim() || '';
         const normalizedOrderNumber = orderNumberText.replace(/^№\s*/, '').trim().split(' от ')[0].trim();
 
@@ -5722,42 +5792,30 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find warehouse row with order number ${orderNumberWith0Only}. Found ${rowCount} rows.`);
       }
 
-      await warehouseRow.waitFor({ state: 'visible', timeout: 10000 });
+      await warehouseRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Use scrollIntoViewWithExtra from PageObject base class
 
       const readWarehouseCell = async (locator: Locator, description: string) => {
-        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        await locator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await loadingTaskPage.waitAndHighlight(locator, { scrollExtra: true });
         const value = (await locator.textContent())?.trim() || '';
         console.log(`Warehouse ${description}: ${value}`);
         return value;
       };
 
-      const warehouseOrderNumber = await readWarehouseCell(
-        warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first(),
-        'order number'
-      );
-      const warehouseArticle = await readWarehouseCell(
-        warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Article"]').first(),
-        'article'
-      );
+      const warehouseOrderNumber = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first(), 'order number');
+      const warehouseArticle = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first(), 'article');
       const warehouseProductName = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.PRODUCT_WRAPPER).first(), 'product name');
-      const warehouseQuantity = await readWarehouseCell(
-        warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first(),
-        'quantity'
-      );
-      const warehouseDateOrder = await readWarehouseCell(
-        warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateOrder"]').first(),
-        'DateOrder'
-      );
+      const warehouseQuantity = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first(), 'quantity');
+      const warehouseDateOrder = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_ORDER_PATTERN).first(), 'DateOrder');
       const warehouseDateShipmentsProduct = await readWarehouseCell(
-        warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateShipments"]').first(),
+        warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN).first(),
         'DateShipments (product)'
       );
       let warehouseTimeValue = '';
       try {
-        const warehouseTimeCells = warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-DateShipments"]');
+        const warehouseTimeCells = warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN);
         const timeCellCount = await warehouseTimeCells.count();
         if (timeCellCount > 2) {
           const warehouseTimeCell = warehouseTimeCells.nth(2);
@@ -5770,21 +5828,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn('Unable to read warehouse time cell:', error);
       }
       const warehouseDateByUrgency = normalizeDate(
-        await readWarehouseCell(
-          warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateByUrgency"]').first(),
-          'DateByUrgency'
-        )
+        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency')
       );
       const warehouseDateShipPlan = normalizeDate(
-        await readWarehouseCell(
-          warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-DateShipments"]').first(),
-          'DateShipments (plan)'
-        )
+        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)')
       );
-      const warehouseBuyer = await readWarehouseCell(
-        warehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Buyers"]').first(),
-        'Buyer'
-      );
+      const warehouseBuyer = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_BUYERS_PATTERN).first(), 'Buyer');
 
       const context = page.context();
       const { page: ordersTab, pageObject: ordersTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(
@@ -5793,7 +5842,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
       try {
         await ordersTabLoadingPage.waitForNetworkIdle();
-        await ordersTab.waitForTimeout(2000);
+        await ordersTab.waitForTimeout(TIMEOUTS.LONG);
 
         await ordersTabLoadingPage.searchAndWaitForTable(
           baseOrderNumberValue,
@@ -5801,7 +5850,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY,
           {
             useRedesign: true,
-            timeoutBeforeWait: 1000,
+            timeoutBeforeWait: TIMEOUTS.STANDARD,
             minRows: 1,
           }
         );
@@ -5809,11 +5858,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Wait for the table to update with search results by verifying the first row contains the searched order number
         const shipmentsTableBodyOrders = ordersTab.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
         const firstRowOrders = shipmentsTableBodyOrders.locator('tr').first();
-        await firstRowOrders.waitFor({ state: 'visible', timeout: 10000 });
+        await firstRowOrders.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Wait for the order number in the first row to match the search term
         const orderNumberCell = firstRowOrders.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
+        await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Poll until the order number matches (with timeout)
         const searchTimeout = 10000;
@@ -5834,22 +5883,22 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         // Additional wait to ensure table is fully updated
-        await ordersTab.waitForTimeout(500);
-        const dateOrderCellOrders = firstRowOrders.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+        await ordersTab.waitForTimeout(TIMEOUTS.MEDIUM);
+        const dateOrderCellOrders = firstRowOrders.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
         await dateOrderCellOrders.click();
 
         const editButtonOrders = ordersTab
           .locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER)
           .filter({ hasText: 'Редактировать' })
           .first();
-        await editButtonOrders.waitFor({ state: 'visible', timeout: 10000 });
+        await editButtonOrders.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await ordersTabLoadingPage.waitAndHighlight(editButtonOrders);
         await editButtonOrders.click();
         await ordersTabLoadingPage.waitForNetworkIdle();
-        await ordersTab.waitForTimeout(1000);
+        await ordersTab.waitForTimeout(TIMEOUTS.STANDARD);
 
         const editTitle = ordersTab.locator(SelectorsLoadingTasksPage.editTitle).first();
-        await editTitle.waitFor({ state: 'visible', timeout: 10000 });
+        await editTitle.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await ordersTabLoadingPage.waitAndHighlight(editTitle);
         const editTitleText = (await editTitle.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -5862,13 +5911,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         const positionsTable = ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
-        await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
+        await positionsTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const positionsRows = positionsTable.locator('tbody tr');
         const rowCount = await positionsRows.count();
         let matchingRow: Locator | null = null;
         for (let i = 0; i < rowCount; i++) {
           const row = positionsRows.nth(i);
-          const numberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+          const numberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
           const text = (await numberCell.textContent())?.trim() || '';
           if (text.includes('/0')) {
             matchingRow = row;
@@ -5880,7 +5929,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         const readOrdersCell = async (locator: Locator, description: string, highlightPage: CreateLoadingTaskPage = ordersTabLoadingPage) => {
-          await locator.waitFor({ state: 'visible', timeout: 10000 });
+          await locator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await highlightPage.waitAndHighlight(locator, { scrollExtra: true });
           const value = (await locator.textContent())?.trim() || '';
           console.log(`Edit page ${description}: ${value}`);
@@ -5888,7 +5937,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         };
 
         const ordersRowOrderNumber =
-          (await matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first().textContent())?.trim() || '';
+          (await matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
 
         const normalizedWarehouseOrder = warehouseOrderNumber.replace(/^№\s*/, '').trim();
         const normalizedOrdersRowOrder = ordersRowOrderNumber.replace(/^№\s*/, '').trim();
@@ -5912,39 +5961,33 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           test.info()
         );
 
-        const ordersArticle = await readOrdersCell(
-          matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Article"]').first(),
-          'article'
-        );
+        const ordersArticle = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN).first(), 'article');
         const ordersProductName = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first(), 'product name');
         const ordersQuantityCell = await readOrdersCell(
-          matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first(),
+          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first(),
           'quantity (cell)'
         );
         const ordersQuantityInputLocator = ordersTab.locator(SelectorsLoadingTasksPage.quantityInput).first();
-        await ordersQuantityInputLocator.waitFor({ state: 'visible', timeout: 10000 });
+        await ordersQuantityInputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await ordersTabLoadingPage.waitAndHighlight(ordersQuantityInputLocator);
         const ordersQuantityInput = (await ordersQuantityInputLocator.inputValue())?.trim() || '';
 
         const ordersDateOrder = await readOrdersCell(
-          matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateOrder"]').first(),
+          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first(),
           'DateOrder'
         );
         const ordersDateShipmentsProduct = await readOrdersCell(
-          matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]').first(),
+          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first(),
           'DateShipments (product)'
         );
         const ordersDateByUrgency = normalizeDate(
-          await readOrdersCell(matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateByUrgency"]').first(), 'DateByUrgency')
+          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency')
         );
         const ordersDateShipPlan = normalizeDate(
-          await readOrdersCell(
-            matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-DateShipments"]').first(),
-            'DateShipments (plan)'
-          )
+          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)')
         );
         const ordersBuyerCell = await readOrdersCell(
-          matchingRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Buyers"]').first(),
+          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first(),
           'Buyer (row)'
         );
         const ordersBuyerSelected = await readOrdersCell(
@@ -5980,7 +6023,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Compare DateByUrgency display value
         const dateByUrgencyDisplayTab2 = await readOrdersCell(
-          ordersTab.locator('[data-testid^="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]').first(),
+          ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first(),
           'DateByUrgency display',
           ordersTabLoadingPage
         );
@@ -5989,7 +6032,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Compare DateShippingPlan display value
         const dateShipPlanDisplayValue = normalizeDate(
           await readOrdersCell(
-            ordersTab.locator('[data-testid^="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]').first(),
+            ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first(),
             'DateShippingPlan display',
             ordersTabLoadingPage
           )
@@ -5997,10 +6040,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await compareValue('DateShippingPlan display', warehouseDateShipPlan, dateShipPlanDisplayValue, ordersTab);
 
         // Compare time value with parts database
-        const dateShipmentsTimeCells = ordersTab.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-DateShipments"]');
+        const dateShipmentsTimeCells = ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN);
         const timeCellCount = await dateShipmentsTimeCells.count();
         const dateShipmentsTimeCell = timeCellCount > 2 ? dateShipmentsTimeCells.nth(2) : dateShipmentsTimeCells.first();
-        await dateShipmentsTimeCell.waitFor({ state: 'visible', timeout: 10000 });
+        await dateShipmentsTimeCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await ordersTabLoadingPage.waitAndHighlight(dateShipmentsTimeCell);
         const dateShipmentsTimeText = (await dateShipmentsTimeCell.textContent())?.trim() || '';
         const timeValue = dateShipmentsTimeText.split('/')[0].trim();
@@ -6016,7 +6059,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await partsDatabasePage.waitForNetworkIdle();
           await partsDatabasePage.searchAndWaitForTable(productNameValue, SelectorsPartsDataBase.PRODUCT_TABLE, SelectorsPartsDataBase.PRODUCT_TABLE, {
             useRedesign: true,
-            timeoutBeforeWait: 1000,
+            timeoutBeforeWait: TIMEOUTS.STANDARD,
           });
 
           const firstRowProduct = productTab.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`).first();
@@ -6024,14 +6067,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await firstRowProduct.click();
 
           const editButtonProduct = productTab.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
-          await editButtonProduct.waitFor({ state: 'visible', timeout: 10000 });
+          await editButtonProduct.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await partsDatabasePage.waitAndHighlight(editButtonProduct);
           await editButtonProduct.click();
           await partsDatabasePage.waitForNetworkIdle();
-          await productTab.waitForTimeout(1000);
+          await productTab.waitForTimeout(TIMEOUTS.STANDARD);
 
           const characteristicElement = productTab.locator(SelectorsPartsDataBase.CREATOR_DETAIL_CHARACTERISTICS_ZNACH_TEXT0);
-          await characteristicElement.waitFor({ state: 'visible', timeout: 10000 });
+          await characteristicElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await partsDatabasePage.waitAndHighlight(characteristicElement);
           const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
           // Verification commented out per requirements
@@ -6043,13 +6086,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       await page.bringToFront();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       console.log('End of step 11');
     });
   });
 
   test('Test Case 6 - Увеличение количества экземпляров в заказе', async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     console.log('Test Case 6 - Increase quantity of instances in order');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -6088,19 +6131,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitProductionButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
@@ -6111,13 +6154,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill('');
       await searchInput.fill(productNameValue);
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results to populate
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify one row is returned and get the deficit value
       const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
 
@@ -6135,12 +6178,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstDeficitRow = deficitRows.first();
-      await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstDeficitRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(firstDeficitRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Get the deficit column value
       const deficitCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEFICIT).first();
-      await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitCell);
       initialDeficitValue = (await deficitCell.textContent())?.trim() || '';
       console.log(`Test Case 6: Initial deficit value stored: ${initialDeficitValue}`);
@@ -6159,7 +6202,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
       await loadingTaskPage.waitForNetworkIdle();
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
+      await pageContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(pageContainer, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       await expectSoftWithScreenshot(
         page,
@@ -6175,16 +6218,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Test Case 6: Searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
       // Verify the order appears in the search results
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(firstRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
-      const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
+      const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(orderNumberCell);
 
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
@@ -6202,7 +6245,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 3: Select the order row (second td) and click the edit button', async () => {
-      await shipmentsTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentsTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
 
       await expectSoftWithScreenshot(
@@ -6228,9 +6271,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       let targetRowIndex = -1;
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
-        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
         try {
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           console.log(`Row ${i}: Order number = "${orderNumberText}"`);
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
@@ -6262,8 +6305,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetRow);
 
       // Check the value in the quantity cell
-      const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
+      await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(quantityCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       initialQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 6: Initial quantity in cell: ${initialQuantity}`);
@@ -6302,9 +6345,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
-        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
         try {
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
           const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
@@ -6312,14 +6355,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // Get product name - try multiple selectors in case the structure is different
           let productNameText = '';
           try {
-            const productNameCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Name"]').first();
-            await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+            const productNameCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_NAME_PATTERN).first();
+            await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
             productNameText = (await productNameCell.textContent())?.trim() || '';
           } catch (nameError) {
             // Try alternative selector
             try {
-              const productNameCellAlt = row.locator('[data-testid*="Name"]').first();
-              await productNameCellAlt.waitFor({ state: 'visible', timeout: 2000 });
+              const productNameCellAlt = row.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
+              await productNameCellAlt.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               productNameText = (await productNameCellAlt.textContent())?.trim() || '';
             } catch (altError) {
               console.log(`Test Case 6: Row ${i}: Could not read product name`);
@@ -6349,9 +6392,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn(`Test Case 6: Could not find /0 row with TEST_PRODUCT_1, trying to find any /0 row as fallback`);
         for (let i = 0; i < rowCount; i++) {
           const row = bodyRows.nth(i);
-          const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+          const orderNumberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
           try {
-            await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+            await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
             const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
             const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
             const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
@@ -6371,15 +6414,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Click on the quantity cell in the /0 row with TEST_PRODUCT_1 to select it
-      const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
+      await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await quantityCell.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Verify the main quantity input now shows the /0 row's quantity and corresponds to TEST_PRODUCT_1
       const mainQuantityInput = page.locator(SelectorsLoadingTasksPage.quantityInput);
-      await mainQuantityInput.waitFor({ state: 'visible', timeout: 10000 });
+      await mainQuantityInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const mainInputValue = await mainQuantityInput.inputValue();
       console.log(`Test Case 6: Main quantity input value after clicking /0 row with TEST_PRODUCT_1: ${mainInputValue}, expected: ${initialQuantity}`);
 
@@ -6392,7 +6435,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify the product name in the /0 table row corresponds to TEST_PRODUCT_1
       const rowProductNameElement = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
-      await rowProductNameElement.waitFor({ state: 'visible', timeout: 10000 });
+      await rowProductNameElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const rowProductName = (await rowProductNameElement.textContent())?.trim() || '';
       console.log(`Test Case 6: Product name in /0 table row: ${rowProductName}, expected: ${firstProductNameValue}`);
 
@@ -6426,7 +6469,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 7: Find the row in bottom table and confirm quantity increased by 2', async () => {
       const positionsTable = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -6438,16 +6481,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
-        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
         try {
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
           const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
 
           // Use the correct selector for product name: AddOrder-PositionInAccount-ShipmentsTable-Product-Wrapper
           const productNameCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameText = (await productNameCell.textContent())?.trim() || '';
 
           console.log(`Test Case 6 Step 7: Row ${i}: Order="${normalizedRowOrder}", Product="${productNameText}"`);
@@ -6471,13 +6514,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify we have the correct product using the correct selector
       const productNameCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
+      await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const productNameText = (await productNameCell.textContent())?.trim() || '';
       console.log(`Test Case 6: Verifying quantity for product: ${productNameText} (expected: ${firstProductNameValue})`);
 
       // Check the quantity cell value
-      const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
+      await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(quantityCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       const updatedQuantity = (await quantityCell.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
@@ -6495,15 +6538,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 8: Click cancel to go back to main orders page', async () => {
       const cancelButton = page.locator(SelectorsLoadingTasksPage.buttonCancelOrder).first();
-      await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
+      await cancelButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(cancelButton);
       await cancelButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify we're back on the main orders page
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
+      await pageContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -6518,16 +6561,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Test Case 6: Re-searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(firstRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
-      const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
+      const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+      await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
       const normalizedCellOrder = normalizeOrderNumber(cellOrderNumber);
       const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
@@ -6543,9 +6586,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 10: Confirm quantity cell contains the new quantity', async () => {
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-      const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell);
       const quantityCellValue = (await quantityCell.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
@@ -6563,31 +6606,31 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 11: Click the quantity cell to open dialog and verify modal', async () => {
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-      const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Wait for modal to open
       let modal = page.locator(SelectorsPartsDataBase.MODAL);
       try {
-        await modal.waitFor({ state: 'attached', timeout: 5000 });
+        await modal.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
       } catch (error) {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
       try {
-        await modal.waitFor({ state: 'visible', timeout: 10000 });
+        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -6608,7 +6651,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check that the title of the modal contains our order number
       const orderNumberH3 = modal.locator('h3').first();
-      await orderNumberH3.waitFor({ state: 'visible', timeout: 10000 });
+      await orderNumberH3.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(orderNumberH3);
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
@@ -6630,7 +6673,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check that the quantity cell in modal has our new quantity
       const countElement = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT).first();
-      await countElement.waitFor({ state: 'visible', timeout: 10000 });
+      await countElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(countElement);
       const countModal = (await countElement.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
@@ -6656,19 +6699,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitProductionButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
@@ -6679,13 +6722,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill('');
       await searchInput.fill(productNameValue);
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results to populate
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify one row is returned and get the new deficit value
       const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
 
@@ -6694,12 +6737,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstDeficitRow = deficitRows.first();
-      await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstDeficitRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(firstDeficitRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Get the new deficit column value
       const deficitCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEFICIT).first();
-      await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitCell);
       newDeficitValue = (await deficitCell.textContent())?.trim() || '';
       console.log(`Test Case 6: New deficit value after quantity change: ${newDeficitValue}`);
@@ -6722,7 +6765,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check that the RealBalance cell has the same value as the Deficit cell
       const realBalanceCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_REAL_BALANCE).first();
-      await realBalanceCell.waitFor({ state: 'visible', timeout: 10000 });
+      await realBalanceCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(realBalanceCell);
       const realBalanceValue = (await realBalanceCell.textContent())?.trim() || '';
       console.log(`Test Case 6: RealBalance value: ${realBalanceValue}, Deficit value: ${newDeficitValue}`);
@@ -6751,19 +6794,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       try {
-        await warehouseTab.waitForTimeout(1000);
+        await warehouseTab.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Click on shipping tasks button to go to orders page
         const shippingTasksButton = warehouseTab.locator(SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS);
-        await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
+        await shippingTasksButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehouseTabLoadingPage.waitAndHighlight(shippingTasksButton);
         await shippingTasksButton.click();
         await warehouseTabLoadingPage.waitForNetworkIdle();
-        await warehouseTab.waitForTimeout(1000);
+        await warehouseTab.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Locate the warehouse table
         const warehouseTable = warehouseTab.locator(SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE);
-        await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
+        await warehouseTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehouseTabLoadingPage.waitAndHighlight(warehouseTable, {
           highlightColor: 'cyan',
           highlightBorder: '2px solid blue',
@@ -6772,20 +6815,20 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Find and use the search input field
         const searchInput = warehouseTab.locator(SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehouseTabLoadingPage.waitAndHighlight(searchInput);
 
         // Search by product name (same product as in the order)
         await searchInput.fill('');
         await searchInput.fill(productNameValue);
         await searchInput.press('Enter');
-        await warehouseTab.waitForTimeout(1000); // Wait for search results to populate
+        await warehouseTab.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
         await warehouseTabLoadingPage.waitForNetworkIdle();
-        await warehouseTab.waitForTimeout(1000);
+        await warehouseTab.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Verify rows are returned and find the one matching our /0 order
         const warehouseTableBody = warehouseTable.locator('tbody');
-        await warehouseTableBody.waitFor({ state: 'visible', timeout: 10000 });
+        await warehouseTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const warehouseRows = warehouseTableBody.locator('tr');
         const warehouseRowCount = await warehouseRows.count();
 
@@ -6802,14 +6845,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           const row = warehouseRows.nth(i);
           try {
             // Check order number
-            const orderNumberCell = row.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
-            await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+            const orderNumberCell = row.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
+            await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
             const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
             const normalizedOrder = orderNumberText.replace(/^№\s*/, '').trim();
 
             // Check product name
-            const productNameCell = row.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-            await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+            const productNameCell = row.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
+            await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
             const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
             console.log(`Test Case 6 Step 13: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
@@ -6828,7 +6871,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           throw new Error(`Could not find warehouse row with /0 order (${orderNumberForSearch}) and product ${productNameValue}`);
         }
 
-        await targetWarehouseRow.waitFor({ state: 'visible', timeout: 10000 });
+        await targetWarehouseRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehouseTabLoadingPage.waitAndHighlight(targetWarehouseRow, {
           highlightColor: 'cyan',
           highlightBorder: '2px solid blue',
@@ -6836,8 +6879,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         });
 
         // Confirm it's the correct product by checking the product name cell
-        const productNameCell = targetWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
+        const productNameCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
+        await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehouseTabLoadingPage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
         const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
@@ -6851,8 +6894,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check that the quantity cell matches the deficit value (deficit is negative, so we compare absolute values)
-        const quantityCell = targetWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
-        await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
+        const quantityCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
+        await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehouseTabLoadingPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
         const quantityValue = (await quantityCell.textContent())?.trim() || '';
         const quantityNum = parseInt(quantityValue, 10) || 0;
@@ -6876,7 +6919,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 7 - Verify order quantity in edit page', async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     console.log('Test Case 7 - Verify order quantity in edit page');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -6906,8 +6949,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
       await loadingTaskPage.waitForNetworkIdle();
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
-      await page.waitForTimeout(1000);
+      await pageContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       await expectSoftWithScreenshot(
         page,
@@ -6922,7 +6965,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Test Case 7: Searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
@@ -6935,8 +6978,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
 
-      const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
+      const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+      await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
       const normalizedCellOrder = normalizeOrderNumber(cellOrderNumber);
       const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
@@ -6951,7 +6994,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Read the actual quantity from the main orders page to use as expected value
-      const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       expectedQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Read expected quantity from main orders page: ${expectedQuantity}`);
@@ -6971,7 +7014,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 2: Select the order row and click edit button', async () => {
-      await shipmentsTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentsTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
 
       await expectSoftWithScreenshot(
@@ -7002,9 +7045,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       let targetRow = null;
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
-        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
         try {
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           console.log(`Row ${i}: Order number = "${orderNumberText}"`);
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
@@ -7035,7 +7078,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetRow);
 
       // Check the value in the quantity cell
-      const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, {
         highlightColor: 'cyan',
         highlightBorder: '2px solid blue',
@@ -7072,7 +7115,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Test Case 7: Re-searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
@@ -7086,8 +7129,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       });
 
       // Verify the order number matches
-      const orderNumberCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-      await orderNumberCell.waitFor({ state: 'visible', timeout: 10000 });
+      const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+      await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
       const normalizedCellOrder = normalizeOrderNumber(cellOrderNumber);
       const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
@@ -7102,7 +7145,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Check the quantity cell in the main orders table
-      const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Main orders page quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
@@ -7120,31 +7163,31 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 5: Double click quantity cell, verify modal, and check table inside modal', async () => {
       // Double click the quantity cell to open modal
       const firstRow = shipmentsTableBody.locator('tr').first();
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-      const quantityCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Wait for modal to open
       let modal = page.locator(SelectorsPartsDataBase.MODAL);
       try {
-        await modal.waitFor({ state: 'attached', timeout: 5000 });
+        await modal.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
       } catch (error) {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
       try {
-        await modal.waitFor({ state: 'visible', timeout: 10000 });
+        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -7201,12 +7244,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find the table with testid: Shipment-Table
       const shipmentTable = modal.locator(SelectorsLoadingTasksPage.SHIPMENT_TABLE).first();
-      await shipmentTable.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(shipmentTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find the row with our order number
       const shipmentTableBody = shipmentTable.locator('tbody');
-      await shipmentTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const shipmentRows = shipmentTableBody.locator('tr');
       const shipmentRowCount = await shipmentRows.count();
       console.log(`Test Case 7: Found ${shipmentRowCount} rows in Shipment-Table`);
@@ -7216,14 +7259,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       for (let i = 0; i < shipmentRowCount; i++) {
         const row = shipmentRows.nth(i);
-        await row.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT }).catch(() => {});
 
         // Try multiple testid patterns for order number cell
         const orderNumberPatterns = [
-          '[data-testid^="Shipment-Tbody-NumberOrder"]', // Correct pattern for Shipment-Table
-          '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]',
-          '[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-Tbody-NumberOrder"]',
-          '[data-testid*="NumberOrder"]',
+          SelectorsShipmentTasks.SHIPMENT_TBODY_NUMBER_ORDER_PATTERN, // Correct pattern for Shipment-Table
+          SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN,
+          SelectorsLoadingTasksPage.SHIPMENTS_MODAL_SHIPMENT_TBODY_NUMBER_ORDER_PATTERN,
+          SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN, // Fallback pattern
         ];
 
         let foundOrderNumber = false;
@@ -7231,7 +7274,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           try {
             const orderNumberCell = row.locator(pattern).first();
             if ((await orderNumberCell.count()) > 0) {
-              await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+              await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
               console.log(`Shipment table Row ${i}: Order number = "${orderNumberText}" (pattern: ${pattern})`);
               const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
@@ -7292,7 +7335,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetShipmentRow);
 
       // Verify the quantity in the shipment table row
-      const shipmentQuantityCell = targetShipmentRow.locator('[data-testid^="Shipment-Product-Kol"]').first();
+      const shipmentQuantityCell = targetShipmentRow.locator(SelectorsShipmentTasks.SHIPMENT_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(shipmentQuantityCell, {
         highlightColor: 'cyan',
         highlightBorder: '2px solid blue',
@@ -7322,19 +7365,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitProductionButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
@@ -7345,13 +7388,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill('');
       await searchInput.fill(productNameValue);
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results to populate
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify one row is returned
       const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
 
@@ -7369,7 +7412,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstDeficitRow = deficitRows.first();
-      await firstDeficitRow.waitFor({ state: 'visible', timeout: 10000 });
+      await firstDeficitRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(firstDeficitRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Confirm it's the correct product by checking the product name cell
@@ -7430,19 +7473,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Click on shipping tasks button to go to orders page
       const shippingTasksButton = page.locator(SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS);
-      await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
+      await shippingTasksButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(shippingTasksButton);
       await shippingTasksButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the warehouse table
       const warehouseTable = page.locator(SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE);
-      await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
+      await warehouseTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
@@ -7454,13 +7497,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill('');
       await searchInput.fill(orderNumberForSearch);
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results to populate
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify rows are returned and find the one matching our /0 order and product
       const warehouseTableBody = warehouseTable.locator('tbody');
-      await warehouseTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await warehouseTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const warehouseRows = warehouseTableBody.locator('tr');
       const warehouseRowCount = await warehouseRows.count();
 
@@ -7485,14 +7528,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const row = warehouseRows.nth(i);
         try {
           // Check order number
-          const orderNumberCell = row.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          const orderNumberCell = row.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           const normalizedOrder = normalizeOrderNumber(orderNumberText);
 
           // Check product name
-          const productNameCell = row.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          const productNameCell = row.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
           console.log(`Test Case 7 Step 7: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
@@ -7515,7 +7558,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetWarehouseRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Confirm it's the correct product by checking the product name cell
-      const productNameCell = targetWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
+      const productNameCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
@@ -7529,7 +7572,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Check that the quantity cell has the correct value
-      const quantityCell = targetWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 7: Warehouse quantity value: ${quantityValue}, expected: ${expectedQuantity}`);
@@ -7546,7 +7589,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 8 - Decrease order quantity and verify deficit changes', async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     console.log('Test Case 8 - Decrease order quantity and verify deficit changes');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -7580,19 +7623,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitProductionButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
@@ -7603,13 +7646,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill('');
       await searchInput.fill(productNameWith3);
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results to populate
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify one row is returned
       const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
 
@@ -7636,25 +7679,25 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Store deficit value
       const deficitCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEFICIT).first();
-      await deficitCell.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialDeficit = (await deficitCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Initial deficit value: ${initialDeficit}`);
 
       // Store required (Demand) value
       const requiredCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEMAND_LINK).first();
-      await requiredCell.waitFor({ state: 'visible', timeout: 10000 });
+      await requiredCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialRequired = (await requiredCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Initial required value: ${initialRequired}`);
 
       // Store remainder (Quantity) value
       const remainderCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_QUANTITY).first();
-      await remainderCell.waitFor({ state: 'visible', timeout: 10000 });
+      await remainderCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialRemainder = (await remainderCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Initial remainder value: ${initialRemainder}`);
 
       // Store real remainder (RealBalance) value
       const realRemainderCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_REAL_BALANCE).first();
-      await realRemainderCell.waitFor({ state: 'visible', timeout: 10000 });
+      await realRemainderCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialRealRemainder = (await realRemainderCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Initial real remainder value: ${initialRealRemainder}`);
 
@@ -7675,8 +7718,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
       await loadingTaskPage.waitForNetworkIdle();
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
-      await page.waitForTimeout(1000);
+      await pageContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       await expectSoftWithScreenshot(
         page,
@@ -7693,7 +7736,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Test Case 8: Searching for product: ${productNameWith3}`);
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         useRedesign: true,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
@@ -7752,13 +7795,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         try {
           // Check product name
-          const productNameCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          const productNameCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
           // Check order number for /2
-          const orderNumberCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
 
           if (productNameInRow.includes(productNameWith3) && orderNumberText.includes('/2')) {
@@ -7776,9 +7819,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       const firstRow = targetRow;
-      await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-      const productNameCell = firstRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const productNameCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+      await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -7811,13 +7854,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         try {
           // Check product name
-          const productNameCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          const productNameCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
           // Check order number for /2
-          const orderNumberCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
 
           if (productNameInRow.includes(productNameWith3) && orderNumberText.includes('/2')) {
@@ -7835,23 +7878,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Click the DateOrder cell in the target row to select it (same approach as selectRowAndClickEdit)
-      const dateOrderCell = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
+      const dateOrderCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
+      await dateOrderCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await dateOrderCell.scrollIntoViewIfNeeded();
       await loadingTaskPage.waitAndHighlight(dateOrderCell, {
         highlightColor: 'yellow',
         highlightBorder: '2px solid red',
         highlightTextColor: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await dateOrderCell.click();
 
       // Wait a bit for row selection to register
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Click the edit button below the table (not in the row)
       const editButton = page.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
+      await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const isEnabled = await editButton.isEnabled();
       if (!isEnabled) {
         throw new Error('Edit order button is disabled; cannot proceed.');
@@ -7862,10 +7905,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         highlightBorder: '2px solid red',
         highlightTextColor: 'blue',
       });
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await editButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       await expectSoftWithScreenshot(
         page,
@@ -7877,10 +7920,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Extract order number from page title (should be /2 order containing TEST_PRODUCT_3)
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
       const editTitle = page.locator(SelectorsLoadingTasksPage.editTitle).first();
-      await editTitle.waitFor({ state: 'visible', timeout: 10000 });
+      await editTitle.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const titleText = (await editTitle.textContent())?.trim() || '';
       console.log(`Test Case 8: Page title: ${titleText}`);
 
@@ -7915,9 +7958,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       let targetRow = null;
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
-        const productNameCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]').first();
+        const productNameCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN).first();
         try {
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameText = (await productNameCell.textContent())?.trim() || '';
           if (productNameText.includes(productNameWith3)) {
             targetRow = row;
@@ -7945,8 +7988,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetRow, { waitAfter: 1500 });
 
       // Get initial quantity
-      const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
-      await quantityCell.waitFor({ state: 'visible', timeout: 10000 });
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
+      await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialQuantity = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Initial quantity: ${initialQuantity}`);
 
@@ -8006,7 +8049,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 6: After page reload, find row in bottom table and confirm new quantity', async () => {
       const positionsTable = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
-      await positionsTable.waitFor({ state: 'visible', timeout: 10000 });
+      await positionsTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
@@ -8015,9 +8058,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       let targetRow = null;
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
-        const productNameCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-Name"]').first();
+        const productNameCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN).first();
         try {
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameText = (await productNameCell.textContent())?.trim() || '';
           if (productNameText.includes(productNameWith3)) {
             targetRow = row;
@@ -8044,7 +8087,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetRow);
 
       // Verify the quantity cell has the new value
-      const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, {
         highlightColor: 'cyan',
         highlightBorder: '2px solid blue',
@@ -8083,31 +8126,31 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Manually handle search input for main orders page
       const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-      await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
+      await searchInputWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await searchInputWrapper.scrollIntoViewIfNeeded();
 
       let searchInput: Locator;
       const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
       if (tagName === 'input') {
         searchInput = searchInputWrapper;
-        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } else {
         searchInput = searchInputWrapper.locator('input').first();
         const inputCount = await searchInput.count();
         if (inputCount === 0) {
           searchInput = searchInputWrapper;
         } else {
-          await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+          await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
       await searchInput.scrollIntoViewIfNeeded();
       await searchInput.clear();
       await searchInput.fill(productNameWith3);
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
       await searchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       await loadingTaskPage.waitingTableBody(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         minRows: 1,
@@ -8122,8 +8165,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       for (let i = 0; i < rowCount; i++) {
         const row = allRows.nth(i);
         try {
-          const productNameCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          const productNameCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
           console.log(`Test Case 8 Step 7: Row ${i}: Product="${productNameInRow}"`);
 
@@ -8149,8 +8192,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       });
 
       // Verify product name
-      const productNameCell = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
+      const productNameCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+      await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -8163,7 +8206,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Verify quantity
-      const quantityCell = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Main orders page quantity: ${quantityValue}, expected: ${newQuantity}`);
@@ -8187,8 +8230,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       for (let i = 0; i < rowCount; i++) {
         const row = allRows.nth(i);
         try {
-          const productNameCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          const productNameCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
           if (productNameInRow.includes(productNameWith3)) {
@@ -8205,29 +8248,29 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row with product ${productNameWith3} for Step 9`);
       }
 
-      const quantityCell = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Wait for modal to open
       let modal = page.locator(SelectorsPartsDataBase.MODAL);
       try {
-        await modal.waitFor({ state: 'attached', timeout: 5000 });
+        await modal.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
       } catch (error) {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
       try {
-        await modal.waitFor({ state: 'visible', timeout: 10000 });
+        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -8263,12 +8306,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find the table with testid: Shipment-Table
       const shipmentTable = modal.locator(SelectorsLoadingTasksPage.SHIPMENT_TABLE).first();
-      await shipmentTable.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(shipmentTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find the row with our product
       const shipmentTableBody = shipmentTable.locator('tbody');
-      await shipmentTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const shipmentRows = shipmentTableBody.locator('tr');
       const shipmentRowCount = await shipmentRows.count();
       console.log(`Test Case 8: Found ${shipmentRowCount} rows in Shipment-Table`);
@@ -8277,23 +8320,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Test Case 8 Step 9: Searching for product ${productNameWith3} in ${shipmentRowCount} rows inside modal`);
       for (let i = 0; i < shipmentRowCount; i++) {
         const row = shipmentRows.nth(i);
-        await row.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT }).catch(() => {});
 
         // Try multiple selectors for product name
         let productNameText = '';
         try {
           // Try the standard selector
-          const productNameCell = row.locator('[data-testid^="Shipment-Product-Name"]').first();
+          const productNameCell = row.locator(SelectorsShipmentTasks.SHIPMENT_PRODUCT_NAME_PATTERN).first();
           if ((await productNameCell.count()) > 0) {
-            await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+            await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
             productNameText = (await productNameCell.textContent())?.trim() || '';
           }
         } catch (error) {
           // Try alternative selector
           try {
-            const productNameCellAlt = row.locator('[data-testid*="Name"]').first();
+            const productNameCellAlt = row.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
             if ((await productNameCellAlt.count()) > 0) {
-              await productNameCellAlt.waitFor({ state: 'visible', timeout: 2000 });
+              await productNameCellAlt.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               productNameText = (await productNameCellAlt.textContent())?.trim() || '';
             }
           } catch (altError) {
@@ -8349,7 +8392,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetShipmentRow);
 
       // Verify the quantity in the shipment table row
-      const shipmentQuantityCell = targetShipmentRow.locator('[data-testid^="Shipment-Product-Kol"]').first();
+      const shipmentQuantityCell = targetShipmentRow.locator(SelectorsShipmentTasks.SHIPMENT_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(shipmentQuantityCell, {
         highlightColor: 'cyan',
         highlightBorder: '2px solid blue',
@@ -8373,19 +8416,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Open Дефицит продукции (Deficit Products) page
       const deficitProductionButton = page.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
-      await deficitProductionButton.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitProductionButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitProductionButton);
       await deficitProductionButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the deficit table
       const deficitMainTable = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-      await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
@@ -8396,13 +8439,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill('');
       await searchInput.fill(productNameWith3);
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results to populate
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify one row is returned
       const deficitTableBody = deficitMainTable.locator('tbody');
-      await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const deficitRows = deficitTableBody.locator('tr');
       const deficitRowCount = await deficitRows.count();
 
@@ -8429,7 +8472,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Confirm it's the correct product
       const productNameCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_NAME).first();
-      await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
+      await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -8509,19 +8552,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to warehouse page
       await loadingTaskPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Click on shipping tasks button to go to orders page
       const shippingTasksButton = page.locator(SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS);
-      await shippingTasksButton.waitFor({ state: 'visible', timeout: 10000 });
+      await shippingTasksButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(shippingTasksButton);
       await shippingTasksButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the warehouse table
       const warehouseTable = page.locator(SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE);
-      await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
+      await warehouseTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find and use the search input field
@@ -8533,13 +8576,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await searchInput.fill('');
       await searchInput.fill(orderNumberForSearch);
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results to populate
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify rows are returned
       const warehouseTableBody = warehouseTable.locator('tbody');
-      await warehouseTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await warehouseTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const warehouseRows = warehouseTableBody.locator('tr');
       const warehouseRowCount = await warehouseRows.count();
 
@@ -8564,14 +8607,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const row = warehouseRows.nth(i);
         try {
           // Check order number
-          const orderNumberCell = row.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-NumberOrder"]').first();
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          const orderNumberCell = row.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           const normalizedOrder = normalizeOrderNumber(orderNumberText);
 
           // Check product name
-          const productNameCell = row.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
-          await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+          const productNameCell = row.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
+          await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
           console.log(`Test Case 8 Step 11: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
@@ -8598,7 +8641,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetWarehouseRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Confirm it's the correct product by checking the product name cell
-      const productNameCell = targetWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
+      const productNameCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
       const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
@@ -8612,7 +8655,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Check that the quantity cell has the correct value
-      const quantityCell = targetWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Warehouse quantity value: ${quantityValue}, expected: ${newQuantity}`);
@@ -8632,14 +8675,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
       await loadingTaskPage.waitForNetworkIdle();
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
-      await page.waitForTimeout(1000);
+      await pageContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Search by product name ending with _3
       console.log(`Test Case 8: Searching for product: ${productNameWith3}`);
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         useRedesign: true,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
@@ -8672,7 +8715,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(firstDataRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Get order number from the row
-      const orderNumberCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
+      const orderNumberCell = firstDataRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(orderNumberCell, { waitAfter: 1500 });
       const orderNumberFromRow = (await orderNumberCell.textContent())?.trim() || '';
       const normalizedOrderNumberFromRow = normalizeOrderNumber(orderNumberFromRow);
@@ -8690,7 +8733,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Get quantity from the row
-      const quantityCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = firstDataRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityFromRow = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 8: Quantity from row: ${quantityFromRow}, expected: ${newQuantity}`);
@@ -8706,12 +8749,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Select the row and click edit button
-      const dateOrderCell = firstDataRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
+      const dateOrderCell = firstDataRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateOrderCell);
       await dateOrderCell.click();
 
       const editButton = page.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
+      await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const isEnabled = await editButton.isEnabled();
       if (!isEnabled) {
         throw new Error('Edit order button is disabled; cannot proceed.');
@@ -8719,7 +8762,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(editButton);
       await editButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Wait for edit page to load and check order number in title
       const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
@@ -8730,8 +8773,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           const text = element.textContent || '';
           return /Редактирование заказа\s+№\s+\d+-\d+/.test(text);
         },
-        'AddOrder-EditTitle',
-        { timeout: 30000 }
+        SelectorsLoadingTasksPage.EDIT_TITLE_TESTID,
+        { timeout: WAIT_TIMEOUTS.PAGE_RELOAD }
       );
 
       const titleText = (await editTitleElement.textContent())?.trim() || '';
@@ -8776,9 +8819,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Set quantity to 1 and save
       await quantityInput.clear();
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       await quantityInput.fill('1');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
 
       const inputValueAfterFill = await quantityInput.inputValue();
       await expectSoftWithScreenshot(
@@ -8795,12 +8838,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(saveButton);
       await saveButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
     });
   });
 
   test('Test Case 9 - Verify quantity is 1 after setting it in edit page', async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     console.log('Test Case 9 - Verify quantity is 1 after setting it in edit page');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -8827,8 +8870,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
       await loadingTaskPage.waitForNetworkIdle();
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
-      await page.waitForTimeout(1000);
+      await pageContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       await expectSoftWithScreenshot(
         page,
@@ -8844,7 +8887,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // We're on the main orders page, so use SHIPMENTS_SEARCH_INPUT
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
 
@@ -8858,12 +8901,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const rowText = (await row.textContent())?.trim() || '';
         const hasItogo = rowText.includes('Итого:');
 
-        const orderNumberCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-        const productNameCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+        const productNameCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
 
         if (
-          (await orderNumberCell.isVisible({ timeout: 1000 }).catch(() => false)) &&
-          (await productNameCell.isVisible({ timeout: 1000 }).catch(() => false))
+          (await orderNumberCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false)) &&
+          (await productNameCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false))
         ) {
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
@@ -8899,8 +8942,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
 
-      const productNameCellTarget = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-Name"]').first();
-      await productNameCellTarget.waitFor({ state: 'visible', timeout: 10000 });
+      const productNameCellTarget = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
+      await productNameCellTarget.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const productNameInRow = (await productNameCellTarget.textContent())?.trim() || '';
 
       await expectSoftWithScreenshot(
@@ -8934,8 +8977,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const rowText = (await row.textContent())?.trim() || '';
         const hasItogo = rowText.includes('Итого:');
 
-        const orderNumberCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-        if (await orderNumberCell.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+        if (await orderNumberCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false)) {
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           if (orderNumberText.includes(orderNumberFromRow) && !hasItogo) {
             targetRow = row;
@@ -8959,8 +9002,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Click the DateOrder cell to select the row
-      const dateOrderCell = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-DateOrder"]').first();
-      await dateOrderCell.waitFor({ state: 'visible', timeout: 10000 });
+      const dateOrderCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
+      await dateOrderCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(dateOrderCell, {
         highlightColor: 'yellow',
         highlightBorder: '2px solid red',
@@ -8971,7 +9014,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Click the edit button below the table
       const editButton = page.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
-      await editButton.waitFor({ state: 'visible', timeout: 10000 });
+      await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const isEnabled = await editButton.isEnabled();
       await expectSoftWithScreenshot(
         page,
@@ -8993,7 +9036,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       });
       await editButton.click();
       await loadingTaskPage.waitForNetworkIdle();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       await expectSoftWithScreenshot(
         page,
@@ -9035,9 +9078,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
-        const orderNumberCell = row.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Tbody-NumberOrder"]').first();
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first();
         try {
-          await orderNumberCell.waitFor({ state: 'visible', timeout: 2000 });
+          await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
           if (normalizedRowOrder.includes(normalizedExpectedOrder) || normalizedExpectedOrder.includes(normalizedRowOrder.split(' от ')[0])) {
@@ -9066,7 +9109,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetRow, { waitAfter: 1500 });
 
       // Verify the quantity cell has value 1
-      const quantityCell = targetRow.locator('[data-testid^="AddOrder-PositionInAccount-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, {
         highlightColor: 'cyan',
         highlightBorder: '2px solid blue',
@@ -9103,7 +9146,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // We're on the main orders page, so use SHIPMENTS_SEARCH_INPUT
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-        timeoutBeforeWait: 1000,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
         minRows: 1,
       });
     });
@@ -9119,8 +9162,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const rowText = (await row.textContent())?.trim() || '';
         const hasItogo = rowText.includes('Итого:');
 
-        const orderNumberCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-        if (await orderNumberCell.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+        if (await orderNumberCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false)) {
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           if (orderNumberText.includes(orderNumberFromRow) && !hasItogo) {
             targetRow = row;
@@ -9136,7 +9179,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Verify quantity
-      const quantityCell = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
       console.log(`Test Case 9: Main orders page quantity: ${quantityValue}, expected: 1`);
@@ -9162,8 +9205,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const rowText = (await row.textContent())?.trim() || '';
         const hasItogo = rowText.includes('Итого:');
 
-        const orderNumberCell = row.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Tbody-NumberOrder"]').first();
-        if (await orderNumberCell.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
+        if (await orderNumberCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false)) {
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           if (orderNumberText.includes(orderNumberFromRow) && !hasItogo) {
             targetRow = row;
@@ -9176,31 +9219,31 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         throw new Error(`Could not find row with /2 order: ${orderNumberFromRow}`);
       }
 
-      await targetRow.waitFor({ state: 'visible', timeout: 10000 });
+      await targetRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-      const quantityCell = targetRow.locator('[data-testid^="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Product-Kol"]').first();
+      const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell);
       await quantityCell.dblclick();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
       await loadingTaskPage.waitForNetworkIdle();
 
       // Wait for modal to open
       let modal = page.locator(SelectorsPartsDataBase.MODAL);
       try {
-        await modal.waitFor({ state: 'attached', timeout: 5000 });
+        await modal.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
       } catch (error) {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
       try {
-        await modal.waitFor({ state: 'visible', timeout: 10000 });
+        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: 10000 });
+          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -9236,12 +9279,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find the table with testid: Shipment-Table
       const shipmentTable = modal.locator(SelectorsLoadingTasksPage.SHIPMENT_TABLE).first();
-      await shipmentTable.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(shipmentTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
       // Find the row with our product
       const shipmentTableBody = shipmentTable.locator('tbody');
-      await shipmentTableBody.waitFor({ state: 'visible', timeout: 10000 });
+      await shipmentTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const shipmentRows = shipmentTableBody.locator('tr');
       const shipmentRowCount = await shipmentRows.count();
       console.log(`Test Case 9: Found ${shipmentRowCount} rows in Shipment-Table`);
@@ -9249,13 +9292,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       let targetShipmentRow = null;
       for (let i = 0; i < shipmentRowCount; i++) {
         const row = shipmentRows.nth(i);
-        await row.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+        await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT }).catch(() => {});
 
         // Try to find product name cell
-        const productNameCell = row.locator('[data-testid^="Shipment-Product-Name"]').first();
+        const productNameCell = row.locator(SelectorsShipmentTasks.SHIPMENT_PRODUCT_NAME_PATTERN).first();
         try {
           if ((await productNameCell.count()) > 0) {
-            await productNameCell.waitFor({ state: 'visible', timeout: 2000 });
+            await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
             const productNameText = (await productNameCell.textContent())?.trim() || '';
             if (productNameText.includes(productNameWith3)) {
               targetShipmentRow = row;
@@ -9298,7 +9341,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(targetShipmentRow);
 
       // Verify the quantity in the shipment table row
-      const shipmentQuantityCell = targetShipmentRow.locator('[data-testid^="Shipment-Product-Kol"]').first();
+      const shipmentQuantityCell = targetShipmentRow.locator(SelectorsShipmentTasks.SHIPMENT_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(shipmentQuantityCell, {
         highlightColor: 'cyan',
         highlightBorder: '2px solid blue',
@@ -9322,18 +9365,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const { page: newPage, pageObject: deficitPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.WAREHOUSE.URL, CreateLoadingTaskPage);
 
       try {
-        await newPage.waitForTimeout(1000);
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Open Дефицит продукции (Deficit Products) page
         const deficitProductionButton = newPage.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
         await deficitPage.waitAndHighlight(deficitProductionButton);
         await deficitProductionButton.click();
         await deficitPage.waitForNetworkIdle();
-        await newPage.waitForTimeout(1000);
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Locate the deficit table
         const deficitMainTable = newPage.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD);
-        await deficitMainTable.waitFor({ state: 'visible', timeout: 10000 });
+        await deficitMainTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await deficitPage.waitAndHighlight(deficitMainTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
         // Find and use the search input field
@@ -9344,13 +9387,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await searchInput.fill('');
         await searchInput.fill(productNameWith3);
         await searchInput.press('Enter');
-        await newPage.waitForTimeout(1000); // Wait for search results to populate
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
         await deficitPage.waitForNetworkIdle();
-        await newPage.waitForTimeout(1000);
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Verify one row is returned
         const deficitTableBody = deficitMainTable.locator('tbody');
-        await deficitTableBody.waitFor({ state: 'visible', timeout: 10000 });
+        await deficitTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const deficitRows = deficitTableBody.locator('tr');
         const deficitRowCount = await deficitRows.count();
 
@@ -9377,7 +9420,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Confirm it's the correct product
         const productNameCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_NAME).first();
-        await productNameCell.waitFor({ state: 'visible', timeout: 10000 });
+        await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
         await expectSoftWithScreenshot(
@@ -9419,23 +9462,23 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       try {
-        await newPage.waitForTimeout(1000);
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Click on shipping tasks button to go to orders page
         const shippingTasksButton = newPage.locator(SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS);
         await warehousePage.waitAndHighlight(shippingTasksButton);
         await shippingTasksButton.click();
         await warehousePage.waitForNetworkIdle();
-        await newPage.waitForTimeout(1000);
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Locate the warehouse table
         const warehouseTable = newPage.locator(SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE);
-        await warehouseTable.waitFor({ state: 'visible', timeout: 10000 });
+        await warehouseTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehousePage.waitAndHighlight(warehouseTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
         // Find and use the search input field
         const searchInputWrapper = newPage.locator(SelectorsShipmentTasks.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
-        await searchInputWrapper.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInputWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await warehousePage.waitAndHighlight(searchInputWrapper);
 
         // Get the actual input element (same approach as Test Case 4)
@@ -9443,12 +9486,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const tagName = await searchInputWrapper.evaluate((el: HTMLElement) => el.tagName.toLowerCase()).catch(() => '');
         if (tagName === 'input') {
           searchInput = searchInputWrapper;
-          await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+          await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         } else {
           searchInput = searchInputWrapper.locator('input').first();
           const inputCount = await searchInput.count();
           if (inputCount > 0) {
-            await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+            await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
             await searchInput.scrollIntoViewIfNeeded();
           } else {
             searchInput = searchInputWrapper;
@@ -9457,26 +9500,26 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Search by product name ending with _3 - click first to focus, then type
         await searchInput.click();
-        await newPage.waitForTimeout(200);
+        await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT);
         await searchInput.fill('');
-        await newPage.waitForTimeout(200);
+        await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
         // Type the search term character by character to ensure it's entered
         await searchInput.type(productNameWith3, { delay: 50 });
-        await newPage.waitForTimeout(300);
+        await newPage.waitForTimeout(TIMEOUTS.SHORT);
 
         // Verify the value was set
         const valueAfterType = await searchInput.inputValue();
         console.log(`Test Case 9: Search input value after type: "${valueAfterType}"`);
 
         await searchInput.press('Enter');
-        await newPage.waitForTimeout(1000); // Wait for search results to populate
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
         await warehousePage.waitForNetworkIdle();
-        await newPage.waitForTimeout(1000);
+        await newPage.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Verify one row is returned
         const warehouseTableBody = warehouseTable.locator('tbody');
-        await warehouseTableBody.waitFor({ state: 'visible', timeout: 10000 });
+        await warehouseTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const warehouseRows = warehouseTableBody.locator('tr');
         const warehouseRowCount = await warehouseRows.count();
 
@@ -9488,7 +9531,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await warehousePage.waitAndHighlight(firstWarehouseRow, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
 
         // Confirm it's the correct product by checking the product name cell
-        const productNameCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Tbody-Name"]').first();
+        const productNameCell = firstWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
         await warehousePage.waitAndHighlight(productNameCell, { waitAfter: 1500 });
         const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
@@ -9502,7 +9545,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Check that the quantity cell has the value 1
-        const quantityCell = firstWarehouseRow.locator('[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Kol"]').first();
+        const quantityCell = firstWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
         await warehousePage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
         const quantityValue = (await quantityCell.textContent())?.trim() || '';
         console.log(`Test Case 9: Warehouse quantity value: ${quantityValue}, expected: 1`);
@@ -9522,7 +9565,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 10 - Set warehouse revision values to 0', async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     console.log('Test Case 10 - Set warehouse revision values to 0');
     const revisionPage = new CreateRevisionPage(page);
     // Use the global test product names constant
@@ -9559,7 +9602,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 11 - Удаление задачи на отгрузку', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 11 - Delete shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
@@ -9572,7 +9615,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitForNetworkIdle();
 
       const pageContainer = page.locator(SelectorsLoadingTasksPage.issueShipmentPage);
-      await pageContainer.waitFor({ state: 'visible', timeout: 10000 });
+      await pageContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -9601,7 +9644,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 12 - Delete all test products', async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     console.log('Test Case 13 - Delete all test products');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
@@ -9624,7 +9667,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 13 - Verify all items are deleted', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 12 - Verify all items are deleted');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const partsDatabasePage = new CreatePartsDatabasePage(page);
