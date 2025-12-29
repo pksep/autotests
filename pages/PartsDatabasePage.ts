@@ -3368,7 +3368,7 @@ export class CreatePartsDatabasePage extends PageObject {
       await page.waitForTimeout(500);
 
       // Click the archive button
-      const archiveButtonSelector = archiveButtonTestId || 'BaseDetals-Button-Archive';
+      const archiveButtonSelector = archiveButtonTestId || 'BaseProducts-Button-Archive';
       const archiveButton = page.locator(`[data-testid="${archiveButtonSelector}"]`);
       await expect(archiveButton).toBeVisible();
       await archiveButton.click();

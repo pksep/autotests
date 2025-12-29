@@ -19,8 +19,8 @@ export const ENV = {
   //HEADLESS: process.env.HEADLESS === "false" ? false : true,
   HEADLESS: process.env.HEADLESS === 'true' ? true : false,
   TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
-  TEST_SUITE: 'U003',
-  //TEST_SUITE: 'suite01',
+  //TEST_SUITE: 'U003',
+  TEST_SUITE: 'ERP_969',
   TEST_DIR: '.',
   DEBUG: true, // Enable debug mode for login testing
 };
@@ -236,7 +236,7 @@ export const SELECTORS = {
   },
   SUBPAGES: {
     CREATEDETAIL: {
-      URL: 'baseproduct/detal/add',
+      URL: 'baseproducts/detal/add',
       TEXT_RUS: 'Создать деталь',
       TEXT_ENG: 'Create Part',
       DATA_TESTID: 'BaseProducts-Button-Create',
