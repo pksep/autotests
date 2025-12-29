@@ -555,12 +555,14 @@ export const runERP_969_2 = () => {
 
       // Click the ordering suppliers button
       const orderingSuppliersButton = warehousePage.locator(SelectorsOrderedFromSuppliers.SCLAD_ORDERING_SUPPLIERS);
+      await detailsPage.highlightElement(orderingSuppliersButton);
       await orderingSuppliersButton.click();
       await warehousePage.waitForTimeout(500);
       await warehousePage.waitForLoadState('networkidle');
 
       // Click the create order button
       const createOrderButton = warehousePage.locator(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON);
+      await detailsPage.highlightElement(createOrderButton);
       await createOrderButton.click();
       await warehousePage.waitForTimeout(500);
       await warehousePage.waitForLoadState('networkidle');
@@ -571,6 +573,7 @@ export const runERP_969_2 = () => {
 
       //Click the assemblies operation button
       const assembliesButton = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_SELECT_SUPPLIER_ASSEMBLE_CARD);
+      await detailsPage.highlightElement(assembliesButton);
       await assembliesButton.click();
       await warehousePage.waitForTimeout(500);
       await warehousePage.waitForLoadState('networkidle');
@@ -620,6 +623,7 @@ export const runERP_969_2 = () => {
       expect(rowCount).toBe(1);
 
       const checkbox = rows.locator('td').nth(0).locator("input[type='checkbox']");
+      await detailsPage.highlightElement(checkbox);
       await checkbox.click();
 
       // Click the order button without selecting checkbox (should show warning)
@@ -643,10 +647,7 @@ export const runERP_969_2 = () => {
         .locator(
           `[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`
         );
-      await quantityInput.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(quantityInput);
       await expect(quantityInput).toBeVisible({ timeout: 5000 });
       await quantityInput.fill(orderedQuantity2.toString());
       await quantityInput.press('Enter');
@@ -654,15 +655,13 @@ export const runERP_969_2 = () => {
 
       // Verify the production start modal is visible
       const startProductionButton = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_CREATE_ORDER_SAVE_BUTTON);
-      await startProductionButton.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'yellow';
-      });
+      await detailsPage.highlightElement(startProductionButton);
       await expect(startProductionButton).toBeVisible({ timeout: 5000 });
 
       // Find and click the "В производство" button
 
       await expect(startProductionButton).toBeVisible({ timeout: 5000 });
+      await detailsPage.highlightElement(startProductionButton);
       await startProductionButton.click();
       await warehousePage.waitForLoadState('networkidle');
       await warehousePage.waitForTimeout(1500);
@@ -765,101 +764,49 @@ export const runERP_969_2 = () => {
 
       // Verify the modal is visible
       const orderModal = warehousePage.locator(`dialog[data-testid^="${CONST.ORDER_MODAL}"]`);
-      await detailsPage.highlightElement(orderModal, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(orderModal, HIGHLIGHT_PENDING);
       await expect(orderModal).toBeVisible({ timeout: 5000 });
-      await detailsPage.highlightElement(orderModal, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(orderModal, HIGHLIGHT_SUCCESS);
 
       // Verify the modal title
       const modalTitle = orderModal.locator('h4');
-      await detailsPage.highlightElement(modalTitle, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(modalTitle, HIGHLIGHT_PENDING);
       await expect(modalTitle).toContainText('Заказ', { timeout: 5000 });
-      await detailsPage.highlightElement(modalTitle, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(modalTitle, HIGHLIGHT_SUCCESS);
 
       // Verify the order date in the modal
       const modalDateElement = orderModal.locator('.modal-worker__label-span').first();
-      await detailsPage.highlightElement(modalDateElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(modalDateElement, HIGHLIGHT_PENDING);
       await expect(modalDateElement).toBeVisible({ timeout: 5000 });
       const modalDate = await modalDateElement.textContent();
       console.log(`Modal date: "${modalDate}"`);
       expect(modalDate).toContain(orderDate?.trim() || '');
-      await detailsPage.highlightElement(modalDateElement, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(modalDateElement, HIGHLIGHT_SUCCESS);
 
       // Verify the order number (without "C" prefix)
       const modalOrderNumberElement = orderModal.locator('.modal-worker__label-span').nth(1);
-      await detailsPage.highlightElement(modalOrderNumberElement, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(modalOrderNumberElement, HIGHLIGHT_PENDING);
       await expect(modalOrderNumberElement).toBeVisible({ timeout: 5000 });
       const modalOrderNumber = await modalOrderNumberElement.textContent();
       console.log(`Modal order number: "${modalOrderNumber}"`);
       expect(modalOrderNumber?.trim()).toBe(orderNumber?.trim());
-      await detailsPage.highlightElement(modalOrderNumberElement, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(modalOrderNumberElement, HIGHLIGHT_SUCCESS);
 
       // Find and verify the table contents
       const table = orderModal.locator(SelectorsOrderedFromSuppliers.ORDER_MODAL_TABLE);
-      await detailsPage.highlightElement(table, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(table, HIGHLIGHT_PENDING);
       await expect(table).toBeVisible({ timeout: 5000 });
-      await detailsPage.highlightElement(table, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(table, HIGHLIGHT_SUCCESS);
 
       // Get the first data row (skip header if present)
       const firstDataRow = table.locator('tbody tr').first();
-      await detailsPage.highlightElement(firstDataRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(firstDataRow, HIGHLIGHT_PENDING);
       await expect(firstDataRow).toBeVisible({ timeout: 5000 });
-      await detailsPage.highlightElement(firstDataRow, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(firstDataRow, HIGHLIGHT_SUCCESS);
 
       // Verify the first column contains order number with suffix
       const firstColumn = firstDataRow.locator('td').nth(1);
-      await detailsPage.highlightElement(firstColumn, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(firstColumn, HIGHLIGHT_PENDING);
       const firstColumnText = await firstColumn.textContent();
       console.log(`First column (order number): "${firstColumnText}"`);
       // Order number column contains plain order number without suffix
@@ -867,33 +814,21 @@ export const runERP_969_2 = () => {
 
       // Verify the third column contains ASSEMBLY_NAME
       const thirdColumn = firstDataRow.locator('td').nth(3); // 3rd column (index 2)
-      await detailsPage.highlightElement(thirdColumn, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(thirdColumn, HIGHLIGHT_PENDING);
       const thirdColumnText = await thirdColumn.textContent();
       console.log(`Third column (item): "${thirdColumnText}"`);
       expect(thirdColumnText?.trim()).toBe(CONST.ASSEMBLY_NAME);
 
       // Verify the fourth column contains "Заказано"
       const fourthColumn = firstDataRow.locator('td').nth(4); // 4th column (index 3)
-      await detailsPage.highlightElement(fourthColumn, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(fourthColumn, HIGHLIGHT_PENDING);
       const fourthColumnText = await fourthColumn.textContent();
       console.log(`Fourth column (status): "${fourthColumnText}"`);
       expect(fourthColumnText?.trim()).toBe('Заказано');
 
       // Verify the fifth column contains the ordered quantity
       const fifthColumn = firstDataRow.locator('td').nth(5); // 5th column (index 4)
-      await detailsPage.highlightElement(fifthColumn, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(fifthColumn, HIGHLIGHT_PENDING);
       // Column 5 is "Кол-во сделанных" (completed) - should be "0"
       const fifthColumnText = await fifthColumn.textContent();
       console.log(`Completed column (index 5): "${fifthColumnText}"`);
@@ -902,11 +837,7 @@ export const runERP_969_2 = () => {
       // Verify column 6 (Кол-во в задании / ordered) contains orderedQuantity2
       // Note: The value is inside an input field, not plain text
       const orderedColumn = firstDataRow.locator('td').nth(6);
-      await detailsPage.highlightElement(orderedColumn, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(orderedColumn, HIGHLIGHT_PENDING);
       const orderedInput = orderedColumn.locator('input');
       const orderedColumnValue = await orderedInput.inputValue();
       console.log(`Ordered column (index 6) input value: "${orderedColumnValue}"`);
@@ -938,11 +869,7 @@ export const runERP_969_2 = () => {
       await expect(searchInput).toBeVisible({ timeout: 10000 });
       await searchInput.waitFor({ state: 'visible', timeout: 10000 });
 
-      await detailsPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(searchInput, HIGHLIGHT_PENDING);
 
       // Clear any existing value first
       await searchInput.clear();
@@ -1005,47 +932,27 @@ export const runERP_969_2 = () => {
 
       // Find cell with id ModalAddWaybill-WaybillDetails-CollectedQuantityCell
       const collectedQuantityCell = waybillModal.locator(SelectorsModalWaybill.WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL);
-      await detailsPage.highlightElement(collectedQuantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT_PENDING);
       await warehousePage.waitForTimeout(1000);
 
       // Confirm it contains the value 0
       const collectedQuantity = await collectedQuantityCell.textContent();
       expect(parseInt(collectedQuantity?.trim() || '0')).toBe(0);
-      await detailsPage.highlightElement(collectedQuantityCell, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT_SUCCESS);
 
       // Find cell with id ModalAddWaybill-WaybillDetails-NameCell
       const nameCell = waybillModal.locator(SelectorsModalWaybill.WAYBILL_DETAILS_NAME_CELL);
-      await detailsPage.highlightElement(nameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(nameCell, HIGHLIGHT_PENDING);
       await warehousePage.waitForTimeout(1000);
 
       // Confirm it contains the name of our СБ
       const nameCellText = await nameCell.textContent();
       expect(nameCellText?.trim()).toBe(CONST.ASSEMBLY_NAME);
-      await detailsPage.highlightElement(nameCell, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(nameCell, HIGHLIGHT_SUCCESS);
 
       // Find input with id ModalAddWaybill-WaybillDetails-OwnQuantityInput
       const ownQuantityInput = waybillModal.locator(SelectorsModalWaybill.WAYBILL_DETAILS_OWN_QUANTITY_INPUT);
-      await detailsPage.highlightElement(ownQuantityInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_PENDING);
       await warehousePage.waitForTimeout(1000);
 
       // Set its value to 1
@@ -1054,29 +961,17 @@ export const runERP_969_2 = () => {
       await warehousePage.waitForLoadState('networkidle');
 
       // Set its color to green
-      await detailsPage.highlightElement(ownQuantityInput, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_SUCCESS);
 
       // Find cell with id ModalAddWaybill-ShipmentDetailsTable-TotalQuantityLabel
       const totalQuantityLabel = waybillModal.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL);
-      await detailsPage.highlightElement(totalQuantityLabel, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT_PENDING);
       await warehousePage.waitForTimeout(1000);
 
       // Confirm it contains "Всего: 0"
       const totalQuantityText = await totalQuantityLabel.textContent();
       expect(totalQuantityText?.trim()).toBe('Всего: 0');
-      await detailsPage.highlightElement(totalQuantityLabel, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT_SUCCESS);
 
       // Find cell with id ModalAddWaybill-ShipmentDetailsTable-ScladSetSelectedCheckbox
       const checkboxCell = waybillModal.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_SCLAD_SET_SELECTED_CHECKBOX);
@@ -1088,6 +983,7 @@ export const runERP_969_2 = () => {
       await warehousePage.waitForTimeout(1000);
 
       // Select the checkbox (click on the parent div)
+      await detailsPage.highlightElement(checkboxCell);
       await checkboxCell.click();
       await warehousePage.waitForTimeout(1000);
 
@@ -1129,6 +1025,7 @@ export const runERP_969_2 = () => {
       });
 
       // Click the Complete Set button
+      await detailsPage.highlightElement(completeSetButton);
       await completeSetButton.click();
       await warehousePage.waitForLoadState('networkidle');
       await warehousePage.waitForTimeout(5000);
@@ -1146,11 +1043,7 @@ export const runERP_969_2 = () => {
       await expect(searchInput).toBeVisible({ timeout: 10000 });
       await searchInput.waitFor({ state: 'visible', timeout: 10000 });
 
-      await detailsPage.highlightElement(searchInput, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(searchInput, HIGHLIGHT_PENDING);
 
       // Clear any existing value first
       await searchInput.clear();
@@ -1184,45 +1077,25 @@ export const runERP_969_2 = () => {
 
       // Get the first row and verify it contains our assembly name
       const firstRow = resultRows.first();
-      await detailsPage.highlightElement(firstRow, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(firstRow, HIGHLIGHT_PENDING);
 
       // Verify the name cell contains our СБ name using data-testid
       const nameCell = firstRow.locator(`[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_NAME}"]`);
-      await detailsPage.highlightElement(nameCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(nameCell, HIGHLIGHT_PENDING);
       const nameValue = await nameCell.textContent();
       console.log(`Found SB name: "${nameValue}"`);
       expect(nameValue?.trim()).toBe(CONST.ASSEMBLY_NAME);
-      await detailsPage.highlightElement(nameCell, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(nameCell, HIGHLIGHT_SUCCESS);
 
       // Double click the designation cell to open modal using data-testid
       const designationCell = firstRow.locator(
         `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION}"]`
       );
-      await detailsPage.highlightElement(designationCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
+      await detailsPage.highlightElement(designationCell, HIGHLIGHT_PENDING);
       await designationCell.dblclick();
       await warehousePage.waitForLoadState('networkidle');
       await warehousePage.waitForTimeout(1000);
-      await detailsPage.highlightElement(designationCell, {
-        backgroundColor: 'green',
-        border: '2px solid green',
-        color: 'white',
-      });
+      await detailsPage.highlightElement(designationCell, HIGHLIGHT_SUCCESS);
       await warehousePage.waitForTimeout(5000);
     });
 
@@ -1670,6 +1543,7 @@ export const runERP_969_2 = () => {
           }
 
           // Click on the name cell to open modal
+          await detailsPage.highlightElement(nameCell);
           await nameCell.click();
           await warehousePage.waitForLoadState('networkidle');
           await warehousePage.waitForTimeout(1000);
@@ -1745,6 +1619,7 @@ export const runERP_969_2 = () => {
           await newTab.waitForTimeout(1000);
 
           // Click the archive button
+          await detailsPage.highlightElement(archiveButton);
           await archiveButton.click();
           await newTab.waitForLoadState('networkidle');
           await newTab.waitForTimeout(1000);
@@ -1776,6 +1651,7 @@ export const runERP_969_2 = () => {
           await newTab.waitForTimeout(2000);
 
           // Click the Yes button
+          await detailsPage.highlightElement(yesButton);
           await yesButton.click();
           await newTab.waitForLoadState('networkidle');
           await newTab.waitForTimeout(1000);
@@ -1817,6 +1693,7 @@ export const runERP_969_2 = () => {
       await warehousePage.waitForTimeout(1000);
 
       // Click the actualize button to reload the page
+      await detailsPage.highlightElement(actualizeButton);
       await actualizeButton.click();
       await warehousePage.waitForLoadState('networkidle');
       await warehousePage.waitForTimeout(1000);

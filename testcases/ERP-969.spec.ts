@@ -133,6 +133,7 @@ export const runERP_969 = () => {
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
+          await detailsPage.highlightElement(archiveButton);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
@@ -142,6 +143,7 @@ export const runERP_969 = () => {
           await expect(archiveModal).toBeVisible();
 
           const yesButton = archiveModal.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON);
+          await detailsPage.highlightElement(yesButton);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -218,11 +220,13 @@ export const runERP_969 = () => {
           await page.waitForTimeout(500);
 
           // Click the row to select the detail.
+          await detailsPage.highlightElement(currentRow);
           await currentRow.click();
           await page.waitForTimeout(500);
 
           // Click the archive button.
           const archiveButton = page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
+          await detailsPage.highlightElement(archiveButton);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
@@ -231,6 +235,7 @@ export const runERP_969 = () => {
           const archiveModal = page.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG);
           await expect(archiveModal).toBeVisible();
           const yesButton = archiveModal.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON);
+          await detailsPage.highlightElement(yesButton);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -321,19 +326,9 @@ export const runERP_969 = () => {
 
       // Search for the new detail within the 'detal' table.
       const detalTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
-      await detalTable.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'yellow';
-      });
+      await detailsPage.highlightElement(detalTable);
       const detailSearchInput = detalTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await detailSearchInput.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'yellow';
-      });
-      await detalTable.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'yellow';
-      });
+      await detailsPage.highlightElement(detailSearchInput);
       await page.waitForTimeout(1000);
       await expect(detailSearchInput).toBeVisible();
       await detailSearchInput.fill(CONST.NEW_DETAIL_A);
@@ -405,10 +400,7 @@ export const runERP_969 = () => {
 
       // Verify that the detail is now visible in the product's specifications table.
       const specsTable = page.locator(SelectorsPartsDataBase.EDITOR_TABLE_SPECIFICATION_CBED);
-      await specsTable.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(specsTable);
       await expect(specsTable).toBeVisible({ timeout: 5000 });
       const specRows = specsTable.locator('tbody tr');
       const rowTexts = await specRows.allTextContents();
@@ -417,10 +409,7 @@ export const runERP_969 = () => {
 
       // Finally, click save on the product page and verify the success message.
       const save = await page.locator(SelectorsPartsDataBase.CREATOR_BUTTON_SAVE);
-      await save.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(save);
       await save.click();
 
       await page.waitForTimeout(1000);
@@ -437,6 +426,7 @@ export const runERP_969 = () => {
     await allure.step('Step 11.2: Click the Ревизия button', async () => {
       // Click the revision button using direct locator.
       const revisionButton = skladPage.locator(SelectorsRevision.WAREHOUSE_PAGE_REVISIONS_TESTID);
+      await detailsPage.highlightElement(revisionButton);
       await revisionButton.click();
       await skladPage.waitForTimeout(500);
     });
@@ -444,6 +434,7 @@ export const runERP_969 = () => {
     await allure.step('Step 11.3: Select the Детайли slider', async () => {
       // In the Склад page, select the Detail slider.
       const detailSlider = skladPage.locator(SelectorsRevision.REVISION_SWITCH_ITEM2);
+      await detailsPage.highlightElement(detailSlider);
       await detailSlider.click();
       await skladPage.waitForTimeout(500);
     });
@@ -454,10 +445,7 @@ export const runERP_969 = () => {
       const skladTable = skladPage.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_TABLE);
 
       const searchInput = skladTable.locator(SelectorsRevision.SEARCH_COVER_INPUT_2);
-      await searchInput.evaluate((element: HTMLElement) => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(searchInput);
       await expect(searchInput).toBeVisible({ timeout: 5000 });
 
       // Enter the detail name (NEW_DETAIL_A) and trigger the search.
@@ -511,6 +499,7 @@ export const runERP_969 = () => {
 
       // In the dialog, click the confirm button.
       const confirmButton = confirmDialog.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE);
+      await detailsPage.highlightElement(confirmButton);
       await expect(confirmButton).toBeVisible({ timeout: 5000 });
       await confirmButton.click();
       await skladPage.waitForLoadState('networkidle');
@@ -550,10 +539,7 @@ export const runERP_969 = () => {
       // Locate the editable div in the 4th column and confirm the saved value
       const fourthCell = rows.first().locator('td').nth(3);
       const editDiv = fourthCell.locator(SelectorsRevision.INPUT_NUMBER_INPUT);
-      await editDiv.evaluate((element: HTMLElement) => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(editDiv);
       await skladPage.waitForTimeout(3000);
       await expect(editDiv).toBeVisible({ timeout: 5000 });
 
@@ -597,10 +583,7 @@ export const runERP_969 = () => {
 
       // Verify that the 5th column contains value "0"
       const fifthCell = rows.first().locator('td').nth(4);
-      await fifthCell.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(fifthCell);
       const cellText = await fifthCell.textContent();
       if (cellText === null) throw new Error('Fifth column content is null.');
       console.log('Residual quantity found in 5th column:', cellText.trim());
@@ -618,12 +601,14 @@ export const runERP_969 = () => {
 
       // Click the ordering suppliers button
       const orderingSuppliersButton = warehousePage.locator(SelectorsOrderedFromSuppliers.SCLAD_ORDERING_SUPPLIERS);
+      await detailsPage.highlightElement(orderingSuppliersButton);
       await orderingSuppliersButton.click();
       await warehousePage.waitForTimeout(500);
       await warehousePage.waitForLoadState('networkidle');
 
       // Click the create order button
       const createOrderButton = warehousePage.locator(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON);
+      await detailsPage.highlightElement(createOrderButton);
       await createOrderButton.click();
       await warehousePage.waitForTimeout(500);
       await warehousePage.waitForLoadState('networkidle');
@@ -634,6 +619,7 @@ export const runERP_969 = () => {
 
       //Click the assemblies operation button
       const assembliesButton = supplierModal.locator(SelectorsOrderedFromSuppliers.MODAL_SELECT_SUPPLIER_ASSEMBLE_CARD);
+      await detailsPage.highlightElement(assembliesButton);
       await assembliesButton.click();
       await warehousePage.waitForTimeout(500);
       await warehousePage.waitForLoadState('networkidle');
@@ -641,10 +627,7 @@ export const runERP_969 = () => {
       //Verify the production table is visible
       const orderAssembly = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG);
       let productionTable = orderAssembly.locator(SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE);
-      await productionTable.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(productionTable);
       await expect(productionTable).toBeVisible({ timeout: 5000 });
       await warehousePage.waitForTimeout(1500);
       // Find and fill the search input
@@ -675,10 +658,7 @@ export const runERP_969 = () => {
 
       //now find th ebottom table  via it's top div:ModallAddStockOrderSupply-Main-Content-Block2
       const bottomTable = warehousePage.locator(SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE);
-      await bottomTable.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(bottomTable);
       await expect(bottomTable).toBeVisible({ timeout: 5000 });
       const bottomRows = bottomTable.locator('tbody tr');
       const bottomRowCount = await bottomRows.count();
@@ -690,10 +670,7 @@ export const runERP_969 = () => {
         .locator(
           `[data-testid^="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START}"][data-testid$="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT}"]`
         );
-      await quantityInput.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
+      await detailsPage.highlightElement(quantityInput);
       await expect(quantityInput).toBeVisible({ timeout: 5000 });
       await quantityInput.fill(orderedQuantity.toString());
       await quantityInput.press('Enter');
@@ -723,6 +700,7 @@ export const runERP_969 = () => {
       console.log(`Captured order number: ${orderNumber}`);
 
       const orderButton = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_CREATE_ORDER_SAVE_BUTTON);
+      await detailsPage.highlightElement(orderButton);
       await orderButton.click();
       await warehousePage.waitForTimeout(500);
       await warehousePage.waitForLoadState('networkidle');
@@ -781,11 +759,7 @@ export const runERP_969 = () => {
             console.log(`✅ Found matching order: "${cellText}"`);
 
             // Highlight the found row
-            await row.evaluate((el: HTMLElement) => {
-              el.style.backgroundColor = 'green';
-              el.style.border = '3px solid red';
-              el.style.color = 'white';
-            });
+            await detailsPage.highlightElement(row, HIGHLIGHT_SUCCESS);
 
             foundOrder = true;
             targetRow = row;
@@ -793,11 +767,7 @@ export const runERP_969 = () => {
             break;
           } else {
             console.log(`❌ No matching order found in tbody ${i + 1}`);
-            await row.evaluate((el: HTMLElement) => {
-              el.style.backgroundColor = 'red';
-              el.style.border = '3px solid red';
-              el.style.color = 'white';
-            });
+            await detailsPage.highlightElement(row, HIGHLIGHT_ERROR);
           }
         }
 
@@ -959,11 +929,7 @@ export const runERP_969 = () => {
       // Sub-step 16.4: Locate and verify kitting table
       await allure.step('Sub-step 16.4: Locate and verify kitting table', async () => {
         kittingTable = kittingPage.locator(SelectorsAssemblyKitting.TABLE_COMPLECT_TABLE);
-        await kittingTable.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'blue';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(kittingTable);
         await expect(kittingTable).toBeVisible({ timeout: 5000 });
       });
 
@@ -996,6 +962,7 @@ export const runERP_969 = () => {
       // Sub-step 16.7: Double click third column to open modal
       await allure.step('Sub-step 16.7: Double click third column to open modal', async () => {
         const targetColumn = firstRow.locator('td').nth(3);
+        await detailsPage.highlightElement(targetColumn, HIGHLIGHT_PENDING);
         await detailsPage.highlightElement(targetColumn, HIGHLIGHT_PENDING);
         await targetColumn.dblclick();
         await kittingPage.waitForLoadState('networkidle');
@@ -1175,11 +1142,7 @@ export const runERP_969 = () => {
           const matchingCell = kittingPage
             .locator(`[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-OrderNumberCell"]:has-text("${orderNumber}")`)
             .first();
-          await matchingCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'green';
-            el.style.border = '2px solid green';
-            el.style.color = 'white';
-          });
+          await detailsPage.highlightElement(matchingCell, HIGHLIGHT_SUCCESS);
         }
       });
 
@@ -1440,10 +1403,7 @@ export const runERP_969 = () => {
         await expect(kittingTable3).toBeVisible({ timeout: 10000 });
 
         firstRow3 = kittingTable3.locator('tbody tr').first();
-        await firstRow3.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-        });
+        await detailsPage.highlightElement(firstRow3, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.39: Verify updated name cell
@@ -1656,16 +1616,8 @@ export const runERP_969 = () => {
         await searchInput.press('Enter');
         await waybillPage.waitForLoadState('networkidle');
         await waybillPage.waitForTimeout(3000); // Wait for search results to load
-        await searchInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
-        await waybillTable.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(searchInput, HIGHLIGHT_SUCCESS);
+        await detailsPage.highlightElement(waybillTable, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.4: Find the row containing our SB
