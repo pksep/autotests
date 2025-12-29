@@ -60,6 +60,25 @@ export const MODAL_CREATE_ORDER_CANCEL_BUTTON = '[data-testid="OrderSuppliers-Mo
 export const MODAL_CREATE_ORDER_SAVE_BUTTON = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save"]';
 export const MODAL_CREATE_ORDER_CHOOSE_BUTTON = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button"]';
 
+// ERP-969 specific selectors
+export const SCLAD_ORDERING_SUPPLIERS = '[data-testid="Sclad-orderingSuppliers"]';
+export const MODAL_ADD_ORDER_PRODUCTION_DIALOG = 'dialog[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"][open]';
+export const MODAL_TITLE = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title"]';
+export const TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE =
+  'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1"]';
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT =
+  '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input"]';
+export const TABLE_MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE =
+  'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2"]';
+export const ORDER_MODAL = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker"]';
+export const ORDER_MODAL_TABLE =
+  '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table"]';
+export const ORDER_MODAL_TOP_ORDER_NUMBER = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-Headers-LabelOrder-Span"]';
+
+// Additional selectors
+export const ORDER_SUPPLIERS_TABLE = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table"]';
+export const ORDER_SUPPLIERS_TABLE_SEARCH_INPUT = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input"]';
+
 // Helper function to get selector by test ID from JSON
 export const getSelectorByTestId = (testId: string): string => {
   const selectorMap: Record<string, string> = {

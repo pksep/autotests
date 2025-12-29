@@ -156,3 +156,12 @@ export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Moda
 export const EDIT_PAGE_SPECIFICATIONS_TABLE = '[data-testid="Editor-TableSpecification-Product"]';
 export const MAIN_PAGE_SAVE_BUTTON_STARTS_WITH = '[data-testid^="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
 export const MAIN_TABLE_TEST_ID = '[data-testid="Editor-TableSpecification-Product"]';
+
+// ERP-969 specific selectors
+export const EDITOR_TABLE_SPECIFICATION_CBED = '[data-testid="Editor-TableSpecification-Cbed"]';
+export const CREATOR_TITLE = '[data-testid="Creator-Title"]';
+export const EDIT_DETAL_TITLE = '[data-testid="EditDetal-Title"]';
+export const CREATOR_BUTTON_SAVE = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
+export const CREATOR_BUTTON_CANCEL = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
+export const BASE_PRODUCTS_BUTTON_CREATE = '[data-testid="BaseProducts-Button-Create"]';
+export const BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS = '[data-testid="BaseProducts-CreatLink-Titlebase-of-assembly-units"]';
