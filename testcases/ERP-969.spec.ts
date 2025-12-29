@@ -4,6 +4,49 @@ import { CreateStockPage } from '../pages/StockPage';
 import { SELECTORS, CONST } from '../config';
 import { allure } from 'allure-playwright';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HIGHLIGHT STYLE OPTIONS (for highlightElement from PageObject)
+// ─────────────────────────────────────────────────────────────────────────────
+const HIGHLIGHT_PENDING = { backgroundColor: 'yellow', border: '2px solid red', color: 'blue' };
+const HIGHLIGHT_SUCCESS = { backgroundColor: 'green', border: '2px solid green', color: 'white' };
+const HIGHLIGHT_ERROR = { backgroundColor: 'red', border: '2px solid red', color: 'white' };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER: Vue-compatible search using pressSequentially
+// ─────────────────────────────────────────────────────────────────────────────
+async function searchWithPressSequentially(
+  page: Page,
+  searchInputSelector: string,
+  searchTerm: string,
+  options?: { delay?: number; waitAfterSearch?: number }
+): Promise<void> {
+  const delay = options?.delay ?? 50;
+  const waitAfterSearch = options?.waitAfterSearch ?? 2000;
+
+  const searchInput = page.locator(searchInputSelector);
+  await expect(searchInput).toBeVisible({ timeout: 5000 });
+
+  // Click to focus, then clear and type
+  await searchInput.click();
+  await page.waitForTimeout(300);
+
+  // Clear the input first
+  await searchInput.fill('');
+  await page.waitForTimeout(200);
+
+  // Type the search term using keyboard (more reliable with Vue)
+  await searchInput.pressSequentially(searchTerm, { delay });
+  await page.waitForTimeout(500);
+
+  // Verify the value was entered
+  const inputValue = await searchInput.inputValue();
+  console.log(`Search input value: "${inputValue}"`);
+
+  // Press Enter to trigger search
+  await searchInput.press('Enter');
+  await page.waitForTimeout(waitAfterSearch);
+}
+
 let orderNumber: string | null = null; // Declare outside to share between steps
 let orderedQuantity: number = 2; // Declare outside to share between steps
 let orderedQuantity2: number = 666; // Declare outside to share between steps
@@ -75,11 +118,7 @@ export const runERP_969 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
           await page.waitForTimeout(500);
 
           // Click the row to select the detail
@@ -169,11 +208,7 @@ export const runERP_969 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging.
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
           await page.waitForTimeout(500);
 
           // Click the row to select the detail.
@@ -628,11 +663,7 @@ export const runERP_969 = () => {
 
       //find the button with the label выбрать and data-testid ModallAddStockOrderSupply-Main-Content-Block-Button
       const selectButton = warehousePage.locator(`button[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}"]`);
-      await selectButton.evaluate(el => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(selectButton, HIGHLIGHT_PENDING);
       await page.waitForTimeout(1000);
       await selectButton.click();
 
@@ -664,11 +695,7 @@ export const runERP_969 = () => {
 
       // Verify the modal title
       const modalTitle = warehousePage.locator('h4').first();
-      await modalTitle.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(modalTitle, HIGHLIGHT_PENDING);
       await expect(modalTitle).toContainText('Создание заказа на сборку', { timeout: 5000 });
       const today = new Date().toLocaleDateString('ru-RU');
       await expect(modalTitle).toContainText(today, { timeout: 5000 });
@@ -785,11 +812,7 @@ export const runERP_969 = () => {
       // Get the date from the 4th column of the found row
       const dateCell = targetRow.locator('td').nth(3); // 4th column (index 3)
       await expect(dateCell).toBeVisible({ timeout: 5000 });
-      await dateCell.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(dateCell, HIGHLIGHT_PENDING);
       const orderDate = await dateCell.textContent();
       console.log(`Order date from table: "${orderDate}"`);
 
@@ -800,101 +823,49 @@ export const runERP_969 = () => {
 
       // Verify the modal is visible
       const orderModal = warehousePage.locator(`dialog[data-testid="${CONST.ORDER_MODAL}"][open]`);
-      await orderModal.evaluate((el: HTMLElement) => {
-        el.style.border = '2px solid red';
-        el.style.backgroundColor = 'yellow';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(orderModal, HIGHLIGHT_PENDING);
       await expect(orderModal).toBeVisible({ timeout: 5000 });
-      await orderModal.evaluate((el: HTMLElement) => {
-        el.style.border = '2px solid green';
-        el.style.backgroundColor = 'green';
-        el.style.color = 'white';
-      });
+      await detailsPage.highlightElement(orderModal, HIGHLIGHT_SUCCESS);
 
       // Verify the modal title
       const modalTitle = orderModal.locator('h4');
-      await modalTitle.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(modalTitle, HIGHLIGHT_PENDING);
       await expect(modalTitle).toContainText('Заказ', { timeout: 5000 });
-      await modalTitle.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'green';
-        el.style.border = '2px solid green';
-        el.style.color = 'white';
-      });
+      await detailsPage.highlightElement(modalTitle, HIGHLIGHT_SUCCESS);
 
       // Verify the order date in the modal
       const modalDateElement = orderModal.locator('.modal-worker__label-span').first();
-      await modalDateElement.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(modalDateElement, HIGHLIGHT_PENDING);
       await expect(modalDateElement).toBeVisible({ timeout: 5000 });
       const modalDate = await modalDateElement.textContent();
       console.log(`Modal date: "${modalDate}"`);
       expect(modalDate).toContain(orderDate?.trim() || '');
-      await modalDateElement.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'green';
-        el.style.border = '2px solid green';
-        el.style.color = 'white';
-      });
+      await detailsPage.highlightElement(modalDateElement, HIGHLIGHT_SUCCESS);
 
       // Verify the order number (without "C" prefix)
       const modalOrderNumberElement = orderModal.locator('.modal-worker__label-span').nth(1);
-      await modalOrderNumberElement.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(modalOrderNumberElement, HIGHLIGHT_PENDING);
       await expect(modalOrderNumberElement).toBeVisible({ timeout: 5000 });
       const modalOrderNumber = await modalOrderNumberElement.textContent();
       console.log(`Modal order number: "${modalOrderNumber}"`);
       expect(modalOrderNumber?.trim()).toBe(orderNumber?.trim());
-      await modalOrderNumberElement.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'green';
-        el.style.border = '2px solid green';
-        el.style.color = 'white';
-      });
+      await detailsPage.highlightElement(modalOrderNumberElement, HIGHLIGHT_SUCCESS);
 
       // Find and verify the table contents
       const table = orderModal.locator(`[data-testid="${CONST.ORDER_MODAL_TABLE}"]`);
-      await table.evaluate((el: HTMLElement) => {
-        el.style.border = '2px solid red';
-        el.style.backgroundColor = 'yellow';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(table, HIGHLIGHT_PENDING);
       await expect(table).toBeVisible({ timeout: 5000 });
-      await table.evaluate((el: HTMLElement) => {
-        el.style.border = '2px solid green';
-        el.style.backgroundColor = 'green';
-        el.style.color = 'white';
-      });
+      await detailsPage.highlightElement(table, HIGHLIGHT_SUCCESS);
 
       // Get the first data row (skip header if present)
       const firstDataRow = table.locator('tbody tr').first();
-      await firstDataRow.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(firstDataRow, HIGHLIGHT_PENDING);
       await expect(firstDataRow).toBeVisible({ timeout: 5000 });
-      await firstDataRow.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'green';
-        el.style.border = '2px solid green';
-        el.style.color = 'white';
-      });
+      await detailsPage.highlightElement(firstDataRow, HIGHLIGHT_SUCCESS);
 
       // Verify the first column contains order number with suffix
       const firstColumn = firstDataRow.locator('td').nth(1);
-      await firstColumn.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(firstColumn, HIGHLIGHT_PENDING);
       const firstColumnText = await firstColumn.textContent();
       console.log(`First column (order number): "${firstColumnText}"`);
       // Order number column contains plain order number without suffix
@@ -902,33 +873,21 @@ export const runERP_969 = () => {
 
       // Verify the item column (Наименование) contains NEW_SB_A
       const thirdColumn = firstDataRow.locator('td').nth(3); // Item at index 3
-      await thirdColumn.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(thirdColumn, HIGHLIGHT_PENDING);
       const thirdColumnText = await thirdColumn.textContent();
       console.log(`Third column (item): "${thirdColumnText}"`);
       expect(thirdColumnText?.trim()).toBe(CONST.NEW_SB_A);
 
       // Verify the fourth column contains "Заказано"
       const fourthColumn = firstDataRow.locator('td').nth(4); // 4th column (index 3)
-      await fourthColumn.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(fourthColumn, HIGHLIGHT_PENDING);
       const fourthColumnText = await fourthColumn.textContent();
       console.log(`Fourth column (status): "${fourthColumnText}"`);
       expect(fourthColumnText?.trim()).toBe('Заказано');
 
       // Verify column 5 (Кол-во сделанных / completed) contains "0"
       const completedColumn = firstDataRow.locator('td').nth(5);
-      await completedColumn.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(completedColumn, HIGHLIGHT_PENDING);
       const completedColumnText = await completedColumn.textContent();
       console.log(`Completed column (index 5): "${completedColumnText}"`);
       expect(completedColumnText?.trim()).toBe('0');
@@ -936,11 +895,7 @@ export const runERP_969 = () => {
       // Verify column 6 (Кол-во в задании / ordered) contains orderedQuantity
       // Note: The value is inside an input field, not plain text
       const orderedColumn = firstDataRow.locator('td').nth(6);
-      await orderedColumn.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(orderedColumn, HIGHLIGHT_PENDING);
       const orderedInput = orderedColumn.locator('input');
       const orderedColumnValue = await orderedInput.inputValue();
       console.log(`Ordered column (index 6) input value: "${orderedColumnValue}"`);
@@ -982,11 +937,7 @@ export const runERP_969 = () => {
       // Sub-step 16.2: Click assembly kitting button
       await allure.step('Sub-step 16.2: Click assembly kitting button', async () => {
         const assemblyKittingButton = kittingPage.locator(`[data-testid="${CONST.SCLAD_COMPLETION_CBED_PLAN}"]`);
-        await assemblyKittingButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(assemblyKittingButton, HIGHLIGHT_PENDING);
         await assemblyKittingButton.click();
         await kittingPage.waitForLoadState('networkidle');
       });
@@ -994,17 +945,9 @@ export const runERP_969 = () => {
       // Sub-step 16.3: Verify page title
       await allure.step('Sub-step 16.3: Verify page title', async () => {
         const pageTitle = kittingPage.locator(`[data-testid="${CONST.COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN}"]`);
-        await pageTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(pageTitle, HIGHLIGHT_PENDING);
         await expect(pageTitle).toHaveText('Комплектация сборок на план', { timeout: 5000 });
-        await pageTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(pageTitle, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.4: Locate and verify kitting table
@@ -1021,31 +964,7 @@ export const runERP_969 = () => {
       // Sub-step 16.5: Search for our SB in the table
       await allure.step('Sub-step 16.5: Search for our SB in the table', async () => {
         console.log(`Searching for: "${CONST.NEW_SB_A}"`);
-
-        // Direct search using the specific data-testid for this table's search input
-        const searchInput = kittingPage.locator(`[data-testid="${CONST.COMPLEX_SBORKA_BY_PLAN}"]`);
-        await expect(searchInput).toBeVisible({ timeout: 5000 });
-
-        // Click to focus, then clear and type
-        await searchInput.click();
-        await kittingPage.waitForTimeout(300);
-
-        // Clear the input first
-        await searchInput.fill('');
-        await kittingPage.waitForTimeout(200);
-
-        // Type the search term using keyboard (more reliable with Vue)
-        await searchInput.pressSequentially(CONST.NEW_SB_A, { delay: 50 });
-        await kittingPage.waitForTimeout(500);
-
-        // Verify the value was entered
-        const inputValue = await searchInput.inputValue();
-        console.log(`Search input value: "${inputValue}"`);
-
-        // Press Enter to trigger search
-        await searchInput.press('Enter');
-        await kittingPage.waitForTimeout(2000);
-
+        await searchWithPressSequentially(kittingPage, `[data-testid="${CONST.COMPLEX_SBORKA_BY_PLAN}"]`, CONST.NEW_SB_A);
         const rowCount = await kittingTable.locator('tbody tr').count();
         console.log(`Rows after search: ${rowCount}`);
       });
@@ -1055,43 +974,23 @@ export const runERP_969 = () => {
         // Use selector that targets main rows (excluding kit rows)
         await kittingPage.waitForTimeout(2000);
         firstRow = kittingTable.locator("tbody tr[data-testid^='CompletCbed-Content-Table-Table-TableRow']:not([data-testid*='-Kit'])").first();
-        await firstRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(firstRow, HIGHLIGHT_PENDING);
         // Removed toBeVisible() assertion - main rows with rowspan are not considered visible by Playwright
 
         const targetColumn = firstRow.locator('td').nth(5);
-        await targetColumn.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(targetColumn, HIGHLIGHT_PENDING);
         await kittingPage.waitForTimeout(2000);
         const columnText = await targetColumn.textContent();
         console.log(`Column 3 value: "${columnText}"`);
         expect(columnText?.trim()).toBe(CONST.NEW_SB_A);
-        await targetColumn.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
-        await firstRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(targetColumn, HIGHLIGHT_SUCCESS);
+        await detailsPage.highlightElement(firstRow, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.7: Double click third column to open modal
       await allure.step('Sub-step 16.7: Double click third column to open modal', async () => {
         const targetColumn = firstRow.locator('td').nth(3);
-        await targetColumn.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(targetColumn, HIGHLIGHT_PENDING);
         await targetColumn.dblclick();
         await kittingPage.waitForLoadState('networkidle');
         await kittingPage.waitForTimeout(2500);
@@ -1114,18 +1013,12 @@ export const runERP_969 = () => {
         waybillModal = kittingPage.locator(`dialog[data-testid^="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT}"][open]`);
         await expect(waybillModal).toBeVisible({ timeout: 10000 });
 
-        await waybillModal.evaluate((el: HTMLElement) => {
-          el.style.border = '2px solid red';
-        });
+        await detailsPage.highlightElement(waybillModal, { border: '2px solid red' });
         // Wait for the inner content to be loaded
         const innerContent = waybillModal.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT_INNER}"]`);
         await expect(innerContent).toBeVisible({ timeout: 10000 });
 
-        await targetColumn.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(targetColumn, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.8: Verify waybill modal is visible
@@ -1139,95 +1032,53 @@ export const runERP_969 = () => {
       await allure.step("Sub-step 16.9: Verify modal title contains today's date", async () => {
         // Find the h4 title within the modal since the data-testid was removed
         const modalTitle = waybillModal.locator('h4');
-        await modalTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(modalTitle, HIGHLIGHT_PENDING);
         await expect(modalTitle).toBeVisible({ timeout: 5000 });
         const titleText = await modalTitle.textContent();
         console.log(`Modal title: "${titleText}"`);
         expect(titleText).toContain('Накладная на комплектацию Сборки');
-        await modalTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(modalTitle, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.10: Verify collected quantity is 0
       await allure.step('Sub-step 16.10: Verify collected quantity is 0', async () => {
         const collectedQuantityCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
-        await collectedQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT_PENDING);
         const collectedQuantityValue = await collectedQuantityCell.textContent();
         const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
         console.log(`Collected quantity: "${collectedQuantityValue}"`);
         expect(parseInt(collectedQuantityValue?.trim() || '0')).toBe(0);
-        await collectedQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.11: Verify required quantity matches order quantity
       await allure.step('Sub-step 16.11: Verify required quantity matches order quantity', async () => {
         const requiredQuantityCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
-        await requiredQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT_PENDING);
         const requiredQuantity = await requiredQuantityCell.textContent();
         console.log(`Required quantity: "${requiredQuantity}"`);
         expect(parseInt(requiredQuantity?.trim() || '0')).toBe(orderedQuantity);
-        await requiredQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.12: Verify own quantity input has order quantity
       await allure.step('Sub-step 16.12: Verify own quantity input has order quantity', async () => {
         ownQuantityInput = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
-        await ownQuantityInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_PENDING);
         const ownQuantityValue = await ownQuantityInput.inputValue();
         console.log(`Own quantity input: "${ownQuantityValue}"`);
         expect(parseInt(ownQuantityValue?.trim() || '0')).toBe(orderedQuantity);
-        await ownQuantityInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.13: Verify assembly name in waybill modal
       await allure.step('Sub-step 16.13: Verify assembly name in waybill modal', async () => {
         const nameCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
-        await nameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(nameCell, { ...HIGHLIGHT_PENDING });
         const sbName = await nameCell.textContent();
         console.log(`SB name: "${sbName}"`);
         expect(sbName?.trim()).toBe(CONST.NEW_SB_A);
-        await nameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(nameCell, { ...HIGHLIGHT_SUCCESS });
       });
 
       // Sub-step 16.14: Verify total quantity label
@@ -1252,11 +1103,7 @@ export const runERP_969 = () => {
 
         // Now verify the total quantity label shows the correct calculated value
         const totalQuantityLabel = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL}"]`);
-        await totalQuantityLabel.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT_PENDING);
         const totalQuantityText = await totalQuantityLabel.textContent();
         console.log(`Total quantity label: "${totalQuantityText}"`);
 
@@ -1264,28 +1111,16 @@ export const runERP_969 = () => {
         const expectedText = `Всего: ${calculatedTotal}`;
         expect(totalQuantityText?.trim()).toBe(expectedText);
 
-        await totalQuantityLabel.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.15: Verify shipment details section
       await allure.step('Sub-step 16.15: Verify shipment details section', async () => {
         // Verify the shipment details table exists (using the correct data-testid from the HTML)
         const shipmentDetailsTable = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TABLE}"]`);
-        await shipmentDetailsTable.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(shipmentDetailsTable, HIGHLIGHT_PENDING);
         await expect(shipmentDetailsTable).toBeVisible({ timeout: 5000 });
-        await shipmentDetailsTable.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(shipmentDetailsTable, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.16: Verify order number in shipment details
@@ -1320,11 +1155,7 @@ export const runERP_969 = () => {
             foundOrderNumberText = orderNumberText.trim();
 
             // Highlight the matching cell
-            await orderNumberCell.evaluate((el: HTMLElement) => {
-              el.style.backgroundColor = 'yellow';
-              el.style.border = '2px solid red';
-              el.style.color = 'blue';
-            });
+            await detailsPage.highlightElement(orderNumberCell, HIGHLIGHT_PENDING);
             break;
           }
         }
@@ -1352,19 +1183,11 @@ export const runERP_969 = () => {
         const remainingQuantityCell = kittingPage
           .locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]')
           .first();
-        await remainingQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT_PENDING);
         const remainingQuantity = await remainingQuantityCell.textContent();
         console.log(`Remaining quantity: "${remainingQuantity}"`);
         expect(parseInt(remainingQuantity?.trim() || '0')).toBe(orderedQuantity);
-        await remainingQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.18: Verify detail name in details table
@@ -1380,19 +1203,11 @@ export const runERP_969 = () => {
           return;
         }
 
-        await detailNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(detailNameCell, HIGHLIGHT_PENDING);
         const detailName = await detailNameCell.textContent();
         console.log(`Detail name: "${detailName}"`);
         expect(detailName?.trim()).toBe(CONST.NEW_DETAIL_A);
-        await detailNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(detailNameCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.19: Verify quantity per unit
@@ -1402,94 +1217,49 @@ export const runERP_969 = () => {
         console.log(`Row ID: "${rowId}"`);
 
         const quantityPerUnitCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${CONST.QUANTITY_PER_UNIT_CELL}"]`);
-        await quantityPerUnitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(quantityPerUnitCell, { ...HIGHLIGHT_PENDING });
         const quantityPerUnit = await quantityPerUnitCell.textContent();
         console.log(`Quantity per unit: "${quantityPerUnit}"`);
         expect(parseInt(quantityPerUnit?.trim() || '0')).toBe(specificationQuantity);
-        await quantityPerUnitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(quantityPerUnitCell, { ...HIGHLIGHT_SUCCESS });
       });
 
       // Sub-step 16.20: Verify material cell shows "Нет материала"
       await allure.step("Sub-step 16.20: Verify material cell shows 'Нет материала'", async () => {
         const materialCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${CONST.MATERIAL_CELL}"]`);
-        await materialCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(materialCell, { ...HIGHLIGHT_PENDING });
         const materialText = await materialCell.textContent();
         console.log(`Material: "${materialText}"`);
         expect(materialText?.trim()).toBe('Нет материала');
-        await materialCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(materialCell, { ...HIGHLIGHT_SUCCESS });
       });
 
       // Sub-step 16.21: Verify need cell calculation
       await allure.step('Sub-step 16.21: Verify need cell calculation', async () => {
         needCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${CONST.NEED_CELL}"]`);
-        await needCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(needCell, { ...HIGHLIGHT_PENDING });
         const needQuantity = await needCell.textContent();
         console.log(`Need quantity: "${needQuantity}"`);
         expect(parseInt(needQuantity?.trim() || '0')).toBe(orderedQuantity * specificationQuantity);
-        await needCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(needCell, { ...HIGHLIGHT_SUCCESS });
       });
 
       // Sub-step 16.22: Verify free quantity cell
       await allure.step('Sub-step 16.22: Verify free quantity cell', async () => {
         const freeQuantityCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${CONST.FREE_QUANTITY_CELL}"]`);
-        await freeQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(freeQuantityCell, { ...HIGHLIGHT_PENDING });
         const freeQuantity = await freeQuantityCell.textContent();
         console.log(`Free quantity: "${freeQuantity}"`);
 
         const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(CONST.NEW_DETAIL_A);
         expect(parseInt(freeQuantity?.trim() || '0')).toBe(expectedFreeQuantity);
-        await freeQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(freeQuantityCell, { ...HIGHLIGHT_SUCCESS });
       });
 
       // Sub-step 16.23: Verify quantity cell
       await allure.step('Sub-step 16.23: Verify quantity cell', async () => {
         const quantityCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${CONST.QUANTITY_CELL}"]`);
-        await quantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-          el.style.fontWeight = 'bold';
-        });
+        await detailsPage.highlightElement(quantityCell, { ...HIGHLIGHT_PENDING });
         const quantityValue = await quantityCell.textContent();
         console.log(`Quantity: "${quantityValue}"`);
       });
@@ -1497,29 +1267,17 @@ export const runERP_969 = () => {
       // Sub-step 16.24: Verify in kits cell
       await allure.step('Sub-step 16.24: Verify in kits cell', async () => {
         const inKitsCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${CONST.IN_KITS_CELL}"]`);
-        await inKitsCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(inKitsCell, HIGHLIGHT_PENDING);
         const inKitsValue = await inKitsCell.textContent();
         console.log(`In kits: "${inKitsValue}"`);
         expect(parseInt(inKitsValue?.trim() || '0')).toBe(0);
-        await inKitsCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(inKitsCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.25: Verify deficit cell calculation
       await allure.step('Sub-step 16.25: Verify deficit cell calculation', async () => {
         deficitCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW}${rowId}-${CONST.DEFICIT_CELL}"]`);
-        await deficitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(deficitCell, HIGHLIGHT_PENDING);
         const deficitValue = await deficitCell.textContent();
         console.log(`Deficit: "${deficitValue}"`);
 
@@ -1533,11 +1291,7 @@ export const runERP_969 = () => {
         console.log(`Calculated expected deficit: ${freeQuantityValueForDeficit} - ${needValueForDeficit} = ${expectedDeficit}`);
 
         expect(parseInt(deficitValue?.trim() || '0')).toBe(expectedDeficit);
-        await deficitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(deficitCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.26: Verify warning message if deficit is negative
@@ -1548,46 +1302,26 @@ export const runERP_969 = () => {
 
       // Sub-step 16.27: Change own quantity input to build quantity
       await allure.step('Sub-step 16.27: Change own quantity input to build quantity', async () => {
-        await ownQuantityInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_PENDING);
         await ownQuantityInput.fill(currentBuildQuantity.toString());
         await ownQuantityInput.press('Enter');
         await kittingPage.waitForLoadState('networkidle');
         await kittingPage.waitForTimeout(1000);
-        await ownQuantityInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.28: Verify updated need cell
       await allure.step('Sub-step 16.28: Verify updated need cell', async () => {
-        await needCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(needCell, HIGHLIGHT_PENDING);
         const updatedNeedQuantity = await needCell.textContent();
         console.log(`Updated need quantity: "${updatedNeedQuantity}"`);
         expect(parseInt(updatedNeedQuantity?.trim() || '0')).toBe(currentBuildQuantity * specificationQuantity);
-        await needCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(needCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.29: Verify updated deficit cell
       await allure.step('Sub-step 16.29: Verify updated deficit cell', async () => {
-        await deficitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(deficitCell, HIGHLIGHT_PENDING);
         const updatedDeficitValue = await deficitCell.textContent();
         console.log(`Updated deficit: "${updatedDeficitValue}"`);
 
@@ -1598,28 +1332,16 @@ export const runERP_969 = () => {
         console.log(`Recalculated expected deficit: ${updatedFreeQuantityValueForDeficit} - ${updatedNeedValueForDeficit} = ${updatedExpectedDeficit}`);
 
         expect(parseInt(updatedDeficitValue?.trim() || '0')).toBe(updatedExpectedDeficit);
-        await deficitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(deficitCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.30: Verify complete set button is now visible
       await allure.step('Sub-step 16.30: Verify complete set button is now visible', async () => {
         completeSetButton = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_CONTROL_BUTTONS_COMPLETE_SET_BUTTON}"]`);
-        await completeSetButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(completeSetButton, HIGHLIGHT_PENDING);
         await expect(completeSetButton).toBeVisible({ timeout: 5000 });
         await expect(completeSetButton).toBeEnabled({ timeout: 5000 });
-        await completeSetButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(completeSetButton, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.31: Verify warning message is no longer present
@@ -1640,54 +1362,30 @@ export const runERP_969 = () => {
       // Sub-step 16.33: Verify order selection warning appears
       await allure.step('Sub-step 16.33: Verify order selection warning appears', async () => {
         const selectOrderWarning = kittingPage.locator(`[data-testid="${CONST.NOTIFICATION_NOTIFICATION_DESCRIPTION}"]`);
-        await selectOrderWarning.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(selectOrderWarning, HIGHLIGHT_PENDING);
         await expect(selectOrderWarning).toBeVisible({ timeout: 5000 });
         const selectOrderText = await selectOrderWarning.textContent();
         console.log(`Select order warning: "${selectOrderText}"`);
         expect(selectOrderText).toContain('Выберите заказ');
-        await selectOrderWarning.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(selectOrderWarning, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.34: Click checkbox in shipment details table
       await allure.step('Sub-step 16.34: Click checkbox in shipment details table', async () => {
         const checkboxCell = kittingPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_SCLAD_SET_CHECKBOX_CELL}"]`);
-        await checkboxCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(checkboxCell, HIGHLIGHT_PENDING);
         await checkboxCell.click();
         await kittingPage.waitForLoadState('networkidle');
         await kittingPage.waitForTimeout(1000);
-        await checkboxCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(checkboxCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.35: Click complete set button again
       await allure.step('Sub-step 16.35: Click complete set button again', async () => {
-        await completeSetButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(completeSetButton, HIGHLIGHT_PENDING);
 
         await kittingPage.waitForTimeout(1000);
-        await completeSetButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(completeSetButton, HIGHLIGHT_SUCCESS);
         await kittingPage.waitForTimeout(1000);
         await completeSetButton.click();
         await kittingPage.waitForLoadState('networkidle');
@@ -1710,34 +1408,10 @@ export const runERP_969 = () => {
         await expect(kittingTable2).toBeVisible({ timeout: 10000 });
 
         console.log(`Searching for: "${CONST.NEW_SB_A}"`);
-
-        // Direct search using the specific data-testid for this table's search input
-        const searchInput2 = kittingPage.locator(`[data-testid="${CONST.COMPLEX_SBORKA_BY_PLAN}"]`);
-        await expect(searchInput2).toBeVisible({ timeout: 5000 });
-
-        // Click to focus, then clear and type
-        await searchInput2.click();
-        await kittingPage.waitForTimeout(300);
-
-        // Clear the input first
-        await searchInput2.fill('');
-        await kittingPage.waitForTimeout(200);
-
-        // Type the search term using keyboard (more reliable with Vue)
-        await searchInput2.pressSequentially(CONST.NEW_SB_A, { delay: 50 });
-        await kittingPage.waitForTimeout(500);
-
-        // Verify the value was entered
-        const inputValue2 = await searchInput2.inputValue();
-        console.log(`Search input value: "${inputValue2}"`);
-
-        // Press Enter to trigger search
-        await searchInput2.press('Enter');
-        await kittingPage.waitForTimeout(2000);
+        await searchWithPressSequentially(kittingPage, `[data-testid="${CONST.COMPLEX_SBORKA_BY_PLAN}"]`, CONST.NEW_SB_A);
 
         const rowCount = await kittingTable2.locator('tbody tr').count();
         console.log(`Rows after search: ${rowCount}`);
-        console.log(`Search successful: ${rowCount} rows found`);
       });
 
       // Sub-step 16.38: Get the first row after search
@@ -1758,19 +1432,11 @@ export const runERP_969 = () => {
         const rowNameCell = firstRow3.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_NAME}"]`
         );
-        await rowNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(rowNameCell, HIGHLIGHT_PENDING);
         const rowName = await rowNameCell.textContent();
         console.log(`Row name: "${rowName}"`);
         expect(rowName?.trim()).toBe(CONST.NEW_SB_A);
-        await rowNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(rowNameCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.40: Verify updated ordered quantity
@@ -1778,19 +1444,11 @@ export const runERP_969 = () => {
         const orderedCell = firstRow3.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_ORDERED}"]`
         );
-        await orderedCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(orderedCell, HIGHLIGHT_PENDING);
         const orderedValue = await orderedCell.textContent();
         console.log(`Ordered value: "${orderedValue}"`);
         expect(orderedValue?.trim()).toBe(orderedQuantity.toString());
-        await orderedCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(orderedCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.41: Verify updated operations cell
@@ -1798,19 +1456,11 @@ export const runERP_969 = () => {
         const operationsCell = firstRow3.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_OPERATIONS}"]`
         );
-        await operationsCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(operationsCell, HIGHLIGHT_PENDING);
         const operationsValue = await operationsCell.textContent();
         console.log(`Operations value: "${operationsValue}"`);
         expect(operationsValue?.trim()).toBe(specificationQuantity.toString());
-        await operationsCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(operationsCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.42: Verify updated status cell
@@ -1820,19 +1470,11 @@ export const runERP_969 = () => {
         const statusCell = firstRow3.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_STATUS}"]`
         );
-        await statusCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(statusCell, HIGHLIGHT_PENDING);
         const statusValue = await statusCell.textContent();
         console.log(`Status value: "${statusValue}"`);
         expect(statusValue?.trim()).toBe(`${expectedCompletionPercentage}%`);
-        await statusCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(statusCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.43: Verify updated completion level cell
@@ -1840,19 +1482,11 @@ export const runERP_969 = () => {
         const completionLevelCell = firstRow3.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_COMPLETION_LEVEL}"]`
         );
-        await completionLevelCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(completionLevelCell, HIGHLIGHT_PENDING);
         const completionLevelValue = await completionLevelCell.textContent();
         console.log(`Completion level: "${completionLevelValue}"`);
         expect(completionLevelValue?.trim()).toBe(`${expectedCompletionPercentage}%`);
-        await completionLevelCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(completionLevelCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.44: Verify updated collected cell
@@ -1861,19 +1495,11 @@ export const runERP_969 = () => {
         const collectedCell = firstRow3.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_COMPLETED}"]`
         );
-        await collectedCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(collectedCell, HIGHLIGHT_PENDING);
         const collectedValue = await collectedCell.textContent();
         console.log(`Collected value: "${collectedValue}"`);
         expect(parseInt(collectedValue?.trim() || '0')).toBe(specificationQuantity);
-        await collectedCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(collectedCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.45: Verify updated remaining cell
@@ -1883,19 +1509,11 @@ export const runERP_969 = () => {
         const remainingCell = firstRow3.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_REMAINING}"]`
         );
-        await remainingCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(remainingCell, HIGHLIGHT_PENDING);
         const remainingValue = await remainingCell.textContent();
         console.log(`Remaining value: "${remainingValue}"`);
         expect(parseInt(remainingValue?.trim() || '0')).toBe(expectedRemainingQuantity);
-        await remainingCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(remainingCell, HIGHLIGHT_SUCCESS);
       });
 
       // // Sub-step 16.46: Verify second row execution date
@@ -1974,11 +1592,7 @@ export const runERP_969 = () => {
       // Sub-step 17.1: Click the button to open assembly kitting plan page
       await allure.step('Sub-step 17.1: Click the button to open assembly kitting plan page', async () => {
         const completionCbedPlanButton = waybillPage.locator(`[data-testid="${CONST.SCLAD_COMPLETION_CBED_PLAN}"]`);
-        await completionCbedPlanButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(completionCbedPlanButton, HIGHLIGHT_PENDING);
         await completionCbedPlanButton.click();
         await waybillPage.waitForLoadState('networkidle');
         await waybillPage.waitForTimeout(2000);
@@ -1987,17 +1601,9 @@ export const runERP_969 = () => {
       // Sub-step 17.2: Confirm the h3 title
       await allure.step('Sub-step 17.2: Confirm the h3 title', async () => {
         const pageTitle = waybillPage.locator(`[data-testid="${CONST.COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN}"]`);
-        await pageTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(pageTitle, HIGHLIGHT_PENDING);
         await expect(pageTitle).toHaveText('Комплектация сборок на план', { timeout: 10000 });
-        await pageTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(pageTitle, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.3: Find the table and search for our SB
@@ -2009,11 +1615,7 @@ export const runERP_969 = () => {
         await waybillPage.waitForLoadState('networkidle');
         await waybillPage.waitForTimeout(3000); // Extra wait for table content to load
 
-        await waybillTable.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(waybillTable, HIGHLIGHT_PENDING);
 
         // Wait for table rows to exist (they may be hidden due to virtualization)
         const tableRows = waybillTable.locator('tbody tr');
@@ -2027,11 +1629,7 @@ export const runERP_969 = () => {
 
         const searchInput = waybillTable.locator(`[data-testid="${CONST.COMPLEX_SBORKA_BY_PLAN}"]`);
         await expect(searchInput).toBeVisible({ timeout: 10000 });
-        await searchInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(searchInput, HIGHLIGHT_PENDING);
         await searchInput.clear();
         await waybillPage.waitForTimeout(500);
         await searchInput.fill(CONST.NEW_SB_A);
@@ -2076,11 +1674,7 @@ export const runERP_969 = () => {
         expect(foundRow).not.toBeNull();
         firstRow = foundRow!;
 
-        await firstRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(firstRow, HIGHLIGHT_PENDING);
         const nameCell = firstRow.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_NAME}"]`
         );
@@ -2097,11 +1691,7 @@ export const runERP_969 = () => {
           el.style.border = '2px solid green';
           el.style.color = 'white';
         });
-        await firstRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(firstRow, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.5: Double click on the designation column to open modal
@@ -2109,18 +1699,10 @@ export const runERP_969 = () => {
         const designationCell = firstRow.locator(
           `[data-testid^="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${CONST.TABLE_COMPLECT_TABLE_ROW_CELL_DESIGNATION}"]`
         );
-        await designationCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(designationCell, HIGHLIGHT_PENDING);
         await designationCell.dblclick();
         await waybillPage.waitForTimeout(2000);
-        await designationCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(designationCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.6: Wait for modal to appear and validate details
@@ -2132,32 +1714,20 @@ export const runERP_969 = () => {
 
         // Find the h4 title within the modal since the data-testid was removed
         const modalTitle = waybillModal.locator('h4');
-        await modalTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(modalTitle, HIGHLIGHT_PENDING);
         await expect(modalTitle).toBeVisible({ timeout: 10000 });
 
         // Validate modal title
         const titleText = await modalTitle.textContent();
         console.log(`Modal title: "${titleText}"`);
         expect(titleText?.trim()).toContain('Накладная на комплектацию Сборки');
-        await modalTitle.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(modalTitle, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.7: Validate collected quantity cell
       await allure.step('Sub-step 17.7: Validate collected quantity cell', async () => {
         const collectedQuantityCell = await waybillPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_COLLECTED_QUANTITY_CELL}"]`);
-        await collectedQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT_PENDING);
         const collectedQuantityValue = await collectedQuantityCell.textContent();
         const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
         console.log(`Collected quantity: "${collectedQuantityValue}"`);
@@ -2167,93 +1737,53 @@ export const runERP_969 = () => {
       // Sub-step 17.8: Validate required quantity cell
       await allure.step('Sub-step 17.8: Validate required quantity cell', async () => {
         const requiredQuantityCell = waybillPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL}"]`);
-        await requiredQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT_PENDING);
         const requiredQuantityValue = await requiredQuantityCell.textContent();
         console.log(`Required quantity: "${requiredQuantityValue}"`);
         expect(parseInt(requiredQuantityValue?.trim() || '0')).toBe(orderedQuantity);
-        await requiredQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.9: Validate own quantity input
       await allure.step('Sub-step 17.9: Validate own quantity input', async () => {
         const ownQuantityInput = waybillPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_OWN_QUANTITY_INPUT}"]`);
-        await ownQuantityInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_PENDING);
         const ownQuantityValue = await ownQuantityInput.inputValue();
 
         console.log(`Own quantity input: "${ownQuantityValue}"`);
         expect(parseInt(ownQuantityValue?.trim() || '0')).toBe(orderedQuantity - currentBuildQuantity);
-        await ownQuantityInput.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT_SUCCESS);
         currentBuildQuantity = parseInt(ownQuantityValue?.trim() || '0');
       });
 
       // Sub-step 17.10: Validate name cell
       await allure.step('Sub-step 17.10: Validate name cell', async () => {
         const waybillNameCell = waybillPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_NAME_CELL}"]`);
-        await waybillNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(waybillNameCell, HIGHLIGHT_PENDING);
         const waybillNameValue = await waybillNameCell.textContent();
         console.log(`Waybill name: "${waybillNameValue}"`);
         expect(waybillNameValue?.trim()).toBe(CONST.NEW_SB_A);
-        await waybillNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(waybillNameCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.11: Validate total quantity label
       await allure.step('Sub-step 17.11: Validate total quantity label', async () => {
         const totalQuantityLabel = waybillPage.locator(`[data-testid="${CONST.MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL}"]`);
-        await totalQuantityLabel.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT_PENDING);
         const totalQuantityText = await totalQuantityLabel.textContent();
         console.log(`Total quantity label: "${totalQuantityText}"`);
         expect(totalQuantityText?.trim()).toBe('Всего: 0');
-        await totalQuantityLabel.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.12: Validate order number cell
       await allure.step('Sub-step 17.12: Validate order number cell', async () => {
         const orderNumberCell = waybillPage.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-OrderNumberCell"]');
-        await orderNumberCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(orderNumberCell, HIGHLIGHT_PENDING);
         const orderNumberValue = await orderNumberCell.textContent();
         console.log(`Order number: "${orderNumberValue}"`);
         expect(orderNumberValue?.trim()).toBe(`№${orderNumber}`);
-        await orderNumberCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(orderNumberCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.13: Validate remaining quantity cell
@@ -2261,55 +1791,31 @@ export const runERP_969 = () => {
         const remainingQuantityCell = waybillPage.locator(
           '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]'
         );
-        await remainingQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT_PENDING);
         const remainingQuantityValue = await remainingQuantityCell.textContent();
         console.log(`Remaining quantity: "${remainingQuantityValue}"`);
         expect(parseInt(remainingQuantityValue?.trim() || '0')).toBe(orderedQuantity);
-        await remainingQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.14: Validate total left to do label
       await allure.step('Sub-step 17.14: Validate total left to do label', async () => {
         const totalLeftToDoLabel = waybillPage.locator('[data-testid="ModalAddWaybill-ShipmentDetailsTable-TotalLeftToDoLabel"]');
-        await totalLeftToDoLabel.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(totalLeftToDoLabel, HIGHLIGHT_PENDING);
         const totalLeftToDoText = await totalLeftToDoLabel.textContent();
         console.log(`Total left to do: "${totalLeftToDoText}"`);
         expect(totalLeftToDoText?.trim()).toBe(`Всего: ${orderedQuantity}`);
-        await totalLeftToDoLabel.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(totalLeftToDoLabel, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.15: Find the detail row by searching for the name cell with dynamic ID
       await allure.step('Sub-step 17.15: Find the detail row by searching for the name cell with dynamic ID', async () => {
         const detailNameCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-NameCell"]');
-        await detailNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(detailNameCell, HIGHLIGHT_PENDING);
         const detailNameValue = await detailNameCell.textContent();
         console.log(`Detail name: "${detailNameValue}"`);
         expect(detailNameValue?.trim()).toBe(CONST.NEW_DETAIL_A);
-        await detailNameCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(detailNameCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.16: Define needCell and deficitCell for later use
@@ -2321,73 +1827,41 @@ export const runERP_969 = () => {
       // Sub-step 17.17: Validate need cell
       await allure.step('Sub-step 17.17: Validate need cell', async () => {
         //Потребность cell
-        await needCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(needCell, HIGHLIGHT_PENDING);
         const needValue = await needCell.textContent();
         console.log(`Need value: "${needValue}"`);
         expect(parseInt(needValue?.trim() || '0')).toBe(currentBuildQuantity * specificationQuantity);
-        await needCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(needCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.18: Validate deficit cell
       await allure.step('Sub-step 17.18: Validate deficit cell', async () => {
-        await deficitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(deficitCell, HIGHLIGHT_PENDING);
         const deficitValue = await deficitCell.textContent();
         console.log(`Deficit value: "${deficitValue}"`);
         // Add validation logic for deficit cell here
-        await deficitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(deficitCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.19: Validate quantity per unit cell
       await allure.step('Sub-step 17.19: Validate quantity per unit cell', async () => {
         const quantityPerUnitCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-QuantityPerUnitCell"]');
-        await quantityPerUnitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(quantityPerUnitCell, HIGHLIGHT_PENDING);
         const quantityPerUnitValue = await quantityPerUnitCell.textContent();
         console.log(`Quantity per unit: "${quantityPerUnitValue}"`);
         expect(parseInt(quantityPerUnitValue?.trim() || '0')).toBe(specificationQuantity);
-        await quantityPerUnitCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(quantityPerUnitCell, HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 17.20: Validate free quantity cell
       await allure.step('Sub-step 17.20: Validate free quantity cell', async () => {
         const freeQuantityCell = waybillPage.locator('[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-FreeQuantityCell"]');
-        await freeQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(freeQuantityCell, HIGHLIGHT_PENDING);
         const freeQuantityValue = await freeQuantityCell.textContent();
         console.log(`Free quantity: "${freeQuantityValue}"`);
         const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(CONST.NEW_DETAIL_A);
         expect(parseInt(freeQuantityValue?.trim() || '0')).toBe(expectedFreeQuantity);
-        await freeQuantityCell.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid green';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(freeQuantityCell, HIGHLIGHT_SUCCESS);
       });
     });
   });
