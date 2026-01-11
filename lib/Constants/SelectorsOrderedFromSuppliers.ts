@@ -49,6 +49,11 @@ export const SWITCH_ITEM_0 = '[data-testid="OrderSuppliers-Main-Content-Switch-I
 export const SWITCH_ITEM_1 = '[data-testid="OrderSuppliers-Main-Content-Switch-Item1"]';
 export const SWITCH_ITEM_2 = '[data-testid="OrderSuppliers-Main-Content-Switch-Item2"]';
 
+// ERP-969 additional constants
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE = 'ModalAddOrder-Production-Table';
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT_START = 'ModalAddOrder-Production-Table-TableRow-YourQuantityInput';
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_YOUR_QUANTITY_INPUT = '-Input';
+
 // Modal Select Supplier button selectors
 export const MODAL_SELECT_SUPPLIER_PROVIDER_CARD = '[data-testid="OrderSuppliers-Modal-AddOrder-Content-ProviderCard"]';
 export const MODAL_SELECT_SUPPLIER_DETAL_CARD = '[data-testid="OrderSuppliers-Modal-AddOrder-Content-DetalCard"]';

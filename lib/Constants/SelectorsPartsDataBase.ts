@@ -1,7 +1,9 @@
 // Parts database: Create new part
 export const BUTTON_CREATE_NEW_PART = '[data-testid="BaseProducts-Button-Create"]';
+export const BASE_PRODUCTS_BUTTON_CREATE = '[data-testid="BaseProducts-Button-Create"]';
 export const BUTTON_DETAIL = '[data-testid="BaseProducts-CreatLink-Cardbase-detail"]';
 export const BUTTON_CBED = '[data-testid="BaseProducts-CreatLink-Cardbase-of-assembly-units"]';
+export const BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS = '[data-testid="BaseProducts-CreatLink-Cardbase-of-assembly-units"]';
 export const BUTTON_PRODUCT = '[data-testid="BaseProducts-CreatLink-Cardthe-base-of-the-tool"]';
 export const BUTTON_ADD_OPERATION = '[data-testid="EditDetal-ModalTechProcess-Buttons-ButtonCreate"]';
 export const BUTTON_SAVE_OPERATION = '[data-testid="EditDetal-ModalTechProcess-Button-Save"]';
@@ -11,6 +13,18 @@ export const BUTTON_OPERATION = '[data-testid="EditDetal-Buttons-TechProcess"]';
 export const BUTTON_OPERATION_PROCESS_ASSYMBLY = '[data-testid="Creator-Buttons-TechProcess"]';
 export const BUTTON_SAVE_CBED = 'button[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
 export const BUTTON_CANCEL_CBED = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
+export const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = '[data-testid="Creator-SaveAndCancelButtons-Center-Save"]';
+export const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = '[data-testid="Creator-SaveAndCancelButtons-Center-Cancel"]';
+
+// Data-testid values for findAndClickElement (without [data-testid="..." wrapper])
+export const ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE_ID = 'AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save';
+export const EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL_ID = 'EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel';
+export const BASE_PRODUCTS_BUTTON_CREATE_ID = 'BaseProducts-Button-Create';
+export const BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS_ID = 'BaseProducts-CreatLink-Cardbase-of-assembly-units';
+export const SPECIFICATION_BUTTONS_ADDING_SPECIFICATION_ID = 'Specification-Buttons-AddingSpecification';
+export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1_ID = 'Specification-Dialog-CardBase-Detail1';
+export const SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON_ID = 'Specification-Modal-BaseDetal-SelectButton';
+export const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON_ID = 'Specification-Modal-BaseDetal-AddButton';
 export const CREATOR_LOADER = '[data-testid="Creator-Loader"]';
 
 // BaseProducts edit button
@@ -163,5 +177,10 @@ export const CREATOR_TITLE = '[data-testid="Creator-Title"]';
 export const EDIT_DETAL_TITLE = '[data-testid="EditDetal-Title"]';
 export const CREATOR_BUTTON_SAVE = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
 export const CREATOR_BUTTON_CANCEL = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
-export const BASE_PRODUCTS_BUTTON_CREATE = '[data-testid="BaseProducts-Button-Create"]';
-export const BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS = '[data-testid="BaseProducts-CreatLink-Titlebase-of-assembly-units"]';
+
+// ERP-969 additional constants
+export const BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS = '[data-testid="BaseProducts-CreatLink-Cardbase-of-assembly-units"]';
+export const SPECIFICATION_BUTTONS_ADDING_SPECIFICATION = '[data-testid="Specification-Buttons-addingSpecification"]';
+export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 = '[data-testid="Specification-Dialog-CardbaseDetail1"]';
+export const SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON = '[data-testid="Specification-ModalBaseDetal-Select-Button"]';
+export const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON = '[data-testid="Specification-ModalBaseDetal-Add-Button"]';

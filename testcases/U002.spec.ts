@@ -134,7 +134,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           datatestid: mappedTestId || button.datatestid,
         };
       });
-      await orderedFromSuppliersPage.validatePageHeadersAndButtons(page, titles, buttons);
+      await orderedFromSuppliersPage.validatePageHeadersAndButtons(page, titles, buttons, SelectorsOrderedFromSuppliers.ORDERED_SUPPLIERS_PAGE_TABLE);
     });
 
     await allure.step('Step 05: Проверка свитчера', async () => {
@@ -452,7 +452,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 3-4: Validate page headings and buttons', async () => {
       const titles = testData1.elements.MetalworkingWarhouse.titles;
       const buttons = testData1.elements.MetalworkingWarhouse.buttons;
-      await metalworkingWarehouse.validatePageHeadersAndButtons(page, titles, buttons);
+      await metalworkingWarehouse.validatePageHeadersAndButtons(page, titles, buttons, SelectorsMetalWorkingWarhouse.SELECTOR_METAL_WORKING_WARHOUSE);
     });
   });
 
@@ -472,7 +472,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 3-4: Validate page headings and buttons', async () => {
       const titles = testData1.elements.AssemblyWarehouse.titles;
       const buttons = testData1.elements.AssemblyWarehouse.buttons;
-      await assemblyWarehouse.validatePageHeadersAndButtons(page, titles, buttons);
+      await assemblyWarehouse.validatePageHeadersAndButtons(page, titles, buttons, SelectorsAssemblyWarehouse.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON);
     });
   });
 

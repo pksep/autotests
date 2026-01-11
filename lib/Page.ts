@@ -836,9 +836,53 @@ export class PageObject extends AbstractPage {
 
       const expectedTitles = titles.map(title => title.trim());
       // Use modal method if specified, otherwise use regular method
-      const h3Titles = options?.useModalMethod
+      let h3Titles = options?.useModalMethod
         ? await this.getAllH3TitlesInModalClassNew(page, containerSelector)
         : await this.getAllH3TitlesInClass(page, containerSelector);
+
+      // If no titles found in container, try searching the entire page body (excluding modals)
+      // This handles cases where page-level titles are outside the container
+      if (h3Titles.length === 0) {
+        console.log('No H3 titles found in container, searching entire page body (excluding modals)...');
+        const pageBody = page.locator('body');
+        const allH3Elements = await pageBody.locator('h3').all();
+
+        for (const h3Tag of allH3Elements) {
+          try {
+            // Check if this H3 is inside any modal/dialog using evaluate
+            const isInsideModal = await h3Tag.evaluate(el => {
+              // Check for dialog element (HTML5 semantic element)
+              if (el.closest('dialog')) return true;
+              // Check for role="dialog" attribute
+              if (el.closest('[role="dialog"]')) return true;
+              // Check for data-testid containing "Modal"
+              let parent = el.parentElement;
+              while (parent) {
+                if (parent.hasAttribute && parent.hasAttribute('data-testid')) {
+                  const testId = parent.getAttribute('data-testid');
+                  if (testId && testId.includes('Modal')) {
+                    return true;
+                  }
+                }
+                parent = parent.parentElement;
+              }
+              return false;
+            });
+
+            // Only include H3 if it's not inside a modal
+            if (!isInsideModal) {
+              const title = await h3Tag.textContent();
+              if (title) {
+                h3Titles.push(title.trim());
+              }
+            }
+          } catch (error) {
+            // Skip if element is detached or not accessible
+            console.log(`Skipping H3 element due to error: ${error}`);
+          }
+        }
+      }
+
       const normalizedH3Titles = h3Titles.map(title => title.trim());
 
       // Log for debugging
@@ -3948,17 +3992,46 @@ export class PageObject extends AbstractPage {
     targetOrderNumber: string,
     errorMessage?: string,
   ): Promise<number> {
+    // Wait for elements to be visible
+    await checkboxesLocator
+      .first()
+      .waitFor({ state: 'visible', timeout: 10000 })
+      .catch(() => {
+        // If first checkbox not found, continue to check count
+      });
+
     const checkboxCount = await checkboxesLocator.count();
+    console.log(`Found ${checkboxCount} checkboxes, looking for order number: ${targetOrderNumber}`);
+
+    const foundOrderNumbers: string[] = [];
 
     for (let i = 0; i < checkboxCount; i++) {
-      const orderNumberCell = orderNumberCellsLocator.nth(i);
-      const orderNumber = (await orderNumberCell.innerText()).trim();
-      if (orderNumber === targetOrderNumber) {
-        return i;
+      try {
+        const orderNumberCell = orderNumberCellsLocator.nth(i);
+        // Wait for cell to be visible
+        await orderNumberCell.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
+          console.log(`Order number cell ${i} not visible, skipping`);
+        });
+
+        const orderNumber = (await orderNumberCell.innerText()).trim();
+        foundOrderNumbers.push(orderNumber);
+
+        console.log(`Order number at index ${i}: "${orderNumber}"`);
+
+        if (orderNumber === targetOrderNumber) {
+          console.log(`✅ Found target order number "${targetOrderNumber}" at index ${i}`);
+          return i;
+        }
+      } catch (error) {
+        console.log(`Error reading order number at index ${i}: ${error}`);
+        foundOrderNumbers.push(`<error: ${error}>`);
       }
     }
 
-    throw new Error(errorMessage || `Could not find checkbox for order ${targetOrderNumber}`);
+    const errorMsg = errorMessage || `Could not find checkbox for order ${targetOrderNumber}`;
+    console.log(`❌ ${errorMsg}`);
+    console.log(`Found order numbers: ${JSON.stringify(foundOrderNumbers)}`);
+    throw new Error(`${errorMsg}. Found order numbers: ${foundOrderNumbers.join(', ')}`);
   }
 
   /**
@@ -4231,6 +4304,9 @@ export class PageObject extends AbstractPage {
       await orderCell.click();
       const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
       console.log(`Clicked on ${logPrefix}order ${orderNumber} to open edit dialog`);
+
+      // Wait a bit for the dialog to open and content to load
+      await this.page.waitForTimeout(500);
     });
   }
 
@@ -4261,9 +4337,20 @@ export class PageObject extends AbstractPage {
       const editModal = this.page.locator(`${editModalSelector}[open]`);
       await editModal.waitFor({ state: 'visible', timeout: 10000 });
 
+      // Wait a bit more for modal content to load
+      await this.page.waitForTimeout(1000);
+
       // Find the checkbox for the order
       const checkboxes = this.page.locator(checkboxesSelector);
       const orderNumberCells = this.page.locator(orderNumberCellsSelector);
+
+      // Wait for at least one checkbox to be visible
+      await checkboxes
+        .first()
+        .waitFor({ state: 'visible', timeout: 10000 })
+        .catch(() => {
+          console.log('Warning: No checkboxes found in edit modal');
+        });
       const checkboxIndex = await this.findCheckboxIndexByOrderNumber(
         checkboxes,
         orderNumberCells,
