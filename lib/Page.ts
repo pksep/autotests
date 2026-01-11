@@ -25,6 +25,7 @@ import { table } from 'console';
 import { exec } from 'child_process';
 import exp from 'constants';
 import { allure } from 'allure-playwright';
+import { HIGHLIGHT_PENDING, HIGHLIGHT_SUCCESS, HIGHLIGHT_ERROR } from '../lib/Constants/HighlightStyles'; // Import highlight style constants
 
 // Global variable declarations for test data arrays
 declare global {
@@ -673,7 +674,7 @@ export class PageObject extends AbstractPage {
       highlightTextColor?: string;
       waitAfter?: number;
       scrollExtra?: boolean;
-    }
+    },
   ): Promise<void> {
     const timeout = options?.timeout ?? 10000;
     const shouldHighlight = options?.highlight ?? true;
@@ -746,7 +747,7 @@ export class PageObject extends AbstractPage {
     url: string,
     tableSelector: string,
     tableBodySelector: string,
-    options?: { minRows?: number; timeoutMs?: number }
+    options?: { minRows?: number; timeoutMs?: number },
   ): Promise<void> {
     await this.goto(url);
     await this.findTable(tableSelector);
@@ -777,7 +778,7 @@ export class PageObject extends AbstractPage {
       timeoutBeforeWait?: number;
       minRows?: number;
       timeoutMs?: number;
-    }
+    },
   ): Promise<void> {
     if (options?.useRedesign) {
       await this.searchTableRedesign(searchTerm, tableSelector);
@@ -826,7 +827,7 @@ export class PageObject extends AbstractPage {
       skipButtonValidation?: boolean;
       useModalMethod?: boolean;
       testInfo?: TestInfo;
-    }
+    },
   ): Promise<void> {
     // Validate H3 titles
     if (!options?.skipTitleValidation && titles.length > 0) {
@@ -851,7 +852,7 @@ export class PageObject extends AbstractPage {
           expect.soft(normalizedH3Titles.length).toBe(expectedTitles.length);
         },
         `Verify H3 titles count: expected ${expectedTitles.length}, actual ${normalizedH3Titles.length}`,
-        options?.testInfo
+        options?.testInfo,
       );
 
       // Validate content and order
@@ -861,7 +862,7 @@ export class PageObject extends AbstractPage {
           expect.soft(normalizedH3Titles).toEqual(expectedTitles);
         },
         `Verify H3 titles match: expected ${JSON.stringify(expectedTitles)}, actual ${JSON.stringify(normalizedH3Titles)}`,
-        options?.testInfo
+        options?.testInfo,
       );
     }
 
@@ -895,7 +896,7 @@ export class PageObject extends AbstractPage {
               expect.soft(isButtonReady).toBeTruthy();
             },
             `Verify button "${buttonLabel}" is visible and enabled: expected true, actual ${isButtonReady}`,
-            options?.testInfo
+            options?.testInfo,
           );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
@@ -926,7 +927,7 @@ export class PageObject extends AbstractPage {
       timeoutBeforeWait?: number;
       minRows?: number;
       timeoutMs?: number;
-    }
+    },
   ): Promise<void> {
     // Search and wait for table
     await this.searchAndWaitForTable(searchTerm, tableSelector, tableBodySelector, options);
@@ -966,7 +967,7 @@ export class PageObject extends AbstractPage {
       verifyTableSelector?: string;
       tableBodySelector?: string;
       searchInputDataTestId?: string;
-    }
+    },
   ): Promise<void> {
     // Select/check the first row
     if (options?.useCheckboxMark) {
@@ -1041,7 +1042,7 @@ export class PageObject extends AbstractPage {
       archiveButtonLabel?: string;
       confirmButtonLabel?: string;
       waitAfterConfirm?: number;
-    }
+    },
   ): Promise<void> {
     // Click archive button
     const archiveLabel = options?.archiveButtonLabel || 'Архив';
@@ -1103,7 +1104,7 @@ export class PageObject extends AbstractPage {
       waitForNetworkIdle?: boolean;
       testInfo?: TestInfo;
       description?: string;
-    }
+    },
   ): Promise<void> {
     if (options?.waitForNetworkIdle !== false) {
       await page.waitForLoadState('networkidle');
@@ -1565,13 +1566,13 @@ export class PageObject extends AbstractPage {
       if (!actualHeadersExistInExpected) {
         logger.info(
           'Missing in Expected:',
-          headerTexts.filter(text => !expectedHeaderLabels.includes(text))
+          headerTexts.filter(text => !expectedHeaderLabels.includes(text)),
         );
       }
       if (!expectedHeadersExistInActual) {
         logger.info(
           'Missing in Actual:',
-          expectedHeaderLabels.filter(text => !headerTexts.includes(text))
+          expectedHeaderLabels.filter(text => !headerTexts.includes(text)),
         );
       }
       if (!headersMatchInOrder) {
@@ -1753,7 +1754,7 @@ export class PageObject extends AbstractPage {
         console.error('Column not found.');
         return -1; // Return -1 if not found
       },
-      { tableId, colId }
+      { tableId, colId },
     );
 
     if (columnIndex !== -1) {
@@ -1991,7 +1992,7 @@ export class PageObject extends AbstractPage {
         expect.soft(currentValue).toBe(nameSearch);
       },
       `Verify search input equals "${nameSearch}"`,
-      undefined
+      undefined,
     );
     await searchTable.press('Enter');
     await this.page.waitForTimeout(1000); // Wait 1 second after pressing Enter before verifying results
@@ -2014,7 +2015,7 @@ export class PageObject extends AbstractPage {
         expect.soft(currentValue).toBe(nameSearch);
       },
       `Verify search input equals "${nameSearch}"`,
-      undefined
+      undefined,
     );
     const searchIcon = table.locator('[data-testid="Search-Cover-Icon"]');
     await searchIcon.click();
@@ -2065,7 +2066,7 @@ export class PageObject extends AbstractPage {
           return false;
         },
         { sel: locator, expected: minRows, isTbody: isTbodySelector },
-        { timeout: timeoutMs }
+        { timeout: timeoutMs },
       );
     }
 
@@ -2090,7 +2091,7 @@ export class PageObject extends AbstractPage {
     modalSelector: string,
     modalTableSelector: string,
     urgencyModalColId: string,
-    plannedShipmentModalColId: string
+    plannedShipmentModalColId: string,
   ): Promise<{ success: boolean; message?: string }> {
     // Step 1: Get all rows in the table
     logger.info(urgencyColIndex);
@@ -2154,7 +2155,7 @@ export class PageObject extends AbstractPage {
           urgencyDateForCompare,
           plannedShipmentDateForCompare,
           urgencyModalColId,
-          plannedShipmentModalColId
+          plannedShipmentModalColId,
         );
 
         page.mouse.dblclick(1, 1);
@@ -2165,7 +2166,7 @@ export class PageObject extends AbstractPage {
         }
       } else {
         logger.warn(
-          `No icon found in the ordersIconColIndex column for row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`
+          `No icon found in the ordersIconColIndex column for row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`,
         );
       }
     }
@@ -2235,7 +2236,7 @@ export class PageObject extends AbstractPage {
     urgencyModalColValForCompare: string,
     plannedShipmentModalColValForCompare: string,
     urgencyDateId: string,
-    plannedShipmentDateId: string
+    plannedShipmentDateId: string,
   ): Promise<{ success: boolean; message?: string }> {
     // Step 1: Check that the modal has opened
     await page.waitForSelector(`[data-testid="${modalSelectorId}"]`, {
@@ -2636,7 +2637,7 @@ export class PageObject extends AbstractPage {
     options?: {
       testInfo?: TestInfo;
       description?: string;
-    }
+    },
   ) {
     // Debug: Check if table has any rows at all
     const allRows = await this.page.locator(`${locator} tbody tr`);
@@ -2692,17 +2693,28 @@ export class PageObject extends AbstractPage {
     }
 
     // Проверяем, что значение найдено
-    await expectSoftWithScreenshot(
-      this.page,
-      () => {
-        expect.soft(foundValue).toBeDefined();
-      },
-      options?.description ?? `Verify value "${name}" exists in first row`,
-      options?.testInfo
-    ); // Проверяем, что найдено значение
+    if (!foundValue) {
+      // Provide more detailed error information
+      const errorMessage =
+        `Value "${name.trim()}" not found in table. ` +
+        `Table has ${rowCount} row(s). ` +
+        `First row content: "${firstRowText?.trim() || 'empty'}". ` +
+        `All cell texts: [${cellTexts.map(text => `"${text.trim()}"`).join(', ')}]`;
+      console.error(errorMessage);
 
-    // Выводим найденное значение в консоль
-    console.log(`Значение "${name}" найдено: ${foundValue || 'не найдено'}`);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(foundValue).toBeDefined();
+        },
+        options?.description ?? `Verify value "${name}" exists in first row. ${errorMessage}`,
+        options?.testInfo,
+      );
+    } else {
+      // Выводим найденное значение в консоль
+      console.log(`Значение "${name}" найдено: ${foundValue || 'не найдено'}`);
+    }
+
     return true;
   }
 
@@ -3200,7 +3212,7 @@ export class PageObject extends AbstractPage {
     const isDataTestIdSelector = selector.startsWith('[data-testid=') || selector.startsWith('[data-testid^=') || selector.startsWith('[data-testid$=');
     if (!isDataTestIdSelector) {
       throw new Error(
-        `getAllH3TitlesInClass only accepts data-testid selectors. Received: ${selector}. Use format: [data-testid="your-test-id"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]`
+        `getAllH3TitlesInClass only accepts data-testid selectors. Received: ${selector}. Use format: [data-testid="your-test-id"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]`,
       );
     }
     const container = page.locator(selector);
@@ -3322,7 +3334,9 @@ export class PageObject extends AbstractPage {
     buttonSelector: string,
     label: string,
     Benabled: boolean = true, // Default is true
-    dialogContext: string = '' // Optional: Specify dialog context for scoping
+    dialogContext: string = '', // Optional: Specify dialog context for scoping
+    waitForEnabled: boolean = false, // Optional: If true, wait for button to become enabled (default: false for backward compatibility)
+    waitTimeout: number = 10000, // Optional: Maximum time to wait for button to become enabled (default: 10 seconds)
   ): Promise<boolean> {
     try {
       // Apply dialog context if provided
@@ -3335,7 +3349,7 @@ export class PageObject extends AbstractPage {
       console.log(`Found ${await button.count()} buttons matching selector "${scopedSelector}" and label "${label}".`);
 
       // Debugging: Log initial info
-      console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}`);
+      console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}, waitForEnabled: ${waitForEnabled}`);
 
       // Highlight the button for debugging
       await button.evaluate(row => {
@@ -3353,21 +3367,53 @@ export class PageObject extends AbstractPage {
       console.log(`Button "${label}" visibility: ${isVisible}`);
       await expect(button).toBeVisible(); // Assert visibility explicitly
 
-      // Check for 'disabled-yui-kit' class
-      const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
-      const isDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
-
-      const isDisabled = hasDisabledClass || isDisabledAttribute;
-      console.log(`Disabled class present for button "${label}": ${isDisabled}`);
-
       if (Benabled) {
         console.log(`Expecting button "${label}" to be enabled.`);
-        expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
-        const isDisabled = await button.evaluate(btn => btn.hasAttribute('disabled'));
-        console.log(`Disabled attribute present for button "${label}": ${isDisabled}`);
-        expect(isDisabled).toBeFalsy(); // Button should not have 'disabled' attribute
+
+        if (waitForEnabled) {
+          console.log(`Waiting for button "${label}" to become enabled (timeout: ${waitTimeout}ms)...`);
+
+          // Wait for button to become enabled (with timeout)
+          const checkInterval = 200; // Check every 200ms
+          const startTime = Date.now();
+          let isEnabled = false;
+
+          while (Date.now() - startTime < waitTimeout) {
+            const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
+            const hasDisabledAttr = await button.evaluate(btn => btn.hasAttribute('disabled'));
+
+            if (!hasDisabledClass && !hasDisabledAttr) {
+              isEnabled = true;
+              console.log(`Button "${label}" is now enabled.`);
+              break;
+            }
+
+            // Wait before next check
+            await page.waitForTimeout(checkInterval);
+          }
+
+          if (!isEnabled) {
+            const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
+            const hasDisabledAttr = await button.evaluate(btn => btn.hasAttribute('disabled'));
+            console.log(`Button "${label}" still disabled after waiting. Disabled class: ${hasDisabledClass}, Disabled attr: ${hasDisabledAttr}`);
+            expect(hasDisabledClass).toBeFalsy(); // This will throw if still disabled
+            expect(hasDisabledAttr).toBeFalsy(); // This will throw if still disabled
+          }
+        } else {
+          // Original behavior: check immediately without waiting
+          const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
+          const isDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
+          console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+          expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
+          console.log(`Disabled attribute present for button "${label}": ${isDisabledAttribute}`);
+          expect(isDisabledAttribute).toBeFalsy(); // Button should not have 'disabled' attribute
+        }
       } else {
         console.log(`Expecting button "${label}" to be disabled.`);
+        const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
+        const isDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
+        const isDisabled = hasDisabledClass || isDisabledAttribute;
+        console.log(`Disabled class present for button "${label}": ${isDisabled}`);
         expect(isDisabled).toBeTruthy(); // Button should be disabled
       }
 
@@ -3526,7 +3572,7 @@ export class PageObject extends AbstractPage {
     testId: string,
     label: string,
     Benabled: boolean = true, // Default is true
-    dialogContextTestId: string = '' // Optional: Specify dialog context testId for scoping
+    dialogContextTestId: string = '', // Optional: Specify dialog context testId for scoping
   ): Promise<boolean> {
     try {
       // Check if testId is already a full selector (starts with '[') or a pattern selector
@@ -3900,7 +3946,7 @@ export class PageObject extends AbstractPage {
     checkboxesLocator: Locator,
     orderNumberCellsLocator: Locator,
     targetOrderNumber: string,
-    errorMessage?: string
+    errorMessage?: string,
   ): Promise<number> {
     const checkboxCount = await checkboxesLocator.count();
 
@@ -3927,7 +3973,7 @@ export class PageObject extends AbstractPage {
     popoverSelector: string,
     menuItemSelector: string,
     waitForModalSelector?: string,
-    popoverPosition: 'first' | 'last' | number = 'first'
+    popoverPosition: 'first' | 'last' | number = 'first',
   ): Promise<void> {
     await allure.step("Open context menu and click 'Заказы'", async () => {
       // Click on the popover cell (ellipse with context menu)
@@ -3996,7 +4042,7 @@ export class PageObject extends AbstractPage {
     expectedQuantities: string[],
     itemTypeName?: string,
     useRowLocator: boolean = false,
-    additionalWaitTimeout?: number
+    additionalWaitTimeout?: number,
   ): Promise<void> {
     await allure.step(
       itemTypeName ? `Verify orders modal opens and shows both ${itemTypeName} orders` : 'Verify orders modal opens and shows both orders',
@@ -4085,7 +4131,7 @@ export class PageObject extends AbstractPage {
         for (const expectedQuantity of expectedQuantities) {
           expect(quantities).toContain(expectedQuantity);
         }
-      }
+      },
     );
   }
 
@@ -4108,7 +4154,7 @@ export class PageObject extends AbstractPage {
     itemTypeName?: string,
     useComplexSelector: boolean = false,
     prefixId?: string,
-    suffixId?: string
+    suffixId?: string,
   ): Promise<number> {
     const stepName =
       expectedValue === 55
@@ -4171,7 +4217,7 @@ export class PageObject extends AbstractPage {
       const orderRowIndex = await this.findOrderRowIndexByOrderNumber(
         orderRows,
         orderNumber,
-        errorMessage || `Could not find ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber} in the orders list`
+        errorMessage || `Could not find ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber} in the orders list`,
       );
 
       // Click on the order number cell to open edit dialog
@@ -4208,7 +4254,7 @@ export class PageObject extends AbstractPage {
     confirmButtonSelector: string,
     editModalSelector: string,
     errorMessage?: string,
-    itemTypeName?: string
+    itemTypeName?: string,
   ): Promise<void> {
     await allure.step('Select checkbox and archive the second order', async () => {
       // Wait for the edit dialog to appear
@@ -4222,7 +4268,7 @@ export class PageObject extends AbstractPage {
         checkboxes,
         orderNumberCells,
         orderNumber,
-        errorMessage || `Could not find checkbox for ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber}`
+        errorMessage || `Could not find checkbox for ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber}`,
       );
 
       // Click the checkbox
@@ -4469,7 +4515,7 @@ export class PageObject extends AbstractPage {
       boxShadow?: string;
       zIndex?: string;
       transition?: string;
-    }
+    },
   ): Promise<void> {
     await element.evaluate(
       (
@@ -4482,7 +4528,7 @@ export class PageObject extends AbstractPage {
           boxShadow?: string;
           zIndex?: string;
           transition?: string;
-        }
+        },
       ) => {
         el.style.backgroundColor = styles?.backgroundColor || 'green';
         el.style.border = styles?.border || '2px solid red';
@@ -4492,7 +4538,7 @@ export class PageObject extends AbstractPage {
         el.style.zIndex = styles?.zIndex || '2147483647';
         el.style.transition = styles?.transition || 'none';
       },
-      customStyles || {}
+      customStyles || {},
     );
   }
   /**
@@ -4506,6 +4552,40 @@ export class PageObject extends AbstractPage {
     await element.waitFor({ state: 'visible', timeout });
     await this.highlightElement(element);
     return element;
+  }
+
+  /**
+   * Vue-compatible search using pressSequentially
+   * @param searchInputSelector - Selector for the search input element
+   * @param searchTerm - Term to search for
+   * @param options - Optional configuration (delay, waitAfterSearch)
+   */
+  async searchWithPressSequentially(searchInputSelector: string, searchTerm: string, options?: { delay?: number; waitAfterSearch?: number }): Promise<void> {
+    const delay = options?.delay ?? 50;
+    const waitAfterSearch = options?.waitAfterSearch ?? 2000;
+
+    const searchInput = this.page.locator(searchInputSelector);
+    await expect(searchInput).toBeVisible({ timeout: 5000 });
+
+    // Click to focus, then clear and type
+    await searchInput.click();
+    await this.page.waitForTimeout(300);
+
+    // Clear the input first
+    await searchInput.fill('');
+    await this.page.waitForTimeout(200);
+
+    // Type the search term using keyboard (more reliable with Vue)
+    await searchInput.pressSequentially(searchTerm, { delay });
+    await this.page.waitForTimeout(500);
+
+    // Verify the value was entered
+    const inputValue = await searchInput.inputValue();
+    console.log(`Search input value: "${inputValue}"`);
+
+    // Press Enter to trigger search
+    await searchInput.press('Enter');
+    await this.page.waitForTimeout(waitAfterSearch);
   }
 }
 

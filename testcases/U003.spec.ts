@@ -16,6 +16,7 @@ import * as SelectorsWarehouseTaskForShipment from '../lib/Constants/SelectorsWa
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages';
 import * as SelectorsRevision from '../lib/Constants/SelectorsRevision';
+import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
 // Helper function to extract ID from full selector
 const extractIdFromSelector = (selector: string): string => {
@@ -79,37 +80,6 @@ const descendantsDetailArray: ISpetificationData[] = [];
 const deficitTable = SelectorsShortagePages.TABLE_DEFICIT_IZD;
 const tableMainUploading = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE;
 
-// Timeout constants (in milliseconds)
-const TIMEOUTS = {
-  VERY_SHORT: 200, // Quick pauses
-  SHORT: 300, // Brief waits
-  MEDIUM: 500, // Standard wait / pause for validation
-  STANDARD: 1000, // Common wait / page render
-  INPUT_SET: 1500, // Input value setting
-  LONG: 2000, // Longer operations
-  EXTENDED: 3000, // Extended waits for async processing
-  VERY_LONG: 5000, // Very long waits for complex operations
-} as const;
-
-// Wait timeout constants for waitFor() operations (in milliseconds)
-const WAIT_TIMEOUTS = {
-  VERY_SHORT: 2000, // 2 seconds - very quick element waits
-  SHORT: 5000, // 5 seconds - quick element waits
-  STANDARD: 10000, // 10 seconds - standard element waits
-  LONG: 15000, // 15 seconds - longer element waits
-  PAGE_RELOAD: 30000, // 30 seconds - page reload operations
-} as const;
-
-// Test timeout constants (in milliseconds)
-const TEST_TIMEOUTS = {
-  SHORT: 120000, // 2 minutes - quick tests
-  MEDIUM_SHORT: 180000, // 3 minutes - medium-short tests
-  MEDIUM: 300000, // 5 minutes - medium tests
-  LONG: 600000, // 10 minutes - long tests
-  VERY_LONG: 900000, // 15 minutes - very long tests
-  EXTENDED: 920000, // ~15.3 minutes - extended tests
-} as const;
-
 /**
  * Helper function to validate cell values with highlighting and soft assertions
  * @param cellLocator - The locator for the cell element
@@ -126,7 +96,7 @@ async function validateCellValue(
   description: string,
   page: Page,
   loadingTaskPage: CreateLoadingTaskPage,
-  testInfo: TestInfo
+  testInfo: TestInfo,
 ): Promise<string> {
   await loadingTaskPage.waitAndHighlight(cellLocator);
   const text = (await cellLocator.textContent())?.trim() || '';
@@ -141,7 +111,7 @@ async function validateCellValue(
       }
     },
     `${description}: actual "${text}"`,
-    testInfo
+    testInfo,
   );
 
   return text;
@@ -163,7 +133,7 @@ async function validateCellValueExact(
   description: string,
   page: Page,
   loadingTaskPage: CreateLoadingTaskPage,
-  testInfo: TestInfo
+  testInfo: TestInfo,
 ): Promise<string> {
   await loadingTaskPage.waitAndHighlight(cellLocator);
   const text = (await cellLocator.textContent())?.trim() || '';
@@ -174,7 +144,7 @@ async function validateCellValueExact(
       expect.soft(text).toBe(expectedValue);
     },
     `${description}: expected "${expectedValue}", actual "${text}"`,
-    testInfo
+    testInfo,
   );
 
   return text;
@@ -258,7 +228,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(archivedShipmentTasksCount).toBeGreaterThanOrEqual(0);
         },
         `Verify shipment tasks archived: ${archivedShipmentTasksCount} items`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -271,7 +241,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(archivedProductsCount).toBeGreaterThanOrEqual(0);
         },
         `Verify test products archived: ${archivedProductsCount} items`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -299,7 +269,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(await createButton.isVisible()).toBe(true);
         },
         'Verify Create button is visible',
-        test.info()
+        test.info(),
       );
     });
 
@@ -316,7 +286,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(isEnabled).toBe(true);
           },
           'Verify Create button is enabled',
-          test.info()
+          test.info(),
         );
 
         await createButton.click();
@@ -333,7 +303,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(await dialog.isVisible()).toBe(true);
           },
           'Verify dialog is visible',
-          test.info()
+          test.info(),
         );
 
         // Find and click on Изделие button with specific data-testid
@@ -345,7 +315,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(await productButton.isVisible()).toBe(true);
           },
           'Verify Изделие button is visible',
-          test.info()
+          test.info(),
         );
         await productButton.click();
         console.log('Clicked on Изделие button');
@@ -363,7 +333,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(await h3Title.isVisible()).toBe(true);
             },
             'Verify creation page header is visible',
-            test.info()
+            test.info(),
           );
         } catch (error) {
           console.warn('Creation page header not visible within timeout, falling back to Save button check', error);
@@ -374,7 +344,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(await saveButton.isVisible()).toBe(true);
             },
             'Verify Save button is visible (fallback)',
-            test.info()
+            test.info(),
           );
         }
 
@@ -391,7 +361,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(await articleInput.isVisible()).toBe(true);
           },
           'Verify article input is visible',
-          test.info()
+          test.info(),
         );
         await articleInput.clear();
         await articleInput.fill(product.articleNumber);
@@ -412,7 +382,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(inputValue).toBe(product.articleNumber);
           },
           `Verify article number matches: ${product.articleNumber}`,
-          test.info()
+          test.info(),
         );
         console.log(`Entered article number: ${product.articleNumber}`);
       });
@@ -426,7 +396,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(await nameInput.isVisible()).toBe(true);
           },
           'Verify name input is visible',
-          test.info()
+          test.info(),
         );
         await nameInput.clear();
         await nameInput.fill(product.name);
@@ -447,7 +417,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(inputValue).toBe(product.name);
           },
           `Verify product name matches: ${product.name}`,
-          test.info()
+          test.info(),
         );
         console.log(`Entered name: ${product.name}`);
       });
@@ -461,7 +431,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(await designationInput.isVisible()).toBe(true);
           },
           'Verify designation input is visible',
-          test.info()
+          test.info(),
         );
         await designationInput.clear();
         await designationInput.fill(product.designation);
@@ -482,7 +452,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(inputValue).toBe(product.designation);
           },
           `Verify designation matches: ${product.designation}`,
-          test.info()
+          test.info(),
         );
         console.log(`Entered designation: ${product.designation}`);
       });
@@ -496,7 +466,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(await saveButton.isVisible()).toBe(true);
           },
           'Verify Save button is visible',
-          test.info()
+          test.info(),
         );
         const saveSuccess = await partsDatabasePage.saveProduct();
 
@@ -506,7 +476,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(saveSuccess).toBe(true);
           },
           `Verify product "${product.name}" was saved successfully`,
-          test.info()
+          test.info(),
         );
         console.log('Clicked Save button and waited for loading to complete');
       });
@@ -527,7 +497,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(await cancelButton.isVisible()).toBe(true);
           },
           'Verify Cancel button is visible',
-          test.info()
+          test.info(),
         );
         const cancelSuccess = await partsDatabasePage.cancelProductCreation();
 
@@ -537,7 +507,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cancelSuccess).toBe(true);
           },
           `Verify cancellation successful and returned to list page for product "${product.name}"`,
-          test.info()
+          test.info(),
         );
         console.log('Clicked Cancel button');
       });
@@ -583,7 +553,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify navigation to shipping tasks page successful`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -595,7 +565,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify Create Order button clicked successfully`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -607,7 +577,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify Изделие Выбрать button clicked successfully`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -619,7 +589,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify product "${productName}" selected successfully in modal`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -631,7 +601,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify Add button clicked successfully in product modal`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -643,7 +613,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify product "${productName}" is displayed correctly`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -655,7 +625,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify buyer "${nameBuyer}" selected successfully`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -667,7 +637,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify quantity "${quantity}" entered successfully`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -681,7 +651,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify urgency date selected successfully: 23.01.2025`,
-        test.info()
+        test.info(),
       );
       console.log('Selected urgency date: 23.01.2025');
     });
@@ -717,7 +687,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(descendantsDetailArray.length).toBeGreaterThanOrEqual(0);
         },
         `Verify descendants data saved: ${descendantsCbedArray.length} CBED, ${descendantsDetailArray.length} DETAIL items`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -729,7 +699,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify order saved successfully`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -750,7 +720,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(shipmentOrderDate).not.toBe('');
         },
         `Verify order information extracted: Number="${shipmentTaskNumber}", Full="${fullOrderNumber}", Date="${shipmentOrderDate}"`,
-        test.info()
+        test.info(),
       );
 
       console.log(`Order Number saved: ${shipmentTaskNumber}`);
@@ -796,7 +766,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify order "${orderNumberValue}" found and edit button clicked successfully`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -910,7 +880,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dataRowCount).toBeGreaterThanOrEqual(1);
         },
         `Verify table has at least 1 data row (found: ${dataRowCount})`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -922,7 +892,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cellOrderNumber.includes(orderNumberValue)).toBe(true);
         },
         `Verify order number in table matches: ${orderNumberValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -939,7 +909,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cellArticle).toBe(articleNumber);
         },
         `Verify article number matches: ${articleNumber}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -953,7 +923,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cellProductName.includes(productName)).toBe(true);
         },
         `Verify product name in cell includes: ${productName}`,
-        test.info()
+        test.info(),
       );
       await expectSoftWithScreenshot(
         page,
@@ -961,7 +931,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(linkProductName).toBe(productName);
         },
         `Verify product name link matches: ${productName}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -980,7 +950,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cellQuantity).toBe(inputQuantity);
         },
         `Verify quantity matches: ${inputQuantity}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -1039,7 +1009,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cellDaysNumber).toBe(diffDays);
         },
         `Verify days number matches: ${diffDays}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -1058,7 +1028,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cellBuyer.includes(selectedBuyer) || selectedBuyer.includes(cellBuyer)).toBe(true);
         },
         `Verify buyer matches: ${selectedBuyer}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -1094,7 +1064,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateMatch).toBe(true);
         },
         `Verify urgency date matches: displayUrgencyDate="${displayUrgencyDate}", cellUrgencyDate="${cellUrgencyDate}", urgencyDate="${urgencyDate}", urgencyDateNewFormat="${urgencyDateNewFormat}"`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -1117,7 +1087,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedCellDate).toBe(normalizedDisplayDate); //ERP-2366
         },
         `Verify shipment date matches: ${normalizedCellDate} vs ${normalizedDisplayDate}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -1165,7 +1135,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               return !!button && !button.disabled;
             },
             SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
-            { timeout: WAIT_TIMEOUTS.SHORT }
+            { timeout: WAIT_TIMEOUTS.SHORT },
           )
           .catch(() => {
             console.warn('Edit button did not become enabled within timeout.');
@@ -1215,7 +1185,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               //              expect.soft(characteristicValue).toBe(startCompleteValue);
             },
             `Verify characteristic matches StartComplete: ${characteristicValue} vs ${startCompleteValue}`,
-            test.info()
+            test.info(),
           );
         } else {
           await expectSoftWithScreenshot(
@@ -1224,7 +1194,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(startCompleteValue).toBe(startCompleteValue); // mark as soft failure if missing
             },
             `Verify StartComplete value exists: ${startCompleteValue}`,
-            test.info()
+            test.info(),
           );
         }
       } finally {
@@ -1317,7 +1287,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Create a new page context for Tab 2
         const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
           SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-          CreateLoadingTaskPage
+          CreateLoadingTaskPage,
         );
 
         // Wait for the page and table to load
@@ -1354,7 +1324,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(isEnabled).toBe(true);
           },
           'Verify edit button is enabled in Tab 2',
-          test.info()
+          test.info(),
         );
 
         await tab2LoadingTaskPage.waitAndHighlight(editButton);
@@ -1432,7 +1402,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           {
             message: 'Title should contain complete order number',
             timeout: WAIT_TIMEOUTS.LONG,
-          }
+          },
         )
         .toBeTruthy();
 
@@ -1443,7 +1413,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(orderNumberTab1).toBe(orderNumberTab2);
         },
         `Verify order numbers match: ${orderNumberTab1} vs ${orderNumberTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ Order numbers match: ${orderNumberTab1}`);
     });
@@ -1468,7 +1438,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(articleNumberTab1).toBe(articleNumberTab2);
         },
         `Verify article numbers match: ${articleNumberTab1} vs ${articleNumberTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ Article numbers match: ${articleNumberTab1}`);
     });
@@ -1493,7 +1463,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameTab1).toBe(productNameTab2);
         },
         `Verify product names match: ${productNameTab1} vs ${productNameTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ Product names match: ${productNameTab1}`);
     });
@@ -1518,7 +1488,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityTab1).toBe(quantityTab2);
         },
         `Verify quantities match: ${quantityTab1} vs ${quantityTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ Quantities match: ${quantityTab1}`);
     });
@@ -1550,7 +1520,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateOrderTab1).toBe(dateOrderTab2);
         },
         `Verify DateOrder values match: ${dateOrderTab1} vs ${dateOrderTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ DateOrder values match: ${dateOrderTab1}`);
     });
@@ -1582,7 +1552,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateShipmentsTab1).toBe(dateShipmentsTab2);
         },
         `Verify DateShipments values match: ${dateShipmentsTab1} vs ${dateShipmentsTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ DateShipments values match: ${dateShipmentsTab1}`);
     });
@@ -1614,7 +1584,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(buyersTab1).toBe(buyersTab2);
         },
         `Verify buyers match: ${buyersTab1} vs ${buyersTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ Buyers match: ${buyersTab1}`);
     });
@@ -1654,7 +1624,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedDateTab1).toBe(normalizedDateTab2);
         },
         `Verify DateByUrgency values match: ${normalizedDateTab1} vs ${normalizedDateTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ DateByUrgency values match: ${normalizedDateTab1}`);
     });
@@ -1690,7 +1660,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedDateTab1).toBe(normalizedDateTab2);
         },
         `Verify DateShipments values match: ${normalizedDateTab1} vs ${normalizedDateTab2}`,
-        test.info()
+        test.info(),
       );
       console.log(`✅ DateShipments values match: ${normalizedDateTab1}`);
     });
@@ -1745,7 +1715,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               return !!button && !button.disabled;
             },
             SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
-            { timeout: WAIT_TIMEOUTS.SHORT }
+            { timeout: WAIT_TIMEOUTS.SHORT },
           )
           .catch(() => {
             console.warn('Edit button did not become enabled within timeout.');
@@ -1786,7 +1756,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             //            expect.soft(characteristicValue).toBe(timeValue); //ERP-2456
           },
           `Verify characteristic matches time value: ${characteristicValue} vs ${timeValue}`,
-          test.info()
+          test.info(),
         );
         console.log(`✅ Time value matches product characteristic: ${timeValue}`);
       } finally {
@@ -1833,7 +1803,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Navigate to Дефицит продукции page in the new tab
       const { page: deficitPage, pageObject: deficitLoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.WAREHOUSE.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       // Step 26.1: Open Дефицит продукции
@@ -1912,7 +1882,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           //          expect.soft(normalizedUrgencyDateFromTable).toBe(normalizedUrgencyDate);
         },
         `Verify urgency date matches: ${normalizedUrgencyDateFromTable} vs ${normalizedUrgencyDate}`,
-        test.info()
+        test.info(),
       );
       // Cross-check urgency date on Tab 2
       await tab2.bringToFront();
@@ -1927,7 +1897,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           //          expect.soft(normalizedUrgencyDateFromTable).toBe(normalizedTab2Urgency);
         },
         `Verify urgency date matches Tab 2: ${normalizedUrgencyDateFromTable} vs ${normalizedTab2Urgency}`,
-        test.info()
+        test.info(),
       );
       await deficitPage.bringToFront();
 
@@ -1945,7 +1915,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // expect.soft(normalizedShipmentPlanDateFromTable).toBe(normalizedShipmentPlanDate);
         },
         `Verify shipment plan date matches: ${normalizedShipmentPlanDateFromTable} vs ${normalizedShipmentPlanDate}`,
-        test.info()
+        test.info(),
       );
       // Cross-check plan date on Tab 2
       await tab2.bringToFront();
@@ -1961,7 +1931,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // expect.soft(normalizedShipmentPlanDateFromTable).toBe(normalizedTab2Plan);
         },
         `Verify shipment plan date matches Tab 2: ${normalizedShipmentPlanDateFromTable} vs ${normalizedTab2Plan}`,
-        test.info()
+        test.info(),
       );
       await deficitPage.bringToFront();
 
@@ -1987,7 +1957,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitRowCount).toBeGreaterThanOrEqual(1);
         },
         `Verify deficit table has at least 1 row (found: ${deficitRowCount})`,
-        test.info()
+        test.info(),
       );
       console.log(`Found ${deficitRowCount} row(s) in DeficitIzd-Main-Table`);
 
@@ -2014,7 +1984,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(deficitArticleValue).toBe(shipmentsArticleValue);
           },
           `Verify article matches: ${deficitArticleValue} vs ${shipmentsArticleValue}`,
-          test.info()
+          test.info(),
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
@@ -2041,7 +2011,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(deficitNameValue).toBe(shipmentsNameValue);
           },
           `Verify name matches: ${deficitNameValue} vs ${shipmentsNameValue}`,
-          test.info()
+          test.info(),
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
@@ -2070,7 +2040,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             //            expect.soft(normalizedDeficitDateUrgency).toBe(normalizedShipmentsDateUrgency);
           },
           `Verify urgency date matches: ${normalizedDeficitDateUrgency} vs ${normalizedShipmentsDateUrgency}`,
-          test.info()
+          test.info(),
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
@@ -2100,7 +2070,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             // expect.soft(normalizedDeficitDateShipments).toBe(normalizedShipmentsDateShipments);
           },
           `Verify shipment date matches: ${normalizedDeficitDateShipments} vs ${normalizedShipmentsDateShipments}`,
-          test.info()
+          test.info(),
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
@@ -2239,7 +2209,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.log(`Test Case 3 Step 28 Method 1: Normalized expected: "${normalizedExpected}"`);
         console.log(`Test Case 3 Step 28 Method 1: Check 1 (cell includes expected): ${normalizedCellOrder.includes(normalizedExpected)}`);
         console.log(
-          `Test Case 3 Step 28 Method 1: Check 2 (expected includes cell base): ${normalizedExpected.includes(normalizedCellOrder.split(' от ')[0])}`
+          `Test Case 3 Step 28 Method 1: Check 2 (expected includes cell base): ${normalizedExpected.includes(normalizedCellOrder.split(' от ')[0])}`,
         );
         console.log(`Test Case 3 Step 28 Method 1: Cell base (split by ' от '): "${normalizedCellOrder.split(' от ')[0]}"`);
         await expectSoftWithScreenshot(
@@ -2248,7 +2218,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(normalizedCellOrder.includes(normalizedExpected) || normalizedExpected.includes(normalizedCellOrder.split(' от ')[0])).toBe(true);
           },
           `Verify order number in search result: cellOrderNumber="${cellOrderNumber}" (normalized="${normalizedCellOrder}") should include fullOrderNumberValue="${fullOrderNumberValue}" (normalized="${normalizedExpected}")`,
-          test.info()
+          test.info(),
         );
 
         // Check article number
@@ -2261,7 +2231,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellArticle).toBe(articleNumberValue);
           },
           `Verify article number in search result: ${cellArticle} vs ${articleNumberValue}`,
-          test.info()
+          test.info(),
         );
 
         // Check product name
@@ -2275,7 +2245,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellProductName.includes(productNameValue)).toBe(true);
           },
           `Verify product name in search result: ${cellProductName} includes ${productNameValue}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -2308,7 +2278,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
           },
           `Verify order number in search result: ${cellOrderNumber} includes ${fullOrderNumberValue}`,
-          test.info()
+          test.info(),
         );
 
         // Check article number
@@ -2321,7 +2291,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellArticle).toBe(articleNumberValue);
           },
           `Verify article number in search result: ${cellArticle} vs ${articleNumberValue}`,
-          test.info()
+          test.info(),
         );
 
         // Check product name
@@ -2334,7 +2304,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellProductName.includes(productNameValue)).toBe(true);
           },
           `Verify product name in search result: ${cellProductName} includes ${productNameValue}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -2365,7 +2335,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
           },
           `Verify order number in search result: ${cellOrderNumber} includes ${fullOrderNumberValue}`,
-          test.info()
+          test.info(),
         );
 
         // Check article number
@@ -2378,7 +2348,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellArticle).toBe(articleNumberValue);
           },
           `Verify article number in search result: ${cellArticle} vs ${articleNumberValue}`,
-          test.info()
+          test.info(),
         );
 
         // Check product name
@@ -2391,7 +2361,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(cellProductName.includes(productNameValue)).toBe(true);
           },
           `Verify product name in search result: ${cellProductName} includes ${productNameValue}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -2404,7 +2374,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Reuse context from Step 28.1
       const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       try {
@@ -2472,7 +2442,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(isEnabled).toBe(true);
           },
           'Verify edit button is enabled in Tab 2',
-          test.info()
+          test.info(),
         );
 
         if (isEnabled) {
@@ -2533,7 +2503,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(editTitleTextTab2.includes(orderNumberTab1)).toBe(true);
         },
         `Verify Tab 1 order number exists in Tab 2 edit title: ${orderNumberTab1} in ${editTitleTextTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.2: Compare article number
@@ -2555,7 +2525,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(articleTab1).toBe(articleTab2);
         },
         `Verify article matches: ${articleTab1} vs ${articleTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.3: Compare product wrapper
@@ -2577,7 +2547,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productWrapperValueTab1).toBe(productWrapperValueTab2);
         },
         `Verify product wrapper matches: ${productWrapperValueTab1} vs ${productWrapperValueTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.4: Compare quantity values
@@ -2601,7 +2571,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityTab1).toBe(quantityInputValueTab2);
         },
         `Verify quantity matches input: ${quantityTab1} vs ${quantityInputValueTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Compare with table cell
@@ -2616,7 +2586,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityTab1).toBe(quantityCellValueTab2);
         },
         `Verify quantity matches cell: ${quantityTab1} vs ${quantityCellValueTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.5: Compare DateOrder values
@@ -2638,7 +2608,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateOrderTab1).toBe(dateOrderTab2);
         },
         `Verify DateOrder matches: ${dateOrderTab1} vs ${dateOrderTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.6: Compare DateShipments values
@@ -2660,7 +2630,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateShipmentsTab1).toBe(dateShipmentsTab2);
         },
         `Verify DateShipments matches: ${dateShipmentsTab1} vs ${dateShipmentsTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.7: Compare DateByUrgency values
@@ -2684,7 +2654,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           //          expect.soft(dateByUrgencyTab1).toBe(dateByUrgencyDisplayTab2Normalized);
         },
         `Verify DateByUrgency matches display: ${dateByUrgencyTab1} vs ${dateByUrgencyDisplayTab2Normalized}`,
-        test.info()
+        test.info(),
       );
 
       const dateByUrgencyCellTab2Locator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
@@ -2699,7 +2669,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateByUrgencyTab1).toBe(dateByUrgencyCellTab2Value);
         },
         `Verify DateByUrgency matches table cell: ${dateByUrgencyTab1} vs ${dateByUrgencyCellTab2Value}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.8: Compare DateShipments (plan) values
@@ -2723,7 +2693,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateShipmentsTbodyTab1).toBe(dateShipPlanDisplayTab2Value);
         },
         `Verify DateShipments matches display: ${dateShipmentsTbodyTab1} vs ${dateShipPlanDisplayTab2Value}`,
-        test.info()
+        test.info(),
       );
 
       const dateShipmentsTbodyCellTab2Locator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first();
@@ -2738,7 +2708,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dateShipmentsTbodyTab1).toBe(dateShipmentsTbodyCellTab2Value);
         },
         `Verify DateShipments matches table cell: ${dateShipmentsTbodyTab1} vs ${dateShipmentsTbodyCellTab2Value}`,
-        test.info()
+        test.info(),
       );
 
       // Step 28.7.9: Change quantity to 10 and save
@@ -2792,7 +2762,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(updatedQuantityTab1).toBe('10');
         },
         `Verify quantity has changed to 10: ${updatedQuantityTab1}`,
-        test.info()
+        test.info(),
       );
     });
   });
@@ -2843,7 +2813,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         'Verify navigation to shipping tasks page successful',
-        test.info()
+        test.info(),
       );
     });
 
@@ -2907,7 +2877,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameFromRow.includes(firstProductNameValue)).toBe(true);
         },
         `Verify product name in row: expected to include '${firstProductNameValue}', got '${productNameFromRow}'`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -2919,7 +2889,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         'Verify row selected and edit button clicked successfully',
-        test.info()
+        test.info(),
       );
 
       // Wait for page to load after navigation (similar to Step 7 before Step 8)
@@ -2958,7 +2928,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dataRowCount).toBeGreaterThanOrEqual(1);
         },
         `Verify positions table has at least one data row (found ${dataRowCount} data rows out of ${totalRowCount} total rows)`,
-        test.info()
+        test.info(),
       );
 
       const clickAddNewProductSuccess = await loadingTaskPage.clickAddNewProductToOrderButton();
@@ -2968,7 +2938,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(clickAddNewProductSuccess).toBe(true);
         },
         'Verify "Add new product to order" button clicked successfully',
-        test.info()
+        test.info(),
       );
 
       // Wait for navigation to complete and new page to load
@@ -2991,7 +2961,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         'Verify product selection modal opened successfully',
-        test.info()
+        test.info(),
       );
     });
 
@@ -3003,7 +2973,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(selectSuccess).toBe(true);
         },
         `Verify product "${secondProductNameValue}" selected in modal`,
-        test.info()
+        test.info(),
       );
 
       const addSuccess = await loadingTaskPage.clickAddButtonInProductModal();
@@ -3013,7 +2983,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(addSuccess).toBe(true);
         },
         'Verify Add button clicked successfully in product modal',
-        test.info()
+        test.info(),
       );
     });
 
@@ -3026,7 +2996,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(attachmentsText.includes(secondProductNameValue)).toBe(true);
         },
         `Verify attachments link contains the second product (${secondProductNameValue}): ${attachmentsText}`,
-        test.info()
+        test.info(),
       );
 
       const saveSuccess = await loadingTaskPage.saveOrder();
@@ -3036,7 +3006,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(saveSuccess).toBe(true);
         },
         'Verify order saved successfully after adding product',
-        test.info()
+        test.info(),
       );
 
       // Wait 1 second before reload to ensure PRODUCT_3 is visible in the bottom table
@@ -3061,7 +3031,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(navigateSuccess).toBe(true);
         },
         'Verify navigation back to list page successful',
-        test.info()
+        test.info(),
       );
 
       // Navigate back to edit mode - this triggers /1 variant creation
@@ -3076,7 +3046,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(editSuccess).toBe(true);
         },
         'Verify navigation back to edit mode successful',
-        test.info()
+        test.info(),
       );
 
       // Wait for page to load after navigation
@@ -3104,7 +3074,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           {
             message: 'Table should have at least 2 rows after adding second product',
             timeout: WAIT_TIMEOUTS.LONG,
-          }
+          },
         )
         .toBeTruthy();
 
@@ -3118,7 +3088,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(rowCountAfterSave1).toBeGreaterThanOrEqual(2);
         },
         `Verify positions table has at least 2 rows after saving second product: ${rowCountAfterSave1}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -3130,7 +3100,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(clickAddNewProductSuccess).toBe(true);
         },
         'Verify "Add new product to order" button clicked successfully',
-        test.info()
+        test.info(),
       );
 
       const openModalSuccess = await loadingTaskPage.openProductSelectionModal();
@@ -3140,7 +3110,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(openModalSuccess).toBe(true);
         },
         'Verify product selection modal opened successfully',
-        test.info()
+        test.info(),
       );
 
       const selectSuccess = await loadingTaskPage.selectProductInModal(thirdProductName);
@@ -3150,7 +3120,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(selectSuccess).toBe(true);
         },
         `Verify product "${thirdProductName}" selected in modal`,
-        test.info()
+        test.info(),
       );
 
       const addSuccess = await loadingTaskPage.clickAddButtonInProductModal();
@@ -3160,7 +3130,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(addSuccess).toBe(true);
         },
         'Verify Add button clicked successfully in product modal',
-        test.info()
+        test.info(),
       );
 
       // Verify the attachments link contains the third product
@@ -3171,7 +3141,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(attachmentsText.includes(thirdProductName)).toBe(true);
         },
         `Verify attachments link contains the third product (${thirdProductName}): ${attachmentsText}`,
-        test.info()
+        test.info(),
       );
 
       const saveSuccess = await loadingTaskPage.saveOrder();
@@ -3181,7 +3151,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(saveSuccess).toBe(true);
         },
         'Verify order saved successfully after adding first product',
-        test.info()
+        test.info(),
       );
 
       // Wait 1 second before reload to ensure PRODUCT_3 is visible in the bottom table
@@ -3211,7 +3181,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(rowCountAfterSave2).toBeGreaterThanOrEqual(3);
         },
         `Verify positions table has at least 3 data rows after saving first product and reloading twice: ${rowCountAfterSave2}`,
-        test.info()
+        test.info(),
       );
 
       // /1 should already exist from adding PRODUCT_2 earlier
@@ -3229,7 +3199,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(navigateSuccess).toBe(true);
         },
         'Verify navigation back to list page successful after adding first product',
-        test.info()
+        test.info(),
       );
 
       // Navigate back to edit mode - this triggers /2 variant creation (similar to how /1 was created)
@@ -3244,7 +3214,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(editSuccess2).toBe(true);
         },
         'Verify navigation back to edit mode successful after adding first product',
-        test.info()
+        test.info(),
       );
 
       // Wait for page to load after navigation
@@ -3270,7 +3240,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(navigateSuccess2).toBe(true);
         },
         'Verify navigation to main list successful to trigger /2 appearance',
-        test.info()
+        test.info(),
       );
 
       // Wait for backend to process /2 creation - may take time for async processing
@@ -3359,7 +3329,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         'Verify navigation to shipping tasks page successful',
-        test.info()
+        test.info(),
       );
     });
 
@@ -3421,7 +3391,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               baseOrderNumberOnly, // Search for base number like "25-4945"
               orderNumberForCase5, // Expect to find /2 variant
               TEST_PRODUCTS[2].articleNumber, // /2 order has third product's article (TEST_ARTICLE_3)
-              thirdProductName || 'TEST_PRODUCT_3'
+              thirdProductName || 'TEST_PRODUCT_3',
             );
             success = searchSuccess;
             return success;
@@ -3430,7 +3400,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             message: `Waiting for /2 order variant (${orderNumberForCase5}) to appear in shipments list`,
             timeout: WAIT_TIMEOUTS.PAGE_RELOAD, // Wait up to 30 seconds for /2 to be created (increased for async backend processing)
             intervals: [2000, 3000, 5000], // Check every 2-5 seconds
-          }
+          },
         )
         .toBeTruthy();
 
@@ -3440,7 +3410,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify order ${orderNumberForCase5} appears in search results`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -3461,7 +3431,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             message: `Waiting for /2 order variant (${orderNumberForSearch}) to be findable and openable`,
             timeout: WAIT_TIMEOUTS.LONG, // Wait up to 15 seconds for /2 to be created
             intervals: [1000, 2000, 3000], // Check every 1-3 seconds
-          }
+          },
         )
         .toBeTruthy();
 
@@ -3471,7 +3441,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         `Verify order ${orderNumberForSearch} found and opened in edit mode`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -3503,7 +3473,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(tab2ForOrder0).not.toBeNull();
         },
         'Verify Tab 2 created and order /0 opened',
-        test.info()
+        test.info(),
       );
       console.log('Tab 2: Order /0 opened in edit mode');
 
@@ -3516,7 +3486,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(tab3ForOrder1).not.toBeNull();
         },
         'Verify Tab 3 created and order /1 opened',
-        test.info()
+        test.info(),
       );
       console.log('Tab 3: Order /1 opened in edit mode');
     });
@@ -3564,7 +3534,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(rowCount).toBe(expectedRowCount); // 3 data rows + 1 total row
         },
         `Verify positions table has ${expectedRowCount} rows: ${rowCount}`,
-        test.info()
+        test.info(),
       );
 
       for (const expected of expectedRows) {
@@ -3573,7 +3543,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expected.rowIndex,
           expected.orderSuffix,
           expected.productName,
-          expected.articleNumber
+          expected.articleNumber,
         );
         await expectSoftWithScreenshot(
           page,
@@ -3581,7 +3551,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(rowVerified).toBe(true);
           },
           `Row ${expected.rowIndex + 1}: Verify ${expected.label} (order ${expected.orderSuffix}, product ${expected.productName})`,
-          test.info()
+          test.info(),
         );
 
         // Get row for date comparisons and extract product name for later use
@@ -3630,7 +3600,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Row ${expected.rowIndex + 1}: Verify DateByUrgency matches: cell="${dateByUrgencyCellValue}" (${normalizedDateByUrgencyCell}) vs display from tab ${
             expected.orderSuffix
           }="${dateByUrgencyDisplayValue}" (${normalizedDateByUrgencyDisplay})`,
-          test.info()
+          test.info(),
         );
 
         // Verify DateShipments: compare row cell with date picker display from the appropriate tab
@@ -3659,7 +3629,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Row ${expected.rowIndex + 1}: Verify DateShipments matches: cell="${dateShipmentsCellValue}" (${normalizedDateShipmentsCell}) vs display from tab ${
             expected.orderSuffix
           }="${dateShipmentsDisplayValue}" (${normalizedDateShipmentsDisplay})`,
-          test.info()
+          test.info(),
         );
 
         // Verify time: extract time from Product-DateShipments cell and compare with product characteristic
@@ -3707,7 +3677,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
                 return !!button && !button.disabled;
               },
               SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
-              { timeout: WAIT_TIMEOUTS.SHORT }
+              { timeout: WAIT_TIMEOUTS.SHORT },
             )
             .catch(() => {
               console.warn('Edit button did not become enabled within timeout.');
@@ -3720,7 +3690,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(isEnabled).toBe(true);
             },
             `Row ${expected.rowIndex + 1}: Verify Edit button is enabled for product ${productNameText}`,
-            test.info()
+            test.info(),
           );
 
           if (isEnabled) {
@@ -3755,7 +3725,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               //              expect.soft(characteristicValue).toBe(timeValue);
             },
             `Row ${expected.rowIndex + 1}: Verify time matches characteristic: time="${timeValue}" vs characteristic="${characteristicValue}"`,
-            test.info()
+            test.info(),
           );
 
           // Close the parts database tab
@@ -3798,7 +3768,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(row1HasOrder0 && row1HasProduct).toBe(true);
         },
         `Verify Row 1: order /0 matches first product: order="${row1Order}", product="${row1Product}"`,
-        test.info()
+        test.info(),
       );
 
       await expectSoftWithScreenshot(
@@ -3810,7 +3780,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(row2HasOrder1 && row2HasProduct).toBe(true);
         },
         `Verify Row 2: order /1 matches second product: order="${row2Order}", product="${row2Product}"`,
-        test.info()
+        test.info(),
       );
 
       await expectSoftWithScreenshot(
@@ -3819,7 +3789,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(row3Order.includes('/2') && row3Product.includes(thirdProductName)).toBe(true);
         },
         `Verify Row 3: order /2 matches third product: order=${row3Order}, product=${row3Product}`,
-        test.info()
+        test.info(),
       );
 
       // Cleanup: Close all tabs except the main page
@@ -3851,7 +3821,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(navSuccess).toBe(true);
         },
         'Verify navigation to shipping tasks page for Step 5',
-        test.info()
+        test.info(),
       );
 
       // Method 1: Search by Заказ (Order Number with /0)
@@ -3863,7 +3833,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(success).toBe(true);
           },
           `Method 1: Verify search by order number ${fullOrderNumberWith0} matches expected values`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -3876,7 +3846,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(success).toBe(true);
           },
           `Method 2: Verify search by article number ${articleNumberValue} matches expected values`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -3889,7 +3859,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(success).toBe(true);
           },
           `Method 3: Verify search by product name ${productNameFor0} matches expected values`,
-          test.info()
+          test.info(),
         );
       });
     });
@@ -3902,7 +3872,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Create Tab 1: Orders page, search for order with /0
       const { page: tab1, pageObject: tab1LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       await tab1LoadingTaskPage.searchAndWaitForTable(
@@ -3913,7 +3883,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           useRedesign: true,
           timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
-        }
+        },
       );
 
       const tableBodyTab1 = tab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -3924,7 +3894,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Create Tab 2: Orders page, search for order with /0, select and edit
       const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       await tab2LoadingTaskPage.searchAndWaitForTable(
@@ -3935,7 +3905,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           useRedesign: true,
           timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
-        }
+        },
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -3978,7 +3948,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(orderNumberTab1).toBe(orderNumberTab2);
           },
           `Verify order numbers match: ${orderNumberTab1} vs ${orderNumberTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4000,7 +3970,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(articleNumberTab1).toBe(articleNumberTab2);
           },
           `Verify article numbers match: ${articleNumberTab1} vs ${articleNumberTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4022,7 +3992,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(productNameTab1).toBe(productNameTab2);
           },
           `Verify product names match: ${productNameTab1} vs ${productNameTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4044,7 +4014,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(quantityTab1).toBe(quantityTab2);
           },
           `Verify quantities match: ${quantityTab1} vs ${quantityTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4127,7 +4097,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(daysNumberTab1).toBe(calculatedDays);
           },
           `Verify Tab 1 Кол-во дней matches calculated: ${daysNumberTab1} vs ${calculatedDays}`,
-          test.info()
+          test.info(),
         );
 
         await expectSoftWithScreenshot(
@@ -4136,7 +4106,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(daysNumberTab2).toBe(calculatedDays);
           },
           `Verify Tab 2 Кол-во дней matches calculated: ${daysNumberTab2} vs ${calculatedDays}`,
-          test.info()
+          test.info(),
         );
 
         // Also verify both tables show the same number
@@ -4146,7 +4116,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(daysNumberTab1).toBe(daysNumberTab2);
           },
           `Verify both tables show same Кол-во дней: Tab 1 ${daysNumberTab1} vs Tab 2 ${daysNumberTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4169,7 +4139,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(dateShipmentsTab1).toBe(dateShipmentsTab2);
           },
           `Verify DateShipments values match: ${dateShipmentsTab1} vs ${dateShipmentsTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4191,7 +4161,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(buyersTab1).toBe(buyersTab2);
           },
           `Verify buyers match: ${buyersTab1} vs ${buyersTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4219,7 +4189,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             // expect.soft(normalizedDateTab1).toBe(normalizedDateTab2);
           },
           `Verify DateByUrgency values match: ${normalizedDateTab1} vs ${normalizedDateTab2}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4297,7 +4267,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(daysUntilShipmentTab1).toBe(calculatedDaysUntilShipment);
           },
           `Verify days until shipment match: Tab 1 shows ${daysUntilShipmentTab1}, calculated from Tab 2 date: ${calculatedDaysUntilShipment}`,
-          test.info()
+          test.info(),
         );
       });
 
@@ -4401,7 +4371,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
                 //                expect.soft(characteristicValue).toBe(timeValue);
               },
               `Verify characteristic matches time: ${characteristicValue} vs ${timeValue}`,
-              test.info()
+              test.info(),
             );
           }
         } finally {
@@ -4447,13 +4417,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(orderNumberTextTab1.includes(orderNumberWith0)).toBe(true);
         },
         `Verify correct row is found: ${orderNumberTextTab1} includes ${orderNumberWith0}`,
-        test.info()
+        test.info(),
       );
 
       // Tab 2: Open new tab, search for order with /0, and edit it
       const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       // We're on the main orders page (not warehouse), so use SHIPMENTS_SEARCH_INPUT
@@ -4465,7 +4435,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
           timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
-        }
+        },
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -4545,7 +4515,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(orderNumberModal).toBe(orderNumberEdit);
         },
         `Verify order numbers match: ${orderNumberModal} vs ${orderNumberEdit}`,
-        test.info()
+        test.info(),
       );
 
       // Compare count: Modal vs Quantity input
@@ -4567,7 +4537,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(countModal).toBe(quantityTab2);
         },
         `Verify count matches: ${countModal} vs ${quantityTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Compare DateOrder: Modal vs DateOrder display
@@ -4592,7 +4562,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedDateOrderModal).toBe(normalizedDateOrderTab2);
         },
         `Verify DateOrder matches: ${normalizedDateOrderModal} vs ${normalizedDateOrderTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Compare DateShipments: Modal vs DateShippingPlan display
@@ -4638,7 +4608,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedDateShipmentsModal).toBe(normalizedDateShipmentsTab2);
         },
         `Verify DateShipments matches: ${normalizedDateShipmentsModal} vs ${normalizedDateShipmentsTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Compare DateByUrgency: Modal vs DateByUrgency display
@@ -4665,7 +4635,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           //         expect.soft(normalizedDateByUrgencyModal).toBe(normalizedDateByUrgencyTab2);
         },
         `Verify DateByUrgency matches: ${normalizedDateByUrgencyModal} vs ${normalizedDateByUrgencyTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Compare Product Name: Modal vs AttachmentsValue-Link and table row
@@ -4687,7 +4657,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameModalValue).toBe(attachmentsLinkTab2Value);
         },
         `Verify product name matches (AttachmentsValue-Link): ${productNameModalValue} vs ${attachmentsLinkTab2Value}`,
-        test.info()
+        test.info(),
       );
 
       // Find the row in the table with matching order number
@@ -4724,7 +4694,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(productNameModalValue).toBe(productWrapperValue);
           },
           `Verify product name matches (table row): ${productNameModalValue} vs ${productWrapperValue}`,
-          test.info()
+          test.info(),
         );
       }
 
@@ -4748,7 +4718,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(companyNameModalValue.includes(buyersCellValue) || buyersCellValue.includes(companyNameModalValue)).toBe(true);
           },
           `Verify company name matches (Buyers cell): ${companyNameModalValue} vs ${buyersCellValue}`,
-          test.info()
+          test.info(),
         );
       }
 
@@ -4764,7 +4734,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(companyNameModalValue.includes(buyerSelectedCompanyValue) || buyerSelectedCompanyValue.includes(companyNameModalValue)).toBe(true);
         },
         `Verify company name matches (Buyer-SelectedCompany): ${companyNameModalValue} vs ${buyerSelectedCompanyValue}`,
-        test.info()
+        test.info(),
       );
 
       // Verify order number in row is found in h3 of dialog
@@ -4783,7 +4753,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(h3Text.includes(orderNumberInRow) || orderNumberInRow.includes(orderNumberModal)).toBe(true);
             },
             `Verify order number in row is found in h3: ${orderNumberInRow} in ${h3Text}`,
-            test.info()
+            test.info(),
           );
         }
       }
@@ -4899,14 +4869,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(orderNameValue.includes(orderNumberWith0)).toBe(true);
         },
         `Verify order number in filter table: ${orderNameValue} includes ${orderNumberWith0}`,
-        test.info()
+        test.info(),
       );
 
       // Create Tab 2: Go to orders page, search for order, select it, click edit
       const context = page.context();
       const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       await tab2LoadingTaskPage.searchAndWaitForTable(
@@ -4917,7 +4887,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           useRedesign: true,
           timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
-        }
+        },
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -4953,7 +4923,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           //          expect.soft(normalizedUrgentDate).toBe(normalizedDateByUrgencyTab2);
         },
         `Verify UrgentDate matches: ${normalizedUrgentDate} vs ${normalizedDateByUrgencyTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Compare PlaneDate from Tab 1 row with Tab 2
@@ -4979,7 +4949,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // expect.soft(normalizedPlaneDate).toBe(normalizedDateShippingPlanTab2);
         },
         `Verify PlaneDate matches: ${normalizedPlaneDate} vs ${normalizedDateShippingPlanTab2}`,
-        test.info()
+        test.info(),
       );
 
       // Back on Tab 1, click the cell with data-testid:DataCell in the row
@@ -5005,7 +4975,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitRowCount).toBe(1);
         },
         `Verify deficit table has exactly 1 row (found: ${deficitRowCount})`,
-        test.info()
+        test.info(),
       );
 
       // Cleanup: Close tab2
@@ -5077,7 +5047,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitRowCount).toBe(1);
         },
         `Verify exactly 1 row returned after article search (found: ${deficitRowCount})`,
-        test.info()
+        test.info(),
       );
 
       // Check the article cell contains our article
@@ -5101,7 +5071,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(articleCellValue).toContain(articleNumberValue);
         },
         `Verify article cell contains searched article: "${articleCellValue}" should contain "${articleNumberValue}"`,
-        test.info()
+        test.info(),
       );
 
       // Get the designation (Обозначение) from the deficit row
@@ -5122,7 +5092,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const context = page.context();
       const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       await tab2LoadingTaskPage.searchAndWaitForTable(
@@ -5133,7 +5103,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
           timeoutBeforeWait: TIMEOUTS.STANDARD,
           minRows: 1,
-        }
+        },
       );
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -5203,7 +5173,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(articleCellValue).toBe(articleCellValueTab2);
             },
             `Verify Article from deficit page matches Article from order edit page: "${articleCellValue}" should equal "${articleCellValueTab2}"`,
-            test.info()
+            test.info(),
           );
 
           // Compare Name from deficit page with Product Wrapper from order edit page
@@ -5213,7 +5183,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(nameValueDeficit).toBe(productWrapperValueTab2);
             },
             `Verify Name from deficit page matches Product Wrapper from order edit page: "${nameValueDeficit}" should equal "${productWrapperValueTab2}"`,
-            test.info()
+            test.info(),
           );
 
           // Compare Name from deficit page with AttachmentsValue-Link from order edit page
@@ -5223,7 +5193,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               expect.soft(nameValueDeficit).toBe(attachmentsValueLinkValue);
             },
             `Verify Name from deficit page matches AttachmentsValue-Link from order edit page: "${nameValueDeficit}" should equal "${attachmentsValueLinkValue}"`,
-            test.info()
+            test.info(),
           );
 
           break;
@@ -5257,7 +5227,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           //          expect.soft(normalizedDateUrgencyTab1).toBe(normalizedDateByUrgencyTab2);
         },
         `Verify DateUrgency from Tab 1 matches DateByUrgency from Tab 2: "${normalizedDateUrgencyTab1}" should equal "${normalizedDateByUrgencyTab2}"`,
-        test.info()
+        test.info(),
       );
 
       // Tab 1: Get DateShipments from deficit row
@@ -5283,7 +5253,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           // expect.soft(normalizedDateShipmentsTab1).toBe(normalizedDateShippingPlanTab2);
         },
         `Verify DateShipments from Tab 1 matches DateShippingPlan from Tab 2: "${normalizedDateShipmentsTab1}" should equal "${normalizedDateShippingPlanTab2}"`,
-        test.info()
+        test.info(),
       );
 
       // Tab 1: Get Demand-Link from deficit row
@@ -5325,7 +5295,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(demandValueTab1).toBe(quantityKolValueTab2);
         },
         `Verify Demand from Tab 1 matches Quantity-Kol from Tab 2: "${demandValueTab1}" should equal "${quantityKolValueTab2}"`,
-        test.info()
+        test.info(),
       );
 
       await expectSoftWithScreenshot(
@@ -5334,7 +5304,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(demandValueTab1).toBe(quantityInputValueTab2);
         },
         `Verify Demand from Tab 1 matches Quantity-Input from Tab 2: "${demandValueTab1}" should equal "${quantityInputValueTab2}"`,
-        test.info()
+        test.info(),
       );
 
       // Tab 1: Get Deficit value and verify it's the opposite of Demand
@@ -5352,7 +5322,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitValueTab1Number).toBe(expectedDeficitValue);
         },
         `Verify Deficit from Tab 1 is opposite of Demand: Deficit="${deficitValueTab1Number}" should equal -Demand="${expectedDeficitValue}"`,
-        test.info()
+        test.info(),
       );
 
       // Tab 2: Increase quantity by 1 and save
@@ -5421,7 +5391,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(demandValueTab1NumberAfterUpdate).toBe(expectedDemandAfterUpdate);
         },
         `Verify Demand increased by 1: "${demandValueTab1NumberAfterUpdate}" should equal "${expectedDemandAfterUpdate}" (was ${demandValueTab1Number})`,
-        test.info()
+        test.info(),
       );
 
       // Verify Deficit decreased by 1 (became more negative)
@@ -5432,7 +5402,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitValueTab1NumberAfterUpdate).toBe(expectedDeficitAfterUpdate);
         },
         `Verify Deficit decreased by 1: "${deficitValueTab1NumberAfterUpdate}" should equal "${expectedDeficitAfterUpdate}" (was ${deficitValueTab1Number})`,
-        test.info()
+        test.info(),
       );
 
       // Tab 2: Decrease quantity by 1 and save
@@ -5503,7 +5473,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(demandValueTab1NumberAfterDecrease).toBe(expectedDemandAfterDecrease);
         },
         `Verify Demand decreased by 1: "${demandValueTab1NumberAfterDecrease}" should equal "${expectedDemandAfterDecrease}" (was ${demandValueTab1NumberAfterUpdate})`,
-        test.info()
+        test.info(),
       );
 
       // Verify Deficit increased by 1 (became less negative, back towards original)
@@ -5514,7 +5484,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitValueTab1NumberAfterDecrease).toBe(expectedDeficitAfterDecrease);
         },
         `Verify Deficit increased by 1: "${deficitValueTab1NumberAfterDecrease}" should equal "${expectedDeficitAfterDecrease}" (was ${deficitValueTab1NumberAfterUpdate})`,
-        test.info()
+        test.info(),
       );
 
       // Tab 1: Verify Quantity and Status
@@ -5529,7 +5499,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValueTab1).toBe('0');
         },
         `Verify Quantity on deficit page equals 0 (found: ${quantityValueTab1})`,
-        test.info()
+        test.info(),
       );
 
       const statusCellTab1 = firstDeficitRowAfterDecrease.locator(SelectorsShortagePages.ROW_STATUS_BADGES_TEXT).first();
@@ -5543,7 +5513,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(statusValueTab1).toBe('Не заказано');
         },
         `Verify Status on deficit page equals "Не заказано" (found: ${statusValueTab1})`,
-        test.info()
+        test.info(),
       );
 
       const normCellTab1 = firstDeficitRowAfterDecrease.locator(SelectorsShortagePages.ROW_NORM).first();
@@ -5595,7 +5565,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             //            expect.soft(characteristicValue).toBe(normFirstPart);
           },
           `Verify Norm first part matches product characteristic: norm="${normFirstPart}" vs characteristic="${characteristicValue}"`,
-          test.info()
+          test.info(),
         );
       } finally {
         await partsTab.close();
@@ -5656,7 +5626,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Warehouse order number should contain ${orderNumberWith0Only}`,
           page,
           loadingTaskPage,
-          test.info()
+          test.info(),
         );
 
         const articleCell = firstRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
@@ -5666,7 +5636,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Warehouse article should match ${articleNumberValue}`,
           page,
           loadingTaskPage,
-          test.info()
+          test.info(),
         );
 
         const productNameCell = firstRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
@@ -5676,7 +5646,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Warehouse product name should include ${productNameValue}`,
           page,
           loadingTaskPage,
-          test.info()
+          test.info(),
         );
       };
 
@@ -5811,7 +5781,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const warehouseDateOrder = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_ORDER_PATTERN).first(), 'DateOrder');
       const warehouseDateShipmentsProduct = await readWarehouseCell(
         warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN).first(),
-        'DateShipments (product)'
+        'DateShipments (product)',
       );
       let warehouseTimeValue = '';
       try {
@@ -5828,17 +5798,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn('Unable to read warehouse time cell:', error);
       }
       const warehouseDateByUrgency = normalizeDate(
-        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency')
+        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency'),
       );
       const warehouseDateShipPlan = normalizeDate(
-        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)')
+        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)'),
       );
       const warehouseBuyer = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_BUYERS_PATTERN).first(), 'Buyer');
 
       const context = page.context();
       const { page: ordersTab, pageObject: ordersTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
       try {
         await ordersTabLoadingPage.waitForNetworkIdle();
@@ -5852,7 +5822,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             useRedesign: true,
             timeoutBeforeWait: TIMEOUTS.STANDARD,
             minRows: 1,
-          }
+          },
         );
 
         // Wait for the table to update with search results by verifying the first row contains the searched order number
@@ -5907,7 +5877,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(editTitleText.includes(orderNumberWith0Only)).toBe(true);
           },
           `Verify edit title includes order /0 (${orderNumberWith0Only}): ${editTitleText}`,
-          test.info()
+          test.info(),
         );
 
         const positionsTable = ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
@@ -5949,7 +5919,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(normalizedWarehouseOrder).toBe(normalizedOrdersRowOrder);
           },
           `Verify warehouse order number matches edit row value: ${normalizedWarehouseOrder} vs ${normalizedOrdersRowOrder}`,
-          test.info()
+          test.info(),
         );
 
         await expectSoftWithScreenshot(
@@ -5958,14 +5928,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(normalizedWarehouseOrder).toBe(normalizedOrdersTitle);
           },
           `Verify warehouse order number matches edit title value: ${normalizedWarehouseOrder} vs ${normalizedOrdersTitle}`,
-          test.info()
+          test.info(),
         );
 
         const ordersArticle = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN).first(), 'article');
         const ordersProductName = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first(), 'product name');
         const ordersQuantityCell = await readOrdersCell(
           matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first(),
-          'quantity (cell)'
+          'quantity (cell)',
         );
         const ordersQuantityInputLocator = ordersTab.locator(SelectorsLoadingTasksPage.quantityInput).first();
         await ordersQuantityInputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
@@ -5974,25 +5944,25 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         const ordersDateOrder = await readOrdersCell(
           matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first(),
-          'DateOrder'
+          'DateOrder',
         );
         const ordersDateShipmentsProduct = await readOrdersCell(
           matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first(),
-          'DateShipments (product)'
+          'DateShipments (product)',
         );
         const ordersDateByUrgency = normalizeDate(
-          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency')
+          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency'),
         );
         const ordersDateShipPlan = normalizeDate(
-          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)')
+          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)'),
         );
         const ordersBuyerCell = await readOrdersCell(
           matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first(),
-          'Buyer (row)'
+          'Buyer (row)',
         );
         const ordersBuyerSelected = await readOrdersCell(
           ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_BUYER_SELECTED_COMPANY).first(),
-          'Buyer (selected company)'
+          'Buyer (selected company)',
         );
 
         const compareValue = async (description: string, expected: string, actual: string, screenshotPage: Page) => {
@@ -6002,7 +5972,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               //              expect.soft(actual).toBe(expected);
             },
             `Verify ${description}: expected "${expected}", actual "${actual}"`,
-            test.info()
+            test.info(),
           );
         };
 
@@ -6025,7 +5995,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const dateByUrgencyDisplayTab2 = await readOrdersCell(
           ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first(),
           'DateByUrgency display',
-          ordersTabLoadingPage
+          ordersTabLoadingPage,
         );
         await compareValue('DateByUrgency display', warehouseDateByUrgency, normalizeDate(dateByUrgencyDisplayTab2), ordersTab);
 
@@ -6034,8 +6004,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await readOrdersCell(
             ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first(),
             'DateShippingPlan display',
-            ordersTabLoadingPage
-          )
+            ordersTabLoadingPage,
+          ),
         );
         await compareValue('DateShippingPlan display', warehouseDateShipPlan, dateShipPlanDisplayValue, ordersTab);
 
@@ -6170,7 +6140,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitRowCount).toBeGreaterThan(0);
         },
         `Verify deficit table has rows after search: found ${deficitRowCount} rows`,
-        test.info()
+        test.info(),
       );
 
       if (deficitRowCount === 0) {
@@ -6194,7 +6164,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(initialDeficitValue).not.toBe('');
         },
         `Verify initial deficit value retrieved: ${initialDeficitValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6210,7 +6180,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(await pageContainer.isVisible()).toBe(true);
         },
         'Verify Issue Shipment page is visible for Test Case 6',
-        test.info()
+        test.info(),
       );
     });
 
@@ -6240,7 +6210,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedCellOrder.includes(normalizedExpected)).toBe(true);
         },
         `Verify order row contains number with /0 suffix: expected ${normalizedExpected}, got ${normalizedCellOrder}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6254,7 +6224,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         'Verify row selected and edit button clicked successfully',
-        test.info()
+        test.info(),
       );
     });
 
@@ -6295,7 +6265,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetRow).not.toBeNull();
         },
         `Verify target row found with order number ${orderNumberWith0}`,
-        test.info()
+        test.info(),
       );
 
       if (!targetRow) {
@@ -6317,7 +6287,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(initialQuantity).not.toBe('');
         },
         `Verify initial quantity retrieved: ${initialQuantity}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6330,7 +6300,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(initialQuantity).not.toBe('');
         },
         `Verify initial quantity is set before increasing: ${initialQuantity}`,
-        test.info()
+        test.info(),
       );
 
       // Re-find and click on the /0 row to select it, so the main quantity input corresponds to this row
@@ -6429,7 +6399,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Verify it matches the /0 row's quantity
       if (mainInputValue !== initialQuantity) {
         throw new Error(
-          `Test Case 6: Main quantity input (${mainInputValue}) does not match /0 row quantity (${initialQuantity}). The input is for a different product.`
+          `Test Case 6: Main quantity input (${mainInputValue}) does not match /0 row quantity (${initialQuantity}). The input is for a different product.`,
         );
       }
 
@@ -6441,7 +6411,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       if (!rowProductName.includes(firstProductNameValue)) {
         throw new Error(
-          `Test Case 6: Product name in /0 row (${rowProductName}) does not match TEST_PRODUCT_1 (${firstProductNameValue}). We are editing the wrong product.`
+          `Test Case 6: Product name in /0 row (${rowProductName}) does not match TEST_PRODUCT_1 (${firstProductNameValue}). We are editing the wrong product.`,
         );
       }
     });
@@ -6458,7 +6428,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           }
         },
         `Verify quantity increased and saved successfully: new value ${newValue}`,
-        test.info()
+        test.info(),
       );
 
       // Store the new quantity for later verification
@@ -6532,7 +6502,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(updatedQuantity).toBe(expectedQuantity);
         },
         `Verify quantity increased by 2: expected ${expectedQuantity}, got ${updatedQuantity}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6553,7 +6523,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(await pageContainer.isVisible()).toBe(true);
         },
         'Verify returned to main orders page',
-        test.info()
+        test.info(),
       );
     });
 
@@ -6580,7 +6550,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedCellOrder.includes(normalizedExpected)).toBe(true);
         },
         `Verify order appears in search results: expected ${normalizedExpected}, got ${normalizedCellOrder}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6600,7 +6570,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityCellValue).toBe(expectedQuantity);
         },
         `Verify quantity cell contains new quantity: expected ${expectedQuantity}, got ${quantityCellValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6641,7 +6611,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(modalCount).toBeGreaterThan(0);
         },
         `Verify modal opened after clicking quantity cell: found ${modalCount} modal(s)`,
-        test.info()
+        test.info(),
       );
 
       if (modalCount === 0) {
@@ -6668,7 +6638,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedModal.includes(normalizedExpected)).toBe(true);
         },
         `Verify modal title contains order number with /0: expected ${normalizedExpected}, got ${normalizedModal}`,
-        test.info()
+        test.info(),
       );
 
       // Check that the quantity cell in modal has our new quantity
@@ -6685,7 +6655,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(countModal).toBe(expectedQuantity);
         },
         `Verify modal quantity cell has new quantity: expected ${expectedQuantity}, got ${countModal}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6760,7 +6730,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(newDeficitNum).toBe(expectedNewDeficit);
         },
         `Verify new deficit value is correct: initial=${initialDeficitValue}, new=${newDeficitValue}, expected=${expectedNewDeficit}`,
-        test.info()
+        test.info(),
       );
 
       // Check that the RealBalance cell has the same value as the Deficit cell
@@ -6776,7 +6746,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(realBalanceValue).toBe(newDeficitValue);
         },
         `Verify RealBalance cell matches Deficit cell: RealBalance=${realBalanceValue}, Deficit=${newDeficitValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -6790,7 +6760,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Create a new tab
       const { page: warehouseTab, pageObject: warehouseTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.WAREHOUSE.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       try {
@@ -6890,7 +6860,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(productNameInRow.includes(productNameValue)).toBe(true);
           },
           `Verify product in warehouse results matches searched product: expected to include ${productNameValue}, got ${productNameInRow}`,
-          test.info()
+          test.info(),
         );
 
         // Check that the quantity cell matches the deficit value (deficit is negative, so we compare absolute values)
@@ -6909,7 +6879,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(quantityNum).toBe(expectedQuantity);
           },
           `Verify warehouse quantity cell matches deficit: quantity=${quantityValue}, deficit=${newDeficitValue}, expected=${expectedQuantity}`,
-          test.info()
+          test.info(),
         );
       } finally {
         // Cleanup: Close the warehouse tab
@@ -6958,7 +6928,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(await pageContainer.isVisible()).toBe(true);
         },
         'Verify Issue Shipment page is visible for Test Case 7',
-        test.info()
+        test.info(),
       );
 
       // Search for the order with /0 suffix
@@ -6990,7 +6960,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedCellOrder.includes(normalizedExpected)).toBe(true);
         },
         `Verify order row contains number with /0 suffix: expected ${normalizedExpected}, got ${normalizedCellOrder}`,
-        test.info()
+        test.info(),
       );
 
       // Read the actual quantity from the main orders page to use as expected value
@@ -7005,7 +6975,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(expectedQuantity).not.toBe('');
         },
         `Verify expected quantity retrieved from main orders page: ${expectedQuantity}`,
-        test.info()
+        test.info(),
       );
 
       if (!expectedQuantity) {
@@ -7023,7 +6993,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         'Verify row selected and edit button clicked successfully',
-        test.info()
+        test.info(),
       );
     });
 
@@ -7068,7 +7038,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetRow).not.toBeNull();
         },
         `Verify target row found with order number ${orderNumberWith0}`,
-        test.info()
+        test.info(),
       );
 
       if (!targetRow) {
@@ -7094,7 +7064,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValue).toBe(expectedQuantity);
         },
         `Verify quantity cell value is correct: expected ${expectedQuantity}, got ${quantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -7108,7 +7078,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cancelSuccess).toBe(true);
         },
         'Verify cancel successful and returned to main orders page',
-        test.info()
+        test.info(),
       );
 
       // Search for the order with /0 again
@@ -7141,7 +7111,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedCellOrder.includes(normalizedExpected)).toBe(true);
         },
         `Verify order appears in search results: expected ${normalizedExpected}, got ${normalizedCellOrder}`,
-        test.info()
+        test.info(),
       );
 
       // Check the quantity cell in the main orders table
@@ -7156,7 +7126,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValue).toBe(expectedQuantity);
         },
         `Verify quantity cell value on main orders page is correct: expected ${expectedQuantity}, got ${quantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -7198,7 +7168,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(modalCount).toBeGreaterThan(0);
         },
         `Verify modal opened after double clicking quantity cell: found ${modalCount} modal(s)`,
-        test.info()
+        test.info(),
       );
 
       if (modalCount === 0) {
@@ -7224,7 +7194,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(normalizedModal.includes(normalizedExpected)).toBe(true);
         },
         `Verify modal title contains order number with /0: expected ${normalizedExpected}, got ${normalizedModal}`,
-        test.info()
+        test.info(),
       );
 
       // Verify the quantity in the modal header
@@ -7239,7 +7209,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(countModal).toBe(expectedQuantity);
         },
         `Verify modal quantity matches expected: expected ${expectedQuantity}, got ${countModal}`,
-        test.info()
+        test.info(),
       );
 
       // Find the table with testid: Shipment-Table
@@ -7351,7 +7321,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(shipmentQuantityValue).toBe(expectedQuantity);
         },
         `Verify quantity cell value in Shipment-Table is correct: expected ${expectedQuantity}, got ${shipmentQuantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -7404,7 +7374,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitRowCount).toBeGreaterThan(0);
         },
         `Verify deficit table has rows after search: found ${deficitRowCount} rows`,
-        test.info()
+        test.info(),
       );
 
       if (deficitRowCount === 0) {
@@ -7426,7 +7396,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameInRow.includes(productNameValue)).toBe(true);
         },
         `Verify product in deficit results matches searched product: expected to include ${productNameValue}, got ${productNameInRow}`,
-        test.info()
+        test.info(),
       );
 
       // Get the deficit value and verify it's correct (should be negative of the quantity)
@@ -7444,7 +7414,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitValue).toBe(expectedDeficitValue);
         },
         `Verify deficit value is correct: expected ${expectedDeficitValue}, got ${deficitValue}`,
-        test.info()
+        test.info(),
       );
 
       // Get the needed quantity (Demand) value and verify it matches the expected quantity
@@ -7459,7 +7429,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(demandValue).toBe(expectedQuantity);
         },
         `Verify needed quantity (Demand) is correct: expected ${expectedQuantity}, got ${demandValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -7513,7 +7483,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(warehouseRowCount).toBeGreaterThan(0);
         },
         `Verify warehouse table has rows after search: found ${warehouseRowCount} rows`,
-        test.info()
+        test.info(),
       );
 
       if (warehouseRowCount === 0) {
@@ -7568,7 +7538,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameInRow.includes(productNameValue)).toBe(true);
         },
         `Verify product in warehouse results matches searched product: expected to include ${productNameValue}, got ${productNameInRow}`,
-        test.info()
+        test.info(),
       );
 
       // Check that the quantity cell has the correct value
@@ -7583,7 +7553,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValue).toBe(expectedQuantity);
         },
         `Verify warehouse quantity cell is correct: expected ${expectedQuantity}, got ${quantityValue}`,
-        test.info()
+        test.info(),
       );
     });
   });
@@ -7662,7 +7632,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitRowCount).toBeGreaterThan(0);
         },
         `Verify deficit table has rows after search: found ${deficitRowCount} rows`,
-        test.info()
+        test.info(),
       );
 
       if (deficitRowCount === 0) {
@@ -7710,7 +7680,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(initialRealRemainder).not.toBe('');
         },
         `Verify initial values retrieved: deficit=${initialDeficit}, required=${initialRequired}, remainder=${initialRemainder}, realRemainder=${initialRealRemainder}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -7727,7 +7697,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(await pageContainer.isVisible()).toBe(true);
         },
         'Verify Issue Shipment page is visible for Test Case 8',
-        test.info()
+        test.info(),
       );
     });
 
@@ -7772,7 +7742,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(dataRowCount).toBeGreaterThan(0);
         },
         `Verify at least one data row in search results: found ${dataRowCount} (total rows: ${totalRowCount})`,
-        test.info()
+        test.info(),
       );
 
       if (dataRowCount === 0) {
@@ -7830,7 +7800,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameInRow.includes(productNameWith3)).toBe(true);
         },
         `Verify product name in row matches: expected to include ${productNameWith3}, got ${productNameInRow}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -7916,7 +7886,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(true).toBe(true); // If we got here, the click was successful
         },
         'Verify row with /2 selected and edit button clicked successfully',
-        test.info()
+        test.info(),
       );
 
       // Extract order number from page title (should be /2 order containing TEST_PRODUCT_3)
@@ -7978,7 +7948,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetRow).not.toBeNull();
         },
         `Verify target row found with product ${productNameWith3}`,
-        test.info()
+        test.info(),
       );
 
       if (!targetRow) {
@@ -7999,7 +7969,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(initialQuantity).not.toBe('');
         },
         `Verify initial quantity retrieved: ${initialQuantity}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -8019,7 +7989,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(initialQuantityNum).toBe(1);
           },
           `Verify quantity is at minimum (1) and cannot be decreased`,
-          test.info()
+          test.info(),
         );
       } else {
         console.log(`Test Case 8: Decreasing quantity from ${initialQuantity} by ${decreaseBy} (minimum quantity is 1)`);
@@ -8034,7 +8004,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             }
           },
           `Verify quantity decreased and saved successfully: new value ${newValue}`,
-          test.info()
+          test.info(),
         );
 
         // Store the new quantity and actual decrease amount
@@ -8077,7 +8047,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetRow).not.toBeNull();
         },
         `Verify target row found after save with product ${productNameWith3}`,
-        test.info()
+        test.info(),
       );
 
       if (!targetRow) {
@@ -8103,7 +8073,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(updatedQuantity).toBe(newQuantity);
         },
         `Verify quantity decreased by 2: expected ${newQuantity}, got ${updatedQuantity}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -8116,7 +8086,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(success).toBe(true);
         },
         'Verify cancel successful and returned to main orders page',
-        test.info()
+        test.info(),
       );
     });
 
@@ -8202,7 +8172,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameInRow.includes(productNameWith3)).toBe(true);
         },
         `Verify product name in row: expected to include ${productNameWith3}, got ${productNameInRow}`,
-        test.info()
+        test.info(),
       );
 
       // Verify quantity
@@ -8217,7 +8187,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValue).toBe(newQuantity);
         },
         `Verify quantity cell value on main orders page: expected ${newQuantity}, got ${quantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -8281,7 +8251,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(modalCount).toBeGreaterThan(0);
         },
         `Verify modal opened after double clicking quantity cell: found ${modalCount} modal(s)`,
-        test.info()
+        test.info(),
       );
 
       if (modalCount === 0) {
@@ -8301,7 +8271,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(countModal).toBe(newQuantity);
         },
         `Verify modal quantity matches expected: expected ${newQuantity}, got ${countModal}`,
-        test.info()
+        test.info(),
       );
 
       // Find the table with testid: Shipment-Table
@@ -8382,7 +8352,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetShipmentRow).not.toBeNull();
         },
         `Verify target shipment row found in modal with product ${productNameWith3}`,
-        test.info()
+        test.info(),
       );
 
       if (!targetShipmentRow) {
@@ -8408,7 +8378,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(shipmentQuantityValue).toBe(newQuantity);
         },
         `Verify quantity cell value in Shipment-Table: expected ${newQuantity}, got ${shipmentQuantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -8455,7 +8425,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(deficitRowCount).toBeGreaterThan(0);
         },
         `Verify deficit table has rows after search: found ${deficitRowCount} rows`,
-        test.info()
+        test.info(),
       );
 
       if (deficitRowCount === 0) {
@@ -8481,7 +8451,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameInRow.includes(productNameWith3)).toBe(true);
         },
         `Verify product in deficit results matches searched product: expected to include ${productNameWith3}, got ${productNameInRow}`,
-        test.info()
+        test.info(),
       );
 
       // Verify deficit value changed based on actual decrease amount
@@ -8493,7 +8463,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Deficit should increase by the amount we decreased quantity (if we decreased at all)
       const expectedNewDeficit = initialDeficitNum + actualDecreaseBy;
       console.log(
-        `Test Case 8: New deficit value: ${newDeficitValue}, expected: ${expectedNewDeficit}, initial was: ${initialDeficit}, actual decrease: ${actualDecreaseBy}`
+        `Test Case 8: New deficit value: ${newDeficitValue}, expected: ${expectedNewDeficit}, initial was: ${initialDeficit}, actual decrease: ${actualDecreaseBy}`,
       );
 
       await expectSoftWithScreenshot(
@@ -8502,7 +8472,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(newDeficitNum).toBe(expectedNewDeficit);
         },
         `Verify new deficit value is correct: initial=${initialDeficit}, new=${newDeficitValue}, expected=${expectedNewDeficit}`,
-        test.info()
+        test.info(),
       );
 
       // Verify required (Demand) value changed
@@ -8514,7 +8484,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Otherwise, it should match newQuantity
       const expectedRequiredValue = actualDecreaseBy === 0 ? initialRequired : newQuantity;
       console.log(
-        `Test Case 8: New required value: ${newRequiredValue}, expected: ${expectedRequiredValue} (initial was: ${initialRequired}, actual decrease: ${actualDecreaseBy})`
+        `Test Case 8: New required value: ${newRequiredValue}, expected: ${expectedRequiredValue} (initial was: ${initialRequired}, actual decrease: ${actualDecreaseBy})`,
       );
 
       await expectSoftWithScreenshot(
@@ -8523,7 +8493,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(newRequiredValue).toBe(expectedRequiredValue);
         },
         `Verify new required value is correct: initial=${initialRequired}, new=${newRequiredValue}, expected=${expectedRequiredValue}, actualDecrease=${actualDecreaseBy}`,
-        test.info()
+        test.info(),
       );
 
       // Verify remainder (Quantity) value changed
@@ -8544,7 +8514,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(newRealRemainderValue).toBe(newDeficitValue);
         },
         `Verify RealBalance matches Deficit: RealBalance=${newRealRemainderValue}, Deficit=${newDeficitValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -8592,7 +8562,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(warehouseRowCount).toBeGreaterThan(0);
         },
         `Verify warehouse table has rows after search: found ${warehouseRowCount} rows`,
-        test.info()
+        test.info(),
       );
 
       if (warehouseRowCount === 0) {
@@ -8651,7 +8621,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameInRow.includes(productNameWith3)).toBe(true);
         },
         `Verify product in warehouse results matches searched product: expected to include ${productNameWith3}, got ${productNameInRow}`,
-        test.info()
+        test.info(),
       );
 
       // Check that the quantity cell has the correct value
@@ -8666,7 +8636,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValue).toBe(newQuantity);
         },
         `Verify warehouse quantity cell is correct: expected ${newQuantity}, got ${quantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -8729,7 +8699,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(orderNumberFromRow.length).toBeGreaterThan(0);
         },
         `Verify order number is present in row: ${orderNumberFromRow}`,
-        test.info()
+        test.info(),
       );
 
       // Get quantity from the row
@@ -8745,7 +8715,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityFromRow).toBe(newQuantity);
         },
         `Verify quantity in row matches expected: expected ${newQuantity}, got ${quantityFromRow}`,
-        test.info()
+        test.info(),
       );
 
       // Select the row and click edit button
@@ -8774,7 +8744,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           return /Редактирование заказа\s+№\s+\d+-\d+/.test(text);
         },
         SelectorsLoadingTasksPage.EDIT_TITLE_TESTID,
-        { timeout: WAIT_TIMEOUTS.PAGE_RELOAD }
+        { timeout: WAIT_TIMEOUTS.PAGE_RELOAD },
       );
 
       const titleText = (await editTitleElement.textContent())?.trim() || '';
@@ -8794,12 +8764,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect
             .soft(
               normalizedOrderNumberFromTitle.includes(normalizedOrderNumberFromRow) ||
-                normalizedOrderNumberFromRow.includes(normalizedOrderNumberFromTitle.split(' от ')[0])
+                normalizedOrderNumberFromRow.includes(normalizedOrderNumberFromTitle.split(' от ')[0]),
             )
             .toBe(true);
         },
         `Verify order number in title matches row: title=${normalizedOrderNumberFromTitle}, row=${normalizedOrderNumberFromRow}`,
-        test.info()
+        test.info(),
       );
 
       // Check that the quantity is correct in the edit page
@@ -8814,7 +8784,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityInInput).toBe(newQuantity);
         },
         `Verify quantity in edit page matches expected: expected ${newQuantity}, got ${quantityInInput}`,
-        test.info()
+        test.info(),
       );
 
       // Set quantity to 1 and save
@@ -8830,7 +8800,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(inputValueAfterFill).toBe('1');
         },
         `Verify quantity input value updated to 1: expected 1, got ${inputValueAfterFill}`,
-        test.info()
+        test.info(),
       );
 
       // Click save button
@@ -8879,7 +8849,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(await pageContainer.isVisible()).toBe(true);
         },
         'Verify Issue Shipment page is visible for Test Case 9',
-        test.info()
+        test.info(),
       );
 
       // Search by product name ending with _3
@@ -8927,7 +8897,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetRow).not.toBeNull();
         },
         `Verify target row with product ${productNameWith3} and /2 order found`,
-        test.info()
+        test.info(),
       );
 
       if (!targetRow) {
@@ -8952,7 +8922,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(productNameInRow.includes(productNameWith3)).toBe(true);
         },
         `Verify product name in row matches: expected to include ${productNameWith3}, got ${productNameInRow}`,
-        test.info()
+        test.info(),
       );
 
       console.log(`Test Case 9: Order number from row: ${orderNumberFromRow}`);
@@ -8963,7 +8933,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(orderNumberFromRow).not.toBe('');
         },
         `Verify order number retrieved from row: ${orderNumberFromRow}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -8994,7 +8964,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetRow).not.toBeNull();
         },
         `Verify target row with /2 order found for editing`,
-        test.info()
+        test.info(),
       );
 
       if (!targetRow) {
@@ -9022,7 +8992,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(isEnabled).toBe(true);
         },
         'Verify edit button is enabled',
-        test.info()
+        test.info(),
       );
 
       if (!isEnabled) {
@@ -9044,7 +9014,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(true).toBe(true); // If we got here, the click was successful
         },
         'Verify row with /2 selected and edit button clicked successfully',
-        test.info()
+        test.info(),
       );
     });
 
@@ -9060,7 +9030,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityInInput).toBe('1');
         },
         `Verify quantity in edit page is 1: expected 1, got ${quantityInInput}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9099,7 +9069,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(targetRow).not.toBeNull();
         },
         `Verify target row found with order number ${orderNumberFromRow}`,
-        test.info()
+        test.info(),
       );
 
       if (!targetRow) {
@@ -9125,7 +9095,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValue).toBe('1');
         },
         `Verify quantity in bottom table is 1: expected 1, got ${quantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9138,7 +9108,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(cancelSuccess).toBe(true);
         },
         'Verify cancel successful and returned to main orders page',
-        test.info()
+        test.info(),
       );
 
       // Search by product name again
@@ -9190,7 +9160,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(quantityValue).toBe('1');
         },
         `Verify quantity cell value on main orders page is 1: expected 1, got ${quantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9254,7 +9224,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(modalCount).toBeGreaterThan(0);
         },
         `Verify modal opened after double clicking quantity cell: found ${modalCount} modal(s)`,
-        test.info()
+        test.info(),
       );
 
       if (modalCount === 0) {
@@ -9274,7 +9244,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(countModal).toBe('1');
         },
         `Verify modal quantity is 1: expected 1, got ${countModal}`,
-        test.info()
+        test.info(),
       );
 
       // Find the table with testid: Shipment-Table
@@ -9357,7 +9327,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(shipmentQuantityValue).toBe('1');
         },
         `Verify quantity cell value in Shipment-Table is 1: expected 1, got ${shipmentQuantityValue}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9403,7 +9373,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(deficitRowCount).toBeGreaterThan(0);
           },
           `Verify deficit table has rows after search: found ${deficitRowCount} rows`,
-          test.info()
+          test.info(),
         );
 
         if (deficitRowCount === 0) {
@@ -9429,7 +9399,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(productNameInRow.includes(productNameWith3)).toBe(true);
           },
           `Verify product in deficit results matches searched product: expected to include ${productNameWith3}, got ${productNameInRow}`,
-          test.info()
+          test.info(),
         );
 
         // Verify deficit value is negative (indicating a deficit exists)
@@ -9448,7 +9418,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(deficitNum).toBeLessThan(0);
           },
           `Verify deficit value is negative (indicating deficit exists): got ${deficitValue}`,
-          test.info()
+          test.info(),
         );
       } finally {
         await newPage.close();
@@ -9458,7 +9428,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 9: Open new tab, go to warehouse orders page, search for product, and verify quantity is 1', async () => {
       const { page: newPage, pageObject: warehousePage } = await loadingTaskPage.createNewTabAndNavigate(
         SELECTORS.MAINMENU.WAREHOUSE.URL,
-        CreateLoadingTaskPage
+        CreateLoadingTaskPage,
       );
 
       try {
@@ -9541,7 +9511,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(productNameInRow.includes(productNameWith3)).toBe(true);
           },
           `Verify product in warehouse results matches searched product: expected to include ${productNameWith3}, got ${productNameInRow}`,
-          test.info()
+          test.info(),
         );
 
         // Check that the quantity cell has the value 1
@@ -9556,7 +9526,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(quantityValue).toBe('1');
           },
           `Verify warehouse quantity cell is 1: expected 1, got ${quantityValue}`,
-          test.info()
+          test.info(),
         );
       } finally {
         await newPage.close();
@@ -9593,7 +9563,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(success).toBe(true);
           },
           `Verify revision balance set to 0 for product "${productName}"`,
-          test.info()
+          test.info(),
         );
       }
     });
@@ -9622,7 +9592,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(await pageContainer.isVisible()).toBe(true);
         },
         'Verify Issue Shipment page is visible for Test Case 11',
-        test.info()
+        test.info(),
       );
     });
 
@@ -9637,7 +9607,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             expect.soft(archivedCount).toBeGreaterThanOrEqual(0);
           },
           `Verify shipment tasks archived for "${name}": ${archivedCount} items`,
-          test.info()
+          test.info(),
         );
       }
     });
@@ -9659,7 +9629,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(archivedCount).toBeGreaterThanOrEqual(0);
         },
         `Verify test products archived: ${archivedCount} items`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9684,7 +9654,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(remainingCount).toBe(0);
         },
         `Verify all shipment tasks deleted: expected 0, found ${remainingCount}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9697,7 +9667,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(remainingCount).toBe(0);
         },
         `Verify all test products deleted: expected 0, found ${remainingCount}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9710,7 +9680,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(remainingCount).toBe(0);
         },
         `Verify all warehouse orders deleted: expected 0, found ${remainingCount}`,
-        test.info()
+        test.info(),
       );
     });
 
@@ -9723,7 +9693,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           expect.soft(remainingCount).toBe(0);
         },
         `Verify all deficit entries deleted: expected 0, found ${remainingCount}`,
-        test.info()
+        test.info(),
       );
     });
   });
