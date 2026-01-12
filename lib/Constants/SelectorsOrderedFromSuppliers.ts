@@ -9,7 +9,7 @@ export const SELECT_TYPE_OBJECT_OPERATION_PRODUCT = '[data-testid="OrderSupplier
 
 export const SELECT_TYPE_OBJECT_OPERATION_DETAILS = '[data-testid="OrderSuppliers-Modal-AddOrder-Content-DetalCard"]';
 
-export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"]';
+export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY = 'dialog[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"] open';
 
 export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_TBODY =
   '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Tbody"]';
@@ -61,9 +61,9 @@ export const MODAL_SELECT_SUPPLIER_ASSEMBLE_CARD = '[data-testid="OrderSuppliers
 export const MODAL_SELECT_SUPPLIER_PRODUCT_CARD = '[data-testid="OrderSuppliers-Modal-AddOrder-Content-ProductCard"]';
 
 // Modal Create Order Supplier button selectors
-export const MODAL_CREATE_ORDER_CANCEL_BUTTON = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Cancel"]';
-export const MODAL_CREATE_ORDER_SAVE_BUTTON = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save"]';
-export const MODAL_CREATE_ORDER_CHOOSE_BUTTON = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button"]';
+export const MODAL_CREATE_ORDER_CANCEL_BUTTON = 'button[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Cancel"]';
+export const MODAL_CREATE_ORDER_SAVE_BUTTON = 'button[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Bottom-ButtonsCenter-Save"]';
+export const MODAL_CREATE_ORDER_CHOOSE_BUTTON = 'button[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button"]';
 
 // ERP-969 specific selectors
 export const SCLAD_ORDERING_SUPPLIERS = '[data-testid="Sclad-orderingSuppliers"]';
@@ -76,6 +76,7 @@ export const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT =
 export const TABLE_MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE =
   'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2"]';
 export const ORDER_MODAL = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker"]';
+export const ORDER_MODAL_DIALOG = 'dialog[data-testid^="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker"]';
 export const ORDER_MODAL_TABLE =
   '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table"]';
 export const ORDER_MODAL_TOP_ORDER_NUMBER = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-Headers-LabelOrder-Span"]';
@@ -83,6 +84,15 @@ export const ORDER_MODAL_TOP_ORDER_NUMBER = '[data-testid="OrderSuppliers-Main-C
 // Additional selectors
 export const ORDER_SUPPLIERS_TABLE = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table"]';
 export const ORDER_SUPPLIERS_TABLE_SEARCH_INPUT = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input"]';
+
+// Quantity input selectors for ChoosedTable2
+export const QUANTITY_INPUT_SUFFIX = '[data-testid$="-TdQuantity-InputNumber-Input"]';
+export const QUANTITY_INPUT_FULL =
+  '[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row"][data-testid$="-TdQuantity-InputNumber-Input"]';
+
+// Modal dialog selectors
+export const MODAL_CHOOSED_TABLE2_CBED = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Modal-Cbed"]';
+export const MODAL_ADD_ORDER_SMALL = '[data-testid="OrderSuppliers-Modal-AddOrder"]';
 
 // Helper function to get selector by test ID from JSON
 export const getSelectorByTestId = (testId: string): string => {

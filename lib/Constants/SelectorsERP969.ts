@@ -44,10 +44,12 @@ export const WAYBILL_DETAILS_TABLE_FREE_QUANTITY_CELL_PATTERN = "[data-testid^='
 export const TABLE_COMPLECT_TABLE_ROW_CELL = 'CompletCbed-Content-Table-Table-TableRow';
 export const TABLE_COMPLECT_TABLE_ROW_CELL_NAME = '-Name';
 export const TABLE_KITTING_TABLE_ROW_CELL = 'CompletCbed-Content-Table-Table-TableRow';
-export const TABLE_KITTING_TABLE_ROW_CELL_ORDERED = '-Ordered';
+export const TABLE_KITTING_TABLE_ROW_CELL_ORDERED = '-Ordred'; // Note: typo in DOM - it's "Ordred" not "Ordered"
 export const TABLE_KITTING_TABLE_ROW_CELL_OPERATIONS = '-Operations';
 export const TABLE_KITTING_TABLE_ROW_CELL_STATUS = '-Status';
 export const TABLE_KITTING_TABLE_ROW_CELL_COMPLETION_LEVEL = '-CompletionLevel';
+export const TABLE_KITTING_TABLE_ROW_CELL_COMPLETION_LEVEL_NEW = '-Status-wrapper-Percent';
+
 export const TABLE_KITTING_TABLE_ROW_CELL_DESIGNATION = '-Designation';
 
 // Usage examples:

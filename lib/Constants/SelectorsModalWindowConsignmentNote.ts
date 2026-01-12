@@ -40,9 +40,21 @@ export const DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX = '-QuantityCell';
 export const DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX = '-InKitsCell';
 export const DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX = '-FreeQuantityCell';
 export const DETAILS_TABLE_ROW_NEED_CELL_SUFFIX = '-NeedCell';
+export const DETAILS_TABLE_ROW_DEFICIT_CELL_SUFFIX = '-DeficitCell';
+export const DETAILS_TABLE_ROW_QUANTITY_PER_UNIT_CELL_SUFFIX = '-QuantityPerUnitCell';
+export const DETAILS_TABLE_ROW_NAME_CELL = '[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-NameCell"]';
+export const DETAILS_TABLE_ROW_NEED_CELL = '[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-NeedCell"]';
+export const DETAILS_TABLE_ROW_DEFICIT_CELL = '[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-DeficitCell"]';
+export const DETAILS_TABLE_ROW_QUANTITY_PER_UNIT_CELL = '[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-QuantityPerUnitCell"]';
+export const DETAILS_TABLE_ROW_FREE_QUANTITY_CELL = '[data-testid^="ModalAddWaybill-DetailsTable-Row"][data-testid$="-FreeQuantityCell"]';
 export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_PREFIX = 'ModalAddWaybill-ShipmentDetailsTable-StockOrderRow';
 export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX = '-OrderNumberCell';
 export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX = '-RemainingQuantityCell';
+export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL =
+  '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-OrderNumberCell"]';
+export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL =
+  '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]';
+export const SHIPMENT_DETAILS_TABLE_ROW_ORDER_NUMBER_CELL = '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-OrderNumberCell"]';
 export const OSTATK_PCBD_MODAL_DETAL_PREFIX = 'OstatkPCBD-ModalDetal';
 export const OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX = '-InformationName-Name';
 export const OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX = '-Buttons-ShowFullInformationButton';
@@ -51,6 +63,8 @@ export const TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX = '
 
 // ERP-969 additional modal constants
 export const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT = 'ModalAddWaybill-WaybillDetails-Right';
+export const MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT_NEW = 'TableComplect-ModalAddWaybill';
+
 export const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_PREFIX = 'ModalAddWaybill-ShipmentDetailsTable-StockOrderRow';
 export const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX = '-OrderNumberCell';
 export const MODAL_ADD_WAYBILL_SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX = '-RemainingQuantityCell';

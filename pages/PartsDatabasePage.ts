@@ -71,7 +71,7 @@ export class CreatePartsDatabasePage extends PageObject {
   async processTableData(
     table: Locator,
     title: string,
-    parentQuantity: number
+    parentQuantity: number,
   ): Promise<{
     СБ: Item[];
     Д: Item[];
@@ -169,7 +169,7 @@ export class CreatePartsDatabasePage extends PageObject {
         logger.info(`Item details: id=${id}, partNumber=${partNumber}, name=${name}, quantity=${quantity}, data-testid=${rowTestId}`);
         if (quantity < 1) {
           logger.error(
-            `Skipped row ${i}: Invalid Quantity value: Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`
+            `Skipped row ${i}: Invalid Quantity value: Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`,
           );
           continue;
         }
@@ -216,7 +216,7 @@ export class CreatePartsDatabasePage extends PageObject {
           }
         } else {
           logger.error(
-            `Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`
+            `Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`,
           );
         }
       } else if (!isDataRow) {
@@ -531,13 +531,13 @@ export class CreatePartsDatabasePage extends PageObject {
 
           // Find a matching item in the array
           const matchingArrayItem = arrayData.find(
-            item => item.partNumber === tableItemPartNumber && item.name === tableItem.partName && item.quantity === tableItem.quantity
+            item => item.partNumber === tableItemPartNumber && item.name === tableItem.partName && item.quantity === tableItem.quantity,
           );
 
           if (!matchingArrayItem) {
             // Log mismatch details
             console.error(
-              `Mismatch found: Part Number '${tableItemPartNumber}', Name '${tableItem.partName}', and Quantity '${tableItem.quantity}' exist in the table but not in the array.`
+              `Mismatch found: Part Number '${tableItemPartNumber}', Name '${tableItem.partName}', and Quantity '${tableItem.quantity}' exist in the table but not in the array.`,
             );
           }
         }
@@ -551,7 +551,7 @@ export class CreatePartsDatabasePage extends PageObject {
             logger.info(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
             // Log mismatch details
             console.error(
-              `Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
+              `Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`,
             );
             console.error(tableData[arrayItem.partNumber]);
             console.error(arrayItem);
@@ -681,7 +681,7 @@ export class CreatePartsDatabasePage extends PageObject {
               item.partNumber === tableItemPartNumber &&
               item.name === tableItem.partName &&
               item.material === tableItem.partMaterial &&
-              item.quantity === tableItem.quantity
+              item.quantity === tableItem.quantity,
           );
 
           if (!matchingArrayItem) {
@@ -691,13 +691,13 @@ export class CreatePartsDatabasePage extends PageObject {
               console.error(
                 `Mismatch found:\n` +
                   `Table Entry => Parent: '${tableItem.parentPartNumber}', Part Number: '${tableItemPartNumber}', Name: '${tableItem.partName}', Material: '${tableItem.partMaterial}', Quantity: '${tableItem.quantity}'\n` +
-                  `Closest Array Entry => Parent: '${closestMatch.parentPartNumber}', Part Number: '${closestMatch.partNumber}', Name: '${closestMatch.name}', Material: '${closestMatch.material}', Quantity: '${closestMatch.quantity}'`
+                  `Closest Array Entry => Parent: '${closestMatch.parentPartNumber}', Part Number: '${closestMatch.partNumber}', Name: '${closestMatch.name}', Material: '${closestMatch.material}', Quantity: '${closestMatch.quantity}'`,
               );
             } else {
               console.error(
                 `Mismatch found:\n` +
                   `Table Entry => Parent: '${tableItem.parentPartNumber}', Part Number: '${tableItemPartNumber}', Name: '${tableItem.partName}', Material: '${tableItem.partMaterial}', Quantity: '${tableItem.quantity}'\n` +
-                  `No matching partNumber found in the array.`
+                  `No matching partNumber found in the array.`,
               );
             }
           }
@@ -715,7 +715,7 @@ export class CreatePartsDatabasePage extends PageObject {
           ) {
             logger.info(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
             console.error(
-              `Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`
+              `Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`,
             );
           }
         }
@@ -1022,7 +1022,7 @@ export class CreatePartsDatabasePage extends PageObject {
     shortagePage: any,
     page: any,
     title: string,
-    parentQuantity: number
+    parentQuantity: number,
   ): Promise<{
     СБ: Item[];
     Д: Item[];
@@ -1173,7 +1173,7 @@ export class CreatePartsDatabasePage extends PageObject {
             } else {
               // Add to МД group
               const existingMDItem = CreatePartsDatabasePage.globalTableData.МД.find(
-                existingItem => existingItem.material.trim().toLowerCase() === item.material.trim().toLowerCase()
+                existingItem => existingItem.material.trim().toLowerCase() === item.material.trim().toLowerCase(),
               );
 
               if (existingMDItem) {
@@ -1456,7 +1456,7 @@ export class CreatePartsDatabasePage extends PageObject {
     bottomTableTestId: string,
     addToBottomButtonTestId: string,
     addToMainButtonTestId: string,
-    itemType?: string
+    itemType?: string,
   ): Promise<void> {
     // Determine column index based on item type
     const columnIndex = itemType === 'РМ' || itemType === 'ПД' ? 0 : 1;
@@ -1742,7 +1742,7 @@ export class CreatePartsDatabasePage extends PageObject {
     addToBottomButtonTestId: string,
     addToMainButtonTestId: string,
     items: Array<{ name: string; quantity?: number }>,
-    itemType?: string
+    itemType?: string,
   ): Promise<void> {
     // Open add dialog and select group
     try {
@@ -1852,7 +1852,7 @@ export class CreatePartsDatabasePage extends PageObject {
     bottomTableTestId: string,
     addToBottomButtonTestId: string,
     addToMainButtonTestId: string,
-    items: Array<{ name: string; quantity?: number }>
+    items: Array<{ name: string; quantity?: number }>,
   ): Promise<void> {
     const page = this.page;
 
@@ -2012,7 +2012,7 @@ export class CreatePartsDatabasePage extends PageObject {
       CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE,
       CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
       CONST.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.assemblies || []).map(i => ({ name: i.name, quantity: i.quantity }))
+      (config.assemblies || []).map(i => ({ name: i.name, quantity: i.quantity })),
     );
 
     // Д: clear and set from config.details (search by name)
@@ -2023,7 +2023,7 @@ export class CreatePartsDatabasePage extends PageObject {
       CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE,
       CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
       CONST.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.details || []).map(i => ({ name: i.name, quantity: i.quantity }))
+      (config.details || []).map(i => ({ name: i.name, quantity: i.quantity })),
     );
 
     // ПД: clear and set from config.standardParts (search by name)
@@ -2034,7 +2034,7 @@ export class CreatePartsDatabasePage extends PageObject {
       CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE,
       CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
       CONST.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.standardParts || []).map(i => ({ name: i.name, quantity: i.quantity }))
+      (config.standardParts || []).map(i => ({ name: i.name, quantity: i.quantity })),
     );
 
     // РМ: clear and set from config.consumables (often empty)
@@ -2045,7 +2045,7 @@ export class CreatePartsDatabasePage extends PageObject {
       CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE,
       CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
       CONST.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.consumables || []).map(i => ({ name: i.name, quantity: i.quantity }))
+      (config.consumables || []).map(i => ({ name: i.name, quantity: i.quantity })),
     );
 
     // Save changes
@@ -2063,7 +2063,7 @@ export class CreatePartsDatabasePage extends PageObject {
     removeButtonColumnIndex: number,
     searchValue: string,
     returnButtonTestId: string,
-    itemType?: string
+    itemType?: string,
   ): Promise<void> {
     // Determine column index based on item type
     //const columnIndex = itemType === "РМ" || itemType === "ПД" ? 0 : 1;
@@ -2311,7 +2311,7 @@ export class CreatePartsDatabasePage extends PageObject {
           if (actualName !== expectedRow['Наименование'] || actualUnit !== expectedRow['ЕИ'] || actualValue !== expectedRow['Значение']) {
             console.error(
               `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
-                `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`,
             );
             return false;
           }
@@ -2345,7 +2345,7 @@ export class CreatePartsDatabasePage extends PageObject {
           if (actualName !== expectedRow['Наименование'] || actualUnit !== expectedRow['ЕИ'] || actualValue !== expectedRow['Значение']) {
             console.error(
               `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
-                `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`
+                `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`,
             );
             return false;
           }
@@ -2463,7 +2463,7 @@ export class CreatePartsDatabasePage extends PageObject {
     page: Page,
     tableTestId: string,
     parentId: string, // Pass product designation from detail page
-    multiplier: number = 1
+    multiplier: number = 1,
   ): Promise<void> {
     const table = page.locator(`[data-testid^="${tableTestId}"]`).last();
     await table.locator('tr').first().waitFor({ state: 'visible' });
@@ -2862,7 +2862,7 @@ export class CreatePartsDatabasePage extends PageObject {
           cells.map(async cell => {
             const text = await cell.textContent();
             return text?.trim() || '';
-          })
+          }),
         );
 
         if (group === 'ПД') {
@@ -2999,7 +2999,9 @@ export class CreatePartsDatabasePage extends PageObject {
   // In CreatePartsDatabasePage.ts
   async fillDetailName(detailName: string, dataTestId: string = 'AddDetal-Information-Input-Input'): Promise<void> {
     await this.page.waitForLoadState('networkidle');
-    const field = this.page.locator(`[data-testid="${dataTestId}"]`);
+    // Check if dataTestId already contains the full selector with [data-testid=
+    const selector = dataTestId.startsWith('[data-testid=') ? dataTestId : `[data-testid="${dataTestId}"]`;
+    const field = this.page.locator(selector);
 
     // (Optional) Highlight for debugging
     await field.evaluate((el: HTMLElement) => {
@@ -3128,7 +3130,7 @@ export class CreatePartsDatabasePage extends PageObject {
     checkboxTestId: string,
     versionInputTestId: string,
     fileNameInputTestId: string,
-    testValue: string
+    testValue: string,
   ): Promise<void> {
     const textarea = fileSectionLocator.locator(`textarea[data-testid="${textareaTestId}"]`);
     await textarea.fill(testValue);
@@ -3326,7 +3328,7 @@ export class CreatePartsDatabasePage extends PageObject {
     searchInputTestId?: string,
     archiveButtonTestId?: string,
     confirmModalTestId?: string,
-    confirmButtonTestId?: string
+    confirmButtonTestId?: string,
   ): Promise<void> {
     const detailTable = page.locator(`[data-testid="${tableTestId}"]`);
     const searchInputSelector = searchInputTestId || 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
@@ -3408,7 +3410,7 @@ export class CreatePartsDatabasePage extends PageObject {
     tableSelector: string,
     searchInputPosition: 'first' | 'last' | number = 'first',
     archiveButtonSelector: string = SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON,
-    confirmButtonSelector: string = SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON
+    confirmButtonSelector: string = SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
   ): Promise<void> {
     await allure.step(`Clean up ${itemTypeName} items`, async () => {
       console.log(`${itemTypeName}: Cleaning up ${itemTypeName} items...`);
@@ -3684,7 +3686,7 @@ export class CreatePartsDatabasePage extends PageObject {
       maxConsecutiveFailures?: number;
       stabilizationDelay?: number;
       progressCheckDelay?: number;
-    } = {}
+    } = {},
   ): Promise<{
     clicksPerformed: number;
     pageTransitioned: boolean;
@@ -4006,7 +4008,7 @@ export class CreatePartsDatabasePage extends PageObject {
     searchInputTestId: string = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input',
     archiveButtonTestId: string = 'EditDetal-ButtonSaveAndCancel-ButtonsRight-Archive',
     confirmModalTestId: string = 'ModalConfirm-Content',
-    confirmButtonTestId: string = 'ModalConfirm-Content-Buttons-Yes'
+    confirmButtonTestId: string = 'ModalConfirm-Content-Buttons-Yes',
   ): Promise<void> {
     // Search for the item in the table
     const itemTable = page.locator(`[data-testid="${tableTestId}"]`);
@@ -4344,7 +4346,7 @@ export class CreatePartsDatabasePage extends PageObject {
         expect.soft(remainingCount).toBe(0);
       },
       `Verify all test products are deleted: expected 0, found ${remainingCount}`,
-      testInfo
+      testInfo,
     );
 
     if (remainingCount === 0) {

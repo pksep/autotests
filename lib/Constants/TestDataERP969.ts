@@ -18,6 +18,10 @@ export const TEST_DATA = {
   // Quantity constants
   NEW_ORDER_QUANTITY: '1',
   DETAIL_NEW_QUANTITY: '9',
+
+  // Table data-testid values for cleanupTestDetail method
+  PARTS_PAGE_DETAL_TABLE: 'BasePaginationTable-Table-detal',
+  MAIN_PAGE_СБ_TABLE: 'BasePaginationTable-Table-cbed',
 } as const;
 
 // Usage examples:

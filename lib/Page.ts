@@ -452,72 +452,153 @@ export class PageObject extends AbstractPage {
    * @returns A promise that resolves once the element is clicked and the wait time has elapsed.
    */
   async findAndClickElement(page: Page, partialDataTestId: string, waitTime: number = 10000, doubleClick?: boolean): Promise<void> {
-    logger.info(`Searching for elements with partial data-testid="${partialDataTestId}"`);
+    // Check if partialDataTestId already contains the full selector with [data-testid=
+    // If yes, use it directly; if no, wrap it with [data-testid^="..."]
+    const isFullSelector = partialDataTestId.startsWith('[data-testid');
+    const selector = isFullSelector ? partialDataTestId : `[data-testid^="${partialDataTestId}"]`;
+    const searchTerm = isFullSelector ? 'selector' : 'data-testid';
 
-    // Locate all elements with the partial data-testid
-    const elements = await page.$$(`[data-testid^="${partialDataTestId}"]`);
+    logger.info(`Searching for elements with ${searchTerm}="${partialDataTestId}"`);
 
-    logger.info(`Found ${elements.length} elements with partial data-testid="${partialDataTestId}"`);
+    // Use locator (modern Playwright API) instead of page.$$() (old API)
+    // Locators automatically wait for elements and are more reliable
+    const locator = page.locator(selector);
 
-    if (elements.length > 0) {
-      if (elements.length > 1) {
-        logger.warn(`Found multiple elements with data-testid="${partialDataTestId}" will click first`);
+    try {
+      // Wait for at least one element to be visible
+      await expect(locator.first()).toBeVisible({ timeout: 10000 });
+
+      // Count how many elements match
+      const count = await locator.count();
+      logger.info(`Found ${count} element(s) with ${searchTerm}="${partialDataTestId}"`);
+
+      if (count > 1) {
+        logger.warn(`Found multiple elements with ${searchTerm}="${partialDataTestId}" will click first`);
       }
-      // Click on the first element
-      //await elements[0].click();
-      if (!doubleClick) {
-        await elements[0].click({ force: true });
-      } else {
-        await elements[0].dblclick({ force: true });
-      }
 
-      logger.info(`Clicked on the first element with partial data-testid="${partialDataTestId}"`);
-      await elements[0].evaluate(element => {
+      // Get the first element locator
+      const firstElement = locator.first();
+
+      // Highlight the element before clicking
+      await firstElement.evaluate(element => {
         element.style.border = '2px solid red';
         element.style.backgroundColor = 'red';
       });
+
+      // Click on the first element
+      if (!doubleClick) {
+        await firstElement.click({ force: true });
+      } else {
+        await firstElement.dblclick({ force: true });
+      }
+
+      logger.info(`Clicked on the first element with ${searchTerm}="${partialDataTestId}"`);
+
       // Wait for the specified amount of time
       await page.waitForTimeout(waitTime);
       await page.waitForTimeout(1500);
       logger.info(`Waited for ${waitTime}ms after clicking the element`);
-    } else {
-      // Log that no elements were found
-      logger.error(`No elements found with partial data-testid="${partialDataTestId}"`);
+    } catch (error) {
+      // If selector search failed, try fallback methods
+      if (isFullSelector) {
+        // Extract the data-testid value from the full selector
+        const dataTestIdValue = partialDataTestId.match(/data-testid="([^"]+)"/)?.[1];
+        if (dataTestIdValue) {
+          logger.warn(`Element with selector="${partialDataTestId}" not found, trying getByTestId with "${dataTestIdValue}"...`);
+          try {
+            const testIdLocator = page.getByTestId(dataTestIdValue);
+            await expect(testIdLocator).toBeVisible({ timeout: 10000 });
 
-      // Attempt to find an element with the same value as id
-      logger.info(`Searching for element with id="${partialDataTestId}"`);
-      const elementById = await page.$(`#${partialDataTestId}`);
+            logger.info(`Element found with getByTestId("${dataTestIdValue}")`);
 
-      if (elementById) {
-        // Log that the element was found
-        logger.info(`Element with id="${partialDataTestId}" found`);
+            await testIdLocator.scrollIntoViewIfNeeded();
+            await testIdLocator.evaluate(element => {
+              element.style.border = '2px solid red';
+              element.style.backgroundColor = 'yellow';
+            });
 
-        // Ensure the element is visible and click it
-        await elementById.scrollIntoViewIfNeeded();
-        //await elementById.click();
-        await elementById.evaluate(element => {
-          element.style.border = '2px solid red';
-          element.style.backgroundColor = 'yellow';
-        });
-        if (!doubleClick) {
-          await elementById.click({ force: true });
-        } else {
-          await elementById.dblclick({ force: true });
+            if (!doubleClick) {
+              await testIdLocator.click({ force: true });
+            } else {
+              await testIdLocator.dblclick({ force: true });
+            }
+
+            logger.info(`Clicked on the element with getByTestId("${dataTestIdValue}")`);
+            await page.waitForTimeout(waitTime);
+            await page.waitForTimeout(1500);
+            logger.info(`Waited for ${waitTime}ms after clicking the element`);
+            return; // Success, exit early
+          } catch (testIdError) {
+            logger.warn(`getByTestId("${dataTestIdValue}") also failed, trying ID fallback...`);
+          }
         }
 
-        logger.info(`Clicked on the element with id="${partialDataTestId}"`);
+        // Try ID fallback
+        const idValue = dataTestIdValue || partialDataTestId.replace(/[\[\]"]/g, '');
+        logger.warn(`Trying to find by ID="${idValue}"...`);
+        const idLocator = page.locator(`#${idValue}`);
 
-        // Wait for the specified amount of time
-        await page.waitForTimeout(waitTime);
+        try {
+          await expect(idLocator).toBeVisible({ timeout: 10000 });
+          logger.info(`Element with id="${idValue}" found`);
 
-        logger.info(`Waited for ${waitTime}ms after clicking the element with id="${partialDataTestId}"`);
+          await idLocator.scrollIntoViewIfNeeded();
+          await idLocator.evaluate(element => {
+            element.style.border = '2px solid red';
+            element.style.backgroundColor = 'yellow';
+          });
+
+          if (!doubleClick) {
+            await idLocator.click({ force: true });
+          } else {
+            await idLocator.dblclick({ force: true });
+          }
+
+          logger.info(`Clicked on the element with id="${idValue}"`);
+          await page.waitForTimeout(waitTime);
+          logger.info(`Waited for ${waitTime}ms after clicking the element`);
+          return; // Success, exit early
+        } catch (idError) {
+          // All methods failed
+          logger.error(`No element found with selector="${partialDataTestId}", getByTestId, or id="${idValue}"`);
+          throw new Error(
+            `findAndClickElement failed: Could not find element with selector="${partialDataTestId}", getByTestId, or id="${idValue}". ` +
+              `The element may not be visible, may have a different selector, or the page may not have loaded completely.`,
+          );
+        }
       } else {
-        // Log that no element was found with the id
-        logger.error(`No element found with id="${partialDataTestId}"`);
+        // For partial data-testid, try ID fallback
+        logger.warn(`Element with data-testid^="${partialDataTestId}" not found, trying to find by ID...`);
+        const idLocator = page.locator(`#${partialDataTestId}`);
 
-        // Log the full HTML content of the page for further debugging
-        //const pageContent = await page.content();
-        //logger.info(`Page content: ${pageContent}`);
+        try {
+          await expect(idLocator).toBeVisible({ timeout: 10000 });
+          logger.info(`Element with id="${partialDataTestId}" found`);
+
+          await idLocator.scrollIntoViewIfNeeded();
+          await idLocator.evaluate(element => {
+            element.style.border = '2px solid red';
+            element.style.backgroundColor = 'yellow';
+          });
+
+          if (!doubleClick) {
+            await idLocator.click({ force: true });
+          } else {
+            await idLocator.dblclick({ force: true });
+          }
+
+          logger.info(`Clicked on the element with id="${partialDataTestId}"`);
+          await page.waitForTimeout(waitTime);
+          logger.info(`Waited for ${waitTime}ms after clicking the element with id="${partialDataTestId}"`);
+        } catch (idError) {
+          // Neither data-testid nor id worked - throw error
+          logger.error(`No element found with data-testid^="${partialDataTestId}" or id="${partialDataTestId}"`);
+
+          throw new Error(
+            `findAndClickElement failed: Could not find element with data-testid^="${partialDataTestId}" or id="${partialDataTestId}". ` +
+              `The element may not be visible, may have a different selector, or the page may not have loaded completely.`,
+          );
+        }
       }
     }
   }
@@ -4647,30 +4728,99 @@ export class PageObject extends AbstractPage {
    * @param searchTerm - Term to search for
    * @param options - Optional configuration (delay, waitAfterSearch)
    */
-  async searchWithPressSequentially(searchInputSelector: string, searchTerm: string, options?: { delay?: number; waitAfterSearch?: number }): Promise<void> {
+  async searchWithPressSequentially(
+    searchInputSelector: string,
+    searchTerm: string,
+    options?: { delay?: number; waitAfterSearch?: number; timeout?: number },
+  ): Promise<void> {
     const delay = options?.delay ?? 50;
     const waitAfterSearch = options?.waitAfterSearch ?? 2000;
+    const timeout = options?.timeout ?? 10000;
 
-    const searchInput = this.page.locator(searchInputSelector);
-    await expect(searchInput).toBeVisible({ timeout: 5000 });
+    // Try to extract data-testid value if it's a full selector
+    let dataTestId: string | null = null;
+    const match = searchInputSelector.match(/data-testid=["']([^"']+)["']/);
+    if (match && match[1]) {
+      dataTestId = match[1];
+    }
 
-    // Click to focus, then clear and type
+    let searchInput;
+    if (dataTestId) {
+      // Try getByTestId first as it's more reliable
+      try {
+        searchInput = this.page.getByTestId(dataTestId);
+        // Wait for attached first, then visible
+        await searchInput.waitFor({ state: 'attached', timeout });
+        await expect(searchInput).toBeVisible({ timeout });
+      } catch (e) {
+        // Fallback to locator if getByTestId fails
+        searchInput = this.page.locator(searchInputSelector);
+        await searchInput.waitFor({ state: 'attached', timeout });
+        await expect(searchInput).toBeVisible({ timeout });
+      }
+    } else {
+      searchInput = this.page.locator(searchInputSelector);
+      await searchInput.waitFor({ state: 'attached', timeout });
+      await expect(searchInput).toBeVisible({ timeout });
+    }
+
+    // Click to focus the input
     await searchInput.click();
     await this.page.waitForTimeout(300);
 
     // Clear the input first
-    await searchInput.fill('');
+    await searchInput.clear();
     await this.page.waitForTimeout(200);
 
-    // Type the search term using keyboard (more reliable with Vue)
-    await searchInput.pressSequentially(searchTerm, { delay });
-    await this.page.waitForTimeout(500);
+    // Focus to ensure it's active
+    await searchInput.focus();
+    await this.page.waitForTimeout(200);
 
-    // Verify the value was entered
-    const inputValue = await searchInput.inputValue();
-    console.log(`Search input value: "${inputValue}"`);
+    // Use fill() - it's the most reliable for text inputs
+    await searchInput.fill(searchTerm);
+    await this.page.waitForTimeout(300);
+    
+    // Verify the value was set
+    let inputValue = await searchInput.inputValue();
+    console.log(`Search input value after fill(): "${inputValue}"`);
+    
+    // If fill() didn't work, try JavaScript as fallback
+    if (inputValue !== searchTerm) {
+      console.log(`Input value mismatch after fill(). Trying JavaScript...`);
+      await searchInput.evaluate((el: HTMLInputElement, value: string) => {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }, searchTerm);
+      await this.page.waitForTimeout(300);
+      inputValue = await searchInput.inputValue();
+      console.log(`Search input value after JavaScript: "${inputValue}"`);
+    }
+
+    // Get the current value (already set above)
+    inputValue = await searchInput.inputValue();
+    console.log(`Search input value after typing: "${inputValue}"`);
+
+    // If the value wasn't set, try JavaScript as fallback
+    if (inputValue !== searchTerm) {
+      console.log(`Input value mismatch. Expected: "${searchTerm}", got: "${inputValue}". Trying JavaScript fallback...`);
+      await searchInput.evaluate((el: HTMLInputElement, value: string) => {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }, searchTerm);
+      await this.page.waitForTimeout(300);
+      inputValue = await searchInput.inputValue();
+      console.log(`Search input value after JavaScript fallback: "${inputValue}"`);
+    }
+
+    if (inputValue !== searchTerm) {
+      throw new Error(`Failed to set search input value. Expected: "${searchTerm}", got: "${inputValue}"`);
+    }
 
     // Press Enter to trigger search
+    await searchInput.focus();
+    await this.page.waitForTimeout(100);
     await searchInput.press('Enter');
     await this.page.waitForTimeout(waitAfterSearch);
   }
