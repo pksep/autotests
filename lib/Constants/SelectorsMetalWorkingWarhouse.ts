@@ -23,3 +23,10 @@ export const METALWORKING_SCLAD_TABLE_ROW0_POPOVER_ITEM0 =
 
 // Pattern prefixes for row selectors
 export const METALWORKING_SCLAD_TABLE_ROW0_PREFIX = 'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0';
+export const METALWORKING_SCLAD_TABLE_ROW_PREFIX = 'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row';
+export const METALWORKING_SCLAD_TABLE_ROW_DATE_BY_URGENCY_PATTERN =
+  '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-DateByUrgency"]';
+export const METALWORKING_SCLAD_TABLE_ROW_ORDERED_PATTERN =
+  '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Ordered"]';
+export const METALWORKING_SCLAD_TABLE_ROW_OPERATIONS_PATTERN =
+  '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Operations"]';

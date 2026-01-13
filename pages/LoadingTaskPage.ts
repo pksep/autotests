@@ -7,6 +7,7 @@ import * as LoadingTasksSelectors from '../lib/Constants/SelectorsLoadingTasksPa
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages';
 import { SELECTORS } from '../config';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
 // Страница: Задачи на отгрузку
 export class CreateLoadingTaskPage extends PageObject {
@@ -636,7 +637,7 @@ export class CreateLoadingTaskPage extends PageObject {
 
       if (iteration > maxIterations) {
         throw new Error(
-          `Превышено максимальное количество итераций архивирования (${maxIterations}). Остались строки с "${productName}" после ${iteration} итераций.`
+          `Превышено максимальное количество итераций архивирования (${maxIterations}). Остались строки с "${productName}" после ${iteration} итераций.`,
         );
       }
     }
@@ -741,7 +742,7 @@ export class CreateLoadingTaskPage extends PageObject {
         expect.soft(dataRowCount).toBe(0);
       },
       `Verify all shipment tasks are deleted: expected 0, found ${dataRowCount}.`,
-      testInfo
+      testInfo,
     );
 
     if (dataRowCount === 0) {
@@ -931,7 +932,7 @@ export class CreateLoadingTaskPage extends PageObject {
         expect.soft(warehouseRowCount).toBe(0);
       },
       `Verify all warehouse orders are deleted: expected 0, found ${warehouseRowCount}`,
-      testInfo
+      testInfo,
     );
 
     if (warehouseRowCount === 0) {
@@ -1021,7 +1022,7 @@ export class CreateLoadingTaskPage extends PageObject {
         expect.soft(deficitRowCount).toBe(0);
       },
       `Verify all deficit entries are deleted: expected 0, found ${deficitRowCount}`,
-      testInfo
+      testInfo,
     );
 
     if (deficitRowCount === 0) {
@@ -1592,7 +1593,7 @@ export class CreateLoadingTaskPage extends PageObject {
         return /Редактирование заказа\s+№\s+\d+-\d+/.test(text);
       },
       'AddOrder-EditTitle',
-      { timeout: 30000 }
+      { timeout: 30000 },
     );
 
     // Get the text
@@ -1886,7 +1887,7 @@ export class CreateLoadingTaskPage extends PageObject {
     searchTerm: string,
     expectedOrderNumber: string,
     expectedArticleNumber: string,
-    expectedProductName: string
+    expectedProductName: string,
   ): Promise<boolean> {
     try {
       // Get search input
@@ -2163,7 +2164,7 @@ export class CreateLoadingTaskPage extends PageObject {
     tab2: Page,
     tab1Selector: string,
     tab2Selector: string,
-    normalizeFn?: (val: string) => string
+    normalizeFn?: (val: string) => string,
   ): Promise<{ tab1Value: string; tab2Value: string; match: boolean }> {
     try {
       // Get value from tab1
@@ -2190,6 +2191,76 @@ export class CreateLoadingTaskPage extends PageObject {
       logger.error(`Failed to compare cell values between tabs: ${error}`);
       return { tab1Value: '', tab2Value: '', match: false };
     }
+  }
+
+  /**
+   * Helper function to validate cell values with highlighting and soft assertions
+   * @param cellLocator - The locator for the cell element
+   * @param expectedValue - Either a string to check if text includes, or a function that returns boolean
+   * @param description - Description for the assertion (will include actual value)
+   * @param page - Playwright Page object
+   * @param testInfo - TestInfo for screenshot capture
+   * @returns The text content of the cell
+   */
+  async validateCellValue(
+    cellLocator: Locator,
+    expectedValue: string | ((text: string) => boolean),
+    description: string,
+    page: Page,
+    testInfo: TestInfo,
+  ): Promise<string> {
+    await this.waitAndHighlight(cellLocator);
+    const text = (await cellLocator.textContent())?.trim() || '';
+
+    await expectSoftWithScreenshot(
+      page,
+      () => {
+        if (typeof expectedValue === 'function') {
+          expect.soft(expectedValue(text)).toBe(true);
+        } else {
+          expect.soft(text.includes(expectedValue)).toBe(true);
+        }
+      },
+      `${description}: actual "${text}"`,
+      testInfo,
+    );
+
+    return text;
+  }
+
+  /**
+   * Helper function to validate cell value with exact match
+   * @param cellLocator - The locator for the cell element
+   * @param expectedValue - Exact string value to match
+   * @param description - Description for the assertion
+   * @param page - Playwright Page object
+   * @param testInfo - TestInfo for screenshot capture
+   * @returns The text content of the cell
+   */
+  async validateCellValueExact(cellLocator: Locator, expectedValue: string, description: string, page: Page, testInfo: TestInfo): Promise<string> {
+    await this.waitAndHighlight(cellLocator);
+    const text = (await cellLocator.textContent())?.trim() || '';
+
+    await expectSoftWithScreenshot(
+      page,
+      () => {
+        expect.soft(text).toBe(expectedValue);
+      },
+      `${description}: expected "${expectedValue}", actual "${text}"`,
+      testInfo,
+    );
+
+    return text;
+  }
+
+  /**
+   * Helper function to wait for network idle and remove redundant waitForTimeout
+   * @param page - Playwright Page object (optional, uses this.page if not provided)
+   */
+  async waitForNetworkStable(page?: Page): Promise<void> {
+    const pageToUse = page || this.page;
+    await this.waitForNetworkIdle();
+    // Network idle is sufficient, no need for additional timeout
   }
 }
 

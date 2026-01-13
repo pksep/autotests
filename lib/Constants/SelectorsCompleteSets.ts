@@ -8,3 +8,5 @@ export const TABLE_CELL_ASSEMBLED = '[data-testid="ComplectKit-TableCell-Assembl
 export const TABLE_CELL_CHECKBOX = '[data-testid="ComplectKit-TableCell-Checkbox"]';
 export const BUTTON_UNASSEMBLE = '[data-testid="ComplectKit-Button-Unassemble"]';
 export const MODAL_UNCOMPLECT_KIT_RIGHT_CONTENT = '[data-testid="ModalUncomplectKit-RightContent"]';
+export const MODAL_UNCOMPLECT_KIT_ASSEMBLY_BLOCK_PATTERN = '[data-testid^="ModalUncomplectKit-AssemblyBlock"]';
+export const MODAL_UNCOMPLECT_KIT_ASSEMBLY_TABLE_KIT_INPUT_PATTERN = '[data-testid^="ModalUncomplectKit-AssemblyTableKitInput"]';

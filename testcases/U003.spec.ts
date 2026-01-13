@@ -18,12 +18,6 @@ import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages
 import * as SelectorsRevision from '../lib/Constants/SelectorsRevision';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
-// Helper function to extract ID from full selector
-const extractIdFromSelector = (selector: string): string => {
-  const match = selector.match(/\[data-testid="([^"]+)"]/);
-  return match ? match[1] : selector;
-};
-
 // Global variable declarations
 declare global {
   var testProductName: string;
@@ -79,132 +73,6 @@ const descendantsCbedArray: ISpetificationData[] = [];
 const descendantsDetailArray: ISpetificationData[] = [];
 const deficitTable = SelectorsShortagePages.TABLE_DEFICIT_IZD;
 const tableMainUploading = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE;
-
-/**
- * Helper function to validate cell values with highlighting and soft assertions
- * @param cellLocator - The locator for the cell element
- * @param expectedValue - Either a string to check if text includes, or a function that returns boolean
- * @param description - Description for the assertion (will include actual value)
- * @param page - Playwright Page object
- * @param loadingTaskPage - LoadingTaskPage instance for highlighting
- * @param testInfo - TestInfo for screenshot capture
- * @returns The text content of the cell
- */
-async function validateCellValue(
-  cellLocator: Locator,
-  expectedValue: string | ((text: string) => boolean),
-  description: string,
-  page: Page,
-  loadingTaskPage: CreateLoadingTaskPage,
-  testInfo: TestInfo,
-): Promise<string> {
-  await loadingTaskPage.waitAndHighlight(cellLocator);
-  const text = (await cellLocator.textContent())?.trim() || '';
-
-  await expectSoftWithScreenshot(
-    page,
-    () => {
-      if (typeof expectedValue === 'function') {
-        expect.soft(expectedValue(text)).toBe(true);
-      } else {
-        expect.soft(text.includes(expectedValue)).toBe(true);
-      }
-    },
-    `${description}: actual "${text}"`,
-    testInfo,
-  );
-
-  return text;
-}
-
-/**
- * Helper function to validate cell value with exact match
- * @param cellLocator - The locator for the cell element
- * @param expectedValue - Exact string value to match
- * @param description - Description for the assertion
- * @param page - Playwright Page object
- * @param loadingTaskPage - LoadingTaskPage instance for highlighting
- * @param testInfo - TestInfo for screenshot capture
- * @returns The text content of the cell
- */
-async function validateCellValueExact(
-  cellLocator: Locator,
-  expectedValue: string,
-  description: string,
-  page: Page,
-  loadingTaskPage: CreateLoadingTaskPage,
-  testInfo: TestInfo,
-): Promise<string> {
-  await loadingTaskPage.waitAndHighlight(cellLocator);
-  const text = (await cellLocator.textContent())?.trim() || '';
-
-  await expectSoftWithScreenshot(
-    page,
-    () => {
-      expect.soft(text).toBe(expectedValue);
-    },
-    `${description}: expected "${expectedValue}", actual "${text}"`,
-    testInfo,
-  );
-
-  return text;
-}
-
-/**
- * Helper function to fill input and wait for value to be set (replaces waitForTimeout after fill)
- * @param inputLocator - The input locator
- * @param value - Value to fill
- * @param timeout - Maximum time to wait (default: TIMEOUTS.MEDIUM)
- */
-async function fillInputAndWaitForValue(inputLocator: Locator, value: string, timeout: number = TIMEOUTS.MEDIUM): Promise<void> {
-  await inputLocator.fill(value);
-  // For search inputs, just wait a brief moment for the value to be set
-  // The actual search will be validated by waiting for network idle and table results
-  await inputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-}
-
-/**
- * Helper function to wait for network idle and remove redundant waitForTimeout
- * @param page - Playwright Page object
- * @param loadingTaskPage - LoadingTaskPage instance
- */
-async function waitForNetworkStable(page: Page, loadingTaskPage: CreateLoadingTaskPage): Promise<void> {
-  await loadingTaskPage.waitForNetworkIdle();
-  // Network idle is sufficient, no need for additional timeout
-}
-
-/**
- * Helper function to find the actual search input element (handles wrapper vs direct input)
- * @param page - Playwright Page object
- * @param searchInputSelector - Selector for the search input wrapper
- * @param timeout - Timeout for waiting (default: WAIT_TIMEOUTS.STANDARD)
- * @returns The actual input locator to use
- */
-async function findSearchInput(page: Page, searchInputSelector: string, timeout: number = WAIT_TIMEOUTS.STANDARD): Promise<Locator> {
-  const searchInputWrapper = page.locator(searchInputSelector).first();
-  await searchInputWrapper.waitFor({ state: 'visible', timeout });
-  await searchInputWrapper.scrollIntoViewIfNeeded();
-
-  // Check if wrapper itself is an input
-  const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
-  if (tagName === 'input') {
-    await searchInputWrapper.waitFor({ state: 'visible', timeout });
-    return searchInputWrapper;
-  }
-
-  // Look for input inside wrapper
-  const searchInput = searchInputWrapper.locator('input').first();
-  const inputCount = await searchInput.count();
-
-  if (inputCount === 0) {
-    // If no input found, try using the wrapper itself (might be contenteditable)
-    return searchInputWrapper;
-  }
-
-  // Wait for the input to be visible
-  await searchInput.waitFor({ state: 'visible', timeout });
-  return searchInput;
-}
 
 export const runU003 = (isSingleTest: boolean, iterations: number) => {
   console.log(`Starting test: U003 - Shipment Tasks Management`);
@@ -1263,11 +1131,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await loadingTaskPage.waitForNetworkIdle();
 
         // Search for order number
-        const searchInput = await findSearchInput(page, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
+        const searchInput = await loadingTaskPage.findSearchInput(page, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
         await searchInput.clear();
         await searchInput.fill(fullOrderNumberValue);
         await searchInput.press('Enter');
-        await waitForNetworkStable(page, loadingTaskPage);
+        await loadingTaskPage.waitForNetworkStable(page);
 
         // Confirm order is present in results
         const firstRow = tableBody.locator('tr').first();
@@ -1299,11 +1167,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await tab2LoadingTaskPage.waitForNetworkIdle();
 
         // Search for order number
-        const searchInput2 = await findSearchInput(tab2, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
+        const searchInput2 = await tab2LoadingTaskPage.findSearchInput(tab2, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
         await searchInput2.clear();
         await searchInput2.fill(fullOrderNumberValue);
         await searchInput2.press('Enter');
-        await waitForNetworkStable(tab2, tab2LoadingTaskPage);
+        await tab2LoadingTaskPage.waitForNetworkStable(tab2);
 
         // Find and click on the order number cell
         const firstRow2 = tableBody2.locator('tr').first();
@@ -5620,32 +5488,29 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         const orderNumberCell = firstRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
-        await validateCellValue(
+        await loadingTaskPage.validateCellValue(
           orderNumberCell,
           orderNumberWith0Only,
           `Warehouse order number should contain ${orderNumberWith0Only}`,
           page,
-          loadingTaskPage,
           test.info(),
         );
 
         const articleCell = firstRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
-        await validateCellValueExact(
+        await loadingTaskPage.validateCellValueExact(
           articleCell,
           articleNumberValue,
           `Warehouse article should match ${articleNumberValue}`,
           page,
-          loadingTaskPage,
           test.info(),
         );
 
         const productNameCell = firstRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
-        await validateCellValue(
+        await loadingTaskPage.validateCellValue(
           productNameCell,
           productNameValue,
           `Warehouse product name should include ${productNameValue}`,
           page,
-          loadingTaskPage,
           test.info(),
         );
       };
@@ -5664,7 +5529,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await inputToUse.click();
         await inputToUse.fill('');
         await page.keyboard.press('Enter');
-        await waitForNetworkStable(page, loadingTaskPage);
+        await loadingTaskPage.waitForNetworkStable(page);
 
         // Now perform the actual search
         await loadingTaskPage.searchAndWaitForTable(searchValue, tableSelector, tableBodySelector, {
@@ -5679,13 +5544,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           console.warn(`Search value mismatch: expected to contain "${searchValue}", got "${currentSearchValue}". Retrying search...`);
           // Retry the search
           await inputToUse.fill('');
-          await fillInputAndWaitForValue(inputToUse, searchValue);
+          await loadingTaskPage.fillInputAndWaitForValue(inputToUse, searchValue);
           await inputToUse.press('Enter');
-          await waitForNetworkStable(page, loadingTaskPage);
+          await loadingTaskPage.waitForNetworkStable(page);
         }
 
         // Wait for search results to be fully populated
-        await waitForNetworkStable(page, loadingTaskPage);
+        await loadingTaskPage.waitForNetworkStable(page);
         // Wait for table body to be visible with results
         const tableBody = await getWarehouseTableBody();
         await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
@@ -8736,14 +8601,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Wait for edit page to load and check order number in title
       const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      const editTitleSelector = SelectorsLoadingTasksPage.editTitle;
       await page.waitForFunction(
-        testId => {
-          const element = document.querySelector(`[data-testid="${testId}"]`);
+        selector => {
+          const element = document.querySelector(selector);
           if (!element) return false;
           const text = element.textContent || '';
           return /Редактирование заказа\s+№\s+\d+-\d+/.test(text);
         },
-        SelectorsLoadingTasksPage.EDIT_TITLE_TESTID,
+        editTitleSelector,
         { timeout: WAIT_TIMEOUTS.PAGE_RELOAD },
       );
 

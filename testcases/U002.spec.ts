@@ -16,12 +16,6 @@ import * as SelectorsMetalWorkingWarhouse from '../lib/Constants/SelectorsMetalW
 import * as SelectorsMetalworkingOperations from '../lib/Constants/SelectorsMetalworkingOperations';
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction';
 
-// Helper function to extract ID from full selector
-const extractIdFromSelector = (selector: string): string => {
-  const match = selector.match(/\[data-testid="([^"]+)"]/);
-  return match ? match[1] : selector;
-};
-
 // Global variable declarations
 declare global {
   var firstItemName: string;
@@ -70,7 +64,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         'DEFAULT_DETAIL',
         SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT,
         SelectorsPartsDataBase.DETAIL_TABLE,
-        'last' // DETAIL search input is the last one
+        'last', // DETAIL search input is the last one
       );
 
       // Clean up CBED items
@@ -79,7 +73,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         'DEFAULT_CBED',
         SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT,
         SelectorsPartsDataBase.CBED_TABLE,
-        1 // CBED search input is at index 1
+        1, // CBED search input is at index 1
       );
 
       // Clean up IZD items
@@ -88,7 +82,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         'DEFAULT_IZD',
         SelectorsPartsDataBase.SEARCH_PRODUCT_ATTRIBUT,
         SelectorsPartsDataBase.PRODUCT_TABLE,
-        'first' // IZD search input is the first one
+        'first', // IZD search input is the first one
       );
 
       console.log('=== CLEANUP COMPLETE ===');
@@ -126,7 +120,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       const buttons = testData1.elements.MainPage.buttons.map(button => {
         // Apply knownButtonTestIdsByLabel mapping if datatestid is missing
         const knownButtonTestIdsByLabel: Record<string, string> = {
-          'Создать заказ': extractIdFromSelector(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON),
+          'Создать заказ': orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON),
         };
         const mappedTestId = button.datatestid || knownButtonTestIdsByLabel[button.label];
         return {
@@ -263,86 +257,26 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 09: Проверка модального окна Создание заказа поставщика', async () => {
       console.log('Step 09: Проверка модального окна Создание заказа поставщика');
+
       const titles = testData1.elements.ModalCreateOrderSupplier.titles.map(title => title.trim());
-      //const target = SelectorsStartProduction.MODAL_START_PRODUCTION_MODAL_CLOSE_LEFT;
-      const h3Titles = await orderedFromSuppliersPage.getAllH4TitlesInModalByTestId(
-        page,
-        extractIdFromSelector(SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY)
-      );
-      const normalizedH3Titles = h3Titles.map(title => title.trim());
-
-      // Wait for the page to stabilize
-      await orderedFromSuppliersPage.waitForNetworkIdle();
-
-      // Log for debugging
-      console.log('Expected Titles:', titles);
-      console.log('Received Titles:', normalizedH3Titles);
-
-      // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
-
-      // Validate content and order
-      expect(normalizedH3Titles[0]).toContain(titles[0]);
-      expect(normalizedH3Titles[1]).toBe(titles[1]);
+      await orderedFromSuppliersPage.validateModalH4Titles(page, SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID, titles, {
+        allowPartialMatch: true, // First title uses contains() instead of exact match
+      });
     });
 
     await allure.step('Step 10: Проверяем кнопки в модальном окне Создание заказа поставщика', async () => {
-      // Wait for the page to stabilize
-      await orderedFromSuppliersPage.waitForNetworkIdle();
-
       const buttons = testData1.elements.ModalCreateOrderSupplier.buttons;
-      // Iterate over each button in the array
-      for (const button of buttons) {
-        // Extract the class, label, and state from the button object
-        const buttonLabel = button.label;
-        const dataTestId = button.datatestid;
-        const buttonClass = button.class;
-        const shouldBeEnabled = String((button as any).state ?? 'true').toLowerCase() === 'true';
-
-        // Perform the validation for the button
-        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          // Подсветка в пределах модалки "Создание заказа поставщика"
-          const modal = page.locator(SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY).first();
-          await modal.waitFor({ state: 'visible' });
-          if (dataTestId) {
-            try {
-              const selector = SelectorsOrderedFromSuppliers.getSelectorByTestId(dataTestId);
-              const highlightLocator = modal.locator(selector).first();
-              await highlightLocator.waitFor({ state: 'visible', timeout: 3000 });
-              await highlightLocator.evaluate((el: HTMLElement) => {
-                el.style.backgroundColor = 'yellow';
-                el.style.border = '2px solid red';
-                el.style.color = 'blue';
-              });
-              await page.waitForTimeout(1000);
-            } catch {}
-          }
-
-          // Проверка доступности: предпочитаем data-testid, иначе падение к классу
-          let isButtonReady = false;
-          if (dataTestId) {
-            isButtonReady = await orderedFromSuppliersPage.isButtonVisibleTestId(
-              page,
-              dataTestId,
-              buttonLabel,
-              shouldBeEnabled,
-              extractIdFromSelector(SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY)
-            );
-          } else {
-            isButtonReady = await orderedFromSuppliersPage.isButtonVisible(
-              page,
-              `[data-testid="${dataTestId}"]` || buttonClass,
-              buttonLabel,
-              shouldBeEnabled,
-              SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY
-            );
-          }
-
-          // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        });
-      }
+      // Use the built-in method to validate buttons only (skip title validation)
+      // The buttons have unique testIds, so they don't need modal scoping
+      await orderedFromSuppliersPage.validatePageHeadersAndButtons(
+        page,
+        [], // Empty titles array since we're only validating buttons
+        buttons,
+        '', // Container selector not needed for button validation (buttons have unique testIds)
+        {
+          skipTitleValidation: true, // Skip title validation, only validate buttons
+        },
+      );
     });
 
     await allure.step('Step 11: Выбираем первые две строки и сохраняем их данные', async () => {
@@ -402,12 +336,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
       await page.waitForTimeout(300);
 
+      // Extract the modal ID from the constant (not the full dialog selector)
+      const modalId = orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID);
       const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
         page,
-        extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON),
+        orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON),
         'Выбрать',
         true,
-        extractIdFromSelector(SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY)
+        modalId, // Use just the ID extracted from the modal test ID constant
       );
       expect(enabled).toBeTruthy();
       await chooseBtn.click();
@@ -465,7 +401,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await assemblyWarehouse.navigateToPageAndWaitForTable(
         SELECTORS.MAINMENU.WAREHOUSE.URL,
         SelectorsAssemblyWarehouse.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON,
-        SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE
+        SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
       );
     });
 
@@ -651,7 +587,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 13: Getting the name of the operation', async () => {
         // Debug: Check what modals are currently open
-        const allModals = page.locator('[role="dialog"], .modal, [data-testid*="Modal"]');
+        const allModals = page.locator(SelectorsPartsDataBase.DEBUG_ALL_MODALS_SELECTOR);
         const modalCount = await allModals.count();
         console.log(`🔍 Found ${modalCount} modals currently open`);
 
@@ -672,7 +608,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const pageTitle = await page.title();
         console.log(`🔍 Current page title: ${pageTitle}`);
 
-        const allTables = page.locator('table, [data-testid*="Table"], [data-testid*="table"]');
+        const allTables = page.locator(SelectorsPartsDataBase.DEBUG_ALL_TABLES_SELECTOR);
         const tableCount = await allTables.count();
         console.log(`🔍 Found ${tableCount} tables on the page`);
 
@@ -797,7 +733,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         }
         nameOprerationOnProcessAssebly = await partsDatabsePage.getValueOrClickFromFirstRow(
           SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER,
-          nameColIndex
+          nameColIndex,
         );
         console.log('Name process Assembly: ', nameOprerationOnProcessAssebly);
       });
@@ -871,14 +807,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const numberColumnOnNameProcess = await partsDatabsePage.findColumn(
           page,
           SelectorsPartsDataBase.TABLE_PROCESS_ID,
-          SelectorsPartsDataBase.TABLE_PROCESS_ASSYMBLY_NAME
+          SelectorsPartsDataBase.TABLE_PROCESS_ASSYMBLY_NAME,
         );
 
         console.log('Column number with process: ', numberColumnOnNameProcess);
 
         nameOprerationOnProcessIzd = await partsDatabsePage.getValueOrClickFromFirstRow(
           SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER,
-          numberColumnOnNameProcess
+          numberColumnOnNameProcess,
         );
 
         console.log('Name process Izd: ', nameOprerationOnProcessIzd);
@@ -926,7 +862,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
           {
             searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT,
-          }
+          },
         );
 
         // Check if there are any results
@@ -937,7 +873,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           // Get the initial ordered quantity from the first row
           const orderedCell = page
             .locator(
-              `[data-testid^="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED}"]`
+              `[data-testid^="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED}"]`,
             )
             .first();
           await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
@@ -1000,7 +936,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
           {
             searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT,
-          }
+          },
         );
 
         // Wait for orders to propagate
@@ -1013,14 +949,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           undefined,
           true,
           SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_PREFIX,
-          SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED
+          SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED,
         );
       });
 
       await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
         await metalworkingWarehouse.openContextMenuAndClickOrders(
           SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_POPOVER,
-          SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_POPOVER_ITEM0
+          SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_POPOVER_ITEM0,
         );
       });
 
@@ -1031,7 +967,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER,
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_COUNT_SHIPMENTS,
           [firstOrderNumber, secondOrderNumber],
-          ['50', '5']
+          ['50', '5'],
         );
       });
 
@@ -1039,7 +975,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         await metalworkingWarehouse.clickOrderToOpenEditDialog(
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER,
           secondOrderNumber,
-          `Could not find second order ${secondOrderNumber} in the orders list`
+          `Could not find second order ${secondOrderNumber} in the orders list`,
         );
       });
 
@@ -1051,7 +987,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_BUTTONS_BUTTON_ARCHIVE,
           SelectorsPartsDataBase.BUTTON_CONFIRM,
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER,
-          `Could not find checkbox for second order ${secondOrderNumber}`
+          `Could not find checkbox for second order ${secondOrderNumber}`,
         );
       });
 
@@ -1080,7 +1016,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
           {
             searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT,
-          }
+          },
         );
 
         // Wait for system to update
@@ -1093,7 +1029,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           undefined,
           true,
           SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_PREFIX,
-          SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED
+          SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED,
         );
 
         // Set the global variable for subsequent test cases
@@ -1130,14 +1066,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
           {
             searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT,
-          }
+          },
         );
       });
 
       await allure.step('Step 3: Select checkbox and archive', async () => {
         const checkbox = page
           .locator(
-            `[data-testid^="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_START}0"][data-testid$="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_CHECKBOX_SUFFIX}"]`
+            `[data-testid^="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_START}0"][data-testid$="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_CHECKBOX_SUFFIX}"]`,
           )
           .first();
         await checkbox.waitFor({ state: 'visible', timeout: 5000 });
@@ -1145,7 +1081,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         await metalworkingWarehouse.archiveAndConfirm(
           SelectorsMetalWorkingWarhouse.BUTTON_MOVE_TO_ARCHIVE_NEW,
-          SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON
+          SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
         );
       });
 
@@ -1157,7 +1093,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
           {
             searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT,
-          }
+          },
         );
 
         const rows = page.locator(`${SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE} tbody tr`);
@@ -1199,7 +1135,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         // Check if there are any results
@@ -1270,7 +1206,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         // Wait for orders to propagate
@@ -1280,7 +1216,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
           55,
           'Total ordered',
-          'CBED'
+          'CBED',
         );
       });
 
@@ -1289,7 +1225,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_HEAD_POPOVER,
           SelectorsPartsDataBase.POPOVER_ITEM0,
           undefined,
-          1 // Assembly Warehouse uses nth(1)
+          1, // Assembly Warehouse uses nth(1)
         );
       });
 
@@ -1301,7 +1237,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_COUNT_SHIPMENTS,
           [firstOrderNumber, secondOrderNumber],
           ['50', '5'],
-          'CBED'
+          'CBED',
         );
       });
 
@@ -1310,7 +1246,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER,
           secondOrderNumber,
           `Could not find second CBED order ${secondOrderNumber} in the orders list`,
-          'CBED'
+          'CBED',
         );
       });
 
@@ -1323,7 +1259,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsPartsDataBase.BUTTON_CONFIRM,
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER,
           `Could not find checkbox for second CBED order ${secondOrderNumber}`,
-          'CBED'
+          'CBED',
         );
       });
 
@@ -1352,7 +1288,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         // Wait for system to update
@@ -1362,7 +1298,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
           50,
           'Remaining ordered',
-          'CBED'
+          'CBED',
         );
 
         // Set the global variable for subsequent test cases
@@ -1398,7 +1334,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
       });
 
@@ -1409,7 +1345,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         await assemblyWarehouse.archiveAndConfirm(
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY,
-          SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON
+          SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON,
         );
       });
 
@@ -1421,7 +1357,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         const rows = page.locator(`${SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE} tbody tr`);
@@ -1463,7 +1399,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         // Check if there are any results
@@ -1534,7 +1470,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         // Wait for orders to propagate
@@ -1544,7 +1480,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
           55,
           'Total ordered',
-          'IZD'
+          'IZD',
         );
       });
 
@@ -1553,7 +1489,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_HEAD_POPOVER,
           SelectorsPartsDataBase.POPOVER_ITEM0,
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_RIGHT_MENU_MODAL,
-          1 // Assembly Warehouse uses nth(1)
+          1, // Assembly Warehouse uses nth(1)
         );
       });
 
@@ -1567,7 +1503,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           ['50', '5'],
           'IZD',
           true, // useRowLocator = true for IZD case
-          10000 // additionalWaitTimeout for IZD case
+          10000, // additionalWaitTimeout for IZD case
         );
       });
 
@@ -1576,7 +1512,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER,
           secondOrderNumber,
           `Could not find second IZD order ${secondOrderNumber} in the orders list`,
-          'IZD'
+          'IZD',
         );
       });
 
@@ -1589,7 +1525,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsPartsDataBase.BUTTON_CONFIRM,
           SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER,
           `Could not find checkbox for second IZD order ${secondOrderNumber}`,
-          'IZD'
+          'IZD',
         );
       });
 
@@ -1618,7 +1554,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         // Wait for system to update
@@ -1628,7 +1564,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
           50,
           'Remaining ordered',
-          'IZD'
+          'IZD',
         );
 
         // Set the global variable for subsequent test cases
@@ -1665,7 +1601,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
       });
 
@@ -1676,7 +1612,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         await assemblyWarehouse.archiveAndConfirm(
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY,
-          SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON
+          SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON,
         );
       });
 
@@ -1688,7 +1624,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
           {
             searchInputDataTestId: SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT,
-          }
+          },
         );
 
         const rows = page.locator(`${SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE} tbody tr`);

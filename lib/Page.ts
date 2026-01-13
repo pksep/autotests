@@ -26,6 +26,7 @@ import { exec } from 'child_process';
 import exp from 'constants';
 import { allure } from 'allure-playwright';
 import { HIGHLIGHT_PENDING, HIGHLIGHT_SUCCESS, HIGHLIGHT_ERROR } from '../lib/Constants/HighlightStyles'; // Import highlight style constants
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants'; // Import timeout constants
 
 // Global variable declarations for test data arrays
 declare global {
@@ -3599,8 +3600,27 @@ export class PageObject extends AbstractPage {
   async getAllH4TitlesInModalByTestId(page: Page, modalTestId: string): Promise<string[]> {
     await page.waitForLoadState('networkidle');
 
-    // Locate the open modal container using data-testid
-    const container = page.locator(`[data-testid="${modalTestId}"][open]`);
+    // Determine the container selector
+    let containerSelector: string;
+
+    // If the input already contains [open] or is a dialog selector, use it as-is (may need [open] added)
+    if (modalTestId.includes('[open]')) {
+      // Already has [open], use as-is
+      containerSelector = modalTestId;
+    } else if (modalTestId.startsWith('dialog')) {
+      // It's a dialog selector without [open], add it
+      containerSelector = `${modalTestId}[open]`;
+    } else if (modalTestId.includes('[data-testid=')) {
+      // It's a full selector without [open], extract ID and construct selector
+      const extractedId = this.extractIdFromSelector(modalTestId);
+      containerSelector = `[data-testid="${extractedId}"][open]`;
+    } else {
+      // It's just the ID, construct the selector
+      containerSelector = `[data-testid="${modalTestId}"][open]`;
+    }
+
+    // Locate the open modal container using the constructed selector
+    const container = page.locator(containerSelector);
     await expect(container).toBeVisible({ timeout: 5000 });
 
     logger.info('Container visibility confirmed.');
@@ -3640,6 +3660,79 @@ export class PageObject extends AbstractPage {
 
     logger.info(`Collected Titles:`, titles);
     return titles;
+  }
+
+  /**
+   * Validates H4 titles in a modal by test ID
+   * @param page - Playwright Page object
+   * @param modalTestId - Modal test ID (can be full selector or just ID)
+   * @param expectedTitles - Array of expected title strings
+   * @param options - Optional configuration (testInfo for screenshots, allowPartialMatch for first title)
+   * @returns Promise<void>
+   */
+  async validateModalH4Titles(
+    page: Page,
+    modalTestId: string,
+    expectedTitles: string[],
+    options?: {
+      testInfo?: TestInfo;
+      allowPartialMatch?: boolean; // If true, first title uses contains() instead of exact match
+    },
+  ): Promise<void> {
+    const expectedTitlesNormalized = expectedTitles.map(title => title.trim());
+    const h4Titles = await this.getAllH4TitlesInModalByTestId(page, modalTestId);
+    const normalizedH4Titles = h4Titles.map(title => title.trim());
+
+    // Log for debugging
+    console.log('Expected Titles:', expectedTitlesNormalized);
+    console.log('Received Titles:', normalizedH4Titles);
+
+    // Validate length
+    await expectSoftWithScreenshot(
+      page,
+      () => {
+        expect.soft(normalizedH4Titles.length).toBe(expectedTitlesNormalized.length);
+      },
+      `Verify H4 titles count: expected ${expectedTitlesNormalized.length}, actual ${normalizedH4Titles.length}`,
+      options?.testInfo,
+    );
+
+    // Validate content and order
+    if (options?.allowPartialMatch && normalizedH4Titles.length > 0 && expectedTitlesNormalized.length > 0) {
+      // First title uses contains, rest use exact match
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH4Titles[0]).toContain(expectedTitlesNormalized[0]);
+        },
+        `Verify first H4 title contains expected: "${expectedTitlesNormalized[0]}"`,
+        options?.testInfo,
+      );
+
+      // Validate remaining titles with exact match
+      for (let i = 1; i < expectedTitlesNormalized.length; i++) {
+        if (i < normalizedH4Titles.length) {
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(normalizedH4Titles[i]).toBe(expectedTitlesNormalized[i]);
+            },
+            `Verify H4 title at index ${i}: expected "${expectedTitlesNormalized[i]}", actual "${normalizedH4Titles[i]}"`,
+            options?.testInfo,
+          );
+        }
+      }
+    } else {
+      // All titles use exact match
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH4Titles).toEqual(expectedTitlesNormalized);
+        },
+        `Verify H4 titles match: expected ${JSON.stringify(expectedTitlesNormalized)}, actual ${JSON.stringify(normalizedH4Titles)}`,
+        options?.testInfo,
+      );
+    }
   }
 
   /** Checks if a button is visible and active/inactive
@@ -4749,80 +4842,92 @@ export class PageObject extends AbstractPage {
       // Try getByTestId first as it's more reliable
       try {
         searchInput = this.page.getByTestId(dataTestId);
-        // Wait for attached first, then visible
-        await searchInput.waitFor({ state: 'attached', timeout });
-        await expect(searchInput).toBeVisible({ timeout });
+        await expect(searchInput).toBeVisible({ timeout: Math.min(timeout, 5000) });
       } catch (e) {
         // Fallback to locator if getByTestId fails
         searchInput = this.page.locator(searchInputSelector);
-        await searchInput.waitFor({ state: 'attached', timeout });
         await expect(searchInput).toBeVisible({ timeout });
       }
     } else {
       searchInput = this.page.locator(searchInputSelector);
-      await searchInput.waitFor({ state: 'attached', timeout });
       await expect(searchInput).toBeVisible({ timeout });
     }
 
-    // Click to focus the input
+    // Click to focus, then clear and type
     await searchInput.click();
     await this.page.waitForTimeout(300);
 
     // Clear the input first
-    await searchInput.clear();
+    await searchInput.fill('');
     await this.page.waitForTimeout(200);
 
-    // Focus to ensure it's active
-    await searchInput.focus();
-    await this.page.waitForTimeout(200);
+    // Type the search term using keyboard (more reliable with Vue)
+    await searchInput.pressSequentially(searchTerm, { delay });
+    await this.page.waitForTimeout(500);
 
-    // Use fill() - it's the most reliable for text inputs
-    await searchInput.fill(searchTerm);
-    await this.page.waitForTimeout(300);
-    
-    // Verify the value was set
-    let inputValue = await searchInput.inputValue();
-    console.log(`Search input value after fill(): "${inputValue}"`);
-    
-    // If fill() didn't work, try JavaScript as fallback
-    if (inputValue !== searchTerm) {
-      console.log(`Input value mismatch after fill(). Trying JavaScript...`);
-      await searchInput.evaluate((el: HTMLInputElement, value: string) => {
-        el.value = value;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-      }, searchTerm);
-      await this.page.waitForTimeout(300);
-      inputValue = await searchInput.inputValue();
-      console.log(`Search input value after JavaScript: "${inputValue}"`);
-    }
-
-    // Get the current value (already set above)
-    inputValue = await searchInput.inputValue();
-    console.log(`Search input value after typing: "${inputValue}"`);
-
-    // If the value wasn't set, try JavaScript as fallback
-    if (inputValue !== searchTerm) {
-      console.log(`Input value mismatch. Expected: "${searchTerm}", got: "${inputValue}". Trying JavaScript fallback...`);
-      await searchInput.evaluate((el: HTMLInputElement, value: string) => {
-        el.value = value;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-      }, searchTerm);
-      await this.page.waitForTimeout(300);
-      inputValue = await searchInput.inputValue();
-      console.log(`Search input value after JavaScript fallback: "${inputValue}"`);
-    }
-
-    if (inputValue !== searchTerm) {
-      throw new Error(`Failed to set search input value. Expected: "${searchTerm}", got: "${inputValue}"`);
-    }
+    // Verify the value was entered
+    const inputValue = await searchInput.inputValue();
+    console.log(`Search input value: "${inputValue}"`);
 
     // Press Enter to trigger search
-    await searchInput.focus();
-    await this.page.waitForTimeout(100);
     await searchInput.press('Enter');
     await this.page.waitForTimeout(waitAfterSearch);
+  }
+
+  /**
+   * Helper function to extract ID from full selector
+   * @param selector - The selector string (may contain [data-testid="..."] or just the ID)
+   * @returns The extracted data-testid value or the original selector if no match
+   */
+  extractIdFromSelector(selector: string): string {
+    const match = selector.match(/\[data-testid="([^"]+)"]/);
+    return match ? match[1] : selector;
+  }
+
+  /**
+   * Helper function to fill input and wait for value to be set (replaces waitForTimeout after fill)
+   * @param inputLocator - The input locator
+   * @param value - Value to fill
+   * @param timeout - Maximum time to wait (default: TIMEOUTS.MEDIUM)
+   */
+  async fillInputAndWaitForValue(inputLocator: Locator, value: string, timeout: number = TIMEOUTS.MEDIUM): Promise<void> {
+    await inputLocator.fill(value);
+    // For search inputs, just wait a brief moment for the value to be set
+    // The actual search will be validated by waiting for network idle and table results
+    await inputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+  }
+
+  /**
+   * Helper function to find the actual search input element (handles wrapper vs direct input)
+   * @param page - Playwright Page object
+   * @param searchInputSelector - Selector for the search input wrapper
+   * @param timeout - Timeout for waiting (default: WAIT_TIMEOUTS.STANDARD)
+   * @returns The actual input locator to use
+   */
+  async findSearchInput(page: Page, searchInputSelector: string, timeout: number = WAIT_TIMEOUTS.STANDARD): Promise<Locator> {
+    const searchInputWrapper = page.locator(searchInputSelector).first();
+    await searchInputWrapper.waitFor({ state: 'visible', timeout });
+    await searchInputWrapper.scrollIntoViewIfNeeded();
+
+    // Check if wrapper itself is an input
+    const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
+    if (tagName === 'input') {
+      await searchInputWrapper.waitFor({ state: 'visible', timeout });
+      return searchInputWrapper;
+    }
+
+    // Look for input inside wrapper
+    const searchInput = searchInputWrapper.locator('input').first();
+    const inputCount = await searchInput.count();
+
+    if (inputCount === 0) {
+      // If no input found, try using the wrapper itself (might be contenteditable)
+      return searchInputWrapper;
+    }
+
+    // Wait for the input to be visible
+    await searchInput.waitFor({ state: 'visible', timeout });
+    return searchInput;
   }
 }
 

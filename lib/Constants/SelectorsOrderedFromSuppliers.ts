@@ -9,7 +9,7 @@ export const SELECT_TYPE_OBJECT_OPERATION_PRODUCT = '[data-testid="OrderSupplier
 
 export const SELECT_TYPE_OBJECT_OPERATION_DETAILS = '[data-testid="OrderSuppliers-Modal-AddOrder-Content-DetalCard"]';
 
-export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY = 'dialog[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"] open';
+export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY = 'dialog[data-testid$="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"] open';
 
 export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_TBODY =
   '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Tbody"]';
@@ -68,6 +68,7 @@ export const MODAL_CREATE_ORDER_CHOOSE_BUTTON = 'button[data-testid="OrderSuppli
 // ERP-969 specific selectors
 export const SCLAD_ORDERING_SUPPLIERS = '[data-testid="Sclad-orderingSuppliers"]';
 export const MODAL_ADD_ORDER_PRODUCTION_DIALOG = 'dialog[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"][open]';
+export const MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"]';
 export const MODAL_TITLE = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title"]';
 export const TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE =
   'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1"]';

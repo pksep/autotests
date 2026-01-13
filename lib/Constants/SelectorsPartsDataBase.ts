@@ -113,6 +113,8 @@ export const MAIN_PAGE_Д_TABLE = '[data-testid="BasePaginationTable-Table-detal
 export const MAIN_PAGE_MAIN_DIV = '[data-testid="BaseProducts-Container-MainContainer"]';
 export const MAIN_PAGE_SMALL_DIALOG_СБ = 'div[data-testid="Specification-Dialog-CardbaseOfAssemblyUnits0"]';
 export const MAIN_PAGE_SMALL_DIALOG_Д = 'div[data-testid="Specification-Dialog-CardbaseDetail1"]';
+export const SPECIFICATION_DIALOG_CARD_BASE_OF_ASSEMBLY_UNITS_0 = '[data-testid="Specification-Dialog-CardbaseOfAssemblyUnits0"]';
+export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 = '[data-testid="Specification-Dialog-CardbaseDetail1"]';
 export const MAIN_PAGE_SMALL_DIALOG_ПД = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials2"]';
 export const MAIN_PAGE_SMALL_DIALOG_РМ = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials3"]';
 export const TABLE_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
@@ -127,6 +129,10 @@ export const EDIT_PAGE_MAIN_ID = '[data-testid="Creator"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG = 'Specification-ModalBaseCbed';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="Specification-ModalBaseCbed"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="Specification-ModalBaseCbed"][open]';
+export const SPECIFICATION_MODAL_BASE_CBED_SECTION_PATTERN = '[data-testid^="Spectification-ModalBaseCbed"][data-testid$="Section"]';
+export const SPECIFICATION_MODAL_BASE_DETAL_MODAL_CONTENT_PATTERN = '[data-testid^="Spectification-ModalBaseDetal"][data-testid$="ModalContent"]';
+export const TABLE_ROW_CHECKBOX_PATTERN = '[data-testid$="-Checkbox"]';
+export const INPUT_CHECKBOX_PATTERN = 'input[type="checkbox"], input[data-testid="checkbox"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE = 'table[data-testid="Specification-ModalBaseCbed-Table"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_STARTS_WITH = 'table[data-testid^="Specification-ModalBaseCbed-Table"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="Specification-ModalBaseCbed-Select-Button"]';
@@ -181,6 +187,10 @@ export const CREATOR_BUTTON_CANCEL = '[data-testid="Creator-ButtonSaveAndCancel-
 // ERP-969 additional constants
 export const BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS = '[data-testid="BaseProducts-CreatLink-Cardbase-of-assembly-units"]';
 export const SPECIFICATION_BUTTONS_ADDING_SPECIFICATION = '[data-testid="Specification-Buttons-addingSpecification"]';
-export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 = '[data-testid="Specification-Dialog-CardbaseDetail1"]';
+// SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 is already defined at line 117
 export const SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON = '[data-testid="Specification-ModalBaseDetal-Select-Button"]';
 export const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON = '[data-testid="Specification-ModalBaseDetal-Add-Button"]';
+
+// Generic debugging selectors
+export const DEBUG_ALL_MODALS_SELECTOR = '[role="dialog"], .modal, [data-testid*="Modal"]';
+export const DEBUG_ALL_TABLES_SELECTOR = 'table, [data-testid*="Table"], [data-testid*="table"]';
