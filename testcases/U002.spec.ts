@@ -15,6 +15,7 @@ import * as SelectorsAssemblyWarehouse from '../lib/Constants/SelectorsAssemblyW
 import * as SelectorsMetalWorkingWarhouse from '../lib/Constants/SelectorsMetalWorkingWarhouse';
 import * as SelectorsMetalworkingOperations from '../lib/Constants/SelectorsMetalworkingOperations';
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction';
+import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
 // Global variable declarations
 declare global {
@@ -48,7 +49,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   console.log(`Starting test: Verify Order From Suppliers Page Functionality`);
 
   test('Setup - Ensure test data exists', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Setup - Ensuring test data exists');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
@@ -102,7 +103,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 01 - Check all elements on page Ordered from suppliers', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     console.log('Test Case 01 - Check all elements on page Ordered from suppliers');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     await allure.step('Step 1: Open the warehouse page', async () => {
@@ -150,13 +151,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           try {
             const selector = dataTestId ? SelectorsOrderedFromSuppliers.getSelectorByTestId(dataTestId) : buttonClass;
             const highlightLocator = page.locator(selector).first();
-            await highlightLocator.waitFor({ state: 'visible', timeout: 3000 });
+            await highlightLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
             await highlightLocator.evaluate((el: HTMLElement) => {
               el.style.backgroundColor = 'yellow';
               el.style.border = '2px solid red';
               el.style.color = 'blue';
             });
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
           } catch {}
 
           let isButtonReady = false;
@@ -184,15 +185,18 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           el.style.border = '2px solid red';
           el.style.color = 'blue';
         });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
       } catch {}
 
       await orderedFromSuppliersPage.clickButton(' Создать заказ ', createOrderSelector);
       // Wait for supplier selection modal to appear (fallback to a reliable content element if container testid differs)
       try {
-        await page.waitForSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT, { state: 'visible', timeout: 5000 });
+        await page.waitForSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT, {
+          state: 'visible',
+          timeout: WAIT_TIMEOUTS.SHORT,
+        });
       } catch {
-        await page.waitForSelector(SelectorsOrderedFromSuppliers.SELECT_TYPE_OBJECT_OPERATION_PRODUCT, { state: 'visible', timeout: 10000 });
+        await page.waitForSelector(SelectorsOrderedFromSuppliers.SELECT_TYPE_OBJECT_OPERATION_PRODUCT, { state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       }
     });
 
@@ -217,13 +221,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           if (dataTestId) {
             const selector = SelectorsOrderedFromSuppliers.getSelectorByTestId(dataTestId);
             const item = modal.locator(selector).first();
-            await item.waitFor({ state: 'visible', timeout: 3000 });
+            await item.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
             await item.evaluate((el: HTMLElement) => {
               el.style.backgroundColor = 'yellow';
               el.style.border = '2px solid red';
               el.style.color = 'blue';
             });
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(TIMEOUTS.STANDARD);
           }
 
           // Prefer data-testid when provided; ignore text filter to avoid mismatches like "Изделии" vs "Изделие"
@@ -251,7 +255,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       const modal = await page.locator(`${SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}[open]`);
       const button = await modal.locator(SelectorsOrderedFromSuppliers.SELECT_TYPE_OBJECT_OPERATION_DETAILS);
       await button.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await orderedFromSuppliersPage.waitForNetworkIdle();
     });
 
@@ -286,8 +290,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       const row0 = tbody.locator(SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW0).first();
       const row1 = tbody.locator(SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW1).first();
-      await row0.waitFor({ state: 'visible', timeout: 5000 });
-      await row1.waitFor({ state: 'visible', timeout: 5000 });
+      await row0.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await row1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
 
       const rows = [row0, row1];
       for (let i = 0; i < rows.length; i++) {
@@ -297,12 +301,12 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           el.style.border = '2px solid red';
           el.style.color = 'blue';
         });
-        await page.waitForTimeout(150);
+        await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
         const tdCheckbox = row.locator(SelectorsOrderedFromSuppliers.TABLE_ROW_CHECKBOX_SUFFIX).first();
-        await tdCheckbox.waitFor({ state: 'visible', timeout: 5000 });
+        await tdCheckbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
         await tdCheckbox.click();
-        await page.waitForTimeout(150);
+        await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
         const checkbox = row.locator(SelectorsOrderedFromSuppliers.TABLE_ROW_CHECKBOX_WRAPPER_SUFFIX).first();
         await expect(checkbox).toBeChecked();
@@ -334,7 +338,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         el.style.border = '2px solid red';
         el.style.color = 'blue';
       });
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Extract the modal ID from the constant (not the full dialog selector)
       const modalId = orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID);
@@ -350,7 +354,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       // Wait for bottom table to appear and verify selected items
       const bottomTable = page.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE).first();
-      await bottomTable.waitFor({ state: 'visible', timeout: 5000 });
+      await bottomTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
 
       // Note: selectedItems no longer exists here after simplifying Test Case 08
       // Keeping the structure for compatibility; no iteration needed now
@@ -413,7 +417,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 05 - Create Parts', async ({ page }) => {
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 05 - Create Parts');
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -443,7 +447,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 04: Enter the name of the part', async () => {
         const nameParts = page.locator(SelectorsPartsDataBase.ADD_DETAL_INFORMATION_INPUT_INPUT);
 
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await nameParts.fill(detail.name || ''); //ERP-2099
         await expect(await nameParts.inputValue()).toBe(detail.name || ''); //ERP-2099
       });
@@ -485,7 +489,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 11: Choice type operation', async () => {
         // Wait for the filter option to be visible before clicking
         const filterOption = page.locator(SelectorsPartsDataBase.BASE_FILTER_OPTION_FIRST);
-        await filterOption.waitFor({ state: 'visible', timeout: 10000 });
+        await filterOption.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Highlight the option for visual validation
         await filterOption.evaluate((el: HTMLElement) => {
@@ -494,19 +498,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           el.style.color = 'blue';
           el.style.fontWeight = 'bold';
         });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
         console.log('🎯 Highlighted first filter option');
 
         // Click on the first filter option
         await filterOption.click();
         console.log('✅ Clicked on first filter option');
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
       });
 
       await allure.step('Step 12: Click on the Save button', async () => {
         // Wait for page to be fully loaded
         await partsDatabsePage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // First, check if there's a nested modal that needs to be saved
         const nestedModal = page.locator(`${SelectorsPartsDataBase.MODAL_ADD_OPERATION}[open]`);
@@ -531,12 +535,12 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             console.log('🎯 Highlighted Save button in nested modal');
 
             // Pause for 2 seconds before clicking
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(TIMEOUTS.LONG);
 
             // Click the Save button in the nested modal
             await nestedSaveButton.click({ force: true });
             console.log('✅ Clicked Save button in nested modal');
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(TIMEOUTS.LONG);
           } else {
             console.log('⚠️ No Save button found in nested modal');
           }
@@ -558,18 +562,18 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           console.log('🎯 Highlighted main Save button in tech process modal');
 
           // Pause for 2 seconds before clicking
-          await page.waitForTimeout(2000);
+          await page.waitForTimeout(TIMEOUTS.LONG);
 
           // Click the main Save button
           await mainSaveButton.click({ force: true });
           console.log('✅ Clicked main Save button in tech process modal');
-          await page.waitForTimeout(2000);
+          await page.waitForTimeout(TIMEOUTS.LONG);
         } else {
           console.log('⚠️ Main Save button not found in tech process modal');
         }
 
         // Wait for the modal to close
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
         await partsDatabsePage.waitForNetworkIdle();
 
         // Verify the modal is closed by checking if any Save buttons are still visible
@@ -579,7 +583,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           console.log('⚠️ Modal still open after Save click, trying alternative approach');
           // Try pressing Enter as alternative
           await page.keyboard.press('Enter');
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         } else {
           console.log('✅ Modal closed successfully');
         }
@@ -649,12 +653,12 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 14: Click on the Save button', async () => {
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await page.locator(SelectorsPartsDataBase.EDIT_SAVE_BUTTON).click();
       });
 
       await allure.step('Step 15: Click on the cancel button', async () => {
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await partsDatabsePage.clickButton('Отменить', SelectorsPartsDataBase.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL);
       });
     }
@@ -681,7 +685,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     for (const cbed of arrayCbed) {
       await allure.step('Step 02: Click on the Create button', async () => {
         await partsDatabsePage.waitForNetworkIdle();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
         await partsDatabsePage.clickButton('Создать', SelectorsPartsDataBase.U002_BUTTON_CREATE_NEW_PART);
       });
 
@@ -691,11 +695,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 04: Enter the name of the part', async () => {
         await partsDatabsePage.waitForNetworkIdle();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         const nameParts = page.locator(SelectorsPartsDataBase.CREATOR_INFORMATION_INPUT);
 
         await nameParts.fill(cbed.name || '');
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         expect(await nameParts.inputValue()).toBe(cbed.name || '');
       });
 
@@ -708,7 +712,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 06: Click on the Save button', async () => {
         await partsDatabsePage.clickButton('Сохранить', SelectorsPartsDataBase.U002_CREATOR_SAVE_BUTTON);
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
       });
 
       await allure.step('Step 07: Click on the Process', async () => {
@@ -739,7 +743,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 09: Click on the Save button', async () => {
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await partsDatabsePage.clickButton('Отменить', SelectorsPartsDataBase.BUTTON_PROCESS_CANCEL);
       });
 
@@ -781,7 +785,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         await partsDatabsePage.waitForNetworkIdle();
         const nameParts = page.locator(SelectorsPartsDataBase.CREATOR_INFORMATION_INPUT);
 
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await nameParts.fill(izd.name || '');
         expect(await nameParts.inputValue()).toBe(izd.name || '');
       });
@@ -794,7 +798,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
       await allure.step('Step 06: Click on the Save button', async () => {
         await partsDatabsePage.clickButton('Сохранить', SelectorsPartsDataBase.U002_CREATOR_SAVE_BUTTON);
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
       });
 
       await allure.step('Step 07: Click on the Process', async () => {
@@ -803,7 +807,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 08: Getting the name of the operation', async () => {
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
         const numberColumnOnNameProcess = await partsDatabsePage.findColumn(
           page,
           SelectorsPartsDataBase.TABLE_PROCESS_ID,
@@ -821,7 +825,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 09: Click on the Save button', async () => {
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await partsDatabsePage.clickButton('Отменить', SelectorsPartsDataBase.BUTTON_PROCESS_CANCEL);
       });
 
@@ -833,7 +837,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 08 - Get Initial Ordered Quantity from Metalworking Warehouse', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 08 - Get Initial Ordered Quantity from Metalworking Warehouse');
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
@@ -876,7 +880,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
               `[data-testid^="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_START}0${SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED}"]`,
             )
             .first();
-          await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
+          await orderedCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
           const initialOrderedQuantity = (await orderedCell.innerText()).trim();
 
           // Store the initial quantity for later comparison
@@ -891,7 +895,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     }
   });
   test('Test Case 10 - Create Two Orders, Verify Total, and Archive Second Order', async ({ page }) => {
-    test.setTimeout(180000);
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
     console.log('Test Case 10 - Create Two Orders, Verify Total, and Archive Second Order');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
@@ -940,7 +944,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Wait for orders to propagate
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const totalOrderedQuantity = await metalworkingWarehouse.getQuantityCellAndVerify(
           '',
@@ -994,7 +998,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 9: Close dialogs and refresh page', async () => {
         // Click at position (1,1) to close open dialogs
         await page.click('body', { position: { x: 1, y: 1 } });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Refresh the page
         await page.reload();
@@ -1020,7 +1024,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Wait for system to update
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const remainingOrderedQuantity = await metalworkingWarehouse.getQuantityCellAndVerify(
           '',
@@ -1040,7 +1044,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     }
   });
   test('Test Case 11 - Archive Task and Verify Removal', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 11 - Archive Task and Verify Removal');
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
@@ -1076,7 +1080,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             `[data-testid^="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_START}0"][data-testid$="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_CHECKBOX_SUFFIX}"]`,
           )
           .first();
-        await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+        await checkbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
         await checkbox.click();
 
         await metalworkingWarehouse.archiveAndConfirm(
@@ -1086,7 +1090,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 4: Verify task is archived', async () => {
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
         await metalworkingWarehouse.searchAndWaitForTable(
           detail.name,
           SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
@@ -1106,7 +1110,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     }
   });
   test('Test Case 13 Cbed - Get Initial Ordered Quantity from Assembly Warehouse', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 13 - Get Initial Ordered Quantity from Assembly Warehouse');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
@@ -1145,7 +1149,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         if (rowCount > 0) {
           // Get the initial ordered quantity from the first row
           const orderedCell = page.locator(SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO).first();
-          await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
+          await orderedCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
           const initialOrderedQuantity = (await orderedCell.innerText()).trim();
 
           // Store the initial quantity for later comparison
@@ -1160,7 +1164,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     }
   });
   test('Test Case 14 Cbed - Create Two CBED Orders, Verify Total, and Archive Second Order', async ({ page }) => {
-    test.setTimeout(180000);
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
     console.log('Test Case 14 - Create Two CBED Orders, Verify Total, and Archive Second Order');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
@@ -1210,7 +1214,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Wait for orders to propagate
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const totalOrderedQuantity = await assemblyWarehouse.getQuantityCellAndVerify(
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
@@ -1266,7 +1270,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 9: Close dialogs and refresh page', async () => {
         // Click at position (1,1) to close open dialogs
         await page.click('body', { position: { x: 1, y: 1 } });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Refresh the page
         await page.reload();
@@ -1292,7 +1296,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Wait for system to update
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const remainingOrderedQuantity = await assemblyWarehouse.getQuantityCellAndVerify(
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
@@ -1308,7 +1312,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     }
   });
   test('Test Case 15 Cbed - Archive Task and Verify Removal', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 18 - Archive CBED Task and Verify Removal');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
@@ -1340,7 +1344,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 3: Select checkbox and archive', async () => {
         const checkbox = page.locator(SelectorsAssemblyWarehouse.DATA_CELL).first();
-        await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+        await checkbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
         await checkbox.click();
 
         await assemblyWarehouse.archiveAndConfirm(
@@ -1350,7 +1354,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 4: Verify task is archived', async () => {
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
         await assemblyWarehouse.searchAndWaitForTable(
           cbed.name,
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,
@@ -1370,7 +1374,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     }
   });
   test('Test Case 16 Izd - Get Initial Ordered Quantity from Assembly Warehouse', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 16 - Get Initial Ordered Quantity from Assembly Warehouse for IZD');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
@@ -1409,7 +1413,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         if (rowCount > 0) {
           // Get the initial ordered quantity from the first row
           const orderedCell = page.locator(SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO).first();
-          await orderedCell.waitFor({ state: 'visible', timeout: 5000 });
+          await orderedCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
           const initialOrderedQuantity = (await orderedCell.innerText()).trim();
 
           // Store the initial quantity for later comparison
@@ -1425,7 +1429,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 17 Izd - Create Two IZD Orders, Verify Total, and Archive Second Order', async ({ page }) => {
-    test.setTimeout(180000);
+    test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
     console.log('Test Case 17 - Create Two IZD Orders, Verify Total, and Archive Second Order');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
@@ -1474,7 +1478,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Wait for orders to propagate
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const totalOrderedQuantity = await metalworkingWarehouse.getQuantityCellAndVerify(
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
@@ -1532,7 +1536,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 9: Close dialogs and refresh page', async () => {
         // Click at position (1,1) to close open dialogs
         await page.click('body', { position: { x: 1, y: 1 } });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Refresh the page
         await page.reload();
@@ -1558,7 +1562,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         );
 
         // Wait for system to update
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const remainingOrderedQuantity = await metalworkingWarehouse.getQuantityCellAndVerify(
           SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO,
@@ -1575,7 +1579,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 18 Izd - Archive Task and Verify Removal', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     console.log('Test Case 18 - Archive IZD Task and Verify Removal');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
@@ -1607,7 +1611,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 3: Select checkbox and archive', async () => {
         const checkbox = page.locator(SelectorsAssemblyWarehouse.DATA_CELL).first();
-        await checkbox.waitFor({ state: 'visible', timeout: 5000 });
+        await checkbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
         await checkbox.click();
 
         await assemblyWarehouse.archiveAndConfirm(
@@ -1617,7 +1621,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 4: Verify task is archived', async () => {
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
         await assemblyWarehouse.searchAndWaitForTable(
           izd.name,
           SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE,

@@ -414,97 +414,126 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     const articleNumberValue = TEST_PRODUCTS[0].articleNumber; // TEST_ARTICLE_1
 
     await allure.step('Step 1: Go to Задачи на отгрузку page', async () => {
-      const success = await loadingTaskPage.navigateToShippingTasksPage();
+      await loadingTaskPage.navigateToShippingTasksPage();
+      const createOrderButton = page.locator(SelectorsLoadingTasksPage.buttonCreateOrder);
+      const isButtonVisible = await createOrderButton.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isButtonVisible).toBe(true);
         },
-        `Verify navigation to shipping tasks page successful`,
+        `Verify navigation to shipping tasks page successful - create order button is visible`,
         test.info(),
       );
     });
 
     await allure.step('Step 2: Click Create Order button', async () => {
-      const success = await loadingTaskPage.clickCreateOrderButton();
+      await loadingTaskPage.clickCreateOrderButton();
+      // Verify order form appeared by checking for AddOrder component
+      const addOrderComponent = page.locator(SelectorsLoadingTasksPage.addOrderComponent);
+      await addOrderComponent.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const isComponentVisible = await addOrderComponent.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isComponentVisible).toBe(true);
         },
-        `Verify Create Order button clicked successfully`,
+        `Verify Create Order button clicked successfully - order form (AddOrder component) is visible`,
         test.info(),
       );
     });
 
     await allure.step('Step 3: Click Изделие Выбрать button', async () => {
-      const success = await loadingTaskPage.clickProductSelectButton();
+      await loadingTaskPage.clickProductSelectButton();
+      // Verify product modal opened
+      const productModal = page.locator(SelectorsLoadingTasksPage.modalListProductNew);
+      const isModalVisible = await productModal.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isModalVisible).toBe(true);
         },
-        `Verify Изделие Выбрать button clicked successfully`,
+        `Verify Изделие Выбрать button clicked successfully - product modal is visible`,
         test.info(),
       );
     });
 
     await allure.step('Step 4: Select product in modal', async () => {
-      const success = await loadingTaskPage.selectProductInModal(productName, articleNumberValue);
+      await loadingTaskPage.selectProductInModal(productName, articleNumberValue);
+      // Verify product was selected by checking that the modal is still open and product row is visible/selected
+      // The modal stays open after selection - it only closes when Add button is clicked in Step 10
+      const productModal = page.locator(SelectorsLoadingTasksPage.modalListProductNew);
+      const modalTableBody = productModal.locator('tbody');
+      const productRow = modalTableBody.locator('tr').filter({ hasText: productName });
+      const rowCount = await productRow.count();
+      const isModalVisible = await productModal.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(rowCount).toBeGreaterThan(0);
+          expect.soft(isModalVisible).toBe(true);
         },
-        `Verify product "${productName}" selected successfully in modal`,
+        `Verify product "${productName}" selected successfully in modal - product row found and modal still open`,
         test.info(),
       );
     });
 
     await allure.step('Step 10: Click Add button', async () => {
-      const success = await loadingTaskPage.clickAddButtonInProductModal();
+      await loadingTaskPage.clickAddButtonInProductModal();
+      // Verify product modal closed (product was added)
+      const productModal = page.locator(SelectorsLoadingTasksPage.modalListProductNew);
+      const isModalVisible = await productModal.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isModalVisible).toBe(false);
         },
-        `Verify Add button clicked successfully in product modal`,
+        `Verify Add button clicked successfully in product modal - modal closed`,
         test.info(),
       );
     });
 
     await allure.step('Step 12: Verify correct product is displayed in Изделие row', async () => {
-      const success = await loadingTaskPage.checkProduct(productName);
+      const productElement = page.locator('.attachments-value .link').first();
+      await productElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const actualProductName = (await productElement.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(actualProductName).toBe(productName);
         },
-        `Verify product "${productName}" is displayed correctly`,
+        `Verify product "${productName}" is displayed correctly - actual: "${actualProductName}"`,
         test.info(),
       );
     });
 
     await allure.step('Step 13: Click Покупатель Выбрать button and select buyer', async () => {
-      const success = await loadingTaskPage.selectBuyer(nameBuyer);
+      await loadingTaskPage.selectBuyer(nameBuyer);
+      // Verify buyer was selected by checking the buyer field
+      const buyerSelectedCompany = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_BUYER_SELECTED_COMPANY);
+      await buyerSelectedCompany.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const actualBuyerName = (await buyerSelectedCompany.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(actualBuyerName).toContain(nameBuyer);
         },
-        `Verify buyer "${nameBuyer}" selected successfully`,
+        `Verify buyer "${nameBuyer}" selected successfully - actual: "${actualBuyerName}"`,
         test.info(),
       );
     });
 
     await allure.step('Step 18: Enter quantity in Количество input', async () => {
-      const success = await loadingTaskPage.enterQuantity(quantity);
+      await loadingTaskPage.enterQuantity(quantity);
+      // Verify quantity was entered by checking input value
+      const quantityInputElement = page.locator(SelectorsLoadingTasksPage.quantityInput);
+      const actualQuantity = await quantityInputElement.inputValue();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(actualQuantity).toBe(quantity);
         },
-        `Verify quantity "${quantity}" entered successfully`,
+        `Verify quantity "${quantity}" entered successfully - actual: "${actualQuantity}"`,
         test.info(),
       );
     });
@@ -512,13 +541,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 19: Enter urgency date', async () => {
       // Use the extracted calendar date selection method
       // monthIndex: 1 = January (matching calendar's nth() index), so for January 23, 2025: year=2025, monthIndex=1, day=23
-      const success = await loadingTaskPage.selectCalendarDate(2025, 1, 23);
+      await loadingTaskPage.selectCalendarDate(2025, 1, 23);
+      // Verify date was selected by checking the date display
+      const urgencyDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY);
+      await urgencyDateDisplay.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const actualDateText = (await urgencyDateDisplay.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(actualDateText).toContain('2025');
+          expect.soft(actualDateText).toContain('23');
         },
-        `Verify urgency date selected successfully: 23.01.2025`,
+        `Verify urgency date selected successfully: 23.01.2025 - actual: "${actualDateText}"`,
         test.info(),
       );
       console.log('Selected urgency date: 23.01.2025');
@@ -528,14 +562,34 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // TODO: Find the selector for shipment plan date input
       // This will need to be implemented based on the actual UI
       console.log('Step 20: Enter shipment plan date - TODO');
-      expect.soft(true).toBe(true); // Placeholder assertion
+      // Placeholder step - no actual implementation yet
+      const shipmentPlanDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY);
+      const isFieldVisible = await shipmentPlanDateDisplay.isVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isFieldVisible).toBe(true);
+        },
+        `Verify shipment plan date field exists (TODO: implement date selection)`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 21: Enter order date', async () => {
       // TODO: Find the selector for order date input
       // This will need to be implemented based on the actual UI
       console.log('Step 21: Enter order date - TODO');
-      expect.soft(true).toBe(true); // Placeholder assertion
+      // Placeholder step - no actual implementation yet
+      const orderDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_ORDER_DISPLAY);
+      const isFieldVisible = await orderDateDisplay.isVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isFieldVisible).toBe(true);
+        },
+        `Verify order date field exists (TODO: implement date selection)`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 22: Iterate through Комплектации table and save data', async () => {
@@ -560,13 +614,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 23: Click Save button', async () => {
-      const success = await loadingTaskPage.saveOrder();
+      await loadingTaskPage.saveOrder();
+      // Verify order was saved by checking for edit title (indicates save completed)
+      const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      await editTitleElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+      const isTitleVisible = await editTitleElement.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isTitleVisible).toBe(true);
         },
-        `Verify order saved successfully`,
+        `Verify order saved successfully - edit title is visible`,
         test.info(),
       );
     });
@@ -626,14 +684,33 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitForNetworkIdle();
 
-      const success = await loadingTaskPage.findOrderAndClickEdit(orderNumberValue);
+      await loadingTaskPage.findOrderAndClickEdit(orderNumberValue);
 
+      // Verify edit mode opened by checking for edit title
+      const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      await editTitleElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+      await editTitleElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      // Wait for the title text to contain the order number (text loads asynchronously)
+      await page.waitForFunction(
+        ({ selector, orderNum }: { selector: string; orderNum: string }) => {
+          const element = document.querySelector(selector);
+          if (!element) return false;
+          const text = element.textContent || '';
+          return text.includes(orderNum);
+        },
+        { selector: SelectorsLoadingTasksPage.editTitle, orderNum: orderNumberValue },
+        { timeout: WAIT_TIMEOUTS.STANDARD },
+      );
+      const isTitleVisible = await editTitleElement.isVisible();
+      const titleText = (await editTitleElement.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isTitleVisible).toBe(true);
+          expect.soft(titleText.length).toBeGreaterThan(0);
+          expect.soft(titleText).toContain(orderNumberValue);
         },
-        `Verify order "${orderNumberValue}" found and edit button clicked successfully`,
+        `Verify order "${orderNumberValue}" found and edit button clicked successfully - edit title visible with text: "${titleText}"`,
         test.info(),
       );
     });
@@ -688,22 +765,34 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         titleText.includes(orderNumberValue) ||
         titleText.includes(normalizedOrderValue) ||
         normalizedTitle.includes(normalizedOrderValue);
-      expect.soft(orderNumberInTitle).toBe(true);
-
-      // Also verify that "№" appears in the title
-      expect.soft(titleText.includes('№')).toBe(true);
-
-      // Check date - use extracted date from row if available, otherwise use orderDateValue
-      const dateToCheck = extractedDate || orderDateValue;
-      if (dateToCheck) {
-        expect.soft(titleText.includes(dateToCheck)).toBe(true);
-      }
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(orderNumberInTitle).toBe(true);
+          // Also verify that "№" appears in the title
+          expect.soft(titleText.includes('№')).toBe(true);
+          // Check date - use extracted date from row if available, otherwise use orderDateValue
+          const dateToCheck = extractedDate || orderDateValue;
+          if (dateToCheck) {
+            expect.soft(titleText.includes(dateToCheck)).toBe(true);
+          }
+        },
+        `Verify edit title contains order number, "№" symbol, and date`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 3: Wait for "Все позиции по заказу" table to load', async () => {
       const positionsTable = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE);
       await positionsTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      expect.soft(await positionsTable.isVisible()).toBe(true);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await positionsTable.isVisible()).toBe(true);
+        },
+        'Verify positions table is visible',
+        test.info(),
+      );
 
       // Wait for table body to finish loading
       const tableBody = positionsTable.locator('tbody');
@@ -1010,7 +1099,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           });
 
         const isEnabled = await editButton.isEnabled();
-        expect.soft(isEnabled).toBe(true);
+        await expectSoftWithScreenshot(
+          newPage,
+          () => {
+            expect.soft(isEnabled).toBe(true);
+          },
+          'Verify edit button is enabled',
+          test.info(),
+        );
 
         // Click the edit button if enabled
         if (isEnabled) {
@@ -1095,19 +1191,40 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Method 1: Search by Заказ (Order Number)
       await allure.step('Method 1: Search by Заказ (Order Number)', async () => {
         const success = await loadingTaskPage.searchAndVerifyRowMatches(fullOrderNumberValue, fullOrderNumberValue, articleNumberValue, productNameValue);
-        expect.soft(success).toBe(true);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(success).toBe(true);
+          },
+          `Method 1: Verify search by order number "${fullOrderNumberValue}" matches expected values`,
+          test.info(),
+        );
       });
 
       // Method 2: Search by Артикул изделия (Article Number)
       await allure.step('Method 2: Search by Артикул изделия (Article Number)', async () => {
         const success = await loadingTaskPage.searchAndVerifyRowMatches(articleNumberValue, fullOrderNumberValue, articleNumberValue, productNameValue);
-        expect.soft(success).toBe(true);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(success).toBe(true);
+          },
+          `Method 2: Verify search by article number "${articleNumberValue}" matches expected values`,
+          test.info(),
+        );
       });
 
       // Method 3: Search by Наименование изделия (Product Name)
       await allure.step('Method 3: Search by Наименование изделия (Product Name)', async () => {
         const success = await loadingTaskPage.searchAndVerifyRowMatches(productNameValue, fullOrderNumberValue, articleNumberValue, productNameValue);
-        expect.soft(success).toBe(true);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(success).toBe(true);
+          },
+          `Method 3: Verify search by product name "${productNameValue}" matches expected values`,
+          test.info(),
+        );
       });
     });
 
@@ -1130,10 +1247,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await loadingTaskPage.waitForNetworkIdle();
 
-        // Search for order number
+        // Search for order number using helper method (findSearchInput + manual search pattern)
+        // Note: searchAndWaitForTable doesn't work for this specific input structure, so we use findSearchInput helper
         const searchInput = await loadingTaskPage.findSearchInput(page, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
         await searchInput.clear();
         await searchInput.fill(fullOrderNumberValue);
+        // Verify value was set
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            const searchValue = await searchInput.inputValue();
+            expect.soft(searchValue).toBe(fullOrderNumberValue);
+          },
+          `Verify search input value equals "${fullOrderNumberValue}"`,
+          test.info(),
+        );
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkStable(page);
 
@@ -1143,7 +1271,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const orderNumberCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
         await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
-        expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
+          },
+          `Verify order number "${fullOrderNumberValue}" found in search results`,
+          test.info(),
+        );
         console.log(`Tab 1: Order ${fullOrderNumberValue} found in results`);
 
         // Store Tab 1 reference for later use (we'll need to access it in Step 26)
@@ -1166,10 +1301,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await tableBody2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab2LoadingTaskPage.waitForNetworkIdle();
 
-        // Search for order number
+        // Search for order number using helper method (findSearchInput + manual search pattern)
+        // Note: searchAndWaitForTable doesn't work for this specific input structure, so we use findSearchInput helper
         const searchInput2 = await tab2LoadingTaskPage.findSearchInput(tab2, SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR);
         await searchInput2.clear();
         await searchInput2.fill(fullOrderNumberValue);
+        // Verify value was set
+        await expectSoftWithScreenshot(
+          tab2,
+          async () => {
+            const searchValue2 = await searchInput2.inputValue();
+            expect.soft(searchValue2).toBe(fullOrderNumberValue);
+          },
+          `Verify search input 2 value equals "${fullOrderNumberValue}"`,
+          test.info(),
+        );
         await searchInput2.press('Enter');
         await tab2LoadingTaskPage.waitForNetworkStable(tab2);
 
@@ -1590,7 +1736,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           });
 
         const isEnabled = await editButton.isEnabled();
-        expect.soft(isEnabled).toBe(true);
+        await expectSoftWithScreenshot(
+          newPage,
+          () => {
+            expect.soft(isEnabled).toBe(true);
+          },
+          'Verify edit button is enabled',
+          test.info(),
+        );
 
         // Click the edit button if enabled
         if (isEnabled) {
@@ -1698,24 +1851,26 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const orderFilterTable = deficitPage.locator(SelectorsShortagePages.ORDER_FILTER_SETTINGS_TABLE);
       await deficitLoadingTaskPage.waitAndHighlight(orderFilterTable);
 
-      // Step 26.6: Inside the table find the input with data-testid:OrderFilterSettings-Table-Search-Dropdown-Input
-      const searchInputWrapper = orderFilterTable.locator(`input${SelectorsShortagePages.ORDER_FILTER_SETTINGS_TABLE_SEARCH_INPUT}`).first();
-      await deficitLoadingTaskPage.waitAndHighlight(searchInputWrapper);
-      await searchInputWrapper.clear();
-      await searchInputWrapper.fill(fullOrderNumberValue);
-      await deficitPage.waitForTimeout(TIMEOUTS.SHORT);
-      searchInputWrapper.press('Enter');
-
-      await deficitLoadingTaskPage.waitForNetworkIdle();
-
-      await deficitPage.waitForTimeout(TIMEOUTS.STANDARD);
+      // Step 26.6: Search in order filter table using helper method
+      const searchInputSelector = `input${SelectorsShortagePages.ORDER_FILTER_SETTINGS_TABLE_SEARCH_INPUT}`;
+      await deficitLoadingTaskPage.searchWithPressSequentially(searchInputSelector, fullOrderNumberValue, {
+        delay: 50,
+        waitAfterSearch: TIMEOUTS.STANDARD,
+      });
 
       // Confirm that the search results show a single row with our order number
       const tableBody = orderFilterTable.locator('tbody');
       await deficitLoadingTaskPage.waitAndHighlight(tableBody);
       const rows = tableBody.locator('tr');
       const rowCount = await rows.count();
-      expect.soft(rowCount).toBe(1);
+      await expectSoftWithScreenshot(
+        deficitPage,
+        () => {
+          expect.soft(rowCount).toBe(1);
+        },
+        `Verify search results show exactly 1 row in OrderFilterTable`,
+        test.info(),
+      );
       console.log(`Found ${rowCount} row(s) in OrderFilterTable`);
 
       // Get the first row
@@ -1727,14 +1882,28 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(orderNumberCell);
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
       console.log(`Order number in table: ${cellOrderNumber}`);
-      expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
+      await expectSoftWithScreenshot(
+        deficitPage,
+        () => {
+          expect.soft(cellOrderNumber.includes(fullOrderNumberValue)).toBe(true);
+        },
+        `Verify order number "${fullOrderNumberValue}" found in table cell`,
+        test.info(),
+      );
       // Cross-check on Tab 2 (edit order page)
       await tab2.bringToFront();
       const editTitleTab2 = tab2.locator(SelectorsLoadingTasksPage.editTitle).first();
       await tab2LoadingTaskPage.waitAndHighlight(editTitleTab2);
       const editTitleText = (await editTitleTab2.textContent())?.trim() || '';
       console.log(`Tab 2 edit title: ${editTitleText}`);
-      expect.soft(editTitleText.includes(cellOrderNumber)).toBe(true);
+      await expectSoftWithScreenshot(
+        tab2,
+        () => {
+          expect.soft(editTitleText.includes(cellOrderNumber)).toBe(true);
+        },
+        `Verify edit title on Tab 2 contains order number from table`,
+        test.info(),
+      );
       await deficitPage.bringToFront();
 
       // Verify urgency date in cell with testid starting with:OrderFilterTableRow-UrgentDate-
@@ -2122,6 +2291,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const searchInput = await getSearchInput();
         await searchInput.fill('');
         await searchInput.fill(articleNumberValue);
+        // Verify value was set
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            const searchValueArticle = await searchInput.inputValue();
+            expect.soft(searchValueArticle).toBe(articleNumberValue);
+          },
+          `Verify search input value equals article number "${articleNumberValue}"`,
+          test.info(),
+        );
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkIdle();
         await page.waitForTimeout(TIMEOUTS.STANDARD);
@@ -2181,6 +2360,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const searchInput = await getSearchInput();
         await searchInput.fill('');
         await searchInput.fill(productNameValue);
+        // Verify value was set
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            const searchValueProduct = await searchInput.inputValue();
+            expect.soft(searchValueProduct).toBe(productNameValue);
+          },
+          `Verify search input value equals product name "${productNameValue}"`,
+          test.info(),
+        );
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkIdle();
         await page.waitForTimeout(TIMEOUTS.STANDARD);
@@ -2284,6 +2473,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await searchInput.scrollIntoViewIfNeeded();
         await searchInput.clear();
         await searchInput.fill(fullOrderNumberValue);
+        // Verify value was set
+        await expectSoftWithScreenshot(
+          tab2,
+          async () => {
+            const searchValueFull = await searchInput.inputValue();
+            expect.soft(searchValueFull).toBe(fullOrderNumberValue);
+          },
+          `Verify search input value equals "${fullOrderNumberValue}"`,
+          test.info(),
+        );
         await searchInput.press('Enter');
         await tab2LoadingTaskPage.waitForNetworkIdle();
         await tab2.waitForTimeout(TIMEOUTS.STANDARD);
@@ -2583,6 +2782,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityInputTab2);
       await quantityInputTab2.clear();
       await quantityInputTab2.fill('10');
+      // Verify value was set
+      await expectSoftWithScreenshot(
+        tab2ForCompare,
+        async () => {
+          const quantityValue = await quantityInputTab2.inputValue();
+          expect.soft(quantityValue).toBe('10');
+        },
+        `Verify quantity input value equals "10"`,
+        test.info(),
+      );
       await tab2ForCompare.waitForTimeout(TIMEOUTS.MEDIUM);
       console.log('Changed quantity to 10');
 
@@ -2608,6 +2817,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await searchInputTab1.fill('');
       await searchInputTab1.fill(searchValue);
+      // Verify value was set
+      await expectSoftWithScreenshot(
+        tab1,
+        async () => {
+          const searchValueTab1 = await searchInputTab1.inputValue();
+          expect.soft(searchValueTab1).toBe(searchValue);
+        },
+        `Verify search input tab 1 value equals "${searchValue}"`,
+        test.info(),
+      );
       await searchInputTab1.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
       await tab1.waitForTimeout(TIMEOUTS.STANDARD);
@@ -2674,13 +2893,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
 
     await allure.step('Step 1: Navigate to main shipping tasks page', async () => {
-      const success = await loadingTaskPage.navigateToShippingTasksPage();
+      await loadingTaskPage.navigateToShippingTasksPage();
+      const createOrderButton = page.locator(SelectorsLoadingTasksPage.buttonCreateOrder);
+      const isButtonVisible = await createOrderButton.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isButtonVisible).toBe(true);
         },
-        'Verify navigation to shipping tasks page successful',
+        'Verify navigation to shipping tasks page successful - create order button is visible',
         test.info(),
       );
     });
@@ -2732,7 +2953,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const productCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
 
       // Wait for the product cell to contain the searched product name (this ensures search has completed)
-      await expect(productCell).toContainText(firstProductNameValue, { timeout: WAIT_TIMEOUTS.LONG });
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await productCell.textContent()).toContain(firstProductNameValue);
+        },
+        `Verify product cell contains "${firstProductNameValue}"`,
+        test.info(),
+      );
 
       await loadingTaskPage.waitAndHighlight(firstRow);
       await loadingTaskPage.waitAndHighlight(productCell);
@@ -2750,13 +2978,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 3: Select the shipment row and open the order in edit mode', async () => {
-      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
+      await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
+      // Verify edit mode opened by checking for edit title
+      const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      await editTitleElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+      const isTitleVisible = await editTitleElement.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isTitleVisible).toBe(true);
         },
-        'Verify row selected and edit button clicked successfully',
+        'Verify row selected and edit button clicked successfully - edit title is visible',
         test.info(),
       );
 
@@ -2822,13 +3054,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 5: Open product selection modal', async () => {
-      const success = await loadingTaskPage.openProductSelectionModal();
+      await loadingTaskPage.openProductSelectionModal();
+      // Verify product modal opened
+      const productModal = page.locator(SelectorsLoadingTasksPage.modalListProductNew);
+      const isModalVisible = await productModal.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isModalVisible).toBe(true);
         },
-        'Verify product selection modal opened successfully',
+        'Verify product selection modal opened successfully - modal is visible',
         test.info(),
       );
     });
@@ -3144,6 +3379,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
         await searchInput.clear();
         await searchInput.fill(baseOrderNumberValue3);
+        // Verify value was set
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            const searchValueBase3 = await searchInput.inputValue();
+            expect.soft(searchValueBase3).toBe(baseOrderNumberValue3);
+          },
+          `Verify search input value equals "${baseOrderNumberValue3}"`,
+          test.info(),
+        );
         await page.waitForTimeout(TIMEOUTS.SHORT);
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkIdle();
@@ -3190,13 +3435,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     };
 
     await allure.step('Step 1: Navigate to the main shipping tasks page', async () => {
-      const success = await loadingTaskPage.navigateToShippingTasksPage();
+      await loadingTaskPage.navigateToShippingTasksPage();
+      const createOrderButton = page.locator(SelectorsLoadingTasksPage.buttonCreateOrder);
+      const isButtonVisible = await createOrderButton.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isButtonVisible).toBe(true);
         },
-        'Verify navigation to shipping tasks page successful',
+        'Verify navigation to shipping tasks page successful - create order button is visible',
         test.info(),
       );
     });
@@ -3230,6 +3477,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             }
             await searchInput.fill('');
             await searchInput.fill(baseOrderNumberOnly);
+            // Note: Value verification is skipped inside expect.poll() as the poll itself retries
+            // The poll will retry if the search doesn't find the expected result
             await searchInput.press('Enter');
             await loadingTaskPage.waitForNetworkIdle();
             await page.waitForTimeout(TIMEOUTS.LONG);
@@ -3272,12 +3521,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         )
         .toBeTruthy();
 
+      // Verify order appears in search results by checking table
+      const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
+      const rows = tableBody.locator('tr');
+      const rowCount = await rows.count();
       await expectSoftWithScreenshot(
         page,
         () => {
+          expect.soft(rowCount).toBeGreaterThan(0);
           expect.soft(success).toBe(true);
         },
-        `Verify order ${orderNumberForCase5} appears in search results`,
+        `Verify order ${orderNumberForCase5} appears in search results - found ${rowCount} row(s)`,
         test.info(),
       );
     });
@@ -3303,12 +3557,31 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         )
         .toBeTruthy();
 
+      // Verify edit mode opened by checking for edit title
+      const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      await editTitleElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+      await editTitleElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      // Wait for the title text to contain the order number (text loads asynchronously)
+      await page.waitForFunction(
+        ({ selector, orderNum }: { selector: string; orderNum: string }) => {
+          const element = document.querySelector(selector);
+          if (!element) return false;
+          const text = element.textContent || '';
+          return text.includes(orderNum);
+        },
+        { selector: SelectorsLoadingTasksPage.editTitle, orderNum: orderNumberForSearch },
+        { timeout: WAIT_TIMEOUTS.STANDARD },
+      );
+      const isTitleVisible = await editTitleElement.isVisible();
+      const titleText = (await editTitleElement.textContent())?.trim() || '';
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isTitleVisible).toBe(true);
+          expect.soft(titleText.length).toBeGreaterThan(0);
+          expect.soft(titleText).toContain(orderNumberForSearch);
         },
-        `Verify order ${orderNumberForSearch} found and opened in edit mode`,
+        `Verify order ${orderNumberForSearch} found and opened in edit mode - edit title visible with text: "${titleText}"`,
         test.info(),
       );
     });
@@ -3700,7 +3973,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           () => {
             expect.soft(success).toBe(true);
           },
-          `Method 1: Verify search by order number ${fullOrderNumberWith0} matches expected values`,
+          `Method 1: Verify search by order number ${fullOrderNumberWith0} matches expected values - search verified`,
           test.info(),
         );
       });
@@ -3713,7 +3986,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           () => {
             expect.soft(success).toBe(true);
           },
-          `Method 2: Verify search by article number ${articleNumberValue} matches expected values`,
+          `Method 2: Verify search by article number ${articleNumberValue} matches expected values - search verified`,
           test.info(),
         );
       });
@@ -3726,7 +3999,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           () => {
             expect.soft(success).toBe(true);
           },
-          `Method 3: Verify search by product name ${productNameFor0} matches expected values`,
+          `Method 3: Verify search by product name ${productNameFor0} matches expected values - search verified`,
           test.info(),
         );
       });
@@ -4338,18 +4611,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
-      // Then wait for visible
+      // Then wait for visible using expect.soft() pattern
       try {
-        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         // Try without filter
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           // Try alternative selectors
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -4709,6 +4982,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Enter order number with /0 and press Enter
       const orderNumberWith0 = baseOrderNumberValue; // This has /0
       await orderFilterSearchInput.fill(orderNumberWith0);
+      // Verify value was set
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          const orderFilterValue = await orderFilterSearchInput.inputValue();
+          expect.soft(orderFilterValue).toBe(orderNumberWith0);
+        },
+        `Verify order filter search input value equals "${orderNumberWith0}"`,
+        test.info(),
+      );
       await page.waitForTimeout(TIMEOUTS.SHORT);
       await orderFilterSearchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
@@ -4899,6 +5182,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Search by article number
       await searchInput.fill('');
       await searchInput.fill(articleNumberValue);
+      // Verify value was set
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          const searchValueArticle2 = await searchInput.inputValue();
+          expect.soft(searchValueArticle2).toBe(articleNumberValue);
+        },
+        `Verify search input value equals article number "${articleNumberValue}"`,
+        test.info(),
+      );
       await searchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(TIMEOUTS.STANDARD);
@@ -5198,6 +5491,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const newQuantityValue = (parseInt(quantityInputValueTab2, 10) || 0) + 1;
       await quantityInputTab2.fill('');
       await quantityInputTab2.fill(newQuantityValue.toString());
+      // Verify value was set
+      await expectSoftWithScreenshot(
+        tab2,
+        async () => {
+          const quantityValueNew = await quantityInputTab2.inputValue();
+          expect.soft(quantityValueNew).toBe(newQuantityValue.toString());
+        },
+        `Verify quantity input value equals "${newQuantityValue}"`,
+        test.info(),
+      );
       await tab2.waitForTimeout(TIMEOUTS.MEDIUM);
 
       const saveButtonTab2 = tab2.locator(SelectorsLoadingTasksPage.buttonSaveOrder).first();
@@ -6081,14 +6384,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 3: Select the order row (second td) and click the edit button', async () => {
       await shipmentsTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
-
+      await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
+      // Verify edit mode opened by checking for edit title
+      const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      await editTitleElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+      const isTitleVisible = await editTitleElement.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isTitleVisible).toBe(true);
         },
-        'Verify row selected and edit button clicked successfully',
+        'Verify row selected and edit button clicked successfully - edit title is visible',
         test.info(),
       );
     });
@@ -6457,15 +6763,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
+      // Wait for visible using expect.soft() pattern
       try {
-        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -6850,14 +7157,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 2: Select the order row and click edit button', async () => {
       await shipmentsTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      const success = await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
-
+      await loadingTaskPage.selectRowAndClickEdit(shipmentsTableBody);
+      // Verify edit mode opened by checking for edit title
+      const editTitleElement = page.locator(SelectorsLoadingTasksPage.editTitle);
+      await editTitleElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+      const isTitleVisible = await editTitleElement.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isTitleVisible).toBe(true);
         },
-        'Verify row selected and edit button clicked successfully',
+        'Verify row selected and edit button clicked successfully - edit title is visible',
         test.info(),
       );
     });
@@ -7014,15 +7324,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
+      // Wait for visible using expect.soft() pattern
       try {
-        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -7943,14 +8254,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 7: Click cancel to go back to main orders page', async () => {
-      const success = await loadingTaskPage.cancelEditOrder();
-
+      await loadingTaskPage.cancelEditOrder();
+      // Verify returned to main page by checking for create order button
+      const createOrderButton = page.locator(SelectorsLoadingTasksPage.buttonCreateOrder);
+      await createOrderButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const isButtonVisible = await createOrderButton.isVisible();
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(success).toBe(true);
+          expect.soft(isButtonVisible).toBe(true);
         },
-        'Verify cancel successful and returned to main orders page',
+        'Verify cancel successful and returned to main orders page - create order button is visible',
         test.info(),
       );
     });
@@ -8097,15 +8411,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
+      // Wait for visible using expect.soft() pattern
       try {
-        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 
@@ -9071,15 +9386,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         console.warn('Modal not found with data-testid="Modal", trying alternatives...');
       }
 
+      // Wait for visible using expect.soft() pattern
       try {
-        await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
       } catch (error) {
         modal = page.locator(SelectorsPartsDataBase.MODAL).first();
         try {
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         } catch (error2) {
           modal = page.locator('div[role="dialog"]').first();
-          await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect.soft(modal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         }
       }
 

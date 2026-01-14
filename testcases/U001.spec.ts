@@ -174,7 +174,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 01- Delete Product before create', async ({ page }) => {
     console.log('Test Case 01 - Delete Product before create');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
     const searchProduct = page.locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT).first();
@@ -306,7 +306,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 02 - Create Parts', async ({ page }) => {
     console.log('Test Case 02 - Create Parts');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 01: Open the parts database page', async () => {
@@ -399,7 +399,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 03 - Create Cbed', async ({ page }) => {
     console.log('Test Case 03 - Create Cbed');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 01: Open the parts database page', async () => {
@@ -452,7 +452,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 04 - Create Product', async ({ page }) => {
     console.log('Test Case 04 - Create Product');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 01: Open the parts database page', async () => {
@@ -582,7 +582,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 05 - Deleting customer orders', async ({ page }) => {
     console.log('Test Case 05 - Deleting customer orders');
-    test.setTimeout(900000);
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
     await allure.step('Step 01: Open the shipment task page', async () => {
@@ -684,7 +684,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 06 - Loading Task', async ({ page }) => {
     console.log('Test Case 06 - Loading Task');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
     await allure.step('Step 01: Open the shipment task page', async () => {
@@ -997,7 +997,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 07 - Checking the urgency date and quantity in a shipment task', async ({ page }) => {
     console.log('Test Case 07 - Checking the urgency date and quantity in a shipment task');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const mainTableLoadingTask = 'IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Table';
 
@@ -1051,7 +1051,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 08 - Launch Into Production Product', async ({ page }) => {
     console.log('Test Case 08 - Launch Into Production Product');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageProduct = new CreateShortageProductPage(page);
 
     let checkOrderNumber: string;
@@ -1249,7 +1249,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 09 - Launch Into Production Cbed', async ({ page }) => {
     console.log('Test Case 04 - Launch Into Production Cbed');
-    test.setTimeout(900000);
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortageAssemblies = new CreatShortageAssembliesPage(page);
     let checkOrderNumber: string;
 
@@ -1476,7 +1476,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 10 - Launch Into Production Parts', async ({ page }) => {
     console.log('Test Case 10 - Launch Into Production Parts');
-    test.setTimeout(900000);
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortageParts = new CreatShortagePartsPage(page);
     let checkOrderNumber: string;
 
@@ -1672,7 +1672,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 11 - Marking Parts', async ({ page }) => {
     console.log('Test Case 11 - Marking Parts');
-    test.setTimeout(500000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const shortageParts = new CreatShortagePartsPage(page);
     let checkOrderNumber: string;
 
@@ -1781,7 +1781,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step('Step 09: Click on the Launch on production button ', async () => {
           // Ensure at least one row is rendered
           const rows = page.locator(SelectorsShortagePages.ROW_PATTERN);
-          await rows.first().waitFor({ state: 'visible', timeout: 15000 });
+          await rows.first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
 
           const firstRow = rows.first();
 
@@ -1816,7 +1816,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             try {
               await inputCheckbox.waitFor({
                 state: 'visible',
-                timeout: 5000,
+                timeout: WAIT_TIMEOUTS.SHORT,
               });
               const isChecked = await inputCheckbox.isChecked();
               if (!isChecked) {
@@ -1911,7 +1911,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 11b - Marking Parts Metalworking', async ({ page }) => {
     console.log('Test Case 11b - Marking Parts Metalworking');
-    test.setTimeout(500000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
     const productionTable = ProductionPathSelectors.OPERATION_TABLE;
@@ -2034,7 +2034,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step('Step 10: Checking the modalwindow headings', async () => {
-          await page.waitForTimeout(2500);
+          await page.waitForTimeout(TIMEOUTS.EXTENDED);
           const titles = testData1.elements.ModalWindowPartsProductionPath.titles.map(title => title.trim());
           const h3Titles = await metalworkingWarehouse.getAllH3AndH4TitlesInModalTestId(
             page,
@@ -2129,7 +2129,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step('Step 15: Checking the modalwindow headings', async () => {
-          await page.waitForTimeout(2500);
+          await page.waitForTimeout(TIMEOUTS.EXTENDED);
           const titles = testData1.elements.ModalWindowMarkOfCompletion.titles.map(title => title.trim());
 
           // Pass only the prefix part of the testId - the method will handle the suffix
@@ -2236,7 +2236,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 12 - Complete Set Of Cbed', async ({ page }) => {
     console.log('Test Case 12 - Complete Set Of Cbed');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(page);
     // Use CONST.TABLE_COMPLECT_TABLE for table selector
     const tableMain = CONST.TABLE_COMPLECT_TABLE;
@@ -2432,7 +2432,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 13 - Disassembly of the set', async ({ page }) => {
     // doc test case 8
     console.log('Test Case 13 - Disassembly of the set');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
 
     // Setup request failure logging to identify 404 sources
     const failedRequests: Array<{ url: string; resourceType: string }> = [];
@@ -2480,13 +2480,13 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Loop through the array of assemblies
       for (const cbed of descendantsCbedArray) {
         await allure.step('Step 05: Search product', async () => {
-          await completeSets.waitForTimeout(1000);
+          await completeSets.waitForTimeout(TIMEOUTS.STANDARD);
           // Using table search we look for the value of the variable
           await completeSets.searchTable(cbed.name, completeSetsTable, 'DeficitCbed-SearchInput-Dropdown-Input');
 
           // Wait for the table body to load
           // await completeSets.waitingTableBody(completeSetsTable);
-          await completeSets.waitForTimeout(1500);
+          await completeSets.waitForTimeout(TIMEOUTS.INPUT_SET);
 
           // Wait for loading
           await page.waitForLoadState('networkidle');
@@ -2683,7 +2683,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     page,
   }) => {
     console.log('Test Case 14 - Complete Set Of Cbed After Desassembly');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(page);
     const TableComplect = await allure.step('Step 01: Open the warehouse page', async () => {
       // Go to the Warehouse page
@@ -2756,7 +2756,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           });
 
           await designationCell.dblclick();
-          await page.waitForTimeout(10000);
+          await page.waitForTimeout(TIMEOUTS.VERY_LONG);
 
           // Wait for loading
           await page.waitForLoadState('networkidle');
@@ -2814,7 +2814,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 15 - Receiving Part And Check Stock', async ({ page }) => {
     // doc test case 10
     console.log('Test Case 15 - Receiving Part And Check Stock');
-    test.setTimeout(900000);
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
 
@@ -2953,7 +2953,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               await page.keyboard.press('Escape');
               await page.waitForTimeout(TIMEOUTS.MEDIUM);
               // Wait for modal to close
-              await detailModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+              await detailModal.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
             } catch (e) {
               console.log('Could not close modal with Escape, trying to click outside');
             }
@@ -2984,7 +2984,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           // If not found in cell, try page-level search
           const inputFound = await quantityInput
-            .waitFor({ state: 'visible', timeout: 2000 })
+            .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT })
             .then(() => true)
             .catch(() => false);
 
@@ -3042,7 +3042,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           }
 
           // Wait for input to be visible and enabled after double-click
-          await quantityInput.waitFor({ state: 'visible', timeout: 5000 });
+          await quantityInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
 
           // Check again if input is readonly/disabled
           const isStillReadonly = await quantityInput.evaluate((el: HTMLInputElement) => el.readOnly).catch(() => false);
@@ -3072,7 +3072,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           // Type the new value character by character
           await quantityInput.fill(''); // Clear first
-          await page.waitForTimeout(100);
+          await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
           await quantityInput.type(valueToSet, { delay: 50 }); // Increased delay
           await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -3154,7 +3154,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           await addButton.scrollIntoViewIfNeeded();
           // Wait for button to be enabled (may take time after quantity is entered)
-          await expect(addButton).toBeEnabled({ timeout: 15000 });
+          await expect(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
           await addButton.click();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
         });
@@ -3233,7 +3233,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     page,
   }) => {
     console.log('Test Case 16 - Receiving Cbed And Check Stock');
-    test.setTimeout(900000);
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
 
@@ -3523,7 +3523,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 17 - Complete Set Of Product', async ({ page }) => {
     // doc test case 12
     console.log('Test Case 17 - Complete Set Of Product');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingProductsToPlan = new CreateCompletingProductsToPlanPage(page);
     const tableComplect = PartsDBSelectors.SCROLL_WRAPPER_SLOT;
     const tableMainTable = SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION;
@@ -3670,7 +3670,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 18 - Receiving Product And Check Stock', async ({ page }) => {
     // doc test case 13
     console.log('Test Case 18 - Receiving Product And Check Stock');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
     const tableStockRecieptModalWindow = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_MODAL_COMING_SCROLL;
@@ -3904,7 +3904,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 19 - Uploading Shipment Task', async ({ page }) => {
     // doc test case 14
     console.log('Test Case 19 - Uploading Shipment Task');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(page);
     let numberColumn: number;
 
@@ -3983,7 +3983,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     page,
   }) => {
     console.log('Test Case 20 - Checking the number of shipped entities');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(page);
     let numberColumn: number;
 
@@ -4058,7 +4058,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 21 - Loading The Second Task', async ({ page }) => {
     // doc test case 16
     console.log('Test Case 21 - Loading The Second Task');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
     await allure.step('Step 01: Open the shipment task page', async () => {
@@ -4195,7 +4195,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 13: Checking the ordered quantity', async () => {
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(TIMEOUTS.EXTENDED);
       const orderNumber = await loadingTaskPage.getOrderDateInfoFromLocator(LoadingTasksSelectors.editTitle);
       console.log('orderNumber: ', orderNumber);
     });
@@ -4215,7 +4215,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 22 - Marking Parts', async ({ page }) => {
     // doc test case 17
     console.log('Test Case 22 - Marking Parts');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
     const tableMetalworkingWarehouse = MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE;
     const productionTable = ProductionPathSelectors.OPERATION_TABLE;
@@ -4255,7 +4255,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await searchTable.clear();
           await searchTable.fill(part.name);
           await page.waitForLoadState('networkidle');
-          await page.waitForTimeout(3000);
+          await page.waitForTimeout(TIMEOUTS.EXTENDED);
           expect(await searchTable.inputValue()).toBe(part.name);
           await searchTable.press('Enter');
 
@@ -4435,7 +4435,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           // Wait for the table body to load
           await metalworkingWarehouse.waitingTableBody(tableMetalworkingWarehouse);
-          await page.waitForTimeout(5000);
+          await page.waitForTimeout(TIMEOUTS.VERY_LONG);
         });
       }
     }
@@ -4444,7 +4444,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 23 - Checking new date by urgency', async ({ page }) => {
     // doc test case 18
     console.log('Test Case 23 - Checking new date by urgency');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     // Проверка изделия на дату по срочности
     const shortageProduct = new CreateShortageProductPage(page);
     let checkOrderNumber: string;
@@ -4683,7 +4683,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 24 - Receiving Part And Check Stock', async ({ page }) => {
     // doc test case 19
     console.log('Test Case 24 - Receiving Part And Check Stock');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
     const tableStockRecieptModalWindow =
@@ -4806,7 +4806,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           // Wait for the Create button to become enabled (may take time after quantity is entered)
           const createButton = page.getByTestId('ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create');
           await createButton.scrollIntoViewIfNeeded();
-          await expect(createButton).toBeEnabled({ timeout: 15000 });
+          await expect(createButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
 
           // Click on the button
           await stockReceipt.clickButton('Создать', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE);
@@ -4835,7 +4835,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 25 - Receiving Cbed And Check Stock', async ({ page }) => {
     // doc test case 20
     console.log('Test Case 25 - Receiving Cbed And Check Stock');
-    test.setTimeout(900000);
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
     const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(page);
@@ -4934,7 +4934,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
               // Search for the CBED
               await newCompletingAssembliesToPlan.searchTable(cbed.name, SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE, CONST.COMPLEX_SBORKA_BY_PLAN);
-              await newPage.waitForTimeout(1000);
+              await newPage.waitForTimeout(TIMEOUTS.STANDARD);
               await newPage.waitForLoadState('networkidle');
 
               // Double-click the designation cell to open the waybill modal
@@ -4946,7 +4946,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               await designationCell.scrollIntoViewIfNeeded();
               await designationCell.dblclick();
               await newPage.waitForLoadState('networkidle');
-              await newPage.waitForTimeout(1500);
+              await newPage.waitForTimeout(TIMEOUTS.INPUT_SET);
 
               // Wait for the modal to appear
               const waybillModal = newPage.locator(SelectorsModalWindowConsignmentNote.MODAL_WINDOW);
@@ -4963,7 +4963,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               });
               await checkboxCell.scrollIntoViewIfNeeded();
               await checkboxCell.click();
-              await newPage.waitForTimeout(1500);
+              await newPage.waitForTimeout(TIMEOUTS.INPUT_SET);
               await newPage.waitForLoadState('networkidle');
 
               // Verify the "Скомплектовать" button is enabled before clicking
@@ -4972,7 +4972,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
                 state: 'visible',
                 timeout: WAIT_TIMEOUTS.STANDARD,
               });
-              await expect(completeButton).toBeEnabled({ timeout: 5000 });
+              await expect(completeButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
               console.log('Скомплектовать button is enabled, clicking...');
 
               // Click the "Скомплектовать" button
@@ -4981,7 +4981,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               // Wait for modal to close using the proper check function
               await newCompletingAssembliesToPlan.checkCloseModalWindow(SelectorsModalWindowConsignmentNote.MODAL_WINDOW);
               await newPage.waitForLoadState('networkidle');
-              await newPage.waitForTimeout(2000);
+              await newPage.waitForTimeout(TIMEOUTS.LONG);
 
               console.log(`Assembly kitting completed for ${cbed.name}`);
             } finally {
@@ -4989,7 +4989,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               await newPage.close();
               console.log('New tab closed, returning to original page');
               // Wait for the server to process the kitting
-              await page.waitForTimeout(3000);
+              await page.waitForTimeout(TIMEOUTS.EXTENDED);
             }
 
             // Wait for data to propagate - poll the quantity until it updates
@@ -5093,7 +5093,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           // Wait directly for the input field to be available
           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row{id}-TdCount-Label-Input-Input
           const inputlocator = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN;
-          await page.locator(inputlocator).first().waitFor({ state: 'visible', timeout: 15000 });
+          await page.locator(inputlocator).first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
           console.log('Кол-во на отгрузку input field is visible');
         });
 
@@ -5192,7 +5192,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           await addButton.scrollIntoViewIfNeeded();
           // Wait for button to be enabled
-          await expect(addButton).toBeEnabled({ timeout: 15000 });
+          await expect(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
           await addButton.click();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           await page.waitForLoadState('networkidle');
@@ -5226,7 +5226,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step('Step 08: Click on the Создать button to create the receipt', async () => {
           // Wait for the Создать button to be available
           const createButton = page.getByTestId('ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create');
-          await createButton.waitFor({ state: 'visible', timeout: 15000 });
+          await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
           await createButton.scrollIntoViewIfNeeded();
 
           // Check that the button is enabled
@@ -5502,7 +5502,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 26 - Complete Set Of Product', async ({ page }) => {
     // doc test case 21
     console.log('Test Case 26 - Complete Set Of Product');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingProductsToPlan = new CreateCompletingProductsToPlanPage(page);
     const TableComplect = SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION;
 
@@ -5582,7 +5582,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 27 - Receiving Product And Check Stock', async ({ page }) => {
     // doc test case 22
     console.log('Test Case 27 - Receiving Product And Check Stock');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
     const tableStockRecieptModalWindow = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_MODAL_COMING_SCROLL;
@@ -5679,7 +5679,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION,
             SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT,
           );
-          await newPage.waitForTimeout(1000);
+          await newPage.waitForTimeout(TIMEOUTS.STANDARD);
           await newPage.waitForLoadState('networkidle');
 
           // Double-click the designation cell to open the waybill modal
@@ -5696,7 +5696,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           });
           await designationCell.dblclick();
           await newPage.waitForLoadState('networkidle');
-          await newPage.waitForTimeout(1500);
+          await newPage.waitForTimeout(TIMEOUTS.INPUT_SET);
 
           // Wait for the modal to appear (Накладная на комплектацию Изделия)
           const waybillModal = newPage.locator(SelectorsModalWindowConsignmentNote.MODAL_WINDOW_BASE);
@@ -5719,7 +5719,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             el.style.border = '2px solid green';
           });
           await checkboxCell.click();
-          await newPage.waitForTimeout(500);
+          await newPage.waitForTimeout(TIMEOUTS.MEDIUM);
           await newPage.waitForLoadState('networkidle');
 
           // Verify the "Скомплектовать" button is enabled before clicking
@@ -5728,7 +5728,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             state: 'visible',
             timeout: WAIT_TIMEOUTS.STANDARD,
           });
-          await expect(completeButton).toBeEnabled({ timeout: 5000 });
+          await expect(completeButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
           console.log('Скомплектовать button is enabled, clicking...');
 
           // Highlight the button
@@ -5737,7 +5737,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             el.style.border = '3px solid red';
             el.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.8)';
           });
-          await newPage.waitForTimeout(300);
+          await newPage.waitForTimeout(TIMEOUTS.SHORT);
 
           // Click the "Скомплектовать" button
           await newCompletingProductsToPlan.clickButton('Скомплектовать', SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON);
@@ -5745,7 +5745,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           // Wait for modal to close
           await waybillModal.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
           await newPage.waitForLoadState('networkidle');
-          await newPage.waitForTimeout(2000);
+          await newPage.waitForTimeout(TIMEOUTS.LONG);
 
           console.log(`Product kitting completed for ${nameProduct}`);
         } finally {
@@ -5753,7 +5753,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await newPage.close();
           console.log('New tab closed, returning to original page');
           // Wait for the server to process the kitting
-          await page.waitForTimeout(3000);
+          await page.waitForTimeout(TIMEOUTS.EXTENDED);
         }
 
         // Close the modal by clicking Cancel to force fresh data load
@@ -5884,7 +5884,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Wait directly for the input field to be available
       // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row{id}-TdCount-Label-Input-Input
       const inputlocator = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN;
-      await page.locator(inputlocator).first().waitFor({ state: 'visible', timeout: 15000 });
+      await page.locator(inputlocator).first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
       console.log('Кол-во на отгрузку input field is visible');
     });
 
@@ -5962,7 +5962,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       // Click the "Добавить" button to add item to selected items bottom table
       const addButton = page.getByTestId('ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add');
       await addButton.scrollIntoViewIfNeeded();
-      await expect(addButton).toBeEnabled({ timeout: 15000 });
+      await expect(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
       // Highlight the Add button
       await addButton.evaluate((el: HTMLElement) => {
         el.style.backgroundColor = 'lightblue';
@@ -5998,7 +5998,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 13: Click on the Создать button to create the receipt', async () => {
       // Click the "Создать" button (not "Создать приход")
       const createButton = page.getByTestId('ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create');
-      await createButton.waitFor({ state: 'visible', timeout: 15000 });
+      await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
       await createButton.scrollIntoViewIfNeeded();
       // Wait for any loader to finish
       const loaderModal = page.locator(`${SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_COMING}[loader="true"]`);
@@ -6039,7 +6039,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 28 - Launch Into Production Product', async ({ page }) => {
     // doc test case 23
     console.log('Test Case 28 - Launch Into Production Product');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageProduct = new CreateShortageProductPage(page);
     let checkOrderNumber: string;
 
@@ -6218,7 +6218,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 29 - Launch Into Production Cbed', async ({ page }) => {
     // doc test case 24
     console.log('Test Case 29 - Launch Into Production Cbed');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageAssemblies = new CreatShortageAssembliesPage(page);
     let checkOrderNumber: string;
 
@@ -6429,7 +6429,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 30 - Launch Into Production Parts', async ({ page }) => {
     // doc test case 25
     console.log('Test Case 30 - Launch Into Production Parts');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageParts = new CreatShortagePartsPage(page);
     let checkOrderNumber: string;
 
@@ -6625,7 +6625,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 31 - Uploading Second Shipment Task', async ({ page }) => {
     // doc test case 26
     console.log('Test Case 31 - Uploading Second Shipment Task');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(page);
 
     let numberColumn: number;
@@ -6721,7 +6721,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
   test('Test Case 32 - Checking new date by urgency', async ({ page }) => {
     // doc test case 27
     console.log('Test Case 32 - Checking new date by urgency');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     // Проверка изделия на дату по срочности
     const shortageProduct = new CreateShortageProductPage(page);
     let checkOrderNumber: string;
@@ -6947,7 +6947,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     page,
   }) => {
     console.log('Test Case 33 - Archive Metalworking Warehouse Task All');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
     const warehouseTable = MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE;
 
@@ -7031,7 +7031,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     page,
   }) => {
     console.log('Test Case 34 - Archive Assembly Warehouse Task All');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
     const warehouseTable = SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE;
 
@@ -7066,7 +7066,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     page,
   }) => {
     console.log('Test Case 35 - Moving Task For Shipment To The Archive');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     let numberColumn: number;
 
@@ -7150,7 +7150,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 36 - Cleaning up warehouse residues', async ({ page }) => {
     console.log('Test Case 36 - Cleaning up warehouse residues');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const revisionPage = new CreateRevisionPage(page);
     const tableMain = SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE;
     const tableMainCbed = SelectorsRevision.TABLE_REVISION_PAGINATION_CBEDS_TABLE;
@@ -7211,7 +7211,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step('Step 11: Search product', async () => {
-          await revisionPage.waitForTimeout(500);
+          await revisionPage.waitForTimeout(TIMEOUTS.MEDIUM);
           // Using table search we look for the value of the variable
           await revisionPage.searchTable(cbed.name, tableMainCbed, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           // Wait for the table body to load
@@ -7236,7 +7236,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step('Step 17: Search product', async () => {
-          await revisionPage.waitForTimeout(500);
+          await revisionPage.waitForTimeout(TIMEOUTS.MEDIUM);
           // Using table search we look for the value of the variable
           await revisionPage.searchTable(detail.name, tableMainDetal, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           // Wait for the table body to load
@@ -7260,7 +7260,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 37 - Delete Product after test', async ({ page }) => {
     console.log('Test Case 37 - Delete Product after test');
-    test.setTimeout(90000);
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
     const searchProduct = page.locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT).first();
     const searchCbed = page.locator(PartsDBSelectors.SEARCH_CBED_ATTRIBUT).nth(1);
