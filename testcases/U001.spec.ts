@@ -19,7 +19,7 @@ let remainingStockBefore: string;
 let remainingStockAfter: string;
 let quantityProductLaunchOnProduction = '2';
 let quantityProductLaunchOnProductionBefore: string;
-let quantityProductLaunchOnProductionAfter;
+let quantityProductLaunchOnProductionAfter: string;
 let quantitySumLaunchOnProduction: Number;
 let urgencyDateOnTable: string;
 let orderNumber: { orderNumber: string; orderDate: string }; // variable declared in test case 2
@@ -190,7 +190,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 02: Search Detail', async () => {
         await searchDetail.fill(detail.name);
         await searchDetail.press('Enter');
-        expect(await searchDetail.inputValue()).toBe(detail.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await searchDetail.inputValue()).toBe(detail.name);
+          },
+          `Verify search detail input value equals "${detail.name}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 03: Check table rows and process if found', async () => {
@@ -229,7 +236,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 04: Search Cbed', async () => {
         await searchCbed.fill(cbed.name);
         await searchCbed.press('Enter');
-        expect(await searchCbed.inputValue()).toBe(cbed.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await searchCbed.inputValue()).toBe(cbed.name);
+          },
+          `Verify search cbed input value equals "${cbed.name}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 05: Check table rows and process if found', async () => {
@@ -269,7 +283,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 06: Search Product', async () => {
       await searchProduct.fill(nameProductNew);
       await searchProduct.press('Enter');
-      expect(await searchProduct.inputValue()).toBe(nameProductNew);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await searchProduct.inputValue()).toBe(nameProductNew);
+        },
+        `Verify search product input value equals "${nameProductNew}"`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 07: Check table rows and process if found', async () => {
@@ -330,14 +351,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await nameParts.fill(detail.name);
-        await expect(await nameParts.inputValue()).toBe(detail.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(detail.name);
+          },
+          `Verify detail name input value equals "${detail.name}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
         const nameParts = page.locator(PartsDBSelectors.INPUT_DETAIL_DESIGNATION);
 
         await nameParts.fill(detail.designation);
-        expect(await nameParts.inputValue()).toBe(detail.designation);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(detail.designation);
+          },
+          `Verify detail designation input value equals "${detail.designation}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 06: Click on the Save button', async () => {
@@ -364,7 +399,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         const typeOperation = 'Сварочная';
 
         await searchTypeOperation.fill(typeOperation);
-        expect(await searchTypeOperation.inputValue()).toBe(typeOperation);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await searchTypeOperation.inputValue()).toBe(typeOperation);
+          },
+          `Verify search type operation input value equals "${typeOperation}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 11: Choice type operation', async () => {
@@ -428,14 +470,28 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await nameParts.fill(cbed.name);
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        expect(await nameParts.inputValue()).toBe(cbed.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(cbed.name);
+          },
+          `Verify cbed name input value equals "${cbed.name}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
         const nameParts = page.locator(PartsDBSelectors.INPUT_DESUGNTATION_IZD);
 
         await nameParts.fill(cbed.designation);
-        expect(await nameParts.inputValue()).toBe(cbed.designation);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(cbed.designation);
+          },
+          `Verify cbed designation input value equals "${cbed.designation}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 06: Click on the Save button', async () => {
@@ -478,7 +534,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await nameParts.fill(nameProductNew);
-      expect(await nameParts.inputValue()).toBe(nameProductNew);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await nameParts.inputValue()).toBe(nameProductNew);
+        },
+        `Verify product name input value equals "${nameProductNew}"`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 05: Click the Add button', async () => {
@@ -500,7 +563,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await fillInputWithRetries(modalWindowSearchCbed, cbed.name, page);
         await modalWindowSearchCbed.press('Enter');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        expect(await modalWindowSearchCbed.inputValue()).toBe(cbed.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await modalWindowSearchCbed.inputValue()).toBe(cbed.name);
+          },
+          `Verify modal window search cbed input value equals "${cbed.name}"`,
+          test.info(),
+        );
         await page.waitForTimeout(TIMEOUTS.STANDARD);
       });
 
@@ -544,7 +614,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await fillInputWithRetries(modalWindowSearchCbed, detail.name, page);
         await modalWindowSearchCbed.press('Enter');
-        expect(await modalWindowSearchCbed.inputValue()).toBe(detail.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await modalWindowSearchCbed.inputValue()).toBe(detail.name);
+          },
+          `Verify modal window search cbed input value equals "${detail.name}"`,
+          test.info(),
+        );
         await page.waitForTimeout(TIMEOUTS.STANDARD);
       });
 
@@ -731,10 +808,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       console.log('Received Titles:', normalizedH3Titles);
 
       // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
-
-      // Validate content and order
-      expect(normalizedH3Titles).toEqual(titles);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH3Titles.length).toBe(titles.length);
+          expect.soft(normalizedH3Titles).toEqual(titles);
+        },
+        `Verify modal window titles match expected: ${titles.join(', ')}`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 09: Checking the main buttons on the page', async () => {
@@ -759,7 +841,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           const isButtonReady = await loadingTaskPage.isButtonVisibleTestId(page, buttonDatatestId, buttonLabel, expectedState);
 
           // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `Verify button "${buttonLabel}" is visible and enabled`,
+            test.info(),
+          );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
@@ -787,7 +876,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           const isButtonReady = await loadingTaskPage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
 
           // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `Verify button "${buttonLabel}" is visible and enabled`,
+            test.info(),
+          );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
@@ -796,12 +892,26 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 11: Search product on modal window', async () => {
       const modalWindow = await page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
-      await expect(modalWindow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await expect.soft(modalWindow).toBeVisible();
+        },
+        'Verify modal window is visible',
+        test.info(),
+      );
 
       const searchTable = modalWindow.locator('.search-yui-kit__input').nth(0);
       await searchTable.fill(nameProduct);
 
-      expect(await searchTable.inputValue()).toBe(nameProduct);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await searchTable.inputValue()).toBe(nameProduct);
+        },
+        `Verify search table input value equals "${nameProduct}"`,
+        test.info(),
+      );
       await searchTable.press('Enter');
 
       await page.waitForTimeout(TIMEOUTS.STANDARD);
@@ -836,12 +946,26 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       const modalWindow = await page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
-      await expect(modalWindow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await expect.soft(modalWindow).toBeVisible();
+        },
+        'Verify modal window is visible',
+        test.info(),
+      );
 
       const searchTable = modalWindow.locator('.search-yui-kit__input').nth(0);
       await searchTable.fill(nameBuyer);
 
-      expect(await searchTable.inputValue()).toBe(nameBuyer);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await searchTable.inputValue()).toBe(nameBuyer);
+        },
+        `Verify search table input value equals "${nameBuyer}"`,
+        test.info(),
+      );
       await searchTable.press('Enter');
 
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -938,7 +1062,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify selection reflects on the header year button
       const finalYearText = ((await yearButton.textContent()) || '').trim();
-      expect(parseInt(finalYearText, 10)).toBe(targetYear);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(parseInt(finalYearText, 10)).toBe(targetYear);
+        },
+        `Verify year selection equals ${targetYear}`,
+        test.info(),
+      );
       // Open months popup and select January
       const monthButton = calendar.locator('button[id^="open-months-popup"]').first();
       await monthButton.waitFor({ state: 'visible' });
@@ -1045,7 +1176,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-      expect(urgencyDateOnTable).toBe(urgencyDateNewFormat);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(urgencyDateOnTable).toBe(urgencyDateNewFormat);
+        },
+        `Verify urgency date equals "${urgencyDateNewFormat}"`,
+        test.info(),
+      );
     });
   });
 
@@ -1193,7 +1331,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           const isButtonReady = await shortageProduct.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
 
           // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `Verify button "${buttonLabel}" is visible and enabled`,
+            test.info(),
+          );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
@@ -1243,7 +1388,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
-      expect(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect
+            .soft(Number(quantityProductLaunchOnProductionAfter))
+            .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+        },
+        'Verify production ordered quantity increased correctly',
+        test.info(),
+      );
     });
   });
 
@@ -1576,7 +1730,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDate);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            },
+            `Verify urgency date equals "${urgencyDate}"`,
+            test.info(),
+          );
         });
 
         await allure.step('Step 08: We check the number of those launched into production', async () => {
@@ -1662,8 +1823,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
-          expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-            Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction),
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect
+                .soft(Number(quantityProductLaunchOnProductionAfter))
+                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+            },
+            'Verify ordered quantity increased correctly',
+            test.info(),
           );
         });
       }
@@ -1762,7 +1930,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDate);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            },
+            `Verify urgency date equals "${urgencyDate}"`,
+            test.info(),
+          );
         });
 
         await allure.step('Step 08: We check the number of those launched into production', async () => {
@@ -1897,8 +2072,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           quantitySumLaunchOnProduction = Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction);
 
-          expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-            Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction),
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect
+                .soft(Number(quantityProductLaunchOnProductionAfter))
+                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+            },
+            'Verify production ordered quantity increased correctly',
+            test.info(),
           );
         });
       }
@@ -2050,10 +2232,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           console.log('Received Titles:', normalizedH3Titles);
 
           // Validate length
-          expect(normalizedH3Titles.length).toBe(titles.length);
-
-          // Validate content and order
-          expect(normalizedH3Titles).toEqual(titles);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(normalizedH3Titles.length).toBe(titles.length);
+              expect.soft(normalizedH3Titles).toEqual(titles);
+            },
+            'Verify modal window titles match expected',
+            test.info(),
+          );
         });
 
         await allure.step('Step 11: Checking the buttons on the modalwindow', async () => {
@@ -2074,7 +2261,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               const isButtonReady = await metalworkingWarehouse.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
 
               // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
+              await expectSoftWithScreenshot(
+                page,
+                async () => {
+                  expect.soft(isButtonReady).toBeTruthy();
+                },
+                `Verify button "${buttonLabel}" is visible and enabled`,
+                test.info(),
+              );
               console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
           }
@@ -2144,10 +2338,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           console.log('Received Titles:', normalizedH3Titles);
 
           // Validate length
-          expect(normalizedH3Titles.length).toBe(titles.length);
-
-          // Validate content and order
-          expect(normalizedH3Titles).toEqual(titles);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(normalizedH3Titles.length).toBe(titles.length);
+              expect.soft(normalizedH3Titles).toEqual(titles);
+            },
+            'Verify modal window titles match expected',
+            test.info(),
+          );
         });
 
         await allure.step('Step 16: Checking the buttons on the modalwindow', async () => {
@@ -2170,7 +2369,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               const isButtonReady = await metalworkingWarehouse.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
 
               // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
+              await expectSoftWithScreenshot(
+                page,
+                async () => {
+                  expect.soft(isButtonReady).toBeTruthy();
+                },
+                `Verify button "${buttonLabel}" is visible and enabled`,
+                test.info(),
+              );
               console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
           }
@@ -2350,11 +2556,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           console.log('Expected Titles:', titles);
           console.log('Received Titles:', normalizedH3Titles);
 
-          // Validate length
-          expect(normalizedH3Titles.length).toBe(titles.length);
-
-          // Validate content and order
-          expect(normalizedH3Titles).toEqual(titles);
+          // Validate length and content
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(normalizedH3Titles.length).toBe(titles.length);
+              expect.soft(normalizedH3Titles).toEqual(titles);
+            },
+            'Verify modal window titles match expected',
+            test.info(),
+          );
         });
 
         await allure.step('Step 10: Checking the presence of buttons in the modal window Invoice for assembly', async () => {
@@ -2375,7 +2586,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               const isButtonReady = await completingAssembliesToPlan.isButtonVisible(page, buttonClass, buttonLabel, true, '', true);
 
               // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
+              await expectSoftWithScreenshot(
+                page,
+                async () => {
+                  expect.soft(isButtonReady).toBeTruthy();
+                },
+                `Verify button "${buttonLabel}" is visible and enabled`,
+                test.info(),
+              );
               console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
           }
@@ -2573,11 +2791,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           console.log('Expected Titles:', titles);
           console.log('Received Titles:', normalizedH3Titles);
 
-          // Validate length
-          expect(normalizedH3Titles.length).toBe(titles.length);
-
-          // Validate content and order
-          expect(normalizedH3Titles).toEqual(titles);
+          // Validate length and content
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(normalizedH3Titles.length).toBe(titles.length);
+              expect.soft(normalizedH3Titles).toEqual(titles);
+            },
+            'Verify modal window titles match expected',
+            test.info(),
+          );
         });
 
         await allure.step('Step 10: Checking buttons on the modalwindow', async () => {
@@ -2601,7 +2824,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               const isButtonReady = await completeSets.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
 
               // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
+              await expectSoftWithScreenshot(
+                page,
+                async () => {
+                  expect.soft(isButtonReady).toBeTruthy();
+                },
+                `Verify button "${buttonLabel}" is visible and enabled`,
+                test.info(),
+              );
               console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
           }
@@ -2643,7 +2873,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           await disassembleBtn.scrollIntoViewIfNeeded();
           await disassembleBtn.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await expect(disassembleBtn).toBeEnabled();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              await expect.soft(disassembleBtn).toBeEnabled();
+            },
+            'Verify disassemble button is enabled',
+            test.info(),
+          );
 
           // Trial click to detect overlays
           await disassembleBtn.click({ trial: true });
@@ -2734,7 +2971,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           console.log('Дата по срочности в переменной: ', urgencyDate);
 
           if (urgencyDateOnTable) {
-            expect(urgencyDateOnTable).toBe(urgencyDate);
+            await expectSoftWithScreenshot(
+              page,
+              async () => {
+                expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+              },
+              `Verify urgency date equals "${urgencyDate}"`,
+              test.info(),
+            );
           } else {
             throw new Error('Urgency date cell not found or empty');
           }
@@ -2885,7 +3129,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               const isButtonReady = await stockReceipt.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
 
               // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
+              await expectSoftWithScreenshot(
+                page,
+                async () => {
+                  expect.soft(isButtonReady).toBeTruthy();
+                },
+                `Verify button "${buttonLabel}" is visible and enabled`,
+                test.info(),
+              );
               console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
           }
@@ -2922,7 +3173,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               const isButtonReady = await stockReceipt.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
 
               // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
+              await expectSoftWithScreenshot(
+                page,
+                async () => {
+                  expect.soft(isButtonReady).toBeTruthy();
+                },
+                `Verify button "${buttonLabel}" is visible and enabled`,
+                test.info(),
+              );
               console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
           }
@@ -3215,7 +3473,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 16: Compare the quantity in cells', async () => {
           // Compare the quantity in cells
-          expect(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+            },
+            'Verify remaining stock increased correctly',
+            test.info(),
+          );
 
           // Output to the console
           console.log(
@@ -3371,16 +3636,20 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           console.log('Expected Titles:', titles);
           console.log('Received Titles:', normalizedH3Titles);
 
-          // Validate length
-          expect(normalizedH3Titles.length).toBe(titles.length);
-
-          // Validate content - handle dynamic order number and date in title
-          for (let i = 0; i < titles.length; i++) {
-            const expectedTitle = titles[i];
-            const receivedTitle = normalizedH3Titles[i];
-
-            expect(receivedTitle).toBe(expectedTitle);
-          }
+          // Validate length and content
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(normalizedH3Titles.length).toBe(titles.length);
+              for (let i = 0; i < titles.length; i++) {
+                const expectedTitle = titles[i];
+                const receivedTitle = normalizedH3Titles[i];
+                expect.soft(receivedTitle).toBe(expectedTitle);
+              }
+            },
+            'Verify modal window titles match expected',
+            test.info(),
+          );
         });
 
         await allure.step('Step 09: Checking the main buttons on the page', async () => {
@@ -3404,7 +3673,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               const isButtonReady = await stockReceipt.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
               await page.waitForTimeout(TIMEOUTS.STANDARD);
               // Validate the button's visibility and state
-              expect(isButtonReady).toBeTruthy();
+              await expectSoftWithScreenshot(
+                page,
+                async () => {
+                  expect.soft(isButtonReady).toBeTruthy();
+                },
+                `Verify button "${buttonLabel}" is visible and enabled`,
+                test.info(),
+              );
               console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
             });
           }
@@ -3505,7 +3781,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await allure.step('Step 17: Compare the quantity in cells', async () => {
           console.log('Step 17: Compare the quantity in cells');
           // Compare the quantity in cells
-          expect(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+            },
+            'Verify remaining stock increased correctly',
+            test.info(),
+          );
 
           // Output to the console
           console.log(
@@ -3617,7 +3900,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
       console.log('Дата по срочности в переменной: ', urgencyDate);
 
-      expect(urgencyDateOnTable).toBe(urgencyDate); //
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+        },
+        `Verify urgency date equals "${urgencyDate}"`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 08: Find the column designation and click', async () => {
@@ -3890,7 +4180,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 18: Compare the quantity in cells', async () => {
       console.log('Step 18: Compare the quantity in cells');
       // Compare the quantity in cells
-      expect(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+        },
+        'Verify remaining stock increased correctly',
+        test.info(),
+      );
 
       // Output to the console
       console.log(
@@ -4087,12 +4384,26 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 04: Search product on modal window', async () => {
       const modalWindow = await page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
-      await expect(modalWindow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await expect.soft(modalWindow).toBeVisible();
+        },
+        'Verify modal window is visible',
+        test.info(),
+      );
 
       const searchTable = modalWindow.locator('.search-yui-kit__input').nth(0);
       await searchTable.fill(nameProduct);
 
-      expect(await searchTable.inputValue()).toBe(nameProduct);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await searchTable.inputValue()).toBe(nameProduct);
+        },
+        `Verify search table input value equals "${nameProduct}"`,
+        test.info(),
+      );
       await searchTable.press('Enter');
 
       await page.waitForTimeout(TIMEOUTS.STANDARD);
@@ -4125,12 +4436,26 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 09: Check modal window Company', async () => {
       const modalWindow = await page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
-      await expect(modalWindow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await expect.soft(modalWindow).toBeVisible();
+        },
+        'Verify modal window is visible',
+        test.info(),
+      );
 
       const searchTable = modalWindow.locator('.search-yui-kit__input').nth(0);
       await searchTable.fill(nameBuyer);
 
-      expect(await searchTable.inputValue()).toBe(nameBuyer);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await searchTable.inputValue()).toBe(nameBuyer);
+        },
+        `Verify search table input value equals "${nameBuyer}"`,
+        test.info(),
+      );
       await searchTable.press('Enter');
 
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -4168,7 +4493,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify selection reflects on the header year button
       const finalYearText = ((await yearButton.textContent()) || '').trim();
-      expect(parseInt(finalYearText, 10)).toBe(targetYear);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(parseInt(finalYearText, 10)).toBe(targetYear);
+        },
+        `Verify year selection equals ${targetYear}`,
+        test.info(),
+      );
       // Open months popup and select January
       const monthButton = calendar.locator('button[id^="open-months-popup"]').first();
       await monthButton.waitFor({ state: 'visible' });
@@ -4256,7 +4588,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           await searchTable.fill(part.name);
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(TIMEOUTS.EXTENDED);
-          expect(await searchTable.inputValue()).toBe(part.name);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(await searchTable.inputValue()).toBe(part.name);
+            },
+            `Verify search table input value equals "${part.name}"`,
+            test.info(),
+          );
           await searchTable.press('Enter');
 
           // Waiting for loading
@@ -4296,7 +4635,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
           console.log('Дата по срочности в переменной: ', urgencyDateSecond);
 
-          expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
+            },
+            `Verify urgency date equals "${urgencyDateSecond}"`,
+            test.info(),
+          );
         });
 
         await allure.step('Step 06: We check the number of those launched into production', async () => {
@@ -4565,7 +4911,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
+            },
+            `Verify urgency date equals "${urgencyDateSecond}"`,
+            test.info(),
+          );
         });
       }
     }
@@ -4674,7 +5027,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDateSecond);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
+            },
+            `Verify urgency date equals "${urgencyDateSecond}"`,
+            test.info(),
+          );
         });
       }
     }
@@ -4819,7 +5179,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 12: Compare the quantity in cells', async () => {
           // Compare the quantity in cells
-          expect(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+            },
+            'Verify remaining stock increased correctly',
+            test.info(),
+          );
 
           // Output to the console
           console.log(
@@ -5248,7 +5615,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
         await allure.step('Step 10: Compare the quantity in cells', async () => {
           // Compare the quantity in cells
-          expect(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+            },
+            'Verify remaining stock increased correctly',
+            test.info(),
+          );
 
           // Output to the console
           console.log(
@@ -6025,7 +6399,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 15: Compare the quantity in cells', async () => {
       // Compare the quantity in cells
-      expect(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(Number(remainingStockAfter)).toBe(Number(remainingStockBefore) + Number(incomingQuantity));
+        },
+        'Verify remaining stock increased correctly',
+        test.info(),
+      );
 
       // Output to the console
       console.log(
@@ -6211,7 +6592,16 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
       quantitySumLaunchOnProduction = Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction);
-      expect(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect
+            .soft(Number(quantityProductLaunchOnProductionAfter))
+            .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+        },
+        'Verify production ordered quantity increased correctly',
+        test.info(),
+      );
     });
   });
 
@@ -6318,7 +6708,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDate);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            },
+            `Verify urgency date equals "${urgencyDate}"`,
+            test.info(),
+          );
         });
 
         await allure.step('Step 06: We check the number of those launched into production', async () => {
@@ -6418,8 +6815,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
-          expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-            Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction),
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect
+                .soft(Number(quantityProductLaunchOnProductionAfter))
+                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+            },
+            'Verify ordered quantity increased correctly',
+            test.info(),
           );
         });
       }
@@ -6526,7 +6930,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDate);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            },
+            `Verify urgency date equals "${urgencyDate}"`,
+            test.info(),
+          );
         });
 
         await allure.step('Step 06: We check the number of those launched into production', async () => {
@@ -6614,8 +7025,15 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
-          expect(Number(quantityProductLaunchOnProductionAfter)).toBe(
-            Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction),
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect
+                .soft(Number(quantityProductLaunchOnProductionAfter))
+                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+            },
+            'Verify production ordered quantity increased correctly',
+            test.info(),
           );
         });
       }
@@ -6835,7 +7253,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDate);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            },
+            `Verify urgency date equals "${urgencyDate}"`,
+            test.info(),
+          );
         });
       }
     }
@@ -6936,7 +7361,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
-          expect(urgencyDateOnTable).toBe(urgencyDate);
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            },
+            `Verify urgency date equals "${urgencyDate}"`,
+            test.info(),
+          );
         });
       }
     }
@@ -7275,7 +7707,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 02: Search Detail', async () => {
         await searchDetail.fill(detail.name);
         await searchDetail.press('Enter');
-        expect(await searchDetail.inputValue()).toBe(detail.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await searchDetail.inputValue()).toBe(detail.name);
+          },
+          `Verify search detail input value equals "${detail.name}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 03: Check table rows and process if found', async () => {
@@ -7313,7 +7752,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 04: Search Cbed', async () => {
         await searchCbed.fill(cbed.name);
         await searchCbed.press('Enter');
-        expect(await searchCbed.inputValue()).toBe(cbed.name);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await searchCbed.inputValue()).toBe(cbed.name);
+          },
+          `Verify search cbed input value equals "${cbed.name}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 05: Check table rows and process if found', async () => {
@@ -7350,7 +7796,14 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 06: Search Product', async () => {
       await searchProduct.fill(nameProductNew);
       await searchProduct.press('Enter');
-      expect(await searchProduct.inputValue()).toBe(nameProductNew);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(await searchProduct.inputValue()).toBe(nameProductNew);
+        },
+        `Verify search product input value equals "${nameProductNew}"`,
+        test.info(),
+      );
     });
 
     await allure.step('Step 07: Check table rows and process if found', async () => {
