@@ -5,7 +5,7 @@ import { CreateMetalworkingWarehousePage } from '../pages/MetalworkingWarehouseP
 import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
 import { ENV, SELECTORS, LOGIN_TEST_CONFIG } from '../config';
 import { allure } from 'allure-playwright';
-import { Click } from '../lib/Page';
+import { Click, expectSoftWithScreenshot } from '../lib/Page';
 import testData1 from '../testdata/U002-PC1.json';
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
@@ -151,13 +151,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           try {
             const selector = dataTestId ? SelectorsOrderedFromSuppliers.getSelectorByTestId(dataTestId) : buttonClass;
             const highlightLocator = page.locator(selector).first();
-            await highlightLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-            await highlightLocator.evaluate((el: HTMLElement) => {
-              el.style.backgroundColor = 'yellow';
-              el.style.border = '2px solid red';
-              el.style.color = 'blue';
-            });
-            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+            await orderedFromSuppliersPage.waitAndHighlight(highlightLocator);
           } catch {}
 
           let isButtonReady = false;
@@ -169,7 +163,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           }
 
           // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `Verify switcher button "${buttonLabel}" is visible and enabled`,
+            test.info(),
+          );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
@@ -179,13 +180,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       const createOrderSelector = SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON;
       try {
         const createBtn = page.locator(createOrderSelector).first();
-        await createBtn.waitFor({ state: 'visible' });
-        await createBtn.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
-        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await orderedFromSuppliersPage.waitAndHighlight(createBtn);
       } catch {}
 
       await orderedFromSuppliersPage.clickButton(' Создать заказ ', createOrderSelector);
@@ -221,13 +216,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           if (dataTestId) {
             const selector = SelectorsOrderedFromSuppliers.getSelectorByTestId(dataTestId);
             const item = modal.locator(selector).first();
-            await item.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-            await item.evaluate((el: HTMLElement) => {
-              el.style.backgroundColor = 'yellow';
-              el.style.border = '2px solid red';
-              el.style.color = 'blue';
-            });
-            await page.waitForTimeout(TIMEOUTS.STANDARD);
+            await orderedFromSuppliersPage.waitAndHighlight(item);
           }
 
           // Prefer data-testid when provided; ignore text filter to avoid mismatches like "Изделии" vs "Изделие"
@@ -244,7 +233,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           }
 
           // Validate the button's visibility and state
-          expect(isButtonReady).toBeTruthy();
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(isButtonReady).toBeTruthy();
+            },
+            `Verify modal button "${buttonLabel}" is visible and enabled`,
+            test.info(),
+          );
           console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
@@ -296,12 +292,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       const rows = [row0, row1];
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        await row.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
-        await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+        await orderedFromSuppliersPage.highlightElement(row);
 
         const tdCheckbox = row.locator(SelectorsOrderedFromSuppliers.TABLE_ROW_CHECKBOX_SUFFIX).first();
         await tdCheckbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
@@ -332,13 +323,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     await allure.step("Step 12: Нажимаем кнопку 'Выбрать' и проверяем выбранные позиции", async () => {
       // Ensure the 'Выбрать' button is enabled
       const chooseBtn = page.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON).first();
-      await chooseBtn.waitFor({ state: 'visible' });
-      await chooseBtn.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await orderedFromSuppliersPage.waitAndHighlight(chooseBtn);
 
       // Extract the modal ID from the constant (not the full dialog selector)
       const modalId = orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID);
@@ -349,7 +334,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         true,
         modalId, // Use just the ID extracted from the modal test ID constant
       );
-      expect(enabled).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(enabled).toBeTruthy();
+        },
+        'Verify "Выбрать" button is enabled',
+        test.info(),
+      );
       await chooseBtn.click();
 
       // Wait for bottom table to appear and verify selected items
@@ -449,14 +441,28 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await nameParts.fill(detail.name || ''); //ERP-2099
-        await expect(await nameParts.inputValue()).toBe(detail.name || ''); //ERP-2099
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(detail.name || '');
+          },
+          'Verify detail name input value',
+          test.info(),
+        ); //ERP-2099
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
         const nameParts = page.locator(SelectorsPartsDataBase.ADD_DETAL_DESIGNATION_INPUT_INPUT);
 
         await nameParts.fill(detail.designation || '-');
-        expect(await nameParts.inputValue()).toBe(detail.designation || '-');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(detail.designation || '-');
+          },
+          'Verify detail designation input value',
+          test.info(),
+        );
       });
 
       await allure.step('Step 06: Click on the Save button', async () => {
@@ -483,7 +489,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const typeOperation = 'Сварочная';
 
         await searchTypeOperation.fill(typeOperation);
-        expect(await searchTypeOperation.inputValue()).toBe(typeOperation);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await searchTypeOperation.inputValue()).toBe(typeOperation);
+          },
+          'Verify search type operation input value',
+          test.info(),
+        );
       });
 
       await allure.step('Step 11: Choice type operation', async () => {
@@ -492,13 +505,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         await filterOption.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         // Highlight the option for visual validation
-        await filterOption.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-          el.style.fontWeight = 'bold';
-        });
-        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await partsDatabsePage.waitAndHighlight(filterOption);
         console.log('🎯 Highlighted first filter option');
 
         // Click on the first filter option
@@ -525,17 +532,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
           if (nestedSaveButtonCount > 0) {
             // Highlight the nested Save button
-            await nestedSaveButton.evaluate((el: HTMLElement) => {
-              el.style.backgroundColor = 'yellow';
-              el.style.border = '3px solid red';
-              el.style.color = 'blue';
-              el.style.fontWeight = 'bold';
-              el.style.zIndex = '9999';
-            });
+            await partsDatabsePage.waitAndHighlight(nestedSaveButton);
             console.log('🎯 Highlighted Save button in nested modal');
-
-            // Pause for 2 seconds before clicking
-            await page.waitForTimeout(TIMEOUTS.LONG);
 
             // Click the Save button in the nested modal
             await nestedSaveButton.click({ force: true });
@@ -552,17 +550,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         if (mainSaveButtonCount > 0) {
           // Highlight the main Save button
-          await mainSaveButton.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'yellow';
-            el.style.border = '3px solid red';
-            el.style.color = 'blue';
-            el.style.fontWeight = 'bold';
-            el.style.zIndex = '9999';
-          });
+          await partsDatabsePage.waitAndHighlight(mainSaveButton);
           console.log('🎯 Highlighted main Save button in tech process modal');
-
-          // Pause for 2 seconds before clicking
-          await page.waitForTimeout(TIMEOUTS.LONG);
 
           // Click the main Save button
           await mainSaveButton.click({ force: true });
@@ -700,14 +689,28 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         await nameParts.fill(cbed.name || '');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        expect(await nameParts.inputValue()).toBe(cbed.name || '');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(cbed.name || '');
+          },
+          'Verify CBED name input value',
+          test.info(),
+        );
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
         const nameParts = page.locator(SelectorsPartsDataBase.INPUT_DESUGNTATION_IZD);
 
         await nameParts.fill(cbed.designation || '-');
-        expect(await nameParts.inputValue()).toBe(cbed.designation || '-');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(cbed.designation || '-');
+          },
+          'Verify CBED designation input value',
+          test.info(),
+        );
       });
 
       await allure.step('Step 06: Click on the Save button', async () => {
@@ -787,14 +790,28 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await nameParts.fill(izd.name || '');
-        expect(await nameParts.inputValue()).toBe(izd.name || '');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(izd.name || '');
+          },
+          'Verify IZD name input value',
+          test.info(),
+        );
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
         const nameParts = page.locator(SelectorsPartsDataBase.INPUT_DESUGNTATION_IZD);
 
         await nameParts.fill(izd.designation || '-');
-        expect(await nameParts.inputValue()).toBe(izd.designation || '-');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(await nameParts.inputValue()).toBe(izd.designation || '-');
+          },
+          'Verify IZD designation input value',
+          test.info(),
+        );
       });
       await allure.step('Step 06: Click on the Save button', async () => {
         await partsDatabsePage.clickButton('Сохранить', SelectorsPartsDataBase.U002_CREATOR_SAVE_BUTTON);
@@ -1104,7 +1121,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const rowCount = await rows.count();
 
         // Should have no rows after archiving
-        expect(rowCount).toBe(0);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount).toBe(0);
+          },
+          `Verify task archived - no rows for ${detail.name}`,
+          test.info(),
+        );
         console.log(`Task successfully archived - no rows found for ${detail.name}`);
       });
     }
@@ -1368,7 +1392,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const rowCount = await rows.count();
 
         // Should have no rows after archiving
-        expect(rowCount).toBe(0);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount).toBe(0);
+          },
+          `Verify CBED task archived - no rows for ${cbed.name}`,
+          test.info(),
+        );
         console.log(`CBED task successfully archived - no rows found for ${cbed.name}`);
       });
     }
@@ -1635,7 +1666,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const rowCount = await rows.count();
 
         // Should have no rows after archiving
-        expect(rowCount).toBe(0);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            expect.soft(rowCount).toBe(0);
+          },
+          `Verify IZD task archived - no rows for ${izd.name}`,
+          test.info(),
+        );
         console.log(`IZD task successfully archived - no rows found for ${izd.name}`);
       });
     }
