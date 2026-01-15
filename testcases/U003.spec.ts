@@ -1973,9 +1973,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitPage.bringToFront();
 
       // Step 26.7: Click checkbox in the row to show item in right side table
+      // Dismiss any open dropdown by clicking outside and pressing Escape
+      await deficitPage.mouse.click(1, 1);
+      await deficitPage.waitForTimeout(TIMEOUTS.SHORT);
+      await deficitPage.keyboard.press('Escape');
+      await deficitPage.waitForTimeout(TIMEOUTS.SHORT);
+
       const dataCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_DATA_CELL).first();
       await deficitLoadingTaskPage.waitAndHighlight(dataCell);
-      await dataCell.click();
+      await dataCell.click({ force: true });
       await deficitLoadingTaskPage.waitForNetworkIdle();
       await deficitPage.waitForTimeout(TIMEOUTS.STANDARD);
 
@@ -6002,23 +6008,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const orderNumberCell = firstRowOrders.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
         await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-        // Poll until the order number matches (with timeout)
-        const searchTimeout = 10000;
-        const pollInterval = 500;
-        const startTime = Date.now();
-        let orderNumberText = '';
-
-        while (Date.now() - startTime < searchTimeout) {
-          orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
-          const normalizedOrderNumber = orderNumberText.replace(/^№\s*/, '').trim();
-          const normalizedSearchTerm = baseOrderNumberValue.replace(/^№\s*/, '').trim();
-
-          if (normalizedOrderNumber.includes(normalizedSearchTerm.split(' от ')[0])) {
-            break; // Found matching order number
-          }
-
-          await ordersTab.waitForTimeout(pollInterval);
-        }
+        // Wait for the order number to match using Playwright's expect.poll
+        const normalizedSearchTerm = baseOrderNumberValue.replace(/^№\s*/, '').trim().split(' от ')[0];
+        await expect
+          .poll(
+            async () => {
+              const text = (await orderNumberCell.textContent())?.trim() || '';
+              const normalizedOrderNumber = text.replace(/^№\s*/, '').trim();
+              return normalizedOrderNumber.includes(normalizedSearchTerm) ? text : null;
+            },
+            { timeout: WAIT_TIMEOUTS.STANDARD, intervals: [500] },
+          )
+          .toBeTruthy();
 
         // Additional wait to ensure table is fully updated
         await ordersTab.waitForTimeout(TIMEOUTS.MEDIUM);
