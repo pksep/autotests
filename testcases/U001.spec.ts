@@ -678,48 +678,18 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       const orderNumber = await firstRow.locator('td').nth(2).textContent();
       console.log('AAAAAAAA' + orderNumber);
 
-      // Loop to ensure the row is selected and archive button is enabled
+      // Select row and wait for archive button to be enabled using Playwright's built-in waiting
       const archiveButton = page.locator(LoadingTasksSelectors.buttonArchive, { hasText: 'Архив' });
-      let archiveButtonEnabled = false;
-      let attempts = 0;
-      const maxAttempts = 20;
+      const currentRow = page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).first();
 
-      while (!archiveButtonEnabled && attempts < maxAttempts) {
-        attempts++;
+      // Click the order number cell to select the row
+      const orderNumberCell = currentRow.locator('td').nth(2);
+      await orderNumberCell.scrollIntoViewIfNeeded();
+      await orderNumberCell.click();
 
-        // Check if the row still exists
-        const currentRow = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).first();
-        const rowExists = (await currentRow.count()) > 0;
-
-        if (!rowExists) {
-          console.log('Row no longer exists, breaking...');
-          break;
-        }
-
-        // Scroll the row into view
-        await currentRow.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(TIMEOUTS.SHORT);
-
-        // Click the order number cell to select the row
-        const orderNumberCell = currentRow.locator('td').nth(2);
-        await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-        await orderNumberCell.click();
-        await page.waitForTimeout(TIMEOUTS.STANDARD);
-
-        // Check if the archive button is enabled
-        archiveButtonEnabled = await archiveButton.isEnabled().catch(() => false);
-
-        if (archiveButtonEnabled) {
-          console.log(`Archive button enabled after ${attempts} attempt(s)`);
-          break;
-        } else {
-          console.log(`Archive button not enabled after attempt ${attempts}, retrying...`);
-        }
-      }
-
-      if (!archiveButtonEnabled) {
-        throw new Error(`Archive button "Архив" is not enabled after ${maxAttempts} attempts for order ${orderNumber}`);
-      }
+      // Wait for archive button to be enabled using Playwright's expect
+      await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
+      console.log('Archive button enabled after row selection');
 
       // Archive and confirm
       await loadingTaskPage.archiveAndConfirm(LoadingTasksSelectors.buttonArchive, PartsDBSelectors.BUTTON_CONFIRM, {
@@ -2478,31 +2448,24 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
           //   .first();
           const urgencyDateCell = page.locator(SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DATE_URGENCY_PATTERN).nth(1); //ERP-2423
 
-          // Wait for the cell to be visible and populated (not just "-")
+          // Wait for the cell to be visible and populated (not just "-") using Playwright's expect.poll
           await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-          // Wait for the cell to contain a valid date (not "-" or empty)
-          const maxWaitTime = 10000; // 10 seconds
-          const checkInterval = 200; // Check every 200ms
-          const startTime = Date.now();
-          let dateValue = '';
+          // Wait for the cell to contain a valid date using expect.poll
+          await expect
+            .poll(
+              async () => {
+                const text = (await urgencyDateCell.textContent())?.trim() || '';
+                return text && text !== '-' && text.length > 0 ? text : null;
+              },
+              { timeout: WAIT_TIMEOUTS.STANDARD, intervals: [200] },
+            )
+            .toBeTruthy();
 
-          while (Date.now() - startTime < maxWaitTime) {
-            dateValue = (await urgencyDateCell.textContent())?.trim() || '';
-            if (dateValue && dateValue !== '-' && dateValue.length > 0) {
-              console.log(`Date cell populated with: "${dateValue}"`);
-              break;
-            }
-            await page.waitForTimeout(checkInterval);
-          }
+          await completingAssembliesToPlan.waitAndHighlight(urgencyDateCell);
 
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'yellow';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-
-          urgencyDateOnTable = dateValue || (await urgencyDateCell.textContent())?.trim() || '';
+          urgencyDateOnTable = (await urgencyDateCell.textContent())?.trim() || '';
+          console.log(`Date cell populated with: "${urgencyDateOnTable}"`);
 
           console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
           console.log('Дата по срочности в переменной: ', urgencyDate);
@@ -3419,36 +3382,23 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         });
 
         await allure.step('Step 15b: Check the number of parts in the warehouse after posting', async () => {
-          // Wait for stock to update after posting (with retry logic)
+          // Wait for stock to update after posting using Playwright's expect.poll
           const expectedStock = Number(remainingStockBefore) + Number(incomingQuantity);
-          const maxWaitTime = 30000; // 30 seconds - increased timeout for backend processing
-          const checkInterval = 1000; // Check every 1 second (less frequent to reduce load)
-          const startTime = Date.now();
-          let stockUpdated = false;
-
           console.log(`Waiting for stock to update from ${remainingStockBefore} to ${expectedStock}...`);
 
-          while (Date.now() - startTime < maxWaitTime) {
-            remainingStockAfter = await stock.checkingTheQuantityInStock(detail.name, TableSelection.detail);
-            const currentStock = Number(remainingStockAfter);
+          await expect
+            .poll(
+              async () => {
+                remainingStockAfter = await stock.checkingTheQuantityInStock(detail.name, TableSelection.detail);
+                const currentStock = Number(remainingStockAfter);
+                console.log(`Stock check: current=${currentStock}, expected=${expectedStock}`);
+                return currentStock;
+              },
+              { timeout: 30000, intervals: [1000] },
+            )
+            .toBe(expectedStock);
 
-            console.log(`Stock check: current=${currentStock}, expected=${expectedStock}, elapsed=${Math.round((Date.now() - startTime) / 1000)}s`);
-
-            if (currentStock === expectedStock) {
-              stockUpdated = true;
-              console.log(`Stock updated successfully: ${currentStock} (expected: ${expectedStock})`);
-              break;
-            }
-
-            // Wait before next check
-            await page.waitForTimeout(checkInterval);
-          }
-
-          if (!stockUpdated) {
-            console.warn(`Stock did not update to expected value within timeout. Current: ${remainingStockAfter}, Expected: ${expectedStock}`);
-            // Still get the final value for the assertion
-            remainingStockAfter = await stock.checkingTheQuantityInStock(detail.name, TableSelection.detail);
-          }
+          console.log(`Stock updated successfully: ${remainingStockAfter} (expected: ${expectedStock})`);
         });
 
         await allure.step('Step 16: Compare the quantity in cells', async () => {
@@ -5343,21 +5293,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               await page.waitForTimeout(TIMEOUTS.EXTENDED);
             }
 
-            // Wait for data to propagate - poll the quantity until it updates
+            // Wait for data to propagate using Playwright's expect.poll
             console.log('Waiting for kitting to propagate and refresh search...');
-            let updatedPrihodQuantity = '0';
-            const maxRetries = 100;
-            let retryCount = 0;
 
-            while ((updatedPrihodQuantity === '0' || updatedPrihodQuantity === '') && retryCount < maxRetries) {
-              retryCount++;
-              console.log(`Waiting for quantity update, attempt ${retryCount}/${maxRetries}...`);
-
-              // Wait with increasing delay on each retry
-              await page.waitForTimeout(2000 + retryCount * 1000);
-
+            const refreshAndCheckQuantity = async (): Promise<string> => {
               // Close the modal by clicking Cancel to force fresh data load
-              console.log('Closing modal to refresh data...');
               const cancelButton = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CANCEL);
               if (await cancelButton.isVisible().catch(() => false)) {
                 await cancelButton.click();
@@ -5366,7 +5306,6 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               }
 
               // Click Сборка button in the small modal to reopen the main modal
-              console.log('Clicking Сборка button in small modal...');
               await stockReceipt.selectStockReceipt(StockReceipt.cbed);
               await page.waitForLoadState('networkidle');
               await stockReceipt.waitingTableBodyNoThead(tableComplectsSets);
@@ -5382,20 +5321,22 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
               // Check the updated quantity
               const updatedPrihodQuantityCell = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN).first();
-              await updatedPrihodQuantityCell.waitFor({
-                state: 'visible',
-                timeout: WAIT_TIMEOUTS.STANDARD,
-              });
+              await updatedPrihodQuantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
               const updatedPrihodValue = await updatedPrihodQuantityCell.textContent();
-              updatedPrihodQuantity = updatedPrihodValue?.trim() || '0';
-              console.log(`Кол-во на приход after kitting (attempt ${retryCount}): ${updatedPrihodQuantity}`);
-            }
+              return updatedPrihodValue?.trim() || '0';
+            };
 
-            if (updatedPrihodQuantity === '0' || updatedPrihodQuantity === '') {
-              throw new Error(
-                `Assembly kitting completed but Кол-во на приход is still 0 for ${cbed.name} after ${maxRetries} attempts. Please check manually.`,
-              );
-            }
+            // Poll until quantity is non-zero
+            await expect
+              .poll(
+                async () => {
+                  const qty = await refreshAndCheckQuantity();
+                  console.log(`Кол-во на приход after kitting: ${qty}`);
+                  return qty !== '0' && qty !== '' ? qty : null;
+                },
+                { timeout: 300000, intervals: [3000, 5000, 10000] },
+              )
+              .toBeTruthy();
 
             // Wait a bit after successful update to ensure UI is stable
             await page.waitForTimeout(TIMEOUTS.STANDARD);
