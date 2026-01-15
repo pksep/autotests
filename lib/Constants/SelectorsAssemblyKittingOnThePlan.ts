@@ -20,6 +20,7 @@ export const TABLE_PRODUCT_COMPLETION_SEARCH_INPUT = 'CompletIzd-Content-Table-T
 // ERP-969 specific selectors
 export const TABLE_COMPLECT_TABLE = '[data-testid="CompletCbed-Content-Table-Table"]';
 export const COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT = '[data-testid="CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input"]';
+export const COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID = 'CompletCbed-Content-Table-Table-SearchInput-Dropdown-Input';
 export const COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN = '[data-testid="CompletCbed-Title"]';
 export const TABLE_COMPLECT_TABLE_ROW_CELL_PREFIX = 'CompletCbed-Content-Table-Table-TableRow';
 export const TABLE_COMPLECT_TABLE_ROW_CELL_NAME_SUFFIX = '-Name';

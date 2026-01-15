@@ -80,7 +80,7 @@ import { CreateCompleteSetsPage } from '../pages/CompleteSetsPage';
 import { CreateShippedOrderOverviewPage } from '../pages/ShippedOrderOverviewPage';
 import { CreateRevisionPage } from '../pages/RevisionPage';
 import { ISpetificationData, Click, TypeInvoice, expectSoftWithScreenshot } from '../lib/Page';
-import { ENV, SELECTORS, CONST } from '../config';
+import { ENV, SELECTORS } from '../config';
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction';
 import * as SelectorsAssemblyWarehouse from '../lib/Constants/SelectorsAssemblyWarehouse';
 import logger from '../lib/logger';
@@ -112,26 +112,6 @@ const arrayCbed = [
   },
 ];
 const nameProductNew = '0Т4.01';
-
-const fillInputWithRetries = async (input: Locator, value: string, page: Page, maxAttempts = 3): Promise<string> => {
-  await input.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-  let currentValue = '';
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    await input.fill('');
-    await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-    await input.fill(value);
-    await page.waitForTimeout(TIMEOUTS.SHORT);
-    currentValue = (await input.inputValue())?.trim() || '';
-    if (currentValue === value) {
-      break;
-    }
-    console.warn(`Input mismatch on attempt ${attempt}. Expected "${value}", got "${currentValue}". Retrying...`);
-    await page.waitForTimeout(TIMEOUTS.MEDIUM);
-  }
-
-  return currentValue;
-};
 
 const buttonLaunchIntoProductionModalWindow = SelectorsStartProduction.MODAL_START_PRODUCTION_COMPLECTATION_TABLE_IN_PRODUCTION;
 const choiceCbed = PartsDBSelectors.SPECIFICATION_DIALOG_CARD_BASE_OF_ASSEMBLY_UNITS_0;
@@ -560,7 +540,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await modalWindowSearchCbed.scrollIntoViewIfNeeded();
 
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        await fillInputWithRetries(modalWindowSearchCbed, cbed.name, page);
+        await partsDatabsePage.fillInputWithRetries(modalWindowSearchCbed, cbed.name);
         await modalWindowSearchCbed.press('Enter');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await expectSoftWithScreenshot(
@@ -612,7 +592,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
         await modalWindowSearchCbed.scrollIntoViewIfNeeded();
 
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        await fillInputWithRetries(modalWindowSearchCbed, detail.name, page);
+        await partsDatabsePage.fillInputWithRetries(modalWindowSearchCbed, detail.name);
         await modalWindowSearchCbed.press('Enter');
         await expectSoftWithScreenshot(
           page,
@@ -2444,8 +2424,8 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     console.log('Test Case 12 - Complete Set Of Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(page);
-    // Use CONST.TABLE_COMPLECT_TABLE for table selector
-    const tableMain = CONST.TABLE_COMPLECT_TABLE;
+    // Use SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE for table selector
+    const tableMain = SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE;
 
     await allure.step('Step 01: Open the warehouse page', async () => {
       // Go to the Warehouse page
@@ -2483,7 +2463,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
             SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
             {
-              searchInputDataTestId: CONST.COMPLEX_SBORKA_BY_PLAN,
+              searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
               timeoutBeforeWait: 1000,
             },
           );
@@ -2948,7 +2928,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
             SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
             SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
             {
-              searchInputDataTestId: CONST.COMPLEX_SBORKA_BY_PLAN,
+              searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
               timeoutBeforeWait: 1000,
             },
           );
@@ -5300,7 +5280,11 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
               await newPage.waitForLoadState('networkidle');
 
               // Search for the CBED
-              await newCompletingAssembliesToPlan.searchTable(cbed.name, SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE, CONST.COMPLEX_SBORKA_BY_PLAN);
+              await newCompletingAssembliesToPlan.searchTable(
+                cbed.name,
+                SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
+                SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
+              );
               await newPage.waitForTimeout(TIMEOUTS.STANDARD);
               await newPage.waitForLoadState('networkidle');
 

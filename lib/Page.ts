@@ -4898,6 +4898,33 @@ export class PageObject extends AbstractPage {
   }
 
   /**
+   * Fill input with retries - attempts to fill input multiple times until value matches
+   * @param input - The input locator
+   * @param value - Value to fill
+   * @param maxAttempts - Maximum number of attempts (default: 3)
+   * @returns The final value in the input
+   */
+  async fillInputWithRetries(input: Locator, value: string, maxAttempts = 3): Promise<string> {
+    await input.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    let currentValue = '';
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      await input.fill('');
+      await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+      await input.fill(value);
+      await this.page.waitForTimeout(TIMEOUTS.SHORT);
+      currentValue = (await input.inputValue())?.trim() || '';
+      if (currentValue === value) {
+        break;
+      }
+      console.warn(`Input mismatch on attempt ${attempt}. Expected "${value}", got "${currentValue}". Retrying...`);
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+    }
+
+    return currentValue;
+  }
+
+  /**
    * Helper function to find the actual search input element (handles wrapper vs direct input)
    * @param page - Playwright Page object
    * @param searchInputSelector - Selector for the search input wrapper
