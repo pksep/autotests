@@ -4589,8 +4589,6 @@ export class PageObject extends AbstractPage {
    * @returns Promise<void> - Validates the presence and non-emptiness of the table.
    */
   async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
-    await this.page.waitForTimeout(500);
-
     // Normalize selector: accept raw testId or full selector
     let selector = tableTestId;
     const match = tableTestId.match(/data-testid\s*=\s*["']([^"']+)["']/);
@@ -4600,11 +4598,19 @@ export class PageObject extends AbstractPage {
       selector = `[data-testid="${tableTestId}"]`;
     }
 
+    // Wait for the table to be visible
+    const tableElement = this.page.locator(selector);
+    await tableElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+
+    // Wait for at least one row to appear in the table
     const tableLocator = this.page.locator(`${selector} tbody tr`);
+    await tableLocator.first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+
+    // Get the row count
     const rowCount = await tableLocator.count();
 
     // Highlight the table for debugging
-    await this.page.locator(selector).evaluate(table => {
+    await tableElement.evaluate(table => {
       table.style.border = '2px solid green';
       table.style.backgroundColor = 'lightyellow';
     });

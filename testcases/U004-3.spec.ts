@@ -1,7 +1,9 @@
 import { test, expect, Locator } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
-import { ENV, SELECTORS, CONST, PRODUCT_SPECS } from '../config';
+import { ENV, SELECTORS, PRODUCT_SPECS } from '../config';
+import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
@@ -70,7 +72,7 @@ export const runU004_3 = () => {
       );
       await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
         // Locate the search field within the left table and fill it
-        await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(CONST.TEST_PRODUCT);
+        await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
         await page.waitForLoadState('networkidle');
         // Optionally, validate that the search input is visible
         await expectSoftWithScreenshot(
@@ -83,7 +85,7 @@ export const runU004_3 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(CONST.TEST_PRODUCT);
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(TestDataU004.TEST_PRODUCT);
           },
           'Step 04 complete (СБ)'
         );
@@ -92,17 +94,13 @@ export const runU004_3 = () => {
         // Simulate pressing "Enter" in the search field
         await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).press('Enter');
         await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(1000); // Wait for table to update
-        // Wait for table to have rows (with retry)
-        let rowCount = 0;
-        for (let i = 0; i < 5; i++) {
-          rowCount = await leftTable.locator('tbody tr').count();
-          if (rowCount > 0) break;
-          await page.waitForTimeout(500);
-        }
+        await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait for table to update
+        // Wait for table to have rows using Playwright's built-in waiting
         await expectSoftWithScreenshot(
           page,
           async () => {
+            await expect.soft(leftTable.locator('tbody tr').first()).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            const rowCount = await leftTable.locator('tbody tr').count();
             expect.soft(rowCount).toBeGreaterThan(0);
           },
           'Step 05 complete (СБ)'
@@ -119,7 +117,7 @@ export const runU004_3 = () => {
         await firstRow.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
         const firstCellInRow = firstRow.locator('td').first();
         await firstCellInRow.click({ force: true });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -153,7 +151,7 @@ export const runU004_3 = () => {
             smallDialogButtonId: SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_СБ,
             dialogTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG,
             searchTableTestId: SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE,
-            searchValue: CONST.TEST_PRODUCT_СБ,
+            searchValue: TestDataU004.TEST_PRODUCT_СБ,
             bottomTableTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE,
             addToBottomButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
             addToMainButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
@@ -195,7 +193,7 @@ export const runU004_3 = () => {
             smallDialogButtonId: SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_Д,
             dialogTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG,
             searchTableTestId: SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE,
-            searchValue: CONST.TESTCASE_2_PRODUCT_Д,
+            searchValue: TestDataU004.TESTCASE_2_PRODUCT_Д,
             bottomTableTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE,
             addToBottomButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
             addToMainButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
@@ -237,7 +235,7 @@ export const runU004_3 = () => {
             smallDialogButtonId: SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_ПД,
             dialogTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG,
             searchTableTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE,
-            searchValue: CONST.TESTCASE_2_PRODUCT_ПД,
+            searchValue: TestDataU004.TESTCASE_2_PRODUCT_ПД,
             bottomTableTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE,
             addToBottomButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
             addToMainButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
@@ -274,13 +272,13 @@ export const runU004_3 = () => {
     });
     await allure.step('Step 004: Добавить РМ к товару (Add РМ to the product and save)', async () => {
       await allure.step('Step 08: Add and Validate Items in Specifications', async () => {
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(TIMEOUTS.VERY_LONG);
         const itemsToAdd = [
           {
             smallDialogButtonId: SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_РМ,
             dialogTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG,
             searchTableTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE,
-            searchValue: CONST.TESTCASE_2_PRODUCT_РМ,
+            searchValue: TestDataU004.TESTCASE_2_PRODUCT_РМ,
             bottomTableTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE,
             addToBottomButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
             addToMainButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
@@ -347,7 +345,7 @@ export const runU004_3 = () => {
     });
     await allure.step('Step 006: Получить и сохранить текущую основную таблицу продуктов. (Get and store the current main product table)', async () => {
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       tableData_full = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
       await expectSoftWithScreenshot(
         page,
@@ -363,10 +361,10 @@ export const runU004_3 = () => {
         await page.waitForLoadState('networkidle');
         const nestedArray = tableData_full.map(group => group.items).flat();
 
-        const result1 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TEST_PRODUCT_СБ); // Output: true
-        const result2 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TESTCASE_2_PRODUCT_Д); // Output: true
-        const result3 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TESTCASE_2_PRODUCT_ПД); // Output: true
-        const result4 = await shortagePage.isStringInNestedArray(nestedArray, CONST.TESTCASE_2_PRODUCT_РМ); // Output: true
+        const result1 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TEST_PRODUCT_СБ); // Output: true
+        const result2 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_Д); // Output: true
+        const result3 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_ПД); // Output: true
+        const result4 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_РМ); // Output: true
         logger.info(result1);
         logger.info(result2);
         logger.info(result3);
@@ -403,7 +401,8 @@ export const runU004_3 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(true).toBe(true);
+          await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
+          expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
         },
         'Cleanup done (TestCase 06)'
       );

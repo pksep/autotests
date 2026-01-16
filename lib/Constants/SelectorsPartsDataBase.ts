@@ -161,6 +161,7 @@ export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="M
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT =
   '[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]';
+export const MODAL_BASE_MATERIAL_DESIGNATION_INPUT = '[data-testid="ModalBaseMaterial-Designation-Input-Input"]';
 
 // U004 dialogs (РМ) — share ModalBaseMaterial
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG = 'ModalBaseMaterial';

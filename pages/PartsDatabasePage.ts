@@ -1373,9 +1373,17 @@ export class CreatePartsDatabasePage extends PageObject {
   }
 
   async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
+    // Wait for page to be stable (no navigation in progress)
+    await page.waitForLoadState('networkidle').catch(() => {
+      logger.warn('Network idle timeout, continuing...');
+    });
+
     const table = page.locator(`${tableTestId}`);
+    // Wait for table to be visible and stable
+    await table.waitFor({ state: 'visible' });
     await table.locator('tr').first().waitFor({ state: 'visible' });
 
+    // Get fresh element handles after ensuring page stability
     const rows = await table.locator('tbody > tr').elementHandles();
     logger.info(`Total rows in tbody: ${rows.length}`);
 
