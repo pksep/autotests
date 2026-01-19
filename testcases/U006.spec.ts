@@ -8,6 +8,7 @@ import testData1 from '../testdata/U005-PC01.json'; // Import your test data
 import testData2 from '../testdata/U004-PC01.json';
 import { notDeepStrictEqual } from "assert";
 import exp from "constants";
+import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents';
 
 // Constants for data-testids
 
@@ -35,7 +36,7 @@ export const runU006 = () => {
         });
 
         await allure.step("Step 2: Find the table with class 'table-yui-kit'", async () => {
-            const table = page.locator('table.table-yui-kit');
+            const table = page.locator(SelectorsFileComponents.BASE_FILE_FILE_WINDOW_TABLE_TABLE);
             await expect(table).toBeVisible({ timeout: 10000 });
 
             // Highlight the table for visibility
@@ -920,38 +921,52 @@ export const runU006 = () => {
             for (const { name, extension } of baseFileNamesToVerify) {
                 logger.info(`Verifying presence of file with base name: ${name} and extension: ${extension}`);
 
-                // Locate rows where the second column (Files column) contains the base name
-                const matchingRows = tableRows.locator(`td[data-testid*="${CONST.DOCUMENT_TABLE_NAME_CELL}"]:has-text("${name}")`);
-                const matchCount = await matchingRows.count();
+                let fileFound = false;
 
-                if (matchCount > 0) {
-                    logger.info(`Found ${matchCount} rows matching base name "${name}".`);
-                    let extensionMatch = false;
-
-                    for (let i = 0; i < matchCount; i++) {
-                        const nameCell = matchingRows.nth(i);
-                        await nameCell.evaluate((cell) => {
-                            cell.style.backgroundColor = 'yellow';
-                            cell.style.border = '2px solid red';
-                            cell.style.color = 'blue';
-                        });
-
+                // Iterate through all rows to find files that start with the base name
+                for (let i = 0; i < rowCount; i++) {
+                    const row = tableRows.nth(i);
+                    
+                    // Try multiple selector strategies to find the filename cell
+                    let nameCell = row.locator(`[data-testid^="${CONST.DOCUMENT_TABLE_NAME_CELL}"]`);
+                    if (await nameCell.count() === 0) {
+                        nameCell = row.locator(`td[data-testid*="${CONST.DOCUMENT_TABLE_NAME_CELL}"]`);
+                    }
+                    if (await nameCell.count() === 0) {
+                        // Fallback: try to find any cell in the row that might contain the filename
+                        nameCell = row.locator('td').first();
+                    }
+                    
+                    if (await nameCell.count() > 0) {
                         const fileName = await nameCell.textContent();
-                        logger.info(`File name in row ${i + 1}: ${fileName}`);
+                        const trimmedFileName = fileName?.trim() || '';
+                        
+                        logger.info(`Row ${i + 1}: Checking cell text "${trimmedFileName}"`);
 
-                        // Check if the file name contains the expected extension
-                        if (fileName && fileName.includes(extension)) {
-                            logger.info(`File "${name}" with extension "${extension}" is present.`);
-                            extensionMatch = true;
+                        // Check if the file name starts with the base name and contains the expected extension
+                        if (trimmedFileName && trimmedFileName.startsWith(name) && trimmedFileName.includes(extension)) {
+                            logger.info(`File "${trimmedFileName}" matches base name "${name}" with extension "${extension}".`);
+                            
+                            // Highlight the matching cell
+                            await nameCell.evaluate((cell) => {
+                                cell.style.backgroundColor = 'yellow';
+                                cell.style.border = '2px solid red';
+                                cell.style.color = 'blue';
+                            });
+                            
+                            fileFound = true;
                             break;
                         }
+                    } else {
+                        logger.info(`Row ${i + 1}: No name cell found`);
                     }
+                }
 
-                    if (!extensionMatch) {
-                        throw new Error(`File "${name}" is present but does not match the expected extension "${extension}".`);
-                    }
-                } else {
-                    throw new Error(`No files found with base name "${name}".`);
+                if (!fileFound) {
+                    // Enhanced error message with debugging info
+                    logger.error(`Failed to find file with base name "${name}" and extension "${extension}".`);
+                    logger.error(`Total rows checked: ${rowCount}`);
+                    throw new Error(`No files found with base name "${name}" and extension "${extension}". Checked ${rowCount} rows.`);
                 }
             }
 

@@ -90,7 +90,7 @@
           {
             "class": "button.filters__btn",
 		      	"datatestid": "BaseProducts-Filter-Component-SortByAttention",									 
-            "label": "Сортировать по отметке",
+            "label": "Фильтровать по отметке",
             "state": "true"
           },
           {
