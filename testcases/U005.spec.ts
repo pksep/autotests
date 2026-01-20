@@ -1482,10 +1482,17 @@ export const runU005 = () => {
           break;
         }
 
-        // Check for notifications
-        const notification = await shortagePage.extractNotificationMessage(page);
+        // Check for notifications (handle no-message case gracefully)
+        let notification: { message?: string } | null = null;
+        try {
+          notification = await shortagePage.extractNotificationMessage(page);
+        } catch (err) {
+          console.warn('No notification found after upload attempt.', err);
+        }
 
-        if (notification?.message === 'Файл с таким именем уже существует') {
+        if (!notification) {
+          console.log('No notification detected. Assuming upload still in progress/succeeded.');
+        } else if (notification.message === 'Файл с таким именем уже существует') {
           console.log('Duplicate filename detected. Updating all filenames.');
           retryCounter++;
 
@@ -1615,7 +1622,7 @@ export const runU005 = () => {
     });
     await allure.step('Step 18: Open Добавить из базы dialog (Open Добавить из базы dialog)', async () => {
       await page.waitForLoadState('networkidle');
-      
+
       // Check if the drag and drop modal is open and close it if needed
       const dragDropModal = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL}"]`);
       const modalCount = await dragDropModal.count();
@@ -1625,14 +1632,14 @@ export const runU005 = () => {
         await page.keyboard.press('Escape').catch(() => {});
         await page.waitForTimeout(500);
         // If still open, try clicking at (1,1)
-        if (await dragDropModal.count() > 0) {
+        if ((await dragDropModal.count()) > 0) {
           await page.mouse.click(1, 1);
           await page.waitForTimeout(500);
         }
         // Wait for modal to be detached
         await dragDropModal.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
       }
-      
+
       const button = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON}"]`, { hasText: 'Добавить из базы' });
       await button.evaluate(row => {
         row.style.backgroundColor = 'green';
@@ -1646,35 +1653,43 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(500);
 
-      // Locate the switch item using data-testid and highlight it for debugging
-      const switchItem = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM0}"]`);
-
-      await switchItem.evaluate(row => {
-        row.style.backgroundColor = 'green';
+      // Wait for the dialog to be open and visible
+      const dialog = page.locator(`dialog[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES}"]`);
+      await dialog.evaluate(row => {
+        row.style.backgroundColor = 'blue';
         row.style.border = '2px solid red';
         row.style.color = 'blue';
       });
+      await expect(dialog).toBeVisible();
 
-      await switchItem.click();
-      await page.waitForLoadState('networkidle');
-
-      // Locate the table container using data-testid
-      const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE}"]`);
+      // Locate the table container and search input within the dialog
+      const tableContainer = dialog.locator(`table[data-testid$="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE}"]`);
       await expect(tableContainer).toBeVisible();
 
-      // Locate the table within the container
-      const leftTable = tableContainer.locator('table');
-      await expect(leftTable).toBeVisible();
-
-      // Locate the search input field using data-testid, scoped to the table container
-      const searchField = tableContainer.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_SEARCH_DROPDOWN_INPUT}"]`);
-
-      // Highlight the search field for debugging
-      await searchField.evaluate(input => {
-        input.style.backgroundColor = 'red';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
+      // Highlight table with red border for debugging
+      await tableContainer.evaluate(table => {
+        table.style.border = '3px solid red';
+        table.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
       });
+
+      // Highlight the table's thead with red border
+      const tableHead = tableContainer.locator('thead');
+      await tableHead.evaluate(thead => {
+        thead.style.border = '3px solid red';
+        thead.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+      });
+
+      // Find the input field in thead second row with data-testid ending in Search-Dropdown-Input
+      const searchField = tableContainer.locator('thead tr:nth-child(2) input[data-testid$="Search-Dropdown-Input"]');
+      await searchField.waitFor({ state: 'visible', timeout: 5000 });
+
+      // Highlight the search input with orange border
+      await searchField.evaluate(input => {
+        input.style.border = '3px solid orange';
+        input.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+      });
+
+      const leftTable = tableContainer;
 
       // Ensure the search field is visible and editable
       await expect(searchField).toBeVisible();

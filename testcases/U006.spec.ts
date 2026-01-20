@@ -1045,24 +1045,6 @@ export const runU006 = () => {
       });
 
       const leftTable = tableContainer;
-
-      // Debug: Check table structure
-      const tableRows = tableContainer.locator('tbody tr');
-      const rowCount = await tableRows.count();
-      console.log(`Found ${rowCount} rows in table body`);
-
-      if (rowCount > 0) {
-        const firstRowCells = tableContainer.locator('tbody tr:first-child td');
-        const cellCount = await firstRowCells.count();
-        console.log(`Found ${cellCount} cells in first row`);
-
-        // Log content of all cells for debugging
-        for (let i = 0; i < cellCount; i++) {
-          const cellText = await firstRowCells.nth(i).textContent();
-          console.log(`Cell ${i}: "${cellText}"`);
-        }
-      }
-
       // Locate the search input field using data-testid
       //const searchField = dialog.locator(`[data-testid="${CONST.FILE_BASE_SEARCH_INPUT}"]`);
 
@@ -1116,30 +1098,38 @@ export const runU006 = () => {
     await allure.step('Step 20: Add the file to the attach list in bottom table (Verify that search works for each column)', async () => {
       await page.waitForLoadState('networkidle');
 // Wait for the dialog to be open and visible
-const dialog = page.locator('dialog[data-testid="AddDetal-FileComponent-ModalBaseFiles"]');
-await dialog.evaluate(row => {
-  row.style.backgroundColor = 'blue';
-  row.style.border = '2px solid red';
-  row.style.color = 'blue';
-});
-await expect(dialog).toBeVisible();
-
-// Locate the table container and search input within the dialog
-const tableContainer = dialog.locator('table[data-testid$="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table"]');
-await expect(tableContainer).toBeVisible();
-      // Locate the parent container of the table
-//      const tableContainer = page.locator(`[data-testid="${CONST.FILE_BASE_TABLE_INNER}"]`);
-      const firstRow = tableContainer.locator('tbody tr:first-child');
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'red';
+      const dialog = page.locator('dialog[data-testid="AddDetal-FileComponent-ModalBaseFiles"]');
+      await dialog.evaluate(row => {
+        row.style.backgroundColor = 'blue';
         row.style.border = '2px solid red';
         row.style.color = 'blue';
-      });      
+      });
+      await expect(dialog).toBeVisible();
+      // Locate the parent container of the table
+      //const tableContainer = page.locator(`[data-testid="${CONST.FILE_BASE_TABLE_INNER}"]`);
+      const tableContainer = dialog.locator('table[data-testid$="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table"]');
+      await expect(tableContainer).toBeVisible();
+
+      // Highlight table with red border for debugging
+      await tableContainer.evaluate(table => {
+        table.style.border = '3px solid red';
+        table.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+      });
+
+      const firstRow = tableContainer.locator('tbody tr:first-child');
+      
+      // Wait for the first row to be visible before accessing its content
+      await firstRow.waitFor({ state: 'visible' });
+      
       let fileType: string = '';
       selectedFileType = (await firstRow.locator('td').nth(2).textContent()) ?? '';
       selectedFileName = (await firstRow.locator('td').nth(3).textContent()) ?? '';
 
-
+      await firstRow.evaluate(row => {
+        row.style.backgroundColor = 'yellow';
+        row.style.border = '2px solid red';
+        row.style.color = 'blue';
+      });
       const addButton = page.locator(`[data-testid="${CONST.FILE_BASE_ADD_BUTTON}"]`, { hasText: 'Добавить' });
       await addButton.evaluate(row => {
         row.style.backgroundColor = 'yellow';
