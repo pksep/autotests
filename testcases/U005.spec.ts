@@ -8,49 +8,23 @@ import testData1 from '../testdata/U005-PC01.json'; // Import your test data
 import testData2 from '../testdata/U004-PC01.json';
 import { notDeepStrictEqual } from 'assert';
 import exp from 'constants';
+import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 
-// Constants for data-testid values
-const LEFT_DATA_TABLE = 'BasePaginationTable-Table-product';
+// Test data constants (keep these in file as they're test-specific)
 const TEST_DETAIL_NAME = 'U005_test2_DETAILName';
 const TEST_CATEGORY = '3D печать';
 const TEST_MATERIAL = '09Г2С (Сталь)';
 const TEST_NAME = 'Круг Сталь 09Г2С Ø100мм';
 const TEST_FILE = '87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg';
 
-const MAIN_PAGE_MAIN_DIV = 'BaseProducts-Container-MainContainer';
-const MAIN_PAGE_ИЗДЕЛИЕ_TABLE = 'BasePaginationTable-Table-product';
-const MAIN_PAGE_TITLE_ID = 'BaseProducts-Container-MainContainer-Title';
 
 // Main page buttons
-const MAIN_PAGE_CREATE_BUTTON = 'BaseProducts-Button-Create';
-const MAIN_PAGE_CREATE_DETAIL_LINK = 'BaseProducts-CreateLink-base-detail';
 
 // Add detail page constants
-const ADD_DETAIL_INFORMATION_INPUT = 'AddDetal-Information-Input-Input';
-const ADD_DETAIL_CHARACTERISTIC_BLANKS = 'AddDetal-CharacteristicBlanks';
-const ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY = 'AddDetal-CharacteristicBlanks-Tbody';
-const ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_SET = 'AddDetal-CharacteristicBlanks-SelectedMaterialName-Set';
-const ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_RESET = 'AddDetal-CharacteristicBlanks-SelectedMaterialName-Reset';
-const ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE = 'AddDetal-CharacteristicBlanks-Title';
-const ADD_DETAIL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = 'AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save';
 
 // Modal base material constants
-const MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH = 'ModalBaseMaterial-TableList-Switch';
-const MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1 = 'ModalBaseMaterial-TableList-Switch-Item1';
-const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE = 'ModalBaseMaterial-TableList-Table-Type';
-const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_SEARCH_INPUT_DROPDOWN_INPUT = 'ModalBaseMaterial-TableList-Table-Type-SearchInput-Dropdown-Input';
-const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE = 'ModalBaseMaterial-TableList-Table-SubType';
-const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_SEARCH_INPUT_DROPDOWN_INPUT = 'ModalBaseMaterial-TableList-Table-SubType-SearchInput-Dropdown-Input';
-const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM = 'ModalBaseMaterial-TableList-Table-Item';
-const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT = 'ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input';
-const MODAL_BASE_MATERIAL_ADD_BUTTON = 'ModalBaseMaterial-Add-Button';
 
 // File component constants
-const ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON = 'AddDetal-FileComponent-AddFileButton';
-const ADD_DETAIL_FILE_COMPONENT = 'AddDetal-FileComponent';
-const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE = 'AddDetal-FileComponent-DocumentTable-Table';
-const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT = 'AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint';
-const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC = 'AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc';
 
 // Modal base files constants
 const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES = 'AddDetal-FileComponent-ModalBaseFiles';
@@ -89,15 +63,15 @@ export const runU005 = () => {
     test.setTimeout(90000);
     const shortagePage = new CreatePartsDatabasePage(page);
     await allure.step('Step 01: Открываем страницу базы деталей (Open the parts database page)', async () => {
-      await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, MAIN_PAGE_TITLE_ID);
+      await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
     });
     await allure.step('Step 02: Проверяем наличие заголовка на странице (Check for the presence of the title)', async () => {
       const expectedTitles = testData2.elements.MainPage.titles.map(title => title.trim());
-      await shortagePage.validatePageTitlesWithStyling(MAIN_PAGE_MAIN_DIV, expectedTitles);
+      await shortagePage.validatePageTitlesWithStyling(SelectorsPartsDataBase.MAIN_PAGE_MAIN_DIV, expectedTitles);
     });
-    const leftTable = page.locator(`[data-testid="${LEFT_DATA_TABLE}"]`);
+    const leftTable = page.locator(`[data-testid="${SelectorsPartsDataBase.PRODUCT_TABLE}"]`);
     await allure.step('Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)', async () => {
-      await shortagePage.validateTableIsDisplayedWithRows(MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
+      await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
     });
     const firstRow = leftTable.locator('tbody tr:first-child');
     await allure.step('Step 04: Проверяем Filters (Verify the presence of filters on the page)', async () => {
@@ -175,7 +149,7 @@ export const runU005 = () => {
     await allure.step('Step 05: нажмите кнопку создания детали. (click on the create detail button)', async () => {
       // Wait for the page to stabilize
       await page.waitForLoadState('networkidle');
-      const createButton = page.locator(`[data-testid="${MAIN_PAGE_CREATE_BUTTON}"]`);
+      const createButton = page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
 
       await createButton.evaluate(row => {
         row.style.backgroundColor = 'yellow';
@@ -221,7 +195,7 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the "Деталь" button using its data-testid
-      const createButton = page.locator(`[data-testid="${MAIN_PAGE_CREATE_DETAIL_LINK}"]`);
+      const createButton = page.locator(SelectorsPartsDataBase.BUTTON_DETAIL_DIV);
 
       await createButton.evaluate(row => {
         row.style.backgroundColor = 'green';
@@ -336,14 +310,14 @@ export const runU005 = () => {
         await page.waitForLoadState('networkidle');
 
         // Locate the table container using data-testid
-        const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
+        const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await tableContainer.waitFor({ state: 'visible' });
 
         // Locate the first data row using data-testid
-        let firstDataRow = tableContainer.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY}"] tr`).first();
+        let firstDataRow = tableContainer.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY + ' tr').first();
 
         // Locate the target button using data-testid
-        const targetButton = firstDataRow.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_SET}"]`);
+        const targetButton = firstDataRow.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_SET);
 
         await targetButton.evaluate(row => {
           row.style.backgroundColor = 'yellow';
@@ -380,7 +354,7 @@ export const runU005 = () => {
     );
     await allure.step('Step 13: Проверяем, что кнопки свитчера отображаются. (Confirm that the switcher is visible)', async () => {
       // Locate the switcher using data-testid
-      const switcher = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH}"]`);
+      const switcher = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH);
 
       await switcher.evaluate(row => {
         row.style.backgroundColor = 'yellow';
@@ -389,14 +363,14 @@ export const runU005 = () => {
       });
 
       // Locate all switch items using data-testid
-      const switchItems = await page.locator('[data-testid^="ModalBaseMaterial-TableList-Switch-Item"]').all();
+      const switchItems = await page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEMS).all();
 
       // Validate the number of switch items
       expect(switchItems.length).toBe(4);
     });
     await allure.step("Step 14: Проверяем, что свитчер 'Материалы для деталей' выбран. (Confirm that 'Материалы для деталей' is selected)", async () => {
       // Locate the active switcher item using data-testid
-      const switcher = await page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1}"]`);
+      const switcher = await page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1);
 
       // Get the text content of the switcher
       const content = await switcher.textContent();
@@ -420,7 +394,7 @@ export const runU005 = () => {
         const validGroups = Object.entries(allTableGroups).filter(([groupName, _]) => groupName !== 'buttons');
 
         // Retrieve the switch items on the page using data-testid
-        const switchItems = await page.locator('[data-testid^="ModalBaseMaterial-TableList-Switch-Item"]').all();
+        const switchItems = await page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEMS).all();
 
         let counter = 0;
 
@@ -506,7 +480,7 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the switcher item using data-testid
-      const targetItem = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1}"]`);
+      const targetItem = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1);
 
       // Ensure the item is visible
       await expect(targetItem).toBeVisible();
@@ -519,7 +493,7 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the table using data-testid
-      const leftTable = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE}"]`);
+      const leftTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE);
 
       await leftTable.evaluate(row => {
         row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -530,7 +504,7 @@ export const runU005 = () => {
       await expect(leftTable).toBeVisible();
 
       // Locate the search field using data-testid and fill it
-      const searchInput = leftTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_SEARCH_INPUT_DROPDOWN_INPUT}"]`);
+      const searchInput = leftTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_SEARCH_INPUT_DROPDOWN_INPUT);
       await searchInput.fill(TEST_CATEGORY);
       await page.waitForLoadState('networkidle');
 
@@ -559,7 +533,7 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the table using data-testid
-      const centerTable = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE}"]`);
+      const centerTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE);
 
       await centerTable.evaluate(row => {
         row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
@@ -570,7 +544,7 @@ export const runU005 = () => {
       await expect(centerTable).toBeVisible();
 
       // Locate the search field using data-testid and fill it
-      const searchInput = centerTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_SEARCH_INPUT_DROPDOWN_INPUT}"]`);
+      const searchInput = centerTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_SEARCH_INPUT_DROPDOWN_INPUT);
       await searchInput.fill(TEST_MATERIAL);
       await page.waitForLoadState('networkidle');
 
@@ -598,23 +572,23 @@ export const runU005 = () => {
     await allure.step('Step 20: Verify that search works for table 3 (Verify that search works for each column)', async () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(500);
-      const rightTable = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM}"]`);
+      const rightTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
       await rightTable.evaluate(row => {
         row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
         row.style.border = '2px solid red'; // Add a red border for extra visibility
         row.style.color = 'blue'; // Change text color to blue
       });
-      await expect(page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM}"]`)).toBeVisible();
-      await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).fill('');
+      await expect(page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM)).toBeVisible();
+      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill('');
       await page.waitForTimeout(1000);
       // Locate the search field within the left table and fill it
-      await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).fill(TEST_NAME);
+      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill(TEST_NAME);
 
       await page.waitForLoadState('networkidle');
       // Optionally, validate that the search input is visible
-      await expect(rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`)).toBeVisible();
+      await expect(rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT)).toBeVisible();
 
-      await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).press('Enter');
+      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).press('Enter');
       await page.waitForLoadState('networkidle');
       // Find the first row in the table
       const firstRow = rightTable.locator('tbody tr:first-child');
@@ -639,7 +613,7 @@ export const runU005 = () => {
     });
     await allure.step('Step 21: Open Archive dialog (Open Archive dialog)', async () => {
       // To open the archive dialog, we need to add something to the archive
-      const targetTable = page.locator(`table[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM}"]`);
+      const targetTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
 
       // Ensure the table is visible
       await expect(targetTable).toBeVisible();
@@ -667,14 +641,14 @@ export const runU005 = () => {
       await page.waitForTimeout(500);
       // Archive dialog locator
       const dialogTestId = 'ModalBaseMaterial'; // No brackets
-      const buttonTestId = MODAL_BASE_MATERIAL_ADD_BUTTON; // No brackets
+      const buttonTestId = SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON_ID; // TestId for Add button
       const buttonLabel = 'Добавить';
       let expectedState = true;
 
       await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
         const isButtonReady = await shortagePage.isButtonVisibleTestId(
           page,
-          buttonTestId, // Pass only the testId string
+          SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON_ID, // Use the correct testId constant
           buttonLabel,
           expectedState,
           dialogTestId, // Pass dialog context if needed
@@ -685,7 +659,7 @@ export const runU005 = () => {
       });
 
       // Reuse the locator for the button
-      const buttonLocator = await page.locator(`button[data-testid="${buttonTestId}"]`);
+      const buttonLocator = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON);
 
       await buttonLocator.evaluate(row => {
         row.style.backgroundColor = 'red';
@@ -698,7 +672,7 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1500);
       // Locate the table container using data-testid
-      const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await tableContainer.evaluate(row => {
         row.style.backgroundColor = 'yellow';
         row.style.border = '2px solid red';
@@ -707,7 +681,7 @@ export const runU005 = () => {
       await tableContainer.waitFor({ state: 'visible' });
 
       const firstDataRow = tableContainer.locator('table tbody tr').first();
-      const targetButton = firstDataRow.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_RESET}"]`);
+      const targetButton = firstDataRow.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_RESET);
 
       await targetButton.evaluate(row => {
         row.style.backgroundColor = 'black';
@@ -762,7 +736,7 @@ export const runU005 = () => {
       await page.waitForTimeout(500);
     });
     await allure.step('Step 24: Open Добавить из базы dialog (Open Добавить из базы dialog)', async () => {
-      const button = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON}"]`, { hasText: 'Добавить из базы' });
+      const button = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON, { hasText: 'Добавить из базы' });
       await button.evaluate(row => {
         row.style.backgroundColor = 'green';
         row.style.border = '2px solid red';
@@ -1027,7 +1001,7 @@ export const runU005 = () => {
       'Step 02: В поле ввода инпута "Наименование" вводим значение переменной. (In the input field "Name" we enter the value of the variable)',
       async () => {
         await page.waitForLoadState('networkidle');
-        const field = page.locator(`[data-testid="${ADD_DETAIL_INFORMATION_INPUT}"]`);
+        const field = page.locator(SelectorsPartsDataBase.ADD_DETAL_INFORMATION_INPUT_INPUT);
 
         await field.evaluate(row => {
           row.style.backgroundColor = 'yellow';
@@ -1049,10 +1023,10 @@ export const runU005 = () => {
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
         // Locate the table container by searching for the h3 with the specific title.
-        const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
+        const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await expect(tableContainer).toBeVisible(); // Ensure the table container is visible
 
-        const tableTitle = tableContainer.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE}"]`);
+        const tableTitle = tableContainer.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE);
         await expect(tableTitle).toBeVisible(); // Ensure the title is visible
 
         // Optionally, highlight the title for debugging
@@ -1076,23 +1050,23 @@ export const runU005 = () => {
     await allure.step('Step 04: Verify that search works for table 3 (Verify that search works for each column)', async () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(500);
-      const rightTable = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM}"]`);
+      const rightTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
       await rightTable.evaluate(row => {
         row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
         row.style.border = '2px solid red'; // Add a red border for extra visibility
         row.style.color = 'blue'; // Change text color to blue
       });
-      await expect(page.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM}"]`)).toBeVisible();
-      await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).fill('');
+      await expect(page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM)).toBeVisible();
+      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill('');
       await page.waitForTimeout(1000);
       // Locate the search field within the left table and fill it
-      await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).fill(TEST_NAME);
+      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill(TEST_NAME);
 
       await page.waitForLoadState('networkidle');
       // Optionally, validate that the search input is visible
-      await expect(rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`)).toBeVisible();
+      await expect(rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT)).toBeVisible();
 
-      await rightTable.locator(`[data-testid="${MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT}"]`).press('Enter');
+      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).press('Enter');
       await page.waitForLoadState('networkidle');
       // Find the first row in the table
       const firstRow = rightTable.locator('tbody tr:first-child');
@@ -1116,7 +1090,7 @@ export const runU005 = () => {
     await allure.step('Step 05: Add the found Item (Add the found Item)', async () => {
       await page.waitForLoadState('networkidle');
 
-      const addButton = page.locator(`[data-testid="${MODAL_BASE_MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON);
       await addButton.evaluate(row => {
         row.style.backgroundColor = 'green';
         row.style.border = '2px solid red';
@@ -1133,7 +1107,7 @@ export const runU005 = () => {
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
         // Locate the table container by searching for the h3 with the specific title.
-        const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
+        const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await tableContainer.waitFor({ state: 'visible' });
         const firstDataRow = tableContainer.locator('table tbody tr').first();
         const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -1152,7 +1126,7 @@ export const runU005 = () => {
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
         // Locate the table container by searching for the h3 with the specific title.
-        const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
+        const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await tableContainer.waitFor({ state: 'visible' });
         const firstDataRow = tableContainer.locator('table tbody tr').first();
         const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -1170,7 +1144,7 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the table container using data-testid
-      const tableContainer = page.locator(`[data-testid="${ADD_DETAIL_CHARACTERISTIC_BLANKS}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       // Locate the row dynamically by searching for the text "Длина (Д)"
@@ -1559,7 +1533,7 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2500);
       // Locate the parent section for the specific table
-      const parentSection = page.locator(`section[data-testid="${ADD_DETAIL_FILE_COMPONENT}"]`);
+      const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
       await parentSection.evaluate(row => {
         row.style.backgroundColor = 'yellow';
         row.style.border = '2px solid red';
@@ -1570,7 +1544,7 @@ export const runU005 = () => {
       await page.waitForTimeout(1000);
 
       // Locate the table rows within the scoped section
-      const tableRows = parentSection.locator(`table[data-testid="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE}"] tbody tr`); // Target the actual table rows
+      const tableRows = parentSection.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE + ' tbody tr'); // Target the actual table rows
       // Debug: Print all row texts
       tableRows
         .evaluateAll(rows => rows.map(row => row.textContent))
@@ -1640,7 +1614,7 @@ export const runU005 = () => {
         await dragDropModal.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
       }
 
-      const button = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON}"]`, { hasText: 'Добавить из базы' });
+      const button = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON, { hasText: 'Добавить из базы' });
       await button.evaluate(row => {
         row.style.backgroundColor = 'green';
         row.style.border = '2px solid red';
@@ -1862,12 +1836,12 @@ export const runU005 = () => {
       // Locate the parent section for the specific table
       //const parentSection = page.locator('section.attach-file-component');
       await page.waitForTimeout(1000);
-      const parentSection = page.locator(`section[data-testid="${ADD_DETAIL_FILE_COMPONENT}"]`);
+      const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
       console.log('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
       //const tableRows = parentSection.locator('tbody .table-yui-kit__tr');
-      const tableRows = parentSection.locator(`table[data-testid="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE}"] tbody tr`); // Target the actual table rows
+      const tableRows = parentSection.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE + ' tbody tr'); // Target the actual table rows
 
       const rowCount = await tableRows.count();
 
@@ -1907,24 +1881,24 @@ export const runU005 = () => {
     });
     await allure.step('Step 24: Удалите первый файл из списка медиафайлов.(Remove the first file from the list of attached media files.)', async () => {
       await page.waitForLoadState('networkidle');
-      let printButton = page.locator(`button[data-testid="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT}"]`, { hasText: 'Печать' });
+      let printButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT, { hasText: 'Печать' });
       await printButton.evaluate(checkboxElement => {
         checkboxElement.style.backgroundColor = 'yellow';
         checkboxElement.style.border = '2px solid red';
         checkboxElement.style.color = 'blue';
       });
-      let isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT, 'Печать', false);
-      let deleteButton = page.locator(`button[data-testid="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC}"]`, { hasText: 'Удалить' });
+      let isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint', 'Печать', false);
+      let deleteButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC, { hasText: 'Удалить' });
       await deleteButton.evaluate(checkboxElement => {
         checkboxElement.style.backgroundColor = 'yellow';
         checkboxElement.style.border = '2px solid red';
         checkboxElement.style.color = 'blue';
       });
-      let isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC, 'Удалить', false);
+      let isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc', 'Удалить', false);
       expect(isPrintButtonReady).toBeTruthy();
       expect(isDeleteButtonReady).toBeTruthy();
       // Locate the parent section for the specific table
-      const parentSection = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT}"]`);
+      const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
       console.log('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
@@ -1943,20 +1917,20 @@ export const runU005 = () => {
       // Check the checkbox
       await checkboxInput.check();
       await page.waitForTimeout(100);
-      printButton = page.locator(`[data-testid="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT}"]`, { hasText: 'Печать' });
+      printButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT, { hasText: 'Печать' });
       await printButton.evaluate(checkboxElement => {
         checkboxElement.style.backgroundColor = 'green';
         checkboxElement.style.border = '2px solid red';
         checkboxElement.style.color = 'blue';
       });
-      isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT, 'Печать', true);
-      deleteButton = page.locator(`button[data-testid="${ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC}"]`, { hasText: 'Удалить' });
+      isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint', 'Печать', true);
+      deleteButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC, { hasText: 'Удалить' });
       await deleteButton.evaluate(checkboxElement => {
         checkboxElement.style.backgroundColor = 'green';
         checkboxElement.style.border = '2px solid red';
         checkboxElement.style.color = 'blue';
       });
-      isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC, 'Удалить', true);
+      isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc', 'Удалить', true);
       expect(isPrintButtonReady).toBeTruthy();
       expect(isDeleteButtonReady).toBeTruthy();
       // Assert that the checkbox is checked
@@ -1973,7 +1947,7 @@ export const runU005 = () => {
     });
 
     await allure.step('Step 25: Save the detail', async () => {
-      const saveButton = page.locator(`[data-testid="${ADD_DETAIL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE}"]`, { hasText: 'Сохранить' });
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, { hasText: 'Сохранить' });
       await saveButton.evaluate(rowElement => {
         rowElement.style.backgroundColor = 'green';
         rowElement.style.border = '2px solid red';

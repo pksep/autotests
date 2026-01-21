@@ -2,24 +2,26 @@
 export const BUTTON_CREATE_NEW_PART = '[data-testid="BaseProducts-Button-Create"]';
 export const BASE_PRODUCTS_BUTTON_CREATE = '[data-testid="BaseProducts-Button-Create"]';
 export const BUTTON_DETAIL = '[data-testid="BaseProducts-CreatLink-Cardbase-detail"]';
+export const BUTTON_DETAIL_DIV = 'div[data-testid="BaseProducts-CreatLink-Cardbase-detail"]';
 export const BUTTON_CBED = 'div[data-testid="BaseProducts-CreatLink-Cardbase-of-assembly-units"]';
 export const BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS = '[data-testid="BaseProducts-CreatLink-Cardbase-of-assembly-units"]';
 export const BUTTON_PRODUCT = '[data-testid="BaseProducts-CreatLink-Cardthe-base-of-the-tool"]';
 export const BUTTON_ADD_OPERATION = '[data-testid="EditDetal-ModalTechProcess-Buttons-ButtonCreate"]';
 export const BUTTON_SAVE_OPERATION = '[data-testid="EditDetal-ModalTechProcess-Button-Save"]';
-export const BUTTON_SAVE = '[data-testid="AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save"]';
-export const BUTTON_CANCEL = '[data-testid="EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
+export const BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = 'button[data-testid="AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save"]';
+export const BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = 'button[data-testid="AddDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
 export const BUTTON_OPERATION = '[data-testid="EditDetal-Buttons-TechProcess"]';
 export const BUTTON_OPERATION_PROCESS_ASSYMBLY = '[data-testid="Creator-Buttons-TechProcess"]';
 export const BUTTON_SAVE_CBED = 'button[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Save"]';
-export const BUTTON_CANCEL_CBED = '[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
-export const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = '[data-testid="Creator-SaveAndCancelButtons-Center-Save"]';
-export const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = '[data-testid="Creator-SaveAndCancelButtons-Center-Cancel"]';
+export const BUTTON_CANCEL_CBED = 'button[data-testid="Creator-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
+export const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = 'button[data-testid="Creator-SaveAndCancelButtons-Center-Save"]';
+export const CREATOR_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = 'button[data-testid="Creator-SaveAndCancelButtons-Center-Cancel"]';
 
 // Data-testid values for findAndClickElement (without [data-testid="..." wrapper])
 export const ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE_ID = 'AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save';
 export const EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL_ID = 'EditDetal-ButtonSaveAndCancel-ButtonsCenter-Cancel';
 export const BASE_PRODUCTS_BUTTON_CREATE_ID = 'BaseProducts-Button-Create';
+export const MODAL_BASE_MATERIAL_ADD_BUTTON_ID = 'ModalBaseMaterial-Add-Button';
 export const BASE_DETALS_CREAT_LINK_TITLE_BASE_OF_ASSEMBLY_UNITS_ID = 'BaseProducts-CreatLink-Cardbase-of-assembly-units';
 export const SPECIFICATION_BUTTONS_ADDING_SPECIFICATION_ID = 'Specification-Buttons-addingSpecification'; // Note: lowercase 'a' in 'addingSpecification'
 export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1_ID = 'Specification-Dialog-CardbaseDetail1'; // Note: lowercase 'b' in 'Cardbase'
@@ -98,8 +100,8 @@ export const U002_CREATOR_CANCEL_BUTTON = BUTTON_CANCEL_CBED;
 export const U002_CREATOR_TECHPROCESS_TABLE_WRAPPER = TABLE_PROCESS_ASS;
 export const ADD_DETAL_INFORMATION_INPUT_INPUT = INPUT_DETAIL_NAME;
 export const ADD_DETAL_DESIGNATION_INPUT_INPUT = INPUT_DETAIL_DESIGNATION;
-export const ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = BUTTON_SAVE;
-export const EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = BUTTON_CANCEL;
+export const ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE;
+export const EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL = BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL;
 export const CREATOR_INFORMATION_INPUT = INPUT_NAME_IZD;
 export const TABLE_PROCESS_ASSYMBLY_NAME = TABLE_PROCESS_NAME_OPERATION_ASS;
 
@@ -162,6 +164,62 @@ export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Moda
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT =
   '[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]';
 export const MODAL_BASE_MATERIAL_DESIGNATION_INPUT = '[data-testid="ModalBaseMaterial-Designation-Input-Input"]';
+
+// U005 specific constants (added for Rule 1 compliance)
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS = '[data-testid="AddDetal-CharacteristicBlanks"]';
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY = '[data-testid="AddDetal-CharacteristicBlanks-Tbody"]';
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_SET = '[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Set"]';
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_RESET = '[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Reset"]';
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE = '[data-testid="AddDetal-CharacteristicBlanks-Title"]';
+export const ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON = '[data-testid="AddDetal-FileComponent-AddFileButton"]';
+export const ADD_DETAIL_FILE_COMPONENT = '[data-testid="AddDetal-FileComponent"]';
+
+// Modal base material constants
+export const MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH = '[data-testid="ModalBaseMaterial-TableList-Switch"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1 = '[data-testid="ModalBaseMaterial-TableList-Switch-Item1"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEMS = '[data-testid^="ModalBaseMaterial-TableList-Switch-Item"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE = '[data-testid="ModalBaseMaterial-TableList-Table-Type"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_SEARCH_INPUT_DROPDOWN_INPUT = '[data-testid="ModalBaseMaterial-TableList-Table-Type-SearchInput-Dropdown-Input"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE = '[data-testid="ModalBaseMaterial-TableList-Table-SubType"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_SEARCH_INPUT_DROPDOWN_INPUT = '[data-testid="ModalBaseMaterial-TableList-Table-SubType-SearchInput-Dropdown-Input"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM = '[data-testid="ModalBaseMaterial-TableList-Table-Item"]';
+export const MODAL_BASE_MATERIAL_ADD_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
+
+// File component constants for U005
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES = '[data-testid="AddDetal-FileComponent-ModalBaseFiles"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM0 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-FileTable"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_SEARCH_DROPDOWN_INPUT = '[data-testid="Search-Dropdown-Input"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_TABLE = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-Table"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_BUTTONS_ADD_BUTTON = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE_THEAD = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table-Thead"]';
+
+// Drag and drop modal constants for U005
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_TEXTAREA_DESCRIPTION_TEXTAREA = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_CHECKBOX_MAIN = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_NUMBER_VERSION_INPUT = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload"]';
+
+// Document table constants for U005
+export const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE = '[data-testid="AddDetal-FileComponent-DocumentTable-Table"]';
+export const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT = '[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint"]';
+export const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC = '[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc"]';
+
+// Additional U005 constants
+export const ADD_DETAIL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = '[data-testid="AddDetal-ButtonSaveAndCancel-ButtonsCenter-Save"]';
+
+// Archive dialog constants for U005
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS_BAN_DIALOG = '[data-testid="ModalConfirm"]';
+
+
+// U004 dialogs (РМ) — share ModalBaseMaterial
 
 // U004 dialogs (РМ) — share ModalBaseMaterial
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG = 'ModalBaseMaterial';
