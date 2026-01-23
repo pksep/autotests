@@ -48,7 +48,7 @@ export const runU006 = () => {
 
     await allure.step("Step 3: Search for 'Test' and press Enter", async () => {
       // Find the search input field using the specific data-testid
-      const searchInput = page.locator(`[data-testid="${CONST.SEARCH_DROPDOWN_INPUT}"]`);
+      const searchInput = page.locator(SelectorsPartsDataBase.SEARCH_DROPDOWN_INPUT);
       await expect(searchInput).toBeVisible({ timeout: 5000 });
 
       // Highlight the search input for visibility
@@ -104,7 +104,7 @@ export const runU006 = () => {
         await page.waitForTimeout(500);
 
         // Find and click the Archive button
-        const archiveButton = page.locator(`button[data-testid="${CONST.ARCHIVE_BUTTON_GENERIC}"]:has-text("Архив")`);
+        const archiveButton = page.locator(`${SelectorsPartsDataBase.ARCHIVE_BUTTON_GENERIC}:has-text("Архив")`);
         await expect(archiveButton).toBeVisible({ timeout: 5000 });
 
         // Highlight the archive button
@@ -118,7 +118,7 @@ export const runU006 = () => {
         await page.waitForTimeout(1000);
 
         // Wait for and interact with the confirmation dialog
-        const confirmDialog = page.locator(`[data-testid="${CONST.MODAL_CONFIRM_GENERIC}"]`);
+        const confirmDialog = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
         await expect(confirmDialog).toBeVisible({ timeout: 5000 });
 
         // Highlight the dialog
@@ -128,7 +128,7 @@ export const runU006 = () => {
         });
 
         // Click the Yes button in the dialog
-        const yesButton = confirmDialog.locator(`[data-testid="${CONST.MODAL_CONFIRM_YES_BUTTON_GENERIC}"]`);
+        const yesButton = confirmDialog.locator(SelectorsPartsDataBase.MODAL_CONFIRM_YES_BUTTON_GENERIC);
         await expect(yesButton).toBeVisible({ timeout: 5000 });
 
         // Highlight the Yes button
@@ -399,7 +399,7 @@ export const runU006 = () => {
         const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await expect(tableContainer).toBeVisible(); // Ensure the table container is visible
 
-        const tableTitle = tableContainer.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_TITLE}"]`);
+        const tableTitle = tableContainer.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_TITLE);
         await expect(tableTitle).toBeVisible(); // Ensure the title is visible
 
         // Optionally, highlight the title for debugging
@@ -482,7 +482,7 @@ export const runU006 = () => {
         // Locate the table container by searching for the h3 with the specific title.
         const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await tableContainer.waitFor({ state: 'visible' });
-        const firstDataRow = tableContainer.locator('table tbody tr').first();
+        const firstDataRow = tableContainer.locator(SelectorsPartsDataBase.CHR_TABLE).locator('tr').first();
         const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
 
         await targetSpan.evaluate(row => {
@@ -642,19 +642,19 @@ export const runU006 = () => {
         // Locate the input section inside the file section (common pattern)
 
         // Locate the textarea inside the fieldset (specific textarea)
-        const textarea = fileSection.locator(`textarea[data-testid="${CONST.FILE_DESCRIPTION_TEXTAREA}"]`);
+        const textarea = fileSection.locator(SelectorsPartsDataBase.FILE_DESCRIPTION_TEXTAREA);
         await textarea.evaluate(row => {
           row.style.backgroundColor = 'yellow';
           row.style.border = '2px solid red';
           row.style.color = 'blue';
         });
-        const checkbox = fileSection.locator(`input[data-testid="${CONST.FILE_MAIN_CHECKBOX}"]`);
+        const checkbox = fileSection.locator(SelectorsPartsDataBase.FILE_MAIN_CHECKBOX);
         await checkbox.evaluate(row => {
           row.style.backgroundColor = 'yellow';
           row.style.border = '2px solid red';
           row.style.color = 'blue';
         });
-        const version = fileSection.locator(`input[data-testid="${CONST.FILE_VERSION_INPUT}"]`);
+        const version = fileSection.locator(SelectorsPartsDataBase.FILE_VERSION_INPUT);
         await version.evaluate(row => {
           row.style.backgroundColor = 'yellow';
           row.style.border = '2px solid red';
@@ -798,7 +798,7 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the upload button using data-testid
-      const uploadButton = page.locator(`[data-testid="${CONST.FILE_UPLOAD_BUTTON}"]`);
+      const uploadButton = page.locator(SelectorsPartsDataBase.FILE_UPLOAD_BUTTON);
       const modalLocator = page.locator(`dialog[data-testid="${CONST.FILE_DRAG_DROP_MODAL}"]`);
       console.log('Upload button and modal located.');
 
@@ -914,11 +914,11 @@ export const runU006 = () => {
 
       // Locate the parent section for the specific table
       await page.waitForTimeout(1000);
-      const parentSection = page.locator(`section[data-testid="${CONST.FILE_COMPONENT}"]`);
+      const parentSection = page.locator(`section[data-testid="${SelectorsPartsDataBase.FILE_COMPONENT_ID}"]`);
       logger.info('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
-      const tableRows = parentSection.locator(`table[data-testid="${CONST.DOCUMENT_TABLE_SELECTOR}"] tbody tr`); // Target the actual table rows
+      const tableRows = parentSection.locator(`${SelectorsPartsDataBase.DOCUMENT_TABLE_SELECTOR} tbody tr`); // Target the actual table rows
       const rowCount = await tableRows.count();
       logger.info(`Found ${rowCount} rows in the table.`);
 
@@ -939,9 +939,9 @@ export const runU006 = () => {
           const row = tableRows.nth(i);
 
           // Try multiple selector strategies to find the filename cell
-          let nameCell = row.locator(`[data-testid^="${CONST.DOCUMENT_TABLE_NAME_CELL}"]`);
+          let nameCell = row.locator(`[data-testid^="${SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_ID}"]`);
           if ((await nameCell.count()) === 0) {
-            nameCell = row.locator(`td[data-testid*="${CONST.DOCUMENT_TABLE_NAME_CELL}"]`);
+            nameCell = row.locator(`td[data-testid*="${SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_ID}"]`);
           }
           if ((await nameCell.count()) === 0) {
             // Fallback: try to find any cell in the row that might contain the filename
@@ -1128,7 +1128,7 @@ export const runU006 = () => {
         row.style.border = '2px solid red';
         row.style.color = 'blue';
       });
-      const addButton = page.locator(`[data-testid="${CONST.FILE_BASE_ADD_BUTTON}"]`, { hasText: 'Добавить' });
+      const addButton = page.locator(SelectorsPartsDataBase.FILE_BASE_ADD_BUTTON, { hasText: 'Добавить' });
       await addButton.evaluate(row => {
         row.style.backgroundColor = 'yellow';
         row.style.border = '2px solid red';
@@ -1159,7 +1159,7 @@ export const runU006 = () => {
       await page.waitForTimeout(1000);
       const selectedPartNumber = CONST.TEST_FILE; // Replace with actual part number
 
-      const bottomTableLocator = page.locator(`[data-testid="${CONST.FILE_BASE_BOTTOM_TABLE}"]`); // Adjust 'xxxxx' as per actual table id
+      const bottomTableLocator = page.locator(SelectorsPartsDataBase.FILE_BASE_BOTTOM_TABLE); // Adjust 'xxxxx' as per actual table id
       await bottomTableLocator.evaluate(row => {
         row.style.backgroundColor = 'green';
         row.style.border = '2px solid red';
@@ -1209,7 +1209,7 @@ export const runU006 = () => {
     await allure.step('Step 22: Click bottom Add button', async () => {
       await page.waitForLoadState('networkidle');
 
-      const addButton = page.locator(`[data-testid="${CONST.FILE_BASE_FOOTER_ADD_BUTTON}"]`, { hasText: 'Добавить' }).last();
+      const addButton = page.locator(SelectorsPartsDataBase.FILE_BASE_FOOTER_ADD_BUTTON, { hasText: 'Добавить' }).last();
 
       await addButton.evaluate(row => {
         row.style.backgroundColor = 'green';
@@ -1224,11 +1224,11 @@ export const runU006 = () => {
 
       // Locate the parent section for the specific table
       await page.waitForTimeout(1000);
-      const parentSection = page.locator(`section[data-testid="${CONST.FILE_COMPONENT}"]`);
+      const parentSection = page.locator(`section[data-testid="${SelectorsPartsDataBase.FILE_COMPONENT_ID}"]`);
       logger.info('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
-      const tableRows = parentSection.locator(`table[data-testid="${CONST.DOCUMENT_TABLE_SELECTOR}"] tbody tr`); // Target the actual table rows
+      const tableRows = parentSection.locator(`${SelectorsPartsDataBase.DOCUMENT_TABLE_SELECTOR} tbody tr`); // Target the actual table rows
       const rowCount = await tableRows.count();
       logger.info(`Found ${rowCount} rows in the table.`);
 
@@ -1236,7 +1236,7 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const row = tableRows.nth(i);
-        const fileNameCell = row.locator(`[data-testid^="${CONST.DOCUMENT_TABLE_NAME_CELL}"]`);
+        const fileNameCell = row.locator(`[data-testid^="${SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_ID}"]`);
         await fileNameCell.waitFor({ state: 'visible' });
         const fileNameText = await fileNameCell.textContent();
 
@@ -1281,21 +1281,20 @@ export const runU006 = () => {
       expect(isPrintButtonReady).toBeTruthy();
       expect(isDeleteButtonReady).toBeTruthy();
       // Locate the parent section for the specific table
-      const parentSection = page.locator(`[data-testid="${CONST.FILE_COMPONENT}"]`);
+      const parentSection = page.locator(SelectorsPartsDataBase.FILE_COMPONENT);
       logger.info('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
-      const tableRows = parentSection.locator(`[data-testid^="${CONST.DOCUMENT_TABLE_ROW}"]`);
+      const tableRows = parentSection.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_ROW_ID);
       const row = tableRows.first();
 
       // Refine the locator to target the checkbox input inside the third column
-      const checkboxInput = row.locator(`[data-testid^="${CONST.DOCUMENT_TABLE_CHECKBOX}"]`);
+      const checkboxInput = row.locator(`[data-testid^="${SelectorsPartsDataBase.DOCUMENT_TABLE_CHECKBOX_ID}"]`);
       await checkboxInput.evaluate(checkboxElement => {
         checkboxElement.style.backgroundColor = 'green';
         checkboxElement.style.border = '2px solid red';
         checkboxElement.style.color = 'blue';
       });
-      await checkboxInput.waitFor({ state: 'visible' });
 
       // Check the checkbox
       await checkboxInput.check();
@@ -1678,7 +1677,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 6: Выбрать материал и подтвердить выбор', async () => {
-      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME_2);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_NAME_2);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
@@ -1692,7 +1691,7 @@ export const runU006 = () => {
 
     await allure.step('Step 7: Проверить, что выбранный материал отображается в форме, но поля атрибутов остаются пустыми', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      const chrTble = tableContainer.locator(`[data-testid="${CONST.CHR_TABLE}"]`);
+      const chrTble = tableContainer.locator(SelectorsPartsDataBase.CHR_TABLE);
 
       await expect(tableContainer).toBeVisible();
 
@@ -1722,7 +1721,7 @@ export const runU006 = () => {
         logger.info('Все поля атрибутов остаются пустыми');
       } else {
         // Fallback: try to find any input fields in the table
-        const fallbackInputFields = tableContainer.locator(`input[data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`);
+        const fallbackInputFields = tableContainer.locator(`input[data-testid$="${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`);
         const fallbackCount = await fallbackInputFields.count();
 
         if (fallbackCount > 0) {
@@ -1903,7 +1902,7 @@ export const runU006 = () => {
     await allure.step('Шаг 7: Заполнить только один обязательный атрибут', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
-      const chrTble = tableContainer.locator(`[data-testid="${CONST.CHR_TABLE}"]`);
+      const chrTble = tableContainer.locator(SelectorsPartsDataBase.CHR_TABLE);
 
       const targetRow = chrTble.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
@@ -1924,7 +1923,7 @@ export const runU006 = () => {
     });
     await allure.step('Шаг 7a: Cycle through all the values in this table making sure that none of them ahve the value NaN', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      const chrTble = tableContainer.locator(`[data-testid="${CONST.CHR_TABLE}"]`);
+      const chrTble = tableContainer.locator(SelectorsPartsDataBase.CHR_TABLE);
 
       // Scroll to the table container to ensure it's visible
       await tableContainer.scrollIntoViewIfNeeded();
@@ -3343,7 +3342,7 @@ export const runU006 = () => {
 
     await allure.step('Step 3: Подтвердить, что данные сохранились', async () => {
       // Verify detail name is preserved
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT_EDIT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT_EDIT);
       await expect(detailNameInput).toBeVisible();
       const savedName = await detailNameInput.inputValue();
       expect(savedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
@@ -3530,7 +3529,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Шаг 2: Удалить материал', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
@@ -3549,7 +3548,7 @@ export const runU006 = () => {
 
       await archiveYesButton.click();
       await page.waitForLoadState('networkidle');
-      const cancelButton = page.locator(`[data-testid="${CONST.MATERIAL_CANCEL_BUTTON}"]`);
+      const cancelButton = page.locator(SelectorsPartsDataBase.MATERIAL_CANCEL_BUTTON);
       await expect(cancelButton).toBeVisible();
       await cancelButton.click();
       await page.waitForLoadState('networkidle');
@@ -3724,7 +3723,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Шаг 3: Нажать на иконку для удаления выбранного материала', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
@@ -3743,7 +3742,7 @@ export const runU006 = () => {
 
       await archiveYesButton.click();
       await page.waitForLoadState('networkidle');
-      const cancelButton = page.locator(`[data-testid="${CONST.MATERIAL_CANCEL_BUTTON}"]`);
+      const cancelButton = page.locator(SelectorsPartsDataBase.MATERIAL_CANCEL_BUTTON);
       await expect(cancelButton).toBeVisible();
       await cancelButton.click();
       await page.waitForLoadState('networkidle');
@@ -4717,7 +4716,7 @@ export const runU006 = () => {
 
           // Check for any save buttons
           const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-          const editSaveButton = page.locator(`[data-testid="${CONST.EDIT_SAVE_BUTTON}"]`);
+          const editSaveButton = page.locator(`SelectorsPartsDataBase.EDIT_SAVE_BUTTON`);
           const saveButtonCount = await saveButton.count();
           const editSaveButtonCount = await editSaveButton.count();
 
@@ -4734,7 +4733,7 @@ export const runU006 = () => {
       }
 
       // Проверить наименование
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT_EDIT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT_EDIT);
       await expect(detailNameInput).toBeVisible();
       const retrievedName = await detailNameInput.inputValue();
       expect(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
@@ -5189,7 +5188,7 @@ export const runU006 = () => {
 
           // Check for any save buttons
           const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-          const editSaveButton = page.locator(`[data-testid="${CONST.EDIT_SAVE_BUTTON}"]`);
+          const editSaveButton = page.locator(`SelectorsPartsDataBase.EDIT_SAVE_BUTTON`);
           const saveButtonCount = await saveButton.count();
           const editSaveButtonCount = await editSaveButton.count();
 
@@ -5206,7 +5205,7 @@ export const runU006 = () => {
       }
 
       // Проверить наименование
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT_EDIT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT_EDIT);
       await expect(detailNameInput).toBeVisible();
       const retrievedName = await detailNameInput.inputValue();
       expect(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
@@ -5404,7 +5403,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Шаг 4: Удалить один из материалов', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');

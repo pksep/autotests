@@ -267,15 +267,20 @@ export const TEST_FILE = '87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg
 export const FILE_DRAG_DROP_SECTION = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]';
 export const FILE_UPLOAD_BUTTON = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload"]';
 export const FILE_COMPONENT = '[data-testid="AddDetal-FileComponent"]';
+export const FILE_COMPONENT_ID = 'AddDetal-FileComponent';
 export const FILE_BASE_ADD_BUTTON = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton"]';
 export const FILE_NAME_INPUT = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]';
 export const TEST_NAME = 'test';
 export const DOCUMENT_TABLE_NAME_CELL = '[data-testid="AddDetal-FileComponent-DocumentTable-Tbody-Name"]';
 export const DOCUMENT_TABLE_NAME_CELL_ID = 'AddDetal-FileComponent-DocumentTable-Tbody-Name';
-export const DOCUMENT_TABLE_SELECTOR = '[data-testid="AddDetal-FileComponent-DocumentTable-Table"]';
+export const DOCUMENT_TABLE_SELECTOR = 'table[data-testid="AddDetal-FileComponent-DocumentTable-Table"]';
 export const FILE_BASE_BOTTOM_TABLE = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-Table"]';
 export const DOCUMENT_TABLE_ROW = '[data-testid="AddDetal-FileComponent-DocumentTable-Tbody-Row"]';
+export const DOCUMENT_TABLE_TABLEROW = '[data-testid="AddDetal-FileComponent-DocumentTable-Tbody-TableRow"]';
+export const DOCUMENT_TABLE_ROW_ID = '[data-testid^="AddDetal-FileComponent-DocumentTable-Tbody-TableRow"]';
 export const DOCUMENT_TABLE_CHECKBOX = '[data-testid="AddDetal-FileComponent-DocumentTable-Tbody-Checkbox"]';
+export const DOCUMENT_TABLE_CHECKBOX_WITHOUT_TBODY = '[data-testid="AddDetal-FileComponent-DocumentTable-Checkbox"]';
+export const DOCUMENT_TABLE_CHECKBOX_ID = 'AddDetal-FileComponent-DocumentTable-Checkbox';
 export const ADD_DETAIL_BUTTONS_ACCESSORY = '[data-testid="AddDetal-Buttons-Accessory"]';
 export const ADD_DETAIL_BUTTONS_CHANGE_HISTORY = '[data-testid="AddDetal-Buttons-ChangeHistory"]';
 export const ADD_DETAIL_BUTTONS_COST_PRICE = '[data-testid="AddDetal-Buttons-CostPrice"]';
@@ -283,11 +288,11 @@ export const ADD_DETAIL_BUTTONS_TECH_PROCESS = '[data-testid="AddDetal-Buttons-T
 export const FILE_ADD_BUTTON = '[data-testid="AddDetal-FileComponent-AddFileButton"]';
 export const FILE_BASE_MODAL = 'AddDetal-FileComponent-ModalBaseFiles';
 export const FILE_BASE_TABLE_INNER = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Inner"]';
-export const FILE_DESCRIPTION_TEXTAREA = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea"]';
+export const FILE_DESCRIPTION_TEXTAREA = 'textarea[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Textarea-Description-Textarea"]';
 export const FILE_BASE_SEARCH_INPUT = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-SearchInput"]';
-export const FILE_VERSION_INPUT = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]';
+export const FILE_VERSION_INPUT = 'input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]';
 export const FILE_BASE_FOOTER_ADD_BUTTON = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton"]';
-export const FILE_MAIN_CHECKBOX = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]';
+export const FILE_MAIN_CHECKBOX = 'input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]';
 export const FILE_BASE_SWITCH_ITEM0 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"]';
 
 // Archive dialog constants for U005
