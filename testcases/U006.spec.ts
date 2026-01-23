@@ -9,7 +9,7 @@ import testData2 from '../testdata/U004-PC01.json';
 import { notDeepStrictEqual } from 'assert';
 import exp from 'constants';
 import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents';
-
+import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 // Constants for data-testids
 
 const baseFileNamesToVerify = [
@@ -179,7 +179,7 @@ export const runU006 = () => {
     });
   });
 
-  test('Cleanup TestCase 00a - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00a - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -190,15 +190,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -217,12 +217,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -246,16 +246,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -271,7 +271,7 @@ export const runU006 = () => {
       console.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
-  test('Cleanup TestCase 00aa - Архивация всех совпадающих деталей (Cleanup) `${CONST.SPECIAL_CHAR_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00aa - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -282,15 +282,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.SPECIAL_CHAR_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -309,12 +309,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.SPECIAL_CHAR_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.SPECIAL_CHAR_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -338,16 +338,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -374,7 +374,7 @@ export const runU006 = () => {
       'Step 02: В поле ввода инпута "Наименование" вводим значение переменной. (In the input field "Name" we enter the value of the variable)',
       async () => {
         await page.waitForLoadState('networkidle');
-        const field = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+        const field = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
 
         await field.evaluate(row => {
           row.style.backgroundColor = 'yellow';
@@ -384,9 +384,9 @@ export const runU006 = () => {
         await field.fill('');
         await field.press('Enter');
         await page.waitForTimeout(500);
-        await field.fill(CONST.TEST_DETAIL_NAME);
+        await field.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
         await page.waitForTimeout(500);
-        await expect(await field.inputValue()).toBe(CONST.TEST_DETAIL_NAME);
+        await expect(await field.inputValue()).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
         await page.waitForTimeout(50);
       },
     );
@@ -396,7 +396,7 @@ export const runU006 = () => {
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
         // Locate the table container by searching for the h3 with the specific title.
-        const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+        const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await expect(tableContainer).toBeVisible(); // Ensure the table container is visible
 
         const tableTitle = tableContainer.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_TITLE}"]`);
@@ -463,7 +463,7 @@ export const runU006 = () => {
     await allure.step('Step 05: Add the found Item (Add the found Item)', async () => {
       await page.waitForLoadState('networkidle');
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await addButton.evaluate(row => {
         row.style.backgroundColor = 'green';
         row.style.border = '2px solid red';
@@ -480,7 +480,7 @@ export const runU006 = () => {
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
         // Locate the table container by searching for the h3 with the specific title.
-        const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+        const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await tableContainer.waitFor({ state: 'visible' });
         const firstDataRow = tableContainer.locator('table tbody tr').first();
         const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -499,7 +499,7 @@ export const runU006 = () => {
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
         // Locate the table container by searching for the h3 with the specific title.
-        const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+        const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
         await tableContainer.waitFor({ state: 'visible' });
         const firstDataRow = tableContainer.locator('table tbody tr').first();
         const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
@@ -517,7 +517,7 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the table container using data-testid
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       // Locate the row dynamically by searching for the text "Длина (Д)"
@@ -529,7 +529,7 @@ export const runU006 = () => {
 
       // Locate the input field dynamically within the row
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       ); // Finds any input field with a data-testid ending in "-Input"
 
       // Highlight the input field for debugging (optional)
@@ -701,10 +701,10 @@ export const runU006 = () => {
       for (const button of buttons) {
         // Map button data-testid to constants
         const buttonTestIdMap: { [key: string]: string } = {
-          'AddDetal-Buttons-TechProcess': CONST.ADD_DETAIL_BUTTONS_TECH_PROCESS,
-          'AddDetal-Buttons-CostPrice': CONST.ADD_DETAIL_BUTTONS_COST_PRICE,
-          'AddDetal-Buttons-Accessory': CONST.ADD_DETAIL_BUTTONS_ACCESSORY,
-          'AddDetal-Buttons-ChangeHistory': CONST.ADD_DETAIL_BUTTONS_CHANGE_HISTORY,
+          'AddDetal-Buttons-TechProcess': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_TECH_PROCESS,
+          'AddDetal-Buttons-CostPrice': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_COST_PRICE,
+          'AddDetal-Buttons-Accessory': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_ACCESSORY,
+          'AddDetal-Buttons-ChangeHistory': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_CHANGE_HISTORY,
         };
 
         const buttonTestId = buttonTestIdMap[button.datatestid] || button.datatestid; // Fallback to original if not mapped
@@ -985,7 +985,7 @@ export const runU006 = () => {
     });
     await allure.step('Step 18: Open Добавить из базы dialog (Open Добавить из базы dialog)', async () => {
       await page.waitForLoadState('networkidle');
-      const button = page.locator(`[data-testid="${CONST.FILE_ADD_BUTTON}"]`, { hasText: 'Добавить из базы' });
+      const button = page.locator(SelectorsPartsDataBase.FILE_ADD_BUTTON, { hasText: 'Добавить из базы' });
       await button.evaluate(row => {
         row.style.backgroundColor = 'green';
         row.style.border = '2px solid red';
@@ -999,7 +999,7 @@ export const runU006 = () => {
       await page.waitForTimeout(500);
 
       // Locate the switch item using data-testid and highlight it for debugging
-      const switchItem = page.locator(`[data-testid="${CONST.FILE_BASE_SWITCH_ITEM0}"]`);
+      const switchItem = page.locator(SelectorsPartsDataBase.FILE_BASE_SWITCH_ITEM0);
       await switchItem.evaluate(row => {
         row.style.backgroundColor = 'green';
         row.style.border = '2px solid red';
@@ -1045,8 +1045,6 @@ export const runU006 = () => {
       });
 
       const leftTable = tableContainer;
-      // Locate the search input field using data-testid
-      //const searchField = dialog.locator(`[data-testid="${CONST.FILE_BASE_SEARCH_INPUT}"]`);
 
       // Ensure the search field is visible and editable
       await expect(searchField).toBeVisible();
@@ -1343,7 +1341,7 @@ export const runU006 = () => {
       await page.waitForTimeout(5000);
     });
   });
-  test('Cleanup TestCase 00b - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00b - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -1354,15 +1352,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -1381,12 +1379,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -1410,16 +1408,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -1450,7 +1448,7 @@ export const runU006 = () => {
 
     await allure.step("Step 02: Заполните поле 'Наименование' детали", async () => {
       // Fill in the 'Наименование' field.
-      await detailsPage.fillDetailName(CONST.TEST_DETAIL_NAME);
+      await detailsPage.fillDetailName(SelectorsPartsDataBase.TEST_DETAIL_NAME);
     });
 
     await allure.step('Step 03: Пропустите выбор материала', async () => {
@@ -1485,7 +1483,7 @@ export const runU006 = () => {
       await page.waitForTimeout(1000);
 
       // Locate the table by its data-testid.
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
 
       // Debug: Log the count of matching table elements.
       const tableCount = await detailTable.count();
@@ -1505,14 +1503,14 @@ export const runU006 = () => {
       });
 
       // Locate the search field in the table header.
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Clear the field, enter the detail name, and press Enter.
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -1533,7 +1531,7 @@ export const runU006 = () => {
 
         const rowText = await currentRow.textContent();
         console.log(`Row ${i + 1} text:`, rowText);
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           isMatch = true;
           break;
         }
@@ -1541,7 +1539,7 @@ export const runU006 = () => {
       expect(isMatch).toBeTruthy();
     });
   });
-  test('Cleanup TestCase 00c - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00c - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -1552,15 +1550,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -1579,12 +1577,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -1608,16 +1606,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -1641,7 +1639,7 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Главная страница успешно загружена со всеми отображаемыми элементами');
     });
@@ -1656,44 +1654,44 @@ export const runU006 = () => {
 
     await allure.step('Step 3: Выбрать тип элемента «Деталь»', async () => {
       // Verify we're on the detail creation page by checking the detail name input field
-      const detailNameInput = await page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Тип детали выбран - страница создания детали активна');
     });
 
     await allure.step('Step 4: Заполнить поле «Наименование»', async () => {
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
     });
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
     await allure.step('Step 6: Выбрать материал и подтвердить выбор', async () => {
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME_2);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME_2);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
     });
 
     await allure.step('Step 7: Проверить, что выбранный материал отображается в форме, но поля атрибутов остаются пустыми', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       const chrTble = tableContainer.locator(`[data-testid="${CONST.CHR_TABLE}"]`);
 
       await expect(tableContainer).toBeVisible();
@@ -1703,12 +1701,12 @@ export const runU006 = () => {
       await detailsPage.highlightElement(materialSpan);
       await expect(materialSpan).toBeVisible();
       const materialText = await materialSpan.innerText();
-      expect(materialText).toBe(CONST.TEST_MATERIAL_NAME_2);
+      expect(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_NAME_2);
       logger.info(`Материал отображается в форме: ${materialText}`);
 
       // Verify that attribute fields are empty
       const inputFields = tableContainer.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
 
       const fieldCount = await inputFields.count();
@@ -1742,7 +1740,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 8: Нажать кнопку «Сохранить»', async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
@@ -1756,7 +1754,7 @@ export const runU006 = () => {
       logger.info('Получено сообщение об ошибке о недостающих обязательных атрибутах материала');
     });
   });
-  test('Cleanup TestCase 00d - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00d - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -1767,15 +1765,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -1794,12 +1792,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -1823,16 +1821,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -1856,7 +1854,7 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Главная страница загружена правильно');
     });
@@ -1869,41 +1867,41 @@ export const runU006 = () => {
     });
 
     await allure.step("Шаг 3: Выбрать 'Деталь'", async () => {
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       logger.info('Поля показаны');
     });
 
     await allure.step("Шаг 4: Заполнить 'Наименование'", async () => {
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
       logger.info('Допустимая запись принята');
     });
 
     await allure.step("Шаг 5: Нажать 'Задать' для выбора материала", async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
       logger.info('Модальное окно открыто');
     });
 
     await allure.step('Шаг 6: Выбрать материал и подтвердить', async () => {
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал добавлен');
     });
 
     await allure.step('Шаг 7: Заполнить только один обязательный атрибут', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
       const chrTble = tableContainer.locator(`[data-testid="${CONST.CHR_TABLE}"]`);
 
@@ -1914,7 +1912,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await detailsPage.highlightElement(inputField);
 
@@ -1925,7 +1923,7 @@ export const runU006 = () => {
       logger.info('Это поле принимает ввод; другие остаются пустыми');
     });
     await allure.step('Шаг 7a: Cycle through all the values in this table making sure that none of them ahve the value NaN', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       const chrTble = tableContainer.locator(`[data-testid="${CONST.CHR_TABLE}"]`);
 
       // Scroll to the table container to ensure it's visible
@@ -2026,7 +2024,7 @@ export const runU006 = () => {
 
     await allure.step('Шаг 9: Повторить для каждого обязательного атрибута по одному', async () => {
       // Очистить все поля атрибутов
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       const inputFields = tableContainer.locator(
         `input[data-testid^="${CONST.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
       );
@@ -2054,7 +2052,7 @@ export const runU006 = () => {
         logger.info('Второе поле заполнено');
 
         // Попытаться сохранить
-        const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+        const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
         await expect(saveButton).toBeVisible();
         await saveButton.click();
         await page.waitForLoadState('networkidle');
@@ -2067,7 +2065,7 @@ export const runU006 = () => {
       }
     });
   });
-  test('Cleanup TestCase 00e - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00e - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -2078,15 +2076,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -2105,12 +2103,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2134,16 +2132,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -2167,7 +2165,7 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Страница загружена правильно');
     });
@@ -2180,39 +2178,39 @@ export const runU006 = () => {
     });
 
     await allure.step("Шаг 3: Выбрать 'Деталь'", async () => {
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       logger.info('Поля обновлены');
     });
 
     await allure.step("Шаг 4: Ввести строку длиннее 500 символов в 'Наименование'", async () => {
       const longName = 'A'.repeat(501); // Строка из 501 символа
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, longName);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, longName);
       logger.info('Валидация должна заблокировать или предупредить о вводе');
     });
 
     await allure.step("Шаг 5: Нажать 'Задать', выбрать материал и подтвердить", async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Модальное окно открыто и принимает выбор');
     });
 
     await allure.step('Шаг 6: Заполнить все обязательные атрибуты материала', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -2222,7 +2220,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await detailsPage.highlightElement(inputField);
 
@@ -2234,7 +2232,7 @@ export const runU006 = () => {
     });
 
     await allure.step("Шаг 7: Нажать 'Сохранить'", async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await detailsPage.highlightElement(saveButton);
       await expect(saveButton).toBeVisible();
       await saveButton.click();
@@ -2252,7 +2250,7 @@ export const runU006 = () => {
       await page.waitForTimeout(5000);
     });
   });
-  test('Cleanup TestCase 00f - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00f - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -2263,15 +2261,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -2290,12 +2288,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2319,16 +2317,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -2352,7 +2350,7 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Главная страница успешно загружена');
     });
@@ -2365,44 +2363,44 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 3: Найти поле для ввода наименования детали', async () => {
-      const detailNameInput = await page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Поле наименования детали найдено');
     });
 
     await allure.step('Step 4: Ввести наименование со специальными символами', async () => {
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.SPECIAL_CHAR_NAME);
-      logger.info(`Наименование со специальными символами заполнено: ${CONST.SPECIAL_CHAR_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME);
+      logger.info(`Наименование со специальными символами заполнено: ${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}`);
     });
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
     await allure.step('Step 6: Выбрать материал и подтвердить выбор', async () => {
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
     });
 
     await allure.step('Step 7: Заполнить все обязательные атрибуты материала', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -2412,7 +2410,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await detailsPage.highlightElement(inputField);
 
@@ -2424,7 +2422,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 8: Нажать кнопку «Сохранить»', async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await detailsPage.highlightElement(saveButton);
       await page.waitForTimeout(1500);
@@ -2441,7 +2439,7 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const tableContainer = detailTable.first();
       await tableContainer.scrollIntoViewIfNeeded();
       await tableContainer.evaluate((el: HTMLElement) => {
@@ -2450,13 +2448,13 @@ export const runU006 = () => {
         el.style.color = 'blue';
       });
 
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.SPECIAL_CHAR_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1500);
@@ -2475,7 +2473,7 @@ export const runU006 = () => {
         await page.waitForTimeout(500);
 
         const rowText = await currentRow.textContent();
-        if (rowText && rowText.trim() === CONST.SPECIAL_CHAR_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME) {
           isMatch = true;
           break;
         }
@@ -2485,7 +2483,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 10: Открыть деталь для редактирования', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const tableContainer = detailTable.first();
       const rows = tableContainer.locator('tbody tr');
       const rowCount = await rows.count();
@@ -2493,7 +2491,7 @@ export const runU006 = () => {
       for (let i = 0; i < rowCount; i++) {
         const currentRow = rows.nth(i);
         const rowText = await currentRow.textContent();
-        if (rowText && rowText.trim() === CONST.SPECIAL_CHAR_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME) {
           await currentRow.click();
           // Click the edit button within this row
           const editButton = page.locator(`button[data-testid="${CONST.EDIT_BUTTON}"]`);
@@ -2514,15 +2512,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 11: Проверить, что материал и атрибуты отображаются корректно', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
       await expect(tableContainer).toBeVisible();
-      const chrTble = tableContainer.locator(`[data-testid="${CONST.EDIT_CHR_TABLE}"]`);
+      const chrTble = tableContainer.locator(SelectorsPartsDataBase.EDIT_CHR_TABLE);
       await detailsPage.highlightElement(chrTble);
 
       // Verify material is displayed
       const materialSpan = chrTble.locator('td').nth(2).locator('span');
       await expect(materialSpan).toBeVisible();
-      expect(await materialSpan.innerText()).toBe(CONST.TEST_MATERIAL_NAME);
+      expect(await materialSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
       logger.info('Материал отображается корректно в режиме редактирования');
 
       // Verify attributes are displayed
@@ -2537,7 +2535,7 @@ export const runU006 = () => {
       logger.info('Атрибуты отображаются корректно в режиме редактирования');
     });
   });
-  test('Cleanup TestCase 00g - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00g - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -2548,15 +2546,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -2575,12 +2573,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2604,16 +2602,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -2637,19 +2635,19 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Все элементы загружены правильно');
     });
 
     await allure.step("Шаг 2: Ввести только числа в поле 'Наименование'", async () => {
       const numericName = '123456';
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, numericName);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, numericName);
       logger.info('Ввод принят или отклонен на основе правил формата');
     });
 
     await allure.step("Шаг 3: Нажать 'Сохранить'", async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -2664,7 +2662,7 @@ export const runU006 = () => {
       }
     });
   });
-  test('Cleanup TestCase 00ga - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00ga - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -2675,15 +2673,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
-      // Perform the search for CONST.TEST_DETAIL_NAME
+      // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -2702,12 +2700,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2731,16 +2729,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -2764,7 +2762,7 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Главная страница успешно загружена');
     });
@@ -2777,58 +2775,58 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 3: Найти поле для ввода наименования детали', async () => {
-      const detailNameInput = await page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Поле наименования детали найдено');
     });
 
     await allure.step('Step 4: Заполнить поле «Наименование»', async () => {
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
     });
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
     await allure.step('Step 6: Выбрать материал из первой категории', async () => {
       // Click on the first category switch
-      const firstCategorySwitch = page.locator(`[data-testid="${CONST.MATERIAL_SWITCH_ITEM1}"]`);
+      const firstCategorySwitch = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1);
       await expect(firstCategorySwitch).toBeVisible();
       await detailsPage.highlightElement(firstCategorySwitch);
       await firstCategorySwitch.click();
       await page.waitForLoadState('networkidle');
 
       // Search and select a material from the first category
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал из первой категории выбран и добавлен');
     });
 
     await allure.step('Step 7: Проверить, что поля обновились с конкретными обязательными атрибутами', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       // Verify that the material is displayed
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
       await expect(materialSpan).toBeVisible();
-      expect(await materialSpan.innerText()).toBe(CONST.TEST_MATERIAL_NAME);
+      expect(await materialSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
       logger.info('Материал отображается в таблице характеристик');
 
       // Verify that required attribute fields are present
@@ -2840,7 +2838,7 @@ export const runU006 = () => {
 
     await allure.step('Step 8: Удалить материал и выбрать из второй категории', async () => {
       // Remove the current material by clicking the remove button
-      const resetButton = page.locator(`[data-testid="${CONST.ADD_DETAILE_RESET_MATERIAL_BUTTON}"]`);
+      const resetButton = page.locator(SelectorsPartsDataBase.ADD_DETAILE_RESET_MATERIAL_BUTTON);
       await detailsPage.highlightElement(resetButton);
       await resetButton.click();
       await page.waitForLoadState('networkidle');
@@ -2869,12 +2867,12 @@ export const runU006 = () => {
         const secondCategoryMaterial = 'Сталь 45';
         await detailsPage.searchAndSelectMaterial(CONST.SWITCH_MATERIAL_ITEM_2, secondCategoryMaterial);
 
-        const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+        const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
         await expect(addButton).toBeVisible();
         await addButton.click();
         await page.waitForLoadState('networkidle');
 
-        await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+        await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
         logger.info('Материал из второй категории выбран и добавлен');
       } else {
         logger.info('Вторая категория материалов недоступна, пропускаем');
@@ -2882,7 +2880,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 9: Проверить, что валидация полей адаптируется в зависимости от типа материала', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       // Verify that the material is displayed
@@ -2903,7 +2901,7 @@ export const runU006 = () => {
       logger.info('Поля атрибутов:', fieldTexts);
     });
   });
-  test('Cleanup TestCase 00h - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00h - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -2914,15 +2912,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -2941,12 +2939,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2970,16 +2968,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -3003,7 +3001,7 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Главная страница успешно загружена');
     });
@@ -3016,44 +3014,44 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 3: Найти поле для ввода наименования детали', async () => {
-      const detailNameInput = await page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Поле наименования детали найдено');
     });
 
     await allure.step('Step 4: Заполнить поле «Наименование»', async () => {
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
     });
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
     await allure.step('Step 6: Выбрать материал и подтвердить выбор', async () => {
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
     });
 
     await allure.step('Step 7: Заполнить все обязательные атрибуты материала', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       // Find all input fields in the characteristics table
@@ -3081,7 +3079,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 8: Нажать кнопку «Сохранить»', async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
@@ -3098,17 +3096,17 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const tableContainer = detailTable.first();
       await tableContainer.scrollIntoViewIfNeeded();
 
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -3127,7 +3125,7 @@ export const runU006 = () => {
         await page.waitForTimeout(500);
 
         const rowText = await currentRow.textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           isMatch = true;
           break;
         }
@@ -3136,7 +3134,7 @@ export const runU006 = () => {
       logger.info('Созданная деталь найдена в базе деталей');
     });
   });
-  test('Cleanup TestCase 00i - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00i - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -3147,15 +3145,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -3174,12 +3172,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -3203,16 +3201,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -3236,35 +3234,35 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Главная страница успешно загружена');
 
       // Fill detail name
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Select material
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
 
       // Fill required attributes
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -3274,7 +3272,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -3290,7 +3288,7 @@ export const runU006 = () => {
       logger.info('Обязательные атрибуты материала заполнены');
 
       // Save the detail
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -3304,17 +3302,17 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const tableContainer = detailTable.first();
       await tableContainer.scrollIntoViewIfNeeded();
 
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -3325,7 +3323,7 @@ export const runU006 = () => {
       for (let i = 0; i < rowCount; i++) {
         const currentRow = rows.nth(i);
         const rowText = await currentRow.textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           await currentRow.click();
           // Click the edit button within this row
           const editButton = page.locator(`button[data-testid="${CONST.EDIT_BUTTON}"]`);
@@ -3348,17 +3346,17 @@ export const runU006 = () => {
       const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT_EDIT}"]`);
       await expect(detailNameInput).toBeVisible();
       const savedName = await detailNameInput.inputValue();
-      expect(savedName).toBe(CONST.TEST_DETAIL_NAME);
+      expect(savedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       logger.info(`Наименование детали сохранено: ${savedName}`);
 
       // Verify material is preserved
-      const tableContainer = page.locator(`[data-testid="${CONST.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
       await expect(tableContainer).toBeVisible();
 
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
       await expect(materialSpan).toBeVisible();
       const savedMaterial = await materialSpan.innerText();
-      expect(savedMaterial).toBe(CONST.TEST_MATERIAL_NAME);
+      expect(savedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
       logger.info(`Материал сохранен: ${savedMaterial}`);
 
       // Verify attributes are preserved
@@ -3378,7 +3376,7 @@ export const runU006 = () => {
       logger.info('Все поля содержат предыдущие значения');
     });
   });
-  test('Cleanup TestCase 00j - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00j - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -3389,15 +3387,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -3416,12 +3414,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -3445,16 +3443,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -3478,35 +3476,35 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Страница создания детали открыта');
 
       // Заполнить наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Выбрать материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -3516,7 +3514,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -3560,7 +3558,7 @@ export const runU006 = () => {
 
     await allure.step("Шаг 4: Нажать 'Сохранить'", async () => {
       console.log("Шаг 4: Нажать 'Сохранить'");
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await detailsPage.highlightElement(saveButton);
       await page.waitForTimeout(1500);
@@ -3571,7 +3569,7 @@ export const runU006 = () => {
       logger.info('Появляется ошибка, требующая выбора материала');
     });
   });
-  test('Cleanup TestCase 00k - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00k - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -3582,15 +3580,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -3609,12 +3607,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -3638,16 +3636,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -3671,36 +3669,36 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма содержит выбранный материал с отображаемыми атрибутами');
 
       // Заполнить наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Выбрать материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
     });
 
     await allure.step('Шаг 2: Заполнить все обязательные атрибуты материала', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -3710,7 +3708,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -3753,7 +3751,7 @@ export const runU006 = () => {
     });
 
     await allure.step("Шаг 4: Нажать кнопку 'Сохранить'", async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -3762,7 +3760,7 @@ export const runU006 = () => {
       logger.info('Система отклоняет сохранение и отображает ошибку, указывающую на обязательность выбора материала');
     });
   });
-  test('Cleanup TestCase 00l - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00l - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -3773,15 +3771,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -3800,12 +3798,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -3829,16 +3827,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -3862,23 +3860,23 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта');
     });
 
     await allure.step("Шаг 2: Заполнить поле 'Наименование'", async () => {
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
     });
 
     await allure.step('Шаг 3: Открыть модальное окно выбора материала', async () => {
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
       logger.info('Модальное окно выбора материала открыто');
     });
@@ -3970,7 +3968,7 @@ export const runU006 = () => {
             await page.waitForTimeout(1000);
 
             // Check if Add button is now visible and enabled
-            const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+            const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
             await expect(addButton).toBeVisible();
 
             // Verify the button is enabled (not disabled)
@@ -3985,7 +3983,7 @@ export const runU006 = () => {
               await addButton.click();
               await page.waitForLoadState('networkidle');
 
-              await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+              await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
               logger.info('Материал из второй категории успешно выбран и добавлен');
               break;
             } else {
@@ -4006,7 +4004,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Шаг 6: Проверить, что материал отображается в форме', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       // Try different approaches to find the material
@@ -4087,7 +4085,7 @@ export const runU006 = () => {
       }
     });
   });
-  test('Cleanup TestCase 00m - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00m - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -4098,15 +4096,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -4125,12 +4123,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -4154,16 +4152,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -4187,35 +4185,35 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Выбрать материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -4225,7 +4223,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -4240,7 +4238,7 @@ export const runU006 = () => {
       logger.info('Атрибуты материала заполнены');
 
       // Сохранить деталь
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -4254,35 +4252,35 @@ export const runU006 = () => {
       await page.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта снова');
 
       // Заполнить то же наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`То же наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`То же наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Выбрать материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -4292,7 +4290,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -4308,7 +4306,7 @@ export const runU006 = () => {
     });
 
     await allure.step('Шаг 3: Попытаться сохранить дублирующую деталь', async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -4340,15 +4338,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -4367,12 +4365,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -4396,16 +4394,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -4429,25 +4427,25 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали загружена');
     });
 
     await allure.step('Шаг 2: Проверить, что все поля пустые по умолчанию', async () => {
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       const nameValue = await detailNameInput.inputValue();
       expect(nameValue).toBe('');
       logger.info('Поле наименования пустое по умолчанию');
 
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
       logger.info('Таблица характеристик заготовки отображается');
     });
 
     await allure.step("Шаг 3: Нажать кнопку 'Сохранить' без заполнения полей", async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
@@ -4460,7 +4458,7 @@ export const runU006 = () => {
       logger.info('Система отобразила ошибки валидации для всех обязательных полей');
     });
   });
-  test('Cleanup TestCase 00o - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00o - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -4471,15 +4469,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -4498,12 +4496,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -4527,16 +4525,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -4559,35 +4557,35 @@ export const runU006 = () => {
     await allure.step('Шаг 1: Заполнить все обязательные поля и атрибуты правильно', async () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Выбрать материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -4597,7 +4595,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -4718,7 +4716,7 @@ export const runU006 = () => {
           }
 
           // Check for any save buttons
-          const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+          const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
           const editSaveButton = page.locator(`[data-testid="${CONST.EDIT_SAVE_BUTTON}"]`);
           const saveButtonCount = await saveButton.count();
           const editSaveButtonCount = await editSaveButton.count();
@@ -4739,17 +4737,17 @@ export const runU006 = () => {
       const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT_EDIT}"]`);
       await expect(detailNameInput).toBeVisible();
       const retrievedName = await detailNameInput.inputValue();
-      expect(retrievedName).toBe(CONST.TEST_DETAIL_NAME);
+      expect(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       logger.info(`Наименование детали совпадает: ${retrievedName}`);
 
       // Проверить материал
-      const tableContainer = page.locator(`[data-testid="${CONST.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
       await expect(tableContainer).toBeVisible();
 
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
       await expect(materialSpan).toBeVisible();
       const retrievedMaterial = await materialSpan.innerText();
-      expect(retrievedMaterial).toBe(CONST.TEST_MATERIAL_NAME);
+      expect(retrievedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
       logger.info(`Материал совпадает: ${retrievedMaterial}`);
 
       // Проверить атрибуты
@@ -4780,15 +4778,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -4807,12 +4805,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -4836,16 +4834,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -4869,38 +4867,38 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Выбрать материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
 
       // Проверить, что UI отражает заполненные значения
-      const materialSpan = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`).locator('td').nth(2).locator('span');
+      const materialSpan = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS).locator('td').nth(2).locator('span');
       await expect(materialSpan).toBeVisible();
       const materialText = await materialSpan.innerText();
-      expect(materialText).toBe(CONST.TEST_MATERIAL_NAME);
+      expect(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
       logger.info('UI отражает заполненные значения');
     });
 
@@ -4918,17 +4916,17 @@ export const runU006 = () => {
     });
 
     await allure.step('Шаг 4: Проверить, что форма пустая или сброшена', async () => {
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       const nameValue = await detailNameInput.inputValue();
       expect(nameValue).toBe('');
       logger.info('Поле наименования пустое - данные не сохранены');
 
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       // Проверить, что материал не выбран
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       logger.info('Форма сброшена - данные не сохранены');
     });
@@ -4944,15 +4942,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -4971,12 +4969,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -5000,16 +4998,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -5032,35 +5030,35 @@ export const runU006 = () => {
     await allure.step('Шаг 1: Завершить создание детали с заполненными атрибутами', async () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
       // Выбрать материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -5070,7 +5068,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -5085,7 +5083,7 @@ export const runU006 = () => {
       logger.info('Атрибуты материала заполнены');
 
       // Сохранить деталь
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -5100,14 +5098,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -5118,7 +5116,7 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           foundRow = rows.nth(i);
           break;
         }
@@ -5190,7 +5188,7 @@ export const runU006 = () => {
           }
 
           // Check for any save buttons
-          const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+          const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
           const editSaveButton = page.locator(`[data-testid="${CONST.EDIT_SAVE_BUTTON}"]`);
           const saveButtonCount = await saveButton.count();
           const editSaveButtonCount = await editSaveButton.count();
@@ -5211,17 +5209,17 @@ export const runU006 = () => {
       const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT_EDIT}"]`);
       await expect(detailNameInput).toBeVisible();
       const retrievedName = await detailNameInput.inputValue();
-      expect(retrievedName).toBe(CONST.TEST_DETAIL_NAME);
+      expect(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       logger.info(`Наименование детали совпадает: ${retrievedName}`);
 
       // Проверить материал
-      const tableContainer = page.locator(`[data-testid="${CONST.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
       await expect(tableContainer).toBeVisible();
 
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
       await expect(materialSpan).toBeVisible();
       const retrievedMaterial = await materialSpan.innerText();
-      expect(retrievedMaterial).toBe(CONST.TEST_MATERIAL_NAME);
+      expect(retrievedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
       logger.info(`Материал совпадает: ${retrievedMaterial}`);
 
       // Проверить атрибуты
@@ -5252,15 +5250,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -5279,12 +5277,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -5308,16 +5306,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -5341,46 +5339,46 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
-      await detailsPage.fillAndVerifyField(CONST.DETAIL_NAME_INPUT, CONST.TEST_DETAIL_NAME);
-      logger.info(`Наименование детали заполнено: ${CONST.TEST_DETAIL_NAME}`);
+      await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
     });
 
     await allure.step('Шаг 2: Добавить несколько материалов', async () => {
       // Добавить первый материал
-      const materialButton = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON}"]`);
+      const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expect(materialButton).toBeVisible();
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Первый материал добавлен');
 
       // Проверить, что материал отображается в списке
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
       await expect(materialSpan).toBeVisible();
-      expect(await materialSpan.innerText()).toBe(CONST.TEST_MATERIAL_NAME);
+      expect(await materialSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
       logger.info('Материалы отображаются в списке');
     });
 
     await allure.step('Шаг 3: Редактировать атрибуты для одного или нескольких материалов', async () => {
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -5390,7 +5388,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -5416,7 +5414,7 @@ export const runU006 = () => {
       await expect(confirmModal).toBeVisible();
 
       // Click Yes button to confirm material removal
-      const yesButton = confirmModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+      const yesButton = confirmModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
       await expect(yesButton).toBeVisible();
       await yesButton.click();
       await page.waitForLoadState('networkidle');
@@ -5429,21 +5427,21 @@ export const runU006 = () => {
 
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1500);
-      const materialModal = page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`);
+      const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
       await expect(materialModal).toBeVisible();
 
-      await detailsPage.searchAndSelectMaterial(CONST.MATERIAL_SWITCH_ITEM1, CONST.TEST_MATERIAL_NAME);
+      await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(`[data-testid="${CONST.MATERIAL_ADD_BUTTON}"]`);
+      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
       await expect(addButton).toBeVisible();
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(`[data-testid="${CONST.MATERIAL_MODAL}"]`)).not.toBeVisible();
+      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
       logger.info('Новый материал добавлен в конец списка');
 
       // Заполнить атрибуты для нового материала
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
 
       const targetRow = tableContainer.locator('tr').filter({
@@ -5453,7 +5451,7 @@ export const runU006 = () => {
       await expect(targetRow).toBeVisible();
 
       const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
+        `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
       await inputField.evaluate(input => {
         input.style.backgroundColor = 'yellow';
@@ -5469,7 +5467,7 @@ export const runU006 = () => {
     });
 
     await allure.step("Шаг 6: Нажать кнопку 'Сохранить'", async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
@@ -5479,7 +5477,7 @@ export const runU006 = () => {
       logger.info('Финальная деталь содержит только последнее состояние списка материалов');
     });
   });
-  test('Cleanup TestCase 00t - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00t - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -5490,15 +5488,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -5517,12 +5515,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -5546,16 +5544,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');
@@ -5579,25 +5577,25 @@ export const runU006 = () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
 
-      const mainContainer = page.locator(`[data-testid="${CONST.ADD_DETAIL_PAGE}"]`);
+      const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
       await expect(mainContainer).toBeVisible();
       logger.info('Форма создания детали открыта');
     });
 
     await allure.step('Шаг 2: Проверить, что все поля пустые', async () => {
-      const detailNameInput = page.locator(`[data-testid="${CONST.DETAIL_NAME_INPUT}"]`);
+      const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
       await expect(detailNameInput).toBeVisible();
       const nameValue = await detailNameInput.inputValue();
       expect(nameValue).toBe('');
       logger.info('Все поля пустые');
 
-      const tableContainer = page.locator(`[data-testid="${CONST.CHARACTERISTIC_BLANKS_CONTAINER}"]`);
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expect(tableContainer).toBeVisible();
       logger.info('Таблица характеристик отображается');
     });
 
     await allure.step("Шаг 3: Немедленно нажать кнопку 'Сохранить'", async () => {
-      const saveButton = page.locator(`[data-testid="${CONST.SAVE_BUTTON}"]`);
+      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expect(saveButton).toBeVisible();
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
@@ -5612,7 +5610,7 @@ export const runU006 = () => {
 
     await allure.step('Шаг 5: Проверить, что в правом верхнем углу не показано уведомление об успехе', async () => {
       // Проверить, что нет уведомления об успехе
-      const notifications = page.locator(`[data-testid="${CONST.NOTIFICATION_NOTIFICATION_DESCRIPTION}"]`);
+      const notifications = page.locator(SelectorsPartsDataBase.NOTIFICATION_NOTIFICATION_DESCRIPTION);
       const notificationCount = await notifications.count();
 
       if (notificationCount > 0) {
@@ -5625,7 +5623,7 @@ export const runU006 = () => {
       }
     });
   });
-  test('Cleanup TestCase 00u - Архивация всех совпадающих деталей (Cleanup) `${CONST.TEST_DETAIL_NAME}`', async ({ page }) => {
+  test('Cleanup TestCase 00u - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -5637,15 +5635,15 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
-      const detailTable = page.locator(`[data-testid="${CONST.DETAIL_TABLE}"]`);
-      const searchInput = detailTable.locator(`[data-testid="${CONST.TABLE_SEARCH_INPUT}"]`);
+      const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
+      const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expect(searchInput).toBeVisible();
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
       await page.waitForTimeout(1000);
-      await searchInput.fill(CONST.TEST_DETAIL_NAME);
+      await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
@@ -5664,12 +5662,12 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const rowText = await rows.nth(i).textContent();
-        if (rowText && rowText.trim() === CONST.TEST_DETAIL_NAME) {
+        if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           matchingRows.push(rows.nth(i));
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${CONST.TEST_DETAIL_NAME}'.`);
+      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -5693,16 +5691,16 @@ export const runU006 = () => {
           await page.waitForTimeout(500);
 
           // Click the archive button
-          const archiveButton = page.locator(`[data-testid="${CONST.ARCHIVE_BUTTON}"]`);
+          const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
           await expect(archiveButton).toBeVisible();
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
-          const archiveModal = page.locator(`dialog[data-testid="${CONST.CONFIRM_MODAL}"]`);
+          const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
           await expect(archiveModal).toBeVisible();
 
-          const yesButton = archiveModal.locator(`[data-testid="${CONST.CONFIRM_YES_BUTTON}"]`);
+          const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
           await expect(yesButton).toBeVisible();
           await yesButton.click();
           await page.waitForLoadState('networkidle');

@@ -2754,8 +2754,11 @@ export class CreatePartsDatabasePage extends PageObject {
     //const newPage = await this.page.context().newPage();
     //await newPage.goto(SELECTORS.MAINMENU.MATERIALS.URL);
 
-    // Click the specified slider using its data-testid.
-    const switchItem = this.page.locator(`[data-testid="${sliderDataTestId}"]`);
+    // Allow both raw ID and full [data-testid] selectors for sliderDataTestId.
+    const normalizedSliderSelector = sliderDataTestId.trim().startsWith('[data-testid=')
+      ? sliderDataTestId
+      : `[data-testid="${sliderDataTestId}"]`;
+    const switchItem = this.page.locator(normalizedSliderSelector);
     await switchItem.click();
     await this.page.waitForTimeout(500);
 
@@ -3177,12 +3180,16 @@ export class CreatePartsDatabasePage extends PageObject {
 
   /**
    * Fills a form field and verifies the input value.
-   * @param dataTestId - The data-testid of the input field
+   * @param dataTestId - Either the data-testid value or full selector string of the input field
    * @param value - The value to fill
    * @param clearFirst - Whether to clear the field first (default: true)
    */
   async fillAndVerifyField(dataTestId: string, value: string, clearFirst: boolean = true): Promise<void> {
-    const field = this.page.locator(`[data-testid="${dataTestId}"]`);
+    // Check if selector already contains [data-testid] or is a full CSS selector
+    const fullSelector = dataTestId.includes('[data-testid') || dataTestId.includes('[') ? 
+      dataTestId : `[data-testid="${dataTestId}"]`;
+    
+    const field = this.page.locator(fullSelector);
     await field.waitFor({ state: 'visible' });
     await this.highlightElement(field);
 
