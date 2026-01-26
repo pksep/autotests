@@ -3795,15 +3795,29 @@ export class PageObject extends AbstractPage {
     try {
       // Check if testId is already a full selector (starts with '[') or a pattern selector
       const isFullSelector = testId.trim().startsWith('[');
+      // Check if dialogContextTestId is already a full selector (only if it's provided)
+      const isDialogContextFullSelector = dialogContextTestId ? dialogContextTestId.trim().startsWith('[') : false;
 
       // Apply dialog context if provided
       let scopedSelector: string;
       if (isFullSelector) {
         // If testId is already a full selector, use it directly
-        scopedSelector = dialogContextTestId ? `[data-testid="${dialogContextTestId}"] ${testId}` : testId;
+        if (dialogContextTestId) {
+          // If dialogContextTestId is also a full selector, use it directly; otherwise wrap it
+          const dialogSelector = isDialogContextFullSelector ? dialogContextTestId : `[data-testid="${dialogContextTestId}"]`;
+          scopedSelector = `${dialogSelector} ${testId}`;
+        } else {
+          scopedSelector = testId;
+        }
       } else {
         // Otherwise, wrap it in data-testid attribute selector
-        scopedSelector = dialogContextTestId ? `[data-testid="${dialogContextTestId}"] [data-testid="${testId}"]` : `[data-testid="${testId}"]`;
+        if (dialogContextTestId) {
+          // If dialogContextTestId is a full selector, use it directly; otherwise wrap it
+          const dialogSelector = isDialogContextFullSelector ? dialogContextTestId : `[data-testid="${dialogContextTestId}"]`;
+          scopedSelector = `${dialogSelector} [data-testid="${testId}"]`;
+        } else {
+          scopedSelector = `[data-testid="${testId}"]`;
+        }
       }
 
       // Locate the button using the updated testId-based selector
@@ -3904,7 +3918,11 @@ export class PageObject extends AbstractPage {
 
   async getAllH3TitlesInModalTestId(page: Page, testId: string): Promise<string[]> {
     // Step 1: Locate the container by the specified data-testid
-    const container = page.locator(`[data-testid^="${testId}"][open]`);
+    // Check if testId is already a full selector (contains [data-testid)
+    // Handles both cases: '[data-testid="..."]' and 'dialog[data-testid="..."]'
+    const isFullSelector = testId.includes('[data-testid');
+    const selector = isFullSelector ? `${testId}[open]` : `[data-testid^="${testId}"][open]`;
+    const container = page.locator(selector);
     const titles: string[] = [];
 
     // Step 2: Find all <h3> elements within the container
