@@ -2024,9 +2024,7 @@ export const runU006 = () => {
     await allure.step('Шаг 9: Повторить для каждого обязательного атрибута по одному', async () => {
       // Очистить все поля атрибутов
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      const inputFields = tableContainer.locator(
-        `input[data-testid^="${CONST.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
-      );
+      const inputFields = tableContainer.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const fieldCount = await inputFields.count();
 
       for (let i = 0; i < fieldCount; i++) {
@@ -2523,12 +2521,11 @@ export const runU006 = () => {
       logger.info('Материал отображается корректно в режиме редактирования');
 
       // Verify attributes are displayed
-      // const targetRow = tableContainer.locator('tr').filter({
-      //     has: page.locator('td:has-text("Длина (Д)")'),
-      // });
-      const inputField = chrTble.locator(
-        `input[data-testid^="${CONST.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
-      );
+      const targetRow = chrTble.locator('tr').filter({
+        has: page.locator('td:has-text("Длина (Д)")'),
+      });
+      await expect(targetRow).toBeVisible();
+      const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const currentValue = await inputField.inputValue();
       expect(currentValue).toBe('100');
       logger.info('Атрибуты отображаются корректно в режиме редактирования');
@@ -3365,9 +3362,7 @@ export const runU006 = () => {
 
       await expect(targetRow).toBeVisible();
 
-      const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
-      );
+      const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const savedValue = await inputField.inputValue();
       expect(savedValue).toBe('150');
       logger.info(`Значение атрибута сохранено: ${savedValue}`);
@@ -4756,9 +4751,7 @@ export const runU006 = () => {
 
       await expect(targetRow).toBeVisible();
 
-      const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
-      );
+      const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const retrievedValue = await inputField.inputValue();
       expect(retrievedValue).toBe('500');
       logger.info(`Значение атрибута совпадает: ${retrievedValue}`);
@@ -5228,9 +5221,7 @@ export const runU006 = () => {
 
       await expect(targetRow).toBeVisible();
 
-      const inputField = targetRow.locator(
-        `input[data-testid^="${CONST.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN}"][data-testid$="${CONST.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`,
-      );
+      const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const retrievedValue = await inputField.inputValue();
       expect(retrievedValue).toBe('600');
       logger.info(`Значение атрибута совпадает: ${retrievedValue}`);

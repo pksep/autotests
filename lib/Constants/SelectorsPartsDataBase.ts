@@ -188,6 +188,7 @@ export const MODAL_BASE_MATERIAL_ADD_BUTTON = '[data-testid="ModalBaseMaterial-A
 //U006 compliance
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2 = 'input[data-testid^="AddDetal-CharacteristicBlanks-Tbody-InputNumber"]';
 export const CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2 = '[data-testid$="-Input"]';
+export const EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2 = 'input[data-testid^="EditDetal-CharacteristicBlanks-Tbody-InputNumber"]';
 // File component constants for U005
 export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES = '[data-testid="AddDetal-FileComponent-ModalBaseFiles"]';
 export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM0 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"]';
@@ -249,6 +250,7 @@ export const CHR_TABLE = '[data-testid="AddDetal-CharacteristicBlanks-Tbody"]';
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN = 'AddDetal-CharacteristicBlanks-';
 export const EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN = 'EditDetal-CharacteristicBlanks';
 export const CHARACTERISTIC_BLANKS_INPUT_SUFFIX = 'Input-Input';
+export const EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR = `${EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`;
 export const EDIT_CHARACTERISTIC_BLANKS_INPUT_PATTERN = 'EditDetal-CharacteristicBlanks';
 export const EDIT_CHARACTERISTIC_BLANKS_CONTAINER = 'EditDetal-CharacteristicBlanks';
 export const DETAIL_NAME_INPUT_EDIT = '[data-testid="EditDetal-Information-Input-Input"]';
