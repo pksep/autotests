@@ -1,15 +1,16 @@
-import { test, expect, Locator } from '@playwright/test';
+import { test, expect, Locator, TestInfo } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
-import { ENV, SELECTORS, CONST } from '../config';
+import { ENV, SELECTORS } from '../config';
 import logger from '../lib/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U005-PC01.json'; // Import your test data
 import testData2 from '../testdata/U004-PC01.json';
-import { notDeepStrictEqual } from 'assert';
-import exp from 'constants';
 import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
+import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import { HIGHLIGHT_PENDING, HIGHLIGHT_SUCCESS, HIGHLIGHT_ERROR } from '../lib/Constants/HighlightStyles';
+import { expectSoftWithScreenshot } from '../lib/Page';
 // Constants for data-testids
 
 const baseFileNamesToVerify = [
@@ -24,7 +25,7 @@ const baseFileNamesToVerify = [
  */
 export const runU006 = () => {
   test('TestCase Archive All - Archive all items in filebase table', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 1: Navigate to filebase page', async () => {
@@ -35,13 +36,17 @@ export const runU006 = () => {
 
     await allure.step("Step 2: Find the table with class 'table-yui-kit'", async () => {
       const table = page.locator(SelectorsFileComponents.BASE_FILE_FILE_WINDOW_TABLE_TABLE);
-      await expect(table).toBeVisible({ timeout: 10000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify table is visible',
+        test.info(),
+      );
 
       // Highlight the table for visibility
-      await table.evaluate((el: HTMLElement) => {
-        el.style.border = '3px solid red';
-        el.style.backgroundColor = 'yellow';
-      });
+      await detailsPage.waitAndHighlight(table);
 
       logger.info("Found table with class 'table-yui-kit'");
     });
@@ -49,20 +54,27 @@ export const runU006 = () => {
     await allure.step("Step 3: Search for 'Test' and press Enter", async () => {
       // Find the search input field using the specific data-testid
       const searchInput = page.locator(SelectorsPartsDataBase.SEARCH_DROPDOWN_INPUT);
-      await expect(searchInput).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Highlight the search input for visibility
-      await searchInput.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'lightblue';
-        el.style.border = '2px solid blue';
-        el.style.color = 'black';
+      await detailsPage.highlightElement(searchInput, {
+        backgroundColor: 'lightblue',
+        border: '2px solid blue',
+        color: 'black',
       });
 
       // Clear any existing text and search for "Test"
       await searchInput.fill('Test');
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       logger.info("Searched for 'Test' and pressed Enter");
     });
@@ -91,56 +103,66 @@ export const runU006 = () => {
         }
 
         // Highlight the current row being processed
-        await firstRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'orange';
-          el.style.border = '2px solid red';
-          el.style.color = 'white';
+        await detailsPage.highlightElement(firstRow, {
+          backgroundColor: 'orange',
+          border: '2px solid red',
+          color: 'white',
         });
 
         console.log(`Processing row ${archivedCount + 1} of ${rowCount}`);
 
         // Click the row to select it
         await firstRow.click();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         // Find and click the Archive button
         const archiveButton = page.locator(`${SelectorsPartsDataBase.ARCHIVE_BUTTON_GENERIC}:has-text("Архив")`);
-        await expect(archiveButton).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(archiveButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify archive button is visible',
+          test.info(),
+        );
 
         // Highlight the archive button
-        await archiveButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'red';
-          el.style.border = '2px solid white';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(archiveButton, HIGHLIGHT_ERROR);
 
         await archiveButton.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Wait for and interact with the confirmation dialog
         const confirmDialog = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-        await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(confirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify confirmation dialog is visible',
+          test.info(),
+        );
 
         // Highlight the dialog
-        await confirmDialog.evaluate((el: HTMLElement) => {
-          el.style.border = '3px solid green';
-          el.style.backgroundColor = 'lightgreen';
-        });
+        await detailsPage.highlightElement(confirmDialog, HIGHLIGHT_SUCCESS);
 
         // Click the Yes button in the dialog
         const yesButton = confirmDialog.locator(SelectorsPartsDataBase.MODAL_CONFIRM_YES_BUTTON_GENERIC);
-        await expect(yesButton).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(yesButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify Yes button is visible',
+          test.info(),
+        );
 
         // Highlight the Yes button
-        await yesButton.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'green';
-          el.style.border = '2px solid white';
-          el.style.color = 'white';
-        });
+        await detailsPage.highlightElement(yesButton, HIGHLIGHT_SUCCESS);
 
         await yesButton.click();
         await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         archivedCount++;
         console.log(`✅ Archived item ${archivedCount}`);
@@ -150,7 +172,7 @@ export const runU006 = () => {
         console.log(`Remaining rows: ${rowCount}`);
 
         // Small delay to make the process visible
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
       console.log(`✅ Successfully archived all ${archivedCount} items`);
@@ -173,14 +195,21 @@ export const runU006 = () => {
         }
       }
 
-      expect(contentRowCount).toBe(0);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(contentRowCount).toBe(0);
+        },
+        `Verify table has no content rows: ${contentRowCount} content rows, ${finalRowCount} total rows`,
+        test.info(),
+      );
       console.log(`✅ Table has no content rows (${contentRowCount} content rows, ${finalRowCount} total rows)`);
       logger.info('Table verification complete - all items archived');
     });
   });
 
   test('Cleanup TestCase 00a - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -192,16 +221,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -234,29 +270,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -264,7 +317,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -272,7 +325,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00aa - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -284,16 +337,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -326,29 +386,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -356,7 +433,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -364,11 +441,11 @@ export const runU006 = () => {
     });
   });
   test('TestCase 01 - создат дитайл', async ({ browser, page }) => {
-    test.setTimeout(900000);
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortagePage = new CreatePartsDatabasePage(page);
     await allure.step('Step 01: Перейдите на страницу создания детали. (Navigate to the create part page)', async () => {
       shortagePage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
     await allure.step(
       'Step 02: В поле ввода инпута "Наименование" вводим значение переменной. (In the input field "Name" we enter the value of the variable)',
@@ -376,18 +453,22 @@ export const runU006 = () => {
         await page.waitForLoadState('networkidle');
         const field = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
 
-        await field.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
+        await shortagePage.highlightElement(field, HIGHLIGHT_PENDING);
         await field.fill('');
         await field.press('Enter');
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await field.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
-        await page.waitForTimeout(500);
-        await expect(await field.inputValue()).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
-        await page.waitForTimeout(50);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const fieldValue = await field.inputValue();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(fieldValue).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
+          },
+          `Verify field input value is ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`,
+          test.info(),
+        );
+        await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       },
     );
     await allure.step(
@@ -397,82 +478,94 @@ export const runU006 = () => {
         await page.waitForLoadState('networkidle');
         // Locate the table container by searching for the h3 with the specific title.
         const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-        await expect(tableContainer).toBeVisible(); // Ensure the table container is visible
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(tableContainer).toBeVisible();
+          },
+          'Verify table container is visible',
+          test.info(),
+        ); // Ensure the table container is visible
 
         const tableTitle = tableContainer.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_TITLE);
-        await expect(tableTitle).toBeVisible(); // Ensure the title is visible
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(tableTitle).toBeVisible();
+          },
+          'Verify table title is visible',
+          test.info(),
+        ); // Ensure the title is visible
 
         // Optionally, highlight the title for debugging
-        await tableTitle.evaluate(el => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await shortagePage.highlightElement(tableTitle, HIGHLIGHT_PENDING);
 
         await tableContainer.waitFor({ state: 'visible' });
         const firstDataRow = tableContainer.locator('table tbody tr').first();
         const targetButton = firstDataRow.locator('td').nth(2).locator('button');
-        await targetButton.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
+        await shortagePage.highlightElement(targetButton, HIGHLIGHT_PENDING);
         await targetButton.click();
       },
     );
     await allure.step('Step 04: Verify that search works for table 3 (Verify that search works for each column)', async () => {
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       const rightTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
-      await rightTable.evaluate(row => {
-        row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-        row.style.border = '2px solid red'; // Add a red border for extra visibility
-        row.style.color = 'blue'; // Change text color to blue
-      });
-      await expect(page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM)).toBeVisible();
+      await shortagePage.highlightElement(rightTable, HIGHLIGHT_PENDING); // Highlight with a yellow background
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM)).toBeVisible();
+        },
+        'Verify modal base material table is visible',
+        test.info(),
+      );
       await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill('');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Locate the search field within the left table and fill it
       await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill(SelectorsPartsDataBase.TEST_MATERIAL_NAME);
 
       await page.waitForLoadState('networkidle');
       // Optionally, validate that the search input is visible
-      await expect(rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT)).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT)).toBeVisible();
+        },
+        'Verify search input in right table is visible',
+        test.info(),
+      );
 
       await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).press('Enter');
       await page.waitForLoadState('networkidle');
       // Find the first row in the table
       const firstRow = rightTable.locator('tbody tr:first-child');
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'yellow'; // Highlight with a yellow background
-        row.style.border = '2px solid red'; // Add a red border for extra visibility
-        row.style.color = 'blue'; // Change text color to blue
-      });
-      await page.waitForTimeout(1000);
-      expect(await firstRow.textContent()).toContain(SelectorsPartsDataBase.TEST_MATERIAL_NAME);
+      await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING); // Highlight with a yellow background
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      const firstRowText = await firstRow.textContent();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(firstRowText).toContain(SelectorsPartsDataBase.TEST_MATERIAL_NAME);
+        },
+        `Verify first row contains ${SelectorsPartsDataBase.TEST_MATERIAL_NAME}`,
+        test.info(),
+      );
       // Wait for the row to be visible and click on it
       await firstRow.waitFor({ state: 'visible' });
       firstRow.click();
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'green'; // Highlight with a yellow background
-        row.style.border = '2px solid red'; // Add a red border for extra visibility
-        row.style.color = 'blue'; // Change text color to blue
-      });
-      await page.waitForTimeout(500);
+      await shortagePage.highlightElement(firstRow, HIGHLIGHT_SUCCESS); // Highlight with a yellow background
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
     await allure.step('Step 05: Add the found Item (Add the found Item)', async () => {
       await page.waitForLoadState('networkidle');
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await addButton.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'red';
-      });
+      await shortagePage.highlightElement(addButton, HIGHLIGHT_SUCCESS);
 
       addButton.click();
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
     await allure.step(
       'Step 06: Verify that the item is now shown in the main page table (Verify that the item is now shown in the main page table)',
@@ -485,12 +578,16 @@ export const runU006 = () => {
         const firstDataRow = tableContainer.locator(SelectorsPartsDataBase.CHR_TABLE).locator('tr').first();
         const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
 
-        await targetSpan.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
-        expect(await targetSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_NAME);
+        await shortagePage.highlightElement(targetSpan, HIGHLIGHT_PENDING);
+        const targetSpanText = await targetSpan.innerText();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(targetSpanText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_NAME);
+          },
+          `Verify target span inner text is ${SelectorsPartsDataBase.TEST_MATERIAL_NAME}`,
+          test.info(),
+        );
       },
     );
     await allure.step(
@@ -504,12 +601,16 @@ export const runU006 = () => {
         const firstDataRow = tableContainer.locator('table tbody tr').first();
         const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
 
-        await targetSpan.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
-        expect(await targetSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_NAME);
+        await shortagePage.highlightElement(targetSpan, HIGHLIGHT_PENDING);
+        const targetSpanText = await targetSpan.innerText();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(targetSpanText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_NAME);
+          },
+          `Verify target span inner text is ${SelectorsPartsDataBase.TEST_MATERIAL_NAME}`,
+          test.info(),
+        );
       },
     );
     await allure.step('Step 08: Вводим значение переменной в обязательное поле в строке "Длина (Д)" в таблице "Характеристики заготовки"', async () => {
@@ -518,14 +619,28 @@ export const runU006 = () => {
 
       // Locate the table container using data-testid
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Locate the row dynamically by searching for the text "Длина (Д)"
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       // Locate the input field dynamically within the row
       const inputField = targetRow.locator(
@@ -533,11 +648,7 @@ export const runU006 = () => {
       ); // Finds any input field with a data-testid ending in "-Input"
 
       // Highlight the input field for debugging (optional)
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       // Set the desired value
       const desiredValue = '999';
@@ -548,9 +659,16 @@ export const runU006 = () => {
       // Verify the value
       const currentValue = await inputField.inputValue();
       console.log('Verified input value:', currentValue);
-      expect(currentValue).toBe(desiredValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(desiredValue);
+        },
+        `Verify current value is ${desiredValue}`,
+        test.info(),
+      );
 
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 09: Upload files using drag-and-drop functionality', async () => {
@@ -567,7 +685,7 @@ export const runU006 = () => {
       //     'testdata/1.3.1.1 Клапан М6х10.PNG__+__c3a2fced-9b03-461b-a596-ef3808d8a475.png',
       // ]);
       // Verify the files were successfully uploaded
-      await page.waitForTimeout(1000); // Wait before execution
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait before execution
       const uploadedFiles = await fileInput.evaluate((element: HTMLInputElement) => {
         return element.files?.length || 0;
       });
@@ -587,7 +705,7 @@ export const runU006 = () => {
       // Retrieve all H3 titles from the specified class
       const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, SelectorsPartsDataBase.FILE_DRAG_DROP_MODAL);
       const normalizedH3Titles = h3Titles.map(title => title.trim());
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       // Wait for the page to stabilize
       await page.waitForLoadState('networkidle');
 
@@ -596,10 +714,24 @@ export const runU006 = () => {
       logger.info('Received Titles:', normalizedH3Titles);
 
       // Validate length
-      expect(normalizedH3Titles.length).toBe(titles.length);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH3Titles.length).toBe(titles.length);
+        },
+        `Verify normalized H3 titles length is ${titles.length}`,
+        test.info(),
+      );
 
       // Validate content and order
-      expect(normalizedH3Titles).toEqual(titles);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH3Titles).toEqual(titles);
+        },
+        'Verify normalized H3 titles match expected titles',
+        test.info(),
+      );
 
       const titlesh4 = testData1.elements.CreatePage.modalAddDocuments.titlesh4.map(title => title.replace(/\s+/g, ' ').trim());
       const h4Titles = await shortagePage.getAllH4TitlesInModalByTestId(page, SelectorsPartsDataBase.FILE_DRAG_DROP_MODAL);
@@ -608,25 +740,46 @@ export const runU006 = () => {
       logger.info('Expected Titles:', titlesh4);
       logger.info('Received Titles:', normalizedH4Titles);
 
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
       // Validate length
-      expect(normalizedH4Titles.length).toBe(titlesh4.length);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH4Titles.length).toBe(titlesh4.length);
+        },
+        `Verify normalized H4 titles length is ${titlesh4.length}`,
+        test.info(),
+      );
 
       // Validate content and order
-      expect(normalizedH4Titles).toEqual(titlesh4);
-      await page.waitForTimeout(50);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedH4Titles).toEqual(titlesh4);
+        },
+        'Verify normalized H4 titles match expected titles',
+        test.info(),
+      );
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
     await allure.step('Step 11: Ensure the textarea is present and writable in each file uploaded section', async () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the modal container using data-testid
       const modal = page.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_MODAL);
-      await expect(modal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modal).toBeVisible();
+        },
+        'Verify modal is visible',
+        test.info(),
+      );
 
       // Locate the SECTION inside the modal (wildcard for '-Section')
       const section = await modal.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_SECTION);
-      await section.waitFor({ state: 'attached', timeout: 50 });
+      await section.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
 
       // Locate ALL FILE SECTIONS inside the section (wildcard for '-File')
       const fileSections = await section.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_FILE);
@@ -643,34 +796,25 @@ export const runU006 = () => {
 
         // Locate the textarea inside the fieldset (specific textarea)
         const textarea = fileSection.locator(SelectorsPartsDataBase.FILE_DESCRIPTION_TEXTAREA);
-        await textarea.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
+        await shortagePage.highlightElement(textarea, HIGHLIGHT_PENDING);
         const checkbox = fileSection.locator(SelectorsPartsDataBase.FILE_MAIN_CHECKBOX);
-        await checkbox.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
+        await shortagePage.highlightElement(checkbox, HIGHLIGHT_PENDING);
         const version = fileSection.locator(SelectorsPartsDataBase.FILE_VERSION_INPUT);
-        await version.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
+        await shortagePage.highlightElement(version, HIGHLIGHT_PENDING);
         const fileName = fileSection.locator(SelectorsPartsDataBase.FILE_NAME_INPUT);
 
         // Highlight the textarea for debugging (optional)
-        await fileName.evaluate(row => {
-          row.style.backgroundColor = 'yellow';
-          row.style.border = '2px solid red';
-          row.style.color = 'blue';
-        });
+        await shortagePage.highlightElement(fileName, HIGHLIGHT_PENDING);
 
         // Ensure the textarea is visible
-        await expect(textarea).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(textarea).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          `Verify textarea in file section ${i + 1} is visible`,
+          test.info(),
+        );
         console.log(`Textarea in file section ${i + 1} is visible.`);
 
         // Focus on the textarea to verify it is writable
@@ -685,15 +829,22 @@ export const runU006 = () => {
         // Verify the entered value
         const currentValue = await textarea.inputValue();
         console.log(`Textarea current value in file section ${i + 1}: ${currentValue}`);
-        expect(currentValue).toBe(testValue);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(currentValue).toBe(testValue);
+          },
+          `Verify textarea current value is ${testValue} in file section ${i + 1}`,
+          test.info(),
+        );
       }
 
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 12: Check buttons in dialog (Check buttons in dialog)', async () => {
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
       const buttons = testData1.elements.CreatePage.modalAddDocuments.buttons;
 
@@ -705,29 +856,48 @@ export const runU006 = () => {
           'AddDetal-Buttons-CostPrice': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_COST_PRICE,
           'AddDetal-Buttons-Accessory': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_ACCESSORY,
           'AddDetal-Buttons-ChangeHistory': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_CHANGE_HISTORY,
+          'Specification-Buttons-addingSpecification': SelectorsPartsDataBase.SPECIFICATION_BUTTONS_ADDING_SPECIFICATION,
         };
 
-        const buttonTestId = buttonTestIdMap[button.datatestid] || button.datatestid; // Fallback to original if not mapped
+        // Get selector from map - all buttons must have constants
+        const buttonSelector = buttonTestIdMap[button.datatestid];
+        if (!buttonSelector) {
+          throw new Error(`Button with datatestid "${button.datatestid}" is not mapped to a constant. Please add it to buttonTestIdMap.`);
+        }
         const buttonLabel = button.label;
         const expectedState = button.state === 'true'; // Convert state string to a boolean
 
         // Perform the validation for the button
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          await page.waitForTimeout(50);
-          console.log(`Checking button: ${buttonTestId} - ${buttonLabel} - Expected State: ${expectedState}`);
+          await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+          console.log(`Checking button: ${buttonSelector} - ${buttonLabel} - Expected State: ${expectedState}`);
 
-          // Locate the button using data-testid
-          const buttonLocator = page.locator(`[data-testid="${buttonTestId}"]`);
+          // Locate the button using selector constant
+          const buttonLocator = page.locator(buttonSelector);
 
           // Check if the button is visible and enabled
           const isButtonVisible = await buttonLocator.isVisible();
           const isButtonEnabled = await buttonLocator.isEnabled();
 
-          console.log(`Button: ${buttonTestId} - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
+          console.log(`Button: ${buttonSelector} - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
 
           // Validate the button's visibility and state
-          expect(isButtonVisible).toBeTruthy();
-          expect(isButtonEnabled).toBe(expectedState);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(isButtonVisible).toBeTruthy();
+            },
+            `Verify button ${buttonLabel} is visible`,
+            test.info(),
+          );
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(isButtonEnabled).toBe(expectedState);
+            },
+            `Verify button ${buttonLabel} enabled state is ${expectedState}`,
+            test.info(),
+          );
 
           logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonVisible && isButtonEnabled);
         });
@@ -740,19 +910,42 @@ export const runU006 = () => {
         await page.waitForLoadState('networkidle');
 
         const modal = page.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_MODAL);
-        await expect(modal).toBeVisible();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(modal).toBeVisible();
+          },
+          'Verify modal is visible',
+          test.info(),
+        );
 
         const section = page.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_SECTION);
-        await section.waitFor({ state: 'attached', timeout: 50 });
+        await section.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
 
         const sectionX = await section.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_FILE).first();
         const sectionY = await section.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_FILE).nth(1);
 
         // Validate checkboxes and assert their state
-        expect(await shortagePage.validateCheckbox(page, sectionX, 1)).toBeFalsy();
-        expect(await shortagePage.validateCheckbox(page, sectionY, 2)).toBeFalsy();
+        const checkboxX1 = await shortagePage.validateCheckbox(page, sectionX, 1);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(checkboxX1).toBeFalsy();
+          },
+          'Verify checkbox in sectionX row 1 is unchecked',
+          test.info(),
+        );
+        const checkboxY2 = await shortagePage.validateCheckbox(page, sectionY, 2);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(checkboxY2).toBeFalsy();
+          },
+          'Verify checkbox in sectionY row 2 is unchecked',
+          test.info(),
+        );
 
-        await page.waitForTimeout(50);
+        await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       },
     );
 
@@ -760,22 +953,38 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const section = page.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_SECTION);
-      await section.waitFor({ state: 'attached', timeout: 50 });
+      await section.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
 
       const sectionX = await section.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_FILE).first();
       const sectionY = await section.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_FILE).nth(1);
 
       // Validate checkboxes and assert their state
-      expect(await shortagePage.checkCheckbox(page, sectionX, 1)).toBeTruthy();
-      expect(await shortagePage.checkCheckbox(page, sectionY, 2)).toBeTruthy();
+      const checkedX1 = await shortagePage.checkCheckbox(page, sectionX, 1);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(checkedX1).toBeTruthy();
+        },
+        'Verify checkbox in sectionX row 1 is checked',
+        test.info(),
+      );
+      const checkedY2 = await shortagePage.checkCheckbox(page, sectionY, 2);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(checkedY2).toBeTruthy();
+        },
+        'Verify checkbox in sectionY row 2 is checked',
+        test.info(),
+      );
 
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
     await allure.step('Step 15: Проверяем, that in the file field is the name of the file uploaded without its file extension', async () => {
       await page.waitForLoadState('networkidle');
 
       const section = await page.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_SECTION);
-      await section.waitFor({ state: 'attached', timeout: 50 });
+      await section.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
       console.log('Dynamic content in modal section loaded.');
 
       // Extract individual file sections from the main section
@@ -788,7 +997,7 @@ export const runU006 = () => {
       await shortagePage.validateFileNames(page, fileSections, filenamesWithoutExtension);
 
       console.log('All file fields validated successfully.');
-      await page.waitForTimeout(100);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 16: Click the Загрузить все файлы button and confirm modal closure', async () => {
@@ -817,10 +1026,10 @@ export const runU006 = () => {
 
         // Change button color for debugging
         const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-        await uploadButton.evaluate((button, color) => {
-          button.style.backgroundColor = color;
-          button.style.borderColor = color;
-        }, randomColor);
+        await shortagePage.highlightElement(uploadButton, {
+          backgroundColor: randomColor,
+          border: `2px solid ${randomColor}`,
+        });
         console.log(`Button color changed to ${randomColor}.`);
 
         // Click the upload button
@@ -828,12 +1037,12 @@ export const runU006 = () => {
         console.log('Upload button clicked.');
 
         // Wait for notifications
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
         // Check modal visibility again after the button click
         if ((await modalLocator.count()) === 0) {
           console.log('Modal closed after button click. Upload succeeded!');
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
           break;
         }
 
@@ -875,7 +1084,7 @@ export const runU006 = () => {
               const currentValue = await fileInput.inputValue();
               await fileInput.fill('');
               await fileInput.press('Enter');
-              await page.waitForTimeout(500);
+              await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
               const updatedValue = `${currentValue}_${Math.random().toString(36).substring(2, 6)}`;
               await fileInput.fill(updatedValue);
@@ -897,7 +1106,7 @@ export const runU006 = () => {
         }
 
         console.log('Waiting before retrying...');
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
       if (retryCounter >= maxRetries) {
@@ -910,11 +1119,11 @@ export const runU006 = () => {
     await allure.step('Step 17: Verify uploaded file names with wildcard matching and extension validation', async () => {
       logger.info('Starting file verification process...');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(2500);
+      await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
       // Locate the parent section for the specific table
-      await page.waitForTimeout(1000);
-      const parentSection = page.locator(`section[data-testid="${SelectorsPartsDataBase.FILE_COMPONENT_ID}"]`);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      const parentSection = page.locator(SelectorsPartsDataBase.FILE_COMPONENT_SECTION);
       logger.info('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
@@ -939,9 +1148,9 @@ export const runU006 = () => {
           const row = tableRows.nth(i);
 
           // Try multiple selector strategies to find the filename cell
-          let nameCell = row.locator(`[data-testid^="${SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_ID}"]`);
+          let nameCell = row.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_PREFIX);
           if ((await nameCell.count()) === 0) {
-            nameCell = row.locator(`td[data-testid*="${SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_ID}"]`);
+            nameCell = row.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_TD_PREFIX);
           }
           if ((await nameCell.count()) === 0) {
             // Fallback: try to find any cell in the row that might contain the filename
@@ -959,11 +1168,7 @@ export const runU006 = () => {
               logger.info(`File "${trimmedFileName}" matches base name "${name}" with extension "${extension}".`);
 
               // Highlight the matching cell
-              await nameCell.evaluate(cell => {
-                cell.style.backgroundColor = 'yellow';
-                cell.style.border = '2px solid red';
-                cell.style.color = 'blue';
-              });
+              await shortagePage.highlightElement(nameCell, HIGHLIGHT_PENDING);
 
               fileFound = true;
               break;
@@ -986,74 +1191,87 @@ export const runU006 = () => {
     await allure.step('Step 18: Open Добавить из базы dialog (Open Добавить из базы dialog)', async () => {
       await page.waitForLoadState('networkidle');
       const button = page.locator(SelectorsPartsDataBase.FILE_ADD_BUTTON, { hasText: 'Добавить из базы' });
-      await button.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
-      await page.waitForTimeout(500);
+      await shortagePage.highlightElement(button, HIGHLIGHT_SUCCESS);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       button.click();
     });
     await allure.step('Step 19: Verify that search works for the files table (Verify that search works for each column)', async () => {
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Locate the switch item using data-testid and highlight it for debugging
       const switchItem = page.locator(SelectorsPartsDataBase.FILE_BASE_SWITCH_ITEM0);
-      await switchItem.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(switchItem, HIGHLIGHT_SUCCESS);
       await switchItem.click();
       await page.waitForLoadState('networkidle');
 
       // Wait for the dialog to be open and visible
-      const dialog = page.locator('dialog[data-testid="AddDetal-FileComponent-ModalBaseFiles"]');
-      await dialog.evaluate(row => {
-        row.style.backgroundColor = 'blue';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
+      const dialog = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_DIALOG);
+      await shortagePage.highlightElement(dialog, {
+        backgroundColor: 'blue',
+        border: '2px solid red',
+        color: 'blue',
       });
-      await expect(dialog).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(dialog).toBeVisible();
+        },
+        'Verify dialog is visible',
+        test.info(),
+      );
 
       // Locate the table container and search input within the dialog
-      const tableContainer = dialog.locator('table[data-testid$="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table"]');
-      await expect(tableContainer).toBeVisible();
+      const tableContainer = dialog.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_TABLE_TABLE_SUFFIX_SELECTOR);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Highlight table with red border for debugging
-      await tableContainer.evaluate(table => {
-        table.style.border = '3px solid red';
-        table.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+      await shortagePage.highlightElement(tableContainer, {
+        border: '3px solid red',
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
       });
 
       // Highlight the table's thead with red border
       const tableHead = tableContainer.locator('thead');
-      await tableHead.evaluate(thead => {
-        thead.style.border = '3px solid red';
-        thead.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+      await shortagePage.highlightElement(tableHead, {
+        border: '3px solid red',
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
       });
 
       // Find the input field in thead second row with data-testid ending in Search-Dropdown-Input
-      const searchField = tableContainer.locator('thead tr:nth-child(2) input[data-testid$="Search-Dropdown-Input"]');
-      await searchField.waitFor({ state: 'visible', timeout: 5000 });
+      const searchField = tableContainer.locator(`thead tr:nth-child(2) ${SelectorsPartsDataBase.SEARCH_DROPDOWN_INPUT_SUFFIX_SELECTOR}`);
+      await searchField.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
 
       // Highlight the search input with red border
-      await searchField.evaluate(input => {
-        input.style.border = '3px solid orange';
-        input.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+      await shortagePage.highlightElement(searchField, {
+        border: '3px solid orange',
+        backgroundColor: 'rgba(255, 0, 0, 0.3)',
       });
 
       const leftTable = tableContainer;
 
       // Ensure the search field is visible and editable
-      await expect(searchField).toBeVisible();
-      await page.waitForTimeout(500);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchField).toBeVisible();
+        },
+        'Verify search field is visible',
+        test.info(),
+      );
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await searchField.focus(); // Focus on the input field
       await searchField.fill(''); // Clear any existing content
       await searchField.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
       // Programmatically set the value using JavaScript
       await searchField.evaluate((element, value) => {
@@ -1066,27 +1284,37 @@ export const runU006 = () => {
       // Verify that the field contains the correct value
       const fieldValue = await searchField.inputValue();
       logger.info('Verified input value:', fieldValue);
-      expect(fieldValue).toBe(SelectorsPartsDataBase.TEST_FILE);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(fieldValue).toBe(SelectorsPartsDataBase.TEST_FILE);
+        },
+        `Verify field value is ${SelectorsPartsDataBase.TEST_FILE}`,
+        test.info(),
+      );
       const firstRow1 = leftTable.locator('tbody tr:first-child');
       logger.info('First Row:', await firstRow1.textContent());
       // Trigger the search by pressing 'Enter'
       await searchField.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       // Locate and highlight the first row in the table
       const firstRow = leftTable.locator('tbody tr:first-child');
       logger.info('First Row 2:', await firstRow.textContent());
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'yellow';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
 
       // Wait for the first row to be visible and validate its content
       await firstRow.waitFor({ state: 'visible' });
       const rowText = await firstRow.textContent();
       logger.info('First row text:', rowText);
-      expect(rowText?.trim()).toContain(SelectorsPartsDataBase.TEST_FILE);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowText?.trim()).toContain(SelectorsPartsDataBase.TEST_FILE);
+        },
+        `Verify row text contains ${SelectorsPartsDataBase.TEST_FILE}`,
+        test.info(),
+      );
 
       logger.info('Search verification completed successfully.');
     });
@@ -1096,22 +1324,36 @@ export const runU006 = () => {
     await allure.step('Step 20: Add the file to the attach list in bottom table (Verify that search works for each column)', async () => {
       await page.waitForLoadState('networkidle');
 // Wait for the dialog to be open and visible
-      const dialog = page.locator('dialog[data-testid="AddDetal-FileComponent-ModalBaseFiles"]');
-      await dialog.evaluate(row => {
-        row.style.backgroundColor = 'blue';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
+      const dialog = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_DIALOG);
+      await shortagePage.highlightElement(dialog, {
+        backgroundColor: 'blue',
+        border: '2px solid red',
+        color: 'blue',
       });
-      await expect(dialog).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(dialog).toBeVisible();
+        },
+        'Verify dialog is visible',
+        test.info(),
+      );
       // Locate the parent container of the table
       
-      const tableContainer = dialog.locator('table[data-testid$="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table"]');
-      await expect(tableContainer).toBeVisible();
+      const tableContainer = dialog.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_TABLE_TABLE_SUFFIX_SELECTOR);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Highlight table with red border for debugging
-      await tableContainer.evaluate(table => {
-        table.style.border = '3px solid red';
-        table.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+      await shortagePage.highlightElement(tableContainer, {
+        border: '3px solid red',
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
       });
 
       const firstRow = tableContainer.locator('tbody tr:first-child');
@@ -1123,52 +1365,53 @@ export const runU006 = () => {
       selectedFileType = (await firstRow.locator('td').nth(2).textContent()) ?? '';
       selectedFileName = (await firstRow.locator('td').nth(3).textContent()) ?? '';
 
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'yellow';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
       const addButton = page.locator(SelectorsPartsDataBase.FILE_BASE_ADD_BUTTON, { hasText: 'Добавить' });
-      await addButton.evaluate(row => {
-        row.style.backgroundColor = 'yellow';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
-      await page.waitForTimeout(100);
+      await shortagePage.highlightElement(addButton, HIGHLIGHT_PENDING);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       const isButtonReady = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.FILE_BASE_ADD_BUTTON, 'Добавить', false, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES);
 
-      expect(isButtonReady).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isButtonReady).toBeTruthy();
+        },
+        'Verify add button is ready before row click',
+        test.info(),
+      );
       firstRow.click();
-      await firstRow.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
-      await page.waitForTimeout(500);
+      await shortagePage.highlightElement(firstRow, HIGHLIGHT_SUCCESS);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       const isButtonReady2 = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.FILE_BASE_ADD_BUTTON, 'Добавить', true, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES);
-      expect(isButtonReady2).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isButtonReady2).toBeTruthy();
+        },
+        'Verify add button is ready after row click',
+        test.info(),
+      );
       addButton.click();
-      await addButton.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(addButton, HIGHLIGHT_SUCCESS);
     });
     await allure.step('Step 21: Confirm the file is listed in the bottom table', async () => {
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       const selectedPartNumber = SelectorsPartsDataBase.TEST_FILE; // Replace with actual part number
 
       const bottomTableLocator = page.locator(SelectorsPartsDataBase.FILE_BASE_BOTTOM_TABLE); // Adjust 'xxxxx' as per actual table id
-      await bottomTableLocator.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(bottomTableLocator, HIGHLIGHT_SUCCESS);
       // Locate all rows in the table body
       const rowsLocator = bottomTableLocator.locator('tbody tr');
       const rowCount = await rowsLocator.count();
-      expect(rowCount).toBeGreaterThan(0); // Ensure the table is not empty
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowCount).toBeGreaterThan(0);
+        },
+        `Verify table has rows: ${rowCount} rows found`,
+        test.info(),
+      ); // Ensure the table is not empty
 
       let isRowFound = false;
       console.log(rowCount);
@@ -1187,44 +1430,47 @@ export const runU006 = () => {
         // Compare the extracted values
         if (tableFileType?.trim() === selectedFileType) {
           isRowFound = true;
-          await tableFileTypeCell.evaluate(row => {
-            row.style.backgroundColor = 'black';
-            row.style.border = '2px solid red';
-            row.style.color = 'white';
+          await shortagePage.highlightElement(tableFileTypeCell, {
+            backgroundColor: 'black',
+            border: '2px solid red',
+            color: 'white',
           });
         }
         if (tableFileName?.trim() === selectedFileName) {
           isRowFound = true;
-          await tableFileNameCell.evaluate(row => {
-            row.style.backgroundColor = 'black';
-            row.style.border = '2px solid red';
-            row.style.color = 'white';
+          await shortagePage.highlightElement(tableFileNameCell, {
+            backgroundColor: 'black',
+            border: '2px solid red',
+            color: 'white',
           });
           console.log(`Selected row found in row ${i + 1}`);
         }
       }
-      expect(isRowFound).toBeTruthy();
-      await page.waitForTimeout(500);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isRowFound).toBeTruthy();
+        },
+        'Verify row was found in table',
+        test.info(),
+      );
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
     await allure.step('Step 22: Click bottom Add button', async () => {
       await page.waitForLoadState('networkidle');
 
       const addButton = page.locator(SelectorsPartsDataBase.FILE_BASE_FOOTER_ADD_BUTTON, { hasText: 'Добавить' }).last();
 
-      await addButton.evaluate(row => {
-        row.style.backgroundColor = 'green';
-        row.style.border = '2px solid red';
-        row.style.color = 'red';
-      });
-      await page.waitForTimeout(500);
+      await shortagePage.highlightElement(addButton, HIGHLIGHT_SUCCESS);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       addButton.click();
     });
     await allure.step('Step 23: Highlight the row containing the selected file name', async () => {
       await page.waitForLoadState('networkidle');
 
       // Locate the parent section for the specific table
-      await page.waitForTimeout(1000);
-      const parentSection = page.locator(`section[data-testid="${SelectorsPartsDataBase.FILE_COMPONENT_ID}"]`);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      const parentSection = page.locator(SelectorsPartsDataBase.FILE_COMPONENT_SECTION);
       logger.info('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
@@ -1236,7 +1482,7 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const row = tableRows.nth(i);
-        const fileNameCell = row.locator(`[data-testid^="${SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_ID}"]`);
+        const fileNameCell = row.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_NAME_CELL_PREFIX);
         await fileNameCell.waitFor({ state: 'visible' });
         const fileNameText = await fileNameCell.textContent();
 
@@ -1246,11 +1492,7 @@ export const runU006 = () => {
         if (fileNameText?.trim() === selectedFileName) {
           // Match exact name
           logger.info(`Selected file name "${selectedFileName}" found in row ${i + 1}. Highlighting...`);
-          await fileNameCell.evaluate(rowElement => {
-            rowElement.style.backgroundColor = 'yellow';
-            rowElement.style.border = '2px solid red';
-            rowElement.style.color = 'blue';
-          });
+          await shortagePage.highlightElement(fileNameCell, HIGHLIGHT_PENDING);
           fileFound = true;
           break; // Exit the loop once the file is found and highlighted
         }
@@ -1259,27 +1501,33 @@ export const runU006 = () => {
       if (!fileFound) {
         throw new Error(`Selected file name "${selectedFileName}" was not found in the table.`);
       }
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       logger.info('File search and highlight process completed successfully.');
     });
     await allure.step('Step 24: Удалите первый файл из списка медиафайлов.(Remove the first file from the list of attached media files.)', async () => {
       await page.waitForLoadState('networkidle');
       let printButton = page.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_PRINT_BUTTON, { hasText: 'Печать' });
-      await printButton.evaluate(checkboxElement => {
-        checkboxElement.style.backgroundColor = 'yellow';
-        checkboxElement.style.border = '2px solid red';
-        checkboxElement.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(printButton, HIGHLIGHT_PENDING);
       let isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.DOCUMENT_TABLE_PRINT_BUTTON, 'Печать', false);
       let deleteButton = page.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_DELETE_BUTTON, { hasText: 'Удалить' });
-      await deleteButton.evaluate(checkboxElement => {
-        checkboxElement.style.backgroundColor = 'yellow';
-        checkboxElement.style.border = '2px solid red';
-        checkboxElement.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(deleteButton, HIGHLIGHT_PENDING);
       let isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.DOCUMENT_TABLE_DELETE_BUTTON, 'Удалить', false);
-      expect(isPrintButtonReady).toBeTruthy();
-      expect(isDeleteButtonReady).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isPrintButtonReady).toBeTruthy();
+        },
+        'Verify print button is ready',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isDeleteButtonReady).toBeTruthy();
+        },
+        'Verify delete button is ready',
+        test.info(),
+      );
       // Locate the parent section for the specific table
       const parentSection = page.locator(SelectorsPartsDataBase.FILE_COMPONENT);
       logger.info('Located parent section for the file table.');
@@ -1289,59 +1537,61 @@ export const runU006 = () => {
       const row = tableRows.first();
 
       // Refine the locator to target the checkbox input inside the third column
-      const checkboxInput = row.locator(`[data-testid^="${SelectorsPartsDataBase.DOCUMENT_TABLE_CHECKBOX_ID}"]`);
-      await checkboxInput.evaluate(checkboxElement => {
-        checkboxElement.style.backgroundColor = 'green';
-        checkboxElement.style.border = '2px solid red';
-        checkboxElement.style.color = 'blue';
-      });
+      const checkboxInput = row.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_CHECKBOX_PREFIX);
+      await shortagePage.highlightElement(checkboxInput, HIGHLIGHT_SUCCESS);
 
       // Check the checkbox
       await checkboxInput.check();
-      await page.waitForTimeout(100);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       printButton = page.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_PRINT_BUTTON, { hasText: 'Печать' });
-      await printButton.evaluate(checkboxElement => {
-        checkboxElement.style.backgroundColor = 'green';
-        checkboxElement.style.border = '2px solid red';
-        checkboxElement.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(printButton, HIGHLIGHT_SUCCESS);
       isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.DOCUMENT_TABLE_PRINT_BUTTON, 'Печать', true);
       deleteButton = page.locator(SelectorsPartsDataBase.DOCUMENT_TABLE_DELETE_BUTTON, { hasText: 'Удалить' });
-      await deleteButton.evaluate(checkboxElement => {
-        checkboxElement.style.backgroundColor = 'green';
-        checkboxElement.style.border = '2px solid red';
-        checkboxElement.style.color = 'blue';
-      });
+      await shortagePage.highlightElement(deleteButton, HIGHLIGHT_SUCCESS);
       isDeleteButtonReady = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.DOCUMENT_TABLE_DELETE_BUTTON, 'Удалить', true);
-      expect(isPrintButtonReady).toBeTruthy();
-      expect(isDeleteButtonReady).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isPrintButtonReady).toBeTruthy();
+        },
+        'Verify print button is ready',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isDeleteButtonReady).toBeTruthy();
+        },
+        'Verify delete button is ready',
+        test.info(),
+      );
       // Assert that the checkbox is checked
-      expect(await checkboxInput.isChecked()).toBeTruthy();
+      const isCheckboxChecked = await checkboxInput.isChecked();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isCheckboxChecked).toBeTruthy();
+        },
+        'Verify checkbox is checked',
+        test.info(),
+      );
 
       //delete row
       deleteButton.click();
-      await deleteButton.evaluate(checkboxElement => {
-        checkboxElement.style.backgroundColor = 'green';
-        checkboxElement.style.border = '2px solid red';
-        checkboxElement.style.color = 'blue';
-      });
-      await page.waitForTimeout(500);
+      await shortagePage.highlightElement(deleteButton, HIGHLIGHT_SUCCESS);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
     await allure.step('Step 25: Save the detail', async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.SAVE_BUTTON, { hasText: 'Сохранить' });
-      await saveButton.evaluate(rowElement => {
-        rowElement.style.backgroundColor = 'green';
-        rowElement.style.border = '2px solid red';
-        rowElement.style.color = 'blue';
-      });
-      await page.waitForTimeout(50);
+      await shortagePage.highlightElement(saveButton, HIGHLIGHT_SUCCESS);
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       saveButton.click();
-      await page.waitForTimeout(5000);
+      await page.waitForTimeout(TIMEOUTS.VERY_LONG);
     });
   });
   test('Cleanup TestCase 00b - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -1353,16 +1603,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -1395,29 +1652,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -1425,7 +1699,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -1434,7 +1708,7 @@ export const runU006 = () => {
   });
   // TestCase 02: Do not select a material and verify that saving is not allowed.
   test('TestCase 02 - не дает сохранить деталь без выбора материала', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     // Instantiate our helper classes.
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -1479,7 +1753,7 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       // Wait a moment to let the page load and then locate the table.
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Locate the table by its data-testid.
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
@@ -1495,24 +1769,27 @@ export const runU006 = () => {
       // Scroll the first found table into view and apply styling.
       const tableContainer = detailTable.first();
       await tableContainer.scrollIntoViewIfNeeded();
-      await tableContainer.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(tableContainer, HIGHLIGHT_PENDING);
 
       // Locate the search field in the table header.
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Clear the field, enter the detail name, and press Enter.
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Locate all rows in the tbody of the first table container.
       const rows = tableContainer.locator('tbody tr');
       const rowCount = await rows.count();
@@ -1521,12 +1798,8 @@ export const runU006 = () => {
       // Loop through each row: apply styling and wait 500ms before checking the text.
       for (let i = 0; i < rowCount; i++) {
         const currentRow = rows.nth(i);
-        await currentRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
-        await page.waitForTimeout(500);
+        await detailsPage.highlightElement(currentRow, HIGHLIGHT_PENDING);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         const rowText = await currentRow.textContent();
         console.log(`Row ${i + 1} text:`, rowText);
@@ -1535,11 +1808,18 @@ export const runU006 = () => {
           break;
         }
       }
-      expect(isMatch).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isMatch).toBeTruthy();
+        },
+        'Verify match is found',
+        test.info(),
+      );
     });
   });
   test('Cleanup TestCase 00c - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -1551,16 +1831,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -1593,29 +1880,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -1623,7 +1927,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -1631,7 +1935,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 02a - Выбрать материал, но оставить атрибуты пустыми', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 1: Открыть главную страницу', async () => {
@@ -1639,22 +1943,50 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Главная страница успешно загружена со всеми отображаемыми элементами');
     });
 
     await allure.step('Step 2: Нажать кнопку «Создать»', async () => {
       // The page is already the create page, so we just verify we're on the correct page
       const createPageTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
-      await expect(createPageTitle).toBeVisible();
-      await expect(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toBeVisible();
+        },
+        'Verify create page title is visible',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+        },
+        `Verify create page title text is ${SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS}`,
+        test.info(),
+      );
       logger.info('Страница создания успешно открыта');
     });
 
     await allure.step('Step 3: Выбрать тип элемента «Деталь»', async () => {
       // Verify we're on the detail creation page by checking the detail name input field
       const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Тип детали выбран - страница создания детали активна');
     });
@@ -1666,13 +1998,27 @@ export const runU006 = () => {
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
@@ -1680,12 +2026,26 @@ export const runU006 = () => {
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_NAME_2);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
     });
 
@@ -1693,14 +2053,35 @@ export const runU006 = () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       const chrTble = tableContainer.locator(SelectorsPartsDataBase.CHR_TABLE);
 
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Verify that the material is displayed
       const materialSpan = chrTble.locator('td').nth(2).locator('span');
       await detailsPage.highlightElement(materialSpan);
-      await expect(materialSpan).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
       const materialText = await materialSpan.innerText();
-      expect(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_NAME_2);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_NAME_2);
+        },
+        `Verify material text is ${SelectorsPartsDataBase.TEST_MATERIAL_NAME_2}`,
+        test.info(),
+      );
       logger.info(`Материал отображается в форме: ${materialText}`);
 
       // Verify that attribute fields are empty
@@ -1715,20 +2096,34 @@ export const runU006 = () => {
           const inputField = inputFields.nth(i);
           await detailsPage.highlightElement(inputField);
           const fieldValue = await inputField.inputValue();
-          expect(fieldValue).toBe('0');
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(fieldValue).toBe('0');
+            },
+            `Verify field ${i + 1} value is 0`,
+            test.info(),
+          );
           logger.info(`Поле атрибута ${i + 1} пустое`);
         }
         logger.info('Все поля атрибутов остаются пустыми');
       } else {
         // Fallback: try to find any input fields in the table
-        const fallbackInputFields = tableContainer.locator(`input[data-testid$="${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`);
+        const fallbackInputFields = tableContainer.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_SELECTOR);
         const fallbackCount = await fallbackInputFields.count();
 
         if (fallbackCount > 0) {
           for (let i = 0; i < fallbackCount; i++) {
             const inputField = fallbackInputFields.nth(i);
             const fieldValue = await inputField.inputValue();
-            expect(fieldValue).toBe('0');
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(fieldValue).toBe('0');
+              },
+              `Verify field ${i + 1} (fallback) value is 0`,
+              test.info(),
+            );
             logger.info(`Поле атрибута ${i + 1} (fallback) пустое`);
           }
           logger.info('Все поля атрибутов (fallback) остаются пустыми');
@@ -1740,7 +2135,14 @@ export const runU006 = () => {
 
     await allure.step('Step 8: Нажать кнопку «Сохранить»', async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -1754,7 +2156,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00d - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -1766,16 +2168,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -1808,29 +2217,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -1838,7 +2264,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -1846,7 +2272,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 03 - Валидация атрибутов на уровне границ', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Открыть главную страницу', async () => {
@@ -1854,20 +2280,48 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Главная страница загружена правильно');
     });
 
     await allure.step("Шаг 2: Нажать кнопку 'Создать'", async () => {
       const createPageTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
-      await expect(createPageTitle).toBeVisible();
-      await expect(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toBeVisible();
+        },
+        'Verify create page title is visible',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+        },
+        `Verify create page title text is ${SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS}`,
+        test.info(),
+      );
       logger.info('Форма загружена');
     });
 
     await allure.step("Шаг 3: Выбрать 'Деталь'", async () => {
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       logger.info('Поля показаны');
     });
 
@@ -1878,12 +2332,26 @@ export const runU006 = () => {
 
     await allure.step("Шаг 5: Нажать 'Задать' для выбора материала", async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
       logger.info('Модальное окно открыто');
     });
 
@@ -1891,24 +2359,52 @@ export const runU006 = () => {
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал добавлен');
     });
 
     await allure.step('Шаг 7: Заполнить только один обязательный атрибут', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
       const chrTble = tableContainer.locator(SelectorsPartsDataBase.CHR_TABLE);
 
       const targetRow = chrTble.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
@@ -1918,7 +2414,14 @@ export const runU006 = () => {
       const value = '100';
       await inputField.fill(value);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(value);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(value);
+        },
+        `Verify current value is ${value}`,
+        test.info(),
+      );
       logger.info('Это поле принимает ввод; другие остаются пустыми');
     });
     await allure.step('Шаг 7a: Cycle through all the values in this table making sure that none of them ahve the value NaN', async () => {
@@ -1927,7 +2430,7 @@ export const runU006 = () => {
 
       // Scroll to the table container to ensure it's visible
       await tableContainer.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Get all table rows (excluding header)
       const tableRows = chrTble.locator('tbody tr');
@@ -1940,14 +2443,10 @@ export const runU006 = () => {
 
         // Scroll to the current row to ensure it's visible
         await currentRow.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(200);
+        await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
         // Highlight the current row being validated
-        await currentRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(currentRow, HIGHLIGHT_PENDING);
 
         // Get row name for logging
         const rowNameCell = currentRow.locator('td').first();
@@ -1980,14 +2479,42 @@ export const runU006 = () => {
             const inputValue = await inputField.inputValue();
 
             // Validate input field value
-            expect(inputValue).not.toBe('NaN');
-            expect(inputValue).not.toBe('nan');
-            expect(inputValue).not.toBe('NAN');
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(inputValue).not.toBe('NaN');
+              },
+              'Verify input value is not NaN',
+              test.info(),
+            );
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(inputValue).not.toBe('nan');
+              },
+              'Verify input value is not nan',
+              test.info(),
+            );
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(inputValue).not.toBe('NAN');
+              },
+              'Verify input value is not NAN',
+              test.info(),
+            );
 
             // Additional validation: if the field has a value, it should be a valid number
             if (inputValue && inputValue.trim() !== '') {
               const numericValue = parseFloat(inputValue);
-              expect(isNaN(numericValue)).toBe(false);
+              await expectSoftWithScreenshot(
+                page,
+                () => {
+                  expect.soft(isNaN(numericValue)).toBe(false);
+                },
+                'Verify numeric value is valid',
+                test.info(),
+              );
               console.log(`    Input ${k + 1}: "${inputValue}" - Valid number: ${numericValue}`);
             } else {
               console.log(`    Input ${k + 1}: Empty field - OK`);
@@ -1995,15 +2522,10 @@ export const runU006 = () => {
           }
         }
 
-        // Remove highlighting after validation
-        await currentRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = '';
-          el.style.border = '';
-          el.style.color = '';
-        });
+        // Remove highlighting after validation - no action needed as highlighting is temporary
 
         // Small delay to make the highlighting visible
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(TIMEOUTS.SHORT);
       }
 
       console.log(`✅ All ${rowCount} rows validated - no NaN values found`);
@@ -2013,7 +2535,14 @@ export const runU006 = () => {
     await allure.step("Шаг 8: Нажать 'Сохранить'", async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await detailsPage.highlightElement(saveButton);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -2036,21 +2565,31 @@ export const runU006 = () => {
       // Заполнить только второе поле
       if (fieldCount > 1) {
         const secondField = inputFields.nth(1);
-        await secondField.evaluate(input => {
-          input.style.backgroundColor = 'yellow';
-          input.style.border = '2px solid red';
-          input.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(secondField, HIGHLIGHT_PENDING);
 
         const value = '200';
         await secondField.fill(value);
         const currentValue = await secondField.inputValue();
-        expect(currentValue).toBe(value);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(currentValue).toBe(value);
+          },
+          `Verify current value is ${value}`,
+          test.info(),
+        );
         logger.info('Второе поле заполнено');
 
         // Попытаться сохранить
         const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-        await expect(saveButton).toBeVisible();
+        await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
         await saveButton.click();
         await page.waitForLoadState('networkidle');
 
@@ -2063,7 +2602,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00e - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -2075,16 +2614,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -2117,29 +2663,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -2147,7 +2710,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -2155,7 +2718,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 04 - Попытка сохранения с очень длинным наименованием', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Открыть главную страницу', async () => {
@@ -2163,20 +2726,48 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Страница загружена правильно');
     });
 
     await allure.step("Шаг 2: Нажать 'Создать'", async () => {
       const createPageTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
-      await expect(createPageTitle).toBeVisible();
-      await expect(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toBeVisible();
+        },
+        'Verify create page title is visible',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+        },
+        `Verify create page title text is ${SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS}`,
+        test.info(),
+      );
       logger.info('Форма создания отображается');
     });
 
     await allure.step("Шаг 3: Выбрать 'Деталь'", async () => {
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       logger.info('Поля обновлены');
     });
 
@@ -2188,33 +2779,75 @@ export const runU006 = () => {
 
     await allure.step("Шаг 5: Нажать 'Задать', выбрать материал и подтвердить", async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Модальное окно открыто и принимает выбор');
     });
 
     await allure.step('Шаг 6: Заполнить все обязательные атрибуты материала', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
@@ -2224,14 +2857,28 @@ export const runU006 = () => {
       const value = '300';
       await inputField.fill(value);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(value);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(value);
+        },
+        `Verify current value is ${value}`,
+        test.info(),
+      );
       logger.info('Поля валидированы');
     });
 
     await allure.step("Шаг 7: Нажать 'Сохранить'", async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await detailsPage.highlightElement(saveButton);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -2244,11 +2891,11 @@ export const runU006 = () => {
         //await detailsPage.verifyDetailSuccessMessage("current transaction is aborted, commands ignored until end of transaction block");
         logger.info('Ошибка в зависимости от результата валидации имени');
       }
-      await page.waitForTimeout(5000);
+      await page.waitForTimeout(TIMEOUTS.VERY_LONG);
     });
   });
   test('Cleanup TestCase 00f - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -2260,16 +2907,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -2302,29 +2956,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -2332,7 +3003,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -2340,7 +3011,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 05 - Использование специальных символов в поле наименования', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 1: Открыть главную страницу', async () => {
@@ -2348,20 +3019,48 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Главная страница успешно загружена');
     });
 
     await allure.step('Step 2: Подтвердить правильный заголовок страницы', async () => {
       const createPageTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
-      await expect(createPageTitle).toBeVisible();
-      await expect(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toBeVisible();
+        },
+        'Verify create page title is visible',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+        },
+        `Verify create page title text is ${SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS}`,
+        test.info(),
+      );
       logger.info('Страница создания успешно открыта');
     });
 
     await allure.step('Step 3: Найти поле для ввода наименования детали', async () => {
       const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Поле наименования детали найдено');
     });
@@ -2373,13 +3072,27 @@ export const runU006 = () => {
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
@@ -2387,24 +3100,52 @@ export const runU006 = () => {
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
     });
 
     await allure.step('Step 7: Заполнить все обязательные атрибуты материала', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
@@ -2414,15 +3155,29 @@ export const runU006 = () => {
       const value = '100';
       await inputField.fill(value);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(value);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(value);
+        },
+        `Verify current value is ${value}`,
+        test.info(),
+      );
       logger.info('Обязательные атрибуты материала заполнены');
     });
 
     await allure.step('Step 8: Нажать кнопку «Сохранить»', async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(saveButton);
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -2434,27 +3189,30 @@ export const runU006 = () => {
     await allure.step('Step 9: Найти созданную деталь в базе деталей', async () => {
       await page.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const tableContainer = detailTable.first();
       await tableContainer.scrollIntoViewIfNeeded();
-      await tableContainer.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(tableContainer, HIGHLIGHT_PENDING);
 
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
       const rows = tableContainer.locator('tbody tr');
       const rowCount = await rows.count();
@@ -2462,12 +3220,8 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const currentRow = rows.nth(i);
-        await currentRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
-        await page.waitForTimeout(500);
+        await detailsPage.highlightElement(currentRow, HIGHLIGHT_PENDING);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         const rowText = await currentRow.textContent();
         if (rowText && rowText.trim() === SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME) {
@@ -2475,7 +3229,14 @@ export const runU006 = () => {
           break;
         }
       }
-      expect(isMatch).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isMatch).toBeTruthy();
+        },
+        'Verify created detail is found in database',
+        test.info(),
+      );
       logger.info('Созданная деталь найдена в базе деталей');
     });
 
@@ -2493,10 +3254,17 @@ export const runU006 = () => {
           // Click the edit button within this row
           const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
           await detailsPage.highlightElement(editButton);
-          await expect(editButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(editButton).toBeVisible();
+            },
+            'Verify edit button is visible',
+            test.info(),
+          );
 
           await editButton.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
           break;
         }
       }
@@ -2504,35 +3272,78 @@ export const runU006 = () => {
       // Verify that the detail opens in edit mode
       const editPageTitle = page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
       await detailsPage.highlightElement(editPageTitle);
-      await expect(editPageTitle).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(editPageTitle).toBeVisible();
+        },
+        'Verify edit page title is visible',
+        test.info(),
+      );
       logger.info('Деталь открыта в режиме редактирования');
     });
 
     await allure.step('Step 11: Проверить, что материал и атрибуты отображаются корректно', async () => {
-      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
-      await expect(tableContainer).toBeVisible();
+      const tableContainer = page.locator(SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER_SELECTOR);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
       const chrTble = tableContainer.locator(SelectorsPartsDataBase.EDIT_CHR_TABLE);
       await detailsPage.highlightElement(chrTble);
 
       // Verify material is displayed
       const materialSpan = chrTble.locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
-      expect(await materialSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
+      const materialText = await materialSpan.innerText();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+        },
+        `Verify material span inner text is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
+        test.info(),
+      );
       logger.info('Материал отображается корректно в режиме редактирования');
 
       // Verify attributes are displayed
       const targetRow = chrTble.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
       const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe('100');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe('100');
+        },
+        'Verify current value is 100',
+        test.info(),
+      );
       logger.info('Атрибуты отображаются корректно в режиме редактирования');
     });
   });
   test('Cleanup TestCase 00g - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -2544,16 +3355,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -2586,29 +3404,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -2616,7 +3451,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -2624,7 +3459,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 06 - Попытка сохранения с числовым наименованием', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Открыть страницу создания', async () => {
@@ -2632,7 +3467,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Все элементы загружены правильно');
     });
 
@@ -2644,7 +3486,14 @@ export const runU006 = () => {
 
     await allure.step("Шаг 3: Нажать 'Сохранить'", async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -2659,7 +3508,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00ga - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -2671,16 +3520,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for SelectorsPartsDataBase.TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -2713,29 +3569,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -2743,7 +3616,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -2751,7 +3624,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 07 - Выбор различных категорий материалов', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 1: Открыть главную страницу', async () => {
@@ -2759,20 +3632,48 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Главная страница успешно загружена');
     });
 
     await allure.step('Step 2: Подтвердить правильный заголовок страницы', async () => {
       const createPageTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
-      await expect(createPageTitle).toBeVisible();
-      await expect(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toBeVisible();
+        },
+        'Verify create page title is visible',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+        },
+        `Verify create page title text is ${SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS}`,
+        test.info(),
+      );
       logger.info('Страница создания успешно открыта');
     });
 
     await allure.step('Step 3: Найти поле для ввода наименования детали', async () => {
       const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Поле наименования детали найдено');
     });
@@ -2784,20 +3685,41 @@ export const runU006 = () => {
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
     await allure.step('Step 6: Выбрать материал из первой категории', async () => {
       // Click on the first category switch
       const firstCategorySwitch = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1);
-      await expect(firstCategorySwitch).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(firstCategorySwitch).toBeVisible();
+        },
+        'Verify first category switch is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(firstCategorySwitch);
       await firstCategorySwitch.click();
       await page.waitForLoadState('networkidle');
@@ -2806,29 +3728,72 @@ export const runU006 = () => {
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал из первой категории выбран и добавлен');
     });
 
     await allure.step('Step 7: Проверить, что поля обновились с конкретными обязательными атрибутами', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Verify that the material is displayed
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
-      expect(await materialSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
+      const materialText = await materialSpan.innerText();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+        },
+        `Verify material span inner text is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
+        test.info(),
+      );
       logger.info('Материал отображается в таблице характеристик');
 
       // Verify that required attribute fields are present
       const requiredFields = tableContainer.locator('tr');
       const fieldCount = await requiredFields.count();
-      expect(fieldCount).toBeGreaterThan(0);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(fieldCount).toBeGreaterThan(0);
+        },
+        `Verify field count is greater than 0: ${fieldCount} fields found`,
+        test.info(),
+      );
       logger.info(`Найдено ${fieldCount} полей атрибутов для первой категории материалов`);
     });
 
@@ -2846,8 +3811,15 @@ export const runU006 = () => {
 
       const materialModal = page.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
       await detailsPage.highlightElement(materialModal);
-      await expect(materialModal).toBeVisible();
-      await page.waitForTimeout(1500);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
       await ArchiveDialog.click();
       await page.waitForLoadState('networkidle');
@@ -2864,11 +3836,25 @@ export const runU006 = () => {
         await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.SWITCH_MATERIAL_ITEM_2, secondCategoryMaterial);
 
         const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-        await expect(addButton).toBeVisible();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(addButton).toBeVisible();
+          },
+          'Verify add button is visible',
+          test.info(),
+        );
         await addButton.click();
         await page.waitForLoadState('networkidle');
 
-        await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
         logger.info('Материал из второй категории выбран и добавлен');
       } else {
         logger.info('Вторая категория материалов недоступна, пропускаем');
@@ -2877,11 +3863,25 @@ export const runU006 = () => {
 
     await allure.step('Step 9: Проверить, что валидация полей адаптируется в зависимости от типа материала', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Verify that the material is displayed
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
 
       const materialText = await materialSpan.innerText();
       logger.info(`Текущий материал: ${materialText}`);
@@ -2889,7 +3889,14 @@ export const runU006 = () => {
       // Verify that required attribute fields are present and may be different
       const requiredFields = tableContainer.locator('tr');
       const fieldCount = await requiredFields.count();
-      expect(fieldCount).toBeGreaterThan(0);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(fieldCount).toBeGreaterThan(0);
+        },
+        `Verify field count is greater than 0: ${fieldCount} fields found`,
+        test.info(),
+      );
       logger.info(`Найдено ${fieldCount} полей атрибутов для текущей категории материалов`);
 
       // Check if the fields are different from the first category
@@ -2898,7 +3905,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00h - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -2910,16 +3917,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -2952,29 +3966,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -2982,7 +4013,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -2990,7 +4021,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 08 - Сохранение при заполнении всех обязательных атрибутов', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 1: Открыть главную страницу', async () => {
@@ -2998,20 +4029,48 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Главная страница успешно загружена');
     });
 
     await allure.step('Step 2: Подтвердить правильный заголовок страницы', async () => {
       const createPageTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
-      await expect(createPageTitle).toBeVisible();
-      await expect(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toBeVisible();
+        },
+        'Verify create page title is visible',
+        test.info(),
+      );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(createPageTitle).toHaveText(SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS);
+        },
+        `Verify create page title text is ${SELECTORS.SUBPAGES.CREATEDETAIL.TEXT_RUS}`,
+        test.info(),
+      );
       logger.info('Страница создания успешно открыта');
     });
 
     await allure.step('Step 3: Найти поле для ввода наименования детали', async () => {
       const detailNameInput = await page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(detailNameInput);
       logger.info('Поле наименования детали найдено');
     });
@@ -3023,13 +4082,27 @@ export const runU006 = () => {
 
     await allure.step('Step 5: Нажать кнопку «Задать» в строке «Материал заготовки»', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(materialButton);
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
       logger.info('Модальное окно выбора материала успешно открыто');
     });
 
@@ -3037,37 +4110,61 @@ export const runU006 = () => {
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(addButton);
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
     });
 
     await allure.step('Step 7: Заполнить все обязательные атрибуты материала', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Find all input fields in the characteristics table
-      const inputFields = tableContainer.locator('input[data-testid$="-Input"]');
+      const inputFields = tableContainer.locator(SelectorsPartsDataBase.INPUT_DATA_TESTID_SUFFIX_SELECTOR);
       const inputCount = await inputFields.count();
       logger.info(`Найдено ${inputCount} полей для заполнения`);
 
       // Fill each input field with a value
       for (let i = 0; i < inputCount; i++) {
         const inputField = inputFields.nth(i);
-        await inputField.evaluate(input => {
-          input.style.backgroundColor = 'yellow';
-          input.style.border = '2px solid red';
-          input.style.color = 'blue';
-        });
+        await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
         const value = (i + 1) * 10; // Generate different values for each field
         await inputField.fill(value.toString());
         const currentValue = await inputField.inputValue();
-        expect(currentValue).toBe(value.toString());
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(currentValue).toBe(value.toString());
+          },
+          `Verify current value is ${value.toString()}`,
+          test.info(),
+        );
         logger.info(`Поле ${i + 1} заполнено значением: ${value}`);
       }
 
@@ -3076,7 +4173,14 @@ export const runU006 = () => {
 
     await allure.step('Step 8: Нажать кнопку «Сохранить»', async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -3090,22 +4194,29 @@ export const runU006 = () => {
       // Navigate to the parts database to verify the saved detail
       await page.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const tableContainer = detailTable.first();
       await tableContainer.scrollIntoViewIfNeeded();
 
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const rows = tableContainer.locator('tbody tr');
       const rowCount = await rows.count();
@@ -3113,12 +4224,8 @@ export const runU006 = () => {
 
       for (let i = 0; i < rowCount; i++) {
         const currentRow = rows.nth(i);
-        await currentRow.evaluate((el: HTMLElement) => {
-          el.style.backgroundColor = 'yellow';
-          el.style.border = '2px solid red';
-          el.style.color = 'blue';
-        });
-        await page.waitForTimeout(500);
+        await detailsPage.highlightElement(currentRow, HIGHLIGHT_PENDING);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         const rowText = await currentRow.textContent();
         if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
@@ -3126,12 +4233,19 @@ export const runU006 = () => {
           break;
         }
       }
-      expect(isMatch).toBeTruthy();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(isMatch).toBeTruthy();
+        },
+        'Verify created detail is found in database',
+        test.info(),
+      );
       logger.info('Созданная деталь найдена в базе деталей');
     });
   });
   test('Cleanup TestCase 00i - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -3143,16 +4257,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -3185,29 +4306,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -3215,7 +4353,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -3223,7 +4361,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 09 - Подтверждение сохраненных значений после редактирования', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 1: Создать деталь с валидными значениями', async () => {
@@ -3231,7 +4369,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Главная страница успешно загружена');
 
       // Fill detail name
@@ -3240,52 +4385,104 @@ export const runU006 = () => {
 
       // Select material
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
 
       // Fill required attributes
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const desiredValue = '150';
       await inputField.fill(desiredValue);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(desiredValue);
-      await page.waitForTimeout(5000);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(desiredValue);
+        },
+        `Verify current value is ${desiredValue}`,
+        test.info(),
+      );
+      await page.waitForTimeout(TIMEOUTS.VERY_LONG);
       logger.info('Обязательные атрибуты материала заполнены');
 
       // Save the detail
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -3296,22 +4493,29 @@ export const runU006 = () => {
     await allure.step('Step 2: Открыть деталь для редактирования', async () => {
       await page.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const tableContainer = detailTable.first();
       await tableContainer.scrollIntoViewIfNeeded();
 
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const rows = tableContainer.locator('tbody tr');
       const rowCount = await rows.count();
@@ -3323,36 +4527,85 @@ export const runU006 = () => {
           await currentRow.click();
           // Click the edit button within this row
           const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
-          await expect(editButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(editButton).toBeVisible();
+            },
+            'Verify edit button is visible',
+            test.info(),
+          );
           await detailsPage.highlightElement(editButton);
           await editButton.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
           break;
         }
       }
 
       // Verify that the detail opens in edit mode
       const editPageTitle = page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
-      await expect(editPageTitle).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(editPageTitle).toBeVisible();
+        },
+        'Verify edit page title is visible',
+        test.info(),
+      );
       logger.info('Деталь открыта в режиме редактирования');
     });
 
     await allure.step('Step 3: Подтвердить, что данные сохранились', async () => {
       // Verify detail name is preserved
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT_EDIT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       const savedName = await detailNameInput.inputValue();
-      expect(savedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(savedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
+        },
+        `Verify saved name is ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`,
+        test.info(),
+      );
       logger.info(`Наименование детали сохранено: ${savedName}`);
 
       // Verify material is preserved
-      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
-      await expect(tableContainer).toBeVisible();
+      const tableContainer = page.locator(SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER_SELECTOR);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
       const savedMaterial = await materialSpan.innerText();
-      expect(savedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(savedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+        },
+        `Verify saved material is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
+        test.info(),
+      );
       logger.info(`Материал сохранен: ${savedMaterial}`);
 
       // Verify attributes are preserved
@@ -3360,18 +4613,32 @@ export const runU006 = () => {
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const savedValue = await inputField.inputValue();
-      expect(savedValue).toBe('150');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(savedValue).toBe('150');
+        },
+        'Verify saved value is 150',
+        test.info(),
+      );
       logger.info(`Значение атрибута сохранено: ${savedValue}`);
 
       logger.info('Все поля содержат предыдущие значения');
     });
   });
   test('Cleanup TestCase 00j - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -3383,16 +4650,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -3425,29 +4699,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -3455,7 +4746,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -3463,7 +4754,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 10 - Попытка удаления материала и сохранения', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Создать деталь с материалом и атрибутами', async () => {
@@ -3471,7 +4762,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Страница создания детали открыта');
 
       // Заполнить наименование
@@ -3480,52 +4778,104 @@ export const runU006 = () => {
 
       // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const value = '100';
       await inputField.fill(value);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(value);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(value);
+        },
+        `Verify current value is ${value}`,
+        test.info(),
+      );
       logger.info('Все данные приняты');
     });
 
     await allure.step('Шаг 2: Удалить материал', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
       logger.info('Материал удален из формы');
@@ -3538,13 +4888,27 @@ export const runU006 = () => {
 
       const archiveYesButton = page.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
       await detailsPage.highlightElement(archiveYesButton);
-      await expect(archiveYesButton).toBeVisible();
-      await page.waitForTimeout(1500);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archiveYesButton).toBeVisible();
+        },
+        'Verify archive Yes button is visible',
+        test.info(),
+      );
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
       await archiveYesButton.click();
       await page.waitForLoadState('networkidle');
       const cancelButton = page.locator(SelectorsPartsDataBase.MATERIAL_CANCEL_BUTTON);
-      await expect(cancelButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(cancelButton).toBeVisible();
+        },
+        'Verify cancel button is visible',
+        test.info(),
+      );
       await cancelButton.click();
       await page.waitForLoadState('networkidle');
       logger.info('Удаление материала подтверждено');
@@ -3553,9 +4917,16 @@ export const runU006 = () => {
     await allure.step("Шаг 4: Нажать 'Сохранить'", async () => {
       console.log("Шаг 4: Нажать 'Сохранить'");
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(saveButton);
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -3564,7 +4935,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00k - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -3576,16 +4947,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -3618,29 +4996,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -3648,7 +5043,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -3656,7 +5051,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 11 - Удалить материал перед сохранением', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step("Шаг 1: Заполнить поле 'Наименование' и выбрать материал", async () => {
@@ -3664,7 +5059,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма содержит выбранный материал с отображаемыми атрибутами');
 
       // Заполнить наименование
@@ -3673,53 +5075,105 @@ export const runU006 = () => {
 
       // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
     });
 
     await allure.step('Шаг 2: Заполнить все обязательные атрибуты материала', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const value = '150';
       await inputField.fill(value);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(value);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(value);
+        },
+        `Verify current value is ${value}`,
+        test.info(),
+      );
       logger.info('Атрибуты успешно валидированы с правильными значениями');
     });
 
     await allure.step('Шаг 3: Нажать на иконку для удаления выбранного материала', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
       logger.info('Материал удален из формы');
@@ -3732,13 +5186,27 @@ export const runU006 = () => {
 
       const archiveYesButton = page.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
       await detailsPage.highlightElement(archiveYesButton);
-      await expect(archiveYesButton).toBeVisible();
-      await page.waitForTimeout(1500);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archiveYesButton).toBeVisible();
+        },
+        'Verify archive Yes button is visible',
+        test.info(),
+      );
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
       await archiveYesButton.click();
       await page.waitForLoadState('networkidle');
       const cancelButton = page.locator(SelectorsPartsDataBase.MATERIAL_CANCEL_BUTTON);
-      await expect(cancelButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(cancelButton).toBeVisible();
+        },
+        'Verify cancel button is visible',
+        test.info(),
+      );
       await cancelButton.click();
       await page.waitForLoadState('networkidle');
       logger.info('Удаление материала подтверждено');
@@ -3746,7 +5214,14 @@ export const runU006 = () => {
 
     await allure.step("Шаг 4: Нажать кнопку 'Сохранить'", async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -3755,7 +5230,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00l - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -3767,16 +5242,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -3809,29 +5291,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -3839,7 +5338,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -3847,7 +5346,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 12 - Переключение между категориями материалов', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Открыть форму создания детали', async () => {
@@ -3855,7 +5354,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта');
     });
 
@@ -3866,12 +5372,26 @@ export const runU006 = () => {
 
     await allure.step('Шаг 3: Открыть модальное окно выбора материала', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
       logger.info('Модальное окно выбора материала открыто');
     });
 
@@ -3884,7 +5404,14 @@ export const runU006 = () => {
         logger.info('Успешно переключились на вторую категорию материалов');
 
         // Проверить, что переключение произошло корректно
-        await expect(secondCategorySwitch).toBeVisible();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(secondCategorySwitch).toBeVisible();
+          },
+          'Verify second category switch is visible',
+          test.info(),
+        );
         logger.info('Переключение между категориями работает корректно');
       } else {
         logger.info('Вторая категория материалов недоступна');
@@ -3895,10 +5422,17 @@ export const runU006 = () => {
       if (await page.locator(SelectorsPartsDataBase.SWITCH_MATERIAL_ITEM_2).isVisible()) {
         // Try to find any available material in the second category
         const materialTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
-        await expect(materialTable).toBeVisible();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(materialTable).toBeVisible();
+          },
+          'Verify material table is visible',
+          test.info(),
+        );
 
         // Wait for the table to load and get the first available material row
-        await page.waitForTimeout(1000); // Give time for table to load
+        await page.waitForTimeout(TIMEOUTS.STANDARD); // Give time for table to load
 
         const materialRows = materialTable.locator('tr');
         const rowCount = await materialRows.count();
@@ -3906,7 +5440,14 @@ export const runU006 = () => {
         if (rowCount > 0) {
           // Get the first material row
           const firstMaterialRow = materialRows.first();
-          await expect(firstMaterialRow).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(firstMaterialRow).toBeVisible();
+            },
+            'Verify first material row is visible',
+            test.info(),
+          );
 
           // Try to get material name from the row (handle different table structures)
           let materialName = 'Неизвестный материал';
@@ -3959,11 +5500,18 @@ export const runU006 = () => {
             }
 
             await page.waitForLoadState('networkidle');
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(TIMEOUTS.STANDARD);
 
             // Check if Add button is now visible and enabled
             const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-            await expect(addButton).toBeVisible();
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(addButton).toBeVisible();
+              },
+              'Verify add button is visible',
+              test.info(),
+            );
 
             // Verify the button is enabled (not disabled)
             const isDisabled = await addButton.getAttribute('disabled');
@@ -3977,7 +5525,14 @@ export const runU006 = () => {
               await addButton.click();
               await page.waitForLoadState('networkidle');
 
-              await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+              await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
               logger.info('Материал из второй категории успешно выбран и добавлен');
               break;
             } else {
@@ -3999,7 +5554,14 @@ export const runU006 = () => {
 
     await allure.step('Шаг 6: Проверить, что материал отображается в форме', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Try different approaches to find the material
       let materialFound = false;
@@ -4080,7 +5642,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00m - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -4092,16 +5654,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -4134,29 +5703,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -4164,7 +5750,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -4172,7 +5758,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 13 - Дублирование наименования и обозначения', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Создать деталь с уникальным наименованием', async () => {
@@ -4180,7 +5766,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
@@ -4189,51 +5782,103 @@ export const runU006 = () => {
 
       // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const value = '100';
       await inputField.fill(value);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(value);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(value);
+        },
+        `Verify current value is ${value}`,
+        test.info(),
+      );
       logger.info('Атрибуты материала заполнены');
 
       // Сохранить деталь
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -4247,7 +5892,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта снова');
 
       // Заполнить то же наименование
@@ -4256,52 +5908,104 @@ export const runU006 = () => {
 
       // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const value = '200';
       await inputField.fill(value);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(value);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(value);
+        },
+        `Verify current value is ${value}`,
+        test.info(),
+      );
       logger.info('Атрибуты материала заполнены');
     });
 
     await allure.step('Шаг 3: Попытаться сохранить дублирующую деталь', async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -4322,7 +6026,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00n - Архивация всех совпадающих деталей (Cleanup) `${TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -4334,16 +6038,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -4376,29 +6087,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -4406,7 +6134,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -4414,7 +6142,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 14 - Попытка сохранения без заполнения полей', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Открыть форму создания детали', async () => {
@@ -4422,25 +6150,60 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали загружена');
     });
 
     await allure.step('Шаг 2: Проверить, что все поля пустые по умолчанию', async () => {
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       const nameValue = await detailNameInput.inputValue();
-      expect(nameValue).toBe('');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(nameValue).toBe('');
+        },
+        'Verify name value is empty',
+        test.info(),
+      );
       logger.info('Поле наименования пустое по умолчанию');
 
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
       logger.info('Таблица характеристик заготовки отображается');
     });
 
     await allure.step("Шаг 3: Нажать кнопку 'Сохранить' без заполнения полей", async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -4453,7 +6216,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00o - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -4465,16 +6228,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -4507,29 +6277,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -4537,7 +6324,7 @@ export const runU006 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -4545,14 +6332,21 @@ export const runU006 = () => {
     });
   });
   test("TestCase 15 - Быстрое нажатие кнопки 'Сохранить'", async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Заполнить все обязательные поля и атрибуты правильно', async () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
@@ -4561,46 +6355,91 @@ export const runU006 = () => {
 
       // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const desiredValue = '500';
       await inputField.fill(desiredValue);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(desiredValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(desiredValue);
+        },
+        `Verify current value is ${desiredValue}`,
+        test.info(),
+      );
       logger.info('Все обязательные поля и атрибуты заполнены правильно');
     });
 
@@ -4634,14 +6473,21 @@ export const runU006 = () => {
         }
       } else {
         // Only fail if no clicks were performed at all
-        expect(result.clicksPerformed).toBeGreaterThan(0);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(result.clicksPerformed).toBeGreaterThan(0);
+          },
+          'Verify clicks were performed',
+          test.info(),
+        );
       }
 
       // Be more flexible about final page state since page might still be in transition
       if (result.finalPageType === 'unknown') {
         logger.warn('Final page type is unknown - page might still be in transition');
         // Wait a bit more and check again
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(TIMEOUTS.LONG);
         const retryPageType = await detailsPage.getCurrentPageType();
         logger.info(`Retry page type check: ${retryPageType}`);
 
@@ -4662,7 +6508,7 @@ export const runU006 = () => {
     await allure.step('Шаг 3: Проверить состояние базы данных и UI', async () => {
       // Wait for page to be stable first
       await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(2000); // Increased wait time
+      await page.waitForTimeout(TIMEOUTS.LONG); // Increased wait time
 
       // Verify we're on the edit page using page object method
       const finalPageType = await detailsPage.getCurrentPageType();
@@ -4671,7 +6517,7 @@ export const runU006 = () => {
       if (finalPageType === 'unknown') {
         logger.warn('Final page type is unknown - page might still be in transition');
         // Wait a bit more and check again
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
         const retryPageType = await detailsPage.getCurrentPageType();
         logger.info(`Retry page type check: ${retryPageType}`);
 
@@ -4687,8 +6533,8 @@ export const runU006 = () => {
           // Check what titles are present
           const addTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
           const editTitle = page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
-          const addContainer = page.locator(`[data-testid="AddDetal"]`);
-          const editContainer = page.locator(`[data-testid="EditDetal"]`);
+          const addContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
+          const editContainer = page.locator(SelectorsPartsDataBase.EDIT_DETAIL_PAGE);
 
           const addTitleCount = await addTitle.count();
           const editTitleCount = await editTitle.count();
@@ -4729,19 +6575,54 @@ export const runU006 = () => {
 
       // Проверить наименование
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT_EDIT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       const retrievedName = await detailNameInput.inputValue();
-      expect(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
+        },
+        `Verify retrieved name is ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`,
+        test.info(),
+      );
       logger.info(`Наименование детали совпадает: ${retrievedName}`);
 
       // Проверить материал
-      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
-      await expect(tableContainer).toBeVisible();
+      const tableContainer = page.locator(SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER_SELECTOR);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
       const retrievedMaterial = await materialSpan.innerText();
-      expect(retrievedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(retrievedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+        },
+        `Verify retrieved material is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
+        test.info(),
+      );
       logger.info(`Материал совпадает: ${retrievedMaterial}`);
 
       // Проверить атрибуты
@@ -4749,18 +6630,32 @@ export const runU006 = () => {
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const retrievedValue = await inputField.inputValue();
-      expect(retrievedValue).toBe('500');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(retrievedValue).toBe('500');
+        },
+        'Verify retrieved value is 500',
+        test.info(),
+      );
       logger.info(`Значение атрибута совпадает: ${retrievedValue}`);
 
       logger.info('Все значения совпадают с тем, что было сохранено из формы');
     });
   });
   test('Cleanup TestCase 00p - Архивация всех совпадающих деталей (Cleanup) `${TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -4772,16 +6667,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -4814,29 +6716,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -4844,7 +6763,7 @@ export const runU006 = () => {
           ////await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -4852,7 +6771,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 16 - Переход без сохранения', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Начать создание детали и частично заполнить поля', async () => {
@@ -4860,7 +6779,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
@@ -4869,28 +6795,70 @@ export const runU006 = () => {
 
       // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
 
       // Проверить, что UI отражает заполненные значения
       const materialSpan = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS).locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
       const materialText = await materialSpan.innerText();
-      expect(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+        },
+        `Verify material text is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
+        test.info(),
+      );
       logger.info('UI отражает заполненные значения');
     });
 
@@ -4909,22 +6877,50 @@ export const runU006 = () => {
 
     await allure.step('Шаг 4: Проверить, что форма пустая или сброшена', async () => {
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       const nameValue = await detailNameInput.inputValue();
-      expect(nameValue).toBe('');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(nameValue).toBe('');
+        },
+        'Verify name value is empty',
+        test.info(),
+      );
       logger.info('Поле наименования пустое - данные не сохранены');
 
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       // Проверить, что материал не выбран
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       logger.info('Форма сброшена - данные не сохранены');
     });
   });
   test('Cleanup TestCase 00q - Архивация всех совпадающих деталей (Cleanup) `${TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -4936,16 +6932,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -4978,29 +6981,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -5008,7 +7028,7 @@ export const runU006 = () => {
           ////await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -5016,14 +7036,21 @@ export const runU006 = () => {
     });
   });
   test('TestCase 17 - Валидация сохраненных данных на бэкенде', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Завершить создание детали с заполненными атрибутами', async () => {
       await detailsPage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
       await page.waitForLoadState('networkidle');
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
@@ -5032,51 +7059,103 @@ export const runU006 = () => {
 
       // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Материал выбран и добавлен');
 
       // Заполнить атрибуты
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const desiredValue = '600';
       await inputField.fill(desiredValue);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(desiredValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(desiredValue);
+        },
+        `Verify current value is ${desiredValue}`,
+        test.info(),
+      );
       logger.info('Атрибуты материала заполнены');
 
       // Сохранить деталь
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await saveButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -5088,19 +7167,26 @@ export const runU006 = () => {
       // Перейти на страницу базы деталей для поиска созданной детали
       await page.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -5114,20 +7200,34 @@ export const runU006 = () => {
         }
       }
 
-      expect(foundRow).not.toBeNull();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(foundRow).not.toBeNull();
+        },
+        'Verify detail row is found in database',
+        test.info(),
+      );
       logger.info('Деталь найдена в базе данных');
 
       // Открыть деталь для редактирования (это будет наша "инспекция базы данных")
       if (foundRow) {
         await foundRow.click();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         logger.info('Данные детали получены из базы данных');
         const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
         await detailsPage.highlightElement(editButton);
-        await expect(editButton).toBeVisible();
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(editButton).toBeVisible();
+          },
+          'Verify edit button is visible',
+          test.info(),
+        );
 
         await editButton.click();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       } else {
         throw new Error('Деталь не найдена в базе данных');
       }
@@ -5136,14 +7236,14 @@ export const runU006 = () => {
     await allure.step('Шаг 3: Сверить все поля атрибутов', async () => {
       // Wait for page to be stable first
       await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
 
       // Проверить, что деталь открыта в режиме редактирования используя улучшенный метод
       const pageType = await detailsPage.getCurrentPageType();
       console.log(`Page type: ${pageType}`);
       if (pageType === 'unknown') {
         logger.warn('Page type is unknown - waiting for page to stabilize');
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(TIMEOUTS.EXTENDED);
         const retryPageType = await detailsPage.getCurrentPageType();
         if (retryPageType === 'edit') {
           logger.info('Successfully detected edit page on retry');
@@ -5157,8 +7257,8 @@ export const runU006 = () => {
           // Check what titles are present
           const addTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
           const editTitle = page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
-          const addContainer = page.locator(`[data-testid="AddDetal"]`);
-          const editContainer = page.locator(`[data-testid="EditDetal"]`);
+          const addContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
+          const editContainer = page.locator(SelectorsPartsDataBase.EDIT_DETAIL_PAGE);
 
           const addTitleCount = await addTitle.count();
           const editTitleCount = await editTitle.count();
@@ -5199,19 +7299,54 @@ export const runU006 = () => {
 
       // Проверить наименование
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT_EDIT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       const retrievedName = await detailNameInput.inputValue();
-      expect(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(retrievedName).toBe(SelectorsPartsDataBase.TEST_DETAIL_NAME);
+        },
+        `Verify retrieved name is ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`,
+        test.info(),
+      );
       logger.info(`Наименование детали совпадает: ${retrievedName}`);
 
       // Проверить материал
-      const tableContainer = page.locator(`[data-testid="${SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER}"]`);
-      await expect(tableContainer).toBeVisible();
+      const tableContainer = page.locator(SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER_SELECTOR);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
       const retrievedMaterial = await materialSpan.innerText();
-      expect(retrievedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(retrievedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+        },
+        `Verify retrieved material is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
+        test.info(),
+      );
       logger.info(`Материал совпадает: ${retrievedMaterial}`);
 
       // Проверить атрибуты
@@ -5219,18 +7354,32 @@ export const runU006 = () => {
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(SelectorsPartsDataBase.EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR);
       const retrievedValue = await inputField.inputValue();
-      expect(retrievedValue).toBe('600');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(retrievedValue).toBe('600');
+        },
+        'Verify retrieved value is 600',
+        test.info(),
+      );
       logger.info(`Значение атрибута совпадает: ${retrievedValue}`);
 
       logger.info('Все значения совпадают с тем, что было сохранено из формы');
     });
   });
   test('Cleanup TestCase 00r - Архивация всех совпадающих деталей (Cleanup) `${TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -5242,16 +7391,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -5284,29 +7440,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -5314,7 +7487,7 @@ export const runU006 = () => {
           ////await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -5322,7 +7495,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 19 - Массовое добавление, удаление и редактирование материалов в одной сессии', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Создать деталь и заполнить обязательные поля', async () => {
@@ -5330,7 +7503,14 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта');
 
       // Заполнить наименование
@@ -5341,71 +7521,159 @@ export const runU006 = () => {
     await allure.step('Шаг 2: Добавить несколько материалов', async () => {
       // Добавить первый материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Первый материал добавлен');
 
       // Проверить, что материал отображается в списке
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
       const materialSpan = tableContainer.locator('td').nth(2).locator('span');
-      await expect(materialSpan).toBeVisible();
-      expect(await materialSpan.innerText()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialSpan).toBeVisible();
+        },
+        'Verify material span is visible',
+        test.info(),
+      );
+      const materialText = await materialSpan.innerText();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialText).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+        },
+        `Verify material span inner text is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
+        test.info(),
+      );
       logger.info('Материалы отображаются в списке');
     });
 
     await allure.step('Шаг 3: Редактировать атрибуты для одного или нескольких материалов', async () => {
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const editValue = '900';
       await inputField.fill(editValue);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(editValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(editValue);
+        },
+        `Verify current value is ${editValue}`,
+        test.info(),
+      );
       logger.info('Изменения атрибутов отражены в строке');
     });
 
     await allure.step('Шаг 4: Удалить один из материалов', async () => {
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON);
-      await expect(materialButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialButton).toBeVisible();
+        },
+        'Verify material button is visible',
+        test.info(),
+      );
       await materialButton.click();
       await page.waitForLoadState('networkidle');
 
       // Verify confirmation modal appears
       const confirmModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-      await expect(confirmModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(confirmModal).toBeVisible();
+        },
+        'Verify confirm modal is visible',
+        test.info(),
+      );
 
       // Click Yes button to confirm material removal
       const yesButton = confirmModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-      await expect(yesButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(yesButton).toBeVisible();
+        },
+        'Verify Yes button is visible',
+        test.info(),
+      );
       await yesButton.click();
       await page.waitForLoadState('networkidle');
 
@@ -5416,49 +7684,94 @@ export const runU006 = () => {
       // Добавить материал снова - use the add button, not the reset button
 
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       const materialModal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
-      await expect(materialModal).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(materialModal).toBeVisible();
+        },
+        'Verify material modal is visible',
+        test.info(),
+      );
 
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
       const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expect(addButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(addButton).toBeVisible();
+        },
+        'Verify add button is visible',
+        test.info(),
+      );
       await addButton.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)).not.toBeVisible();
+        },
+        'Verify material modal is not visible after adding',
+        test.info(),
+      );
       logger.info('Новый материал добавлен в конец списка');
 
       // Заполнить атрибуты для нового материала
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
 
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
 
-      await expect(targetRow).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(targetRow).toBeVisible();
+        },
+        'Verify target row is visible',
+        test.info(),
+      );
 
       const inputField = targetRow.locator(
         `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`,
       );
-      await inputField.evaluate(input => {
-        input.style.backgroundColor = 'yellow';
-        input.style.border = '2px solid red';
-        input.style.color = 'blue';
-      });
+      await detailsPage.highlightElement(inputField, HIGHLIGHT_PENDING);
 
       const newValue = '950';
       await inputField.fill(newValue);
       const currentValue = await inputField.inputValue();
-      expect(currentValue).toBe(newValue);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(currentValue).toBe(newValue);
+        },
+        `Verify current value is ${newValue}`,
+        test.info(),
+      );
       logger.info('Атрибуты для нового материала заполнены');
     });
 
     await allure.step("Шаг 6: Нажать кнопку 'Сохранить'", async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -5468,7 +7781,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00t - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -5480,16 +7793,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -5522,29 +7842,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -5552,7 +7889,7 @@ export const runU006 = () => {
           ////await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -5560,7 +7897,7 @@ export const runU006 = () => {
     });
   });
   test('TestCase 20 - Попытка сохранения пустой формы', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
     const detailsPage = new CreatePartsDatabasePage(page);
 
     await allure.step('Шаг 1: Открыть форму создания детали', async () => {
@@ -5568,25 +7905,60 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       const mainContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-      await expect(mainContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(mainContainer).toBeVisible();
+        },
+        'Verify main container is visible',
+        test.info(),
+      );
       logger.info('Форма создания детали открыта');
     });
 
     await allure.step('Шаг 2: Проверить, что все поля пустые', async () => {
       const detailNameInput = page.locator(SelectorsPartsDataBase.DETAIL_NAME_INPUT);
-      await expect(detailNameInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailNameInput).toBeVisible();
+        },
+        'Verify detail name input is visible',
+        test.info(),
+      );
       const nameValue = await detailNameInput.inputValue();
-      expect(nameValue).toBe('');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(nameValue).toBe('');
+        },
+        'Verify name value is empty',
+        test.info(),
+      );
       logger.info('Все поля пустые');
 
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await expect(tableContainer).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(tableContainer).toBeVisible();
+        },
+        'Verify table container is visible',
+        test.info(),
+      );
       logger.info('Таблица характеристик отображается');
     });
 
     await allure.step("Шаг 3: Немедленно нажать кнопку 'Сохранить'", async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await expect(saveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(saveButton).toBeVisible();
+        },
+        'Verify save button is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(saveButton);
       await saveButton.click();
       await page.waitForLoadState('networkidle');
@@ -5606,7 +7978,14 @@ export const runU006 = () => {
       if (notificationCount > 0) {
         const lastNotification = notifications.last();
         const notificationText = await lastNotification.textContent();
-        expect(notificationText).not.toContain('Деталь успешно создана');
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(notificationText).not.toContain('Деталь успешно создана');
+          },
+          'Verify notification does not contain success message',
+          test.info(),
+        );
         logger.info('Уведомление об успехе не показано');
       } else {
         logger.info('Уведомления не найдены');
@@ -5614,7 +7993,7 @@ export const runU006 = () => {
     });
   });
   test('Cleanup TestCase 00u - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(TEST_TIMEOUTS.LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -5627,16 +8006,23 @@ export const runU006 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(SelectorsPartsDataBase.TEST_DETAIL_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -5669,29 +8055,46 @@ export const runU006 = () => {
           const currentRow = matchingRows[i];
 
           // Highlight the row for debugging
-          await currentRow.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'red';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-          await page.waitForTimeout(500);
+          await detailsPage.highlightElement(currentRow, HIGHLIGHT_ERROR);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsPartsDataBase.ARCHIVE_BUTTON);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsPartsDataBase.CONFIRM_YES_BUTTON);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify Yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -5699,7 +8102,7 @@ export const runU006 = () => {
           ////await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           //await detailsPage.verifyDetailSuccessMessage("Файл успешно перенесён в архив");
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
