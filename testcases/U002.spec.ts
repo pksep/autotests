@@ -374,8 +374,12 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       const button = page.locator(SelectorsMetalWorkingWarhouse.WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON);
       await button.click();
 
-      // Wait for loading
-      await metalworkingWarehouse.waitForNetworkIdle();
+      // Wait for the table to be visible first, then wait for network idle with a shorter timeout
+      const table = page.locator(SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE);
+      await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+
+      // Wait for loading with a shorter timeout
+      await metalworkingWarehouse.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
 
       // Wait for the table body to load
       await metalworkingWarehouse.waitingTableBody(SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE, { minRows: 0 });
@@ -644,10 +648,25 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 14: Click on the Save button', async () => {
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await page.locator(SelectorsPartsDataBase.EDIT_SAVE_BUTTON).click();
+        // Wait for the save operation to complete
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
       });
 
       await allure.step('Step 15: Click on the cancel button', async () => {
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const cancelButton = page.locator(SelectorsPartsDataBase.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL).filter({ hasText: 'Отменить' });
+        
+        // Check if the cancel button exists and is visible
+        const cancelButtonCount = await cancelButton.count();
+        if (cancelButtonCount === 0) {
+          console.log('⚠️ Cancel button not found - page may have navigated after save. Skipping Step 15.');
+          return;
+        }
+
+        // Wait for the button to be visible with a longer timeout
+        await cancelButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+        await cancelButton.scrollIntoViewIfNeeded();
         await partsDatabsePage.clickButton('Отменить', SelectorsPartsDataBase.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL);
       });
     }

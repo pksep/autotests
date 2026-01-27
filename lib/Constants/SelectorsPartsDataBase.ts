@@ -218,6 +218,7 @@ export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_CHECKBOX_MAI
 export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_NUMBER_VERSION_INPUT = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputNumber-Version-Input"]';
 export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]';
 export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload"]';
+export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_CANCEL = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Cancel"]';
 
 // Document table constants for U005
 export const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE = '[data-testid="AddDetal-FileComponent-DocumentTable-Table"]';

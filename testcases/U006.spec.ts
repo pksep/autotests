@@ -857,6 +857,8 @@ export const runU006 = () => {
           'AddDetal-Buttons-Accessory': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_ACCESSORY,
           'AddDetal-Buttons-ChangeHistory': SelectorsPartsDataBase.ADD_DETAIL_BUTTONS_CHANGE_HISTORY,
           'Specification-Buttons-addingSpecification': SelectorsPartsDataBase.SPECIFICATION_BUTTONS_ADDING_SPECIFICATION,
+          'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Cancel': SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_CANCEL,
+          'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload': SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD,
         };
 
         // Get selector from map - all buttons must have constants

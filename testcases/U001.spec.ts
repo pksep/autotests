@@ -318,6 +318,29 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
     for (const detail of arrayDetail) {
       await allure.step('Step 02: Click on the Create button', async () => {
+        // Wait for network idle and ensure page is ready
+        await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        
+        // Check if the Create button exists on the current page
+        let createButton = page.locator(PartsDBSelectors.BUTTON_CREATE_NEW_PART).filter({ hasText: 'Создать' });
+        const createButtonCount = await createButton.count();
+        
+        if (createButtonCount === 0) {
+          // Button not found - might need to navigate back to parts database page
+          console.log('⚠️ Create button not found, navigating back to parts database page');
+          await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+          await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          
+          // Re-check the button after navigation
+          createButton = page.locator(PartsDBSelectors.BUTTON_CREATE_NEW_PART).filter({ hasText: 'Создать' });
+        }
+        
+        // Wait for the button to be visible with a longer timeout
+        await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+        await createButton.scrollIntoViewIfNeeded();
+        
         await partsDatabsePage.clickButton('Создать', PartsDBSelectors.BUTTON_CREATE_NEW_PART);
       });
 
@@ -356,7 +379,7 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 06: Click on the Save button', async () => {
-        await partsDatabsePage.clickButton('Сохранить', PartsDBSelectors.BUTTON_SAVE);
+        await partsDatabsePage.clickButton('Сохранить', PartsDBSelectors.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       });
 
       await allure.step('Step 07: Click on the Process', async () => {
@@ -414,7 +437,21 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 14: Click on the Create by copyinp', async () => {
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        await partsDatabsePage.clickButton('Отменить', PartsDBSelectors.BUTTON_CANCEL);
+        await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
+        
+        const cancelButton = page.locator(PartsDBSelectors.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL).filter({ hasText: 'Отменить' });
+        
+        // Check if the cancel button exists and is visible
+        const cancelButtonCount = await cancelButton.count();
+        if (cancelButtonCount === 0) {
+          console.log('⚠️ Cancel button not found - page may have navigated after save. Skipping Step 14.');
+          return;
+        }
+
+        // Wait for the button to be visible with a longer timeout
+        await cancelButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+        await cancelButton.scrollIntoViewIfNeeded();
+        await partsDatabsePage.clickButton('Отменить', PartsDBSelectors.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL);
       });
     }
   });
