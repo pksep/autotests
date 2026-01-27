@@ -94,6 +94,7 @@ export const QUANTITY_INPUT_FULL =
 // Modal dialog selectors
 export const MODAL_CHOOSED_TABLE2_CBED = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Modal-Cbed"]';
 export const MODAL_ADD_ORDER_SMALL = '[data-testid="OrderSuppliers-Modal-AddOrder"]';
+export const MODAL_ADD_ORDER_SMALL_DIALOG_OPEN = 'dialog[data-testid="OrderSuppliers-Modal-AddOrder"][open]';
 
 // Helper function to get selector by test ID from JSON
 export const getSelectorByTestId = (testId: string): string => {

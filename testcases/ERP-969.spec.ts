@@ -1,4 +1,4 @@
-import { test, expect, Locator, Page } from '@playwright/test';
+import { test, expect, Locator, Page, TestInfo } from '@playwright/test';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import { CreateStockPage } from '../pages/StockPage';
@@ -12,6 +12,8 @@ import * as SelectorsAssemblyKittingOnThePlan from '../lib/Constants/SelectorsAs
 import * as SelectorsRevision from '../lib/Constants/SelectorsRevision';
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import * as HIGHLIGHT from '../lib/Constants/HighlightStyles';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import { expectSoftWithScreenshot } from '../lib/Page';
 
 let orderNumber: string | null = null; // Declare outside to share between steps
 let orderedQuantity: number = 2; // Declare outside to share between steps
@@ -42,16 +44,23 @@ export const runERP_969 = () => {
     await allure.step('Step 2: Найдите все детали с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Perform the search for TEST_DETAIL_NAME
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await searchInput.fill(TEST_DATA.NEW_DETAIL_A);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
@@ -85,26 +94,47 @@ export const runERP_969 = () => {
 
           // Highlight the row for debugging
           await detailsPage.highlightElement(currentRow, HIGHLIGHT.HIGHLIGHT_ERROR);
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button
           const archiveButton = page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
           await detailsPage.highlightElement(archiveButton);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify archive modal appears
           const archiveModal = page.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
 
           const yesButton = archiveModal.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON);
           await detailsPage.highlightElement(yesButton);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
@@ -112,7 +142,7 @@ export const runERP_969 = () => {
           //await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");//BUG ERP-960
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
 
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -131,18 +161,25 @@ export const runERP_969 = () => {
     await allure.step('Step 2: Найдите все детали СБ с точным совпадением имени', async () => {
       const detailTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE);
       const searchInput = detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible();
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Clear any existing search text.
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Search for the СБ detail using NEW_SB_A.
       await searchInput.fill(TEST_DATA.NEW_SB_A);
       await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Retrieve all rows.
       const rows = detailTable.locator('tbody tr');
@@ -177,32 +214,53 @@ export const runERP_969 = () => {
 
           // Highlight the row for debugging.
           await detailsPage.highlightElement(currentRow, HIGHLIGHT.HIGHLIGHT_ERROR);
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the row to select the detail.
           await detailsPage.highlightElement(currentRow);
           await currentRow.click();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Click the archive button.
           const archiveButton = page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
           await detailsPage.highlightElement(archiveButton);
-          await expect(archiveButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveButton).toBeVisible();
+            },
+            'Verify archive button is visible',
+            test.info(),
+          );
           await archiveButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify the archive confirmation modal appears.
           const archiveModal = page.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG);
-          await expect(archiveModal).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(archiveModal).toBeVisible();
+            },
+            'Verify archive modal is visible',
+            test.info(),
+          );
           const yesButton = archiveModal.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON);
           await detailsPage.highlightElement(yesButton);
-          await expect(yesButton).toBeVisible();
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(yesButton).toBeVisible();
+            },
+            'Verify yes button is visible',
+            test.info(),
+          );
           await yesButton.click();
           await page.waitForLoadState('networkidle');
 
           // Verify a success message appears.
           await detailsPage.verifyDetailSuccessMessage('Файл успешно перенесён в архив');
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
       }
 
@@ -225,44 +283,86 @@ export const runERP_969 = () => {
 
     await allure.step("Step 2: Verify 'cbed' table is visible", async () => {
       const cbedTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE);
-      await expect(cbedTable).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(cbedTable).toBeVisible();
+        },
+        'Verify cbed table is visible',
+        test.info(),
+      );
     });
 
     await allure.step("Step 3: Search in 'cbed' table", async () => {
       const cbedTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE);
       const cbedInput = cbedTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(cbedInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(cbedInput).toBeVisible();
+        },
+        'Verify cbed input is visible',
+        test.info(),
+      );
       await cbedInput.fill(TEST_DATA.NEW_SB_A);
       await cbedInput.press('Enter');
-      await page.waitForTimeout(1000); // Allow search results to update.
+      await page.waitForTimeout(TIMEOUTS.STANDARD); // Allow search results to update.
     });
 
     await allure.step("Step 4: Verify no results in 'cbed' table", async () => {
       const cbedTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE);
       const resultRows = cbedTable.locator('tbody tr');
       const count = await resultRows.count();
-      expect(count).toBe(0);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(count).toBe(0);
+        },
+        'Verify no results in cbed table',
+        test.info(),
+      );
     });
 
     await allure.step("Step 5: Verify 'detal' table is visible", async () => {
       const detalTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
-      await expect(detalTable).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detalTable).toBeVisible();
+        },
+        'Verify detal table is visible',
+        test.info(),
+      );
     });
 
     await allure.step("Step 6: Search in 'detal' table", async () => {
       const detalTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const detalInput = detalTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(detalInput).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detalInput).toBeVisible();
+        },
+        'Verify detal input is visible',
+        test.info(),
+      );
       await detalInput.fill(TEST_DATA.NEW_DETAIL_A);
       await detalInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
     });
 
     await allure.step("Step 7: Verify no results in 'detal' table", async () => {
       const detalTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
       const resultRows = detalTable.locator('tbody tr');
       const count = await resultRows.count();
-      expect(count).toBe(0);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(count).toBe(0);
+        },
+        'Verify no results in detal table',
+        test.info(),
+      );
     });
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -274,14 +374,14 @@ export const runERP_969 = () => {
       await page.waitForLoadState('networkidle');
       await detailsPage.fillDetailName(TEST_DATA.NEW_DETAIL_A, 'AddDetal-Information-Input-Input');
       await detailsPage.findAndClickElement(page, SelectorsPartsDataBase.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE_ID, 500);
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await page.waitForLoadState('networkidle');
     });
 
     await allure.step(`Step 9: Verify detail "${TEST_DATA.NEW_DETAIL_A}" was saved`, async () => {
       // Click the cancel button to return to the listing.
       await detailsPage.findAndClickElement(page, SelectorsPartsDataBase.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL_ID, 500);
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await page.waitForLoadState('networkidle');
 
       // Search for the new detail within the 'detal' table.
@@ -289,14 +389,28 @@ export const runERP_969 = () => {
       await detailsPage.highlightElement(detalTable);
       const detailSearchInput = detalTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await detailsPage.highlightElement(detailSearchInput);
-      await page.waitForTimeout(1000);
-      await expect(detailSearchInput).toBeVisible();
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailSearchInput).toBeVisible();
+        },
+        'Verify detail search input is visible',
+        test.info(),
+      );
       await detailSearchInput.fill(TEST_DATA.NEW_DETAIL_A);
       await detailSearchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       const resultRows = detalTable.locator('tbody tr');
       const count = await resultRows.count();
-      expect(count).toBe(1);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(count).toBe(1);
+        },
+        'Verify one result in detal table',
+        test.info(),
+      );
     });
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -316,7 +430,14 @@ export const runERP_969 = () => {
 
       // Fill in the detail name with NEW_SB_A.
       const smallDialogDetailInput = page.locator(SelectorsPartsDataBase.INPUT_NAME_IZD);
-      await expect(smallDialogDetailInput).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(smallDialogDetailInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify small dialog detail input is visible',
+        test.info(),
+      );
       await smallDialogDetailInput.fill(TEST_DATA.NEW_SB_A);
 
       // Click the "Добавить" button in the small dialog.
@@ -329,14 +450,28 @@ export const runERP_969 = () => {
 
       // Wait for the dialog table to be visible before trying to find the search input
       const dialogTable = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE);
-      await expect(dialogTable).toBeVisible({ timeout: 10000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(dialogTable).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify dialog table is visible',
+        test.info(),
+      );
 
       // In the dialog's bottom table, search for the detail we just entered.
       const dialogSearchInput = dialogTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
-      await expect(dialogSearchInput).toBeVisible({ timeout: 10000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(dialogSearchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify dialog search input is visible',
+        test.info(),
+      );
       await dialogSearchInput.fill(TEST_DATA.NEW_DETAIL_A);
       await dialogSearchInput.press('Enter');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Now, search the results for an exact match for NEW_DETAIL_A.
       const resultRows = dialogTable.locator('tbody tr');
@@ -354,32 +489,46 @@ export const runERP_969 = () => {
       if (!found) {
         throw new Error(`Detail "${TEST_DATA.NEW_DETAIL_A}" not found in dialog results.`);
       }
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       // Click the button to add that detail to the dialog's bottom table.
       // Now that findAndClickElement is fixed, we can use it with the ID constant
       await detailsPage.findAndClickElement(page, SelectorsPartsDataBase.SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON_ID, 500);
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Click the add button to move the detail into the main specifications table (closes the dialog).
       // Now that findAndClickElement is fixed, we can use it with the ID constant
       await detailsPage.findAndClickElement(page, SelectorsPartsDataBase.SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON_ID, 500);
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify that the detail is now visible in the product's specifications table.
       const specsTable = page.locator(SelectorsPartsDataBase.EDITOR_TABLE_SPECIFICATION_CBED);
       await detailsPage.highlightElement(specsTable);
-      await expect(specsTable).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(specsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify specs table is visible',
+        test.info(),
+      );
       const specRows = specsTable.locator('tbody tr');
       const rowTexts = await specRows.allTextContents();
       const detailAdded = rowTexts.some(text => text.includes(TEST_DATA.NEW_DETAIL_A));
-      expect(detailAdded).toBe(true);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(detailAdded).toBe(true);
+        },
+        'Verify detail was added to specs',
+        test.info(),
+      );
 
       // Finally, click save on the product page and verify the success message.
       const save = await page.locator(SelectorsPartsDataBase.CREATOR_BUTTON_SAVE);
       await detailsPage.highlightElement(save);
       await save.click();
 
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
     });
     let skladPage: Page; // Declare outside to share between steps
 
@@ -395,7 +544,7 @@ export const runERP_969 = () => {
       const revisionButton = skladPage.locator(SelectorsRevision.WAREHOUSE_PAGE_REVISIONS_TESTID);
       await detailsPage.highlightElement(revisionButton);
       await revisionButton.click();
-      await skladPage.waitForTimeout(500);
+      await skladPage.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
     await allure.step('Step 11.3: Select the Детайли slider', async () => {
@@ -403,7 +552,7 @@ export const runERP_969 = () => {
       const detailSlider = skladPage.locator(SelectorsRevision.REVISION_SWITCH_ITEM2);
       await detailsPage.highlightElement(detailSlider);
       await detailSlider.click();
-      await skladPage.waitForTimeout(500);
+      await skladPage.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
     await allure.step('Step 11.4: Find the search input and search for the detail', async () => {
@@ -413,18 +562,25 @@ export const runERP_969 = () => {
 
       const searchInput = skladTable.locator(SelectorsRevision.SEARCH_COVER_INPUT_2);
       await detailsPage.highlightElement(searchInput);
-      await expect(searchInput).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
 
       // Enter the detail name (NEW_DETAIL_A) and trigger the search.
       await searchInput.fill(TEST_DATA.NEW_DETAIL_A);
       await searchInput.press('Enter');
       await skladPage.waitForLoadState('networkidle');
-      await skladPage.waitForTimeout(1000);
+      await skladPage.waitForTimeout(TIMEOUTS.STANDARD);
     });
 
     await allure.step('Step 11.5: Verify exactly one matching row is found', async () => {
       // Get all <tbody> elements within the target table
-      await skladPage.waitForTimeout(1000);
+      await skladPage.waitForTimeout(TIMEOUTS.STANDARD);
       const allBodies = skladPage.locator(`${SelectorsRevision.TABLE_REVISION_PAGINATION_TABLE} tbody`).first();
       //const lastBody = allBodies.last(); // The one with actual data rows (not headers)
 
@@ -432,24 +588,52 @@ export const runERP_969 = () => {
       const resultRows = allBodies.locator('tr');
       const rowCount = await resultRows.count();
       console.log(`✅ Found ${rowCount} row(s) in the data tbody`);
-      await skladPage.waitForTimeout(5000);
+      await skladPage.waitForTimeout(TIMEOUTS.VERY_LONG);
       // Expect exactly one matching row from the search
-      expect(rowCount).toBe(1);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowCount).toBe(1);
+        },
+        'Verify exactly one matching row from search',
+        test.info(),
+      );
     });
 
     // Step 2: Update the value in the 4th column (the editable element).
     await allure.step("Step 11.6: Update the actual quantity to '1' in the editable cell", async () => {
       // Locate the only returned row after the search.
       const row = skladPage.locator(`${SelectorsRevision.TABLE_REVISION_PAGINATION_TABLE} tbody tr`).first();
-      await expect(row).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(row).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify row is visible',
+        test.info(),
+      );
 
       // Within this row, locate the 4th column (index 3).
       const fourthCell = row.locator('td').nth(3);
-      await expect(fourthCell).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(fourthCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify fourth cell is visible',
+        test.info(),
+      );
 
       // Inside the cell, locate the editable div with contenteditable=true.
       const editField = fourthCell.locator(SelectorsRevision.INPUT_NUMBER_INPUT);
-      await expect(editField).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(editField).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify edit field is visible',
+        test.info(),
+      );
 
       // Fill in "1" and press Enter to submit the change.
       await editField.fill('1');
@@ -462,12 +646,26 @@ export const runERP_969 = () => {
     await allure.step('Step 11.7: Confirm the update in the confirmation dialog', async () => {
       // Wait for the confirmation dialog to appear.
       const confirmDialog = skladPage.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG);
-      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(confirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify confirm dialog is visible',
+        test.info(),
+      );
 
       // In the dialog, click the confirm button.
       const confirmButton = confirmDialog.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE);
       await detailsPage.highlightElement(confirmButton);
-      await expect(confirmButton).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(confirmButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify confirm button is visible',
+        test.info(),
+      );
       await confirmButton.click();
       await skladPage.waitForLoadState('networkidle');
     });
@@ -478,43 +676,78 @@ export const runERP_969 = () => {
 
       // Re-open the Детайли slider tab
       await skladPage.locator(SelectorsRevision.REVISION_SWITCH_ITEM2).click();
-      await skladPage.waitForTimeout(1000);
+      await skladPage.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Confirm the table is visible
       const skladTable = skladPage.locator(`table${SelectorsRevision.TABLE_REVISION_PAGINATION_TABLE}`).first();
-      await expect(skladTable).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(skladTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify sklad table is visible',
+        test.info(),
+      );
 
       // Perform the search again
       const searchInput = skladTable.locator(SelectorsRevision.SEARCH_COVER_INPUT_2);
-      await expect(searchInput).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await skladPage.waitForTimeout(1000);
+      await skladPage.waitForTimeout(TIMEOUTS.STANDARD);
 
       await searchInput.fill(TEST_DATA.NEW_DETAIL_A);
       await searchInput.press('Enter');
       await skladPage.waitForLoadState('networkidle');
-      await skladPage.waitForTimeout(1000);
+      await skladPage.waitForTimeout(TIMEOUTS.STANDARD);
       // Select the last <tbody> (actual data) and verify one row is returned
       const allTbody = skladTable.locator('tbody');
       const dataBody = allTbody.last();
       const rows = dataBody.locator('tr');
       const rowCount = await rows.count();
       console.log(`Verified ${rowCount} row(s) in the updated table`);
-      expect(rowCount).toBe(1);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowCount).toBe(1);
+        },
+        'Verify one row in updated table',
+        test.info(),
+      );
 
       // Locate the editable div in the 4th column and confirm the saved value
       const fourthCell = rows.first().locator('td').nth(3);
       const editDiv = fourthCell.locator(SelectorsRevision.INPUT_NUMBER_INPUT);
       await detailsPage.highlightElement(editDiv);
-      await skladPage.waitForTimeout(3000);
-      await expect(editDiv).toBeVisible({ timeout: 5000 });
+      await skladPage.waitForTimeout(TIMEOUTS.EXTENDED);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(editDiv).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify edit div is visible',
+        test.info(),
+      );
 
       const value = await editDiv.inputValue();
       if (value === null) throw new Error('Editable cell content is null.');
       console.log('Confirmed saved value after reload:', value.trim());
 
-      expect(value.trim()).toBe('1');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(value.trim()).toBe('1');
+        },
+        'Verify saved value after reload',
+        test.info(),
+      );
     });
     await allure.step('Step 12: Open residuals in new tab and verify saved detail has 0 quantity', async () => {
       // Open a new tab for the residuals check
@@ -529,24 +762,45 @@ export const runERP_969 = () => {
 
       // Locate the residuals table and confirm visibility
       const residualsTable = residualsPage.locator(SelectorsModalWaybill.OSTATK_PCBD_DETAL_TABLE);
-      await expect(residualsTable).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(residualsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify residuals table is visible',
+        test.info(),
+      );
 
       // Perform the search for the new detail
       const searchInput = residualsTable.locator(SelectorsModalWaybill.OSTATK_PCBD_TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
       await searchInput.fill('');
       await searchInput.press('Enter');
-      await residualsPage.waitForTimeout(1000);
+      await residualsPage.waitForTimeout(TIMEOUTS.STANDARD);
 
       await searchInput.fill(TEST_DATA.NEW_DETAIL_A);
       await searchInput.press('Enter');
       await residualsPage.waitForLoadState('networkidle');
-      await residualsPage.waitForTimeout(1000);
+      await residualsPage.waitForTimeout(TIMEOUTS.STANDARD);
       // Verify exactly one matching row is returned
       const rows = residualsTable.locator('tbody tr');
       const rowCount = await rows.count();
       console.log(`Found ${rowCount} row(s) in residuals table for detail "${TEST_DATA.NEW_DETAIL_A}".`);
-      expect(rowCount).toBe(1);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowCount).toBe(1);
+        },
+        'Verify one row in residuals table',
+        test.info(),
+      );
 
       // Verify that the 5th column contains value "0"
       const fifthCell = rows.first().locator('td').nth(4);
@@ -554,8 +808,15 @@ export const runERP_969 = () => {
       const cellText = await fifthCell.textContent();
       if (cellText === null) throw new Error('Fifth column content is null.');
       console.log('Residual quantity found in 5th column:', cellText.trim());
-      expect(cellText.trim()).toBe('0');
-      await residualsPage.waitForTimeout(3000);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(cellText.trim()).toBe('0');
+        },
+        'Verify residual quantity is 0',
+        test.info(),
+      );
+      await residualsPage.waitForTimeout(TIMEOUTS.EXTENDED);
     });
 
     // to here comment
@@ -570,40 +831,61 @@ export const runERP_969 = () => {
       const orderingSuppliersButton = warehousePage.locator(SelectorsOrderedFromSuppliers.SCLAD_ORDERING_SUPPLIERS);
       await detailsPage.highlightElement(orderingSuppliersButton);
       await orderingSuppliersButton.click();
-      await warehousePage.waitForTimeout(500);
+      await warehousePage.waitForTimeout(TIMEOUTS.MEDIUM);
       await warehousePage.waitForLoadState('networkidle');
 
       // Click the create order button
       const createOrderButton = warehousePage.locator(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON);
       await detailsPage.highlightElement(createOrderButton);
       await createOrderButton.click();
-      await warehousePage.waitForTimeout(500);
+      await warehousePage.waitForTimeout(TIMEOUTS.MEDIUM);
       await warehousePage.waitForLoadState('networkidle');
 
       // Verify the supplier order creation modal is visible
       const supplierModal = warehousePage.locator(`dialog${SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}`);
-      await expect(supplierModal).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(supplierModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify supplier modal is visible',
+        test.info(),
+      );
 
       //Click the assemblies operation button
       const assembliesButton = supplierModal.locator(SelectorsOrderedFromSuppliers.MODAL_SELECT_SUPPLIER_ASSEMBLE_CARD);
       await detailsPage.highlightElement(assembliesButton);
       await assembliesButton.click();
-      await warehousePage.waitForTimeout(500);
+      await warehousePage.waitForTimeout(TIMEOUTS.MEDIUM);
       await warehousePage.waitForLoadState('networkidle');
 
       //Verify the production table is visible
       const orderAssembly = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG);
       let productionTable = orderAssembly.locator(SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE);
       await detailsPage.highlightElement(productionTable);
-      await expect(productionTable).toBeVisible({ timeout: 5000 });
-      await warehousePage.waitForTimeout(1500);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(productionTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify production table is visible',
+        test.info(),
+      );
+      await warehousePage.waitForTimeout(TIMEOUTS.INPUT_SET);
       // Find and fill the search input
       const searchInput = productionTable.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
       await searchInput.fill(TEST_DATA.NEW_SB_A);
       await searchInput.press('Enter');
       await warehousePage.waitForLoadState('networkidle');
-      await warehousePage.waitForTimeout(2000);
+      await warehousePage.waitForTimeout(TIMEOUTS.LONG);
 
       // const productionDialog = page.locator(`dialog[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE}"]`);
       // productionTable = productionDialog.locator(SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE);
@@ -611,7 +893,14 @@ export const runERP_969 = () => {
       const rows = productionTable.locator('tbody tr');
       const rowCount = await rows.count();
       console.log(`Found ${rowCount} row(s) in production table for SB "${TEST_DATA.NEW_SB_A}".`);
-      expect(rowCount).toBe(1);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(rowCount).toBe(1);
+        },
+        'Verify one row in production table',
+        test.info(),
+      );
 
       // select the rows checkbox
       const checkbox = rows.locator('td').nth(0).locator("input[type='checkbox']");
@@ -620,38 +909,59 @@ export const runERP_969 = () => {
       //find the button with the label выбрать and data-testid ModallAddStockOrderSupply-Main-Content-Block-Button
       const selectButton = warehousePage.locator(`button${SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}`);
       await detailsPage.highlightElement(selectButton, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
       await selectButton.click();
 
       // Wait for network to be idle after clicking select button
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(TIMEOUTS.LONG);
 
       //now find th ebottom table  via it's top div:ModallAddStockOrderSupply-Main-Content-Block2
       const bottomTable = warehousePage.locator(SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE);
       await detailsPage.highlightElement(bottomTable);
-      await expect(bottomTable).toBeVisible({ timeout: 10000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(bottomTable).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify bottom table is visible',
+        test.info(),
+      );
 
       // Wait for table to be fully rendered
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const bottomRows = bottomTable.locator('tbody tr');
       const bottomRowCount = await bottomRows.count();
       console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${TEST_DATA.NEW_SB_A}".`);
-      expect(bottomRowCount).toBe(1);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(bottomRowCount).toBe(1);
+        },
+        'Verify one row in bottom table',
+        test.info(),
+      );
 
       // Wait for the row to be visible first
-      await expect(bottomRows.first()).toBeVisible({ timeout: 10000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(bottomRows.first()).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify bottom rows first is visible',
+        test.info(),
+      );
 
       // Try clicking the row first to ensure it's selected (input might only appear when row is selected)
       await bottomRows.first().click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Scroll to bottom to ensure the input is in view
       await page.evaluate(() => {
         window.scrollTo(0, document.body.scrollHeight);
       });
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Use the correct data-testid pattern for the quantity input in ChoosedTable2
       // Starts with: OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row
@@ -688,22 +998,22 @@ export const runERP_969 = () => {
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
         }, orderedQuantity.toString());
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       } else {
         // Clear the input first, then fill it
         await quantityInput.clear();
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(TIMEOUTS.SHORT);
 
         // Fill the input with the quantity value
         await quantityInput.fill(orderedQuantity.toString());
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(TIMEOUTS.SHORT);
 
         // Trigger input event manually
         await quantityInput.evaluate((el: HTMLInputElement) => {
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
         });
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(TIMEOUTS.SHORT);
       }
 
       // Verify the value was set
@@ -719,16 +1029,16 @@ export const runERP_969 = () => {
           el.dispatchEvent(new Event('change', { bubbles: true }));
           el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
         }, orderedQuantity.toString());
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
       // Blur the input to trigger validation
       await quantityInput.blur();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Press Enter to confirm the value
       await quantityInput.press('Enter');
-      await warehousePage.waitForTimeout(1000);
+      await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify the value is still there after Enter
       const finalValue = await quantityInput.inputValue();
@@ -737,9 +1047,23 @@ export const runERP_969 = () => {
       // Verify the modal title
       const modalTitle = warehousePage.locator('h4').first();
       await detailsPage.highlightElement(modalTitle, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await expect(modalTitle).toContainText('Создание заказа на сборку', { timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modalTitle).toContainText('Создание заказа на сборку', { timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify modal title contains expected text',
+        test.info(),
+      );
       const today = new Date().toLocaleDateString('ru-RU');
-      await expect(modalTitle).toContainText(today, { timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modalTitle).toContainText(today, { timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify modal title contains today date',
+        test.info(),
+      );
 
       // Example: modalTitle = "Создание заказа на сборку № 25-6029 от 21.07.2025"
       const modalTitleText = await modalTitle.textContent();
@@ -761,7 +1085,14 @@ export const runERP_969 = () => {
       await detailsPage.highlightElement(orderButton);
 
       // Wait for the button to become enabled (it starts disabled until quantity is filled)
-      await expect(orderButton).toBeEnabled({ timeout: 15000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(orderButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
+        },
+        'Verify order button is enabled',
+        test.info(),
+      );
 
       // Check if there's a modal dialog open that might intercept clicks
       const modalDialog = page.locator(SelectorsOrderedFromSuppliers.MODAL_CHOOSED_TABLE2_CBED);
@@ -770,7 +1101,7 @@ export const runERP_969 = () => {
         console.log('Modal dialog is open, closing it...');
         // Try to close the modal by pressing Escape
         await page.keyboard.press('Escape');
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         // Wait for modal to be hidden
         await modalDialog.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {
           console.log('Modal did not close with Escape, trying click outside...');
@@ -779,14 +1110,14 @@ export const runERP_969 = () => {
         if (await modalDialog.isVisible().catch(() => false)) {
           // Click at a safe position outside the modal (bottom right)
           await page.mouse.click(100, 100);
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
         }
       }
 
       // Check if the small modal with 4 options (Поставщик, Сборка, Изделие, Детали) is open
       // This modal appears when the main modal closes and needs to be closed before clicking the button
       // Find the dialog with data-testid="OrderSuppliers-Modal-AddOrder" and open attribute
-      const smallModalDialog = page.locator('dialog[data-testid="OrderSuppliers-Modal-AddOrder"][open]');
+      const smallModalDialog = page.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_SMALL_DIALOG_OPEN);
 
       const isSmallModalOpen = await smallModalDialog.isVisible().catch(() => false);
 
@@ -795,7 +1126,7 @@ export const runERP_969 = () => {
 
         // Highlight the dialog
         await detailsPage.highlightElement(smallModalDialog);
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         // Click on the element that is above it in the DOM (parent or previous sibling)
         // We'll use evaluate to find the previous sibling or parent element and click it
@@ -838,7 +1169,7 @@ export const runERP_969 = () => {
           }
         }
 
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Wait for modal to be closed (no longer has open attribute or is detached)
         // Don't wait too long - just check if it's closed and proceed
@@ -856,7 +1187,7 @@ export const runERP_969 = () => {
             const parentElement = smallModalDialog.locator('..');
             if ((await parentElement.count()) > 0) {
               await parentElement.click();
-              await page.waitForTimeout(500);
+              await page.waitForTimeout(TIMEOUTS.MEDIUM);
             }
           }
         }
@@ -866,34 +1197,48 @@ export const runERP_969 = () => {
       console.log('Verifying order button is present and active...');
 
       // Wait for button to be visible and attached to DOM
-      await expect(orderButton).toBeVisible({ timeout: 10000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(orderButton).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify order button is visible',
+        test.info(),
+      );
       console.log('✅ Order button is visible');
 
       // Verify button is enabled
       const isButtonEnabled = await orderButton.isEnabled().catch(() => false);
       if (!isButtonEnabled) {
         console.log('Button is not enabled, waiting for it to become enabled...');
-        await expect(orderButton).toBeEnabled({ timeout: 10000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(orderButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify order button is enabled',
+          test.info(),
+        );
       }
       console.log('✅ Order button is enabled');
 
       // Change highlighting to indicate we're about to click (use PENDING style)
       await detailsPage.highlightElement(orderButton, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Scroll button into view
       await orderButton.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
 
       // Wait for button to be stable (not animating)
       await orderButton.waitFor({ state: 'visible' });
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
 
       console.log('About to click the order button...');
 
       // Try clicking at 1,1 first to close any modals
       await warehousePage.mouse.click(1, 1);
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(TIMEOUTS.SHORT);
 
       // Try normal click first
       let clickSuccessful = false;
@@ -927,7 +1272,7 @@ export const runERP_969 = () => {
       console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
       console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
       console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
-      await warehousePage.waitForTimeout(5000);
+      await warehousePage.waitForTimeout(TIMEOUTS.VERY_LONG);
       await warehousePage.waitForLoadState('networkidle');
       // Verify success notification contains the order number
       //await detailsPage.verifyDetailSuccessMessage(`Заказ №${orderNumber} отправлен в производство`);
@@ -939,24 +1284,38 @@ export const runERP_969 = () => {
       console.log('НННННННННННННН');
       // Close the modal by clicking at position 1,1
       await page.mouse.click(1, 1);
-      await warehousePage.waitForTimeout(1000);
+      await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
       await warehousePage.mouse.click(1, 1);
-      await warehousePage.waitForTimeout(1000);
+      await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
     });
 
     await allure.step('Step 14: Search for the created order in the order table', async () => {
       // Verify the order table is visible
       await warehousePage.waitForLoadState('networkidle');
       const orderTable = warehousePage.locator(`table${SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_TABLE}`);
-      await expect(orderTable).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(orderTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify order table is visible',
+        test.info(),
+      );
 
       // Find and fill the search input with the captured order number
       const searchInput = orderTable.locator(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_TABLE_SEARCH_INPUT);
-      await expect(searchInput).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify search input is visible',
+        test.info(),
+      );
       await searchInput.fill(TEST_DATA.NEW_SB_A);
       await searchInput.press('Enter');
       await warehousePage.waitForLoadState('networkidle');
-      await warehousePage.waitForTimeout(1000);
+      await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify exactly one tbody is returned (due to table structure issue)
       const tbodyElements = orderTable.locator('tbody');
@@ -1006,10 +1365,17 @@ export const runERP_969 = () => {
           break;
         }
       }
-      await warehousePage.waitForTimeout(5000);
+      await warehousePage.waitForTimeout(TIMEOUTS.VERY_LONG);
       // Verify that the order was found
-      expect(foundOrder).toBe(true);
-      expect(targetRow).not.toBeNull();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(foundOrder).toBe(true);
+          expect.soft(targetRow).not.toBeNull();
+        },
+        'Verify order was found and target row is not null',
+        test.info(),
+      );
       console.log(`✅ Order "${searchPattern}" was found and highlighted`);
       console.log(`✅ Target row is ready for Step 15: ${targetRow ? 'yes' : 'no'}`);
     });
@@ -1017,7 +1383,14 @@ export const runERP_969 = () => {
     await allure.step('Step 15: Click the found order row and verify order details in modal', async () => {
       // Get the date from the 4th column of the found row
       const dateCell = targetRow.locator('td').nth(3); // 4th column (index 3)
-      await expect(dateCell).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(dateCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify date cell is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(dateCell, HIGHLIGHT.HIGHLIGHT_PENDING);
       const orderDate = await dateCell.textContent();
       console.log(`Order date from table: "${orderDate}"`);
@@ -1025,48 +1398,104 @@ export const runERP_969 = () => {
       // Click the found row to open the modal
       await targetRow.dblclick();
       await warehousePage.waitForLoadState('networkidle');
-      await warehousePage.waitForTimeout(1000);
+      await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Verify the modal is visible
       const orderModal = warehousePage.locator(`dialog${SelectorsOrderedFromSuppliers.ORDER_MODAL}[open]`);
       await detailsPage.highlightElement(orderModal, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await expect(orderModal).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(orderModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify order modal is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(orderModal, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
       // Verify the modal title
       const modalTitle = orderModal.locator('h4');
       await detailsPage.highlightElement(modalTitle, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await expect(modalTitle).toContainText('Заказ', { timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modalTitle).toContainText('Заказ', { timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify modal title contains Заказ',
+        test.info(),
+      );
       await detailsPage.highlightElement(modalTitle, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
       // Verify the order date in the modal
       const modalDateElement = orderModal.locator('.modal-worker__label-span').first();
       await detailsPage.highlightElement(modalDateElement, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await expect(modalDateElement).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modalDateElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify modal date element is visible',
+        test.info(),
+      );
       const modalDate = await modalDateElement.textContent();
       console.log(`Modal date: "${modalDate}"`);
-      expect(modalDate).toContain(orderDate?.trim() || '');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modalDate).toContain(orderDate?.trim() || '');
+        },
+        'Verify modal date contains order date',
+        test.info(),
+      );
       await detailsPage.highlightElement(modalDateElement, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
       // Verify the order number (without "C" prefix)
       const modalOrderNumberElement = orderModal.locator('.modal-worker__label-span').nth(1);
       await detailsPage.highlightElement(modalOrderNumberElement, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await expect(modalOrderNumberElement).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modalOrderNumberElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify modal order number element is visible',
+        test.info(),
+      );
       const modalOrderNumber = await modalOrderNumberElement.textContent();
       console.log(`Modal order number: "${modalOrderNumber}"`);
-      expect(modalOrderNumber?.trim()).toBe(orderNumber?.trim());
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(modalOrderNumber?.trim()).toBe(orderNumber?.trim());
+        },
+        'Verify modal order number matches',
+        test.info(),
+      );
       await detailsPage.highlightElement(modalOrderNumberElement, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
       // Find and verify the table contents
       const table = orderModal.locator(SelectorsOrderedFromSuppliers.ORDER_MODAL_TABLE);
       await detailsPage.highlightElement(table, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await expect(table).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify table is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(table, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
       // Get the first data row (skip header if present)
       const firstDataRow = table.locator('tbody tr').first();
       await detailsPage.highlightElement(firstDataRow, HIGHLIGHT.HIGHLIGHT_PENDING);
-      await expect(firstDataRow).toBeVisible({ timeout: 5000 });
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(firstDataRow).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify first data row is visible',
+        test.info(),
+      );
       await detailsPage.highlightElement(firstDataRow, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
       // Verify the first column contains order number with suffix
@@ -1075,28 +1504,56 @@ export const runERP_969 = () => {
       const firstColumnText = await firstColumn.textContent();
       console.log(`First column (order number): "${firstColumnText}"`);
       // Order number column contains plain order number without suffix
-      expect(firstColumnText?.trim()).toBe(orderNumber);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(firstColumnText?.trim()).toBe(orderNumber);
+        },
+        'Verify first column contains order number',
+        test.info(),
+      );
 
       // Verify the item column (Наименование) contains NEW_SB_A
       const thirdColumn = firstDataRow.locator('td').nth(3); // Item at index 3
       await detailsPage.highlightElement(thirdColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const thirdColumnText = await thirdColumn.textContent();
       console.log(`Third column (item): "${thirdColumnText}"`);
-      expect(thirdColumnText?.trim()).toBe(TEST_DATA.NEW_SB_A);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(thirdColumnText?.trim()).toBe(TEST_DATA.NEW_SB_A);
+        },
+        'Verify third column contains NEW_SB_A',
+        test.info(),
+      );
 
       // Verify the fourth column contains "Заказано"
       const fourthColumn = firstDataRow.locator('td').nth(4); // 4th column (index 3)
       await detailsPage.highlightElement(fourthColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const fourthColumnText = await fourthColumn.textContent();
       console.log(`Fourth column (status): "${fourthColumnText}"`);
-      expect(fourthColumnText?.trim()).toBe('Заказано');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(fourthColumnText?.trim()).toBe('Заказано');
+        },
+        'Verify fourth column contains Заказано',
+        test.info(),
+      );
 
       // Verify column 5 (Кол-во сделанных / completed) contains "0"
       const completedColumn = firstDataRow.locator('td').nth(5);
       await detailsPage.highlightElement(completedColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const completedColumnText = await completedColumn.textContent();
       console.log(`Completed column (index 5): "${completedColumnText}"`);
-      expect(completedColumnText?.trim()).toBe('0');
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(completedColumnText?.trim()).toBe('0');
+        },
+        'Verify completed column is 0',
+        test.info(),
+      );
 
       // Verify column 6 (Кол-во в задании / ordered) contains orderedQuantity
       // Note: The value is inside an input field, not plain text
@@ -1105,8 +1562,15 @@ export const runERP_969 = () => {
       const orderedInput = orderedColumn.locator('input');
       const orderedColumnValue = await orderedInput.inputValue();
       console.log(`Ordered column (index 6) input value: "${orderedColumnValue}"`);
-      expect(parseInt(orderedColumnValue?.trim() || '0')).toBe(orderedQuantity);
-      await warehousePage.waitForTimeout(5000);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(parseInt(orderedColumnValue?.trim() || '0')).toBe(orderedQuantity);
+        },
+        'Verify ordered column value matches orderedQuantity',
+        test.info(),
+      );
+      await warehousePage.waitForTimeout(TIMEOUTS.VERY_LONG);
       // Close the modal
       await warehousePage.mouse.click(1, 1);
     });
@@ -1152,7 +1616,14 @@ export const runERP_969 = () => {
       await allure.step('Sub-step 16.3: Verify page title', async () => {
         const pageTitle = kittingPage.locator(SelectorsAssemblyKittingOnThePlan.COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN);
         await detailsPage.highlightElement(pageTitle, HIGHLIGHT.HIGHLIGHT_PENDING);
-        await expect(pageTitle).toHaveText('Комплектация сборок на план', { timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(pageTitle).toHaveText('Комплектация сборок на план', { timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify page title has expected text',
+          test.info(),
+        );
         await detailsPage.highlightElement(pageTitle, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1160,7 +1631,14 @@ export const runERP_969 = () => {
       await allure.step('Sub-step 16.4: Locate and verify kitting table', async () => {
         kittingTable = kittingPage.locator(SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE);
         await detailsPage.highlightElement(kittingTable);
-        await expect(kittingTable).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(kittingTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify kitting table is visible',
+          test.info(),
+        );
       });
 
       // Sub-step 16.5: Search for our SB in the table
@@ -1174,17 +1652,24 @@ export const runERP_969 = () => {
       // Sub-step 16.6: Verify search result in first row
       await allure.step('Sub-step 16.6: Verify search result in first row', async () => {
         // Use selector that targets main rows (excluding kit rows)
-        await kittingPage.waitForTimeout(2000);
+        await kittingPage.waitForTimeout(TIMEOUTS.LONG);
         firstRow = kittingTable.locator(SelectorsERP969.KITTING_TABLE_MAIN_ROWS).first();
         await detailsPage.highlightElement(firstRow, HIGHLIGHT.HIGHLIGHT_PENDING);
         // Removed toBeVisible() assertion - main rows with rowspan are not considered visible by Playwright
 
         const targetColumn = firstRow.locator('td').nth(5);
         await detailsPage.highlightElement(targetColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
-        await kittingPage.waitForTimeout(2000);
+        await kittingPage.waitForTimeout(TIMEOUTS.LONG);
         const columnText = await targetColumn.textContent();
         console.log(`Column 3 value: "${columnText}"`);
-        expect(columnText?.trim()).toBe(TEST_DATA.NEW_SB_A);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(columnText?.trim()).toBe(TEST_DATA.NEW_SB_A);
+          },
+          'Verify column 3 contains NEW_SB_A',
+          test.info(),
+        );
         await detailsPage.highlightElement(targetColumn, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         await detailsPage.highlightElement(firstRow, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
@@ -1196,10 +1681,10 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(targetColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
         await targetColumn.dblclick();
         await kittingPage.waitForLoadState('networkidle');
-        await kittingPage.waitForTimeout(2500);
+        await kittingPage.waitForTimeout(TIMEOUTS.EXTENDED);
 
         // Wait for the modal to appear
-        await kittingPage.waitForTimeout(2000);
+        await kittingPage.waitForTimeout(TIMEOUTS.LONG);
 
         // Try to find any dialog element first
         // const anyDialog = kittingPage.locator('dialog[open]');
@@ -1214,12 +1699,26 @@ export const runERP_969 = () => {
         // }
 
         waybillModal = kittingPage.locator(SelectorsERP969.WAYBILL_MODAL_OPEN_PATTERN);
-        await expect(waybillModal).toBeVisible({ timeout: 10000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify waybill modal is visible',
+          test.info(),
+        );
 
         await detailsPage.highlightElement(waybillModal, { border: '2px solid red' });
         // Wait for the inner content to be loaded
         const innerContent = waybillModal.locator(SelectorsModalWaybill.WAYBILL_DETAILS_RIGHT_INNER);
-        await expect(innerContent).toBeVisible({ timeout: 10000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(innerContent).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify inner content is visible',
+          test.info(),
+        );
 
         await detailsPage.highlightElement(targetColumn, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
@@ -1236,10 +1735,24 @@ export const runERP_969 = () => {
         // Find the h4 title within the modal since the data-testid was removed
         const modalTitle = waybillModal.locator('h4');
         await detailsPage.highlightElement(modalTitle, HIGHLIGHT.HIGHLIGHT_PENDING);
-        await expect(modalTitle).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(modalTitle).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify modal title is visible',
+          test.info(),
+        );
         const titleText = await modalTitle.textContent();
         console.log(`Modal title: "${titleText}"`);
-        expect(titleText).toContain('Накладная на комплектацию Сборки');
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(titleText).toContain('Накладная на комплектацию Сборки');
+          },
+          'Verify modal title contains expected text',
+          test.info(),
+        );
         await detailsPage.highlightElement(modalTitle, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1250,7 +1763,14 @@ export const runERP_969 = () => {
         const collectedQuantityValue = await collectedQuantityCell.textContent();
         const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
         console.log(`Collected quantity: "${collectedQuantityValue}"`);
-        expect(parseInt(collectedQuantityValue?.trim() || '0')).toBe(0);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(collectedQuantityValue?.trim() || '0')).toBe(0);
+          },
+          'Verify collected quantity is 0',
+          test.info(),
+        );
         await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1260,7 +1780,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const requiredQuantity = await requiredQuantityCell.textContent();
         console.log(`Required quantity: "${requiredQuantity}"`);
-        expect(parseInt(requiredQuantity?.trim() || '0')).toBe(orderedQuantity);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(requiredQuantity?.trim() || '0')).toBe(orderedQuantity);
+          },
+          'Verify required quantity matches order quantity',
+          test.info(),
+        );
         await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1270,7 +1797,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT.HIGHLIGHT_PENDING);
         const ownQuantityValue = await ownQuantityInput.inputValue();
         console.log(`Own quantity input: "${ownQuantityValue}"`);
-        expect(parseInt(ownQuantityValue?.trim() || '0')).toBe(orderedQuantity);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(ownQuantityValue?.trim() || '0')).toBe(orderedQuantity);
+          },
+          'Verify own quantity matches ordered quantity',
+          test.info(),
+        );
         await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1280,7 +1814,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(nameCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const sbName = await nameCell.textContent();
         console.log(`SB name: "${sbName}"`);
-        expect(sbName?.trim()).toBe(TEST_DATA.NEW_SB_A);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(sbName?.trim()).toBe(TEST_DATA.NEW_SB_A);
+          },
+          'Verify assembly name matches',
+          test.info(),
+        );
         await detailsPage.highlightElement(nameCell, { ...HIGHLIGHT.HIGHLIGHT_SUCCESS });
       });
 
@@ -1312,7 +1853,14 @@ export const runERP_969 = () => {
 
         // Expect the total label to show "Всего: X" where X is the calculated total
         const expectedText = `Всего: ${calculatedTotal}`;
-        expect(totalQuantityText?.trim()).toBe(expectedText);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(totalQuantityText?.trim()).toBe(expectedText);
+          },
+          'Verify total quantity text matches expected',
+          test.info(),
+        );
 
         await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
@@ -1322,7 +1870,14 @@ export const runERP_969 = () => {
         // Verify the shipment details table exists (using the correct data-testid from the HTML)
         const shipmentDetailsTable = kittingPage.locator(SelectorsModalWaybill.TABLE_ORDERS);
         await detailsPage.highlightElement(shipmentDetailsTable, HIGHLIGHT.HIGHLIGHT_PENDING);
-        await expect(shipmentDetailsTable).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(shipmentDetailsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify shipment details table is visible',
+          test.info(),
+        );
         await detailsPage.highlightElement(shipmentDetailsTable, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1364,7 +1919,14 @@ export const runERP_969 = () => {
         }
 
         // Verify that we found the order number in at least one cell
-        expect(orderNumberFound).toBe(true);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(orderNumberFound).toBe(true);
+          },
+          'Verify order number was found',
+          test.info(),
+        );
         console.log(`✅ Found order number "${orderNumber}" in: "${foundOrderNumberText}"`);
 
         // Style the found cell as successful
@@ -1381,7 +1943,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const remainingQuantity = await remainingQuantityCell.textContent();
         console.log(`Remaining quantity: "${remainingQuantity}"`);
-        expect(parseInt(remainingQuantity?.trim() || '0')).toBe(orderedQuantity);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(remainingQuantity?.trim() || '0')).toBe(orderedQuantity);
+          },
+          'Verify remaining quantity matches ordered quantity',
+          test.info(),
+        );
         await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1401,7 +1970,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(detailNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const detailName = await detailNameCell.textContent();
         console.log(`Detail name: "${detailName}"`);
-        expect(detailName?.trim()).toBe(TEST_DATA.NEW_DETAIL_A);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(detailName?.trim()).toBe(TEST_DATA.NEW_DETAIL_A);
+          },
+          'Verify detail name matches',
+          test.info(),
+        );
         await detailsPage.highlightElement(detailNameCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1417,7 +1993,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(quantityPerUnitCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const quantityPerUnit = await quantityPerUnitCell.textContent();
         console.log(`Quantity per unit: "${quantityPerUnit}"`);
-        expect(parseInt(quantityPerUnit?.trim() || '0')).toBe(specificationQuantity);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(quantityPerUnit?.trim() || '0')).toBe(specificationQuantity);
+          },
+          'Verify quantity per unit matches specification quantity',
+          test.info(),
+        );
         await detailsPage.highlightElement(quantityPerUnitCell, { ...HIGHLIGHT.HIGHLIGHT_SUCCESS });
       });
 
@@ -1427,7 +2010,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(materialCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const materialText = await materialCell.textContent();
         console.log(`Material: "${materialText}"`);
-        expect(materialText?.trim()).toBe('Нет материала');
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(materialText?.trim()).toBe('Нет материала');
+          },
+          'Verify material text is Нет материала',
+          test.info(),
+        );
         await detailsPage.highlightElement(materialCell, { ...HIGHLIGHT.HIGHLIGHT_SUCCESS });
       });
 
@@ -1439,7 +2029,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(needCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const needQuantity = await needCell.textContent();
         console.log(`Need quantity: "${needQuantity}"`);
-        expect(parseInt(needQuantity?.trim() || '0')).toBe(orderedQuantity * specificationQuantity);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(needQuantity?.trim() || '0')).toBe(orderedQuantity * specificationQuantity);
+          },
+          'Verify need quantity calculation',
+          test.info(),
+        );
         await detailsPage.highlightElement(needCell, { ...HIGHLIGHT.HIGHLIGHT_SUCCESS });
       });
 
@@ -1453,7 +2050,14 @@ export const runERP_969 = () => {
         console.log(`Free quantity: "${freeQuantity}"`);
 
         const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(TEST_DATA.NEW_DETAIL_A);
-        expect(parseInt(freeQuantity?.trim() || '0')).toBe(expectedFreeQuantity);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(freeQuantity?.trim() || '0')).toBe(expectedFreeQuantity);
+          },
+          'Verify free quantity matches expected',
+          test.info(),
+        );
         await detailsPage.highlightElement(freeQuantityCell, { ...HIGHLIGHT.HIGHLIGHT_SUCCESS });
       });
 
@@ -1475,7 +2079,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(inKitsCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const inKitsValue = await inKitsCell.textContent();
         console.log(`In kits: "${inKitsValue}"`);
-        expect(parseInt(inKitsValue?.trim() || '0')).toBe(0);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(inKitsValue?.trim() || '0')).toBe(0);
+          },
+          'Verify in kits value is 0',
+          test.info(),
+        );
         await detailsPage.highlightElement(inKitsCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1499,7 +2110,14 @@ export const runERP_969 = () => {
         const expectedDeficit = parseInt(freeQuantityValueForDeficit?.trim() || '0') - parseInt(needValueForDeficit?.trim() || '0');
         console.log(`Calculated expected deficit: ${freeQuantityValueForDeficit} - ${needValueForDeficit} = ${expectedDeficit}`);
 
-        expect(parseInt(deficitValue?.trim() || '0')).toBe(expectedDeficit);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(deficitValue?.trim() || '0')).toBe(expectedDeficit);
+          },
+          'Verify deficit value matches expected',
+          test.info(),
+        );
         await detailsPage.highlightElement(deficitCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1515,7 +2133,7 @@ export const runERP_969 = () => {
         await ownQuantityInput.fill(currentBuildQuantity.toString());
         await ownQuantityInput.press('Enter');
         await kittingPage.waitForLoadState('networkidle');
-        await kittingPage.waitForTimeout(1000);
+        await kittingPage.waitForTimeout(TIMEOUTS.STANDARD);
         await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1524,7 +2142,14 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(needCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const updatedNeedQuantity = await needCell.textContent();
         console.log(`Updated need quantity: "${updatedNeedQuantity}"`);
-        expect(parseInt(updatedNeedQuantity?.trim() || '0')).toBe(currentBuildQuantity * specificationQuantity);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(updatedNeedQuantity?.trim() || '0')).toBe(currentBuildQuantity * specificationQuantity);
+          },
+          'Verify updated need quantity calculation',
+          test.info(),
+        );
         await detailsPage.highlightElement(needCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1540,7 +2165,14 @@ export const runERP_969 = () => {
         const updatedExpectedDeficit = parseInt(updatedFreeQuantityValueForDeficit?.trim() || '0') - parseInt(updatedNeedValueForDeficit?.trim() || '0');
         console.log(`Recalculated expected deficit: ${updatedFreeQuantityValueForDeficit} - ${updatedNeedValueForDeficit} = ${updatedExpectedDeficit}`);
 
-        expect(parseInt(updatedDeficitValue?.trim() || '0')).toBe(updatedExpectedDeficit);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(parseInt(updatedDeficitValue?.trim() || '0')).toBe(updatedExpectedDeficit);
+          },
+          'Verify updated deficit value matches expected',
+          test.info(),
+        );
         await detailsPage.highlightElement(deficitCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1548,34 +2180,69 @@ export const runERP_969 = () => {
       await allure.step('Sub-step 16.30: Verify complete set button is now visible', async () => {
         completeSetButton = kittingPage.locator(SelectorsModalWaybill.COMPLETE_SET_BUTTON);
         await detailsPage.highlightElement(completeSetButton, HIGHLIGHT.HIGHLIGHT_PENDING);
-        await expect(completeSetButton).toBeVisible({ timeout: 5000 });
-        await expect(completeSetButton).toBeEnabled({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(completeSetButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify complete set button is visible',
+          test.info(),
+        );
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(completeSetButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify complete set button is enabled',
+          test.info(),
+        );
         await detailsPage.highlightElement(completeSetButton, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
       // Sub-step 16.31: Verify warning message is no longer present
       await allure.step('Sub-step 16.31: Verify warning message is no longer present', async () => {
         if (warningMessage) {
-          await expect(warningMessage).not.toBeVisible({ timeout: 5000 });
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(warningMessage).not.toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            },
+            'Verify warning message is not visible',
+            test.info(),
+          );
         }
-        await kittingPage.waitForTimeout(5000);
+        await kittingPage.waitForTimeout(TIMEOUTS.VERY_LONG);
       });
 
       // Sub-step 16.32: Click complete set button
       await allure.step('Sub-step 16.32: Click complete set button', async () => {
         await completeSetButton.click();
         await kittingPage.waitForLoadState('networkidle');
-        await kittingPage.waitForTimeout(1000);
+        await kittingPage.waitForTimeout(TIMEOUTS.STANDARD);
       });
 
       // Sub-step 16.33: Verify order selection warning appears
       await allure.step('Sub-step 16.33: Verify order selection warning appears', async () => {
         const selectOrderWarning = kittingPage.locator(SelectorsModalWaybill.NOTIFICATION_DESCRIPTION);
         await detailsPage.highlightElement(selectOrderWarning, HIGHLIGHT.HIGHLIGHT_PENDING);
-        await expect(selectOrderWarning).toBeVisible({ timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(selectOrderWarning).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify select order warning is visible',
+          test.info(),
+        );
         const selectOrderText = await selectOrderWarning.textContent();
         console.log(`Select order warning: "${selectOrderText}"`);
-        expect(selectOrderText).toContain('Выберите заказ');
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(selectOrderText).toContain('Выберите заказ');
+          },
+          'Verify select order warning text',
+          test.info(),
+        );
         await detailsPage.highlightElement(selectOrderWarning, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1585,7 +2252,7 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(checkboxCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         await checkboxCell.click();
         await kittingPage.waitForLoadState('networkidle');
-        await kittingPage.waitForTimeout(1000);
+        await kittingPage.waitForTimeout(TIMEOUTS.STANDARD);
         await detailsPage.highlightElement(checkboxCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
       });
 
@@ -1593,9 +2260,9 @@ export const runERP_969 = () => {
       await allure.step('Sub-step 16.35: Click complete set button again', async () => {
         await detailsPage.highlightElement(completeSetButton, HIGHLIGHT.HIGHLIGHT_PENDING);
 
-        await kittingPage.waitForTimeout(1000);
+        await kittingPage.waitForTimeout(TIMEOUTS.STANDARD);
         await detailsPage.highlightElement(completeSetButton, HIGHLIGHT.HIGHLIGHT_SUCCESS);
-        await kittingPage.waitForTimeout(1000);
+        await kittingPage.waitForTimeout(TIMEOUTS.STANDARD);
         await completeSetButton.click();
         await kittingPage.waitForLoadState('networkidle');
       });
@@ -1603,7 +2270,14 @@ export const runERP_969 = () => {
       // Sub-step 16.36: Verify return to main kitting page
       await allure.step('Sub-step 16.36: Verify return to main kitting page', async () => {
         const pageTitle = kittingPage.locator(SelectorsAssemblyKittingOnThePlan.COMPLETING_CBE_TITLE_ASSEMBLY_KITTING_ON_PLAN);
-        await expect(pageTitle).toHaveText('Комплектация сборок на план', { timeout: 5000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(pageTitle).toHaveText('Комплектация сборок на план', { timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify page title has expected text',
+          test.info(),
+        );
       });
 
       // Sub-step 16.37: Refresh page and search for SB again after completion
@@ -1611,10 +2285,17 @@ export const runERP_969 = () => {
         // Refresh the page to get updated completion percentage from server
         console.log('Refreshing page to get updated completion percentage...');
         await kittingPage.reload({ waitUntil: 'networkidle' });
-        await kittingPage.waitForTimeout(3000);
+        await kittingPage.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const kittingTable2 = kittingPage.locator(SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE);
-        await expect(kittingTable2).toBeVisible({ timeout: 10000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(kittingTable2).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify kitting table 2 is visible',
+          test.info(),
+        );
 
         console.log(`Searching for: "${TEST_DATA.NEW_SB_A}"`);
         await kittingPageHelper.searchWithPressSequentially(SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT, TEST_DATA.NEW_SB_A);
@@ -1626,7 +2307,14 @@ export const runERP_969 = () => {
       // Sub-step 16.38: Get the first row after search
       await allure.step('Sub-step 16.38: Get the first row after search', async () => {
         const kittingTable3 = kittingPage.locator(SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE);
-        await expect(kittingTable3).toBeVisible({ timeout: 10000 });
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(kittingTable3).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify kitting table 3 is visible',
+          test.info(),
+        );
 
         firstRow3 = kittingTable3.locator('tbody tr').first();
         await detailsPage.highlightElement(firstRow3, HIGHLIGHT.HIGHLIGHT_SUCCESS);
@@ -1634,14 +2322,21 @@ export const runERP_969 = () => {
 
       // Sub-step 16.39: Verify updated name cell
       await allure.step('Sub-step 16.39: Verify updated name cell', async () => {
-        await kittingPage.waitForTimeout(1000);
+        await kittingPage.waitForTimeout(TIMEOUTS.STANDARD);
         const rowNameCell = firstRow3.locator(
           `[data-testid^="${SelectorsERP969.TABLE_COMPLECT_TABLE_ROW_CELL}"][data-testid$="${SelectorsERP969.TABLE_COMPLECT_TABLE_ROW_CELL_NAME}"]`,
         );
         await detailsPage.highlightElement(rowNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const rowName = await rowNameCell.textContent();
         console.log(`Row name: "${rowName}"`);
-        expect(rowName?.trim()).toBe(TEST_DATA.NEW_SB_A);
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(rowName?.trim()).toBe(TEST_DATA.NEW_SB_A);
+          },
+          'Verify row name matches',
+          test.info(),
+        );
         await detailsPage.highlightElement(rowNameCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
         // Sub-step 16.40: Verify updated ordered quantity
@@ -1652,12 +2347,26 @@ export const runERP_969 = () => {
           );
 
           // Wait for the element to be visible and attached before highlighting
-          await expect(orderedCell).toBeVisible({ timeout: 10000 });
-          await page.waitForTimeout(300); // Small wait to ensure element is stable
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(orderedCell).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify ordered cell is visible',
+            test.info(),
+          );
+          await page.waitForTimeout(TIMEOUTS.SHORT); // Small wait to ensure element is stable
           await detailsPage.highlightElement(orderedCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const orderedValue = await orderedCell.textContent();
           console.log(`Ordered value: "${orderedValue}"`);
-          expect(orderedValue?.trim()).toBe(orderedQuantity.toString());
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(orderedValue?.trim()).toBe(orderedQuantity.toString());
+            },
+            'Verify ordered value matches',
+            test.info(),
+          );
           await detailsPage.highlightElement(orderedCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1669,7 +2378,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(operationsCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const operationsValue = await operationsCell.textContent();
           console.log(`Operations value: "${operationsValue}"`);
-          expect(operationsValue?.trim()).toBe(specificationQuantity.toString());
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(operationsValue?.trim()).toBe(specificationQuantity.toString());
+            },
+            'Verify operations value matches',
+            test.info(),
+          );
           await detailsPage.highlightElement(operationsCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1683,7 +2399,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(statusCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const statusValue = await statusCell.textContent();
           console.log(`Status value: "${statusValue}"`);
-          expect(statusValue?.trim()).toBe(`${expectedCompletionPercentage}%`);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(statusValue?.trim()).toBe(`${expectedCompletionPercentage}%`);
+            },
+            'Verify status value matches',
+            test.info(),
+          );
           await detailsPage.highlightElement(statusCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1695,7 +2418,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(completionLevelCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const completionLevelValue = await completionLevelCell.textContent();
           console.log(`Completion level: "${completionLevelValue}"`);
-          expect(completionLevelValue?.trim()).toBe(`${expectedCompletionPercentage}%`);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(completionLevelValue?.trim()).toBe(`${expectedCompletionPercentage}%`);
+            },
+            'Verify completion level matches',
+            test.info(),
+          );
           await detailsPage.highlightElement(completionLevelCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1708,7 +2438,7 @@ export const runERP_969 = () => {
           );
           await detailsPage.highlightElement(designationCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           await designationCell.dblclick();
-          await kittingPage.waitForTimeout(2000);
+          await kittingPage.waitForTimeout(TIMEOUTS.LONG);
           await detailsPage.highlightElement(designationCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1717,17 +2447,38 @@ export const runERP_969 = () => {
           // First locate the dialog element
 
           const waybillModal = kittingPage.locator(`dialog[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_WAYBILL_DETAILS_RIGHT_NEW}"]`);
-          await expect(waybillModal).toBeVisible({ timeout: 10000 });
+          await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify waybill modal is visible',
+          test.info(),
+        );
 
           // Find the h4 title within the modal since the data-testid was removed
           const modalTitle = waybillModal.locator('h4');
           await detailsPage.highlightElement(modalTitle, HIGHLIGHT.HIGHLIGHT_PENDING);
-          await expect(modalTitle).toBeVisible({ timeout: 10000 });
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(modalTitle).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify modal title is visible',
+            test.info(),
+          );
 
           // Validate modal title
           const titleText = await modalTitle.textContent();
           console.log(`Modal title: "${titleText}"`);
-          expect(titleText?.trim()).toContain('Накладная на комплектацию Сборки');
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(titleText?.trim()).toContain('Накладная на комплектацию Сборки');
+            },
+            'Verify modal title contains expected text',
+            test.info(),
+          );
           await detailsPage.highlightElement(modalTitle, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1738,7 +2489,14 @@ export const runERP_969 = () => {
           const collectedQuantityValue = await collectedQuantityCell.textContent();
           const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
           console.log(`Collected quantity: "${collectedQuantityValue}"`);
-          expect(parseInt(collectedQuantityValue?.trim() || '0')).toBe(currentBuildQuantity);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(parseInt(collectedQuantityValue?.trim() || '0')).toBe(currentBuildQuantity);
+            },
+            'Verify collected quantity matches current build quantity',
+            test.info(),
+          );
         });
 
         // Sub-step 17.8: Validate required quantity cell
@@ -1747,7 +2505,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const requiredQuantityValue = await requiredQuantityCell.textContent();
           console.log(`Required quantity: "${requiredQuantityValue}"`);
-          expect(parseInt(requiredQuantityValue?.trim() || '0')).toBe(orderedQuantity);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(parseInt(requiredQuantityValue?.trim() || '0')).toBe(orderedQuantity);
+            },
+            'Verify required quantity matches ordered quantity',
+            test.info(),
+          );
           await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1758,7 +2523,14 @@ export const runERP_969 = () => {
           const ownQuantityValue = await ownQuantityInput.inputValue();
 
           console.log(`Own quantity input: "${ownQuantityValue}"`);
-          expect(parseInt(ownQuantityValue?.trim() || '0')).toBe(orderedQuantity - currentBuildQuantity);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(parseInt(ownQuantityValue?.trim() || '0')).toBe(orderedQuantity - currentBuildQuantity);
+            },
+            'Verify own quantity calculation',
+            test.info(),
+          );
           await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT.HIGHLIGHT_SUCCESS);
           currentBuildQuantity = parseInt(ownQuantityValue?.trim() || '0');
         });
@@ -1769,7 +2541,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(waybillNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const waybillNameValue = await waybillNameCell.textContent();
           console.log(`Waybill name: "${waybillNameValue}"`);
-          expect(waybillNameValue?.trim()).toBe(TEST_DATA.NEW_SB_A);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(waybillNameValue?.trim()).toBe(TEST_DATA.NEW_SB_A);
+            },
+            'Verify waybill name matches',
+            test.info(),
+          );
           await detailsPage.highlightElement(waybillNameCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1779,7 +2558,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT.HIGHLIGHT_PENDING);
           const totalQuantityText = await totalQuantityLabel.textContent();
           console.log(`Total quantity label: "${totalQuantityText}"`);
-          expect(totalQuantityText?.trim()).toBe('Всего: 0');
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(totalQuantityText?.trim()).toBe('Всего: 0');
+            },
+            'Verify total quantity label is Всего: 0',
+            test.info(),
+          );
           await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1789,7 +2575,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(orderNumberCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const orderNumberValue = await orderNumberCell.textContent();
           console.log(`Order number: "${orderNumberValue}"`);
-          expect(orderNumberValue?.trim()).toBe(`№${orderNumber}`);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(orderNumberValue?.trim()).toBe(`№${orderNumber}`);
+            },
+            'Verify order number matches',
+            test.info(),
+          );
           await detailsPage.highlightElement(orderNumberCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1799,7 +2592,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const remainingQuantityValue = await remainingQuantityCell.textContent();
           console.log(`Remaining quantity: "${remainingQuantityValue}"`);
-          expect(parseInt(remainingQuantityValue?.trim() || '0')).toBe(orderedQuantity);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(parseInt(remainingQuantityValue?.trim() || '0')).toBe(orderedQuantity);
+            },
+            'Verify remaining quantity matches ordered quantity',
+            test.info(),
+          );
           await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1809,7 +2609,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(totalLeftToDoLabel, HIGHLIGHT.HIGHLIGHT_PENDING);
           const totalLeftToDoText = await totalLeftToDoLabel.textContent();
           console.log(`Total left to do: "${totalLeftToDoText}"`);
-          expect(totalLeftToDoText?.trim()).toBe(`Всего: ${orderedQuantity}`);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(totalLeftToDoText?.trim()).toBe(`Всего: ${orderedQuantity}`);
+            },
+            'Verify total left to do text',
+            test.info(),
+          );
           await detailsPage.highlightElement(totalLeftToDoLabel, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1819,7 +2626,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(detailNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const detailNameValue = await detailNameCell.textContent();
           console.log(`Detail name: "${detailNameValue}"`);
-          expect(detailNameValue?.trim()).toBe(TEST_DATA.NEW_DETAIL_A);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(detailNameValue?.trim()).toBe(TEST_DATA.NEW_DETAIL_A);
+            },
+            'Verify detail name matches',
+            test.info(),
+          );
           await detailsPage.highlightElement(detailNameCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1835,7 +2649,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(needCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const needValue = await needCell.textContent();
           console.log(`Need value: "${needValue}"`);
-          expect(parseInt(needValue?.trim() || '0')).toBe(currentBuildQuantity * specificationQuantity);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(parseInt(needValue?.trim() || '0')).toBe(currentBuildQuantity * specificationQuantity);
+            },
+            'Verify need value calculation',
+            test.info(),
+          );
           await detailsPage.highlightElement(needCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1854,7 +2675,14 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(quantityPerUnitCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const quantityPerUnitValue = await quantityPerUnitCell.textContent();
           console.log(`Quantity per unit: "${quantityPerUnitValue}"`);
-          expect(parseInt(quantityPerUnitValue?.trim() || '0')).toBe(specificationQuantity);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(parseInt(quantityPerUnitValue?.trim() || '0')).toBe(specificationQuantity);
+            },
+            'Verify quantity per unit matches specification quantity',
+            test.info(),
+          );
           await detailsPage.highlightElement(quantityPerUnitCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
 
@@ -1865,7 +2693,14 @@ export const runERP_969 = () => {
           const freeQuantityValue = await freeQuantityCell.textContent();
           console.log(`Free quantity: "${freeQuantityValue}"`);
           const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(TEST_DATA.NEW_DETAIL_A);
-          expect(parseInt(freeQuantityValue?.trim() || '0')).toBe(expectedFreeQuantity);
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(parseInt(freeQuantityValue?.trim() || '0')).toBe(expectedFreeQuantity);
+            },
+            'Verify free quantity matches expected',
+            test.info(),
+          );
           await detailsPage.highlightElement(freeQuantityCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
       });
