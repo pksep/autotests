@@ -30,6 +30,7 @@ import { runU006 } from './testcases/U006.spec';
 import { runU007 } from './testcases/U007.spec';
 import { runCheckTableTotals } from './testcases/CheckTableTotals.spec';
 import { runERP_969 } from './testcases/ERP-969.spec';
+import { runERP_3015 } from './testcases/ERP-3015.spec';
 import { runERP_969_2 } from './testcases/ERP-969-2.spec';
 import { runAuthAPI } from './testcases/APIAuth.spec';
 import { runUsersAPI } from './testcases/APIUsers.spec';
@@ -89,6 +90,15 @@ export const testSuites = {
       {
         test: runERP_969_2,
         description: 'This test checks the ERP-969-2',
+      },
+    ],
+  },
+  ERP_3015: {
+    description: 'ERP-2969 test suite to verify functionalities specific to ERP-3015.',
+    tests: [
+      {
+        test: runERP_3015,
+        description: 'This test checks the ERP-3015',
       },
     ],
   },

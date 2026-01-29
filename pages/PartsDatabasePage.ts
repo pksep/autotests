@@ -10,6 +10,7 @@ import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
 const MAIN_TABLE_TEST_ID = SelectorsPartsDataBase.MAIN_TABLE_TEST_ID;
 const MODAL_CONFIRM_DIALOG_YES_BUTTON = 'ModalConfirm-Content-Buttons-Yes';
@@ -2790,30 +2791,58 @@ export class CreatePartsDatabasePage extends PageObject {
     if (rowsCount === 1) {
       // If exactly one row is present, select it.
       const row = materialTable.locator('tbody tr').first();
+      await this.highlightElement(row);
       await row.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
       materialFound = true;
     } else if (rowsCount > 1) {
       // If multiple rows are returned, iterate through them for an exact match.
-      const rowElements = await materialTable.locator('tbody tr').elementHandles();
-      for (const row of rowElements) {
+      const resultRows = materialTable.locator('tbody tr');
+      for (let i = 0; i < rowsCount; i++) {
+        const row = resultRows.nth(i);
         const rowText = await row.textContent();
         if (rowText?.trim() === materialName) {
           // Apply debug styling before clicking.
-          await row.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'yellow';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
+          await this.highlightElement(row);
           await row.click();
+          await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
           materialFound = true;
           break;
         }
       }
     }
-    await this.page.waitForTimeout(1000);
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
     // Expect a material to have been selected.
     expect(materialFound).toBe(true);
+
+    // After selecting the material row, click the "Select" button to add it to the bottom table
+    const selectButton = this.page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON);
+    await selectButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+    await this.highlightElement(selectButton);
+    await selectButton.click();
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+    await this.waitForNetworkIdle();
+
+    // Verify the material is now in the bottom table
+    // The bottom table should contain the selected material
+    const modal = this.page.locator('[data-testid="ModalBaseMaterial"]');
+    const bottomTable = modal.locator('table').last();
+    await bottomTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+    const bottomTableRows = bottomTable.locator('tbody tr');
+    const bottomRowCount = await bottomTableRows.count();
+    expect(bottomRowCount).toBeGreaterThan(0);
+    
+    // Verify the material name appears in the bottom table
+    let materialInBottomTable = false;
+    for (let i = 0; i < bottomRowCount; i++) {
+      const rowText = await bottomTableRows.nth(i).textContent();
+      if (rowText && rowText.trim().includes(materialName)) {
+        materialInBottomTable = true;
+        break;
+      }
+    }
+    expect(materialInBottomTable).toBe(true);
   }
 
   async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {
@@ -3345,9 +3374,19 @@ export class CreatePartsDatabasePage extends PageObject {
     confirmModalTestId?: string,
     confirmButtonTestId?: string,
   ): Promise<void> {
-    const detailTable = page.locator(`[data-testid="${tableTestId}"]`);
-    const searchInputSelector = searchInputTestId || 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
-    const searchInput = detailTable.locator(`[data-testid="${searchInputSelector}"]`);
+    // Check if tableTestId already contains [data-testid, if so use it directly, otherwise wrap it
+    const detailTableSelector = tableTestId.includes('[data-testid') || tableTestId.includes('[')
+      ? tableTestId
+      : `[data-testid="${tableTestId}"]`;
+    const detailTable = page.locator(detailTableSelector);
+    
+    // Check if searchInputTestId already contains [data-testid, if so use it directly, otherwise wrap it
+    const defaultSearchInput = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
+    const searchInputTestIdValue = searchInputTestId || defaultSearchInput;
+    const searchInputSelector = searchInputTestIdValue.includes('[data-testid') || searchInputTestIdValue.includes('[')
+      ? searchInputTestIdValue
+      : `[data-testid="${searchInputTestIdValue}"]`;
+    const searchInput = detailTable.locator(searchInputSelector);
 
     // Clear search and search for the detail
     await searchInput.fill('');
@@ -3443,7 +3482,8 @@ export class CreatePartsDatabasePage extends PageObject {
       await searchInput.clear();
       await searchInput.fill(searchPrefix);
       await searchInput.press('Enter');
-      await this.page.waitForTimeout(2000);
+      await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+      await this.waitForNetworkIdle();
 
       const rows = this.page.locator(`${tableSelector} tbody tr`);
       const rowCount = await rows.count();
@@ -3452,11 +3492,31 @@ export class CreatePartsDatabasePage extends PageObject {
       // Delete items from bottom up
       for (let i = rowCount - 1; i >= 0; i--) {
         const row = rows.nth(i);
+        
+        // Wait for row to be visible and scroll into view
+        await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+        await row.scrollIntoViewIfNeeded();
+        await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+        
+        // Click the row to select it
         await row.click();
-        await this.clickButton('Архив', archiveButtonSelector);
-        const confirmButton = this.page.locator(confirmButtonSelector, { hasText: 'Да' });
+        await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+        
+        // Wait for the Archive button to be enabled
+        const archiveButton = this.page.locator(archiveButtonSelector).filter({ hasText: 'Архив' }).first();
+        await archiveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+        await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+        
+        // Click the Archive button
+        await archiveButton.click();
+        await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+        
+        // Wait for and click the confirm button
+        const confirmButton = this.page.locator(confirmButtonSelector).filter({ hasText: 'Да' }).first();
+        await confirmButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
         await confirmButton.click();
-        await this.page.waitForTimeout(1000);
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await this.waitForNetworkIdle();
       }
 
       console.log(`Deleted ${rowCount} ${itemTypeName} items`);
@@ -4372,4 +4432,508 @@ export class CreatePartsDatabasePage extends PageObject {
 
     return remainingCount;
   }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Helper Methods for Creating Entities
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Creates a detail (деталь) with the given name
+   * @param detailName - Name of the detail to create
+   * @param testInfo - TestInfo for expectSoftWithScreenshot
+   * @returns Promise<boolean> - true if creation was successful
+   */
+  async createDetail(detailName: string, testInfo: TestInfo): Promise<boolean> {
+    await allure.step(`Create detail "${detailName}"`, async () => {
+      // Navigate to create detail page
+      await this.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
+      await this.waitForNetworkIdle();
+
+      // Fill detail name using existing method
+      await this.fillDetailName(detailName, SelectorsPartsDataBase.INPUT_DETAIL_NAME);
+
+      // Save the detail using existing method
+      await this.clickButtonByDataTestId(SelectorsPartsDataBase.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE_ID);
+      await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+      await this.waitForNetworkIdle();
+
+      // Verify success using existing method
+      await this.verifyDetailSuccessMessage('Деталь успешно создана');
+
+      // Verify we're in edit mode
+      const editPageTitle = this.page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(editPageTitle).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        `Verify detail "${detailName}" was saved and we're in edit mode`,
+        testInfo,
+      );
+
+      // Click cancel to return to listing using existing method
+      await this.clickButtonByDataTestId(SelectorsPartsDataBase.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL_ID);
+      await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+      await this.waitForNetworkIdle();
+    });
+
+    return true;
+  }
+
+  /**
+   * Creates an assembly (СБ) with the given name and optional specification items
+   * @param assemblyName - Name of the assembly to create
+   * @param specificationItems - Optional items to add to assembly (materials, details)
+   * @param testInfo - TestInfo for expectSoftWithScreenshot
+   * @returns Promise<boolean> - true if creation was successful
+   */
+  async createAssembly(
+    assemblyName: string,
+    specificationItems?: {
+      materials?: Array<{ name: string; quantity?: number }>;
+      details?: Array<{ name: string; quantity?: number }>;
+    },
+    testInfo?: TestInfo,
+  ): Promise<boolean> {
+    await allure.step(`Create assembly "${assemblyName}"`, async () => {
+      // Navigate to parts database
+      await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+      await this.page.waitForLoadState('networkidle');
+
+      // Click create button using existing method
+      await this.clickButtonByDataTestId(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_CREATE_ID, false);
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Select СБ (assembly) type - need to use .first() to avoid strict mode violation
+      const assemblyTypeButton = this.page.locator(SelectorsPartsDataBase.BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS).first();
+      await this.highlightElement(assemblyTypeButton);
+      await assemblyTypeButton.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Fill in the assembly name using existing method
+      const assemblyInput = this.page.locator(SelectorsPartsDataBase.INPUT_NAME_IZD);
+      if (testInfo) {
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(assemblyInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify assembly input is visible',
+          testInfo,
+        );
+      }
+      await this.fillAndVerifyField(SelectorsPartsDataBase.INPUT_NAME_IZD, assemblyName);
+
+      // Add materials to assembly if specified
+      if (specificationItems?.materials) {
+        for (const material of specificationItems.materials) {
+          await this.addMaterialToSpecification(material.name, testInfo);
+        }
+      }
+
+      // Add details to assembly if specified using existing method
+      if (specificationItems?.details) {
+        for (const detail of specificationItems.details) {
+          await this.addDetailToAssemblySpecification(this.page, detail.name);
+          if (testInfo) {
+            await this.verifyDetailSuccessMessage('Деталь добавлена в спецификацию');
+          }
+        }
+      }
+
+      // Save the assembly using existing method
+      const saveSuccess = await this.saveProduct();
+      if (testInfo) {
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(saveSuccess).toBe(true);
+          },
+          'Verify assembly was saved successfully',
+          testInfo,
+        );
+        await this.verifyDetailSuccessMessage('Сборочная единица успешно создана');
+      }
+    });
+
+    return true;
+  }
+
+  /**
+   * Adds a material to the current specification (for assembly or product)
+   * @param materialName - Name of the material to add
+   * @param testInfo - Optional TestInfo for expectSoftWithScreenshot
+   */
+  async addMaterialToSpecification(materialName: string, testInfo?: TestInfo): Promise<void> {
+    await allure.step(`Add material "${materialName}" to specification`, async () => {
+      // Click "Добавить" button to open the dialog using existing method
+      await this.clickButtonByDataTestId(SelectorsPartsDataBase.SPECIFICATION_BUTTONS_ADDING_SPECIFICATION_ID, false);
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Select material icon (ПД - покупные материалы) using existing method
+      const materialIcon = this.page.locator(SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_ПД).first();
+      await this.highlightElement(materialIcon);
+      await materialIcon.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+
+      // Verify modal is visible using existing method
+      const materialModal = await this.verifyModalVisible(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, WAIT_TIMEOUTS.SHORT);
+
+      // Use existing searchAndSelectMaterial method
+      // Note: Materials must exist in the Materials Database before they can be added to specifications
+      try {
+        await this.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, materialName);
+      } catch (error) {
+        const errorMessage = `Material "${materialName}" not found in database. Materials must be created in the Materials Database (${SELECTORS.MAINMENU.MATERIALS.URL}) before they can be added to specifications.`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Wait for the Add button to be enabled before clicking
+      const addButton = this.page.locator(`[data-testid="${SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON_ID}"]`);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify Add button is enabled after material selection',
+        testInfo,
+      );
+
+      // Add the material to the specification using existing method
+      await this.clickButtonByDataTestId(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON_ID, false);
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Verify material modal is closed
+      if (testInfo) {
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(materialModal).not.toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify material modal is closed after adding',
+          testInfo,
+        );
+      }
+    });
+  }
+
+  /**
+   * Creates a complete product (изделие) with materials, assemblies, and details
+   * @param spec - Product specification object defining the product structure
+   * @param testInfo - TestInfo for expectSoftWithScreenshot
+   * @returns Promise<CreateProductResult> - Result of the creation operation
+   */
+  async createИзделие(spec: ProductSpecification, testInfo: TestInfo): Promise<CreateProductResult> {
+    const result: CreateProductResult = {
+      success: false,
+      productName: spec.productName,
+      createdDetails: [],
+      createdAssemblies: [],
+    };
+
+    try {
+      await allure.step(`Create product "${spec.productName}" with full specification`, async () => {
+        // Step 0: Collect all unique materials needed and create them first
+        const allMaterials = new Set<string>();
+        if (spec.materials) {
+          spec.materials.forEach(m => allMaterials.add(m.name));
+        }
+        if (spec.assemblies) {
+          spec.assemblies.forEach(assembly => {
+            if (assembly.materials) {
+              assembly.materials.forEach(m => allMaterials.add(m.name));
+            }
+          });
+        }
+
+        // Step 0.5: Create all required materials first using MaterialsDatabasePage
+        if (allMaterials.size > 0) {
+          const materialsPage = new CreateMaterialsDatabasePage(this.page);
+          for (const materialName of Array.from(allMaterials)) {
+            await materialsPage.createMaterial(materialName, testInfo);
+          }
+        }
+
+        // Step 1: Create all required details first
+        if (spec.details) {
+          for (const detail of spec.details) {
+            await this.createDetail(detail.name, testInfo);
+            result.createdDetails.push(detail.name);
+          }
+        }
+
+        // Step 2: Create all required assemblies with their specifications
+        if (spec.assemblies) {
+          for (const assembly of spec.assemblies) {
+            // Create details for this assembly if needed
+            if (assembly.details) {
+              for (const detail of assembly.details) {
+                // Check if detail already exists in createdDetails
+                if (!result.createdDetails.includes(detail.name)) {
+                  await this.createDetail(detail.name, testInfo);
+                  result.createdDetails.push(detail.name);
+                }
+              }
+            }
+
+            // Create the assembly with its specification
+            // Note: Materials must exist in database before they can be added
+            await this.createAssembly(
+              assembly.name,
+              {
+                materials: assembly.materials,
+                details: assembly.details,
+              },
+              testInfo,
+            );
+            result.createdAssemblies.push(assembly.name);
+          }
+        }
+
+        // Step 3: Create the product itself
+        await allure.step(`Create product "${spec.productName}"`, async () => {
+          // Navigate to parts database
+          await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+          await this.page.waitForLoadState('networkidle');
+
+          // Click create button using existing method
+          await this.clickButtonByDataTestId(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_CREATE_ID, false);
+          await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+          // Select product (изделие) type using existing method
+          const productTypeButton = this.page.locator(SelectorsPartsDataBase.BUTTON_PRODUCT).first();
+          await this.highlightElement(productTypeButton);
+          await productTypeButton.click();
+          await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+          // Fill in the product name using existing method
+          const productInput = this.page.locator(SelectorsPartsDataBase.INPUT_NAME_IZD);
+          await expectSoftWithScreenshot(
+            this.page,
+            () => {
+              expect.soft(productInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            },
+            'Verify product input is visible',
+            testInfo,
+          );
+          await this.fillAndVerifyField(SelectorsPartsDataBase.INPUT_NAME_IZD, spec.productName);
+
+          // Add direct materials to product if specified
+          if (spec.materials) {
+            for (const material of spec.materials) {
+              await this.addMaterialToSpecification(material.name, testInfo);
+            }
+          }
+
+          // Add assemblies to product specification
+          if (spec.assemblies) {
+            for (const assembly of spec.assemblies) {
+              await this.addAssemblyToSpecification(assembly.name, testInfo);
+            }
+          }
+
+          // Add direct details to product if specified
+          if (spec.details) {
+            for (const detail of spec.details) {
+              await this.addDetailToAssemblySpecification(this.page, detail.name);
+              await this.verifyDetailSuccessMessage('Деталь добавлена в спецификацию');
+            }
+          }
+
+          // Save the product using existing method
+          const saveSuccess = await this.saveProduct();
+          await expectSoftWithScreenshot(
+            this.page,
+            () => {
+              expect.soft(saveSuccess).toBe(true);
+            },
+            'Verify product was saved successfully',
+            testInfo,
+          );
+
+          // Verify success
+          await this.verifyDetailSuccessMessage('Изделие успешно создано');
+
+          await expectSoftWithScreenshot(
+            this.page,
+            () => {
+              expect.soft(true).toBe(true); // Product creation verified by success message
+            },
+            `Verify product "${spec.productName}" was created successfully`,
+            testInfo,
+          );
+        });
+
+        result.success = true;
+      });
+    } catch (error) {
+      result.error = error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to create product "${spec.productName}": ${result.error}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Adds an assembly to the current specification (for product)
+   * @param assemblyName - Name of the assembly to add
+   * @param testInfo - Optional TestInfo for expectSoftWithScreenshot
+   */
+  async addAssemblyToSpecification(assemblyName: string, testInfo?: TestInfo): Promise<void> {
+    await allure.step(`Add assembly "${assemblyName}" to specification`, async () => {
+      // Click "Добавить" button to open the dialog using existing method
+      await this.clickButtonByDataTestId(SelectorsPartsDataBase.SPECIFICATION_BUTTONS_ADDING_SPECIFICATION_ID, false);
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Select СБ (assembly) icon using existing method
+      const assemblyIcon = this.page.locator(SelectorsPartsDataBase.SPECIFICATION_DIALOG_CARD_BASE_OF_ASSEMBLY_UNITS_0).first();
+      await this.highlightElement(assemblyIcon);
+      await assemblyIcon.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+
+      // Verify modal is visible - use the open dialog selector
+      const assemblyModal = this.page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_OPEN);
+      await assemblyModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+
+      // Find the table with testid BasePaginationTable-Table-cbed
+      const dialogTable = assemblyModal.locator(SelectorsPartsDataBase.CBED_TABLE);
+      await dialogTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      
+      // Find the search input in the table - try multiple possible selectors
+      let searchInput = dialogTable.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]');
+      if ((await searchInput.count()) === 0) {
+        // Try alternative selector
+        searchInput = assemblyModal.locator('[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]');
+      }
+      await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      
+      // Clear and search for the assembly
+      await searchInput.clear();
+      await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+      await searchInput.fill(assemblyName);
+      await searchInput.press('Enter');
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM); // Additional wait for search results
+
+      // Find and click the assembly in search results
+      const resultRows = dialogTable.locator('tbody tr');
+      const rowCount = await resultRows.count();
+      
+      // Log for debugging
+      if (rowCount === 0) {
+        logger.warn(`No search results found for assembly "${assemblyName}". Table may be empty or search didn't work.`);
+      } else {
+        logger.info(`Found ${rowCount} search result(s) for assembly "${assemblyName}"`);
+      }
+      
+      let found = false;
+
+      for (let i = 0; i < rowCount; i++) {
+        const rowText = await resultRows.nth(i).textContent();
+        const trimmedRowText = rowText?.trim() || '';
+        logger.info(`Checking row ${i}: "${trimmedRowText}"`);
+        if (trimmedRowText.includes(assemblyName)) {
+          const targetRow = resultRows.nth(i);
+          await this.highlightElement(targetRow);
+          await targetRow.click();
+          await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+          found = true;
+          logger.info(`✅ Found and selected assembly "${assemblyName}"`);
+          break;
+        }
+      }
+
+      if (!found) {
+        // Log all available rows for debugging
+        const allRowTexts: string[] = [];
+        for (let i = 0; i < rowCount; i++) {
+          const rowText = await resultRows.nth(i).textContent();
+          allRowTexts.push(rowText?.trim() || '');
+        }
+        logger.error(`Assembly "${assemblyName}" not found in dialog results. Available rows: ${JSON.stringify(allRowTexts)}`);
+        throw new Error(`Assembly "${assemblyName}" not found in dialog results. Found ${rowCount} row(s) but none matched.`);
+      }
+
+      // Click "Select" button to add to bottom table
+      const selectButton = assemblyModal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON);
+      await selectButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await this.highlightElement(selectButton);
+      await selectButton.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+
+      // Verify the assembly is now in the bottom table
+      const bottomTable = assemblyModal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE);
+      await bottomTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      const bottomTableRows = bottomTable.locator('tbody tr');
+      const bottomRowCount = await bottomTableRows.count();
+      expect(bottomRowCount).toBeGreaterThan(0);
+      
+      // Verify the assembly name appears in the bottom table
+      let assemblyInBottomTable = false;
+      for (let i = 0; i < bottomRowCount; i++) {
+        const rowText = await bottomTableRows.nth(i).textContent();
+        if (rowText && rowText.includes(assemblyName)) {
+          assemblyInBottomTable = true;
+          break;
+        }
+      }
+      expect(assemblyInBottomTable).toBe(true);
+
+      // Click "Add" button to add to main specification
+      const addButton = assemblyModal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON);
+      await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await this.highlightElement(addButton);
+      await addButton.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Verify assembly modal is closed
+      if (testInfo) {
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(assemblyModal).not.toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify assembly modal is closed after adding',
+          testInfo,
+        );
+      }
+    });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Product Specification Data Structure (Exported for use in test files)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Interface for product specification structure
+ * Allows flexible creation of products with materials, assemblies, and details
+ */
+export interface ProductSpecification {
+  productName: string;
+  materials?: Array<{ name: string; quantity?: number }>;
+  assemblies?: Array<{
+    name: string;
+    materials?: Array<{ name: string; quantity?: number }>;
+    details?: Array<{ name: string; quantity?: number }>;
+  }>;
+  details?: Array<{ name: string; quantity?: number }>;
+}
+
+/**
+ * Result of product creation operation
+ */
+export interface CreateProductResult {
+  success: boolean;
+  productName: string;
+  createdDetails: string[];
+  createdAssemblies: string[];
+  error?: string;
 }

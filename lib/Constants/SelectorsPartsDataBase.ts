@@ -58,6 +58,7 @@ export const BASE_FILTER_OPTION_FIRST = '[data-testid="BaseFilter-Options-0"]';
 export const BUTTON_ADD_OPERATION_SAVE = '[data-testid="EditDetal-ModalTechProcess-ModalAddOperation-SaveButton"]';
 
 export const PRODUCT_TABLE = '[data-testid="BasePaginationTable-Table-product"]';
+export const PRODUCT_TABLE_ID = 'BasePaginationTable-Table-product';
 export const PRODUCT_TABLE_DIV = '[data-testid="scroll-wrapper__horizont-wrapper"]';
 export const SEARCH_PRODUCT_ATTRIBUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
 

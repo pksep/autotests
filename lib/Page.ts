@@ -3785,6 +3785,17 @@ export class PageObject extends AbstractPage {
     return { title, message };
   }
 
+  /**
+   * Gets the text content of the latest notification description.
+   * @returns The notification description text, or empty string if not visible
+   */
+  async getLatestNotificationText(): Promise<string> {
+    const desc = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
+    const visible = await desc.isVisible().catch(() => false);
+    if (!visible) return '';
+    return (await desc.textContent())?.trim() || '';
+  }
+
   async isButtonVisibleTestId(
     page: Page,
     testId: string,
