@@ -5,6 +5,7 @@ import { CreateUsersPage } from '../pages/UsersPage';
 import { CreateStockPage } from '../pages/StockPage';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { CreateOrderedFromSuppliersPage, Supplier } from '../pages/OrderedFromSuppliersPage';
+import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
 import { SELECTORS } from '../config';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsModalWaybill from '../lib/Constants/SelectorsModalWindowConsignmentNote';
@@ -12,6 +13,7 @@ import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrdere
 import * as SelectorsAssemblyKittingOnThePlan from '../lib/Constants/SelectorsAssemblyKittingOnThePlan';
 import * as SelectorsRevision from '../lib/Constants/SelectorsRevision';
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
+import * as SelectorsAssemblyWarehouse from '../lib/Constants/SelectorsAssemblyWarehouse';
 import * as HIGHLIGHT from '../lib/Constants/HighlightStyles';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
@@ -23,6 +25,7 @@ let targetRow: any = null;
 let specificationQuantity: number = 0;
 let waybillCollections: number = 0;
 let currentBuildQuantity: number = 0;
+let createdOrders: Array<{ orderNumber: string; itemName: string; itemType: 'product' | 'assembly' }> = []; // Store orders with their items for cleanup
 
 // Get today's date in DD.MM.YYYY format
 const today = new Date().toLocaleDateString('ru-RU', {
@@ -97,10 +100,34 @@ export const runERP_3015 = () => {
     const detailsPage = new CreatePartsDatabasePage(page);
     const usersPage = new CreateUsersPage(page);
     const materialsPage = new CreateMaterialsDatabasePage(page);
+    const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
     await allure.step('Cleanup - Archive all created test items', async () => {
-      // Cleanup in reverse order: Product -> Assemblies -> Details -> Materials
+      // Cleanup in reverse order: Orders -> Product -> Assemblies -> Details -> Materials
       // Use prefix-based search to find and delete all items with the prefix (e.g., "ERPTEST_PRODUCT" finds all _001, _002, etc.)
+      
+      // 0. Archive all orders for test items (search by prefix instead of relying on stored array)
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          // Collect all item prefixes to check for orders
+          const itemPrefixes: string[] = [];
+          itemPrefixes.push(PRODUCT_PREFIX); // Product prefix
+          if (productSpec.assemblies && productSpec.assemblies.length > 0) {
+            for (const assembly of productSpec.assemblies) {
+              const assemblyPrefix = assembly.name.replace(/_\d+$/, '');
+              if (!itemPrefixes.includes(assemblyPrefix)) {
+                itemPrefixes.push(assemblyPrefix);
+              }
+            }
+          }
+
+          const totalArchivedOrders = await assemblyWarehouse.archiveOrdersByItemPrefixes(itemPrefixes);
+          expect.soft(totalArchivedOrders).toBeGreaterThanOrEqual(0); // Cleanup completed
+        },
+        `Archive all orders for test items with prefixes: ${PRODUCT_PREFIX}, ${ASSEMBLY_PREFIX}`,
+        test.info(),
+      );
       
       // 1. Archive all products with prefix (изделие)
       await expectSoftWithScreenshot(
@@ -170,6 +197,7 @@ export const runERP_3015 = () => {
       );
     });
   });
+
   test('ERP-3015 - Create test product with complex specification', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
 
@@ -257,6 +285,15 @@ export const runERP_3015 = () => {
           `Verify order was created for product "${productSpec.productName}" with order number ${orderResult.checkOrderNumber}`,
           test.info(),
         );
+
+        // Store order number with item info for cleanup
+        if (orderResult.checkOrderNumber) {
+          createdOrders.push({
+            orderNumber: orderResult.checkOrderNumber,
+            itemName: productSpec.productName,
+            itemType: 'product',
+          });
+        }
       });
 
       // Create orders for each assembly (СБ)
@@ -278,6 +315,15 @@ export const runERP_3015 = () => {
               `Verify order was created for assembly "${assembly.name}" with order number ${orderResult.checkOrderNumber}`,
               test.info(),
             );
+
+            // Store order number with item info for cleanup
+            if (orderResult.checkOrderNumber) {
+              createdOrders.push({
+                orderNumber: orderResult.checkOrderNumber,
+                itemName: assembly.name,
+                itemType: 'assembly',
+              });
+            }
           });
         }
       }
@@ -290,10 +336,34 @@ export const runERP_3015 = () => {
     const detailsPage = new CreatePartsDatabasePage(page);
     const usersPage = new CreateUsersPage(page);
     const materialsPage = new CreateMaterialsDatabasePage(page);
+    const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
     await allure.step('Cleanup - Archive all created test items', async () => {
-      // Cleanup in reverse order: Product -> Assemblies -> Details -> Materials
+      // Cleanup in reverse order: Orders -> Product -> Assemblies -> Details -> Materials
       // Use prefix-based search to find and delete all items with the prefix (e.g., "ERPTEST_PRODUCT" finds all _001, _002, etc.)
+      
+      // 0. Archive all orders for test items (search by prefix instead of relying on stored array)
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          // Collect all item prefixes to check for orders
+          const itemPrefixes: string[] = [];
+          itemPrefixes.push(PRODUCT_PREFIX); // Product prefix
+          if (productSpec.assemblies && productSpec.assemblies.length > 0) {
+            for (const assembly of productSpec.assemblies) {
+              const assemblyPrefix = assembly.name.replace(/_\d+$/, '');
+              if (!itemPrefixes.includes(assemblyPrefix)) {
+                itemPrefixes.push(assemblyPrefix);
+              }
+            }
+          }
+
+          const totalArchivedOrders = await assemblyWarehouse.archiveOrdersByItemPrefixes(itemPrefixes);
+          expect.soft(totalArchivedOrders).toBeGreaterThanOrEqual(0); // Cleanup completed
+        },
+        `Archive all orders for test items with prefixes: ${PRODUCT_PREFIX}, ${ASSEMBLY_PREFIX}`,
+        test.info(),
+      );
       
       // 1. Archive all products with prefix (изделие)
       await expectSoftWithScreenshot(

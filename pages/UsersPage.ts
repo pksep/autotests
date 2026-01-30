@@ -233,7 +233,7 @@ export class CreateUsersPage extends PageObject {
       );
 
       let currentTableNumber = params.tableNumberStart;
-      const maxAttempts = 25;
+      const maxAttempts = 100;
       let attempts = 0;
 
       while (attempts < maxAttempts && currentTableNumber > 0) {
