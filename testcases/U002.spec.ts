@@ -1110,23 +1110,73 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         );
       });
 
-      await allure.step('Step 3: Select checkbox and archive', async () => {
-        const checkbox = page
-          .locator(
-            `[data-testid^="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_START}0"][data-testid$="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_CHECKBOX_SUFFIX}"]`,
-          )
-          .first();
-        await checkbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-        await checkbox.click();
+      await allure.step('Step 3: Select checkbox and archive all matching tasks', async () => {
+        // Get all rows that match the detail name
+        let rows = page.locator(`${SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE} tbody tr`);
+        let rowCount = await rows.count();
+        console.log(`Found ${rowCount} task(s) to archive for ${detail.name}`);
 
-        await metalworkingWarehouse.archiveAndConfirm(
-          SelectorsMetalWorkingWarhouse.BUTTON_MOVE_TO_ARCHIVE_NEW,
-          SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
-        );
+        // Archive all matching tasks (there might be multiple from previous test runs)
+        let archivedCount = 0;
+        const maxArchives = 10; // Safety limit to prevent infinite loops
+        
+        while (rowCount > 0 && archivedCount < maxArchives) {
+          // Select the first row's checkbox
+          const firstRow = rows.first();
+          await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+          
+          // Find the checkbox within the first row
+          const checkbox = firstRow.locator(`[data-testid$="${SelectorsMetalworkingOperations.METALWORKING_OPERATIONS_ROW_PATTERN_CHECKBOX_SUFFIX}"]`).first();
+          await checkbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+          await checkbox.click();
+
+          await metalworkingWarehouse.archiveAndConfirm(
+            SelectorsMetalWorkingWarhouse.BUTTON_MOVE_TO_ARCHIVE_NEW,
+            SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
+          );
+
+          archivedCount++;
+          
+          // Wait for the archive to complete and table to update
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await metalworkingWarehouse.waitForNetworkIdle();
+
+          // Re-search to get updated row count
+          await metalworkingWarehouse.searchAndWaitForTable(
+            detail.name,
+            SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
+            SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
+            {
+              searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT,
+            },
+          );
+
+          // Re-get rows after search
+          rows = page.locator(`${SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE} tbody tr`);
+          const newRowCount = await rows.count();
+          
+          if (newRowCount === rowCount) {
+            // No change - might be stuck, break to avoid infinite loop
+            console.log(`⚠️ Row count unchanged after archive (${rowCount}), stopping archive loop`);
+            break;
+          }
+          
+          rowCount = newRowCount;
+          console.log(`Archived 1 task, ${rowCount} task(s) remaining for ${detail.name}`);
+        }
+        
+        if (archivedCount >= maxArchives) {
+          console.log(`⚠️ Reached maximum archive limit (${maxArchives}), stopping`);
+        }
+        
+        console.log(`✅ Completed archiving ${archivedCount} task(s) for ${detail.name}`);
       });
 
-      await allure.step('Step 4: Verify task is archived', async () => {
+      await allure.step('Step 4: Verify all tasks are archived', async () => {
         await page.waitForTimeout(TIMEOUTS.LONG);
+        await metalworkingWarehouse.waitForNetworkIdle();
+        
+        // Re-search to ensure we have the latest results
         await metalworkingWarehouse.searchAndWaitForTable(
           detail.name,
           SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
@@ -1136,19 +1186,20 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           },
         );
 
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         const rows = page.locator(`${SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE} tbody tr`);
         const rowCount = await rows.count();
 
-        // Should have no rows after archiving
+        // Should have no rows after archiving all tasks
         await expectSoftWithScreenshot(
           page,
           async () => {
             expect.soft(rowCount).toBe(0);
           },
-          `Verify task archived - no rows for ${detail.name}`,
+          `Verify all tasks archived - no rows for ${detail.name}`,
           test.info(),
         );
-        console.log(`Task successfully archived - no rows found for ${detail.name}`);
+        console.log(`✅ All tasks successfully archived - no rows found for ${detail.name}`);
       });
     }
   });

@@ -4,6 +4,7 @@ import { CreatePartsDatabasePage, ProductSpecification } from '../pages/PartsDat
 import { CreateUsersPage } from '../pages/UsersPage';
 import { CreateStockPage } from '../pages/StockPage';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
+import { CreateOrderedFromSuppliersPage, Supplier } from '../pages/OrderedFromSuppliersPage';
 import { SELECTORS } from '../config';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsModalWaybill from '../lib/Constants/SelectorsModalWindowConsignmentNote';
@@ -175,49 +176,49 @@ export const runERP_3015 = () => {
     const detailsPage = new CreatePartsDatabasePage(page);
     const usersPage = new CreateUsersPage(page);
 
-    // await allure.step('Step 1: Create test product with full specification', async () => {
-    //   const result = await detailsPage.createИзделие(productSpec, test.info());
+    await allure.step('Step 1: Create test product with full specification', async () => {
+      const result = await detailsPage.createИзделие(productSpec, test.info());
 
-    //   await expectSoftWithScreenshot(
-    //     page,
-    //     () => {
-    //       expect.soft(result.success).toBe(true);
-    //     },
-    //     'Verify product creation was successful',
-    //     test.info(),
-    //   );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(result.success).toBe(true);
+        },
+        'Verify product creation was successful',
+        test.info(),
+      );
 
-    //   await expectSoftWithScreenshot(
-    //     page,
-    //     () => {
-    //       expect.soft(result.productName).toBe(productSpec.productName);
-    //     },
-    //     `Verify product name is "${productSpec.productName}"`,
-    //     test.info(),
-    //   );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(result.productName).toBe(productSpec.productName);
+        },
+        `Verify product name is "${productSpec.productName}"`,
+        test.info(),
+      );
 
-    //   await expectSoftWithScreenshot(
-    //     page,
-    //     () => {
-    //       expect.soft(result.createdDetails.length).toBeGreaterThan(0);
-    //     },
-    //     'Verify details were created',
-    //     test.info(),
-    //   );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(result.createdDetails.length).toBeGreaterThan(0);
+        },
+        'Verify details were created',
+        test.info(),
+      );
 
-    //   await expectSoftWithScreenshot(
-    //     page,
-    //     () => {
-    //       expect.soft(result.createdAssemblies.length).toBe(productSpec.assemblies?.length || 0);
-    //     },
-    //     `Verify ${productSpec.assemblies?.length || 0} assemblies were created`,
-    //     test.info(),
-    //   );
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(result.createdAssemblies.length).toBe(productSpec.assemblies?.length || 0);
+        },
+        `Verify ${productSpec.assemblies?.length || 0} assemblies were created`,
+        test.info(),
+      );
 
-    //   if (result.error) {
-    //     throw new Error(`Product creation failed: ${result.error}`);
-    //   }
-    // });
+      if (result.error) {
+        throw new Error(`Product creation failed: ${result.error}`);
+      }
+    });
 
     await allure.step('Step 2: Create test users', async () => {
       for (const testUser of testUsers) {
@@ -233,6 +234,52 @@ export const runERP_3015 = () => {
             test.info(),
           );
         });
+      }
+    });
+
+    await allure.step('Step 3: Create orders for product and assemblies', async () => {
+      const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
+
+      // Create order for the product (Изделие)
+      await allure.step(`Create order for product "${productSpec.productName}" with quantity 10`, async () => {
+        const orderResult = await orderedFromSuppliersPage.launchIntoProductionSupplierByPrefix(
+          productSpec.productName,
+          '10',
+          Supplier.product,
+        );
+
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(orderResult.checkOrderNumber).toBeTruthy();
+            expect.soft(orderResult.checkOrderNumber.length).toBeGreaterThan(0);
+          },
+          `Verify order was created for product "${productSpec.productName}" with order number ${orderResult.checkOrderNumber}`,
+          test.info(),
+        );
+      });
+
+      // Create orders for each assembly (СБ)
+      if (productSpec.assemblies && productSpec.assemblies.length > 0) {
+        for (const assembly of productSpec.assemblies) {
+          await allure.step(`Create order for assembly "${assembly.name}" with quantity 10`, async () => {
+            const orderResult = await orderedFromSuppliersPage.launchIntoProductionSupplierByPrefix(
+              assembly.name,
+              '10',
+              Supplier.cbed,
+            );
+
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(orderResult.checkOrderNumber).toBeTruthy();
+                expect.soft(orderResult.checkOrderNumber.length).toBeGreaterThan(0);
+              },
+              `Verify order was created for assembly "${assembly.name}" with order number ${orderResult.checkOrderNumber}`,
+              test.info(),
+            );
+          });
+        }
       }
     });
   });
