@@ -34,34 +34,78 @@ const today = new Date().toLocaleDateString('ru-RU', {
   year: 'numeric',
 });
 
-// Test data for ERP-3015 - Product Specification
-const productSpec: ProductSpecification = {
-  productName: 'ERPTEST_PRODUCT_001',
-  materials: [
-    { name: 'ERPTEST_MATERIAL_001', quantity: 1 },
-  ],
-  assemblies: [
-    {
-      name: 'ERPTEST_SB_001',
-      materials: [{ name: 'ERPTEST_MATERIAL_002', quantity: 1 }],
-      details: [{ name: 'ERPTEST_DETAIL_001', quantity: 1 }],
-    },
-    {
-      name: 'ERPTEST_SB_002',
-      materials: [{ name: 'ERPTEST_MATERIAL_003', quantity: 1 }],
-      details: [{ name: 'ERPTEST_DETAIL_002', quantity: 1 }],
-    },
-  ],
-  details: [
-    { name: 'ERPTEST_DETAIL_003', quantity: 1 },
-    { name: 'ERPTEST_DETAIL_004', quantity: 1 },
-  ],
+// Test data prefixes
+const PRODUCT_PREFIX = 'ERPTEST_PRODUCT';
+const ASSEMBLY_PREFIX = 'ERPTEST_SB';
+const DETAIL_PREFIX = 'ERPTEST_DETAIL';
+const USER_PREFIX = 'ERPTEST_TEST_USER';
+
+// Type definitions for test data arrays
+type ProductItem = {
+  name: string;
+  materials?: Array<{ name: string; quantity?: number }>;
+  details?: Array<{ name: string; quantity?: number }>;
+  assemblies?: Array<{ name: string; materials?: Array<{ name: string; quantity?: number }>; details?: Array<{ name: string; quantity?: number }> }>;
 };
 
-// Test data for ERP-3015 - User Accounts (array to support multiple users)
+type AssemblyItem = {
+  name: string;
+  materials?: Array<{ name: string; quantity?: number }>;
+  details?: Array<{ name: string; quantity?: number }>;
+};
+
+type DetailItem = {
+  name: string;
+};
+
+// Test data arrays
+// Products can optionally have materials and details
+const products: ProductItem[] = [
+  { name: `${PRODUCT_PREFIX}_001` },
+  { name: `${PRODUCT_PREFIX}_002` },
+];
+
+// Test product with: 1 material, 1 assembly (with 1 material and 2 details), and 2 details
+// const products: ProductItem[] = [
+//   {
+//     name: `${PRODUCT_PREFIX}_001`,
+//     materials: [
+//       { name: `ERPTEST_MATERIAL_001`, quantity: 1 },
+//     ],
+//     assemblies: [
+//       {
+//         name: `${ASSEMBLY_PREFIX}_003`,
+//         materials: [
+//           { name: `ERPTEST_MATERIAL_002`, quantity: 1 },
+//         ],
+//         details: [
+//           { name: `${DETAIL_PREFIX}_001`, quantity: 1 },
+//           { name: `${DETAIL_PREFIX}_002`, quantity: 1 },
+//         ],
+//       },
+//     ],
+//     details: [
+//       { name: `${DETAIL_PREFIX}_003`, quantity: 1 },
+//       { name: `${DETAIL_PREFIX}_004`, quantity: 1 },
+//     ],
+//   },
+// ];
+
+// Assemblies can optionally have materials and details
+const assemblies: AssemblyItem[] = [
+  { name: `${ASSEMBLY_PREFIX}_001` },
+  { name: `${ASSEMBLY_PREFIX}_002` },
+];
+
+// Details array
+const details: DetailItem[] = [
+  { name: `${DETAIL_PREFIX}_001` },
+  { name: `${DETAIL_PREFIX}_002` },
+];
+
 const testUsers = [
   {
-    username: 'ERPTEST_TEST_USER_001',
+    username: `${USER_PREFIX}_001`,
     jobType: 'Слесарь сборщик',
     phoneSuffix: '995',
     login: 'Тестовыё сборка 1',
@@ -70,7 +114,7 @@ const testUsers = [
     tableNumberStart: 999,
   },
   {
-    username: 'ERPTEST_TEST_USER_002',
+    username: `${USER_PREFIX}_002`,
     jobType: 'Слесарь сборщик',
     phoneSuffix: '999',
     login: 'Тестовыё сборка 2',
@@ -78,20 +122,30 @@ const testUsers = [
     department: 'Сборка',
     tableNumberStart: 999,
   },
-  // Add more user objects here as needed
 ];
 
-// Extract prefixes and names from test data for cleanup
-const PRODUCT_PREFIX = productSpec.productName.replace(/_\d+$/, '');
-const ASSEMBLY_PREFIX = productSpec.assemblies?.[0]?.name.replace(/_\d+$/, '') || 'ERPTEST_SB';
-const DETAIL_PREFIX = productSpec.details?.[0]?.name.replace(/_\d+$/, '') || 'ERPTEST_DETAIL';
-const MATERIAL_NAMES = [
-  ...(productSpec.materials?.map(m => m.name) || []),
-  ...(productSpec.assemblies?.flatMap(a => a.materials?.map(m => m.name) || []) || []),
-];
-// Extract username prefix for user search (search by username, e.g., "ERPTEST_TEST_USER_001" -> "ERPTEST_TEST_USER")
-// Remove trailing underscore and number to get common prefix
-const USER_USERNAME_PREFIX = testUsers[0]?.username.replace(/_\d+$/, '') || 'ERPTEST_TEST_USER';
+// Constants for cleanup - collect material names from products and assemblies if they exist
+const MATERIAL_NAMES: string[] = (() => {
+  const materialNames: string[] = [];
+  // Collect materials from products
+  for (const product of products) {
+    if ('materials' in product && product.materials) {
+      for (const material of product.materials) {
+        materialNames.push(material.name);
+      }
+    }
+  }
+  // Collect materials from assemblies
+  for (const assembly of assemblies) {
+    if ('materials' in assembly && assembly.materials) {
+      for (const material of assembly.materials) {
+        materialNames.push(material.name);
+      }
+    }
+  }
+  return materialNames;
+})();
+const USER_USERNAME_PREFIX = USER_PREFIX;
 
 export const runERP_3015 = () => {
   test('ERP-3015 00 - Cleanup - Archive all created test items', async ({ page }) => {
@@ -113,14 +167,7 @@ export const runERP_3015 = () => {
           // Collect all item prefixes to check for orders
           const itemPrefixes: string[] = [];
           itemPrefixes.push(PRODUCT_PREFIX); // Product prefix
-          if (productSpec.assemblies && productSpec.assemblies.length > 0) {
-            for (const assembly of productSpec.assemblies) {
-              const assemblyPrefix = assembly.name.replace(/_\d+$/, '');
-              if (!itemPrefixes.includes(assemblyPrefix)) {
-                itemPrefixes.push(assemblyPrefix);
-              }
-            }
-          }
+          itemPrefixes.push(ASSEMBLY_PREFIX); // Assembly prefix
 
           const totalArchivedOrders = await assemblyWarehouse.archiveOrdersByItemPrefixes(itemPrefixes);
           expect.soft(totalArchivedOrders).toBeGreaterThanOrEqual(0); // Cleanup completed
@@ -204,47 +251,116 @@ export const runERP_3015 = () => {
     const detailsPage = new CreatePartsDatabasePage(page);
     const usersPage = new CreateUsersPage(page);
 
-    await allure.step('Step 1: Create test product with full specification', async () => {
-      const result = await detailsPage.createИзделие(productSpec, test.info());
+    await allure.step('Step 1: Create test products with full specification', async () => {
+      // Create products - build ProductSpecification from arrays, supporting optional materials/details
+      for (const product of products) {
+        // Build product spec with optional materials
+        const productSpec: ProductSpecification = {
+          productName: product.name,
+        };
+        
+        // Add materials to product if specified
+        if ('materials' in product && product.materials) {
+          productSpec.materials = product.materials;
+        }
+        
+        // Add assemblies to product only if explicitly specified in product
+        // Otherwise, assemblies are created separately (empty)
+        if ('assemblies' in product && product.assemblies) {
+          productSpec.assemblies = product.assemblies.map(assembly => {
+            const assemblySpec: { name: string; materials?: Array<{ name: string; quantity?: number }>; details?: Array<{ name: string; quantity?: number }> } = {
+              name: assembly.name,
+            };
+            
+            // Add materials to assembly if specified
+            if ('materials' in assembly && assembly.materials) {
+              assemblySpec.materials = assembly.materials;
+            }
+            
+            // Add details to assembly only if explicitly specified
+            if ('details' in assembly && assembly.details) {
+              assemblySpec.details = assembly.details;
+            }
+            
+            return assemblySpec;
+          });
+        }
+        
+        // Add details to product only if explicitly specified
+        if ('details' in product && product.details) {
+          productSpec.details = product.details;
+        }
 
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(result.success).toBe(true);
-        },
-        'Verify product creation was successful',
-        test.info(),
-      );
+        const result = await detailsPage.createИзделие(productSpec, test.info());
 
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(result.productName).toBe(productSpec.productName);
-        },
-        `Verify product name is "${productSpec.productName}"`,
-        test.info(),
-      );
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(result.success).toBe(true);
+          },
+          `Verify product "${product.name}" creation was successful`,
+          test.info(),
+        );
 
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(result.createdDetails.length).toBeGreaterThan(0);
-        },
-        'Verify details were created',
-        test.info(),
-      );
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(result.productName).toBe(product.name);
+          },
+          `Verify product name is "${product.name}"`,
+          test.info(),
+        );
 
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(result.createdAssemblies.length).toBe(productSpec.assemblies?.length || 0);
-        },
-        `Verify ${productSpec.assemblies?.length || 0} assemblies were created`,
-        test.info(),
-      );
+        // Verify details only if they were specified in the product
+        if ('details' in product && product.details) {
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(result.createdDetails.length).toBeGreaterThan(0);
+            },
+            `Verify details were created for product "${product.name}"`,
+            test.info(),
+          );
+        }
 
-      if (result.error) {
-        throw new Error(`Product creation failed: ${result.error}`);
+        // Verify assemblies only if they were specified in the product
+        if ('assemblies' in product && product.assemblies) {
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(result.createdAssemblies.length).toBe(product.assemblies!.length);
+            },
+            `Verify ${product.assemblies!.length} assemblies were created for product "${product.name}"`,
+            test.info(),
+          );
+        }
+
+        if (result.error) {
+          throw new Error(`Product "${product.name}" creation failed: ${result.error}`);
+        }
+      }
+
+      // Create assemblies separately (empty, unless specified in assemblies array)
+      for (const assembly of assemblies) {
+        const specificationItems = {
+          ...(assembly.materials ? { materials: assembly.materials } : {}),
+          ...(assembly.details ? { details: assembly.details } : {}),
+        };
+
+        const assemblyCreated = await detailsPage.createAssembly(
+          assembly.name,
+          Object.keys(specificationItems).length > 0 ? specificationItems : undefined,
+          test.info(),
+        );
+
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(assemblyCreated).toBe(true);
+          },
+          `Verify assembly "${assembly.name}" was created successfully`,
+          test.info(),
+        );
       }
     });
 
@@ -265,13 +381,13 @@ export const runERP_3015 = () => {
       }
     });
 
-    await allure.step('Step 3: Create orders for product and assemblies', async () => {
+    await allure.step('Step 3: Create orders for products and assemblies', async () => {
       const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
 
-      // Create order for the product (Изделие)
-      await allure.step(`Create order for product "${productSpec.productName}" with quantity 10`, async () => {
+      // Create one order for all products (Изделие) - search by prefix to find both products
+      await allure.step(`Create order for all products with prefix "${PRODUCT_PREFIX}" with quantity 10`, async () => {
         const orderResult = await orderedFromSuppliersPage.launchIntoProductionSupplierByPrefix(
-          productSpec.productName,
+          products[0].name, // Use first product name to get prefix
           '10',
           Supplier.product,
         );
@@ -282,7 +398,7 @@ export const runERP_3015 = () => {
             expect.soft(orderResult.checkOrderNumber).toBeTruthy();
             expect.soft(orderResult.checkOrderNumber.length).toBeGreaterThan(0);
           },
-          `Verify order was created for product "${productSpec.productName}" with order number ${orderResult.checkOrderNumber}`,
+          `Verify order was created for all products with prefix "${PRODUCT_PREFIX}" with order number ${orderResult.checkOrderNumber}`,
           test.info(),
         );
 
@@ -290,42 +406,40 @@ export const runERP_3015 = () => {
         if (orderResult.checkOrderNumber) {
           createdOrders.push({
             orderNumber: orderResult.checkOrderNumber,
-            itemName: productSpec.productName,
+            itemName: PRODUCT_PREFIX, // Store prefix for cleanup
             itemType: 'product',
           });
         }
       });
 
-      // Create orders for each assembly (СБ)
-      if (productSpec.assemblies && productSpec.assemblies.length > 0) {
-        for (const assembly of productSpec.assemblies) {
-          await allure.step(`Create order for assembly "${assembly.name}" with quantity 10`, async () => {
-            const orderResult = await orderedFromSuppliersPage.launchIntoProductionSupplierByPrefix(
-              assembly.name,
-              '10',
-              Supplier.cbed,
-            );
+      // Create one order for all assemblies (СБ) - search by prefix to find both assemblies
+      if (assemblies.length > 0) {
+        await allure.step(`Create order for all assemblies with prefix "${ASSEMBLY_PREFIX}" with quantity 10`, async () => {
+          const orderResult = await orderedFromSuppliersPage.launchIntoProductionSupplierByPrefix(
+            assemblies[0].name, // Use first assembly name to get prefix
+            '10',
+            Supplier.cbed,
+          );
 
-            await expectSoftWithScreenshot(
-              page,
-              () => {
-                expect.soft(orderResult.checkOrderNumber).toBeTruthy();
-                expect.soft(orderResult.checkOrderNumber.length).toBeGreaterThan(0);
-              },
-              `Verify order was created for assembly "${assembly.name}" with order number ${orderResult.checkOrderNumber}`,
-              test.info(),
-            );
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(orderResult.checkOrderNumber).toBeTruthy();
+              expect.soft(orderResult.checkOrderNumber.length).toBeGreaterThan(0);
+            },
+            `Verify order was created for all assemblies with prefix "${ASSEMBLY_PREFIX}" with order number ${orderResult.checkOrderNumber}`,
+            test.info(),
+          );
 
-            // Store order number with item info for cleanup
-            if (orderResult.checkOrderNumber) {
-              createdOrders.push({
-                orderNumber: orderResult.checkOrderNumber,
-                itemName: assembly.name,
-                itemType: 'assembly',
-              });
-            }
-          });
-        }
+          // Store order number with item info for cleanup
+          if (orderResult.checkOrderNumber) {
+            createdOrders.push({
+              orderNumber: orderResult.checkOrderNumber,
+              itemName: ASSEMBLY_PREFIX, // Store prefix for cleanup
+              itemType: 'assembly',
+            });
+          }
+        });
       }
     });
   });
@@ -349,14 +463,7 @@ export const runERP_3015 = () => {
           // Collect all item prefixes to check for orders
           const itemPrefixes: string[] = [];
           itemPrefixes.push(PRODUCT_PREFIX); // Product prefix
-          if (productSpec.assemblies && productSpec.assemblies.length > 0) {
-            for (const assembly of productSpec.assemblies) {
-              const assemblyPrefix = assembly.name.replace(/_\d+$/, '');
-              if (!itemPrefixes.includes(assemblyPrefix)) {
-                itemPrefixes.push(assemblyPrefix);
-              }
-            }
-          }
+          itemPrefixes.push(ASSEMBLY_PREFIX); // Assembly prefix
 
           const totalArchivedOrders = await assemblyWarehouse.archiveOrdersByItemPrefixes(itemPrefixes);
           expect.soft(totalArchivedOrders).toBeGreaterThanOrEqual(0); // Cleanup completed
