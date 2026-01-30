@@ -4906,6 +4906,312 @@ export class CreatePartsDatabasePage extends PageObject {
       }
     });
   }
+
+  /**
+   * Adds tech process operations to a detail, assembly, or product
+   * @param objectName - Name of the object (detail, assembly, or product)
+   * @param objectType - Type of object: 'detail', 'assembly', or 'product'
+   * @param operationTypes - Array of operation type names to add (e.g., ["Сварочная", "Токарная"])
+   * @param testInfo - TestInfo for expectSoftWithScreenshot
+   * @param inCreatorMode - If true, object is still in creator modal (before saving). If false, object needs to be opened for editing.
+   * @returns Promise<boolean> - true if all operations were added successfully
+   */
+  async addTechProcesses(
+    objectName: string,
+    objectType: 'detail' | 'assembly' | 'product',
+    operationTypes: string[],
+    testInfo?: TestInfo,
+    inCreatorMode: boolean = false,
+  ): Promise<boolean> {
+    if (operationTypes.length === 0) {
+      console.log(`No tech processes to add for ${objectType} "${objectName}"`);
+      return true;
+    }
+
+    await allure.step(`Add tech processes to ${objectType} "${objectName}"`, async () => {
+      // If not in creator mode, we need to open the object for editing first
+      if (!inCreatorMode) {
+        // Navigate to parts database
+        await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+        await this.waitForNetworkIdle();
+
+        // Search for the object and open it for editing
+        let tableSelector: string;
+        if (objectType === 'detail') {
+          tableSelector = SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE;
+        } else if (objectType === 'assembly') {
+          tableSelector = SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE;
+        } else {
+          tableSelector = SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE;
+        }
+
+        // Use searchAndWaitForTable to search and wait for results
+        // Extract plain data-testid value from selector (remove [data-testid="..."] wrapper)
+        const searchInputTestId = SelectorsPartsDataBase.TABLE_SEARCH_INPUT.replace(/^\[data-testid="([^"]+)"\]$/, '$1');
+        await this.searchAndWaitForTable(
+          objectName,
+          tableSelector,
+          tableSelector,
+          {
+            searchInputDataTestId: searchInputTestId,
+          },
+        );
+
+        // Wait a bit for the search to fully complete
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await this.waitForNetworkIdle();
+        
+        // Close dropdown that intercepts clicks - press Escape multiple times to ensure it closes
+        await this.page.keyboard.press('Escape');
+        await this.page.waitForTimeout(TIMEOUTS.SHORT);
+        await this.page.keyboard.press('Escape');
+        await this.page.waitForTimeout(TIMEOUTS.SHORT);
+        
+        // Click outside the search area to close any dropdowns
+        await this.page.click('body', { position: { x: 1, y: 1 } });
+        await this.page.waitForTimeout(TIMEOUTS.SHORT);
+
+        // Click the first row to select it (on products page, edit button is BaseProducts-Button-Edit)
+        const firstRow = this.page.locator(`${tableSelector} tbody tr`).first();
+        await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await this.waitAndHighlight(firstRow);
+        await firstRow.click(); // Normal click so the handler runs and enables the button
+        
+        // Wait for row to be selected and edit button to be enabled
+        const editButton = this.page.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
+        await editButton.waitFor({ state: 'attached', timeout: 30000 });
+        
+        // Wait for button to be enabled (same pattern as U003.spec.ts line 1088-1095)
+        await this.page.waitForFunction(
+          (buttonSelector) => {
+            const button = document.querySelector(buttonSelector) as HTMLButtonElement;
+            return button && !button.disabled;
+          },
+          SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
+          { timeout: 30000 },
+        );
+        
+        await editButton.click();
+        
+        // Wait for edit page to load
+        await this.waitForNetworkIdle();
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      }
+
+      // Determine which button selector to use based on object type and mode
+      let techProcessButtonSelector: string;
+      if (objectType === 'detail') {
+        // For details, use EditDetal button
+        techProcessButtonSelector = SelectorsPartsDataBase.BUTTON_OPERATION;
+      } else if (objectType === 'product' && !inCreatorMode) {
+        // For products in edit mode, use Creator-Buttons-TechProcess
+        techProcessButtonSelector = '[data-testid="Creator-Buttons-TechProcess"]';
+      } else if (objectType === 'assembly' && !inCreatorMode) {
+        // For assemblies in edit mode, try Creator first, then fall back
+        const creatorButton = this.page.locator('[data-testid="Creator-Buttons-TechProcess"]');
+        const creatorCount = await creatorButton.count();
+        if (creatorCount > 0) {
+          techProcessButtonSelector = '[data-testid="Creator-Buttons-TechProcess"]';
+        } else {
+          techProcessButtonSelector = SelectorsPartsDataBase.BUTTON_OPERATION_PROCESS_ASSYMBLY;
+        }
+      } else {
+        // For products and assemblies in creator mode, use Creator button
+        techProcessButtonSelector = SelectorsPartsDataBase.BUTTON_OPERATION_PROCESS_ASSYMBLY;
+      }
+
+      // Click on "Технологический процесс" button
+      await this.waitForNetworkIdle();
+      await this.page.waitForTimeout(TIMEOUTS.LONG);
+      
+      // Wait for the edit page to be fully loaded - check for either button pattern
+      // Try both selectors to see which one is available
+      let techProcessButton = this.page.locator(techProcessButtonSelector);
+      let buttonCount = await techProcessButton.count();
+      
+      // If the selected button isn't found, try the alternative
+      if (buttonCount === 0 && !inCreatorMode && objectType !== 'detail') {
+        const alternativeButton = this.page.locator(SelectorsPartsDataBase.BUTTON_OPERATION);
+        const altButtonCount = await alternativeButton.count();
+        if (altButtonCount > 0) {
+          techProcessButtonSelector = SelectorsPartsDataBase.BUTTON_OPERATION;
+          techProcessButton = this.page.locator(techProcessButtonSelector);
+        }
+      }
+      
+      // Wait for the tech process button to be visible and enabled
+      await techProcessButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await this.waitAndHighlight(techProcessButton);
+      await techProcessButton.click();
+      
+      await this.page.waitForSelector(SelectorsPartsDataBase.MODAL_CONTENT, { timeout: WAIT_TIMEOUTS.STANDARD });
+
+      // Add each operation
+      for (let i = 0; i < operationTypes.length; i++) {
+        const operationType = operationTypes[i];
+        await allure.step(`Add operation "${operationType}" (${i + 1}/${operationTypes.length})`, async () => {
+          console.log(`🔄 Starting to add operation ${i + 1}/${operationTypes.length}: "${operationType}"`);
+          
+          // If this is not the first operation, the modal might have closed after saving
+          // Check if modal is still open, if not, click the tech process button again
+          if (i > 0) {
+            console.log(`📋 Checking if modal is still open for operation ${i + 1}...`);
+            await this.waitForNetworkIdle();
+            await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+            
+            // Check if tech process modal is still open
+            const modalContent = this.page.locator(SelectorsPartsDataBase.MODAL_CONTENT);
+            const isModalOpen = await modalContent.isVisible().catch(() => false);
+            
+            console.log(`📋 Modal is ${isModalOpen ? 'open' : 'closed'} for operation ${i + 1}`);
+            
+            if (!isModalOpen) {
+              console.log(`🔄 Modal closed, reopening for operation ${i + 1}...`);
+              // Modal closed, reopen it
+              // Wait for the page to be ready first
+              await this.waitForNetworkIdle();
+              await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+              
+              // Wait for the tech process button to be visible and enabled
+              const techProcessButton = this.page.locator(techProcessButtonSelector);
+              await techProcessButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+              await this.waitAndHighlight(techProcessButton);
+              await techProcessButton.click();
+              
+              // Wait for modal to open
+              await this.page.waitForSelector(SelectorsPartsDataBase.MODAL_CONTENT, { timeout: WAIT_TIMEOUTS.STANDARD });
+              await this.waitForNetworkIdle();
+              await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+              console.log(`✅ Modal reopened for operation ${i + 1}`);
+            }
+          }
+
+          // Click on "Добавить операцию" (Add Operation)
+          // For products/assemblies, try Creator pattern first, then fall back to EditDetal pattern
+          let addOperationButtonSelector = SelectorsPartsDataBase.BUTTON_ADD_OPERATION;
+          if (objectType === 'product' || objectType === 'assembly') {
+            const creatorAddOperation = '[data-testid="Creator-ModalTechProcess-Buttons-ButtonCreate"]';
+            const creatorButton = this.page.locator(creatorAddOperation);
+            const creatorButtonCount = await creatorButton.count();
+            if (creatorButtonCount > 0) {
+              addOperationButtonSelector = creatorAddOperation;
+            }
+          }
+          
+          // Wait for the button to be visible and enabled before clicking
+          const addButton = this.page.locator(addOperationButtonSelector);
+          await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await this.waitAndHighlight(addButton);
+          await this.clickButton('Добавить операцию', addOperationButtonSelector);
+
+          // Click on the type of operation dropdown
+          await this.waitForNetworkIdle();
+          await this.page.locator(SelectorsPartsDataBase.BASE_FILTER_TITLE).click();
+
+          // Search for operation type
+          const searchTypeOperation = this.page.locator(SelectorsPartsDataBase.BASE_FILTER_SEARCH_INPUT);
+          await searchTypeOperation.fill(operationType);
+
+          if (testInfo) {
+            await expectSoftWithScreenshot(
+              this.page,
+              async () => {
+                expect.soft(await searchTypeOperation.inputValue()).toBe(operationType);
+              },
+              `Verify search type operation input value equals "${operationType}"`,
+              testInfo,
+            );
+          }
+
+          // Select first option from dropdown
+          const filterOption = this.page.locator(SelectorsPartsDataBase.BASE_FILTER_OPTION_FIRST);
+          await filterOption.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await this.waitAndHighlight(filterOption);
+          await filterOption.click();
+          await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+
+          // Save the operation (handle nested modal if exists)
+          await this.waitForNetworkIdle();
+          await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+
+          // Check for nested modal and save it first
+          // For products/assemblies, try Creator pattern first, then fall back to EditDetal pattern
+          let nestedModalSelector = SelectorsPartsDataBase.MODAL_ADD_OPERATION;
+          let nestedSaveButtonSelector = SelectorsPartsDataBase.BUTTON_ADD_OPERATION_SAVE;
+          if (objectType === 'product' || objectType === 'assembly') {
+            const creatorNestedModal = '[data-testid="Creator-ModalTechProcess-ModalAddOperation-Modal"]';
+            const creatorNestedModalCount = await this.page.locator(creatorNestedModal).count();
+            if (creatorNestedModalCount > 0) {
+              nestedModalSelector = creatorNestedModal;
+              nestedSaveButtonSelector = '[data-testid="Creator-ModalTechProcess-ModalAddOperation-SaveButton"]';
+            }
+          }
+
+          const nestedModal = this.page.locator(`${nestedModalSelector}[open]`);
+          const isNestedModalVisible = await nestedModal.isVisible().catch(() => false);
+
+          if (isNestedModalVisible) {
+            // Use the selector directly - it already includes the button tag
+            const nestedSaveButton = this.page.locator(nestedSaveButtonSelector);
+            await nestedSaveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+            await this.waitAndHighlight(nestedSaveButton);
+            await nestedSaveButton.click({ force: true });
+            await this.page.waitForTimeout(TIMEOUTS.LONG);
+            await this.waitForNetworkIdle();
+          }
+
+          // Save the main tech process modal
+          // For products/assemblies, try Creator pattern first, then fall back to EditDetal pattern
+          let saveOperationButtonSelector = SelectorsPartsDataBase.BUTTON_SAVE_OPERATION;
+          if (objectType === 'product' || objectType === 'assembly') {
+            const creatorSaveOperation = '[data-testid="Creator-ModalTechProcess-Button-Save"]';
+            const creatorSaveButton = this.page.locator(creatorSaveOperation);
+            const creatorSaveButtonCount = await creatorSaveButton.count();
+            if (creatorSaveButtonCount > 0) {
+              saveOperationButtonSelector = creatorSaveOperation;
+            } else {
+              // If Creator pattern not found, try EditDetal pattern as fallback
+              const editDetalSaveOperation = SelectorsPartsDataBase.BUTTON_SAVE_OPERATION;
+              const editDetalSaveButton = this.page.locator(editDetalSaveOperation);
+              const editDetalSaveButtonCount = await editDetalSaveButton.count();
+              if (editDetalSaveButtonCount > 0) {
+                saveOperationButtonSelector = editDetalSaveOperation;
+              }
+            }
+          }
+
+          const mainSaveButton = this.page.locator(saveOperationButtonSelector);
+          await mainSaveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await this.waitAndHighlight(mainSaveButton);
+          
+          console.log(`💾 Clicking save button for operation "${operationType}" (${i + 1}/${operationTypes.length})`);
+          await mainSaveButton.click({ force: true });
+          await this.page.waitForTimeout(TIMEOUTS.LONG);
+          await this.waitForNetworkIdle();
+
+          // Wait for modal to stabilize
+          await this.page.waitForTimeout(TIMEOUTS.LONG);
+          await this.waitForNetworkIdle();
+
+          console.log(`✅ Added operation "${operationType}" to ${objectType} "${objectName}"`);
+        });
+      }
+
+      // Close tech process modal if still open (click Cancel or close)
+      const cancelButton = this.page.locator(SelectorsPartsDataBase.BUTTON_PROCESS_CANCEL);
+      const cancelButtonVisible = await cancelButton.isVisible().catch(() => false);
+      if (cancelButtonVisible) {
+        await this.clickButton('Отменить', SelectorsPartsDataBase.BUTTON_PROCESS_CANCEL);
+        await this.waitForNetworkIdle();
+      } else {
+        // Try to close by clicking outside or Escape
+        await this.page.keyboard.press('Escape');
+        await this.page.waitForTimeout(TIMEOUTS.SHORT);
+      }
+    });
+
+    return true;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

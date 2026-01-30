@@ -46,26 +46,33 @@ type ProductItem = {
   materials?: Array<{ name: string; quantity?: number }>;
   details?: Array<{ name: string; quantity?: number }>;
   assemblies?: Array<{ name: string; materials?: Array<{ name: string; quantity?: number }>; details?: Array<{ name: string; quantity?: number }> }>;
+  techProcesses?: string[]; // List of operation type names (e.g., ["Сварочная", "Токарная"])
 };
 
 type AssemblyItem = {
   name: string;
   materials?: Array<{ name: string; quantity?: number }>;
   details?: Array<{ name: string; quantity?: number }>;
+  techProcesses?: string[]; // List of operation type names
 };
 
 type DetailItem = {
   name: string;
+  techProcesses?: string[]; // List of operation type names
 };
 
 // Test data arrays
 // Products can optionally have materials and details
 const products: ProductItem[] = [
-  { name: `${PRODUCT_PREFIX}_001` },
+  {
+    name: `${PRODUCT_PREFIX}_001`,
+    techProcesses: [ 'Покраска'],
+  },
   { name: `${PRODUCT_PREFIX}_002` },
 ];
 
 // Test product with: 1 material, 1 assembly (with 1 material and 2 details), and 2 details
+// EXAMPLE: do not delete
 // const products: ProductItem[] = [
 //   {
 //     name: `${PRODUCT_PREFIX}_001`,
@@ -361,6 +368,47 @@ export const runERP_3015 = () => {
           `Verify assembly "${assembly.name}" was created successfully`,
           test.info(),
         );
+      }
+    });
+
+    await allure.step('Step 1.5: Add tech processes to products, assemblies, and details', async () => {
+      // Add tech processes to products
+      for (const product of products) {
+        if (product.techProcesses && product.techProcesses.length > 0) {
+          await detailsPage.addTechProcesses(
+            product.name,
+            'product',
+            product.techProcesses,
+            test.info(),
+            false, // Product is already saved, need to open for editing
+          );
+        }
+      }
+
+      // Add tech processes to assemblies
+      for (const assembly of assemblies) {
+        if (assembly.techProcesses && assembly.techProcesses.length > 0) {
+          await detailsPage.addTechProcesses(
+            assembly.name,
+            'assembly',
+            assembly.techProcesses,
+            test.info(),
+            false, // Assembly is already saved, need to open for editing
+          );
+        }
+      }
+
+      // Add tech processes to details
+      for (const detail of details) {
+        if (detail.techProcesses && detail.techProcesses.length > 0) {
+          await detailsPage.addTechProcesses(
+            detail.name,
+            'detail',
+            detail.techProcesses,
+            test.info(),
+            false, // Detail is already saved, need to open for editing
+          );
+        }
       }
     });
 

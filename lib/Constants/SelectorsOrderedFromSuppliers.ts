@@ -29,8 +29,10 @@ export const MODAL_SHIPMENTS_TO_IZED_RIGHT_MENU_MODAL = '[data-testid="ModalShip
 export const MODAL_SHIPMENTS_TO_IZED_TABLE_SCLAD = '[data-testid="ModalShipmentsToIzed-Table-Sclad"]';
 export const MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER = '[data-testid="ModalShipmentsToIzed-TbodySclad-Number"]';
 export const MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_COUNT_SHIPMENTS = '[data-testid="ModalShipmentsToIzed-TbodySclad-CountShipments"]';
-export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER = '[data-testid="ModalShipmentsToIzed-ModalWorker"]';
+export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER = 'dialog[data-testid="ModalShipmentsToIzed-ModalWorker"]';
 export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_BUTTONS_BUTTON_ARCHIVE = '[data-testid="ModalShipmentsToIzed-ModalWorker-Buttons-ButtonArchive"]';
+export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_SELECT_ALL_CHECKBOX = '[data-testid="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-SelectAll"]';
+export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_TABLE_STOCK_ORDER_ITEMS = '[data-testid="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-Table"]';
 
 // Pattern selectors for checkbox and row elements
 export const TABLE_ROW_CHECKBOX_SUFFIX = '[data-testid$="-TdCheckbox"]';

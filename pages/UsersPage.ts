@@ -506,6 +506,10 @@ export class CreateUsersPage extends PageObject {
           testInfo,
         );
         
+        // Close any open dropdowns before clicking the row
+        await this.page.keyboard.press('Escape');
+        await this.page.waitForTimeout(TIMEOUTS.SHORT);
+        
         // Click the row to select it
         await row.click();
         await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);

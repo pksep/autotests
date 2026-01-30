@@ -13,3 +13,6 @@ export const ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON = '[data-testid="AssemblySclad-
 
 export const ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO = '[data-testid="AssemblySclad-TableBody-TdKolvo"]';
 export const ASSEMBLY_SCLAD_TABLE_HEAD_POPOVER = '[data-testid="AssemblySclad-TableHead-Popover"]';
+export const ASSEMBLY_SCLAD_TABLE_BODY_TD_NAME = '[data-testid="AssemblySclad-TableBody-TdName"]';
+export const DEFICIT_CBED_TABLE_DATA_CHECKBOX = '[data-testid="DeficitCbed-TableData-Checkbox"]';
+export const ASSEMBLY_SCLAD_TABLE_HEADER_CHECKBOX_SELECT_ALL = '[data-testid="AssemblySclad-TableHeader-CheckboxSelectAll"]';
