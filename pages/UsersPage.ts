@@ -1,4 +1,4 @@
-import { Page, expect, TestInfo } from '@playwright/test';
+import { Page, expect, TestInfo, Locator } from '@playwright/test';
 import { allure } from 'allure-playwright';
 import { PageObject, expectSoftWithScreenshot } from '../lib/Page';
 import * as SelectorsSettingsPage from '../lib/Constants/SelectorsSettingsPage';
@@ -186,37 +186,161 @@ export class CreateUsersPage extends PageObject {
       );
       await passwordInput.fill(params.password);
 
-      // 9) Department dropdown - click to open and select (non-blocking if it fails)
-      const deptDropdown = this.page.locator(SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_CURRENT).first();
-      await expectSoftWithScreenshot(
-        this.page,
-        () => {
-          expect.soft(deptDropdown).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
-        },
-        'Verify department dropdown is visible',
-        testInfo,
-      );
-      await this.highlightElement(deptDropdown);
-      await deptDropdown.click();
-      await this.page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for dropdown to open
+      // 9) Department dropdown - click to open and select
+      if (params.department) {
+        // First click the department dropdown to open it
+        // Use .last() or .nth(1) because there are two dropdowns - first is job type, second is department
+        const deptDropdown = this.page.locator(SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_CURRENT).last();
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(deptDropdown).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify department dropdown is visible',
+          testInfo,
+        );
+        await this.highlightElement(deptDropdown);
+        await deptDropdown.click();
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for dropdown to open
 
-      // Try to select department option, but proceed to save even if it fails
-      try {
-        const deptOption = this.page
-          .locator(SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_OPTIONS_LIST)
-          .first()
-          .locator('li')
-          .filter({ hasText: params.department })
-          .first();
-        await deptOption.click({ timeout: WAIT_TIMEOUTS.SHORT });
-        await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-      } catch (error) {
-        // Department selection failed - proceed to save anyway (may already be selected)
+        // Wait for the dropdown options list to be visible
+        // Find the options list that's associated with the department dropdown
+        // We need to find the one that's closest to the department dropdown we clicked
+        // Since there are two dropdowns with the same pattern, we'll find all and check which one contains department options
+        const allOpenDropdowns = this.page.locator(`${SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_OPTIONS_LIST}[open="true"]`);
+        const dropdownCount = await allOpenDropdowns.count();
+        
+        let deptOptionsList: Locator | null = null;
+        // Try to find the dropdown that contains the department option we're looking for
+        for (let i = 0; i < dropdownCount; i++) {
+          const dropdown = allOpenDropdowns.nth(i);
+          const allOptionsInDropdown = dropdown.locator('li');
+          const optionCountInDropdown = await allOptionsInDropdown.count();
+          
+          // Check if this dropdown contains our target department
+          for (let j = 0; j < optionCountInDropdown; j++) {
+            const option = allOptionsInDropdown.nth(j);
+            const optionText = await option.locator('div.options__value').textContent();
+            if (optionText && optionText.trim().toLowerCase() === params.department.toLowerCase()) {
+              deptOptionsList = dropdown;
+              break;
+            }
+          }
+          if (deptOptionsList) break;
+        }
+        
+        // If we didn't find it, use the last one (department is typically second)
+        if (!deptOptionsList && dropdownCount > 0) {
+          deptOptionsList = allOpenDropdowns.last();
+        }
+        
+        if (!deptOptionsList) {
+          throw new Error('No open department dropdown found');
+        }
+        
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(deptOptionsList!).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify department dropdown options list is visible',
+          testInfo,
+        );
+
+        // Now click on the title element AFTER the dropdown is open
+        const titleElement = this.page.locator('[data-testid^="UserInfoRow-v-"][data-testid$="-title"]').filter({ hasText: 'Подразделение' }).first();
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(titleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          'Verify department title element is visible',
+          testInfo,
+        );
+        await this.highlightElement(titleElement);
+        await this.page.waitForTimeout(1000); // Wait 1 second before clicking
+        await titleElement.click();
+        await this.page.waitForTimeout(TIMEOUTS.SHORT);
+
+        // Verify dropdown is still open after clicking title, reopen if needed
+        // Check all open dropdowns and find the department one
+        const allOpenDropdownsAfterTitle = this.page.locator(`${SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_OPTIONS_LIST}[open="true"]`);
+        const dropdownCountAfterTitle = await allOpenDropdownsAfterTitle.count();
+        
+        let deptOptionsListAfterTitle: Locator | null = null;
+        if (dropdownCountAfterTitle === 1) {
+          deptOptionsListAfterTitle = allOpenDropdownsAfterTitle.first();
+        } else if (dropdownCountAfterTitle > 1) {
+          deptOptionsListAfterTitle = allOpenDropdownsAfterTitle.last(); // Department is typically the second/last one
+        }
+        
+        const isStillOpen = deptOptionsListAfterTitle ? await deptOptionsListAfterTitle.isVisible().catch(() => false) : false;
+        
+        if (!isStillOpen) {
+          // Dropdown closed, reopen it
+          await deptDropdown.click();
+          await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+          const allOpenDropdownsReopened = this.page.locator(`${SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_OPTIONS_LIST}[open="true"]`);
+          const dropdownCountReopened = await allOpenDropdownsReopened.count();
+          if (dropdownCountReopened === 1) {
+            deptOptionsListAfterTitle = allOpenDropdownsReopened.first();
+          } else if (dropdownCountReopened > 1) {
+            deptOptionsListAfterTitle = allOpenDropdownsReopened.last();
+          } else {
+            throw new Error('Department dropdown did not open after clicking');
+          }
+          await expectSoftWithScreenshot(
+            this.page,
+            () => {
+              expect.soft(deptOptionsListAfterTitle!).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify department dropdown options list is visible after reopening',
+            testInfo,
+          );
+        }
+
+        // Ensure we have a valid dropdown list
+        if (!deptOptionsListAfterTitle) {
+          throw new Error('Department dropdown options list not found');
+        }
+
+        // Find the option by iterating through all options and matching text
+        // Get all li elements in the dropdown
+        const allOptions = deptOptionsListAfterTitle.locator('li');
+        const optionCount = await allOptions.count();
+        
+        let deptOption: Locator | null = null;
+        const availableOptions: string[] = [];
+        for (let i = 0; i < optionCount; i++) {
+          const option = allOptions.nth(i);
+          const optionText = await option.locator('div.options__value').textContent();
+          const trimmedText = optionText ? optionText.trim() : '';
+          availableOptions.push(trimmedText);
+          // Match with trimmed text, case-insensitive
+          if (trimmedText.toLowerCase() === params.department.toLowerCase()) {
+            deptOption = option;
+            break;
+          }
+        }
+        
+        if (!deptOption) {
+          throw new Error(`Department option "${params.department}" not found in dropdown. Available options: ${availableOptions.join(', ')}`);
+        }
+        
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(deptOption!).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          `Verify department option "${params.department}" is visible in dropdown`,
+          testInfo,
+        );
+        await this.highlightElement(deptOption);
+        await deptOption.scrollIntoViewIfNeeded();
+        await deptOption.click();
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for selection to register and form to update
+        await this.waitForNetworkIdle(); // Wait for any network requests after selection
       }
-
-      // Wait for form to update after department selection
-      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-      await this.waitForNetworkIdle();
 
       // 10) Table number + Save, decrement on conflict
       const tableNumberInput = this.page.locator(SelectorsUsersPage.USERS_FORM_TABLE_NUMBER_INPUT).first();

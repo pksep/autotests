@@ -66,9 +66,11 @@ type DetailItem = {
 const products: ProductItem[] = [
   {
     name: `${PRODUCT_PREFIX}_001`,
-    techProcesses: [ 'Покраска'],
+    techProcesses: [ 'Покраска', 'Покраска'],
   },
-  { name: `${PRODUCT_PREFIX}_002` },
+  { name: `${PRODUCT_PREFIX}_002`,
+    techProcesses: [ 'Сборка конструкции (ПРОФИ)'],  
+ },
 ];
 
 // Test product with: 1 material, 1 assembly (with 1 material and 2 details), and 2 details
@@ -100,14 +102,22 @@ const products: ProductItem[] = [
 
 // Assemblies can optionally have materials and details
 const assemblies: AssemblyItem[] = [
-  { name: `${ASSEMBLY_PREFIX}_001` },
-  { name: `${ASSEMBLY_PREFIX}_002` },
+  { name: `${ASSEMBLY_PREFIX}_001`,
+  techProcesses: [ 'Сборка гидравлики и пневматики (ПРОФИ)'], 
+  },
+  { name: `${ASSEMBLY_PREFIX}_002` ,
+  techProcesses: [ 'ИСПЫТАНИЕ','ИСПЫТАНИЕ'], 
+  },
 ];
 
 // Details array
 const details: DetailItem[] = [
-  { name: `${DETAIL_PREFIX}_001` },
-  { name: `${DETAIL_PREFIX}_002` },
+  { name: `${DETAIL_PREFIX}_001`,
+  techProcesses: [ 'Зачистная (для разнорабочих)','Токарный-универсал'], 
+  },
+  { name: `${DETAIL_PREFIX}_002`,
+  techProcesses: [ 'Зачистная (для разнорабочих)','Фрезерный-универсал','Фрезерный-универсал'], 
+  },
 ];
 
 const testUsers = [
@@ -117,8 +127,8 @@ const testUsers = [
     phoneSuffix: '995',
     login: 'Тестовыё сборка 1',
     password: '123456',
-    department: 'Сборка',
-    tableNumberStart: 999,
+    department: 'Металлообработка',
+    tableNumberStart: 920,
   },
   {
     username: `${USER_PREFIX}_002`,
@@ -127,7 +137,7 @@ const testUsers = [
     login: 'Тестовыё сборка 2',
     password: '123456',
     department: 'Сборка',
-    tableNumberStart: 999,
+    tableNumberStart: 919,
   },
 ];
 
@@ -369,6 +379,20 @@ export const runERP_3015 = () => {
           test.info(),
         );
       }
+
+      // Create details separately
+      for (const detail of details) {
+        const detailCreated = await detailsPage.createDetail(detail.name, test.info());
+
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(detailCreated).toBe(true);
+          },
+          `Verify detail "${detail.name}" was created successfully`,
+          test.info(),
+        );
+      }
     });
 
     await allure.step('Step 1.5: Add tech processes to products, assemblies, and details', async () => {
@@ -384,6 +408,7 @@ export const runERP_3015 = () => {
           );
         }
       }
+
 
       // Add tech processes to assemblies
       for (const assembly of assemblies) {
