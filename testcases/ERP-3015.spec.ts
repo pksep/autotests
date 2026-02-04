@@ -2,20 +2,11 @@ import { test, expect, Locator, Page, TestInfo } from '@playwright/test';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, ProductSpecification } from '../pages/PartsDatabasePage';
 import { CreateUsersPage } from '../pages/UsersPage';
-import { CreateStockPage } from '../pages/StockPage';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { CreateOrderedFromSuppliersPage, Supplier } from '../pages/OrderedFromSuppliersPage';
 import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
-import { SELECTORS } from '../config';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
-import * as SelectorsModalWaybill from '../lib/Constants/SelectorsModalWindowConsignmentNote';
-import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrderedFromSuppliers';
-import * as SelectorsAssemblyKittingOnThePlan from '../lib/Constants/SelectorsAssemblyKittingOnThePlan';
-import * as SelectorsRevision from '../lib/Constants/SelectorsRevision';
-import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
-import * as SelectorsAssemblyWarehouse from '../lib/Constants/SelectorsAssemblyWarehouse';
 import * as SelectorsProductionPage from '../lib/Constants/SelectorsProductionPage';
-import * as HIGHLIGHT from '../lib/Constants/HighlightStyles';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS, RETRY_COUNTS, ROW_COLLECTION } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
 
@@ -354,7 +345,11 @@ export const runERP_3015 = () => {
         }
 
         if (result.error) {
-          throw new Error(`Product "${product.name}" creation failed: ${result.error}`);
+          throw new Error(
+            `Product "${product.name}" creation failed. Error: ${result.error}. ` +
+            `Product spec: ${JSON.stringify(productSpec)}. ` +
+            `This occurred during test setup in the "Create test product with complex specification" step.`,
+          );
         }
       }
 
@@ -622,7 +617,15 @@ export const runERP_3015 = () => {
           }
           
           if (mainRows.length === 0) {
-            throw new Error('No main rows found (all rows appear to be sub-rows with -Operation or -NonOperation)');
+            const totalRowCount = await allRows.count();
+            const tableSelector = SelectorsProductionPage.PRODUCTION_TABLE;
+            throw new Error(
+              `No main rows found in production table. ` +
+              `Total rows checked: ${totalRowCount}. ` +
+              `All rows appear to be sub-rows with "-Operation" or "-NonOperation" in their data-testid. ` +
+              `Table selector: ${tableSelector}. ` +
+              `This occurred while validating table cell values on the production page.`,
+            );
           }
           
           // Process each of the first N main rows
@@ -760,7 +763,17 @@ export const runERP_3015 = () => {
           // Parse left and right values from "10 / 10" format
           const countMatch = countText!.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
           if (!countMatch) {
-            throw new Error(`Invalid count format: ${countText}. Expected format: "number / number"`);
+            const cellSelector = `td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`;
+            const rowTestIdForError = await freshRow.getAttribute('data-testid');
+            throw new Error(
+              `Invalid count format in table cell. ` +
+              `Actual value: "${countText}". ` +
+              `Expected format: "number / number" (e.g., "10 / 10"). ` +
+              `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
+              `Cell selector: ${cellSelector}. ` +
+              `Employee: ${employeeName || 'N/A'}. ` +
+              `This occurred while parsing the count position cell value in row ${rowIndex + 1}.`,
+            );
           }
           leftValue = parseInt(countMatch[1], 10);
           rightValue = parseInt(countMatch[2], 10);
