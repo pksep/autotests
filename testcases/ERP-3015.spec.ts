@@ -524,6 +524,9 @@ export const runERP_3015 = () => {
   test('ERP-3015 - Validate table cell values in production page', async ({ page, context }) => {
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
 
+    // Page object for highlighting elements
+    const detailsPage = new CreatePartsDatabasePage(page);
+
     // Constant for number of rows to validate
     const ROWS_TO_VALIDATE = 2;
 
@@ -692,9 +695,9 @@ export const runERP_3015 = () => {
               await freshRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
               
               // Highlight the current row to verify we found it
-              await freshRow.evaluate((el: HTMLElement) => {
-                el.style.border = '5px solid blue';
-                el.style.backgroundColor = 'lightblue';
+              await detailsPage.highlightElement(freshRow, {
+                border: '5px solid blue',
+                backgroundColor: 'lightblue',
               });
               await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
 
@@ -711,27 +714,27 @@ export const runERP_3015 = () => {
               // Scroll the cell into view to ensure it's visible
               await popoverCell.scrollIntoViewIfNeeded();
               await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Wait a bit after scrolling
-              await popoverCell.evaluate((el: HTMLElement) => {
-                el.style.border = '3px solid red';
-                el.style.backgroundColor = 'pink';
+              await detailsPage.highlightElement(popoverCell, {
+                border: '3px solid red',
+                backgroundColor: 'pink',
               });
               await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
               // Second cell: TabelNumber - data-testid is on the td element itself
               const tabelNumberCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_TABEL_NUMBER_CELL_SUFFIX}"]`).first();
               await tabelNumberCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-              await tabelNumberCell.evaluate((el: HTMLElement) => {
-                el.style.border = '3px solid orange';
-                el.style.backgroundColor = 'lightyellow';
+              await detailsPage.highlightElement(tabelNumberCell, {
+                border: '3px solid orange',
+                backgroundColor: 'lightyellow',
               });
           await page.waitForTimeout(TIMEOUTS.SHORT);
 
               // Third cell: Name (employee name) - data-testid is on the td element itself
               const nameCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_NAME_CELL_SUFFIX}"]`).first();
           await nameCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-              await nameCell.evaluate((el: HTMLElement) => {
-                el.style.border = '3px solid green';
-                el.style.backgroundColor = 'lightgreen';
+              await detailsPage.highlightElement(nameCell, {
+                border: '3px solid green',
+                backgroundColor: 'lightgreen',
               });
           await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
           
@@ -750,9 +753,9 @@ export const runERP_3015 = () => {
               // Fourth cell: CountPosition - format: "10 / 10" - data-testid is on the td element itself
               const countCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`).first();
           await countCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-              await countCell.evaluate((el: HTMLElement) => {
-                el.style.border = '3px solid purple';
-                el.style.backgroundColor = 'lavender';
+              await detailsPage.highlightElement(countCell, {
+                border: '3px solid purple',
+                backgroundColor: 'lavender',
               });
           await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
           
@@ -933,9 +936,9 @@ export const runERP_3015 = () => {
                 }
                 
                 // Highlight the menu item before clicking
-                await menuItem.evaluate((el: HTMLElement) => {
-                  el.style.border = '5px solid yellow';
-                  el.style.backgroundColor = 'lightyellow';
+                await detailsPage.highlightElement(menuItem, {
+                  border: '5px solid yellow',
+                  backgroundColor: 'lightyellow',
                 });
                 await page.waitForTimeout(TIMEOUTS.LONG); // 2 second pause before clicking
                 
@@ -1004,6 +1007,9 @@ export const runERP_3015 = () => {
             
             // Sub-step 7: Highlight employee name on new page
             await allure.step('Highlight employee name on new page', async () => {
+              // Create page object for the new page
+              const newPageDetailsPage = new CreatePartsDatabasePage(newPage);
+              
               // Try to find the element by class
               const employeeElement = newPage.locator(SelectorsProductionPage.TASK_BY_USER_EMPLOYEE_CLASS);
               const elementCount = await employeeElement.count();
@@ -1013,9 +1019,9 @@ export const runERP_3015 = () => {
                 await employeeElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
                 
                 // Highlight the employee name element
-                await employeeElement.evaluate((el) => {
-                  (el as HTMLElement).style.border = '5px solid green';
-                  (el as HTMLElement).style.backgroundColor = 'lightgreen';
+                await newPageDetailsPage.highlightElement(employeeElement, {
+                  border: '5px solid green',
+                  backgroundColor: 'lightgreen',
                 });
                 await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
               } else {
@@ -1027,9 +1033,9 @@ export const runERP_3015 = () => {
                 if (textElementCount > 0) {
                   // Found by text, highlight it
                   await textElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                  await textElement.evaluate((el) => {
-                    (el as HTMLElement).style.border = '5px solid green';
-                    (el as HTMLElement).style.backgroundColor = 'lightgreen';
+                  await newPageDetailsPage.highlightElement(textElement, {
+                    border: '5px solid green',
+                    backgroundColor: 'lightgreen',
                   });
                   await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
                 }
