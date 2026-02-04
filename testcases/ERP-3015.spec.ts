@@ -16,7 +16,7 @@ import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import * as SelectorsAssemblyWarehouse from '../lib/Constants/SelectorsAssemblyWarehouse';
 import * as SelectorsProductionPage from '../lib/Constants/SelectorsProductionPage';
 import * as HIGHLIGHT from '../lib/Constants/HighlightStyles';
-import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS, RETRY_COUNTS, ROW_COLLECTION } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
 
 // Global variables for sharing data between steps
@@ -561,6 +561,14 @@ export const runERP_3015 = () => {
             'Verify Сборка item is visible in switch',
             test.info(),
           );
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(сборкаItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify Сборка item is enabled before clicking',
+            test.info(),
+          );
           await сборкаItem.click();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           await page.waitForLoadState('networkidle');
@@ -606,8 +614,8 @@ export const runERP_3015 = () => {
             const testId = await row.getAttribute('data-testid');
             if (testId && !testId.includes('-Operation') && !testId.includes('-NonOperation')) {
               mainRows.push(row);
-              // Collect at least 15 main rows to account for skipped rows (0/0 values, -Operation, or -NonOperation)
-              if (mainRows.length >= 15) {
+              // Collect at least MAX_ROWS_TO_COLLECT main rows to account for skipped rows (0/0 values, -Operation, or -NonOperation)
+              if (mainRows.length >= ROW_COLLECTION.MAX_ROWS_TO_COLLECT) {
                 break;
               }
             }
@@ -796,6 +804,15 @@ export const runERP_3015 = () => {
                   test.info(),
                 );
                 
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                  },
+                  'Verify 3 dots menu button is enabled before clicking',
+                  test.info(),
+                );
+                
                 await threeDotsButton.click();
                 await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Wait for popover to open
                 
@@ -857,11 +874,23 @@ export const runERP_3015 = () => {
                 await expectSoftWithScreenshot(
                   page,
                   () => {
-                    expect.soft(menuItem).toBeAttached({ timeout: TIMEOUTS.STANDARD });
+                    expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
                   },
                   'Verify menu item "ПЗ по пользователю" is attached',
                   test.info(),
                 );
+                
+                // Verify menu item is enabled before clicking (only when not using force click)
+                if (!useForceClick) {
+                  await expectSoftWithScreenshot(
+                    page,
+                    () => {
+                      expect.soft(menuItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                    },
+                    'Verify menu item "ПЗ по пользователю" is enabled before clicking',
+                    test.info(),
+                  );
+                }
                 
                 // Scroll the popover container into view first, then the menu item
                 if (rowNumber) {
@@ -889,6 +918,51 @@ export const runERP_3015 = () => {
                 });
                 await page.waitForTimeout(TIMEOUTS.LONG); // 2 second pause before clicking
                 
+                // Set up network listener BEFORE clicking to ensure we catch the API response
+                let apiResponse: any = null;
+                let responseResolve: ((value: void) => void) | null = null;
+                
+                // Create a Promise that resolves when the API response is captured
+                const responseCapturedPromise = new Promise<void>((resolve) => {
+                  responseResolve = resolve;
+                });
+                
+                const responseHandler = async (response: any) => {
+                  const url = response.url();
+                  if (url.includes('/api/production-task/by-user')) {
+                    try {
+                      const responseBody = await response.json();
+                      apiResponse = {
+                        status: response.status(),
+                        url: url,
+                        data: responseBody,
+                      };
+                      // Remove listeners once we've captured the response
+                      context.off('response', responseHandler);
+                      newPage.off('response', responseHandler);
+                      if (responseResolve) {
+                        responseResolve();
+                      }
+                    } catch (error) {
+                      console.log(`Failed to parse API response: ${error}`);
+                      apiResponse = {
+                        status: response.status(),
+                        url: url,
+                        error: String(error),
+                      };
+                      // Remove listeners even on error
+                      context.off('response', responseHandler);
+                      newPage.off('response', responseHandler);
+                      if (responseResolve) {
+                        responseResolve();
+                      }
+                    }
+                  }
+                };
+                
+                // Set up listener on context to catch responses from any page
+                context.on('response', responseHandler);
+                
                 // Wait for new page to be created before clicking
                 // Use a longer timeout for waiting for the new page
                 const [newPage] = await Promise.all([
@@ -897,36 +971,9 @@ export const runERP_3015 = () => {
                     ? menuItem.click({ force: true, timeout: WAIT_TIMEOUTS.STANDARD })
                     : menuItem.click({ timeout: WAIT_TIMEOUTS.STANDARD }),
                 ]);
-            
-            // Set up network listener right after page is created (before it fully loads)
-            let apiResponse: any = null;
-            let responseCaptured = false;
-            
-            const responseHandler = async (response: any) => {
-              const url = response.url();
-              if (url.includes('/api/production-task/by-user')) {
-                try {
-                  const responseBody = await response.json();
-                  apiResponse = {
-                    status: response.status(),
-                    url: url,
-                    data: responseBody,
-                  };
-                  responseCaptured = true;
-                  newPage.off('response', responseHandler);
-                } catch (error) {
-                  console.log(`Failed to parse API response: ${error}`);
-                  apiResponse = {
-                    status: response.status(),
-                    url: url,
-                    error: String(error),
-                  };
-                  responseCaptured = true;
-                  newPage.off('response', responseHandler);
-                }
-              }
-            };
-            newPage.on('response', responseHandler);
+                
+                // Also set up listener on the new page specifically
+                newPage.on('response', responseHandler);
             
             // Wait for the new page to fully open and load
             await newPage.waitForLoadState('domcontentloaded');
@@ -937,7 +984,7 @@ export const runERP_3015 = () => {
             // Sub-step 7: Highlight employee name on new page
             await allure.step('Highlight employee name on new page', async () => {
               // Try to find the element by class
-              const employeeElement = newPage.locator('.task-by-user__employee');
+              const employeeElement = newPage.locator(SelectorsProductionPage.TASK_BY_USER_EMPLOYEE_CLASS);
               const elementCount = await employeeElement.count();
               
               if (elementCount > 0) {
@@ -970,22 +1017,25 @@ export const runERP_3015 = () => {
 
             // Sub-step 8: Wait for API response to be captured
             await allure.step('Wait for API response to be captured', async () => {
-              // Wait for the response to be captured (it should have been captured during initial page load)
-              let waitCount = 0;
-              const maxWaitCount = 20; // Wait up to 10 seconds (20 * 500ms)
-              while (!responseCaptured && waitCount < maxWaitCount) {
-                await newPage.waitForTimeout(TIMEOUTS.MEDIUM);
-                waitCount++;
-              }
+              // Wait for the response to be captured using Promise.race with timeout
+              // This avoids retry loops by using Playwright's built-in waiting mechanisms
+              const timeoutPromise = new Promise<void>((resolve) => {
+                setTimeout(() => {
+                  resolve(); // Resolve after timeout (response may have been missed, will be checked in assertion)
+                }, RETRY_COUNTS.API_RESPONSE_WAIT * TIMEOUTS.MEDIUM);
+              });
               
-              // Remove listener if still attached
+              // Race between response capture and timeout
+              await Promise.race([responseCapturedPromise, timeoutPromise]);
+              
+              // Remove listeners if still attached
+              context.off('response', responseHandler);
               newPage.off('response', responseHandler);
               
               await expectSoftWithScreenshot(
                 newPage,
                 () => {
                   expect.soft(apiResponse).toBeTruthy();
-                  expect.soft(responseCaptured).toBe(true);
                   if (apiResponse) {
                     expect.soft([200, 201]).toContain(apiResponse.status); // Accept both 200 (OK) and 201 (Created)
                     expect.soft(apiResponse.data).toBeTruthy();
@@ -1056,7 +1106,7 @@ export const runERP_3015 = () => {
                 const uniqueEntityIds = [...new Set(entityIds)];
                 
                 // Compare unique count with rightValue from the main table for the current row
-                console.log(`Row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'} - Unique entity IDs: ${uniqueEntityIds.length}, Expected (rightValue): ${rightValue}, Left value: ${leftValue}, Right value: ${rightValue}`);
+                console.log(`Test ${processedCount + 1} - Row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'} - Unique entity IDs: ${uniqueEntityIds.length}, Expected (rightValue): ${rightValue}, Left value: ${leftValue}, Right value: ${rightValue}`);
                 await expectSoftWithScreenshot(
                   newPage,
                   () => {
@@ -1067,7 +1117,7 @@ export const runERP_3015 = () => {
                 );
                 
                 // Verify that both left and right numbers are the same
-                console.log(`Row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'} - Left value: ${leftValue}, Right value: ${rightValue}`);
+                console.log(`Test ${processedCount + 1} - Row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'} - Left value: ${leftValue}, Right value: ${rightValue}`);
                 await expectSoftWithScreenshot(
                   newPage,
                   () => {

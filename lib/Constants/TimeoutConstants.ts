@@ -37,3 +37,13 @@ export const TEST_TIMEOUTS = {
   VERY_LONG: 900000, // 15 minutes - very long tests
   EXTENDED: 920000, // ~15.3 minutes - extended tests
 } as const;
+
+// Retry/iteration constants for loops and retries
+export const RETRY_COUNTS = {
+  API_RESPONSE_WAIT: 20, // Number of iterations to wait for API response (20 * 500ms = 10 seconds)
+} as const;
+
+// Row collection constants
+export const ROW_COLLECTION = {
+  MAX_ROWS_TO_COLLECT: 15, // Maximum number of main rows to collect for validation
+} as const;
