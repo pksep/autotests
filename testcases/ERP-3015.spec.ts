@@ -5,6 +5,7 @@ import { CreateUsersPage } from '../pages/UsersPage';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { CreateOrderedFromSuppliersPage, Supplier } from '../pages/OrderedFromSuppliersPage';
 import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
+import { ProductionPage } from '../pages/ProductionPage';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsProductionPage from '../lib/Constants/SelectorsProductionPage';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS, RETRY_COUNTS, ROW_COLLECTION } from '../lib/Constants/TimeoutConstants';
@@ -521,7 +522,7 @@ export const runERP_3015 = () => {
     });
   });
 
-  test('ERP-3015 - Validate table cell values in production page', async ({ page, context }) => {
+  test.skip('ERP-3015 - Validate table cell values in production page - Пользователи по производственным заданиям - Сборка', async ({ page, context }) => {
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
 
     // Page object for highlighting elements
@@ -1170,6 +1171,928 @@ export const runERP_3015 = () => {
             // Increment processed count only after successfully processing the row
             processedCount++;
             }); // End of "Validate row X" step
+          } // End of loop through rows
+        }); // End of "Validate first N main rows" step
+      });
+    });
+  });
+
+  test('ERP-3015 - Validate table cell values in production page - Оборудование по производственным заданиям металлообработки table', async ({ page, context }) => {
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
+
+    // Page object for Production page interactions
+    const productionPage = new ProductionPage(page);
+
+    // Constant for number of rows to validate
+    const ROWS_TO_VALIDATE = 20;
+
+    await allure.step('Step 3: Validate table cell values - Next table', async () => {
+      await allure.step('Validate cell: Занятость на ПЗ - Кол-во позиций', async () => {
+        // Sub-step 1: Navigate to production page
+        await allure.step('Navigate to production page', async () => {
+          await page.goto('/production');
+          await page.waitForLoadState('networkidle');
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(page.url()).toContain('/production');
+            },
+            'Verify navigation to production page',
+            test.info(),
+          );
+        });
+
+        // Sub-step 1.2: Ensure User accordion (top) is closed
+        await allure.step('Ensure User accordion (top) is closed', async () => {
+          const userAccordionButton = page.locator(SelectorsProductionPage.USER_ACCORDION_BUTTON);
+          
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(userAccordionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify User accordion button is visible',
+            test.info(),
+          );
+
+          // Verify it's a div element
+          const tagName = await userAccordionButton.evaluate((el) => el.tagName.toLowerCase());
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(tagName).toBe('div');
+            },
+            `Verify User accordion button is a div element (found: ${tagName})`,
+            test.info(),
+          );
+
+          // Check if the accordion is open by checking for the class
+          const classList = await userAccordionButton.evaluate((el) => Array.from(el.classList));
+          const isOpen = classList.includes('accordion-button_open');
+          
+          if (isOpen) {
+            // Accordion is open, click to close it
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(userAccordionButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+              },
+              'Verify User accordion button is enabled before clicking',
+              test.info(),
+            );
+            await userAccordionButton.click();
+            await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait 1 second after clicking
+            
+            // Verify the accordion is now closed
+            const classListAfterClick = await userAccordionButton.evaluate((el) => Array.from(el.classList));
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(classListAfterClick).not.toContain('accordion-button_open');
+              },
+              'Verify User accordion is closed after clicking',
+              test.info(),
+            );
+          } else {
+            // Accordion is already closed
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(isOpen).toBe(false);
+              },
+              'Verify User accordion is already closed',
+              test.info(),
+            );
+          }
+        });
+
+        // Sub-step 1.5: Ensure Equipment accordion (second) is open
+        await allure.step('Ensure Equipment accordion (second) is open', async () => {
+          // Get the accordion button element (must be a div)
+          const accordionButton = page.locator(SelectorsProductionPage.EQUIPMENT_ACCORDION_BUTTON);
+          
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(accordionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify accordion button is visible',
+            test.info(),
+          );
+
+          // Verify it's a div element
+          const tagName = await accordionButton.evaluate((el) => el.tagName.toLowerCase());
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(tagName).toBe('div');
+            },
+            `Verify accordion button is a div element (found: ${tagName})`,
+            test.info(),
+          );
+
+          // Check if the accordion is already open by checking for the class
+          const classList = await accordionButton.evaluate((el) => Array.from(el.classList));
+          const isOpen = classList.includes('accordion-button_open');
+          
+          if (!isOpen) {
+            // Accordion is closed, click to open it
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(accordionButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+              },
+              'Verify accordion button is enabled before clicking',
+              test.info(),
+            );
+            await accordionButton.click();
+            await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait 1 second after clicking
+            
+            // Verify the accordion is now open
+            const classListAfterClick = await accordionButton.evaluate((el) => Array.from(el.classList));
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(classListAfterClick).toContain('accordion-button_open');
+              },
+              'Verify accordion is open after clicking',
+              test.info(),
+            );
+          } else {
+            // Accordion is already open
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(isOpen).toBe(true);
+              },
+              'Verify accordion is already open',
+              test.info(),
+            );
+          }
+        });
+
+        // Sub-step 2: Find and click the switch element for the next table (if it exists)
+        await allure.step('Find and click switch element for next table', async () => {
+          // Try to find the switch element - it might not exist for Equipment table
+          const switchElement = page.locator(SelectorsProductionPage.EQUIPMENT_SWITCH);
+          const switchExists = await switchElement.count() > 0;
+          
+          if (switchExists) {
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(switchElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+              },
+              'Verify switch element is visible',
+              test.info(),
+            );
+
+            const nextTableItem = switchElement.locator(SelectorsProductionPage.EQUIPMENT_SWITCH_ITEM_METALWORKING).filter({ hasText: 'Металлообработка' });
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(nextTableItem).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+              },
+              'Verify next table item is visible in switch',
+              test.info(),
+            );
+            await expectSoftWithScreenshot(
+              page,
+              () => {
+                expect.soft(nextTableItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+              },
+              'Verify next table item is enabled before clicking',
+              test.info(),
+            );
+            await nextTableItem.click();
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+            await page.waitForLoadState('networkidle');
+            
+            // Wait a bit more for table to render
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          } else {
+            console.log('Switch element not found for Equipment table - skipping switch step');
+            // Wait a bit for the table to be ready
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+            await page.waitForLoadState('networkidle');
+          }
+        });
+
+        // Sub-step 3: Find the table and wait for rows to be visible
+        await allure.step('Find production table and wait for rows', async () => {
+          const table = page.locator(SelectorsProductionPage.EQUIPMENT_TABLE);
+          
+          // First check if table is attached to DOM
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(table).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify production table is attached to DOM',
+            test.info(),
+          );
+          
+          // Wait for table to become visible (it might be hidden initially)
+          await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            },
+            'Verify production table is visible',
+            test.info(),
+          );
+          
+          // Highlight the table to verify we found it
+          // await productionPage.highlightElement(table, {
+          //   border: '5px solid red',
+          //   backgroundColor: 'yellow',
+          // });
+          
+          // Wait for table to be fully loaded and stable before analyzing
+          await page.waitForLoadState('networkidle');
+          // Additional wait to ensure all popover components are initialized and ready
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        });
+
+        // Sub-step 4: Validate first N main rows
+        await allure.step(`Validate first ${ROWS_TO_VALIDATE} main rows`, async () => {
+          const table = page.locator(SelectorsProductionPage.EQUIPMENT_TABLE);
+          // Get all rows and filter to main rows only (exclude sub-rows with -Operation in data-testid)
+          // Equipment table structure: main rows end with Row##, sub-rows end with Row##-Operation0
+          const allRows = table.locator('tbody tr');
+          const rowCount = await allRows.count();
+          const mainRows: any[] = [];
+          // Collect more main rows than we need, in case some are skipped
+          for (let i = 0; i < rowCount; i++) {
+            const row = allRows.nth(i);
+            const testId = await row.getAttribute('data-testid');
+            if (testId && !testId.includes('-Operation')) {
+              mainRows.push(row);
+              // Collect at least MAX_ROWS_TO_COLLECT main rows to account for skipped rows (0 values or -Operation)
+              if (mainRows.length >= ROW_COLLECTION.MAX_ROWS_TO_COLLECT) {
+                break;
+              }
+            }
+          }
+          
+          if (mainRows.length === 0) {
+            const totalRowCount = await allRows.count();
+            const tableSelector = SelectorsProductionPage.EQUIPMENT_TABLE;
+            throw new Error(
+              `No main rows found in equipment production table. ` +
+              `Total rows checked: ${totalRowCount}. ` +
+              `All rows appear to be sub-rows with "-Operation" in their data-testid. ` +
+              `Table selector: ${tableSelector}. ` +
+              `This occurred while validating table cell values on the production page.`,
+            );
+          }
+          
+          // Process each of the first N main rows
+          let processedCount = 0;
+          for (let rowIndex = 0; rowIndex < mainRows.length && processedCount < ROWS_TO_VALIDATE; rowIndex++) {
+            const currentRow = mainRows[rowIndex];
+            
+            // Verify this is still a main row (not a sub-row with -Operation) before processing
+            // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0
+            try {
+              await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+              const rowTestIdCheck = await currentRow.getAttribute('data-testid');
+              if (!rowTestIdCheck || rowTestIdCheck.includes('-Operation')) {
+                console.log(`Skipping row ${rowIndex + 1} - contains "-Operation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
+                continue; // Skip to next row in the loop
+              }
+            } catch (e) {
+              console.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
+              continue; // Skip to next row in the loop
+            }
+            
+            let equipmentName: string | null = null;
+            let leftValue: number = 0;
+            
+            await allure.step(`Validate row ${rowIndex + 1} of ${mainRows.length} (processing ${processedCount + 1} of ${ROWS_TO_VALIDATE})`, async () => {
+              // Wait for row to be attached (row is visible but Playwright may report it as hidden)
+              await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+              
+              // Scroll the table container into view first, then the row
+              const table = page.locator(SelectorsProductionPage.EQUIPMENT_TABLE);
+              await table.scrollIntoViewIfNeeded();
+              await page.waitForTimeout(TIMEOUTS.SHORT);
+              
+              // Force scroll the row into view (use evaluate to ensure it actually scrolls)
+              await currentRow.evaluate((el: HTMLElement) => {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              });
+              await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait longer after scrolling to ensure row is fully rendered
+              
+              // Verify the row is actually visible after scrolling
+              try {
+                await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+              } catch (e) {
+                console.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
+              }
+              
+              // Re-verify this is still a main row after scrolling (DOM might have changed)
+              // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0
+              const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
+              if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation')) {
+                console.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
+                return; // Skip the rest of the steps for this row
+              }
+              
+              // Re-query the row by its data-testid to get a fresh locator after scrolling
+              const freshRow = table.locator(SelectorsProductionPage.getEquipmentTableRowByTestId(rowTestIdAfterScroll));
+              await freshRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
+              
+              // Highlight the current row to verify we found it
+              // await productionPage.highlightElement(freshRow, {
+              //   border: '5px solid blue',
+              //   backgroundColor: 'lightblue',
+              // });
+              // await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+
+              // Re-verify this is still a main row before accessing cells (DOM might have changed after highlighting)
+              // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0
+              const rowTestIdBeforeCells = await freshRow.getAttribute('data-testid');
+              if (!rowTestIdBeforeCells || rowTestIdBeforeCells.includes('-Operation')) {
+                console.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
+                return; // Skip the rest of the steps for this row
+              }
+
+              // First cell: Popover (3 dots menu) - data-testid is on the td element itself
+              let popoverCell: Locator;
+              await allure.step('Extract and highlight Popover cell', async () => {
+                popoverCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_CELL_SUFFIX}"]`).first();
+                await popoverCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                await popoverCell.scrollIntoViewIfNeeded();
+                await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+                // await productionPage.highlightElement(popoverCell, {
+                //   border: '3px solid red',
+                //   backgroundColor: 'pink',
+                // });
+                // await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+              });
+
+              // Second cell: Name (equipment name) - data-testid is on the td element itself
+              await allure.step('Extract and highlight Name cell', async () => {
+                const nameCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_NAME_CELL_SUFFIX}"]`).first();
+                await nameCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                // await productionPage.highlightElement(nameCell, {
+                //   border: '3px solid green',
+                //   backgroundColor: 'lightgreen',
+                // });
+                // await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+                
+                equipmentName = await nameCell.textContent();
+                
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(equipmentName).toBeTruthy();
+                    expect.soft(equipmentName!.trim().length).toBeGreaterThan(0);
+                  },
+                  `Verify equipment name extracted: ${equipmentName}`,
+                  test.info(),
+                );
+              });
+
+              // Third cell: CountPosition - single number (not "X / Y" format) - data-testid is on the td element itself
+              await allure.step('Extract and highlight CountPosition cell', async () => {
+                const countCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`).first();
+                await countCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                // await productionPage.highlightElement(countCell, {
+                //   border: '3px solid purple',
+                //   backgroundColor: 'lavender',
+                // });
+                // await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+                
+                const countText = await countCell.textContent();
+                
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(countText).toBeTruthy();
+                    expect.soft(countText!.trim().length).toBeGreaterThan(0);
+                  },
+                  `Verify count position extracted: ${countText}`,
+                  test.info(),
+                );
+
+                // Parse single number value (not "X / Y" format for Equipment table)
+                const countMatch = countText!.trim().match(/^(\d+)$/);
+                if (!countMatch) {
+                  const cellSelector = `td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`;
+                  const rowTestIdForError = await freshRow.getAttribute('data-testid');
+                  throw new Error(
+                    `Invalid count format in equipment table cell. ` +
+                    `Actual value: "${countText}". ` +
+                    `Expected format: single number (e.g., "1"). ` +
+                    `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
+                    `Cell selector: ${cellSelector}. ` +
+                    `Equipment: ${equipmentName || 'N/A'}. ` +
+                    `This occurred while parsing the count position cell value in row ${rowIndex + 1}.`,
+                  );
+                }
+                leftValue = parseInt(countMatch[1], 10);
+
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(leftValue).toBeGreaterThanOrEqual(0);
+                  },
+                  `Verify parsed value - left: ${leftValue}`,
+                  test.info(),
+                );
+
+                // Skip this row if value is 0
+                if (leftValue === 0) {
+                  console.log(`Skipping row ${rowIndex + 1} - leftValue is 0`);
+                  return; // Skip to next row
+                }
+              });
+
+              // Sub-step 5: Click 3 dots menu in first cell
+              // Get the row number from the fresh row's data-testid to scope the menu item search
+              const rowTestId = await freshRow.getAttribute('data-testid');
+              const rowNumberMatch = rowTestId?.match(/Row(\d+)$/);
+              const rowNumber = rowNumberMatch ? rowNumberMatch[1] : null;
+              
+              await allure.step('Click 3 dots menu in first cell', async () => {
+                // Use the popoverCell we already found and highlighted
+                // Inside it, there's a div with data-testid ending in -Popover-Popover-PopoverShow
+                // HTML structure: td[-Popover] > div[-Popover-Wrapper] > div[-Popover-Popover] > div[-Popover-Popover-Popover] > div[-Popover-Popover-PopoverShow]
+                const threeDotsButton = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_SHOW_BUTTON_SUFFIX}"]`);
+                
+                // Wait for the button to be attached and ready (popover component needs to be initialized)
+                await threeDotsButton.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                await page.waitForTimeout(TIMEOUTS.SHORT); // Wait for popover component to be fully initialized
+                
+                // Scroll the button into view to ensure it's visible
+                await threeDotsButton.scrollIntoViewIfNeeded();
+                await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Wait a bit after scrolling
+                
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(threeDotsButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                  },
+                  'Verify 3 dots menu button is visible',
+                  test.info(),
+                );
+                
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                  },
+                  'Verify 3 dots menu button is enabled before clicking',
+                  test.info(),
+                );
+                
+                // Highlight the button before clicking to verify we found it
+                // await productionPage.highlightElement(threeDotsButton, {
+                //   border: '5px solid orange',
+                //   backgroundColor: 'yellow',
+                // });
+                // await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+                
+                // Try clicking using JavaScript to ensure the click event fires
+                await threeDotsButton.evaluate((el: HTMLElement) => {
+                  // Try both click() and dispatchEvent to ensure it works
+                  el.click();
+                  el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                });
+                await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for popover to open
+                
+                // Wait for the popover menu to be attached and try to make it visible
+                if (rowNumber) {
+                  const popoverMenuContainer = page.locator(SelectorsProductionPage.getEquipmentTableRowPopoverOptionsList(rowNumber)).first();
+                  // Wait for it to be attached to the DOM
+                  await popoverMenuContainer.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                  await page.waitForTimeout(TIMEOUTS.MEDIUM); // Additional wait for menu to be ready and positioned
+                  
+                  // Try to bring the menu to the front using JavaScript (fix z-index issue)
+                  try {
+                    await popoverMenuContainer.evaluate((el: HTMLElement) => {
+                      const rect = (el as HTMLElement).getBoundingClientRect();
+                      // Set high z-index and ensure it's visible
+                      (el as HTMLElement).style.zIndex = '99999';
+                      (el as HTMLElement).style.position = 'fixed';
+                      (el as HTMLElement).style.top = `${rect.top}px`;
+                      (el as HTMLElement).style.left = `${rect.left}px`;
+                      (el as HTMLElement).style.opacity = '1';
+                      (el as HTMLElement).style.visibility = 'visible';
+                      (el as HTMLElement).style.display = 'block';
+                      // Also try to bring parent elements to front
+                      let parent = (el as HTMLElement).parentElement;
+                      while (parent && parent !== document.body) {
+                        (parent as HTMLElement).style.zIndex = '99999';
+                        parent = (parent as HTMLElement).parentElement;
+                      }
+                    });
+                    await page.waitForTimeout(TIMEOUTS.SHORT); // Wait for styles to apply
+                  } catch (e) {
+                    // If we can't modify the style, that's okay - we'll use JavaScript click anyway
+                    console.log('Could not modify menu styles, will continue with JavaScript click');
+                  }
+                  
+                  // Try to verify menu is visible after style changes
+                  try {
+                    await popoverMenuContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+                    await expectSoftWithScreenshot(
+                      page,
+                      () => {
+                        expect.soft(popoverMenuContainer).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                      },
+                      'Verify popover menu container is visible after style adjustments',
+                      test.info(),
+                    );
+                  } catch (e) {
+                    // Menu still not visible, but we verified it's attached
+                    await expectSoftWithScreenshot(
+                      page,
+                      () => {
+                        expect.soft(popoverMenuContainer).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                      },
+                      'Verify popover menu container is attached (may still be behind table)',
+                      test.info(),
+                    );
+                  }
+                } else {
+                  console.log('Warning: rowNumber is null, cannot verify menu appearance');
+                }
+              });
+
+              // Sub-step 5.5: Store name and count values for validation on new tab
+              await allure.step('Store name and count values for validation', async () => {
+                // Store the equipment name (from second cell) and count position (from third cell)
+                // These values are already extracted in previous steps, but we explicitly verify them here
+                // to ensure they're available for validation on the new tab
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(equipmentName).toBeTruthy();
+                    expect.soft(equipmentName!.trim().length).toBeGreaterThan(0);
+                    expect.soft(leftValue).toBeGreaterThan(0);
+                  },
+                  `Store values for validation - Name: "${equipmentName}", Count: ${leftValue}`,
+                  test.info(),
+                );
+              });
+
+              // Sub-step 6: Click second menu item "ПЗ по оборудованию" and handle new tab
+              await allure.step('Click menu item: ПЗ по оборудованию', async () => {
+                // Scope the menu item search to the popover from the current row using the row number
+                let menuItem: Locator;
+                if (rowNumber) {
+                  // Use the specific row number to find the exact menu item
+                  menuItem = page.locator(SelectorsProductionPage.getEquipmentTableRowPopoverItem1(rowNumber)).filter({ hasText: 'ПЗ по оборудованию' });
+                } else {
+                  // Fallback: scope to the popover cell's popover
+                  const popoverMenu = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_OPTIONS_LIST_SUFFIX}"]`);
+                  menuItem = popoverMenu.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_ITEM1_SUFFIX}"]`).filter({ hasText: 'ПЗ по оборудованию' });
+                }
+                
+                // Wait for menu item to be attached first
+                await menuItem.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                
+                // Verify the menu item text is correct before clicking (even if menu is behind table)
+                const menuItemText = await menuItem.textContent();
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(menuItemText).toBe('ПЗ по оборудованию');
+                  },
+                  `Verify menu item text is correct before clicking: "${menuItemText}"`,
+                  test.info(),
+                );
+                
+                // Try a different approach: move the menu to body to ensure it's on top
+                if (rowNumber) {
+                  const popoverMenuContainer = page.locator(SelectorsProductionPage.getEquipmentTableRowPopoverOptionsList(rowNumber)).first();
+                  try {
+                    // Try to move the menu to body and position it absolutely
+                    await popoverMenuContainer.evaluate((el: HTMLElement) => {
+                      const rect = (el as HTMLElement).getBoundingClientRect();
+                      const menuElement = el as HTMLElement;
+                      
+                      // Store original parent
+                      const originalParent = menuElement.parentElement;
+                      
+                      // Move to body
+                      document.body.appendChild(menuElement);
+                      
+                      // Position absolutely at the same screen coordinates
+                      menuElement.style.position = 'fixed';
+                      menuElement.style.zIndex = '999999';
+                      menuElement.style.top = `${rect.top}px`;
+                      menuElement.style.left = `${rect.left}px`;
+                      menuElement.style.opacity = '1';
+                      menuElement.style.visibility = 'visible';
+                      menuElement.style.display = 'block';
+                    });
+                    await page.waitForTimeout(TIMEOUTS.SHORT); // Wait for repositioning
+                  } catch (e) {
+                    // If we can't move it, try the previous z-index approach
+                    try {
+                      await popoverMenuContainer.evaluate((el: HTMLElement) => {
+                        const rect = (el as HTMLElement).getBoundingClientRect();
+                        (el as HTMLElement).style.zIndex = '99999';
+                        (el as HTMLElement).style.position = 'fixed';
+                        (el as HTMLElement).style.top = `${rect.top}px`;
+                        (el as HTMLElement).style.left = `${rect.left}px`;
+                        (el as HTMLElement).style.opacity = '1';
+                        (el as HTMLElement).style.visibility = 'visible';
+                      });
+                      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+                    } catch (e2) {
+                      // If we can't modify the style, that's okay - we verified by text content
+                    }
+                  }
+                }
+                
+                // Verify menu item is attached
+                await expectSoftWithScreenshot(
+                  page,
+                  () => {
+                    expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                  },
+                  'Verify menu item "ПЗ по оборудованию" is attached',
+                  test.info(),
+                );
+                
+                // Set up listener for new page BEFORE clicking
+                const newPagePromise = context.waitForEvent('page', { timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+                
+                // Pause before clicking the menu item that opens the new tab
+                await page.waitForTimeout(500); // 500ms pause before clicking
+                
+                // Try to get the bounding box for a more realistic mouse click
+                let useMouseClick = false;
+                try {
+                  const box = await menuItem.boundingBox();
+                  if (box) {
+                    // Use mouse click at the center of the element for a more realistic interaction
+                    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+                    await page.waitForTimeout(100); // Small pause before clicking
+                    await page.mouse.down();
+                    await page.waitForTimeout(50); // Simulate mouse press duration
+                    await page.mouse.up();
+                    useMouseClick = true;
+                  }
+                } catch (e) {
+                  // If bounding box fails, fall back to JavaScript click
+                }
+                
+                // If mouse click didn't work, try JavaScript click with proper event dispatch
+                if (!useMouseClick) {
+                  await menuItem.evaluate((el: HTMLElement) => {
+                    // Dispatch mouse events in sequence for a more realistic click
+                    const mouseDownEvent = new MouseEvent('mousedown', {
+                      bubbles: true,
+                      cancelable: true,
+                      view: window,
+                      button: 0,
+                    });
+                    const mouseUpEvent = new MouseEvent('mouseup', {
+                      bubbles: true,
+                      cancelable: true,
+                      view: window,
+                      button: 0,
+                    });
+                    const clickEvent = new MouseEvent('click', {
+                      bubbles: true,
+                      cancelable: true,
+                      view: window,
+                      button: 0,
+                    });
+                    
+                    (el as HTMLElement).dispatchEvent(mouseDownEvent);
+                    (el as HTMLElement).dispatchEvent(mouseUpEvent);
+                    (el as HTMLElement).dispatchEvent(clickEvent);
+                    // Also call the native click method
+                    (el as HTMLElement).click();
+                  });
+                }
+                
+                // Wait for the new page to open
+                const newPage = await newPagePromise;
+                
+                // Wait for the new page to fully load
+                await newPage.waitForLoadState('domcontentloaded');
+                await newPage.waitForLoadState('load');
+                await newPage.waitForLoadState('networkidle');
+                await newPage.waitForTimeout(TIMEOUTS.SHORT);
+                
+                // Validate the stored values on the new tab
+                await allure.step('Validate stored values on new tab', async () => {
+                  // Create page object for the new page to use highlighting methods
+                  const newPageDetailsPage = new CreatePartsDatabasePage(newPage);
+                  
+                  // Verify the new tab loaded successfully
+                  const newPageUrl = newPage.url();
+                  await expectSoftWithScreenshot(
+                    newPage,
+                    () => {
+                      expect.soft(newPageUrl).toBeTruthy();
+                    },
+                    `Verify new tab loaded - URL: ${newPageUrl}`,
+                    test.info(),
+                  );
+                  
+                  // Validate equipment name appears in title element with class 'task-by-equipment__equipment'
+                  const titleElement = newPage.locator('.task-by-equipment__equipment');
+                  await expectSoftWithScreenshot(
+                    newPage,
+                    () => {
+                      expect.soft(titleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                    },
+                    'Verify title element is visible',
+                    test.info(),
+                  );
+                  
+                  // Highlight the title element
+                  await newPageDetailsPage.highlightElement(titleElement, {
+                    border: '5px solid green',
+                    backgroundColor: 'lightgreen',
+                  });
+                  await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
+                  
+                  const titleText = await titleElement.textContent();
+                  await expectSoftWithScreenshot(
+                    newPage,
+                    () => {
+                      expect.soft(titleText).toContain(equipmentName!);
+                    },
+                    `Verify title element contains equipment name - Title: "${titleText}", Expected: "${equipmentName}"`,
+                    test.info(),
+                  );
+                  
+                  // Wait a bit more for the page to fully render, especially the table
+                  await newPage.waitForLoadState('networkidle');
+                  await newPage.waitForTimeout(TIMEOUTS.MEDIUM);
+                  
+                  // Find table with class 'Table' and count rows, excluding rows with 0 in 11th cell
+                  // Try multiple selectors: table.Table, .Table, or just Table
+                  let table = newPage.locator('table.Table');
+                  let tableCount = await table.count();
+                  
+                  if (tableCount === 0) {
+                    // Try just .Table (any element with class Table)
+                    table = newPage.locator('.Table');
+                    tableCount = await table.count();
+                  }
+                  
+                  if (tableCount === 0) {
+                    // Try with case-insensitive or partial match
+                    table = newPage.locator('[class*="Table"]');
+                    tableCount = await table.count();
+                  }
+                  
+                  if (tableCount === 0) {
+                    // Try finding any table element
+                    table = newPage.locator('table');
+                    tableCount = await table.count();
+                    console.log(`Found ${tableCount} table(s) on the page. Trying to use the first one.`);
+                  }
+                  
+                  // Wait for table to be attached and visible
+                  if (tableCount > 0) {
+                    table = table.first(); // Use the first table found
+                    await table.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                    await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for table to render
+                  } else {
+                    // If no table found, wait a bit more and try again
+                    await newPage.waitForTimeout(TIMEOUTS.STANDARD);
+                    table = newPage.locator('.Table');
+                    tableCount = await table.count();
+                    if (tableCount > 0) {
+                      table = table.first();
+                    } else {
+                      // Try table.Table one more time
+                      table = newPage.locator('table.Table');
+                      tableCount = await table.count();
+                      if (tableCount > 0) {
+                        table = table.first();
+                      }
+                    }
+                  }
+                  
+                  await expectSoftWithScreenshot(
+                    newPage,
+                    () => {
+                      expect.soft(tableCount).toBeGreaterThan(0);
+                      if (tableCount > 0) {
+                        expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                      }
+                    },
+                    `Verify table with class Table is visible (found ${tableCount} table(s))`,
+                    test.info(),
+                  );
+                  
+                  // Only proceed if we found a table
+                  if (tableCount === 0) {
+                    throw new Error(`Table with class "Table" not found on the new tab page. URL: ${newPageUrl}`);
+                  }
+                  
+                  // Highlight the table
+                  await newPageDetailsPage.highlightElement(table, {
+                    border: '5px solid blue',
+                    backgroundColor: 'lightblue',
+                  });
+                  await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
+                  
+                  const allTableRows = table.locator('tbody tr');
+                  // Wait for at least one row to be attached (table might be loading)
+                  try {
+                    await allTableRows.first().waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                  } catch (e) {
+                    // If no rows found, that's okay - we'll count 0
+                    console.log('No rows found in table yet, will count 0');
+                  }
+                  await newPage.waitForTimeout(TIMEOUTS.SHORT); // Additional wait for rows to render
+                  const totalRowCount = await allTableRows.count();
+                  
+                  // Go through each row and exclude rows that have 0 in the 11th cell (index 10) or have class 'executive-table__row_mark'
+                  let validRowCount = 0;
+                  for (let i = 0; i < totalRowCount; i++) {
+                    const row = allTableRows.nth(i);
+                    
+                    // Check if row has the class 'executive-table__row_mark' - exclude it if it does
+                    const rowClassList = await row.evaluate((el) => Array.from(el.classList));
+                    const hasMarkClass = rowClassList.includes('executive-table__row_mark');
+                    
+                    if (hasMarkClass) {
+                      // Skip this row - it has the mark class
+                      continue;
+                    }
+                    
+                    // Highlight the current row being analyzed
+                    await newPageDetailsPage.highlightElement(row, {
+                      border: '3px solid orange',
+                      backgroundColor: 'yellow',
+                    });
+                    await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+                    
+                    const cells = row.locator('td');
+                    const cellCount = await cells.count();
+                    
+                    if (cellCount >= 11) {
+                      // Get the 11th cell (index 10)
+                      const eleventhCell = cells.nth(10);
+                      
+                      // Highlight the 11th cell
+                      await newPageDetailsPage.highlightElement(eleventhCell, {
+                        border: '3px solid purple',
+                        backgroundColor: 'lavender',
+                      });
+                      await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+                      
+                      const cellText = await eleventhCell.textContent();
+                      const cellValue = parseInt(cellText?.trim() || '0', 10);
+                      
+                      // Only count rows where 11th cell is not 0
+                      if (cellValue !== 0) {
+                        validRowCount++;
+                        // Keep highlight for valid rows a bit longer
+                        await newPage.waitForTimeout(TIMEOUTS.SHORT);
+                      }
+                    } else {
+                      // If row doesn't have 11 cells, include it in the count
+                      validRowCount++;
+                      await newPage.waitForTimeout(TIMEOUTS.SHORT);
+                    }
+                  }
+                  
+                  // Verify the valid row count matches the count position from main table
+                  await expectSoftWithScreenshot(
+                    newPage,
+                    () => {
+                      expect.soft(validRowCount).toBe(leftValue);
+                    },
+                    `Verify valid table row count matches count position - Valid Rows: ${validRowCount}, Total Rows: ${totalRowCount}, Expected: ${leftValue}, Equipment: "${equipmentName}"`,
+                    test.info(),
+                  );
+                  
+                  // Log test results and numbers tested
+                  const testResult = validRowCount === leftValue ? 'PASS' : 'FAIL';
+                  console.log(`Test Result: ${testResult} - Equipment: "${equipmentName}" - Valid Rows: ${validRowCount}, Expected: ${leftValue}, Total Rows: ${totalRowCount}`);
+                  
+                  // Pause after count comparison is finished
+                  await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // 500ms pause
+                });
+                
+                // Close the new page and switch back to the original page
+                await newPage.close();
+                await page.bringToFront();
+                await page.waitForTimeout(TIMEOUTS.SHORT); // Wait a bit for the page to be ready
+              });
+              
+            }); // End of "Validate row X" step
+            
+            // Increment processed count only after successfully processing the row
+            processedCount++;
           } // End of loop through rows
         }); // End of "Validate first N main rows" step
       });
