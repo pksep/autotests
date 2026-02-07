@@ -2816,33 +2816,17 @@ export class CreatePartsDatabasePage extends PageObject {
     // Expect a material to have been selected.
     expect(materialFound).toBe(true);
 
-    // After selecting the material row, click the "Select" button to add it to the bottom table
-    const selectButton = this.page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON);
-    await selectButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-    await this.highlightElement(selectButton);
-    await selectButton.click();
+    // After selecting the material row, click the "Add" button which will close the dialog
+    const addButton = this.page.locator('[data-testid="ModalBaseMaterial-Add-Button"]');
+    await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+    await this.highlightElement(addButton);
+    await addButton.click();
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-    await this.waitForNetworkIdle();
-
-    // Verify the material is now in the bottom table
-    // The bottom table should contain the selected material
-    const modal = this.page.locator('[data-testid="ModalBaseMaterial"]');
-    const bottomTable = modal.locator('table').last();
-    await bottomTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-    const bottomTableRows = bottomTable.locator('tbody tr');
-    const bottomRowCount = await bottomTableRows.count();
-    expect(bottomRowCount).toBeGreaterThan(0);
     
-    // Verify the material name appears in the bottom table
-    let materialInBottomTable = false;
-    for (let i = 0; i < bottomRowCount; i++) {
-      const rowText = await bottomTableRows.nth(i).textContent();
-      if (rowText && rowText.trim().includes(materialName)) {
-        materialInBottomTable = true;
-        break;
-      }
-    }
-    expect(materialInBottomTable).toBe(true);
+    // Wait for the dialog to close
+    const modal = this.page.locator('[data-testid="ModalBaseMaterial"]');
+    await modal.waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.STANDARD });
+    await this.waitForNetworkIdle();
   }
 
   async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {

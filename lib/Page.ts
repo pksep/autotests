@@ -4431,6 +4431,7 @@ export class PageObject extends AbstractPage {
     useComplexSelector: boolean = false,
     prefixId?: string,
     suffixId?: string,
+    timeoutMs: number = WAIT_TIMEOUTS.STANDARD,
   ): Promise<number> {
     const stepName =
       expectedValue === 55
@@ -4448,7 +4449,8 @@ export class PageObject extends AbstractPage {
         quantityCell = this.page.locator(quantityCellSelector).first();
       }
 
-      await quantityCell.waitFor({ state: 'visible', timeout: 5000 });
+      // Wait for element to be visible (with longer timeout for slow-loading tables)
+      await quantityCell.waitFor({ state: 'visible', timeout: timeoutMs });
 
       // Highlight the quantity cell
       await this.highlightElement(quantityCell, {

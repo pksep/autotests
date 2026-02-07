@@ -2025,21 +2025,10 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 6: Выбрать материал и подтвердить выбор', async () => {
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_NAME_2);
-
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await detailsPage.highlightElement(addButton);
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -2358,20 +2347,10 @@ export const runU006 = () => {
     });
 
     await allure.step('Шаг 6: Выбрать материал и подтвердить', async () => {
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -2802,20 +2781,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -3099,21 +3068,10 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 6: Выбрать материал и подтвердить выбор', async () => {
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await detailsPage.highlightElement(addButton);
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -3727,21 +3685,10 @@ export const runU006 = () => {
       await page.waitForLoadState('networkidle');
 
       // Search and select a material from the first category
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await detailsPage.highlightElement(addButton);
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -3835,20 +3782,10 @@ export const runU006 = () => {
 
         // Search and select a material from the second category
         const secondCategoryMaterial = 'Сталь 45';
+        // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
         await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.SWITCH_MATERIAL_ITEM_2, secondCategoryMaterial);
 
-        const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-        await expectSoftWithScreenshot(
-          page,
-          () => {
-            expect.soft(addButton).toBeVisible();
-          },
-          'Verify add button is visible',
-          test.info(),
-        );
-        await addButton.click();
-        await page.waitForLoadState('networkidle');
-
+        // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
         await expectSoftWithScreenshot(
         page,
         () => {
@@ -4109,21 +4046,10 @@ export const runU006 = () => {
     });
 
     await allure.step('Step 6: Выбрать материал и подтвердить выбор', async () => {
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await detailsPage.highlightElement(addButton);
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -4408,20 +4334,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -4801,20 +4717,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -5098,20 +5004,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -5805,20 +5701,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -5931,20 +5817,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -6378,20 +6254,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -6818,20 +6684,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -7082,20 +6938,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -7544,20 +7390,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -7697,20 +7533,10 @@ export const runU006 = () => {
         test.info(),
       );
 
+      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      const addButton = page.locator(SelectorsPartsDataBase.MATERIAL_ADD_BUTTON);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(addButton).toBeVisible();
-        },
-        'Verify add button is visible',
-        test.info(),
-      );
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-
+      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         () => {

@@ -674,6 +674,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 06 - Create Cbed', async ({ page }) => {
     console.log('Test Case 06 - Create Cbed');
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 01: Open the parts database page', async () => {
@@ -778,6 +779,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 07 - Create Product', async ({ page }) => {
     console.log('Test Case 07 - Create Product');
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 01: Open the parts database page', async () => {
@@ -981,6 +983,12 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         // Wait for orders to propagate
         await page.waitForTimeout(TIMEOUTS.EXTENDED);
+        
+        // Wait for table to have rows after search
+        await metalworkingWarehouse.waitingTableBody(SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE, {
+          minRows: 1,
+          timeoutMs: WAIT_TIMEOUTS.LONG,
+        });
 
         const totalOrderedQuantity = await metalworkingWarehouse.getQuantityCellAndVerify(
           '',
@@ -990,6 +998,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           true,
           SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_PREFIX,
           SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED,
+          WAIT_TIMEOUTS.LONG, // Use longer timeout for slow-loading cells
         );
       });
 

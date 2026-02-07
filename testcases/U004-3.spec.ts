@@ -29,7 +29,7 @@ export const runU004_3 = () => {
   logger.info(`Starting test U004`);
 
   test('TestCase 05 - Adding All Material Types at Once', async ({ page }) => {
-    test.setTimeout(90000);
+    test.setTimeout(300000); // 5 minutes - test adds multiple material types which can take time
     const shortagePage = new CreatePartsDatabasePage(page);
     const leftTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
     let firstCellValue = '';

@@ -36,6 +36,7 @@ export const TEST_TIMEOUTS = {
   LONG: 600000, // 10 minutes - long tests
   VERY_LONG: 900000, // 15 minutes - very long tests
   EXTENDED: 920000, // ~15.3 minutes - extended tests
+  SUPER_EXTENDED: 9999999,
 } as const;
 
 // Retry/iteration constants for loops and retries

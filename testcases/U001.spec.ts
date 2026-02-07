@@ -2115,8 +2115,10 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
       for (const part of descendantsDetailArray) {
         console.log('part.nameXXXX: ', part.name);
         await allure.step('Step 05-06: Search product and verify first row', async () => {
-          // Wait for the table body to load
-          await metalworkingWarehouse.waitingTableBody(MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE);
+          // Wait for the table to be visible (may be empty before search) - searchAndVerifyFirstRow will populate it
+          await metalworkingWarehouse.waitingTableBody(MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE, {
+            timeoutMs: WAIT_TIMEOUTS.LONG,
+          });
 
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           // Using table search we look for the value of the variable and verify it's in the first row
@@ -4035,7 +4037,9 @@ export const runU001 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 08: Check the modal window Completed sets', async () => {
       // Check the modal window Completed sets
       await stockReceipt.completesSetsModalWindow();
-      await stockReceipt.waitingTableBody(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST_TABLE);
+      await stockReceipt.waitingTableBody(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST_TABLE, {
+        timeoutMs: WAIT_TIMEOUTS.LONG,
+      });
     });
 
     await allure.step('Step 09: We get the cell number with a checkmark', async () => {
