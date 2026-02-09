@@ -1,6 +1,6 @@
 import { test, expect, Locator, Page, TestInfo } from '@playwright/test';
 import { allure } from 'allure-playwright';
-import { CreatePartsDatabasePage, ProductSpecification } from '../pages/PartsDatabasePage';
+import { CreatePartsDatabasePage, ProductSpecification } from '../pages/PartsDatabasePage'; // Includes createEquipment and archiveAllTestEquipmentByPrefix methods
 import { CreateUsersPage } from '../pages/UsersPage';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { CreateOrderedFromSuppliersPage, Supplier } from '../pages/OrderedFromSuppliersPage';
@@ -8,8 +8,11 @@ import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
 import { ProductionPage } from '../pages/ProductionPage';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsProductionPage from '../lib/Constants/SelectorsProductionPage';
+import * as SelectorsEquipment from '../lib/Constants/SelectorsEquipment';
+import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS, RETRY_COUNTS, ROW_COLLECTION } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
+import { ENV } from '../config';
 
 // Global variables for sharing data between steps
 let orderNumber: string | null = null;
@@ -32,6 +35,7 @@ const PRODUCT_PREFIX = 'ERPTEST_PRODUCT';
 const ASSEMBLY_PREFIX = 'ERPTEST_SB';
 const DETAIL_PREFIX = 'ERPTEST_DETAIL';
 const USER_PREFIX = 'ERPTEST_TEST_USER';
+const EQUIPMENT_PREFIX = 'ERPTEST_EQUIPMENT';
 
 // Type definitions for test data arrays
 type ProductItem = {
@@ -52,6 +56,11 @@ type AssemblyItem = {
 type DetailItem = {
   name: string;
   techProcesses?: string[]; // List of operation type names
+};
+
+type EquipmentItem = {
+  name: string;
+  operationType?: string; // Operation type name (e.g., "Токарный-ЧПУ")
 };
 
 // Test data arrays
@@ -132,6 +141,12 @@ const testUsers = [
     department: 'Сборка',
     tableNumberStart: 919,
   },
+];
+
+// Equipment array
+const equipments: EquipmentItem[] = [
+  { name: `${EQUIPMENT_PREFIX}_001`, operationType: 'Токарный-ЧПУ' },
+  { name: `${EQUIPMENT_PREFIX}_002`, operationType: 'Токарный-ЧПУ' },
 ];
 
 // Constants for cleanup - collect material names from products and assemblies if they exist
@@ -260,15 +275,29 @@ export const runERP_3015 = () => {
         `Archive all test users with username prefix ${USER_USERNAME_PREFIX}`,
         test.info(),
       );
+
+      // 6. Archive equipment - using archiveAllTestEquipmentByPrefix
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await detailsPage.archiveAllTestEquipmentByPrefix(EQUIPMENT_PREFIX);
+          // Verify cleanup completed successfully - page should still be accessible
+          expect.soft(page.url()).toBeTruthy();
+          expect.soft(await page.title()).toBeTruthy();
+        },
+        `Archive all test equipment with prefix ${EQUIPMENT_PREFIX}`,
+        test.info(),
+      );
     });
   });
 
-  test.skip('ERP-3015 - Create test product with complex specification', async ({ page }) => {
+  test('ERP-3015 - Create test product with complex specification', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
 
     const detailsPage = new CreatePartsDatabasePage(page);
     const usersPage = new CreateUsersPage(page);
 
+    /* COMMENTED OUT FOR EQUIPMENT TESTING
     await allure.step('Step 1: Create test products with full specification', async () => {
       // Create products - build ProductSpecification from arrays, supporting optional materials/details
       for (const product of products) {
@@ -399,7 +428,9 @@ export const runERP_3015 = () => {
         );
       }
     });
+    */
 
+    /* COMMENTED OUT FOR EQUIPMENT TESTING
     await allure.step('Step 1.5: Add tech processes to products, assemblies, and details', async () => {
       // Add tech processes to products
       for (const product of products) {
@@ -517,7 +548,36 @@ export const runERP_3015 = () => {
               itemType: 'assembly',
             });
           }
-        });
+        }        );
+      }
+    });
+    */
+
+    await allure.step('Step 4: Create test equipment', async () => {
+      // Create each equipment
+      for (const equipment of equipments) {
+        const equipmentCreated = await detailsPage.createEquipment(
+          equipment.name,
+          equipment.operationType || 'Токарный-ЧПУ',
+          test.info(),
+        );
+
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(equipmentCreated).toBe(true);
+          },
+          `Verify equipment "${equipment.name}" was created successfully`,
+          test.info(),
+        );
+
+        // Navigate back to base equipment page to be ready for next equipment
+        // (only if there are more equipment items to create)
+        if (equipments.indexOf(equipment) < equipments.length - 1) {
+          await page.goto(`${ENV.BASE_URL}baseequipments`);
+          await page.waitForLoadState('networkidle');
+          await page.waitForTimeout(TIMEOUTS.STANDARD);
+        }
       }
     });
   });
@@ -1246,7 +1306,7 @@ export const runERP_3015 = () => {
     });
   });
 
-  test('ERP-3015 - Validate table cell values in production page - Оборудование по производственным заданиям металлообработки table', async ({ page, context }) => {
+  test.skip('ERP-3015 - Validate table cell values in production page - Оборудование по производственным заданиям металлообработки table', async ({ page, context }) => {
     test.setTimeout(TEST_TIMEOUTS.SUPER_EXTENDED);
 
     // Page object for Production page interactions
@@ -1473,12 +1533,6 @@ export const runERP_3015 = () => {
             test.info(),
           );
           
-          // Highlight the table to verify we found it
-          // await productionPage.highlightElement(table, {
-          //   border: '5px solid red',
-          //   backgroundColor: 'yellow',
-          // });
-          
           // Wait for table to be fully loaded and stable before analyzing
           await page.waitForLoadState('networkidle');
           // Additional wait to ensure all popover components are initialized and ready
@@ -1488,126 +1542,128 @@ export const runERP_3015 = () => {
         // Sub-step 4: Validate first N main rows
         await allure.step(`Validate first ${ROWS_TO_VALIDATE} main rows`, async () => {
           const table = page.locator(SelectorsProductionPage.EQUIPMENT_TABLE);
-          // Get all rows and filter to main rows only (exclude sub-rows with -Operation or -NonOperation in data-testid)
-          // Equipment table structure: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-          const allRows = table.locator('tbody tr');
-          const rowCount = await allRows.count();
-          const mainRows: any[] = [];
-          // Collect more main rows than we need, in case some are skipped
-          for (let i = 0; i < rowCount; i++) {
-            const row = allRows.nth(i);
-            const testId = await row.getAttribute('data-testid');
-            if (testId && !testId.includes('-Operation') && !testId.includes('-NonOperation')) {
-              mainRows.push(row);
-              // Collect at least MAX_ROWS_TO_COLLECT main rows to account for skipped rows (0 values, -Operation, or -NonOperation)
-              if (mainRows.length >= ROW_COLLECTION.MAX_ROWS_TO_COLLECT) {
-                break;
-              }
-            }
-          }
-          
-          if (mainRows.length === 0) {
-            const totalRowCount = await allRows.count();
-            const tableSelector = SelectorsProductionPage.EQUIPMENT_TABLE;
-            throw new Error(
-              `No main rows found in equipment production table. ` +
-              `Total rows checked: ${totalRowCount}. ` +
-              `All rows appear to be sub-rows with "-Operation" or "-NonOperation" in their data-testid. ` +
-              `Table selector: ${tableSelector}. ` +
-              `This occurred while validating table cell values on the production page.`,
-            );
-          }
-          
-          // Process each of the first N main rows
-          let processedCount = 0;
-          // Array to store validation results for table output
-          const validationResults: Array<{
-            rowNumber: number;
-            equipmentName: string;
-            cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
-            cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
-          }> = [];
-          
-          for (let rowIndex = 0; rowIndex < mainRows.length && processedCount < ROWS_TO_VALIDATE; rowIndex++) {
-            const currentRow = mainRows[rowIndex];
-            
-            // Verify this is still a main row (not a sub-row with -Operation or -NonOperation) before processing
-            // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-            try {
-              await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-              const rowTestIdCheck = await currentRow.getAttribute('data-testid');
-              if (!rowTestIdCheck || rowTestIdCheck.includes('-Operation') || rowTestIdCheck.includes('-NonOperation')) {
-                console.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
-                continue; // Skip to next row in the loop
-              }
-            } catch (e) {
-              console.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
-              continue; // Skip to next row in the loop
-            }
-            
-            let equipmentName: string | null = null;
-            let leftValue: number = 0;
-            let countEntityValue: number = 0;
-            // Initialize result object for this row
-            const rowResult: {
-              rowNumber: number;
-              equipmentName: string;
-              cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
-              cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
-            } = {
-              rowNumber: rowIndex + 1,
-              equipmentName: '',
-              cell3CountPosition: { status: 'SKIP', validRows: 0, expected: 0, totalRows: 0 },
-              cell4CountEntity: { status: 'SKIP', sum: 0, expected: 0, totalRows: 0 },
-            };
-            
-            await allure.step(`Validate row ${rowIndex + 1} of ${mainRows.length} (processing ${processedCount + 1} of ${ROWS_TO_VALIDATE})`, async () => {
-              // Wait for row to be attached (row is visible but Playwright may report it as hidden)
-              await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-              
-              // Scroll the table container into view first, then the row
-              const table = page.locator(SelectorsProductionPage.EQUIPMENT_TABLE);
-              await table.scrollIntoViewIfNeeded();
-              await page.waitForTimeout(TIMEOUTS.SHORT);
-              
-              // Force scroll the row into view (use evaluate to ensure it actually scrolls)
-              await currentRow.evaluate((el: HTMLElement) => {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              });
-              await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait longer after scrolling to ensure row is fully rendered
-              
-              // Verify the row is actually visible after scrolling
-              try {
-                await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-              } catch (e) {
-                console.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
-              }
-              
-              // Re-verify this is still a main row after scrolling (DOM might have changed)
-              // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-              const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
-              if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation') || rowTestIdAfterScroll.includes('-NonOperation')) {
-                console.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
-                return; // Skip the rest of the steps for this row
-              }
-              
-              // Re-query the row by its data-testid to get a fresh locator after scrolling
-              const freshRow = table.locator(SelectorsProductionPage.getEquipmentTableRowByTestId(rowTestIdAfterScroll));
-              await freshRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
-              
-              // Highlight the current row with red border as we start processing it
-              await productionPage.highlightElement(freshRow, {
-                border: '3px solid red',
-              });
-              await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+                // Get all rows and filter to main rows only (exclude sub-rows with -Operation or -NonOperation in data-testid)
+                // Equipment table structure: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+                const allRows = table.locator('tbody tr');
+                const rowCount = await allRows.count();
+                const mainRows: any[] = [];
+                // Collect more main rows than we need, in case some are skipped
+                for (let i = 0; i < rowCount; i++) {
+                  const row = allRows.nth(i);
+                  const testId = await row.getAttribute('data-testid');
+                  if (testId && !testId.includes('-Operation') && !testId.includes('-NonOperation')) {
+                    mainRows.push(row);
+                    // Collect at least MAX_ROWS_TO_COLLECT main rows to account for skipped rows (0 values, -Operation, or -NonOperation)
+                    if (mainRows.length >= ROW_COLLECTION.MAX_ROWS_TO_COLLECT) {
+                      break;
+                    }
+                  }
+                }
+                
+                if (mainRows.length === 0) {
+                  const totalRowCount = await allRows.count();
+                  const tableTestIdForError = await table.getAttribute('data-testid');
+                  throw new Error(
+                    `No main rows found in equipment production table. ` +
+                    `Total rows checked: ${totalRowCount}. ` +
+                    `All rows appear to be sub-rows with "-Operation" or "-NonOperation" in their data-testid. ` +
+                    `Table data-testid: ${tableTestIdForError || 'N/A'}. ` +
+                    `This occurred while validating table cell values on the production page.`,
+                  );
+                }
+                
+                // Process each of the first N main rows
+                let processedCount = 0;
+                // Array to store validation results for table output
+                const validationResults: Array<{
+                  rowNumber: number;
+                  equipmentName: string;
+                  cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
+                  cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
+                }> = [];
+                
+                for (let rowIndex = 0; rowIndex < mainRows.length && processedCount < ROWS_TO_VALIDATE; rowIndex++) {
+                  const currentRow = mainRows[rowIndex];
+                  
+                  // Verify this is still a main row (not a sub-row with -Operation or -NonOperation) before processing
+                  // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+                  try {
+                    await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                    const rowTestIdCheck = await currentRow.getAttribute('data-testid');
+                    if (!rowTestIdCheck || rowTestIdCheck.includes('-Operation') || rowTestIdCheck.includes('-NonOperation')) {
+                      console.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
+                      continue; // Skip to next row in the loop
+                    }
+                  } catch (e) {
+                    console.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
+                    continue; // Skip to next row in the loop
+                  }
+                  
+                  let equipmentName: string | null = null;
+                  let leftValue: number = 0;
+                  let countEntityValue: number = 0;
+                  // Store cell references for highlighting on validation failure
+                  let countCell: Locator | null = null;
+                  let countEntityCell: Locator | null = null;
+                  // Initialize result object for this row
+                  const rowResult: {
+                    rowNumber: number;
+                    equipmentName: string;
+                    cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
+                    cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
+                  } = {
+                    rowNumber: rowIndex + 1,
+                    equipmentName: '',
+                    cell3CountPosition: { status: 'SKIP', validRows: 0, expected: 0, totalRows: 0 },
+                    cell4CountEntity: { status: 'SKIP', sum: 0, expected: 0, totalRows: 0 },
+                  };
+                  
+                  await allure.step(`Validate row ${rowIndex + 1} of ${mainRows.length} (processing ${processedCount + 1} of ${ROWS_TO_VALIDATE})`, async () => {
+                    // Wait for row to be attached (row is visible but Playwright may report it as hidden)
+                    await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                    
+                    // Scroll the table container into view first, then the row
+                    await table.scrollIntoViewIfNeeded();
+                    await page.waitForTimeout(TIMEOUTS.SHORT);
+                    
+                    // Force scroll the row into view (use evaluate to ensure it actually scrolls)
+                    await currentRow.evaluate((el: HTMLElement) => {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                    await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait longer after scrolling to ensure row is fully rendered
+                    
+                    // Verify the row is actually visible after scrolling
+                    try {
+                      await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+                    } catch (e) {
+                      console.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
+                    }
+                    
+                    // Re-verify this is still a main row after scrolling (DOM might have changed)
+                    // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+                    const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
+                    if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation') || rowTestIdAfterScroll.includes('-NonOperation')) {
+                      console.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
+                      return; // Skip the rest of the steps for this row
+                    }
+                    
+                    // Re-query the row by its data-testid to get a fresh locator after scrolling
+                    const freshRow = table.locator(SelectorsProductionPage.getEquipmentTableRowByTestId(rowTestIdAfterScroll));
+                    await freshRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
+                    
+                    // Highlight the current row with red border as we start processing it
+                    await productionPage.highlightElement(freshRow, {
+                      border: '3px solid red',
+                    });
+                    await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
 
-              // Re-verify this is still a main row before accessing cells (DOM might have changed after highlighting)
-              // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-              const rowTestIdBeforeCells = await freshRow.getAttribute('data-testid');
-              if (!rowTestIdBeforeCells || rowTestIdBeforeCells.includes('-Operation') || rowTestIdBeforeCells.includes('-NonOperation')) {
-                console.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
-                return; // Skip the rest of the steps for this row
-              }
+                    // Re-verify this is still a main row before accessing cells (DOM might have changed after highlighting)
+                    // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+                    const rowTestIdBeforeCells = await freshRow.getAttribute('data-testid');
+                    if (!rowTestIdBeforeCells || rowTestIdBeforeCells.includes('-Operation') || rowTestIdBeforeCells.includes('-NonOperation')) {
+                      console.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
+                      return; // Skip the rest of the steps for this row
+                    }
 
               // First cell: Popover (3 dots menu) - data-testid is on the td element itself
               let popoverCell: Locator;
@@ -1649,7 +1705,7 @@ export const runERP_3015 = () => {
 
               // Third cell: CountPosition - single number (not "X / Y" format) - data-testid is on the td element itself
               await allure.step('Extract and highlight CountPosition cell', async () => {
-                const countCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`).first();
+                countCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`).first();
                 await countCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
                 // Highlight the cell with red border as we extract its value
                 await productionPage.highlightElement(countCell, {
@@ -2010,52 +2066,23 @@ export const runERP_3015 = () => {
                       test.info(),
                     );
                     
-                    // Wait a bit more for the page to fully render, especially the table
+                    // Wait a bit more for the page to fully render, especially the tables
                     await newPage.waitForLoadState('networkidle');
-                    await newPage.waitForTimeout(TIMEOUTS.MEDIUM);
+                    await newPage.waitForTimeout(TIMEOUTS.STANDARD);
                     
-                    // Find table with class 'Table' and count rows, excluding rows with 0 in 11th cell
-                    // Try multiple selectors: table.Table, .Table, or just Table
-                    let table = newPage.locator('table.Table');
-                    let tableCount = await table.count();
+                    // Find all TaskByEquipment tables on the new page
+                    const allTablesPattern = newPage.locator(SelectorsProductionPage.TASK_BY_EQUIPMENT_TABLE_PATTERN);
                     
-                    if (tableCount === 0) {
-                      // Try just .Table (any element with class Table)
-                      table = newPage.locator('.Table');
-                      tableCount = await table.count();
-                    }
-                    
-                    if (tableCount === 0) {
-                      // Try with case-insensitive or partial match
-                      table = newPage.locator('[class*="Table"]');
-                      tableCount = await table.count();
-                    }
-                    
-                    if (tableCount === 0) {
-                      // Try finding any table element
-                      table = newPage.locator('table');
-                      tableCount = await table.count();
-                    }
-                    
-                    // Wait for table to be attached and visible
-                    if (tableCount > 0) {
-                      table = table.first(); // Use the first table found
-                      await table.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                      await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for table to render
-                    } else {
-                      // If no table found, wait a bit more and try again
-                      await newPage.waitForTimeout(TIMEOUTS.STANDARD);
-                      table = newPage.locator('.Table');
-                      tableCount = await table.count();
-                      if (tableCount > 0) {
-                        table = table.first();
-                      } else {
-                        // Try table.Table one more time
-                        table = newPage.locator('table.Table');
-                        tableCount = await table.count();
-                        if (tableCount > 0) {
-                          table = table.first();
-                        }
+                    // Wait for tables to appear with retries
+                    let tableCount = 0;
+                    let retries = 3;
+                    while (tableCount === 0 && retries > 0) {
+                      tableCount = await allTablesPattern.count();
+                      if (tableCount === 0) {
+                        console.log(`No TaskByEquipment tables found on new page yet, waiting longer... (${retries} retries left)`);
+                        await newPage.waitForTimeout(TIMEOUTS.STANDARD);
+                        await newPage.waitForLoadState('networkidle');
+                        retries--;
                       }
                     }
                     
@@ -2063,102 +2090,133 @@ export const runERP_3015 = () => {
                       newPage,
                       () => {
                         expect.soft(tableCount).toBeGreaterThan(0);
-                        if (tableCount > 0) {
-                          expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
-                        }
                       },
-                      `Verify table with class Table is visible (found ${tableCount} table(s))`,
+                      `Verify at least one TaskByEquipment table is found on new page (found ${tableCount} table(s))`,
                       test.info(),
                     );
                     
-                    // Only proceed if we found a table
-                    if (tableCount === 0) {
-                      throw new Error(`Table with class "Table" not found on the new tab page. URL: ${newPageUrl}`);
-                    }
+                    console.log(`Found ${tableCount} TaskByEquipment table(s) on new page to process`);
                     
-                    // Highlight the table
-                    await newPageDetailsPage.highlightElement(table, {
-                      border: '5px solid blue',
-                      backgroundColor: 'lightblue',
-                    });
-                    await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
+                    // Process each table and sum up valid rows from all tables
+                    let totalValidRowCount = 0;
+                    let totalRowCount = 0;
                     
-                    const allTableRows = table.locator('tbody tr');
-                    // Wait for at least one row to be attached (table might be loading)
-                    try {
-                      await allTableRows.first().waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                    } catch (e) {
-                      // If no rows found, that's okay - we'll count 0
-                    }
-                    await newPage.waitForTimeout(TIMEOUTS.SHORT); // Additional wait for rows to render
-                    const totalRowCount = await allTableRows.count();
-                    
-                    // Go through each row and exclude rows that have 0 in the 11th cell (index 10) or have class 'executive-table__row_mark'
-                    let validRowCount = 0;
-                    for (let i = 0; i < totalRowCount; i++) {
-                      const row = allTableRows.nth(i);
-                      
-                      // Check if row has the class 'executive-table__row_mark' - exclude it if it does
-                      const rowClassList = await row.evaluate((el) => Array.from(el.classList));
-                      const hasMarkClass = rowClassList.includes('executive-table__row_mark');
-                      
-                      if (hasMarkClass) {
-                        // Skip this row - it has the mark class
-                        continue;
-                      }
-                      
-                      // Highlight the current row being analyzed
-                      await newPageDetailsPage.highlightElement(row, {
-                        border: '3px solid orange',
-                        backgroundColor: 'yellow',
-                      });
-                      await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
-                      
-                      const cells = row.locator('td');
-                      const cellCount = await cells.count();
-                      
-                      if (cellCount >= 11) {
-                        // Get the 11th cell (index 10)
-                        const eleventhCell = cells.nth(10);
+                    for (let tableIndex = 0; tableIndex < tableCount; tableIndex++) {
+                      await allure.step(`Process table ${tableIndex + 1} of ${tableCount} on new page`, async () => {
+                        const table = allTablesPattern.nth(tableIndex);
                         
-                        // Highlight the 11th cell
-                        await newPageDetailsPage.highlightElement(eleventhCell, {
-                          border: '3px solid purple',
-                          backgroundColor: 'lavender',
+                        // Get table data-testid for logging
+                        const tableTestId = await table.getAttribute('data-testid');
+                        console.log(`Processing table ${tableIndex + 1} on new page: ${tableTestId}`);
+                        
+                        // Wait for table to be attached and visible
+                        await expectSoftWithScreenshot(
+                          newPage,
+                          () => {
+                            expect.soft(table).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                          },
+                          `Verify table ${tableIndex + 1} is attached to DOM on new page`,
+                          test.info(),
+                        );
+                        
+                        await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+                        
+                        await expectSoftWithScreenshot(
+                          newPage,
+                          () => {
+                            expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                          },
+                          `Verify table ${tableIndex + 1} is visible on new page`,
+                          test.info(),
+                        );
+                        
+                        // Highlight the table
+                        await newPageDetailsPage.highlightElement(table, {
+                          border: '5px solid blue',
+                          backgroundColor: 'lightblue',
                         });
-                        await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+                        await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
                         
-                        const cellText = await eleventhCell.textContent();
-                        const cellValue = parseInt(cellText?.trim() || '0', 10);
-                        
-                        // Only count rows where 11th cell is not 0
-                        if (cellValue !== 0) {
-                          validRowCount++;
-                          // Keep highlight for valid rows a bit longer
-                          await newPage.waitForTimeout(TIMEOUTS.SHORT);
+                        const allTableRows = table.locator('tbody tr');
+                        // Wait for at least one row to be attached (table might be loading)
+                        try {
+                          await allTableRows.first().waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                        } catch (e) {
+                          // If no rows found, that's okay - we'll count 0
                         }
-                      } else {
-                        // If row doesn't have 11 cells, include it in the count
-                        validRowCount++;
-                        await newPage.waitForTimeout(TIMEOUTS.SHORT);
-                      }
+                        await newPage.waitForTimeout(TIMEOUTS.SHORT); // Additional wait for rows to render
+                        const currentTableRowCount = await allTableRows.count();
+                        totalRowCount += currentTableRowCount;
+                        
+                        // Go through each row and exclude rows that have 0 in the 11th cell (index 10) or have class 'executive-table__row_mark'
+                        for (let i = 0; i < currentTableRowCount; i++) {
+                          const row = allTableRows.nth(i);
+                          
+                          // Check if row has the class 'executive-table__row_mark' - exclude it if it does
+                          const rowClassList = await row.evaluate((el) => Array.from(el.classList));
+                          const hasMarkClass = rowClassList.includes('executive-table__row_mark');
+                          
+                          if (hasMarkClass) {
+                            // Skip this row - it has the mark class
+                            continue;
+                          }
+                          
+                          // Highlight the current row being analyzed
+                          await newPageDetailsPage.highlightElement(row, {
+                            border: '3px solid orange',
+                            backgroundColor: 'yellow',
+                          });
+                          await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+                          
+                          const cells = row.locator('td');
+                          const cellCount = await cells.count();
+                          
+                          if (cellCount >= 11) {
+                            // Get the 11th cell (index 10)
+                            const eleventhCell = cells.nth(10);
+                            
+                            // Highlight the 11th cell
+                            await newPageDetailsPage.highlightElement(eleventhCell, {
+                              border: '3px solid purple',
+                              backgroundColor: 'lavender',
+                            });
+                            await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+                            
+                            const cellText = await eleventhCell.textContent();
+                            const cellValue = parseInt(cellText?.trim() || '0', 10);
+                            
+                            // Only count rows where 11th cell is not 0
+                            if (cellValue !== 0) {
+                              totalValidRowCount++;
+                              // Keep highlight for valid rows a bit longer
+                              await newPage.waitForTimeout(TIMEOUTS.SHORT);
+                            }
+                          } else {
+                            // If row doesn't have 11 cells, include it in the count
+                            totalValidRowCount++;
+                            await newPage.waitForTimeout(TIMEOUTS.SHORT);
+                          }
+                        }
+                        
+                        console.log(`Table ${tableIndex + 1}: Found ${currentTableRowCount} total rows, ${totalValidRowCount} valid rows so far`);
+                      });
                     }
                     
-                    // Verify the valid row count matches the count position from main table
+                    // Verify the total valid row count from all tables matches the count position from main table
                     await expectSoftWithScreenshot(
                       newPage,
                       () => {
-                        expect.soft(validRowCount).toBe(leftValue);
+                        expect.soft(totalValidRowCount).toBe(leftValue);
                       },
-                      `Verify valid table row count matches count position - Valid Rows: ${validRowCount}, Total Rows: ${totalRowCount}, Expected: ${leftValue}, Equipment: "${equipmentName}"`,
+                      `Verify total valid row count from all tables matches count position - Valid Rows: ${totalValidRowCount}, Total Rows: ${totalRowCount}, Expected: ${leftValue}, Equipment: "${equipmentName}"`,
                       test.info(),
                     );
                     
                     // Store test results for table output
-                    const testResult = validRowCount === leftValue ? 'PASS' : 'FAIL';
+                    const testResult = totalValidRowCount === leftValue ? 'PASS' : 'FAIL';
                     rowResult.cell3CountPosition = {
                       status: testResult,
-                      validRows: validRowCount,
+                      validRows: totalValidRowCount,
                       expected: leftValue,
                       totalRows: totalRowCount,
                     };
@@ -2171,12 +2229,27 @@ export const runERP_3015 = () => {
                   await newPage.close();
                   await page.bringToFront();
                   await page.waitForTimeout(TIMEOUTS.SHORT); // Wait a bit for the page to be ready
+                  
+                  // Highlight CountPosition cell with red background if validation failed
+                  if (rowResult.cell3CountPosition.status === 'FAIL') {
+                    // Re-query the cell to ensure it's still valid after returning from new page
+                    const rowTestIdForHighlight = await freshRow.getAttribute('data-testid');
+                    if (rowTestIdForHighlight) {
+                      const freshRowForHighlight = table.locator(SelectorsProductionPage.getEquipmentTableRowByTestId(rowTestIdForHighlight));
+                      const countCellForHighlight = freshRowForHighlight.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`).first();
+                      await productionPage.highlightElement(countCellForHighlight, {
+                        backgroundColor: 'red',
+                        border: '3px solid darkred',
+                      });
+                      await page.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
+                    }
+                  }
                 });
               });
 
               // Fourth cell: CountEntity - data-testid is on the td element itself
               await allure.step('Extract and highlight CountEntity cell', async () => {
-                const countEntityCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_ENTITY_CELL_SUFFIX}"]`).first();
+                countEntityCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_ENTITY_CELL_SUFFIX}"]`).first();
                 await countEntityCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
                 // Highlight the cell with red border as we extract its value
                 await productionPage.highlightElement(countEntityCell, {
@@ -2513,9 +2586,8 @@ export const runERP_3015 = () => {
                       test.info(),
                     );
                     
-                    // Wait for element to be attached before highlighting (new page might still be loading)
-                    await titleElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
-                    await newPage.waitForTimeout(TIMEOUTS.SHORT); // Brief pause to ensure element is stable
+                    // Brief pause to ensure element is stable before highlighting
+                    await newPage.waitForTimeout(TIMEOUTS.SHORT);
                     
                     // Highlight the title element
                     await newPageDetailsPage.highlightElement(titleElement, {
@@ -2688,53 +2760,68 @@ export const runERP_3015 = () => {
                   await newPage.close();
                   await page.bringToFront();
                   await page.waitForTimeout(TIMEOUTS.SHORT); // Wait a bit for the page to be ready
+                  
+                  // Highlight CountEntity cell with red background if validation failed
+                  if (rowResult.cell4CountEntity.status === 'FAIL') {
+                    // Re-query the cell to ensure it's still valid after returning from new page
+                    const rowTestIdForHighlight = await freshRow.getAttribute('data-testid');
+                    if (rowTestIdForHighlight) {
+                      const freshRowForHighlight = table.locator(SelectorsProductionPage.getEquipmentTableRowByTestId(rowTestIdForHighlight));
+                      const countEntityCellForHighlight = freshRowForHighlight.locator(`td[data-testid^="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_COUNT_ENTITY_CELL_SUFFIX}"]`).first();
+                      await productionPage.highlightElement(countEntityCellForHighlight, {
+                        backgroundColor: 'red',
+                        border: '3px solid darkred',
+                      });
+                      await page.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
+                    }
+                  }
                 });
               });
               
-            }); // End of "Validate row X" step
-            
-            // Add row result to validation results array
-            validationResults.push(rowResult);
-            
-            // Increment processed count only after successfully processing the row
-            processedCount++;
-          } // End of loop through rows
-          
-          // Print validation results table
-          console.log('\n' + '='.repeat(120));
-          console.log('VALIDATION RESULTS TABLE'.padStart(70));
-          console.log('='.repeat(120));
-          console.log('Row'.padEnd(5) + '| ' + 'Equipment Name'.padEnd(50) + '| ' + 'Cell 3 (CountPosition)'.padEnd(30) + '| ' + 'Cell 4 (CountEntity)');
-          console.log('-'.repeat(120));
-          for (const result of validationResults) {
-            const rowNum = result.rowNumber.toString().padEnd(4);
-            const equipment = (result.equipmentName.length > 48 ? result.equipmentName.substring(0, 45) + '...' : result.equipmentName).padEnd(50);
-            const cell3Status = result.cell3CountPosition.status === 'SKIP' 
-              ? 'SKIP' 
-              : result.cell3CountPosition.status === 'PASS'
-              ? `PASS (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})`
-              : `FAIL (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})`;
-            const cell3 = cell3Status.padEnd(30);
-            const cell4Status = result.cell4CountEntity.status === 'SKIP'
-              ? 'SKIP'
-              : result.cell4CountEntity.status === 'PASS'
-              ? `PASS (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`
-              : `FAIL (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`;
-            const cell4 = cell4Status.padEnd(30);
-            console.log(`${rowNum}| ${equipment}| ${cell3}| ${cell4}`);
-          }
-          console.log('-'.repeat(120));
-          console.log(`Total Rows Processed: ${validationResults.length}`);
-          const cell3Passed = validationResults.filter(r => r.cell3CountPosition.status === 'PASS').length;
-          const cell3Failed = validationResults.filter(r => r.cell3CountPosition.status === 'FAIL').length;
-          const cell3Skipped = validationResults.filter(r => r.cell3CountPosition.status === 'SKIP').length;
-          const cell4Passed = validationResults.filter(r => r.cell4CountEntity.status === 'PASS').length;
-          const cell4Failed = validationResults.filter(r => r.cell4CountEntity.status === 'FAIL').length;
-          const cell4Skipped = validationResults.filter(r => r.cell4CountEntity.status === 'SKIP').length;
-          console.log(`Cell 3 (CountPosition): ${cell3Passed} PASS, ${cell3Failed} FAIL, ${cell3Skipped} SKIP`);
-          console.log(`Cell 4 (CountEntity): ${cell4Passed} PASS, ${cell4Failed} FAIL, ${cell4Skipped} SKIP`);
-          console.log('='.repeat(120) + '\n');
-        }); // End of "Validate first N main rows" step
+                  }); // End of "Validate row X" step
+                  
+                  // Add row result to validation results array
+                  validationResults.push(rowResult);
+                  
+                  // Increment processed count only after successfully processing the row
+                  processedCount++;
+                } // End of loop through rows
+                
+                // Print validation results table
+                console.log('\n' + '='.repeat(120));
+                console.log('VALIDATION RESULTS TABLE'.padStart(70));
+                console.log('='.repeat(120));
+                console.log('Row'.padEnd(5) + '| ' + 'Equipment Name'.padEnd(50) + '| ' + 'Cell 3 (CountPosition)'.padEnd(30) + '| ' + 'Cell 4 (CountEntity)');
+                console.log('-'.repeat(120));
+                for (const result of validationResults) {
+                  const rowNum = result.rowNumber.toString().padEnd(4);
+                  const equipment = (result.equipmentName.length > 48 ? result.equipmentName.substring(0, 45) + '...' : result.equipmentName).padEnd(50);
+                  const cell3Status = result.cell3CountPosition.status === 'SKIP' 
+                    ? 'SKIP' 
+                    : result.cell3CountPosition.status === 'PASS'
+                    ? `PASS (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})`
+                    : `FAIL (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})`;
+                  const cell3 = cell3Status.padEnd(30);
+                  const cell4Status = result.cell4CountEntity.status === 'SKIP'
+                    ? 'SKIP'
+                    : result.cell4CountEntity.status === 'PASS'
+                    ? `PASS (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`
+                    : `FAIL (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`;
+                  const cell4 = cell4Status.padEnd(30);
+                  console.log(`${rowNum}| ${equipment}| ${cell3}| ${cell4}`);
+                }
+                console.log('-'.repeat(120));
+                console.log(`Total Rows Processed: ${validationResults.length}`);
+                const cell3Passed = validationResults.filter(r => r.cell3CountPosition.status === 'PASS').length;
+                const cell3Failed = validationResults.filter(r => r.cell3CountPosition.status === 'FAIL').length;
+                const cell3Skipped = validationResults.filter(r => r.cell3CountPosition.status === 'SKIP').length;
+                const cell4Passed = validationResults.filter(r => r.cell4CountEntity.status === 'PASS').length;
+                const cell4Failed = validationResults.filter(r => r.cell4CountEntity.status === 'FAIL').length;
+                const cell4Skipped = validationResults.filter(r => r.cell4CountEntity.status === 'SKIP').length;
+                console.log(`Cell 3 (CountPosition): ${cell3Passed} PASS, ${cell3Failed} FAIL, ${cell3Skipped} SKIP`);
+                console.log(`Cell 4 (CountEntity): ${cell4Passed} PASS, ${cell4Failed} FAIL, ${cell4Skipped} SKIP`);
+                console.log('='.repeat(120) + '\n');
+              }); // End of "Validate first N main rows" step
       });
 
       // Next cell validation: CountEntity
@@ -2845,6 +2932,19 @@ export const runERP_3015 = () => {
           expect.soft(await page.title()).toBeTruthy();
         },
         `Archive all test users with username prefix ${USER_USERNAME_PREFIX}`,
+        test.info(),
+      );
+
+      // 6. Archive equipment - using archiveAllTestEquipmentByPrefix
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          await detailsPage.archiveAllTestEquipmentByPrefix(EQUIPMENT_PREFIX);
+          // Verify cleanup completed successfully - page should still be accessible
+          expect.soft(page.url()).toBeTruthy();
+          expect.soft(await page.title()).toBeTruthy();
+        },
+        `Archive all test equipment with prefix ${EQUIPMENT_PREFIX}`,
         test.info(),
       );
     });

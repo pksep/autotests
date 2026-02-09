@@ -10,6 +10,8 @@ import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
+import * as SelectorsEquipment from '../lib/Constants/SelectorsEquipment';
+import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
 const MAIN_TABLE_TEST_ID = SelectorsPartsDataBase.MAIN_TABLE_TEST_ID;
@@ -4299,6 +4301,200 @@ export class CreatePartsDatabasePage extends PageObject {
     }
 
     return archivedCount;
+  }
+
+  /**
+   * Archives all test equipment items with the given prefix
+   * Navigates to base equipment page and archives all matching items
+   * @param searchPrefix - The prefix to search for (e.g., "ERPTEST_EQUIPMENT")
+   * @returns Promise that resolves when cleanup is complete
+   */
+  async archiveAllTestEquipmentByPrefix(searchPrefix: string): Promise<void> {
+    // Navigate to base equipment page
+    await this.goto(`${ENV.BASE_URL}baseequipments`);
+    await this.waitForNetworkIdle();
+    await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+
+    // Use cleanupTestItemsByPrefix to archive equipment
+    await this.cleanupTestItemsByPrefix(
+      'EQUIPMENT',
+      searchPrefix,
+      `${SelectorsEquipment.BASE_EQUIPMENT_TABLE} ${SelectorsEquipment.BASE_EQUIPMENT_SEARCH_INPUT}`,
+      SelectorsEquipment.BASE_EQUIPMENT_TABLE,
+    );
+  }
+
+  /**
+   * Creates an equipment item with the given name and operation type
+   * @param equipmentName - Name of the equipment to create
+   * @param operationType - Operation type (e.g., "Токарный-ЧПУ")
+   * @param testInfo - TestInfo for expectSoftWithScreenshot
+   * @returns Promise<boolean> - true if creation was successful
+   */
+  async createEquipment(equipmentName: string, operationType: string = 'Токарный-ЧПУ', testInfo: TestInfo): Promise<boolean> {
+    await allure.step(`Create equipment "${equipmentName}"`, async () => {
+      // Navigate to base equipment page
+      await this.goto(`${ENV.BASE_URL}baseequipments`);
+      await this.waitForNetworkIdle();
+
+      // Click Add button
+      const addButton = this.page.locator(SelectorsEquipment.BASE_EQUIPMENT_ADD_BUTTON);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(addButton).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify Add button is visible',
+        testInfo,
+      );
+      await addButton.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Fill equipment name
+      const nameInput = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_NAME_INPUT);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(nameInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify name input is visible',
+        testInfo,
+      );
+      await nameInput.fill(equipmentName);
+      await this.page.waitForTimeout(TIMEOUTS.SHORT);
+
+      // Select first row in type table
+      const typeTable = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_TYPE_TABLE);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(typeTable).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify type table is visible',
+        testInfo,
+      );
+
+      const firstTypeRow = typeTable.locator('tbody').locator(SelectorsEquipment.getEquipmentTypeTableRowSelector()).first();
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(firstTypeRow).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify first type row is visible',
+        testInfo,
+      );
+      await firstTypeRow.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Select first row in subtype table
+      const subtypeTable = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_SUBTYPE_TABLE);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(subtypeTable).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify subtype table is visible',
+        testInfo,
+      );
+
+      const firstSubtypeRow = subtypeTable.locator('tbody').locator(SelectorsEquipment.getEquipmentSubtypeTableRowSelector()).first();
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(firstSubtypeRow).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify first subtype row is visible',
+        testInfo,
+      );
+      await firstSubtypeRow.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Click operation select filter title
+      const operationFilterTitle = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_OPERATION_SELECT_FILTER_TITLE);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(operationFilterTitle).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify operation filter title is visible',
+        testInfo,
+      );
+      await operationFilterTitle.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Select operation type from options list
+      const optionsList = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_OPERATION_SELECT_FILTER_OPTIONS_LIST);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(optionsList).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify options list is visible',
+        testInfo,
+      );
+
+      const operationOption = optionsList.locator(`text="${operationType}"`);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(operationOption).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        `Verify operation option "${operationType}" is visible`,
+        testInfo,
+      );
+      await operationOption.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Click on the table to close the dropdown selector
+      await typeTable.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Click Save button
+      const saveButton = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_SAVE_BUTTON);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(saveButton).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify Save button is visible',
+        testInfo,
+      );
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(saveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify Save button is enabled',
+        testInfo,
+      );
+
+      // Try regular click first, if it fails due to interception, use JavaScript click
+      try {
+        await saveButton.click({ timeout: WAIT_TIMEOUTS.SHORT });
+      } catch (error) {
+        // If click is intercepted, use JavaScript click as fallback
+        await saveButton.evaluate((el: HTMLElement) => {
+          (el as HTMLElement).click();
+        });
+      }
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Wait for success notification
+      const notification = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(notification).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify success notification is visible',
+        testInfo,
+      );
+
+      // Wait a second after notification appears
+      await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+    });
+
+    return true;
   }
 
   /**

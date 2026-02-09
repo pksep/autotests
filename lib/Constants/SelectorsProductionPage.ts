@@ -93,3 +93,17 @@ export const getEquipmentTableRowPopoverItem1 = (rowNumber: string): string => {
 export const getEquipmentTableRowByTestId = (testId: string): string => {
   return `tr[data-testid="${testId}"]`;
 };
+
+// TaskByEquipment tables - can have multiple tables with indices
+// Pattern: TaskByEquipment-Content-List-ExecutiveBody{N}-Table where N is 0, 1, 2, etc.
+export const TASK_BY_EQUIPMENT_TABLE_PREFIX = 'TaskByEquipment-Content-List-ExecutiveBody';
+export const TASK_BY_EQUIPMENT_TABLE_SUFFIX = '-Table';
+
+// Helper function to get TaskByEquipment table selector by index
+export const getTaskByEquipmentTableByIndex = (index: number): string => {
+  return `[data-testid="${TASK_BY_EQUIPMENT_TABLE_PREFIX}${index}${TASK_BY_EQUIPMENT_TABLE_SUFFIX}"]`;
+};
+
+// Helper function to get all TaskByEquipment tables selector pattern
+// This matches any table with the pattern TaskByEquipment-Content-List-ExecutiveBody{N}-Table
+export const TASK_BY_EQUIPMENT_TABLE_PATTERN = '[data-testid^="TaskByEquipment-Content-List-ExecutiveBody"][data-testid$="-Table"]';
