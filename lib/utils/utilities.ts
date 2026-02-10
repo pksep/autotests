@@ -34,7 +34,7 @@ global.arrayIzd = global.arrayIzd || [];
  */
 export async function populateTestData(page: Page, skipNavigation = false) {
   // Lazy import to avoid circular dependency (PartsDatabasePage imports PageObject from Page.ts)
-  const { CreatePartsDatabasePage } = await import('../pages/PartsDatabasePage');
+  const { CreatePartsDatabasePage } = await import('../../pages/PartsDatabasePage');
   const partsDatabasePage = new CreatePartsDatabasePage(page);
 
   // Go to parts database page only if not already there

@@ -21,7 +21,7 @@ import { Input } from './Input'; // Import the Input helper class for handling i
 import { Button } from './Button'; // Import the Button helper class for handling button clicks
 import logger from './logger'; // Import logger utility for logging messages
 import { allure } from 'allure-playwright';
-import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants'; // Import timeout constants
+import { TIMEOUTS, WAIT_TIMEOUTS } from './Constants/TimeoutConstants'; // Import timeout constants
 import { expectSoftWithScreenshot, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities'; // Import utility functions
 // Re-export utilities for backward compatibility
 export { expectSoftWithScreenshot, populateTestData, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities';
