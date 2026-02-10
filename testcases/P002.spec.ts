@@ -5,6 +5,7 @@ import { ENV, SELECTORS } from '../config'; // Import the configuration
 import testData from '../testdata/DD18-T2.json'; // Import your test data
 import testData2 from '../testdata/DD18-T1.json'; // Import your test data
 import logger from '../lib/logger';
+import { countColumns } from '../lib/utils/utilities';
 import { allure } from 'allure-playwright';
 
 const WAREHOUSE_PAGE_BUTTON = "Sclad-deficitProduction-deficitProduction";
@@ -84,7 +85,7 @@ export const runP002 = () => {
 
         await allure.step('Step 5: Check table column count from the test data and compare to the page', async () => {
             logger.info('STEP 5: Check table column count from the test data and compare to the page');
-            const expectedColumnCount = await shortagePage.countColumns(testData.headers);
+            const expectedColumnCount = await countColumns(testData.headers);
             logger.info(`Expected column count: ${expectedColumnCount}`);
             expect(columnCount).toBe(expectedColumnCount);
             logger.info('Navigation to materials page completed');
@@ -111,7 +112,7 @@ export const runP002 = () => {
 
         await allure.step('Step 5: Check table column count from the test data and compare to the page', async () => {
             logger.info('STEP 5: Check table column count from the test data and compare to the page');
-            const expectedColumnCount = await shortagePage.countColumns(testData2.headers);
+            const expectedColumnCount = await countColumns(testData2.headers);
             logger.info(`Expected column count: ${expectedColumnCount}`);
             expect(columnCount).toBe(expectedColumnCount);
         });

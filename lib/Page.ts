@@ -8,10 +8,9 @@
  * - 2025-01-20: Added logging, text normalization, and error message handling methods.
  */
 
-import { Page, expect, Locator, ElementHandle, TestInfo, TestInfoError } from '@playwright/test'; // Import Playwright's Page class
+import { Page, expect, Locator, ElementHandle, TestInfo } from '@playwright/test'; // Import Playwright's Page class
 import { AbstractPage } from './AbstractPage'; // Import the base AbstractPage class
-import { ENV, SELECTORS, CONST } from '../config'; // Import environment and selector configurations
-import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase'; // Import Parts Database selectors
+import { ENV } from '../config'; // Import environment and selector configurations
 import * as SelectorsModalWindowConsignmentNote from '../lib/Constants/SelectorsModalWindowConsignmentNote'; // Import Modal Window Consignment Note selectors
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction'; // Import Start Production selectors
 import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications'; // Import Notifications selectors
@@ -21,303 +20,16 @@ import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrdere
 import { Input } from './Input'; // Import the Input helper class for handling input fields
 import { Button } from './Button'; // Import the Button helper class for handling button clicks
 import logger from './logger'; // Import logger utility for logging messages
-import { table } from 'console';
-import { exec } from 'child_process';
-import exp from 'constants';
 import { allure } from 'allure-playwright';
-import { HIGHLIGHT_PENDING, HIGHLIGHT_SUCCESS, HIGHLIGHT_ERROR } from '../lib/Constants/HighlightStyles'; // Import highlight style constants
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants'; // Import timeout constants
-
-// Global variable declarations for test data arrays
-declare global {
-  var arrayDetail: Array<{ name: string; designation?: string }>;
-  var arrayCbed: Array<{ name: string; designation?: string }>;
-  var arrayIzd: Array<{ name: string; designation?: string }>;
-}
-
-// Initialize global arrays
-global.arrayDetail = global.arrayDetail || [];
-global.arrayCbed = global.arrayCbed || [];
-global.arrayIzd = global.arrayIzd || [];
+import { expectSoftWithScreenshot, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities'; // Import utility functions
+// Re-export utilities for backward compatibility
+export { expectSoftWithScreenshot, populateTestData, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities';
 
 /**
  * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
  * Inherits from the AbstractPage class for basic page handling functionality.
  */
-// Utility function to populate test data arrays
-export async function populateTestData(page: Page, skipNavigation = false) {
-  // Lazy import to avoid circular dependency (PartsDatabasePage imports PageObject from Page.ts)
-  const { CreatePartsDatabasePage } = await import('../pages/PartsDatabasePage');
-  const partsDatabasePage = new CreatePartsDatabasePage(page);
-
-  // Go to parts database page only if not already there
-  if (!skipNavigation) {
-    await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
-    await page.waitForLoadState('networkidle');
-  }
-
-  // Get existing details
-  try {
-    const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
-    await detailTable.waitFor({ state: 'visible', timeout: 5000 });
-    const detailRows = detailTable.locator('tbody tr');
-    const detailCount = await detailRows.count();
-
-    if (detailCount > 0) {
-      const firstDetailRow = detailRows.first();
-      const detailName = await firstDetailRow.locator('td').nth(1).textContent();
-      const detailDesignation = await firstDetailRow.locator('td').nth(2).textContent();
-      arrayDetail = [
-        {
-          name: detailName?.trim() || 'DEFAULT_DETAIL',
-          designation: detailDesignation?.trim() || '-',
-        },
-      ];
-      console.log(`Found existing detail: ${arrayDetail[0].name}`);
-    }
-  } catch (error) {
-    console.log('No details found, using default');
-    arrayDetail = [{ name: 'DEFAULT_DETAIL', designation: '-' }];
-  }
-
-  // Get existing assemblies
-  try {
-    const cbedTable = page.locator(SelectorsPartsDataBase.CBED_TABLE);
-    await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
-    const cbedRows = cbedTable.locator('tbody tr');
-    const cbedCount = await cbedRows.count();
-
-    if (cbedCount > 0) {
-      const firstCbedRow = cbedRows.first();
-      const cbedName = await firstCbedRow.locator('td').nth(1).textContent();
-      const cbedDesignation = await firstCbedRow.locator('td').nth(2).textContent();
-      arrayCbed = [
-        {
-          name: cbedName?.trim() || 'DEFAULT_CBED',
-          designation: cbedDesignation?.trim() || '-',
-        },
-      ];
-      console.log(`Found existing assembly: ${arrayCbed[0].name}`);
-    }
-  } catch (error) {
-    console.log('No assemblies found, using default');
-    arrayCbed = [{ name: 'DEFAULT_CBED', designation: '-' }];
-  }
-
-  // Get existing products by searching for them
-  try {
-    console.log('Looking for products table...');
-    const productTable = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
-    await productTable.waitFor({ state: 'visible', timeout: 5000 });
-    console.log('Products table found, searching for products...');
-
-    // Search for products that might exist (try common patterns)
-    const searchInput = page.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} ${SelectorsPartsDataBase.SEARCH_PRODUCT_ATTRIBUT}`);
-    await searchInput.waitFor({ state: 'visible', timeout: 5000 });
-
-    // Try searching for products with common patterns
-    const searchTerms = ['Впускной', 'крапан', 'М12', 'DEFAULT_PRODUCT'];
-    let foundProduct = false;
-
-    for (const searchTerm of searchTerms) {
-      console.log(`Searching for products with term: "${searchTerm}"`);
-      await searchInput.clear();
-      await searchInput.fill(searchTerm);
-      await searchInput.press('Enter');
-      await page.waitForTimeout(1000); // Wait for search results
-
-      const productRows = productTable.locator('tbody tr');
-      const productCount = await productRows.count();
-      console.log(`Found ${productCount} products matching "${searchTerm}"`);
-
-      if (productCount > 0) {
-        const firstProductRow = productRows.first();
-        const productName = await firstProductRow.locator('td').nth(2).textContent();
-        const productDesignation = await firstProductRow.locator('td').nth(3).textContent();
-        arrayIzd = [
-          {
-            name: productName?.trim() || 'DEFAULT_PRODUCT',
-            designation: productDesignation?.trim() || '-',
-          },
-        ];
-        console.log(`Found existing product: ${arrayIzd[0].name}`);
-        foundProduct = true;
-        break;
-      }
-    }
-
-    if (!foundProduct) {
-      console.log('No products found with any search terms, will use default');
-    }
-  } catch (error) {
-    console.log('No products found, using default. Error:', error);
-    arrayIzd = [{ name: 'DEFAULT_PRODUCT', designation: '-' }];
-  }
-
-  // Populate details array
-  try {
-    console.log('Looking for details table...');
-    const detailTable = page.locator(SelectorsPartsDataBase.DETAIL_TABLE);
-    await detailTable.waitFor({ state: 'visible', timeout: 5000 });
-    console.log('Details table found, searching for details...');
-
-    const searchInput = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE} ${SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT}`);
-    await searchInput.waitFor({ state: 'visible', timeout: 5000 });
-
-    const searchTerms = ['DEFAULT_DETAIL', 'Шток', 'поршнем'];
-    let foundDetail = false;
-
-    for (const searchTerm of searchTerms) {
-      console.log(`Searching for details with term: "${searchTerm}"`);
-      await searchInput.clear();
-      await searchInput.fill(searchTerm);
-      await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
-
-      const rows = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE} tbody tr`);
-      const rowCount = await rows.count();
-
-      if (rowCount > 0) {
-        console.log(`Found ${rowCount} details with search term: "${searchTerm}"`);
-        arrayDetail = [];
-        for (let i = 0; i < Math.min(rowCount, 3); i++) {
-          const nameCell = rows.nth(i).locator('td').nth(1);
-          const designationCell = rows.nth(i).locator('td').nth(2);
-          const name = (await nameCell.textContent())?.trim() || `DETAIL_${i + 1}`;
-          const designation = (await designationCell.textContent())?.trim() || '-';
-          arrayDetail.push({ name, designation });
-        }
-        foundDetail = true;
-        break;
-      }
-    }
-
-    if (!foundDetail) {
-      console.log('No details found with any search terms, will use default');
-    }
-  } catch (error) {
-    console.log('No details found, using default. Error:', error);
-    arrayDetail = [{ name: 'DEFAULT_DETAIL', designation: '-' }];
-  }
-
-  // Populate CBED array
-  try {
-    console.log('Looking for CBED table...');
-    const cbedTable = page.locator(SelectorsPartsDataBase.CBED_TABLE);
-    await cbedTable.waitFor({ state: 'visible', timeout: 5000 });
-    console.log('CBED table found, searching for CBEDs...');
-
-    const searchInput = page.locator(`${SelectorsPartsDataBase.CBED_TABLE} ${SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT}`);
-    await searchInput.waitFor({ state: 'visible', timeout: 5000 });
-
-    const searchTerms = ['DEFAULT_CBED', 'СБЕД', 'сборка'];
-    let foundCbed = false;
-
-    for (const searchTerm of searchTerms) {
-      console.log(`Searching for CBEDs with term: "${searchTerm}"`);
-      await searchInput.clear();
-      await searchInput.fill(searchTerm);
-      await searchInput.press('Enter');
-      await page.waitForTimeout(1000);
-
-      const rows = page.locator(`${SelectorsPartsDataBase.CBED_TABLE} tbody tr`);
-      const rowCount = await rows.count();
-
-      if (rowCount > 0) {
-        console.log(`Found ${rowCount} CBEDs with search term: "${searchTerm}"`);
-        arrayCbed = [];
-        for (let i = 0; i < Math.min(rowCount, 3); i++) {
-          const nameCell = rows.nth(i).locator('td').nth(1);
-          const designationCell = rows.nth(i).locator('td').nth(2);
-          const name = (await nameCell.textContent())?.trim() || `CBED_${i + 1}`;
-          const designation = (await designationCell.textContent())?.trim() || '-';
-          arrayCbed.push({ name, designation });
-        }
-        foundCbed = true;
-        break;
-      }
-    }
-
-    if (!foundCbed) {
-      console.log('No CBEDs found with any search terms, will use default');
-    }
-  } catch (error) {
-    console.log('No CBEDs found, using default. Error:', error);
-    arrayCbed = [{ name: 'DEFAULT_CBED', designation: '-' }];
-  }
-}
-
-/**
- * Helper function to wrap expect.soft() with automatic screenshot capture
- * This ensures screenshots are taken before every soft assertion for debugging purposes
- *
- * @param page - The Playwright Page object to capture screenshot from
- * @param assertionFn - A function that contains the expect.soft() assertion
- * @param description - Optional description for the assertion (used in logs and screenshot naming)
- * @param testInfo - Optional TestInfo object to attach screenshot to test report
- *
- * @example
- * await expectSoftWithScreenshot(page, () => {
- *   expect.soft(actualValue).toBe(expectedValue);
- * }, 'Verify quantity matches', test.info());
- */
-export async function expectSoftWithScreenshot(page: Page, assertionFn: () => void | Promise<void>, description?: string, testInfo?: TestInfo): Promise<void> {
-  const errorsArray: TestInfoError[] | undefined = testInfo && (testInfo as any).errors;
-  const canDetectFailure = Array.isArray(errorsArray);
-  const getSoftErrorCount = (): number => {
-    if (canDetectFailure && errorsArray) {
-      return errorsArray.length;
-    }
-    return (page as any).__softAssertErrorCount ?? 0;
-  };
-
-  const beforeCount = getSoftErrorCount();
-  const result = assertionFn();
-  if (result instanceof Promise) {
-    await result;
-  }
-  const afterCount = getSoftErrorCount();
-  const assertionFailed = canDetectFailure ? afterCount > beforeCount : true;
-
-  if (!assertionFailed) {
-    if (!canDetectFailure) {
-      (page as any).__softAssertErrorCount = afterCount;
-    }
-    return;
-  }
-
-  const timestamp = Date.now();
-  const safeDescription = description ? description.replace(/[^a-zA-Z0-9]/g, '_') : 'assertion';
-  const screenshotPath = `test-results/soft-assert-${safeDescription}-${timestamp}.png`;
-  let screenshotAttached = false;
-
-  try {
-    await page.screenshot({ path: screenshotPath, fullPage: false, timeout: 5000 });
-
-    if (testInfo) {
-      try {
-        await testInfo.attach(`soft-assert-${description || 'screenshot'}`, {
-          path: screenshotPath,
-          contentType: 'image/png',
-        });
-        screenshotAttached = true;
-      } catch (attachError) {
-        console.log(`Could not attach screenshot to test report: ${attachError}`);
-      }
-    }
-
-    if (description) {
-      const attachmentNote = screenshotAttached ? ' (attached to test report - will appear in HTML report on failure)' : '';
-      console.log(`📸 Screenshot captured for soft assertion: ${description}`);
-      console.log(`   Screenshot path: ${screenshotPath}${attachmentNote}`);
-    }
-
-    (page as any).__lastSoftAssertScreenshot = screenshotPath;
-  } catch (error) {
-    console.log(`Could not capture screenshot for soft assertion: ${error}`);
-  }
-}
-
 export class PageObject extends AbstractPage {
   protected button: Button; // Button helper instance
   protected input: Input; // Input helper instance
@@ -613,92 +325,6 @@ export class PageObject extends AbstractPage {
     return await this.page.textContent(selector); // Return the text content of the element
   }
 
-  /**
-   * Normalizes a string by removing extra spaces and normalizing Unicode characters.
-   * @param text - The text string to normalize.
-   * @returns The normalized text string.
-   */
-  normalizeText(text: string): string {
-    return text
-      .normalize('NFC')
-      .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
-      .trim(); // Trim leading and trailing spaces
-  }
-
-  /**
-   * Normalizes order numbers by removing "№" symbol and trimming whitespace
-   * @param orderNum - The order number string to normalize
-   * @returns Normalized order number without "№" symbol
-   */
-  normalizeOrderNumber(orderNum: string): string {
-    return orderNum.replace(/^№\s*/, '').trim();
-  }
-
-  /**
-   * Normalizes date strings to DD.MM.YYYY format
-   * Handles formats: DD.MM.YYYY, DD.MM.YY, and month names (янв, фев, etc.)
-   * @param rawDate - The raw date string to normalize
-   * @returns Normalized date string in DD.MM.YYYY format, or original string if it's just a number
-   */
-  normalizeDate(rawDate: string): string {
-    if (!rawDate || !rawDate.trim()) {
-      logger.warn('normalizeDate: Empty or undefined date string');
-      return rawDate || '';
-    }
-
-    const trimmedDate = rawDate.trim();
-
-    // Skip normalization if it's just a number (like "0" for DateOrder)
-    if (/^\d+$/.test(trimmedDate)) {
-      return trimmedDate;
-    }
-
-    const parseDate = (dateStr: string): Date => {
-      if (!dateStr || !dateStr.trim()) {
-        throw new Error('Empty date string');
-      }
-
-      if (dateStr.includes('.')) {
-        const parts = dateStr.split('.');
-        if (parts.length >= 3) {
-          const [day, month, yearStr] = parts;
-          const year = yearStr && yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr || '0', 10);
-          return new Date(year, Number(month) - 1, Number(day));
-        }
-      }
-
-      const months: { [key: string]: number } = {
-        янв: 0,
-        фев: 1,
-        мар: 2,
-        апр: 3,
-        май: 4,
-        июн: 5,
-        июл: 6,
-        авг: 7,
-        сен: 8,
-        окт: 9,
-        ноя: 10,
-        дек: 11,
-      };
-      const parts = dateStr.split(' ');
-      const monthName = parts[0].toLowerCase();
-      const day = parseInt(parts[1].replace(',', ''), 10);
-      const year = parseInt(parts[2], 10);
-      return new Date(year, months[monthName], day);
-    };
-
-    try {
-      const date = parseDate(trimmedDate);
-      const day = `${date.getDate()}`.padStart(2, '0');
-      const month = `${date.getMonth() + 1}`.padStart(2, '0');
-      const year = `${date.getFullYear()}`;
-      return `${day}.${month}.${year}`;
-    } catch (error) {
-      logger.warn(`Failed to normalize date "${rawDate}": ${error}`);
-      return rawDate;
-    }
-  }
 
   /**
    * Retrieves and normalizes the text content of a specified selector.
@@ -707,7 +333,7 @@ export class PageObject extends AbstractPage {
    */
   async getTextNormalized(selector: string): Promise<string | null> {
     const text = await this.getText(selector); // Get the raw text
-    return text ? this.normalizeText(text) : null; // Return normalized text if available
+    return text ? normalizeText(text) : null; // Return normalized text if available
   }
 
   /**
@@ -1573,22 +1199,6 @@ export class PageObject extends AbstractPage {
   }
 
   /**
-   * This method counts the number of sub headers for a group of columns. IE, they have a parent column above them.
-   * @param headers - The headers object containing columns and their sub-headers.
-   * @returns The total count of columns, including sub-headers.
-   */
-
-  async countColumns(headers: any): Promise<number> {
-    let count = 0;
-    for (const key in headers) {
-      if (headers[key].subHeaders) {
-        count += await this.countColumns(headers[key].subHeaders); // Await the result
-      }
-      count++; // Ensure each top-level column is counted
-    }
-    return count;
-  }
-  /**
    * Check if the table column headers match the expected headers.
    * @param page - The Playwright page instance.
    * @param tableId - The ID or data-testid of the table element.
@@ -1641,7 +1251,7 @@ export class PageObject extends AbstractPage {
           logger.info('The parameter "text" is undefined.');
         } else {
           // Normalize text content and add to headerTexts array
-          headerTexts.push(this.normalizeText(text));
+          headerTexts.push(normalizeText(text));
         }
 
         // Log the column text or 'Tick'
@@ -1659,15 +1269,15 @@ export class PageObject extends AbstractPage {
 
       for (const key in headers) {
         if (headers[key] && typeof headers[key] === 'object' && headers[key].label) {
-          flattened.push(this.normalizeText(headers[key].label));
+          flattened.push(normalizeText(headers[key].label));
 
           if (headers[key].subHeaders) {
             for (const subKey in headers[key].subHeaders) {
-              flattened.push(this.normalizeText(headers[key].subHeaders[subKey]));
+              flattened.push(normalizeText(headers[key].subHeaders[subKey]));
             }
           }
         } else {
-          flattened.push(this.normalizeText(headers[key]));
+          flattened.push(normalizeText(headers[key]));
         }
       }
 
@@ -3156,12 +2766,12 @@ export class PageObject extends AbstractPage {
     // Check if each searchTerm exists in the historyItems
     for (const term of searchTerms) {
       // Trim extra spaces from the search term
-      const trimmedTerm = this.normalizeText(term.trim());
+      const trimmedTerm = normalizeText(term.trim());
 
       // Log the current search term
       logger.info('Current Search Term (trimmed):', trimmedTerm);
 
-      const termExists = historyItems.some(item => this.normalizeText(item.trim()) === trimmedTerm);
+      const termExists = historyItems.some(item => normalizeText(item.trim()) === trimmedTerm);
       // Log the comparison result
       logger.info(`Term "${trimmedTerm}" exists in history items:`, termExists);
 
@@ -3612,7 +3222,7 @@ export class PageObject extends AbstractPage {
       containerSelector = `${modalTestId}[open]`;
     } else if (modalTestId.includes('[data-testid=')) {
       // It's a full selector without [open], extract ID and construct selector
-      const extractedId = this.extractIdFromSelector(modalTestId);
+      const extractedId = extractIdFromSelector(modalTestId);
       containerSelector = `[data-testid="${extractedId}"][open]`;
     } else {
       // It's just the ID, construct the selector
@@ -4035,21 +3645,6 @@ export class PageObject extends AbstractPage {
 
     // Find all buttons inside the scoped dialog
     return dialogLocator.locator(buttonSelector);
-  }
-  async arraysAreIdentical<T>(arr1: T[], arr2: T[]): Promise<boolean> {
-    if (arr1.length !== arr2.length) {
-      return false; // Arrays have different lengths
-    }
-
-    const areEqual = arr1.every((value, index) => {
-      const value2 = arr2[index];
-      if (Array.isArray(value) && Array.isArray(value2)) {
-        return this.arraysAreIdentical(value, value2); // Recursive call
-      }
-      return value === value2; // Compare primitives
-    });
-
-    return areEqual;
   }
 
   async getAllH3TitlesInModalClassNew(page: Page, className: string): Promise<string[]> {
@@ -4916,10 +4511,6 @@ export class PageObject extends AbstractPage {
    * @param selector - The selector string (may contain [data-testid="..."] or just the ID)
    * @returns The extracted data-testid value or the original selector if no match
    */
-  extractIdFromSelector(selector: string): string {
-    const match = selector.match(/\[data-testid="([^"]+)"]/);
-    return match ? match[1] : selector;
-  }
 
   /**
    * Helper function to fill input and wait for value to be set (replaces waitForTimeout after fill)
@@ -4995,124 +4586,12 @@ export class PageObject extends AbstractPage {
   }
 }
 
-// Retrieving descendants from the entity specification
-/**
- * Interface representing specification data.
- * @property designation - The designation of the specification item.
- * @property name - The name of the specification item.
- * @property quantity - The quantity of the specification item.
- */
-async function extractDataSpetification(table: Locator): Promise<ISpetificationReturnData> {
-  const cbedListData: ISpetificationData[] = [];
-  const detalListData: ISpetificationData[] = [];
-  const listPokDetListData: ISpetificationData[] = [];
-  const materialListData: ISpetificationData[] = [];
-
-  // Get all draggable tables
-  const draggableTables = table.locator('.draggable-table');
-  const tableCount = await draggableTables.count();
-  console.log(`Found ${tableCount} draggable tables`);
-
-  // Wait for the first table to be attached to DOM (may be hidden initially)
-  await draggableTables.first().waitFor({ state: 'attached' });
-
-  for (let tableIndex = 0; tableIndex < tableCount; tableIndex++) {
-    const currentTable = draggableTables.nth(tableIndex);
-
-    // Check if table is visible or hidden
-    const isVisible = await currentTable.isVisible();
-    console.log(`Table ${tableIndex} visibility: ${isVisible}`);
-
-    const tbody = currentTable.locator('tbody');
-    const tbodyRows = tbody.locator('tr');
-    const rowCount = await tbodyRows.count();
-    console.log(`Table ${tableIndex} has ${rowCount} rows`);
-
-    if (rowCount === 0) {
-      console.log(`Table ${tableIndex} is empty, skipping`);
-      continue;
-    }
-
-    for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-      const row = tbodyRows.nth(rowIndex);
-      const rowData = row.locator('td');
-      const tdCount = await rowData.count();
-
-      if (tdCount === 0) {
-        console.log(`Row ${rowIndex} has no td elements, skipping`);
-        continue;
-      }
-
-      const cell2 = (await rowData.nth(1).textContent()) || '';
-      const cell3 = (await rowData.nth(2).textContent()) || '';
-      const cell5 = (await rowData.nth(4).textContent()) || '0';
-
-      const designation = cell2?.trim() || '';
-      const name = cell3?.trim() || '';
-      const quantity = Number(cell5?.trim()) || 0;
-
-      console.log(`Processing row ${rowIndex} in table ${tableIndex}:`, {
-        designation,
-        name,
-        quantity,
-      });
-
-      // Determine which array to push based on table index
-      switch (tableIndex) {
-        case 0:
-          cbedListData.push({ designation, name, quantity });
-          break;
-        case 1:
-          detalListData.push({ designation, name, quantity });
-          break;
-        case 2:
-          listPokDetListData.push({ designation, name, quantity });
-          break;
-        case 3:
-          materialListData.push({ designation, name, quantity });
-          break;
-      }
-    }
-  }
-
-  // Log the contents of each array
-  console.log('Сборки (cbeds):', JSON.stringify(cbedListData, null, 2));
-  console.log('Детали (detals):', JSON.stringify(detalListData, null, 2));
-  console.log('Покупные детали (listPokDet):', JSON.stringify(listPokDetListData, null, 2));
-  console.log('Материалы (materialList):', JSON.stringify(materialListData, null, 2));
-
-  return {
-    cbeds: cbedListData,
-    detals: detalListData,
-    listPokDet: listPokDetListData,
-    materialList: materialListData,
-  };
-}
-
 interface ValidationResult {
   success: boolean;
   errors: string[];
 }
 
-export interface ISpetificationData {
-  designation: string;
-  name: string;
-  quantity: number;
-}
 
-/**
- * Interface representing the return data structure of specifications.
- * @property cbeds - An array of specification data for cbeds.
- * @property detals - An array of specification data for detals.
- * @property listPokDet - An array of specification data for listPokDet.
- * @property materialList - An array of specification data for materials.
- */
-interface ISpetificationReturnData {
-  cbeds: ISpetificationData[];
-  detals: ISpetificationData[];
-  listPokDet: ISpetificationData[];
-  materialList: ISpetificationData[];
-}
 
 export enum Click {
   Yes = 1,

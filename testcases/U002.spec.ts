@@ -6,6 +6,7 @@ import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
 import { ENV, SELECTORS, LOGIN_TEST_CONFIG } from '../config';
 import { allure } from 'allure-playwright';
 import { Click, expectSoftWithScreenshot } from '../lib/Page';
+import { extractIdFromSelector } from '../lib/utils/utilities';
 import testData1 from '../testdata/U002-PC1.json';
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
@@ -121,7 +122,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       const buttons = testData1.elements.MainPage.buttons.map(button => {
         // Apply knownButtonTestIdsByLabel mapping if datatestid is missing
         const knownButtonTestIdsByLabel: Record<string, string> = {
-          'Создать заказ': orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON),
+          'Создать заказ': extractIdFromSelector(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_DIV_CREATE_ORDER_BUTTON),
         };
         const mappedTestId = button.datatestid || knownButtonTestIdsByLabel[button.label];
         return {
@@ -326,10 +327,10 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       await orderedFromSuppliersPage.waitAndHighlight(chooseBtn);
 
       // Extract the modal ID from the constant (not the full dialog selector)
-      const modalId = orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID);
+      const modalId = extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID);
       const enabled = await orderedFromSuppliersPage.isButtonVisibleTestId(
         page,
-        orderedFromSuppliersPage.extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON),
+        extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON),
         'Выбрать',
         true,
         modalId, // Use just the ID extracted from the modal test ID constant

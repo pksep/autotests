@@ -1,5 +1,6 @@
 import { expect, Page, Locator, TestInfo } from '@playwright/test';
 import { PageObject, ISpetificationData, expectSoftWithScreenshot } from '../lib/Page';
+import { normalizeOrderNumber } from '../lib/utils/utilities';
 import logger from '../lib/logger';
 import { exec } from 'child_process';
 import { time } from 'console';
@@ -1923,7 +1924,7 @@ export class CreateLoadingTaskPage extends PageObject {
       await tableBody.waitFor({ state: 'visible', timeout: 10000 });
 
       // Normalize expected order number (remove "№" and extra spaces)
-      const normalizedExpected = this.normalizeOrderNumber(expectedOrderNumber);
+      const normalizedExpected = normalizeOrderNumber(expectedOrderNumber);
 
       // Find the row that matches the expected order number
       const rows = tableBody.locator('tr');
@@ -1936,7 +1937,7 @@ export class CreateLoadingTaskPage extends PageObject {
         if ((await orderNumberCell.count()) > 0) {
           await orderNumberCell.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
           const cellOrderNumber = ((await orderNumberCell.textContent()) || '').trim();
-          const normalizedCell = this.normalizeOrderNumber(cellOrderNumber);
+          const normalizedCell = normalizeOrderNumber(cellOrderNumber);
 
           // Check if this row matches the expected order number
           if (normalizedCell.includes(normalizedExpected) || normalizedExpected.includes(normalizedCell.split(' от ')[0])) {
@@ -1992,7 +1993,7 @@ export class CreateLoadingTaskPage extends PageObject {
    */
   async findRowByOrderNumber(tableBody: Locator, expectedOrderNumber: string, orderNumberCellSelector?: string): Promise<Locator | null> {
     try {
-      const normalizedExpected = this.normalizeOrderNumber(expectedOrderNumber);
+      const normalizedExpected = normalizeOrderNumber(expectedOrderNumber);
       const rows = tableBody.locator('tr');
       const rowCount = await rows.count();
 
@@ -2005,7 +2006,7 @@ export class CreateLoadingTaskPage extends PageObject {
         if ((await orderNumberCell.count()) > 0) {
           await orderNumberCell.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
           const cellOrderNumber = ((await orderNumberCell.textContent()) || '').trim();
-          const normalizedCell = this.normalizeOrderNumber(cellOrderNumber);
+          const normalizedCell = normalizeOrderNumber(cellOrderNumber);
 
           // Check if this row matches the expected order number
           if (normalizedCell.includes(normalizedExpected) || normalizedExpected.includes(normalizedCell.split(' от ')[0])) {

@@ -3,6 +3,7 @@ import { runTC000, performLogin } from './TC000.spec';
 import { ENV, SELECTORS, LOGIN_TEST_CONFIG } from '../config';
 import { allure } from 'allure-playwright';
 import { Click, ISpetificationData, expectSoftWithScreenshot } from '../lib/Page';
+import { normalizeOrderNumber, normalizeDate } from '../lib/utils/utilities';
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import { CreateLoadingTaskPage, Month } from '../pages/LoadingTaskPage';
 import { CreateWarehouseTaskForShipmentPage } from '../pages/WarehouseTaskForShipmentPage';
@@ -747,8 +748,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         return orderNum.split(' /')[0].trim();
       };
 
-      const normalizedTitle = loadingTaskPage.normalizeOrderNumber(titleText);
-      const normalizedOrderValue = loadingTaskPage.normalizeOrderNumber(orderNumberValue);
+      const normalizedTitle = normalizeOrderNumber(titleText);
+      const normalizedOrderValue = normalizeOrderNumber(orderNumberValue);
       const baseTitleOrder = getBaseOrderNumber(normalizedTitle);
       const baseOrderValue = getBaseOrderNumber(normalizedOrderValue);
 
@@ -1036,8 +1037,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(shipmentDateCell);
       const cellShipmentDate = (await shipmentDateCell.textContent())?.trim() || '';
 
-      const normalizedDisplayDate = loadingTaskPage.normalizeDate(displayShipmentDate);
-      const normalizedCellDate = loadingTaskPage.normalizeDate(cellShipmentDate);
+      const normalizedDisplayDate = normalizeDate(displayShipmentDate);
+      const normalizedCellDate = normalizeDate(cellShipmentDate);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1628,8 +1629,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Tab 2 DateByUrgency: ${dateByUrgencyTab2}`);
 
       // Normalize dates to same format before comparing
-      const normalizedDateTab1 = loadingTaskPage.normalizeDate(dateByUrgencyTab1);
-      const normalizedDateTab2 = loadingTaskPage.normalizeDate(dateByUrgencyTab2);
+      const normalizedDateTab1 = normalizeDate(dateByUrgencyTab1);
+      const normalizedDateTab2 = normalizeDate(dateByUrgencyTab2);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1664,8 +1665,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
 
       // Normalize dates to same format before comparing
-      const normalizedDateTab1 = loadingTaskPage.normalizeDate(dateShipmentsTab1);
-      const normalizedDateTab2 = loadingTaskPage.normalizeDate(dateShipmentsTab2);
+      const normalizedDateTab1 = normalizeDate(dateShipmentsTab1);
+      const normalizedDateTab2 = normalizeDate(dateShipmentsTab2);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1805,8 +1806,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       console.log(`Tab 2 DateShipments (for comparison): ${dateShipmentsTab2}`);
 
       // Normalize dates using page class method
-      const normalizedUrgencyDate = loadingTaskPage.normalizeDate(dateByUrgencyTab2);
-      const normalizedShipmentPlanDate = loadingTaskPage.normalizeDate(dateShipmentsTab2);
+      const normalizedUrgencyDate = normalizeDate(dateByUrgencyTab2);
+      const normalizedShipmentPlanDate = normalizeDate(dateShipmentsTab2);
 
       // Get full order number
       const fullOrderNumberValue = global.fullOrderNumber || fullOrderNumber;
@@ -1910,7 +1911,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const urgencyDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_URGENT_DATE_PATTERN).first();
       await deficitLoadingTaskPage.waitAndHighlight(urgencyDateCell);
       const urgencyDateValue = (await urgencyDateCell.textContent())?.trim() || '';
-      const normalizedUrgencyDateFromTable = deficitLoadingTaskPage.normalizeDate(urgencyDateValue);
+      const normalizedUrgencyDateFromTable = normalizeDate(urgencyDateValue);
       console.log(`Urgency date in table: ${urgencyDateValue} (normalized: ${normalizedUrgencyDateFromTable})`);
       console.log(`Expected urgency date: ${normalizedUrgencyDate}`);
       await expectSoftWithScreenshot(
@@ -1926,7 +1927,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2UrgencyDisplay = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(tab2UrgencyDisplay);
       const tab2UrgencyValue = (await tab2UrgencyDisplay.textContent())?.trim() || '';
-      const normalizedTab2Urgency = tab2LoadingTaskPage.normalizeDate(tab2UrgencyValue);
+      const normalizedTab2Urgency = normalizeDate(tab2UrgencyValue);
       console.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
       await expectSoftWithScreenshot(
         deficitPage,
@@ -1942,7 +1943,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const shipmentPlanDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_PLANE_DATE_PATTERN).first();
       await deficitLoadingTaskPage.waitAndHighlight(shipmentPlanDateCell);
       const shipmentPlanDateValue = (await shipmentPlanDateCell.textContent())?.trim() || '';
-      const normalizedShipmentPlanDateFromTable = deficitLoadingTaskPage.normalizeDate(shipmentPlanDateValue);
+      const normalizedShipmentPlanDateFromTable = normalizeDate(shipmentPlanDateValue);
       console.log(`Shipment plan date in table: ${shipmentPlanDateValue} (normalized: ${normalizedShipmentPlanDateFromTable})`);
       console.log(`Expected shipment plan date: ${normalizedShipmentPlanDate}`);
       await expectSoftWithScreenshot(
@@ -1959,7 +1960,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tab2PlanDisplay = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(tab2PlanDisplay);
       const tab2PlanValue = (await tab2PlanDisplay.textContent())?.trim() || '';
-      const normalizedTab2Plan = tab2LoadingTaskPage.normalizeDate(tab2PlanValue);
+      const normalizedTab2Plan = normalizeDate(tab2PlanValue);
       console.log(`Tab 2 plan shipment date: ${tab2PlanValue} (normalized: ${normalizedTab2Plan})`);
       await expectSoftWithScreenshot(
         deficitPage,
@@ -2065,7 +2066,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const deficitDateUrgencyCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
       await deficitLoadingTaskPage.waitAndHighlight(deficitDateUrgencyCell);
       const deficitDateUrgencyValue = (await deficitDateUrgencyCell.textContent())?.trim() || '';
-      const normalizedDeficitDateUrgency = deficitLoadingTaskPage.normalizeDate(deficitDateUrgencyValue);
+      const normalizedDeficitDateUrgency = normalizeDate(deficitDateUrgencyValue);
       console.log(`Deficit table urgency date: ${deficitDateUrgencyValue} (normalized: ${normalizedDeficitDateUrgency})`);
 
       // Switch to orders page to compare
@@ -2075,7 +2076,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await shipmentsDateUrgencyDisplay.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsDateUrgencyDisplay.scrollIntoViewIfNeeded();
         const shipmentsDateUrgencyValue = (await shipmentsDateUrgencyDisplay.textContent())?.trim() || '';
-        const normalizedShipmentsDateUrgency = loadingTaskPage.normalizeDate(shipmentsDateUrgencyValue);
+        const normalizedShipmentsDateUrgency = normalizeDate(shipmentsDateUrgencyValue);
         console.log(`Shipments table urgency date: ${shipmentsDateUrgencyValue} (normalized: ${normalizedShipmentsDateUrgency})`);
         await expectSoftWithScreenshot(
           tab1,
@@ -2094,7 +2095,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const deficitDateShipmentsCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DATE_SHIPMENTS).first();
       await deficitLoadingTaskPage.waitAndHighlight(deficitDateShipmentsCell);
       const deficitDateShipmentsValue = (await deficitDateShipmentsCell.textContent())?.trim() || '';
-      const normalizedDeficitDateShipments = deficitLoadingTaskPage.normalizeDate(deficitDateShipmentsValue);
+      const normalizedDeficitDateShipments = normalizeDate(deficitDateShipmentsValue);
       console.log(`Deficit table shipment date: ${deficitDateShipmentsValue} (normalized: ${normalizedDeficitDateShipments})`);
 
       // Switch to orders page to compare
@@ -2104,7 +2105,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await shipmentsDateShipmentsCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsDateShipmentsCell.scrollIntoViewIfNeeded();
         const shipmentsDateShipmentsValue = (await shipmentsDateShipmentsCell.textContent())?.trim() || '';
-        const normalizedShipmentsDateShipments = loadingTaskPage.normalizeDate(shipmentsDateShipmentsValue);
+        const normalizedShipmentsDateShipments = normalizeDate(shipmentsDateShipmentsValue);
         console.log(`Shipments table shipment date: ${shipmentsDateShipmentsValue} (normalized: ${normalizedShipmentsDateShipments})`);
         await expectSoftWithScreenshot(
           tab1,
@@ -2122,7 +2123,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
     await allure.step('Step 28: Navigate to warehouse page and click shipping tasks', async () => {
       // Use normalizeDate from page class
-      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
+      // normalizeDate is already imported from utilities
       // Step 28.1: Close all open tabs except the main page
       const context = page.context();
       const allPages = context.pages();
@@ -2244,8 +2245,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const orderNumberCell = firstRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(orderNumberCell, { waitAfter: 1500 });
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
-        const normalizedCellOrder = loadingTaskPage.normalizeOrderNumber(cellOrderNumber);
-        const normalizedExpected = loadingTaskPage.normalizeOrderNumber(fullOrderNumberValue);
+        const normalizedCellOrder = normalizeOrderNumber(cellOrderNumber);
+        const normalizedExpected = normalizeOrderNumber(fullOrderNumberValue);
         console.log(`Test Case 3 Step 28 Method 1: Searching for: "${fullOrderNumberValue}"`);
         console.log(`Test Case 3 Step 28 Method 1: Found in cell: "${cellOrderNumber}"`);
         console.log(`Test Case 3 Step 28 Method 1: Normalized cell: "${normalizedCellOrder}"`);
@@ -3640,7 +3641,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 4: Verify positions table has 4 rows and validate each data row', async () => {
       // Use normalizeDate from page class
-      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
+      // normalizeDate is already imported from utilities
 
       const positionsTable = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TABLE).first();
       await loadingTaskPage.waitAndHighlight(positionsTable, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
@@ -4014,7 +4015,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 6: Compare values between orders list and edit page for order /0', async () => {
       console.log('Start: step 6');
       // Use normalizeDate from page class
-      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
+      // normalizeDate is already imported from utilities
 
       // Create Tab 1: Orders page, search for order with /0
       const { page: tab1, pageObject: tab1LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
@@ -4537,7 +4538,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Use scrollIntoViewWithExtra from PageObject base class
 
       // Use normalizeDate from page class
-      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
+      // normalizeDate is already imported from utilities
 
       // Tab 1: Go to main orders page and search for order with /0
       await page.goto(SELECTORS.MAINMENU.SHIPPING_TASKS.URL);
@@ -4925,7 +4926,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Use scrollIntoViewWithExtra from PageObject base class
 
       // Use normalizeDate from page class
-      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
+      // normalizeDate is already imported from utilities
 
       // Navigate to warehouse page first
       await page.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
@@ -5145,7 +5146,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Use scrollIntoViewWithExtra from PageObject base class
 
       // Use normalizeDate from page class
-      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
+      // normalizeDate is already imported from utilities
 
       // Get article number for the /0 order (first product - after ordering change: /0 = PRODUCT_1)
       const articleNumberValue = TEST_PRODUCTS[0].articleNumber; // TEST_ARTICLE_1
@@ -5875,7 +5876,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 11: Compare warehouse order row with edit page and validate time in parts database', async () => {
       // Use normalizeDate from page class
-      const normalizeDate = (rawDate: string): string => loadingTaskPage.normalizeDate(rawDate);
+      // normalizeDate is already imported from utilities
 
       const articleNumberValue = global.testProductArticleNumber || testProductArticleNumber;
       const productNameValue = global.testProductName || testProductName;

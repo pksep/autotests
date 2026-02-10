@@ -3,6 +3,7 @@ import { runTC000, performLogin } from './TC000.spec'; // Adjust the import path
 import { CreateAssemblyWarehousePage } from '../pages/AssemplyWarehousePage';
 import { ENV, SELECTORS } from '../config'; // Import the configuration
 import logger from '../lib/logger';
+import { countColumns } from '../lib/utils/utilities';
 import { allure } from 'allure-playwright';
 
 import testData from '../testdata/SA18-T2.json'; // Import your test data
@@ -87,7 +88,7 @@ export const runP003 = () => {
 
         await allure.step('Step 5: Check table column count from the test data and compare to the page', async () => {
             logger.info('STEP 5: Check table column count from the test data and compare to the page');
-            const expectedColumnCount = await shortagePage.countColumns(testData.headers);
+            const expectedColumnCount = await countColumns(testData.headers);
             logger.info(`Expected column count: ${expectedColumnCount}`);
             expect(columnCount).toBe(expectedColumnCount);
         });
@@ -113,7 +114,7 @@ export const runP003 = () => {
 
         await allure.step('Step 5: Check table column count from the test data and compare to the page', async () => {
             logger.info('STEP 5: Check table column count from the test data and compare to the page');
-            const expectedColumnCount = await shortagePage.countColumns(testData2.headers);
+            const expectedColumnCount = await countColumns(testData2.headers);
             logger.info(`Expected column count: ${expectedColumnCount}`);
             expect(columnCount).toBe(expectedColumnCount);
         });
