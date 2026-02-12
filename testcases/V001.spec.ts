@@ -6,12 +6,11 @@
  */
 
 import { test } from '@playwright/test';
-import { performLogin } from './TC000.spec';
 import testData from '../testdata/U001-PC1.json';
 import testDataU002 from '../testdata/U002-PC1.json';
 import { PageObject } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
-import { TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import { TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import * as LoadingTasksSelectors from '../lib/Constants/SelectorsLoadingTasksPage';
 import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages';
 import * as SelectorsShipmentTasks from '../lib/Constants/SelectorsShipmentTasks';
@@ -45,10 +44,14 @@ function getButtonsForValidation(element: ElementSpec): Array<{ class?: string; 
 /** Validation step definition: how to open the page/section and which JSON + container to use. */
 interface ValidationStep {
   stepName: string;
-  jsonKey: keyof typeof testData.elements;
+  jsonKey: keyof typeof testData.elements | keyof typeof testDataU002.elements;
   containerSelector: string;
   url?: string;
   sectionSelector?: string;
+  /** Wait for this table/body after navigating (after goto when no section, or after clicking section). */
+  tableBodySelector?: string;
+  /** If true, use waitingTableBodyNoThead instead of waitingTableBody. */
+  waitTableNoThead?: boolean;
   useModalMethod?: boolean;
   openAction?: { clickSelector: string; waitAfter?: number };
   closeModalSelector?: string;
@@ -62,6 +65,7 @@ const V001_STEPS: ValidationStep[] = [
     jsonKey: 'LoadingPage',
     containerSelector: LoadingTasksSelectors.issueShipmentPage,
     url: SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
+    tableBodySelector: LoadingTasksSelectors.SHIPMENTS_TABLE_BODY,
   },
   {
     stepName: 'Create order page',
@@ -83,6 +87,7 @@ const V001_STEPS: ValidationStep[] = [
     containerSelector: SelectorsShortagePages.PAGE_TESTID,
     url: SELECTORS.MAINMENU.WAREHOUSE.URL,
     sectionSelector: SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION,
+    tableBodySelector: SelectorsShortagePages.TABLE_DEFICIT_IZD,
   },
   {
     stepName: 'Cbed shortage (Warehouse)',
@@ -90,6 +95,7 @@ const V001_STEPS: ValidationStep[] = [
     containerSelector: SelectorsShortagePages.PAGE_TESTID_CBED,
     url: SELECTORS.MAINMENU.WAREHOUSE.URL,
     sectionSelector: SelectorsShortagePages.SELECTOR_DEFICIT_CBED_PAGE,
+    tableBodySelector: SelectorsShortagePages.TABLE_DEFICIT_CBED,
   },
   {
     stepName: 'Metalworking warehouse',
@@ -97,6 +103,7 @@ const V001_STEPS: ValidationStep[] = [
     containerSelector: MetalWorkingWarhouseSelectors.PAGE_TESTID,
     url: SELECTORS.MAINMENU.WAREHOUSE.URL,
     sectionSelector: MetalWorkingWarhouseSelectors.SELECTOR_METAL_WORKING_WARHOUSE,
+    tableBodySelector: MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
   },
   {
     stepName: 'Assembly kitting on plan',
@@ -104,6 +111,7 @@ const V001_STEPS: ValidationStep[] = [
     containerSelector: SelectorsAssemblyKittingOnThePlan.PAGE_TESTID,
     url: SELECTORS.MAINMENU.WAREHOUSE.URL,
     sectionSelector: SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_CBED_PLAN,
+    tableBodySelector: SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
   },
   {
     stepName: 'Disassembly (Complete sets)',
@@ -111,6 +119,7 @@ const V001_STEPS: ValidationStep[] = [
     containerSelector: SelectorsCompleteSets.ASSEMBLY_PAGE_TESTID,
     url: SELECTORS.MAINMENU.WAREHOUSE.URL,
     sectionSelector: SelectorsCompleteSets.SELECTOR_COMPLETE_SETS,
+    tableBodySelector: SelectorsCompleteSets.TABLE_SCROLL,
   },
   {
     stepName: 'Arrival at warehouse',
@@ -125,6 +134,7 @@ const V001_STEPS: ValidationStep[] = [
     containerSelector: SelectorsShipmentTasks.SELECTOR_SCLAD_SHIPPING_TASKS,
     url: SELECTORS.MAINMENU.WAREHOUSE.URL,
     sectionSelector: SelectorsShipmentTasks.SELECTOR_SHIPPING_TASKS,
+    tableBodySelector: SelectorsShipmentTasks.SHIPMENTS_TABLE_BODY,
   },
   {
     stepName: 'Revision',
@@ -132,6 +142,8 @@ const V001_STEPS: ValidationStep[] = [
     containerSelector: SelectorsRevision.PAGE_TESTID,
     url: SELECTORS.MAINMENU.WAREHOUSE.URL,
     sectionSelector: SelectorsRevision.WAREHOUSE_PAGE_REVISIONS_TESTID,
+    tableBodySelector: SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE,
+    waitTableNoThead: true,
   },
 ];
 
@@ -144,8 +156,9 @@ function getElement(jsonKey: string): ElementSpec | undefined {
 
 export const runV001 = (_isSingleTest?: boolean, _iterations?: number) => {
   test.describe('V001 - Validate site pages against JSON', () => {
-    test('V001 - Full validation tour (titles, buttons, filters)', async ({ page }) => {
-      await performLogin(page, '001', 'Перов Д.А.', '54321');
+    test('V001 - Full validation tour (titles, buttons, filters)', async ({ page }, testInfo) => {
+      testInfo.setTimeout(TEST_TIMEOUTS.LONG); // 10 min - many steps with navigation and waits
+      // Login is done in setup.ts beforeEach; we start already on the homepage.
       await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       const po = new PageObject(page);
@@ -153,21 +166,40 @@ export const runV001 = (_isSingleTest?: boolean, _iterations?: number) => {
 
       for (const step of V001_STEPS) {
         await test.step(`Step: ${step.stepName}`, async () => {
-          // Navigate to URL if step has its own url (or we need to open a section on a new base)
+          // Navigate to URL if step has its own url. Re-goto when we have a section to open so the sidebar is visible (e.g. Warehouse subsections).
           if (step.url) {
-            if (step.url !== currentUrl) {
+            const needGoto = step.url !== currentUrl || !!step.sectionSelector;
+            if (needGoto) {
               await po.goto(step.url);
               await page.waitForLoadState('networkidle');
               await page.waitForTimeout(TIMEOUTS.INPUT_SET);
               currentUrl = step.url;
             }
+            // Wait for page content when we have a table body selector but no section to click (e.g. Loading/Shipping tasks)
+            if (step.tableBodySelector && !step.sectionSelector) {
+              if (step.waitTableNoThead) {
+                await po.waitingTableBodyNoThead(step.tableBodySelector);
+              } else {
+                await po.waitingTableBody(step.tableBodySelector, { minRows: 0, timeoutMs: 15000 });
+              }
+              await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+            }
           }
 
-          // Open a section on the current page (e.g. warehouse menu item)
+          // Open a section on the current page (e.g. warehouse menu item) — click sidebar/menu to open that view
           if (step.sectionSelector) {
             await po.findTable(step.sectionSelector);
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+            // Wait for section content (table) to load after clicking the section
+            if (step.tableBodySelector) {
+              if (step.waitTableNoThead) {
+                await po.waitingTableBodyNoThead(step.tableBodySelector);
+              } else {
+                await po.waitingTableBody(step.tableBodySelector, { minRows: 0, timeoutMs: 15000 });
+              }
+              await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+            }
           }
 
           // Open modal or another view (e.g. Create order, Choice product modal)
