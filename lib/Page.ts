@@ -23,8 +23,21 @@ import logger from './logger'; // Import logger utility for logging messages
 import { allure } from 'allure-playwright';
 import { TIMEOUTS, WAIT_TIMEOUTS } from './Constants/TimeoutConstants'; // Import timeout constants
 import { expectSoftWithScreenshot, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities'; // Import utility functions
+import { ElementHelper } from './helpers/ElementHelper'; // Import ElementHelper for element interaction operations
+import { NavigationHelper } from './helpers/NavigationHelper'; // Import NavigationHelper for navigation operations
+import { ModalHelper } from './helpers/ModalHelper'; // Import ModalHelper for modal operations
+import { ValidationHelper } from './helpers/ValidationHelper'; // Import ValidationHelper for validation operations
+import { ArchiveHelper } from './helpers/ArchiveHelper'; // Import ArchiveHelper for archive operations
+import { OrderHelper } from './helpers/OrderHelper'; // Import OrderHelper for order operations
+import { RowCellHelper } from './helpers/RowCellHelper'; // Import RowCellHelper for row/cell operations
+import { NotificationHelper } from './helpers/NotificationHelper'; // Import NotificationHelper for notification operations
+import { LoginHelper } from './helpers/LoginHelper'; // Import LoginHelper for login operations
+import { MiscHelper } from './helpers/MiscHelper'; // Import MiscHelper for miscellaneous operations
+import { TableHelper, type ValidationResult } from './helpers/TableHelper'; // Import TableHelper for table operations
 // Re-export utilities for backward compatibility
 export { expectSoftWithScreenshot, populateTestData, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities';
+// Re-export ValidationResult from TableHelper
+export type { ValidationResult } from './helpers/TableHelper';
 
 /**
  * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
@@ -33,11 +46,33 @@ export { expectSoftWithScreenshot, populateTestData, normalizeText, normalizeOrd
 export class PageObject extends AbstractPage {
   protected button: Button; // Button helper instance
   protected input: Input; // Input helper instance
+  protected elementHelper: ElementHelper; // Element interaction helper instance
+  protected navigationHelper: NavigationHelper; // Navigation helper instance
+  protected tableHelper: TableHelper; // Table operations helper instance
+  protected modalHelper: ModalHelper; // Modal operations helper instance
+  protected validationHelper: ValidationHelper; // Validation operations helper instance
+  protected archiveHelper: ArchiveHelper; // Archive operations helper instance
+  protected orderHelper: OrderHelper; // Order operations helper instance
+  protected rowCellHelper: RowCellHelper; // Row/cell operations helper instance
+  protected notificationHelper: NotificationHelper; // Notification operations helper instance
+  protected loginHelper: LoginHelper; // Login operations helper instance
+  protected miscHelper: MiscHelper; // Miscellaneous operations helper instance
 
   constructor(page: Page) {
     super(page); // Initialize the base AbstractPage with the page object
     this.button = new Button(page); // Initialize the button helper
     this.input = new Input(page); // Initialize the input helper
+    this.elementHelper = new ElementHelper(page); // Initialize the element helper
+    this.navigationHelper = new NavigationHelper(page); // Initialize the navigation helper
+    this.tableHelper = new TableHelper(page); // Initialize the table helper
+    this.modalHelper = new ModalHelper(page); // Initialize the modal helper
+    this.validationHelper = new ValidationHelper(page); // Initialize the validation helper
+    this.archiveHelper = new ArchiveHelper(page); // Initialize the archive helper
+    this.orderHelper = new OrderHelper(page); // Initialize the order helper
+    this.rowCellHelper = new RowCellHelper(page); // Initialize the row/cell helper
+    this.notificationHelper = new NotificationHelper(page); // Initialize the notification helper
+    this.loginHelper = new LoginHelper(page); // Initialize the login helper
+    this.miscHelper = new MiscHelper(page); // Initialize the misc helper
   }
 
   /**
@@ -48,112 +83,7 @@ export class PageObject extends AbstractPage {
    * @throws An error if any validation check fails.
    */
   async scanTablesWithinElement(page: Page, dataTestId: string): Promise<ValidationResult> {
-    const errors: string[] = [];
-
-    // Locate the element with the specified data-testid
-    const container = await page.$(`[data-testid="${dataTestId}"]`);
-    if (!container) {
-      const errorMessage = `Element with data-testid "${dataTestId}" not found.`;
-      logger.error(errorMessage);
-      errors.push(errorMessage);
-    } else {
-      // Find all tables within the located container
-      const tables = await container.$$('table');
-      if (tables.length === 0) {
-        const errorMessage = `No tables found within the element with data-testid "${dataTestId}".`;
-        logger.error(errorMessage);
-        errors.push(errorMessage);
-      } else {
-        // Iterate through each table and validate its structure
-        for (const [index, table] of tables.entries()) {
-          const tableErrors: string[] = [];
-          logger.info(`Validating Table ${index + 1} within data-testid "${dataTestId}":`);
-
-          // Validate the table structure (you can expand this as needed)
-          const thead = await table.$('thead');
-          if (!thead) {
-            const errorMessage = `Table ${index + 1} is missing <thead>.`;
-            logger.error(errorMessage);
-            tableErrors.push(errorMessage);
-          }
-
-          const tbody = await table.$('tbody');
-          if (!tbody) {
-            const errorMessage = `Table ${index + 1} is missing <tbody>.`;
-            logger.error(errorMessage);
-            tableErrors.push(errorMessage);
-          }
-
-          // Check for duplicate data-testids in rows
-          const rows = await table.$$('tr');
-          const dataTestIdMap = new Map();
-          const duplicateDataTestIds = new Set();
-          for (const row of rows) {
-            const rowDataTestId = await row.evaluate(node => node.getAttribute('data-testid'));
-            if (rowDataTestId) {
-              if (dataTestIdMap.has(rowDataTestId)) {
-                duplicateDataTestIds.add(rowDataTestId);
-              } else {
-                dataTestIdMap.set(rowDataTestId, true);
-              }
-            }
-          }
-
-          // Log duplicate data-testids only once per data-testid
-          duplicateDataTestIds.forEach(duplicateId => {
-            const errorMessage = `Duplicate data-testid "${duplicateId}" found in Table ${index + 1}`;
-            logger.warn(errorMessage);
-            tableErrors.push(errorMessage);
-          });
-
-          // Check for th and td cells missing data-testid
-          const cells = await table.$$('th, td');
-          for (const cell of cells) {
-            const cellDataTestId = await cell.evaluate(node => node.getAttribute('data-testid'));
-            if (!cellDataTestId) {
-              const cellTagName = await cell.evaluate(node => node.tagName.toLowerCase());
-              const errorMessage = `Cell <${cellTagName}> is missing data-testid in Table ${index + 1}`;
-              logger.warn(errorMessage);
-              tableErrors.push(errorMessage);
-            }
-          }
-
-          // Find the closest preceding h3 tag containing the header of the page or modal window
-          const header = await table.evaluate(node => {
-            let element = node as HTMLElement;
-            while (element && element.tagName.toLowerCase() !== 'body') {
-              const previousElement = element.previousElementSibling as HTMLElement;
-              if (previousElement) {
-                element = previousElement;
-                if (element.tagName.toLowerCase() === 'h3') {
-                  return element.innerText;
-                }
-              } else {
-                element = element.parentElement as HTMLElement;
-              }
-            }
-            return null;
-          });
-
-          const headerText = header ? ` (Header: ${header})` : '';
-
-          // Append header text to each error message and remove duplicates
-          const tableErrorMessages = Array.from(new Set(tableErrors.map(error => `${error}${headerText}`)));
-
-          // Further validations can be added here
-          if (tableErrors.length === 0) {
-            logger.info(`Table ${index + 1} has a valid structure.`);
-          } else {
-            errors.push(...tableErrorMessages);
-          }
-        }
-      }
-    }
-
-    return {
-      success: errors.length === 0,
-      errors,
-    };
+    return this.tableHelper.scanTablesWithinElement(page, dataTestId);
   }
 
   /**
@@ -164,156 +94,15 @@ export class PageObject extends AbstractPage {
    * @param waitTime - The amount of time to wait after clicking, in milliseconds.
    * @returns A promise that resolves once the element is clicked and the wait time has elapsed.
    */
+  /**
+   * Finds and clicks an element by partial data-testid, with fallback strategies
+   * @param page - The Playwright page instance
+   * @param partialDataTestId - The partial data-testid or full selector
+   * @param waitTime - Time to wait after clicking (default: 10000)
+   * @param doubleClick - Whether to double-click instead of single-click
+   */
   async findAndClickElement(page: Page, partialDataTestId: string, waitTime: number = 10000, doubleClick?: boolean): Promise<void> {
-    // Check if partialDataTestId already contains the full selector with [data-testid=
-    // If yes, use it directly; if no, wrap it with [data-testid^="..."]
-    const isFullSelector = partialDataTestId.startsWith('[data-testid');
-    const selector = isFullSelector ? partialDataTestId : `[data-testid^="${partialDataTestId}"]`;
-    const searchTerm = isFullSelector ? 'selector' : 'data-testid';
-
-    logger.info(`Searching for elements with ${searchTerm}="${partialDataTestId}"`);
-
-    // Use locator (modern Playwright API) instead of page.$$() (old API)
-    // Locators automatically wait for elements and are more reliable
-    const locator = page.locator(selector);
-
-    try {
-      // Wait for at least one element to be visible
-      await expect(locator.first()).toBeVisible({ timeout: 10000 });
-
-      // Count how many elements match
-      const count = await locator.count();
-      logger.info(`Found ${count} element(s) with ${searchTerm}="${partialDataTestId}"`);
-
-      if (count > 1) {
-        logger.warn(`Found multiple elements with ${searchTerm}="${partialDataTestId}" will click first`);
-      }
-
-      // Get the first element locator
-      const firstElement = locator.first();
-
-      // Highlight the element before clicking
-      await firstElement.evaluate(element => {
-        element.style.border = '2px solid red';
-        element.style.backgroundColor = 'red';
-      });
-
-      // Click on the first element
-      if (!doubleClick) {
-        await firstElement.click({ force: true });
-      } else {
-        await firstElement.dblclick({ force: true });
-      }
-
-      logger.info(`Clicked on the first element with ${searchTerm}="${partialDataTestId}"`);
-
-      // Wait for the specified amount of time
-      await page.waitForTimeout(waitTime);
-      await page.waitForTimeout(1500);
-      logger.info(`Waited for ${waitTime}ms after clicking the element`);
-    } catch (error) {
-      // If selector search failed, try fallback methods
-      if (isFullSelector) {
-        // Extract the data-testid value from the full selector
-        const dataTestIdValue = partialDataTestId.match(/data-testid="([^"]+)"/)?.[1];
-        if (dataTestIdValue) {
-          logger.warn(`Element with selector="${partialDataTestId}" not found, trying getByTestId with "${dataTestIdValue}"...`);
-          try {
-            const testIdLocator = page.getByTestId(dataTestIdValue);
-            await expect(testIdLocator).toBeVisible({ timeout: 10000 });
-
-            logger.info(`Element found with getByTestId("${dataTestIdValue}")`);
-
-            await testIdLocator.scrollIntoViewIfNeeded();
-            await testIdLocator.evaluate(element => {
-              element.style.border = '2px solid red';
-              element.style.backgroundColor = 'yellow';
-            });
-
-            if (!doubleClick) {
-              await testIdLocator.click({ force: true });
-            } else {
-              await testIdLocator.dblclick({ force: true });
-            }
-
-            logger.info(`Clicked on the element with getByTestId("${dataTestIdValue}")`);
-            await page.waitForTimeout(waitTime);
-            await page.waitForTimeout(1500);
-            logger.info(`Waited for ${waitTime}ms after clicking the element`);
-            return; // Success, exit early
-          } catch (testIdError) {
-            logger.warn(`getByTestId("${dataTestIdValue}") also failed, trying ID fallback...`);
-          }
-        }
-
-        // Try ID fallback
-        const idValue = dataTestIdValue || partialDataTestId.replace(/[\[\]"]/g, '');
-        logger.warn(`Trying to find by ID="${idValue}"...`);
-        const idLocator = page.locator(`#${idValue}`);
-
-        try {
-          await expect(idLocator).toBeVisible({ timeout: 10000 });
-          logger.info(`Element with id="${idValue}" found`);
-
-          await idLocator.scrollIntoViewIfNeeded();
-          await idLocator.evaluate(element => {
-            element.style.border = '2px solid red';
-            element.style.backgroundColor = 'yellow';
-          });
-
-          if (!doubleClick) {
-            await idLocator.click({ force: true });
-          } else {
-            await idLocator.dblclick({ force: true });
-          }
-
-          logger.info(`Clicked on the element with id="${idValue}"`);
-          await page.waitForTimeout(waitTime);
-          logger.info(`Waited for ${waitTime}ms after clicking the element`);
-          return; // Success, exit early
-        } catch (idError) {
-          // All methods failed
-          logger.error(`No element found with selector="${partialDataTestId}", getByTestId, or id="${idValue}"`);
-          throw new Error(
-            `findAndClickElement failed: Could not find element with selector="${partialDataTestId}", getByTestId, or id="${idValue}". ` +
-              `The element may not be visible, may have a different selector, or the page may not have loaded completely.`,
-          );
-        }
-      } else {
-        // For partial data-testid, try ID fallback
-        logger.warn(`Element with data-testid^="${partialDataTestId}" not found, trying to find by ID...`);
-        const idLocator = page.locator(`#${partialDataTestId}`);
-
-        try {
-          await expect(idLocator).toBeVisible({ timeout: 10000 });
-          logger.info(`Element with id="${partialDataTestId}" found`);
-
-          await idLocator.scrollIntoViewIfNeeded();
-          await idLocator.evaluate(element => {
-            element.style.border = '2px solid red';
-            element.style.backgroundColor = 'yellow';
-          });
-
-          if (!doubleClick) {
-            await idLocator.click({ force: true });
-          } else {
-            await idLocator.dblclick({ force: true });
-          }
-
-          logger.info(`Clicked on the element with id="${partialDataTestId}"`);
-          await page.waitForTimeout(waitTime);
-          logger.info(`Waited for ${waitTime}ms after clicking the element with id="${partialDataTestId}"`);
-        } catch (idError) {
-          // Neither data-testid nor id worked - throw error
-          logger.error(`No element found with data-testid^="${partialDataTestId}" or id="${partialDataTestId}"`);
-
-          throw new Error(
-            `findAndClickElement failed: Could not find element with data-testid^="${partialDataTestId}" or id="${partialDataTestId}". ` +
-              `The element may not be visible, may have a different selector, or the page may not have loaded completely.`,
-          );
-        }
-      }
-    }
+    return this.elementHelper.findAndClickElement(page, partialDataTestId, waitTime, doubleClick);
   }
 
   /**
@@ -322,9 +111,8 @@ export class PageObject extends AbstractPage {
    * @returns The text content of the element or null if the element doesn't exist.
    */
   async getText(selector: string): Promise<string | null> {
-    return await this.page.textContent(selector); // Return the text content of the element
+    return this.elementHelper.getText(selector);
   }
-
 
   /**
    * Retrieves and normalizes the text content of a specified selector.
@@ -332,8 +120,7 @@ export class PageObject extends AbstractPage {
    * @returns The normalized text content of the element or null if the element doesn't exist.
    */
   async getTextNormalized(selector: string): Promise<string | null> {
-    const text = await this.getText(selector); // Get the raw text
-    return text ? normalizeText(text) : null; // Return normalized text if available
+    return this.elementHelper.getTextNormalized(selector);
   }
 
   /**
@@ -342,7 +129,7 @@ export class PageObject extends AbstractPage {
    * @returns The normalized error message or null if no message is found.
    */
   async getErrorMessage(selector: string): Promise<string | null> {
-    return await this.getTextNormalized(selector); // Use the getTextNormalized method to fetch and normalize the error message
+    return this.elementHelper.getErrorMessage(selector);
   }
 
   /**
@@ -351,12 +138,7 @@ export class PageObject extends AbstractPage {
    * @param pageInstance - The page instance to perform the scroll on
    */
   async scrollIntoViewWithExtra(element: Locator, pageInstance: Page): Promise<void> {
-    await element.scrollIntoViewIfNeeded();
-    // Scroll down an additional 100px to ensure element is fully visible in smaller viewports
-    await pageInstance.evaluate(() => {
-      window.scrollBy(0, 100);
-    });
-    await pageInstance.waitForTimeout(200); // Small delay for scroll to complete
+    return this.elementHelper.scrollIntoViewWithExtra(element, pageInstance);
   }
 
   /**
@@ -384,30 +166,7 @@ export class PageObject extends AbstractPage {
       scrollExtra?: boolean;
     },
   ): Promise<void> {
-    const timeout = options?.timeout ?? 10000;
-    const shouldHighlight = options?.highlight ?? true;
-    const waitAfter = options?.waitAfter ?? 500;
-    const scrollExtra = options?.scrollExtra ?? false;
-
-    await locator.waitFor({ state: 'visible', timeout });
-
-    if (scrollExtra) {
-      await this.scrollIntoViewWithExtra(locator, this.page);
-    } else {
-      await locator.scrollIntoViewIfNeeded();
-    }
-
-    if (shouldHighlight) {
-      await this.highlightElement(locator, {
-        backgroundColor: options?.highlightColor ?? 'yellow',
-        border: options?.highlightBorder ?? '2px solid red',
-        color: options?.highlightTextColor ?? 'blue',
-      });
-    }
-
-    if (waitAfter > 0) {
-      await this.page.waitForTimeout(waitAfter);
-    }
+    return this.elementHelper.waitAndHighlight(locator, options);
   }
 
   /**
@@ -417,13 +176,7 @@ export class PageObject extends AbstractPage {
    * @returns An object containing the new page and page object instance
    */
   async createNewTabAndNavigate<T extends PageObject>(url: string, PageObjectClass: new (page: Page) => T): Promise<{ page: Page; pageObject: T }> {
-    const context = this.page.context();
-    const newPage = await context.newPage();
-    const pageObject = new PageObjectClass(newPage);
-    await pageObject.goto(url);
-    await pageObject.waitForNetworkIdle();
-    await newPage.waitForTimeout(1000);
-    return { page: newPage, pageObject };
+    return this.navigationHelper.createNewTabAndNavigate(url, PageObjectClass);
   }
 
   /**
@@ -431,7 +184,7 @@ export class PageObject extends AbstractPage {
    * @param url - The URL to navigate to. Defaults to BASE_URL from ENV if not provided.
    */
   async goto(url: string = ENV.BASE_URL): Promise<void> {
-    await this.page.goto(url, { waitUntil: 'domcontentloaded' }); // Navigate to the provided URL and wait until the DOM content is loaded
+    return this.navigationHelper.goto(url);
   }
 
   /**
@@ -440,7 +193,7 @@ export class PageObject extends AbstractPage {
    * @param timeout - Optional timeout in milliseconds (default: 30000)
    */
   async waitForNetworkIdle(timeout?: number): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout });
+    return this.navigationHelper.waitForNetworkIdle(timeout);
   }
 
   /**
@@ -457,10 +210,16 @@ export class PageObject extends AbstractPage {
     tableBodySelector: string,
     options?: { minRows?: number; timeoutMs?: number },
   ): Promise<void> {
-    await this.goto(url);
-    await this.findTable(tableSelector);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitingTableBody(tableBodySelector, options);
+    return this.navigationHelper.navigateToPageAndWaitForTable(
+      url,
+      tableSelector,
+      tableBodySelector,
+      options,
+      this.tableHelper.findTable.bind(this.tableHelper),
+      async (selector: string, opts?: { minRows?: number; timeoutMs?: number }) => {
+        await this.tableHelper.waitingTableBody(selector, opts);
+      },
+    );
   }
 
   /**
@@ -489,10 +248,10 @@ export class PageObject extends AbstractPage {
     },
   ): Promise<void> {
     if (options?.useRedesign) {
-      await this.searchTableRedesign(searchTerm, tableSelector);
+      await this.tableHelper.searchTableRedesign(searchTerm, tableSelector);
       await this.page.waitForLoadState('networkidle');
     } else {
-      await this.searchTable(searchTerm, tableSelector, options?.searchInputDataTestId);
+      await this.tableHelper.searchTable(searchTerm, tableSelector, options?.searchInputDataTestId);
       // searchTable already includes waitForLoadState('networkidle')
     }
 
@@ -502,7 +261,7 @@ export class PageObject extends AbstractPage {
 
     // Only wait for table body if minRows is explicitly provided
     if (options?.minRows !== undefined) {
-      await this.waitingTableBody(tableBodySelector, {
+      await this.tableHelper.waitingTableBody(tableBodySelector, {
         minRows: options.minRows,
         timeoutMs: options?.timeoutMs,
       });
@@ -537,123 +296,7 @@ export class PageObject extends AbstractPage {
       testInfo?: TestInfo;
     },
   ): Promise<void> {
-    // Validate H3 titles
-    if (!options?.skipTitleValidation && titles.length > 0) {
-      // Wait for the page to stabilize before collecting H3 titles
-      await page.waitForLoadState('networkidle');
-
-      const expectedTitles = titles.map(title => title.trim());
-      // Use modal method if specified, otherwise use regular method
-      let h3Titles = options?.useModalMethod
-        ? await this.getAllH3TitlesInModalClassNew(page, containerSelector)
-        : await this.getAllH3TitlesInClass(page, containerSelector);
-
-      // If no titles found in container, try searching the entire page body (excluding modals)
-      // This handles cases where page-level titles are outside the container
-      if (h3Titles.length === 0) {
-        console.log('No H3 titles found in container, searching entire page body (excluding modals)...');
-        const pageBody = page.locator('body');
-        const allH3Elements = await pageBody.locator('h3').all();
-
-        for (const h3Tag of allH3Elements) {
-          try {
-            // Check if this H3 is inside any modal/dialog using evaluate
-            const isInsideModal = await h3Tag.evaluate(el => {
-              // Check for dialog element (HTML5 semantic element)
-              if (el.closest('dialog')) return true;
-              // Check for role="dialog" attribute
-              if (el.closest('[role="dialog"]')) return true;
-              // Check for data-testid containing "Modal"
-              let parent = el.parentElement;
-              while (parent) {
-                if (parent.hasAttribute && parent.hasAttribute('data-testid')) {
-                  const testId = parent.getAttribute('data-testid');
-                  if (testId && testId.includes('Modal')) {
-                    return true;
-                  }
-                }
-                parent = parent.parentElement;
-              }
-              return false;
-            });
-
-            // Only include H3 if it's not inside a modal
-            if (!isInsideModal) {
-              const title = await h3Tag.textContent();
-              if (title) {
-                h3Titles.push(title.trim());
-              }
-            }
-          } catch (error) {
-            // Skip if element is detached or not accessible
-            console.log(`Skipping H3 element due to error: ${error}`);
-          }
-        }
-      }
-
-      const normalizedH3Titles = h3Titles.map(title => title.trim());
-
-      // Log for debugging
-      console.log('Expected Titles:', expectedTitles);
-      console.log('Received Titles:', normalizedH3Titles);
-
-      // Validate length
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(normalizedH3Titles.length).toBe(expectedTitles.length);
-        },
-        `Verify H3 titles count: expected ${expectedTitles.length}, actual ${normalizedH3Titles.length}`,
-        options?.testInfo,
-      );
-
-      // Validate content and order
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(normalizedH3Titles).toEqual(expectedTitles);
-        },
-        `Verify H3 titles match: expected ${JSON.stringify(expectedTitles)}, actual ${JSON.stringify(normalizedH3Titles)}`,
-        options?.testInfo,
-      );
-    }
-
-    // Validate buttons
-    if (!options?.skipButtonValidation && buttons.length > 0) {
-      // Wait for the page to stabilize
-      await page.waitForLoadState('networkidle');
-
-      // Iterate over each button in the array
-      for (const button of buttons) {
-        const buttonLabel = button.label;
-        const expectedState = typeof button.state === 'string' ? button.state === 'true' : button.state ?? true;
-
-        // Perform the validation for the button
-        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          let isButtonReady: boolean;
-
-          // Use isButtonVisibleTestId if datatestid is provided, otherwise use isButtonVisible
-          if (button.datatestid) {
-            isButtonReady = await this.isButtonVisibleTestId(page, button.datatestid, buttonLabel, expectedState);
-          } else if (button.class) {
-            isButtonReady = await this.isButtonVisible(page, button.class, buttonLabel, expectedState);
-          } else {
-            throw new Error(`Button "${buttonLabel}" must have either 'class' or 'datatestid' property`);
-          }
-
-          // Validate the button's visibility and state
-          await expectSoftWithScreenshot(
-            page,
-            () => {
-              expect.soft(isButtonReady).toBeTruthy();
-            },
-            `Verify button "${buttonLabel}" is visible and enabled: expected true, actual ${isButtonReady}`,
-            options?.testInfo,
-          );
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        });
-      }
-    }
+    return this.validationHelper.validatePageHeadersAndButtons(page, titles, buttons, containerSelector, options);
   }
 
   /**
@@ -681,11 +324,7 @@ export class PageObject extends AbstractPage {
       timeoutMs?: number;
     },
   ): Promise<void> {
-    // Search and wait for table
-    await this.searchAndWaitForTable(searchTerm, tableSelector, tableBodySelector, options);
-
-    // Verify the first row contains the search term
-    await this.checkNameInLineFromFirstRow(searchTerm, tableBodySelector);
+    return this.validationHelper.searchAndVerifyFirstRow(this, searchTerm, tableSelector, tableBodySelector, options);
   }
 
   /**
@@ -721,60 +360,7 @@ export class PageObject extends AbstractPage {
       searchInputDataTestId?: string;
     },
   ): Promise<void> {
-    // Select/check the first row
-    if (options?.useCheckboxMark) {
-      await this.checkboxMarkNameInLineFromFirstRow(searchTerm, tableSelector);
-    } else {
-      await this.checkNameInLineFromFirstRow(searchTerm, tableSelector);
-    }
-
-    // Click on table header cell if specified (some archive operations require this)
-    if (options?.headerCellIndex !== undefined) {
-      await this.clickOnTheTableHeaderCell(options.headerCellIndex, tableSelector);
-    }
-
-    // Click archive button
-    const archiveLabel = options?.archiveButtonLabel || 'Архив';
-    await this.clickButton(archiveLabel, archiveButtonSelector);
-
-    // Wait a bit for modal to appear
-    await page.waitForTimeout(200);
-
-    // Confirm the archive
-    const confirmLabel = options?.confirmButtonLabel || 'Да';
-    await this.clickButton(confirmLabel, confirmButtonSelector);
-
-    // Wait for the modal to close and table to update
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(options?.waitAfterConfirm || 1000);
-
-    // Verify the item is archived by searching again
-    if (options?.verifyArchived !== false && options?.tableBodySelector) {
-      console.log('Verifying item is archived by searching again...');
-      const verifyTableSelector = options.verifyTableSelector || tableSelector;
-
-      // Perform the search using redesign method
-      await this.searchTableRedesign(searchTerm, verifyTableSelector);
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
-
-      // Check that the item is no longer in the table
-      // When there are no results, the table body might be hidden, so we check for attached state
-      const tableBodyLocator = page.locator(options.tableBodySelector);
-      const isTableBodyVisible = await tableBodyLocator.isVisible().catch(() => false);
-
-      let rowCount = 0;
-      if (isTableBodyVisible) {
-        const rows = page.locator(`${options.tableBodySelector} tr`);
-        rowCount = await rows.count();
-      }
-
-      if (rowCount > 0) {
-        console.log(`Warning: Item "${searchTerm}" still found in table after archiving (${rowCount} rows). It may not have been archived properly.`);
-      } else {
-        console.log(`Item "${searchTerm}" successfully archived - not found in search results.`);
-      }
-    }
+    return this.archiveHelper.archiveItem(this, page, searchTerm, tableSelector, archiveButtonSelector, confirmButtonSelector, options);
   }
 
   /**
@@ -796,45 +382,7 @@ export class PageObject extends AbstractPage {
       waitAfterConfirm?: number;
     },
   ): Promise<void> {
-    // Click archive button
-    const archiveLabel = options?.archiveButtonLabel || 'Архив';
-    const archiveButton = this.page.locator(archiveButtonSelector, { hasText: archiveLabel });
-
-    // Wait for button to be visible and enabled
-    await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
-
-    // Wait for button to be enabled with retry
-    let isEnabled = false;
-    for (let retry = 0; retry < 10; retry++) {
-      isEnabled = await archiveButton.isEnabled();
-      if (isEnabled) {
-        break;
-      }
-      await this.page.waitForTimeout(500);
-    }
-
-    if (!isEnabled) {
-      throw new Error(`Archive button "${archiveLabel}" is not enabled after waiting.`);
-    }
-
-    await this.highlightElement(archiveButton, {
-      backgroundColor: 'yellow',
-      border: '2px solid red',
-      color: 'blue',
-    });
-    await this.page.waitForTimeout(500);
-    await archiveButton.click();
-
-    // Wait a bit for modal to appear
-    await this.page.waitForTimeout(200);
-
-    // Confirm the archive
-    const confirmLabel = options?.confirmButtonLabel || 'Да';
-    await this.clickButton(confirmLabel, confirmButtonSelector);
-
-    // Wait for the modal to close
-    await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(options?.waitAfterConfirm || 1000);
+    return this.archiveHelper.archiveAndConfirm(this, archiveButtonSelector, confirmButtonSelector, options);
   }
 
   /**
@@ -858,16 +406,7 @@ export class PageObject extends AbstractPage {
       description?: string;
     },
   ): Promise<void> {
-    if (options?.waitForNetworkIdle !== false) {
-      await page.waitForLoadState('networkidle');
-    }
-    if (options?.timeoutMs && options.timeoutMs > 0) {
-      await page.waitForTimeout(options.timeoutMs);
-    }
-    await this.checkNameInLineFromFirstRow(searchTerm, tableSelector, {
-      testInfo: options?.testInfo,
-      description: options?.description,
-    });
+    return this.validationHelper.waitAndCheckFirstRow(this, page, searchTerm, tableSelector, options);
   }
 
   /**
@@ -893,88 +432,11 @@ export class PageObject extends AbstractPage {
    */
 
   async fillLoginForm(page: Page, tabel: string, login: string, password: string): Promise<void> {
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-    // Step 2: Wait for and select the "tabel" option
-    try {
-      await page.waitForSelector('select[data-testid="Authorization-Form-SelectTabel"]', { state: 'visible', timeout: 100000 });
-      logger.info('Select element found and visible.');
-    } catch (error) {
-      logger.error('Error waiting for select element:', error);
-      throw error; // Rethrow the error after logging
-    }
-
-    // Wait for and select the "tabel" option
-    //await this.page.waitForLoadState('networkidle');
-    //await page.waitForSelector(
-    // 'select[data-testid="Authorization-Form-SelectTabel"]',
-    // { state: 'visible' }
-    //);
-
-    const tableSelectElement = await page.$('select[data-testid="Authorization-Form-SelectTabel"]');
-    if (!tableSelectElement) {
-      throw new Error('Select element with name "tabel" not found');
-    }
-    await tableSelectElement.selectOption({ value: tabel });
-
-    // Wait for and select the "initial" option
-    await page.waitForSelector('select[data-testid="Authorization-Form-SelectInitial"]', { state: 'visible' });
-    const initialSelectElement = await page.$('select[data-testid="Authorization-Form-SelectInitial"]');
-    if (!initialSelectElement) {
-      throw new Error('Select element with name "initial" not found');
-    }
-    await initialSelectElement.selectOption({ value: login });
-
-    // Wait for and fill the password input
-    await page.waitForSelector('input[data-testid="Authorization-Form-InputPassword"]', { state: 'visible' });
-    const passwordInputElement = await page.$('input[data-testid="Authorization-Form-InputPassword"]');
-    if (!passwordInputElement) {
-      throw new Error('Password input field not found');
-    }
-    await passwordInputElement.fill(password);
-
-    // Optionally, log the HTML to confirm it was set correctly
-    const html = await page.evaluate(el => el.outerHTML, passwordInputElement);
-
-    // Pause the page for inspection (you can remove this in production)
+    return this.loginHelper.fillLoginForm(page, tabel, login, password);
   }
 
   async newFillLoginForm(page: Page, tabel: string, login: string, password: string): Promise<void> {
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-    try {
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
-
-      // Step 1: Fill "Табельный номер" field
-      await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-Input"]', { state: 'visible', timeout: 10000 });
-      console.log('Табельный номер field is visible.');
-      await page.click('[data-testid="LoginForm-TabelNumber-Combobox-Input"]'); // Open dropdown
-
-      await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"]', { state: 'visible' });
-      await page.click(`[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"] >> text="${tabel}"`);
-      console.log(`Табельный номер set to: ${tabel}`);
-
-      // Step 2: Fill "Логин" field
-      await page.waitForSelector('[data-testid="LoginForm-Login-Combobox-Input"]', { state: 'visible', timeout: 10000 });
-      console.log('Логин field is visible.');
-      await page.fill('[data-testid="LoginForm-Login-Combobox-Input"]', login);
-      console.log(`Логин set to: ${login}`);
-
-      // Ensure login selection is applied
-      await page.waitForTimeout(500);
-
-      // Step 3: Fill "Пароль" field
-      console.log('Waiting for password field...');
-      await page.waitForSelector('[data-testid="Password-Inputs-Input-Input"]', { state: 'visible', timeout: 10000 });
-      console.log('Password field is visible.');
-      await page.fill('[data-testid="Password-Inputs-Input-Input"]', password);
-      console.log('Password filled successfully.');
-
-      console.log('Form filled successfully!');
-    } catch (error) {
-      console.error('Error filling the login form:', error);
-      throw error;
-    }
+    return this.loginHelper.newFillLoginForm(page, tabel, login, password);
   }
 
   /**
@@ -984,6 +446,14 @@ export class PageObject extends AbstractPage {
    * @returns The text content of the tooltip, or null if not found.
    */
 
+  /**
+   * Reads tooltip text by hovering over an element and reading the tooltip.
+   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
+   * @param hoverSelector - The selector for the element to hover over.
+   * @param tooltipSelector - The selector for the tooltip element.
+   * @returns The tooltip text or null if not found.
+   */
+  // TODO: OBSOLETE - Remove after confirming no usage
   async readTooltip(hoverSelector: string, tooltipSelector: string): Promise<string | null> {
     await this.page.hover(hoverSelector);
     await this.page.waitForSelector(tooltipSelector);
@@ -997,50 +467,13 @@ export class PageObject extends AbstractPage {
    * @returns True if navigation is successful, or an error message if it fails.
    */
 
+  /**
+   * Navigates by clicking an element with the specified data-testid
+   * @param dataTestId - The data-testid of the element to click
+   * @returns True if navigation succeeded, or an error message if it failed
+   */
   async nav(dataTestId: string): Promise<true | string> {
-    try {
-      const elementHandles = await this.page.$$(`[data-testid="${dataTestId}"]`);
-      // Check if elementHandle is not null
-      if (!elementHandles) {
-        return `Element with data-testid="${dataTestId}" not found`;
-      }
-
-      const elementCount = elementHandles.length;
-      //logger.info(dataTestId);
-      if (elementCount === 0) {
-        const errorMessage = `Navigation failed: Element with data-testid "${dataTestId}" not found.`;
-        logger.error(errorMessage);
-        return errorMessage;
-      }
-
-      if (elementCount > 1) {
-        const errorMessage = `Navigation failed: Multiple elements with data-testid "${dataTestId}" found. Expected only one.`;
-        logger.error(errorMessage);
-        return errorMessage;
-      }
-
-      await elementHandles[0].click();
-      await this.page.waitForLoadState('load');
-      const pageUrl = this.page.url();
-      const pageTitle = await this.page.title();
-      const pageBreadcrumb = await this.page.innerText('.breadcrumb');
-
-      logger.info(`Navigated to: ${pageUrl}`);
-      logger.info(`Page Title: ${pageTitle}`);
-      logger.info(`Breadcrumb: ${pageBreadcrumb}`);
-      return true;
-    } catch (error) {
-      let errorMessage: string;
-
-      if (error instanceof Error) {
-        errorMessage = `Navigation failed: ${error.message}`;
-      } else {
-        errorMessage = 'Navigation failed: An unknown error occurred';
-      }
-
-      logger.error(errorMessage);
-      return errorMessage;
-    }
+    return this.navigationHelper.nav(dataTestId);
   }
 
   /**
@@ -1048,85 +481,41 @@ export class PageObject extends AbstractPage {
    * @param expectedPath - The expected URL path to compare.
    * @returns True if the URL path matches, or an error message if it does not.
    */
-
   async checkUrl(expectedPath: string): Promise<true | string> {
-    try {
-      const actualURL = new URL(this.page.url());
-      const actualPath = actualURL.pathname;
-      if (actualPath !== expectedPath) {
-        const errorMessage = `URL path does not match. Expected: ${expectedPath}, Actual: ${actualPath}`;
-        logger.error(errorMessage);
-        return errorMessage;
-      }
-      logger.info(`URL path verification passed: ${actualPath}`);
-      return true;
-    } catch (error) {
-      let errorMessage: string;
-
-      if (error instanceof Error) {
-        errorMessage = `URL path verification failed: ${error.message}`;
-      } else {
-        errorMessage = 'URL path verification failed: An unknown error occurred';
-      }
-
-      logger.error(errorMessage);
-      return errorMessage;
-    }
+    return this.navigationHelper.checkUrl(expectedPath);
   }
 
   /**
    * Check if the current page title matches the expected title.
+   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
    * @param expectedTitle - The expected page title to compare.
    * @throws Error if the actual title does not match the expected title.
    */
-
+  // TODO: OBSOLETE - Remove after confirming no usage
   async checkTitle(expectedTitle: string): Promise<void> {
-    const actualTitle = await this.page.title();
-    if (actualTitle !== expectedTitle) {
-      throw new Error(`Title does not match. Expected: ${expectedTitle}, Actual: ${actualTitle}`);
-    }
-    logger.info(`Title verification passed: ${actualTitle}`);
+    return this.navigationHelper.checkTitle(expectedTitle);
   }
 
   /**
    * Check if the current page language matches the expected language.
+   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
    * @param expectedLanguage - The expected language to compare.
    * @throws Error if the actual language does not match the expected language or if the language element is not found.
    */
-
+  // TODO: OBSOLETE - Remove after confirming no usage
   async checkLanguage(expectedLanguage: string): Promise<void> {
-    const languageElement = await this.page.$('selector-for-language-element');
-
-    // Check if languageElement is not null
-    if (!languageElement) {
-      throw new Error('Language element not found');
-    }
-
-    const language = await languageElement.textContent();
-
-    // Check if language text is not null
-    if (!language) {
-      throw new Error('Language text is not available');
-    }
-
-    if (language.trim() !== expectedLanguage) {
-      throw new Error(`Language does not match. Expected: ${expectedLanguage}, Actual: ${language}`);
-    }
-
-    logger.info(`Language verification passed: ${language}`);
+    return this.navigationHelper.checkLanguage(expectedLanguage);
   }
+
   /**
    * Check if the current breadcrumb matches the expected breadcrumb.
+   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
    * @param expectedBreadcrumb - The expected breadcrumb to compare.
    * @throws Error if the actual breadcrumb does not match the expected breadcrumb.
    */
-
+  // TODO: OBSOLETE - Remove after confirming no usage
   async checkBreadCrumb(expectedBreadcrumb: string): Promise<void> {
-    const actualBreadcrumb = await this.page.innerText('.breadcrumb');
-    if (actualBreadcrumb !== expectedBreadcrumb) {
-      throw new Error(`Breadcrumb does not match. Expected: ${expectedBreadcrumb}, Actual: ${actualBreadcrumb}`);
-    }
-    logger.info(`Breadcrumb verification passed: ${actualBreadcrumb}`);
+    return this.navigationHelper.checkBreadCrumb(expectedBreadcrumb);
   }
 
   /**
@@ -1135,6 +524,12 @@ export class PageObject extends AbstractPage {
    * @returns A promise that resolves when the screenshot is captured and saved.
    */
 
+  /**
+   * Captures a screenshot of the current page.
+   * @deprecated OBSOLETE - Only used in README.md examples, not in actual test code. Consider removing.
+   * @param filename - The filename to save the screenshot as.
+   */
+  // TODO: OBSOLETE - Remove after confirming no usage (only in README examples)
   async captureScreenshot(filename: string): Promise<void> {
     logger.info(`Capturing screenshot: ${filename}`);
     await this.page.screenshot({ path: filename });
@@ -1142,9 +537,11 @@ export class PageObject extends AbstractPage {
 
   /**
    * Wait for the specified selector to become visible on the page.
+   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
    * @param selector - The selector to wait for.
    * @returns A promise that resolves when the selector is visible.
    */
+  // TODO: OBSOLETE - Remove after confirming no usage
   async waitForSelector(selector: string): Promise<void> {
     logger.info(`Waiting for selector: ${selector}`);
     await this.page.waitForSelector(selector, { state: 'visible' });
@@ -1158,44 +555,7 @@ export class PageObject extends AbstractPage {
    * @returns The column count as a number.
    */
   async checkTableColumns(page: Page, tableId: string, skip?: boolean): Promise<number> {
-    // Locate the table with the specific id
-    logger.info(tableId);
-    await page.waitForLoadState('networkidle');
-    // Try to find the table using both selectors
-    let tab = await page.$(`#${tableId}`);
-    if (!tab) {
-      tab = await page.$(`[data-testid="${tableId}"]`);
-    }
-
-    if (!tab) {
-      throw new Error(`Table with id "${tableId}" not found`);
-    }
-
-    // Get all rows in the table containing th tags
-
-    const allRows = await tab.$$('tr:has(th)');
-    if (skip && allRows.length > 0) {
-      allRows.shift(); // removes the first element from the array
-    }
-    // Initialize the column count
-    let columnCount = 0;
-
-    // Loop through each row containing th tags
-    for (const row of allRows) {
-      // Check if the row's data-testid contains "SearchRow"
-      const dataTestId = await row.getAttribute('data-testid');
-      if (dataTestId && dataTestId.includes('Search')) {
-        continue; // Ignore this row
-      }
-
-      // Count the number of columns in this row
-      const columns = await row.$$('th');
-      columnCount += columns.length;
-    }
-
-    // Return the column count
-    logger.info(columnCount);
-    return columnCount;
+    return this.tableHelper.checkTableColumns(page, tableId, skip);
   }
 
   /**
@@ -1205,117 +565,8 @@ export class PageObject extends AbstractPage {
    * @param expectedHeaders - The expected headers to compare.
    * @returns A promise that resolves to true if the headers match, or throws an error if not.
    */
-
   async checkTableColumnHeaders(page: Page, tableId: string, expectedHeaders: any, skip?: boolean): Promise<boolean> {
-    // Define the selector for the table header
-    await page.waitForTimeout(1000);
-    let tab = await page.$(`#${tableId}`);
-    if (!tab) {
-      tab = await page.$(`[data-testid="${tableId}"]`);
-    }
-
-    if (!tab) {
-      throw new Error(`Table with id "${tableId}" not found`);
-    }
-
-    // Get all rows in the table containing th tags
-    const allRows = await tab.$$('tr:has(th)');
-    if (skip && allRows.length > 0) {
-      allRows.shift(); // removes the first element from the array
-    }
-    // Initialize the column count and headerTexts
-    let headerTexts: string[] = [];
-
-    // Loop through each row containing th tags
-    for (const row of allRows) {
-      // Check if the row's data-testid contains "SearchRow"
-      const dataTestId = await row.getAttribute('data-testid');
-      if (dataTestId && dataTestId.includes('Search')) {
-        continue; // Ignore this row
-      }
-
-      // Get the text content of each th element in the row
-      const columns = await row.$$('th');
-      for (const col of columns) {
-        let text = await col.innerText();
-        const colDataTestId = await col.getAttribute('data-testid'); // Get the data-testid attribute
-
-        if (!text.trim()) {
-          // Check if the column contains a div with class "unicon"
-          const hasUniconDiv = await col.$('div.unicon');
-          if (hasUniconDiv) {
-            text = 'Tick';
-          }
-        }
-        if (typeof text === 'undefined') {
-          logger.info('The parameter "text" is undefined.');
-        } else {
-          // Normalize text content and add to headerTexts array
-          headerTexts.push(normalizeText(text));
-        }
-
-        // Log the column text or 'Tick'
-        if (text === 'Tick') {
-          logger.info('Column text: Tick');
-        } else {
-          logger.info(`Column text: ${text}`);
-        }
-      }
-    }
-
-    // Flatten expected headers structure to handle main and sub-columns
-    const flattenHeaders = (headers: any): string[] => {
-      const flattened: string[] = [];
-
-      for (const key in headers) {
-        if (headers[key] && typeof headers[key] === 'object' && headers[key].label) {
-          flattened.push(normalizeText(headers[key].label));
-
-          if (headers[key].subHeaders) {
-            for (const subKey in headers[key].subHeaders) {
-              flattened.push(normalizeText(headers[key].subHeaders[subKey]));
-            }
-          }
-        } else {
-          flattened.push(normalizeText(headers[key]));
-        }
-      }
-
-      return flattened;
-    };
-
-    const expectedHeaderLabels = flattenHeaders.call(this, expectedHeaders.headers);
-
-    // Compare the actual header texts with the expected header labels for existence
-    const actualHeadersExistInExpected = headerTexts.every(text => expectedHeaderLabels.includes(text));
-    const expectedHeadersExistInActual = expectedHeaderLabels.every(text => headerTexts.includes(text));
-
-    // Compare the ordering of actual header texts with the expected header labels
-    const headersMatchInOrder = headerTexts.every((text, index) => text === expectedHeaderLabels[index]);
-
-    // Log the result for debugging purposes
-    if (actualHeadersExistInExpected && expectedHeadersExistInActual && headersMatchInOrder) {
-      logger.info('Header labels match the expected values in both existence and order.');
-      return true;
-    } else {
-      logger.info('Headers do not match in existence and/or order.');
-      if (!actualHeadersExistInExpected) {
-        logger.info(
-          'Missing in Expected:',
-          headerTexts.filter(text => !expectedHeaderLabels.includes(text)),
-        );
-      }
-      if (!expectedHeadersExistInActual) {
-        logger.info(
-          'Missing in Actual:',
-          expectedHeaderLabels.filter(text => !headerTexts.includes(text)),
-        );
-      }
-      if (!headersMatchInOrder) {
-        logger.info('Order mismatch between actual and expected headers.');
-      }
-      return false;
-    }
+    return this.tableHelper.checkTableColumnHeaders(page, tableId, expectedHeaders, skip);
   }
 
   /**
@@ -1323,42 +574,8 @@ export class PageObject extends AbstractPage {
    * @param selector - The selector to locate the table element.
    * @returns A promise that resolves when the element is found, scrolled into view, and clicked.
    */
-
   async findTable(selector: string): Promise<void> {
-    // Wait for the element to be visible and enabled
-    await this.page.waitForSelector(selector, { state: 'visible' });
-
-    // Check if the element is present on the page
-    const element = await this.page.$(selector);
-
-    if (element) {
-      logger.info('Element is present on the page');
-
-      // Check if the element is visible
-      const isVisible = await this.page.isVisible(selector);
-      if (isVisible) {
-        // Scroll the element into view with a null check
-        await this.page.evaluate(selector => {
-          const element = document.querySelector(selector);
-          if (element) {
-            element.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-            });
-          } else {
-            console.warn(`Element with selector "${selector}" not found.`);
-          }
-        }, selector);
-
-        // Click on the element
-        await this.page.click(selector);
-        //logger.info('Element clicked');
-      } else {
-        //logger.info('Element is not visible on the page');
-      }
-    } else {
-      //logger.info('Element is not present on the page');
-    }
+    return this.tableHelper.findTable(selector);
   }
 
   /**
@@ -1369,137 +586,7 @@ export class PageObject extends AbstractPage {
    * @returns The index of the column with the specified data-testid, or false if not found.
    */
   async findColumn(page: Page, tableId: string, colId: string): Promise<number> {
-    page.on('console', msg => {
-      if (msg.type() === 'log') {
-        logger.info(`Browser log: ${msg.text()}`);
-      } else if (msg.type() === 'info') {
-        logger.info(`Browser info: ${msg.text()}`);
-      } else if (msg.type() === 'warning') {
-        logger.warn(`Browser warning: ${msg.text()}`);
-      } else if (msg.type() === 'error') {
-        logger.error(`Browser error: ${msg.text()}`);
-      }
-    });
-
-    logger.info(`Task started: Finding table "${tableId}" and analyzing header rows.`);
-
-    const columnIndex = await page.evaluate(
-      ({ tableId, colId }) => {
-        let table;
-
-        if (tableId.startsWith('.')) {
-          // Если строка начинается с '.', это класс
-          table = document.querySelector(tableId);
-        } else if (tableId.startsWith('#')) {
-          // Если строка начинается с '#', это id
-          table = document.getElementById(tableId.substring(1));
-        } else {
-          // В противном случае предполагаем, что это data-testid
-          table = document.querySelector(`[data-testid="${tableId}"]`);
-        }
-
-        // Если элемент не найден, можно добавить дополнительную проверку
-        if (!table) {
-          // Попробуем найти элемент по id, если это не data-testid
-          table = document.getElementById(tableId);
-        }
-
-        // Проверка на наличие элемента
-        if (table) {
-          console.log('Элемент найден:', table);
-        } else {
-          console.log('Элемент не найден');
-        }
-
-        if (!table) {
-          console.error(`Table with data-testid or id "${tableId}" not found.`);
-          return -1;
-        }
-        console.info(`Found table. Now analyzing rows to locate column "${colId}".`);
-
-        // Extract header rows
-        let headerRows = Array.from(table.querySelectorAll('thead tr, tbody tr:has(th)')).filter(row => row.querySelectorAll('th').length > 0);
-
-        // Filter out irrelevant rows
-        headerRows = headerRows.filter(row => {
-          const dataTestId = row?.getAttribute?.('data-testid'); // Safely access the attribute
-          return !dataTestId?.includes('SearchRow') && !dataTestId?.includes('TableFooter');
-        });
-        // Handle the case for a single row of headers
-        if (headerRows.length === 1) {
-          console.info('Only one header row found. No merging necessary.');
-          const singleRow = headerRows[0];
-          const singleRowCells = Array.from(singleRow.querySelectorAll('th'));
-
-          // Look for the column in the single row
-          for (let i = 0; i < singleRowCells.length; i++) {
-            const headerDataTestId = singleRowCells[i].getAttribute('data-testid');
-            if (headerDataTestId === colId) {
-              return i; // Return the index of the column
-            }
-          }
-
-          console.error('Column not found in the single header row.');
-          return -1; // Return -1 if not found
-        }
-
-        // Start with the last row as the initial merged row
-        let mergedRow = Array.from(headerRows[headerRows.length - 1].querySelectorAll('th'));
-
-        // Iterate backward through the rows to merge
-        for (let i = headerRows.length - 2; i >= 0; i--) {
-          const currentRow = Array.from(headerRows[i].querySelectorAll('th'));
-          const newMergedRow = [];
-
-          let childIndex = 0;
-          for (let j = 0; j < currentRow.length; j++) {
-            const cell = currentRow[j];
-
-            const colspan = parseInt(cell.getAttribute('colspan') || '1');
-
-            if (colspan > 1) {
-              // Replace parent with child columns from the merged row
-              for (let k = 0; k < colspan; k++) {
-                newMergedRow.push(mergedRow[childIndex++]);
-              }
-            } else {
-              // Add the current cell as-is
-              newMergedRow.push(cell);
-            }
-          }
-          // Update mergedRow for the next iteration
-          mergedRow = newMergedRow;
-        }
-
-        // Print all data-testid values in the final merged row
-
-        const dataTestIds = mergedRow
-          .filter(cell => cell && typeof cell.getAttribute === 'function') // Validate each element
-          .map(cell => cell.getAttribute('data-testid')); // Extract the data-testid attribute
-
-        console.info('All data-testid values in the final merged row:');
-        // Look for the column in the final merged row
-        for (let i = 0; i < mergedRow.length; i++) {
-          const headerDataTestId = mergedRow[i].getAttribute('data-testid');
-
-          if (headerDataTestId === colId) {
-            return i; // Return the index of the column
-          }
-        }
-
-        console.error('Column not found.');
-        return -1; // Return -1 if not found
-      },
-      { tableId, colId },
-    );
-
-    if (columnIndex !== -1) {
-      logger.info(`Column with data-testid "${colId}" found at index: ${columnIndex}`);
-    } else {
-      logger.error(`Column with data-testid "${colId}" not found.`);
-    }
-
-    return columnIndex;
+    return this.tableHelper.findColumn(page, tableId, colId);
   }
 
   /**
@@ -1600,12 +687,7 @@ export class PageObject extends AbstractPage {
    */
 
   async getMessage(orderNumber?: string) {
-    const successMessageLocator = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
-    await expect(successMessageLocator).toBeVisible();
-    if (orderNumber) {
-      const successMessageText = (await successMessageLocator.textContent()) || '';
-      expect(successMessageText).toContain(orderNumber);
-    }
+    return this.notificationHelper.getMessage(orderNumber);
   }
 
   /**
@@ -1615,14 +697,7 @@ export class PageObject extends AbstractPage {
    * @returns A promise that resolves when the search is performed.
    */
   async closeSuccessMessage() {
-    try {
-      // Находим и кликаем по кнопке закрытия
-      const closeButton = this.page.locator('[data-testid="Notification-Notification-Icon"]').last();
-      await expect(closeButton).toBeVisible();
-      await closeButton.click();
-    } catch (error) {
-      console.error('Ошибка при закрытии уведомления:', error);
-    }
+    return this.notificationHelper.closeSuccessMessage();
   }
 
   /**
@@ -1829,93 +904,19 @@ export class PageObject extends AbstractPage {
     urgencyModalColId: string,
     plannedShipmentModalColId: string,
   ): Promise<{ success: boolean; message?: string }> {
-    // Step 1: Get all rows in the table
-    logger.info(urgencyColIndex);
-
-    let table = await page.$(`#${tableId}`);
-    if (!table) {
-      table = await page.$(`[data-testid="${tableId}"]`);
-    }
-
-    if (!table) {
-      return {
-        success: false,
-        message: `Table with id "${tableId}" not found`,
-      };
-    }
-
-    // Step 2: Get all rows in the table
-    const rows = await table.$$('tbody tr');
-
-    // Step 3: Filter out rows that contain `th` elements
-    const filteredRows = [];
-    for (const row of rows) {
-      const thElements = await row.$$('th');
-      if (thElements.length === 0) {
-        filteredRows.push(row);
-      }
-    }
-
-    // Step 4: Log total rows found
-    logger.info(`Total rows found in the table: ${filteredRows.length}`);
-
-    let allTestsPassed = true; // Variable to track the overall success status
-
-    for (let i = 0; i < filteredRows.length; i++) {
-      if (i > 100) {
-        break;
-      }
-      const row = filteredRows[i];
-      const cells = await row.$$('td');
-      let nameForErrorReport = await cells[nameColIdIndex].innerText();
-      let urgencyDateForCompare = await cells[urgencyColIndex].innerText();
-      let plannedShipmentDateForCompare = await cells[plannedShipmentColIndex].innerText();
-
-      logger.info(`Urgency Date: ${urgencyDateForCompare}`);
-      logger.info(`Planned Shipment Date: ${plannedShipmentDateForCompare}`);
-
-      // Click on the icon in the ordersIconColIndex column
-      const iconCell = cells[ordersIconColIndex];
-      const icon = await iconCell.$('img.link_img');
-      if (icon) {
-        // Scroll the icon into view before clicking it
-        await iconCell.evaluate(node => node.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-        await page.waitForTimeout(5000); // Optional: wait for smooth scroll to finish
-
-        await icon.click();
-        logger.info(`Clicked on the icon in row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`);
-        const result = await this.ordersListVerifyModalDates(
-          page,
-          modalSelector,
-          modalTableSelector,
-          urgencyDateForCompare,
-          plannedShipmentDateForCompare,
-          urgencyModalColId,
-          plannedShipmentModalColId,
-        );
-
-        page.mouse.dblclick(1, 1);
-        if (!result.success) {
-          // Log the error and continue testing
-          allTestsPassed = false; // Mark the overall success status as false
-          logger.error(`Test failed for order ${nameForErrorReport}. Dates do not match.`);
-        }
-      } else {
-        logger.warn(
-          `No icon found in the ordersIconColIndex column for row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`,
-        );
-      }
-    }
-
-    // Return the overall success status
-    if (!allTestsPassed) {
-      return {
-        success: false,
-        message: 'One or more orders failed the date comparison test. Check logs for details.',
-      };
-    }
-
-    return { success: true };
+    return this.orderHelper.checkDatesWithOrderList(
+      this,
+      page,
+      tableId,
+      nameColIdIndex,
+      urgencyColIndex,
+      plannedShipmentColIndex,
+      ordersIconColIndex,
+      modalSelector,
+      modalTableSelector,
+      urgencyModalColId,
+      plannedShipmentModalColId,
+    );
   }
 
   /**
@@ -1924,25 +925,14 @@ export class PageObject extends AbstractPage {
    * @param locator - The selector to locate the button element.
    * @returns A promise that resolves when the button is clicked.
    */
+  /**
+   * Clicks a button by text and locator
+   * @param textButton - The button text to match
+   * @param locator - The locator for the button
+   * @param click - Whether to actually click (Click.Yes) or just verify (Click.No)
+   */
   async clickButton(textButton: string, locator: string, click: Click = Click.Yes) {
-    const button = this.page.locator(locator, { hasText: textButton });
-    await this.highlightElement(button, {
-      backgroundColor: 'yellow',
-      border: '2px solid red',
-      color: 'blue',
-    });
-    await this.page.waitForTimeout(1000);
-    await expect(button).toHaveText(textButton);
-    await expect(button).toBeVisible();
-
-    if (click === Click.Yes) {
-      try {
-        await button.click();
-      } catch (error) {
-        console.warn(`Click failed for button "${textButton}", trying with force`, error);
-        await button.click({ force: true });
-      }
-    }
+    return this.elementHelper.clickButton(textButton, locator, click);
   }
 
   /**
@@ -1961,8 +951,7 @@ export class PageObject extends AbstractPage {
   }
 
   async checkHeader(header: string, url: string) {
-    const checkHeader = this.page.locator(url);
-    await expect(checkHeader.locator('h3').nth(0)).toHaveText(header);
+    return this.validationHelper.checkHeader(header, url);
   }
 
   async ordersListVerifyModalDates(
@@ -1974,163 +963,36 @@ export class PageObject extends AbstractPage {
     urgencyDateId: string,
     plannedShipmentDateId: string,
   ): Promise<{ success: boolean; message?: string }> {
-    // Step 1: Check that the modal has opened
-    await page.waitForSelector(`[data-testid="${modalSelectorId}"]`, {
-      state: 'attached',
-      timeout: 50000,
-    });
-    logger.info(`Modal opened: ${modalSelectorId}`);
-
-    // Step 2: Find the table in the modal
-    const table = await page.waitForSelector(`[data-testid="${modalTableSelectorId}"]`, { state: 'visible', timeout: 50000 });
-    if (!table) {
-      logger.error(`Table with selector "${modalTableSelectorId}" not found in the modal.`);
-      return {
-        success: false,
-        message: `Table with selector "${modalTableSelectorId}" not found in the modal.`,
-      };
-    }
-    await page.waitForLoadState('networkidle');
-    await this.waitingTableBody(`[data-testid="${modalTableSelectorId}"]`);
-    logger.info(`Table with selector "${modalTableSelectorId}" found in the modal.`);
-
-    // Step 3: Find the columns in the modal table
-    const urgencyModalCellNumber = await this.findColumn(page, modalTableSelectorId, urgencyDateId);
-    logger.info(`Urgency Modal Cell: ${urgencyModalCellNumber}`);
-    const plannedShipmentModalCellNumber = await this.findColumn(page, modalTableSelectorId, plannedShipmentDateId);
-    logger.info(`Planned Shipment Modal Cell: ${plannedShipmentModalCellNumber}`);
-
-    if (!urgencyModalCellNumber || !plannedShipmentModalCellNumber) {
-      logger.error(`Required columns not found in the modal table.`);
-      return {
-        success: false,
-        message: `Required columns not found in the modal table.`,
-      };
-    }
-
-    // Step 4: Extract dates from the modal table
-    const rows = await table.$$('tbody tr');
-    const filteredRows = await this.filterRowsWithoutTh(rows);
-    let urgencyModalDate = '';
-    let plannedShipmentModalDate = '';
-    let counter = 0;
-
-    for (const row of filteredRows) {
-      const hasNotDeficitClass = await row.evaluate(node => {
-        const element = node as Element;
-        return element.classList.contains('not-deficit');
-      });
-      if (!hasNotDeficitClass) {
-        const cells = await row.$$('td');
-        urgencyModalDate = await cells[urgencyModalCellNumber].innerText();
-        plannedShipmentModalDate = await cells[plannedShipmentModalCellNumber].innerText();
-        logger.info(`Row without .not-deficit class found. Urgency Date: ${urgencyModalDate}, Planned Shipment Date: ${plannedShipmentModalDate}`);
-        break;
-      }
-    }
-
-    logger.info(`Modal Urgency Date: ${urgencyModalDate}`);
-    logger.info(`Modal Planned Shipment Date: ${plannedShipmentModalDate}`);
-
-    // Step 5: Confirm that the modal dates match the parent table dates
-    // if (urgencyModalColValForCompare.trim() !== urgencyModalDate.trim() || plannedShipmentModalColValForCompare.trim() !== plannedShipmentModalDate.trim()) {
-    //    console.log("FFFFFF");
-    //    logger.error(`counter: ${counter}`);
-    //    logger.error(`Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`);
-    //    return {
-    //        success: false,
-    //        message: `Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`
-    //    };
-    // }
-    // console.log("GGGGG");
-    // logger.info(`Dates MATCH for row with urgency date ${urgencyModalColValForCompare} and planned shipment date ${plannedShipmentModalColValForCompare}.`);
-    return { success: true };
+    return this.orderHelper.ordersListVerifyModalDates(
+      this,
+      page,
+      modalSelectorId,
+      modalTableSelectorId,
+      urgencyModalColValForCompare,
+      plannedShipmentModalColValForCompare,
+      urgencyDateId,
+      plannedShipmentDateId,
+    );
   }
 
   /** Checks the current date in the locator
    * @param locator - the full locator of the table
    */
   async checkCurrentDate(locator: string) {
-    const checkDate = await this.page.locator(locator).textContent();
-    const today = new Date();
-    const formattedToday = today.toLocaleDateString('ru-RU');
-
-    // if (!checkDate || !checkDate.includes(formattedToday)) { //erp-2366
-    //   throw new Error(
-    //     `Ожидаемая дата "${formattedToday}" не найдена в тексте: "${checkDate}".`
-    //   );
-    // }
-
-    logger.info(`Текущая дата "${formattedToday}" успешно найдена в тексте.`);
-    return formattedToday;
+    return this.miscHelper.checkCurrentDate(locator);
   }
 
   // Check the "Start Production" modal window
   async checkModalWindowLaunchIntoProduction(locator: string) {
-    const modalWindow = await this.page.locator(locator);
-
-    // Debug: Check what elements are actually in the modal
-    const allH4Elements = await modalWindow.locator('h4').all();
-    console.log(`Found ${allH4Elements.length} h4 elements in modal`);
-    for (let i = 0; i < allH4Elements.length; i++) {
-      const text = await allH4Elements[i].textContent();
-      console.log(`H4 ${i}: "${text}"`);
-      // Highlight each H4 element
-      await allH4Elements[i].evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-    }
-
-    const allH3Elements = await modalWindow.locator('h3').all();
-    console.log(`Found ${allH3Elements.length} h3 elements in modal`);
-    for (let i = 0; i < allH3Elements.length; i++) {
-      const text = await allH3Elements[i].textContent();
-      console.log(`H3 ${i}: "${text}"`);
-      // Highlight each H3 element
-      await allH3Elements[i].evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-    }
-
-    // Try to find the title in any heading element (h1-h6)
-    const titleElement = modalWindow.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: 'Запустить в производство' }).first();
-    const titleExists = (await titleElement.count()) > 0;
-    console.log(`Title "Запустить в производство" found: ${titleExists}`);
-
-    if (titleExists) {
-      expect(titleElement).toBeVisible();
-    } else {
-      console.log('Title not found, skipping title check');
-    }
-    expect(await modalWindow.locator('h3', { hasText: 'Описание/Примечание' })).toBeVisible();
-    expect(await modalWindow.locator('h3', { hasText: 'Комплектация' })).toBeVisible();
-
-    await this.page.locator('[data-testid="ModalStartProduction-NoteTextarea-Textarea"]').isVisible();
-
-    const buttonCansel = await this.page.locator('[data-testid="ModalStartProduction-ComplectationTable-CancelButton"]', { hasText: 'Отменить' });
-    expect(buttonCansel).toBeVisible();
-
-    const buttonLaunchProduction = await this.page.locator('[data-testid="ModalStartProduction-ComplectationTable-InProduction"]', {
-      hasText: 'В производство',
-    });
-    expect(buttonLaunchProduction).toBeVisible();
-
-    await this.page.locator(`${SelectorsStartProduction.MODAL_START_PRODUCTION_MODAL_CONTENT} table tbody tr`).isVisible();
+    return this.miscHelper.checkModalWindowLaunchIntoProduction(locator);
   }
 
   /** Checks and enters the quantity in the "Start Production" modal window
    * @param quantity - checks that the input has this value
    * @param quantityOrder - if this parameter is specified, enters this value in the input field
    */
-  async checkOrderQuantityNew(qunatity: string, qunatityOrder?: string) {
-    const modalWindowLaunchIntoProduction = this.page.locator(SelectorsStartProduction.MODAL_START_PRODUCTION_MODAL_CONTENT);
-    if (qunatityOrder) {
-      await modalWindowLaunchIntoProduction.locator('input').fill(qunatityOrder);
-    }
+  async checkOrderQuantityNew(quantity: string, quantityOrder?: string) {
+    return this.orderHelper.checkOrderQuantityNew(quantity, quantityOrder);
   }
   /** Checks and enters the quantity in the order modal window
    * @param locator - selector for the quantity input field
@@ -2138,29 +1000,12 @@ export class PageObject extends AbstractPage {
    * @param quantityOrder - if specified, enters this value in the input field
    */
   async checkOrderQuantity(locator: string, quantity: string, quantityOrder?: string) {
-    const input = this.page.locator(locator).locator('input');
-
-    if (quantityOrder) {
-      // Если указано quantityOrder, просто вводим его значение
-      await input.fill(quantityOrder);
-    } else {
-      // Если quantityOrder не указан, проверяем текущее значение с quantity
-      const currentValue = await input.inputValue();
-      expect(currentValue).toBe(quantity);
-    }
+    return this.orderHelper.checkOrderQuantity(locator, quantity, quantityOrder);
   }
 
   // Save the order number from the "Start Production" modal window
   async checkOrderNumber() {
-    const orderNumberValue = this.page.locator(SelectorsStartProduction.MODAL_START_PRODUCTION_ORDER_NUMBER_VALUE);
-    await expect(orderNumberValue).toBeVisible();
-    const orderNumberText = await orderNumberValue.textContent();
-
-    if (!orderNumberText) {
-      throw new Error('Номер заказа не найден');
-    }
-
-    return orderNumberText?.trim();
+    return this.orderHelper.checkOrderNumber();
   }
 
   /** Retrieves the value from the cell in the first row of the table and can click on the cell
@@ -2174,44 +1019,7 @@ export class PageObject extends AbstractPage {
    * @param click - whether to click on the cell
    */
   async getValueOrClickFromFirstRow(locator: string, cellIndex: number, click: Click = Click.No, dblclick: Click = Click.No) {
-    const rows = await this.page.locator(`${locator} tbody tr`);
-
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      throw new Error('В таблице нет строк.');
-    }
-
-    const firstRow = rows.nth(0);
-    await firstRow.evaluate((el: HTMLElement) => {
-      el.style.backgroundColor = 'yellow';
-      el.style.border = '2px solid red';
-      el.style.color = 'blue';
-    });
-    await this.page.waitForTimeout(5000);
-    const cells = await firstRow.locator('td').allInnerTexts();
-
-    if (cellIndex < 0 || cellIndex > cells.length) {
-      throw new Error(`Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 0-${cells.length}.`);
-    }
-
-    const valueInCell = cells[cellIndex];
-    const cellLocator = firstRow.locator('td').nth(cellIndex);
-    await cellLocator.evaluate((el: HTMLElement) => {
-      el.style.backgroundColor = 'red';
-      el.style.border = '2px solid red';
-      el.style.color = 'blue';
-    });
-    logger.info(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
-
-    if (click === Click.Yes) {
-      await firstRow.locator('td').nth(cellIndex).click();
-      logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
-    }
-    if (dblclick === Click.Yes) {
-      await firstRow.locator('td').nth(cellIndex).dblclick();
-      logger.info(`Дважды кликнули по ячейке ${cellIndex} первой строки.`);
-    }
-    return valueInCell;
+    return this.rowCellHelper.getValueOrClickFromFirstRow(locator, cellIndex, click, dblclick);
   }
 
   /** Retrieves the value from the cell in the first row of the table and can click on the cell
@@ -2220,35 +1028,7 @@ export class PageObject extends AbstractPage {
    * @param click - whether to click on the cell
    */
   async getValueOrClickFromFirstRowNoThead(locator: string, cellIndex: number, click: Click = Click.No, dblclick: Click = Click.No) {
-    const rows = await this.page.locator(`${locator} tbody tr.td-row`);
-
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      throw new Error('В таблице нет строк.');
-    }
-
-    const firstRow = rows.nth(0);
-
-    const cells = await firstRow.locator('td').allInnerTexts();
-
-    if (cellIndex < 0 || cellIndex >= cells.length) {
-      throw new Error(`Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 0-${cells.length}.`);
-    }
-
-    const valueInCell = cells[cellIndex];
-
-    logger.info(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
-
-    if (click === Click.Yes) {
-      await firstRow.locator('td').nth(cellIndex).click();
-      logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
-    }
-    if (dblclick === Click.Yes) {
-      await firstRow.locator('td').nth(cellIndex).dblclick();
-      logger.info(`Дважды кликнули по ячейке ${cellIndex} первой строки.`);
-    }
-
-    return valueInCell;
+    return this.rowCellHelper.getValueOrClickFromFirstRowNoThead(locator, cellIndex, click, dblclick);
   }
 
   /** Retrieves the value from the cell in the first row of the table and can click on the cell
@@ -2257,41 +1037,7 @@ export class PageObject extends AbstractPage {
    * @param click - whether to click on the cell
    */
   async clickIconOperation(locator: string, cellIndex: number, click: Click = Click.No) {
-    // Сначала дождемся появления таблицы
-    await this.page.waitForSelector(`${locator} tbody tr.td-row`, {
-      state: 'attached',
-      timeout: 3000,
-    });
-
-    const rows = await this.page.locator(`${locator} tbody tr`);
-
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      throw new Error('В таблице нет строк.');
-    }
-
-    const firstRow = rows.nth(0);
-
-    const cells = await firstRow.locator('td').allInnerTexts();
-
-    if (cellIndex < 1 || cellIndex > cells.length) {
-      throw new Error(`Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 1-${cells.length}.`);
-    }
-
-    const valueInCell = cells[cellIndex - 1];
-
-    logger.info(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
-
-    if (click === Click.Yes) {
-      const iconOperation = await firstRow
-        .locator('td')
-        .nth(cellIndex - 1)
-        .locator('.link_img');
-      await iconOperation.click();
-      logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
-    }
-
-    return valueInCell;
+    return this.rowCellHelper.clickIconOperation(locator, cellIndex, click);
   }
 
   /** Retrieves the value from the cell in the first row of the table and can click on the cell
@@ -2300,36 +1046,7 @@ export class PageObject extends AbstractPage {
    * @param click - whether to click on the cell
    */
   async clickIconOperationNew(locator: string, cellIndex: number, click: Click = Click.No) {
-    const rows = await this.page.locator(`${locator} tbody tr`);
-
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      throw new Error('В таблице нет строк.');
-    }
-
-    if (typeof cellIndex !== 'number') {
-      throw new Error('Номер ячейки должен быть числом.');
-    }
-
-    const firstRow = rows.nth(0);
-
-    const cells = await firstRow.locator('td').allInnerTexts();
-
-    if (cellIndex < 0 || cellIndex >= cells.length) {
-      throw new Error(`Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 0-${cells.length}.`);
-    }
-
-    const valueInCell = cells[cellIndex];
-
-    logger.info(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
-
-    if (click === Click.Yes) {
-      const iconOperation = await firstRow.locator('td').nth(cellIndex).locator('.link_img');
-      await iconOperation.click();
-      logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
-    }
-
-    return valueInCell;
+    return this.rowCellHelper.clickIconOperationNew(locator, cellIndex, click);
   }
 
   /** Checks if the first row contains the specified name and marks the checkbox in the second cell
@@ -2337,29 +1054,7 @@ export class PageObject extends AbstractPage {
    * @param locator - the full locator of the table
    */
   async checkboxMarkNameInLineFromFirstRow(name: string, locator: string) {
-    const cells = await this.page.locator(`${locator} tbody td`);
-
-    const cellTexts = await cells.allInnerTexts();
-
-    const containsSearchValue = cellTexts.some(cellText => cellText.trim().toLowerCase().includes(name.trim().toLowerCase()));
-
-    if (containsSearchValue) {
-      logger.info('Имя найдено');
-
-      const secondCell = cells.nth(0);
-      const isSecondCellVisible = await secondCell.isVisible();
-
-      if (isSecondCellVisible) {
-        await secondCell.click();
-        logger.info('Кликнули по второй ячейке');
-      } else {
-        logger.info('Вторая ячейка не видима для клика');
-      }
-    } else {
-      logger.info('Имя не найдено');
-    }
-
-    await expect(containsSearchValue).toBe(true);
+    return this.rowCellHelper.checkboxMarkNameInLineFromFirstRow(name, locator);
   }
 
   /**
@@ -2375,83 +1070,7 @@ export class PageObject extends AbstractPage {
       description?: string;
     },
   ) {
-    // Debug: Check if table has any rows at all
-    const allRows = await this.page.locator(`${locator} tbody tr`);
-    const rowCount = await allRows.count();
-    console.log(`DEBUG: Total rows in table: ${rowCount}`);
-
-    if (rowCount === 0) {
-      console.log(`DEBUG: Table is empty - no rows found`);
-      throw new Error(`Table is empty - no rows found in ${locator}`);
-    }
-
-    // Debug: Check what's in the first row
-    const firstRow = await this.page.locator(`${locator} tbody tr:first-child`);
-    const firstRowText = await firstRow.textContent();
-    console.log(`DEBUG: First row text content: "${firstRowText?.trim()}"`);
-
-    // Получаем ячейки только первой строки
-    const cells = await this.page.locator(`${locator} tbody tr:first-child td`);
-
-    const cellTexts = await cells.allInnerTexts();
-
-    // Debug: Log all cell texts to see what's in the table
-    console.log(`DEBUG: All cell texts in first row: [${cellTexts.map(text => `"${text.trim()}"`).join(', ')}]`);
-    console.log(`DEBUG: Looking for: "${name.trim()}"`);
-
-    // Находим ячейку, которая содержит искомое значение
-    let foundValue = cellTexts.find(cellText => cellText.trim().toLowerCase().includes(name.trim().toLowerCase()));
-    let foundRowIndex = 0;
-
-    if (!foundValue) {
-      // Дополнительная проверка: ищем значение в остальных строках таблицы
-      const rows = await this.page.locator(`${locator} tbody tr`);
-      const rowsCount = await rows.count();
-      console.log(`DEBUG: Searching remaining ${rowsCount} rows for "${name.trim()}"`);
-
-      for (let i = 0; i < rowsCount; i++) {
-        const rowText = (await rows.nth(i).textContent())?.trim() || '';
-        console.log(`DEBUG: Row ${i} content: "${rowText}"`);
-        if (rowText.toLowerCase().includes(name.trim().toLowerCase())) {
-          foundValue = rowText;
-          foundRowIndex = i;
-          console.warn(`Value "${name.trim()}" found in row ${i}, not in the first row.`);
-          break;
-        }
-      }
-    }
-
-    // Логируем результат после проверки
-    if (foundValue) {
-      logger.info(`Имя найдено (row ${foundRowIndex})`);
-    } else {
-      logger.info('Имя не найдено');
-    }
-
-    // Проверяем, что значение найдено
-    if (!foundValue) {
-      // Provide more detailed error information
-      const errorMessage =
-        `Value "${name.trim()}" not found in table. ` +
-        `Table has ${rowCount} row(s). ` +
-        `First row content: "${firstRowText?.trim() || 'empty'}". ` +
-        `All cell texts: [${cellTexts.map(text => `"${text.trim()}"`).join(', ')}]`;
-      console.error(errorMessage);
-
-      await expectSoftWithScreenshot(
-        this.page,
-        () => {
-          expect.soft(foundValue).toBeDefined();
-        },
-        options?.description ?? `Verify value "${name}" exists in first row. ${errorMessage}`,
-        options?.testInfo,
-      );
-    } else {
-      // Выводим найденное значение в консоль
-      console.log(`Значение "${name}" найдено: ${foundValue || 'не найдено'}`);
-    }
-
-    return true;
+    return this.rowCellHelper.checkNameInLineFromFirstRow(name, locator, options);
   }
 
   /**
@@ -2460,15 +1079,7 @@ export class PageObject extends AbstractPage {
    * @param cellIndex - the index of the header cell to click on
    */
   async clickOnTheTableHeaderCell(cellIndex: number, locator: string) {
-    const headerCells = await this.page.locator(`${locator} thead th`);
-
-    const cellCount = await headerCells.count();
-    if (cellIndex < 1 || cellIndex > cellCount) {
-      throw new Error(`Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 1-${cellCount}.`);
-    }
-
-    await headerCells.nth(cellIndex - 1).click();
-    logger.info(`Кликнули по ячейке ${cellIndex} заголовка таблицы.`);
+    return this.rowCellHelper.clickOnTheTableHeaderCell(cellIndex, locator);
   }
 
   /**
@@ -2478,25 +1089,7 @@ export class PageObject extends AbstractPage {
    * @param descendantsDetailArray - the array where we plan to save the details
    */
   async preservingDescendants(descendantsCbedArray: ISpetificationData[], descendantsDetailArray: ISpetificationData[]) {
-    await this.page.waitForTimeout(5000);
-    const rows = this.page.locator('[data-testid="AddOrder-ShipmentComplect-Table-Spec"]');
-    const rowCount = await rows.count();
-
-    expect(rowCount).toBeGreaterThan(0); // Проверка на наличие строк
-
-    if (rowCount === 0) {
-      throw new Error('Нет строк в таблице');
-    }
-
-    const { cbeds, detals, materialList, listPokDet } = await extractDataSpetification(rows);
-
-    descendantsCbedArray.push(...cbeds);
-    descendantsDetailArray.push(...detals);
-
-    logger.info(`cbeds: `, descendantsCbedArray);
-    logger.info(`detals: `, descendantsDetailArray);
-    logger.info('materialList: ', materialList);
-    logger.info('listPokDet: ', listPokDet);
+    return this.miscHelper.preservingDescendants(this, descendantsCbedArray, descendantsDetailArray);
   }
 
   /**
@@ -2506,55 +1099,17 @@ export class PageObject extends AbstractPage {
    * @param designationProduct - Pass the designation of the entity for verification
    */
   async completionMarkModalWindow(nameOperation: string, nameProduct: string, designationProduct: string) {
-    const modalWindow = this.page.locator('[data-testid^="OperationPathInfo-ModalMark-Create"][data-testid$="ModalContent"]');
-    await expect(modalWindow).toBeVisible();
-    // Skip validation of specific H3 elements as modal content has changed
-    await expect(modalWindow.locator('h4', { hasText: 'Отметка о выполнении' })).toBeVisible();
-    await expect(modalWindow.locator('h3', { hasText: 'Распределение времени' })).toBeVisible();
-    await this.page.waitForTimeout(500);
-    // Checking a button in a modal window
-    const saveButton = this.page.locator('button[data-testid="ModalMark-Button-Save"]').filter({ hasText: 'Сохранить' }).first();
-    await saveButton.waitFor({ state: 'visible' });
-
-    // Check if button is enabled before attempting to click
-    const isEnabled = await saveButton.isEnabled();
-    if (!isEnabled) {
-      console.log('Save button is disabled - this is expected when running Test Case 11 in isolation');
-      // Skip clicking the disabled button
-      return;
-    }
-    await saveButton.click();
+    return this.miscHelper.completionMarkModalWindow(nameOperation, nameProduct, designationProduct);
   }
 
   // Checking the modal window to send to archive
   async checkModalWindowForTransferringToArchive(locator: string) {
-    const modalWindow = this.page.locator(`[data-testid^=${locator}]`);
-    await expect(modalWindow).toBeVisible();
-    await expect(modalWindow.locator('.unicon')).toBeVisible();
-    await expect(modalWindow.locator('button', { hasText: ' Отмена ' })).toBeVisible();
-    await expect(modalWindow.locator('button', { hasText: ' Подтвердить ' })).toBeVisible();
-
-    const modalText = await modalWindow.locator('[data-testid="ModalPromptMini-Cross-Container"]').textContent();
-
-    const regex = /Перенести \d+ в архив\?/;
-
-    if (!modalText || !regex.test(modalText)) {
-      throw new Error(`Ожидаемый текст "Перенести * в архив?" не найден в модальном окне. Найденный текст: "${modalText}"`);
-    }
-
-    logger.info(`Текст "Перенести * в архив?" успешно найден в модальном окне.`);
+    return this.miscHelper.checkModalWindowForTransferringToArchive(locator);
   }
 
   // Check the modal window "Completed Sets"
   async completesSetsModalWindow() {
-    await this.page.waitForTimeout(1000);
-    const locatorModalWindow =
-      //'[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Content"]';
-      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Content"]';
-    const modalWindow = this.page.locator(locatorModalWindow);
-
-    await expect(modalWindow).toBeVisible();
-    await this.waitingTableBody(locatorModalWindow);
+    return this.miscHelper.completesSetsModalWindow(this);
   }
 
   /**
@@ -2565,110 +1120,18 @@ export class PageObject extends AbstractPage {
    * @param enterQuantity - Enter the quantity in the "Your Quantity" cell.
    */
   async assemblyInvoiceModalWindow(typeInvoice: TypeInvoice, checkbox: boolean, enterQuantity?: string) {
-    const modalWindow = await this.page.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_RIGHT_INNER);
-    await expect(modalWindow).toBeVisible();
-    await this.page.waitForTimeout(3000);
-
-    // Find the dialog first, then get the first H4 element within it
-    const dialog = this.page.locator('dialog[data-testid*="ModalAddWaybill"]').first();
-    await dialog.waitFor({ state: 'visible', timeout: 10000 });
-
-    // Get the first H4 element within the dialog
-    const h4Element = dialog.locator('h4').first();
-    await h4Element.waitFor({ state: 'visible', timeout: 10000 });
-
-    const headerModal = await h4Element.textContent();
-    console.log(`DEBUG: Found H4 title in dialog: "${headerModal?.trim()}"`);
-
-    // Wait for and get infoHeader text
-    const infoHeaderElement = modalWindow.locator('[data-testid="ModalAddWaybill-WaybillDetails-InfoHeading"]');
-    await infoHeaderElement.waitFor({ state: 'visible', timeout: 10000 });
-    const infoHeaderRaw = await infoHeaderElement.textContent();
-    if (!infoHeaderRaw) {
-      throw new Error('Info header not found or empty');
-    }
-    const infoHeader = infoHeaderRaw.trim();
-
-    // Wait for and get configuration text
-    const configurationElement = modalWindow.locator('[data-testid="ModalAddWaybill-Complectation-Header"]');
-    await configurationElement.waitFor({ state: 'visible', timeout: 10000 });
-    const configurationRaw = await configurationElement.textContent();
-    if (!configurationRaw) {
-      throw new Error('Configuration header not found or empty');
-    }
-    const configuration = configurationRaw.trim();
-    // expect(headerModal).toContain(
-    //   await this.checkCurrentDate(
-    //     '[data-testid="ModalAddWaybill-WaybillDetails-Heading"]'
-    //   )
-    // );
-    if (typeInvoice === TypeInvoice.cbed) {
-      const headerInvoiceModal = 'Накладная на комплектацию Сборки';
-      const infoHeaderModal = 'Информация по сборочной единице';
-      const assemblyComfiguration = 'Комплектация Сборочной единицы';
-      expect(headerModal).toContain(headerInvoiceModal);
-      expect(infoHeader).toContain(infoHeaderModal);
-      expect(configuration).toContain(assemblyComfiguration);
-    } else {
-      const headerInvoiceModal = 'Накладная на комплектацию Изделия';
-      const infoHeaderModal = 'Информация по изделию';
-      const productConfiguration = 'Комплектация Изделия';
-      expect(headerModal).toContain(headerInvoiceModal);
-      expect(infoHeader).toContain(infoHeaderModal);
-      expect(configuration).toContain(productConfiguration);
-    }
-
-    const yourQuantity = await modalWindow.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_OWN_QUANTITY_INPUT);
-    const needQuantity = await this.getValueOrClickFromFirstRow('[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTable"]', 4);
-    // expect(yourQuantity).toHaveValue(needQuantity);
-    if (enterQuantity) {
-      await this.page.waitForTimeout(500);
-      await yourQuantity.fill(enterQuantity);
-      expect(await yourQuantity.inputValue()).toBe(enterQuantity);
-      await yourQuantity.press('Enter');
-    }
-
-    if (checkbox === true) {
-      // Find the checkbox cell using the new data-testid pattern
-      // Pattern: ModalAddWaybill-ShipmentDetailsTable-Row{number}-SelectCell
-      const checkboxCell = this.page.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]').first();
-
-      // Wait for the checkbox cell to be visible
-      await checkboxCell.waitFor({ state: 'visible' });
-
-      // Click on the checkbox cell
-      await checkboxCell.click();
-
-      console.log('Clicked on checkbox cell with new data-testid pattern');
-    }
-
-    expect(await modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(0).textContent()).toContain('Сборки');
-    expect(await modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(1).textContent()).toContain('Детали');
-    expect(await modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(2).textContent()).toContain('Покупные детали');
-    expect(await modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(3).textContent()).toContain('Материалы');
-    await this.clickButton('Отменить', '[data-testid="ModalAddWaybill-ControlButtons-CancelButton"]', Click.No);
-    await this.clickButton('Обновить', SelectorsModalWindowConsignmentNote.CONTROL_BUTTONS_ACTUALIZE_BUTTON, Click.No);
-    await this.clickButton('Печать', '[data-testid="ModalAddWaybill-ControlButtons-PrintButton"]', Click.No);
-    await this.clickButton('Создать приход', '[data-testid="ModalAddWaybill-ControlButtons-CreateIncomeButton"]', Click.No);
+    return this.miscHelper.assemblyInvoiceModalWindow(this, typeInvoice, checkbox, enterQuantity);
   }
 
   /** Waiting close modal window
    *    @param locator - Locator of the input.
    */
   async checkCloseModalWindow(locator: string) {
-    const modalWindow = await this.page.locator(locator);
-    await expect(modalWindow).toBeHidden();
+    return this.modalHelper.checkCloseModalWindow(locator);
   }
 
   async filterRowsWithoutTh(rows: ElementHandle[]): Promise<ElementHandle[]> {
-    const filteredRows: ElementHandle[] = [];
-    for (const row of rows) {
-      const thElements = await row.$$('th');
-      if (thElements.length === 0) {
-        filteredRows.push(row);
-      }
-    }
-    return filteredRows;
+    return this.miscHelper.filterRowsWithoutTh(rows);
   }
 
   /**
@@ -2677,18 +1140,7 @@ export class PageObject extends AbstractPage {
    * @param buttonId of the button that we will click on
    */
   async showLeftTable(tableId: string, buttonId: string) {
-    await this.page.waitForLoadState('networkidle');
-
-    // Capture the number of columns from the checkTableColumns method
-    const button = `[data-testid="${buttonId}"]`;
-    const table = `[data-testid="${tableId}"]`;
-    await this.page.waitForTimeout(3000);
-    const isVisible = await this.page.isVisible(table);
-    await this.page.waitForLoadState('networkidle');
-    if (!isVisible) {
-      await this.page.click(button);
-      await this.page.waitForSelector(table, { state: 'visible' });
-    }
+    return this.miscHelper.showLeftTable(tableId, buttonId);
   }
 
   /**
@@ -2698,36 +1150,17 @@ export class PageObject extends AbstractPage {
    * @param searchFields the array of data-testids to search for
    * @returns array of integers
    */
+  /**
+   * Get searchable column IDs for a table
+   * @param page - The Playwright page instance
+   * @param tableId - The ID or data-testid of the table
+   * @param searchFields - Array of search field data-testids
+   * @returns Array of column indices
+   */
   async getSearchableColumnIds(page: Page, tableId: string, searchFields: string[]): Promise<number[]> {
-    const columnIds: number[] = [];
-
-    // Wait for the table to be visible
-    const tableSelector = `[data-testid="${tableId}"], #${tableId}`;
-    await page.waitForSelector(tableSelector, {
-      state: 'attached',
-      timeout: 10000,
-    });
-    logger.info(`Table with ID ${tableId} is visible`);
-
-    for (const field of searchFields) {
-      logger.info(`Finding column for field: ${field}`);
-
-      const columnId = await this.findColumn(page, tableId, field);
-
-      logger.info(`Found column ID: ${columnId} for field: ${field}`);
-
-      if (columnId !== -1) {
-        columnIds.push(columnId);
-        logger.info(`Column ID ${columnId} added to columnIds array`);
-      } else {
-        // Handle the case where the column is not found
-        logger.warn(`Column not found for field: ${field}`);
-      }
-    }
-
-    logger.info(`Final column IDs: ${JSON.stringify(columnIds)}`);
-    return columnIds;
+    return this.tableHelper.getSearchableColumnIds(page, tableId, searchFields);
   }
+
   /**
    * Checks the search history functionality and verifies that search history items
    * can be clicked to populate the search field and trigger the search.
@@ -2735,56 +1168,12 @@ export class PageObject extends AbstractPage {
    * @param page - The Playwright page object.
    * @param tableId - The ID of the table to perform the search on.
    * @param searchFieldId - The ID of the search input field.
-   * @param searchTerm - The term to verify in the search history.
+   * @param searchTerms - Array of search terms to verify in the search history.
    */
   async checkSearchHistory(page: Page, tableId: string, searchFieldId: string, searchTerms: string[]): Promise<void> {
-    const table = page.locator(`[data-testid="${tableId}"]`);
-    const searchTable = table.locator(`[data-testid="${searchFieldId}"]`);
-    // Hover over search input to trigger dropdown
-    await searchTable.hover();
-    try {
-      await page.waitForSelector('[data-testid="Search-Cover-ShowHistoryParagraph"]', { timeout: 5000 });
-      logger.info('Element found');
-
-      // Verify dropdown text and click
-      await page.waitForSelector(`[data-testid="Search-Cover-ShowHistoryParagraph"]`, { state: 'visible' });
-      await page.click('[data-testid="Search-Cover-ShowHistoryParagraph"]');
-
-      logger.info('Clicked on the element');
-    } catch (error) {
-      logger.error('Element not found:', error);
-      throw error; // Re-throw the error to halt processing if needed
-    }
-
-    // Verify search history items and check each term
-    const searchHistory = page.locator('[data-testid="Search-Cover-History"]');
-    const historyItems = await searchHistory.locator('[data-testid="Search-Cover-HistoryParagraph"]').allInnerTexts();
-
-    // Log the history items
-    logger.info('History Items:', historyItems);
-
-    // Check if each searchTerm exists in the historyItems
-    for (const term of searchTerms) {
-      // Trim extra spaces from the search term
-      const trimmedTerm = normalizeText(term.trim());
-
-      // Log the current search term
-      logger.info('Current Search Term (trimmed):', trimmedTerm);
-
-      const termExists = historyItems.some(item => normalizeText(item.trim()) === trimmedTerm);
-      // Log the comparison result
-      logger.info(`Term "${trimmedTerm}" exists in history items:`, termExists);
-
-      // Pause to inspect the browser state if needed
-
-      expect(termExists).toBe(true);
-      if (termExists) {
-        logger.info(`Search term "${trimmedTerm}" found in history`);
-      } else {
-        logger.error(`Search term "${trimmedTerm}" not found in history`);
-      }
-    }
+    return this.tableHelper.checkSearchHistory(page, tableId, searchFieldId, searchTerms);
   }
+
   /**
    * Performs negative tests on the search functionality to ensure it handles
    * invalid inputs gracefully.
@@ -2794,125 +1183,20 @@ export class PageObject extends AbstractPage {
    * @param searchFieldId - The ID of the search input field.
    */
   async performNegativeSearchTests(page: Page, tableId: string, searchFieldId: string): Promise<void> {
-    const table = page.locator(`[data-testid="${tableId}"]`);
-    const searchTable = table.locator(`[data-testid="${searchFieldId}"]`);
-
-    // Function to filter out rows with `th` elements
-    async function getValidRows(): Promise<ElementHandle<Element>[]> {
-      const allRows = (await table.locator('tbody tr').elementHandles()) as ElementHandle<Element>[];
-      const validRows: ElementHandle<Element>[] = [];
-
-      for (const row of allRows) {
-        const thCount = await row.$$('th');
-        if (thCount.length === 0) {
-          validRows.push(row);
-        }
-      }
-      return validRows;
-    }
+    return this.tableHelper.performNegativeSearchTests(page, tableId, searchFieldId);
   }
 
+  /**
+   * Find and fill a cell in a table
+   * @param page - The Playwright page instance
+   * @param tableSelector - The selector for the table
+   * @param variableName - The variable name to search for in cells
+   * @param targetCellIndex - The index of the target cell to fill
+   * @param value - Optional value to fill (if not provided, returns current value)
+   * @returns The current value if value not provided, or void if value was filled
+   */
   async findAndFillCell(page: Page, tableSelector: string, variableName: string, targetCellIndex: number, value?: string): Promise<string | void> {
-    // Находим таблицу
-    const table = await page.$(`.${tableSelector}, #${tableSelector}, [data-testid="${tableSelector}"]`);
-    if (!table) {
-      throw new Error(`Таблица с ID "${tableSelector}" не найдена.`);
-    }
-
-    // Ждем загрузки таблицы
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000); // Даем время на рендеринг
-
-    const rows = await table.$$('tbody tr');
-    console.log(`Найдено строк: ${rows.length}`);
-
-    for (const row of rows) {
-      const cells = await row.$$('td');
-      for (const cell of cells) {
-        // Получаем текст разными способами для надежности
-        const cellText = await cell.evaluate(el => {
-          // Пробуем получить текст через textContent
-          const textContent = el.textContent?.trim() || '';
-          if (textContent) return textContent;
-
-          // Если textContent пустой, пробуем получить через innerText
-          const innerText = el.innerText?.trim() || '';
-          if (innerText) return innerText;
-
-          // Если и innerText пустой, пробуем получить через value
-          const input = el.querySelector('input');
-          if (input) return input.value?.trim() || '';
-
-          return '';
-        });
-
-        console.log(`Проверяем ячейку с текстом: "${cellText}"`);
-
-        // Более гибкое сравнение текста
-        if (cellText.toLowerCase().includes(variableName.toLowerCase())) {
-          console.log(`Найдена ячейка с переменной "${variableName}"`);
-
-          if (targetCellIndex < cells.length) {
-            const targetCell = cells[targetCellIndex];
-            console.log(`Обрабатываем целевую ячейку с индексом ${targetCellIndex}`);
-
-            // Проверяем наличие input в ячейке
-            const inputField = await targetCell.$('input[type="number"], input[type="text"]');
-            if (!inputField) {
-              console.log('Input не найден, проверяем наличие других элементов ввода');
-              const anyInput = await targetCell.$('input');
-              if (!anyInput) {
-                throw new Error(`Поле ввода не найдено в целевой ячейке.`);
-              }
-            }
-
-            if (value) {
-              console.log(`Пытаемся ввести значение: ${value}`);
-              try {
-                // Кликаем по ячейке для активации input
-                await targetCell.click();
-                await page.waitForTimeout(500);
-
-                // Очищаем существующее значение
-                await page.keyboard.press('Control+A');
-                await page.keyboard.press('Delete');
-
-                // Вводим новое значение
-                await page.keyboard.type(value);
-                await page.waitForTimeout(500);
-
-                // Проверяем, что значение введено
-                const inputValue = await targetCell.evaluate(el => {
-                  const input = el.querySelector('input');
-                  return input ? input.value : '';
-                });
-
-                console.log(`Текущее значение в input: ${inputValue}`);
-                if (inputValue !== value) {
-                  throw new Error(`Не удалось ввести значение ${value}. Текущее значение: ${inputValue}`);
-                }
-              } catch (error) {
-                console.error('Ошибка при вводе значения:', error);
-                throw error;
-              }
-            } else {
-              // Получаем текущее значение
-              const currentValue = await targetCell.evaluate(el => {
-                const input = el.querySelector('input');
-                return input ? input.value : '';
-              });
-              console.log(`Текущее значение: ${currentValue}`);
-              return currentValue;
-            }
-            return;
-          } else {
-            throw new Error(`Целевая ячейка с индексом ${targetCellIndex} не найдена.`);
-          }
-        }
-      }
-    }
-
-    throw new Error(`Переменная "${variableName}" не найдена в таблице.`);
+    return this.tableHelper.findAndFillCell(page, tableSelector, variableName, targetCellIndex, value);
   }
 
   /**
@@ -2921,17 +1205,7 @@ export class PageObject extends AbstractPage {
    * @returns A promise that resolves to an array of row Locators.
    */
   async getAllDataRows(table: Locator): Promise<Locator[]> {
-    // Locate all <tbody><tr> elements that contain <td> and exclude <th>
-    const rowsLocator = table.locator('tbody tr:has(td)');
-    const rowsCount = await rowsLocator.count();
-
-    // Collect all rows as Locators
-    const rows: Locator[] = [];
-    for (let i = 0; i < rowsCount; i++) {
-      rows.push(rowsLocator.nth(i));
-    }
-    logger.info(rows.length);
-    return rows;
+    return this.tableHelper.getAllDataRows(table);
   }
 
   /**
@@ -2942,127 +1216,11 @@ export class PageObject extends AbstractPage {
    * @returns {string[]} - Array of H3 text content.
    */
   async getAllH3TitlesInClass(page: Page, selector: string): Promise<string[]> {
-    // Step 1: Only accept data-testid selectors (no CSS classes)
-    // Selector must be in format: [data-testid="value"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]
-    // Also accepts combinations like [data-testid^="..."][data-testid$="..."]
-    const isDataTestIdSelector = selector.startsWith('[data-testid=') || selector.startsWith('[data-testid^=') || selector.startsWith('[data-testid$=');
-    if (!isDataTestIdSelector) {
-      throw new Error(
-        `getAllH3TitlesInClass only accepts data-testid selectors. Received: ${selector}. Use format: [data-testid="your-test-id"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]`,
-      );
-    }
-    const container = page.locator(selector);
-
-    const classTitles: string[] = [];
-    const h3Elements = await container.locator('h3').all();
-
-    for (const h3Tag of h3Elements) {
-      try {
-        // Check if this H3 is inside any modal/dialog using evaluate
-        const isInsideModal = await h3Tag.evaluate(el => {
-          // Check for dialog element (HTML5 semantic element)
-          if (el.closest('dialog')) return true;
-
-          // Check for role="dialog" attribute
-          if (el.closest('[role="dialog"]')) return true;
-
-          // Check for data-testid containing "Modal"
-          let parent = el.parentElement;
-          while (parent) {
-            if (parent.hasAttribute && parent.hasAttribute('data-testid')) {
-              const testId = parent.getAttribute('data-testid');
-              if (testId && testId.includes('Modal')) {
-                return true;
-              }
-            }
-            parent = parent.parentElement;
-          }
-
-          return false;
-        });
-
-        // Only include H3 if it's not inside a modal
-        if (!isInsideModal) {
-          const title = await h3Tag.textContent();
-          if (title) {
-            classTitles.push(title.trim());
-            await h3Tag.evaluate(row => {
-              row.style.backgroundColor = 'yellow';
-              row.style.border = '2px solid red';
-              row.style.color = 'blue';
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error processing H3 tag:', error);
-      }
-    }
-    logger.info('H3 Titles Found Inside Class (Excluding Modals):', classTitles);
-
-    return classTitles;
+    return this.modalHelper.getAllH3TitlesInClass(page, selector);
   }
 
   async getAllH3TitlesInTestId(page: Page, testId: string): Promise<string[]> {
-    // Normalize: accept raw testId or a full selector containing data-testid
-    let selector = testId;
-    const match = testId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
-    if (match && match[1]) {
-      selector = `[data-testid="${match[1]}"]`;
-    } else if (!testId.includes('data-testid')) {
-      selector = `[data-testid="${testId}"]`;
-    }
-
-    // Step 1: Collect all H3 titles inside the specified data-testid container
-    const container = page.locator(selector);
-    const testIdTitles: string[] = [];
-    const h3Elements = await container.locator('h3').all();
-
-    for (const h3Tag of h3Elements) {
-      try {
-        // Check if this H3 is inside any modal/dialog using evaluate
-        const isInsideModal = await h3Tag.evaluate(el => {
-          // Check for dialog element (HTML5 semantic element)
-          if (el.closest('dialog')) return true;
-
-          // Check for role="dialog" attribute
-          if (el.closest('[role="dialog"]')) return true;
-
-          // Check for data-testid containing "Modal"
-          let parent = el.parentElement;
-          while (parent) {
-            if (parent.hasAttribute && parent.hasAttribute('data-testid')) {
-              const testId = parent.getAttribute('data-testid');
-              if (testId && testId.includes('Modal')) {
-                return true;
-              }
-            }
-            parent = parent.parentElement;
-          }
-
-          return false;
-        });
-
-        // Only include H3 if it's not inside a modal
-        if (!isInsideModal) {
-          const title = await h3Tag.textContent();
-          if (title) {
-            testIdTitles.push(title.trim());
-
-            // Highlight the element inside the given data-testid container
-            await h3Tag.evaluate(el => {
-              (el as HTMLElement).style.backgroundColor = 'yellow';
-              (el as HTMLElement).style.border = '2px solid red';
-              (el as HTMLElement).style.color = 'blue';
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error processing H3 tag:', error);
-      }
-    }
-    logger.info('H3 Titles Found Inside TestId (Excluding Modals):', testIdTitles);
-
-    return testIdTitles;
+    return this.modalHelper.getAllH3TitlesInTestId(page, testId);
   }
 
   async isButtonVisible(
@@ -3074,202 +1232,15 @@ export class PageObject extends AbstractPage {
     waitForEnabled: boolean = false, // Optional: If true, wait for button to become enabled (default: false for backward compatibility)
     waitTimeout: number = 10000, // Optional: Maximum time to wait for button to become enabled (default: 10 seconds)
   ): Promise<boolean> {
-    try {
-      // Apply dialog context if provided
-      const scopedSelector = dialogContext ? `${dialogContext} ${buttonSelector}` : buttonSelector;
-
-      // Locate the button using the updated selector
-      const button = page.locator(scopedSelector, {
-        hasText: new RegExp(`^\\s*${label.trim()}\\s*$`),
-      });
-      console.log(`Found ${await button.count()} buttons matching selector "${scopedSelector}" and label "${label}".`);
-
-      // Debugging: Log initial info
-      console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}, waitForEnabled: ${waitForEnabled}`);
-
-      // Highlight the button for debugging
-      await button.evaluate(row => {
-        row.style.backgroundColor = 'yellow';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
-
-      // Wait for the button to be attached to the DOM
-      await button.waitFor({ state: 'attached' });
-      console.log(`Button "${label}" is attached to the DOM.`);
-
-      // Verify visibility
-      const isVisible = await button.isVisible();
-      console.log(`Button "${label}" visibility: ${isVisible}`);
-      await expect(button).toBeVisible(); // Assert visibility explicitly
-
-      if (Benabled) {
-        console.log(`Expecting button "${label}" to be enabled.`);
-
-        if (waitForEnabled) {
-          console.log(`Waiting for button "${label}" to become enabled (timeout: ${waitTimeout}ms)...`);
-
-          // Wait for button to become enabled (with timeout)
-          const checkInterval = 200; // Check every 200ms
-          const startTime = Date.now();
-          let isEnabled = false;
-
-          while (Date.now() - startTime < waitTimeout) {
-            const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
-            const hasDisabledAttr = await button.evaluate(btn => btn.hasAttribute('disabled'));
-
-            if (!hasDisabledClass && !hasDisabledAttr) {
-              isEnabled = true;
-              console.log(`Button "${label}" is now enabled.`);
-              break;
-            }
-
-            // Wait before next check
-            await page.waitForTimeout(checkInterval);
-          }
-
-          if (!isEnabled) {
-            const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
-            const hasDisabledAttr = await button.evaluate(btn => btn.hasAttribute('disabled'));
-            console.log(`Button "${label}" still disabled after waiting. Disabled class: ${hasDisabledClass}, Disabled attr: ${hasDisabledAttr}`);
-            expect(hasDisabledClass).toBeFalsy(); // This will throw if still disabled
-            expect(hasDisabledAttr).toBeFalsy(); // This will throw if still disabled
-          }
-        } else {
-          // Original behavior: check immediately without waiting
-          const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
-          const isDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
-          console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
-          expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
-          console.log(`Disabled attribute present for button "${label}": ${isDisabledAttribute}`);
-          expect(isDisabledAttribute).toBeFalsy(); // Button should not have 'disabled' attribute
-        }
-      } else {
-        console.log(`Expecting button "${label}" to be disabled.`);
-        const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
-        const isDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
-        const isDisabled = hasDisabledClass || isDisabledAttribute;
-        console.log(`Disabled class present for button "${label}": ${isDisabled}`);
-        expect(isDisabled).toBeTruthy(); // Button should be disabled
-      }
-
-      console.log(`Button "${label}" passed all checks.`);
-      return true; // If everything passes, the button is valid
-    } catch (error) {
-      console.error(`Error while checking button "${label}" state:`, error);
-      return false; // Return false on failure
-    }
+    return this.validationHelper.isButtonVisible(page, buttonSelector, label, Benabled, dialogContext, waitForEnabled, waitTimeout);
   }
 
   async getAllH4TitlesInModalClass(page: Page, modalClassName: string): Promise<string[]> {
-    await page.waitForLoadState('networkidle');
-    const section = page.locator('.basefile__modal-section');
-    await section.waitFor({ state: 'attached', timeout: 5000 }); // Wait for the section to populate
-    await page.waitForTimeout(1000); // Extra time for dynamic rendering, if needed
-
-    const container = await page.locator(`.${modalClassName}`);
-    const modalInnerHTML = await container.innerHTML();
-    logger.info('Modal inner HTML:', modalInnerHTML);
-
-    await expect(container).toBeVisible({ timeout: 5000 });
-    logger.info('Container visibility confirmed.');
-
-    const h4Elements = container.locator('h4');
-    const h4Count = await h4Elements.count();
-    logger.info(`Number of <h4> elements found: ${h4Count}`);
-
-    if (h4Count === 0) {
-      logger.warn(`No <h4> elements found inside class '${modalClassName}'.`);
-      return [];
-    }
-
-    const titles: string[] = [];
-    for (let i = 0; i < h4Count; i++) {
-      const h4Tag = h4Elements.nth(i);
-      await h4Tag.evaluate(row => {
-        row.style.backgroundColor = 'yellow';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
-      const title = await h4Tag.evaluate(element => {
-        return Array.from(element.childNodes)
-          .map(node => node.textContent?.trim() || '')
-          .join(' ');
-      });
-      console.log(`H4 Element ${i + 1}:`, title);
-
-      if (title) {
-        titles.push(title);
-      }
-    }
-
-    logger.info(`Collected Titles:`, titles);
-    return titles;
+    return this.modalHelper.getAllH4TitlesInModalClass(page, modalClassName);
   }
 
   async getAllH4TitlesInModalByTestId(page: Page, modalTestId: string): Promise<string[]> {
-    await page.waitForLoadState('networkidle');
-
-    // Determine the container selector
-    let containerSelector: string;
-
-    // If the input already contains [open] or is a dialog selector, use it as-is (may need [open] added)
-    if (modalTestId.includes('[open]')) {
-      // Already has [open], use as-is
-      containerSelector = modalTestId;
-    } else if (modalTestId.startsWith('dialog')) {
-      // It's a dialog selector without [open], add it
-      containerSelector = `${modalTestId}[open]`;
-    } else if (modalTestId.includes('[data-testid=')) {
-      // It's a full selector without [open], extract ID and construct selector
-      const extractedId = extractIdFromSelector(modalTestId);
-      containerSelector = `[data-testid="${extractedId}"][open]`;
-    } else {
-      // It's just the ID, construct the selector
-      containerSelector = `[data-testid="${modalTestId}"][open]`;
-    }
-
-    // Locate the open modal container using the constructed selector
-    const container = page.locator(containerSelector);
-    await expect(container).toBeVisible({ timeout: 5000 });
-
-    logger.info('Container visibility confirmed.');
-
-    // Wait briefly to ensure all elements are loaded
-    await page.waitForTimeout(500);
-
-    // Locate all h4 elements inside the modal (without filtering by data-testid)
-    const h4Elements = container.locator('h4');
-
-    const h4Count = await h4Elements.count();
-
-    logger.info(`Number of <h4> elements found: ${h4Count}`);
-
-    if (h4Count === 0) {
-      logger.warn(`No <h4> elements found inside modal '${modalTestId}'.`);
-      return [];
-    }
-
-    const titles: string[] = [];
-    for (let i = 0; i < h4Count; i++) {
-      const h4Tag = h4Elements.nth(i);
-
-      await h4Tag.evaluate(row => {
-        row.style.backgroundColor = 'yellow';
-        row.style.border = '2px solid red';
-        row.style.color = 'blue';
-      });
-
-      const title = await h4Tag.textContent();
-      console.log(`H4 Element ${i + 1}:`, title);
-
-      if (title) {
-        titles.push(title.trim());
-      }
-    }
-
-    logger.info(`Collected Titles:`, titles);
-    return titles;
+    return this.modalHelper.getAllH4TitlesInModalByTestId(page, modalTestId);
   }
 
   /**
@@ -3289,60 +1260,7 @@ export class PageObject extends AbstractPage {
       allowPartialMatch?: boolean; // If true, first title uses contains() instead of exact match
     },
   ): Promise<void> {
-    const expectedTitlesNormalized = expectedTitles.map(title => title.trim());
-    const h4Titles = await this.getAllH4TitlesInModalByTestId(page, modalTestId);
-    const normalizedH4Titles = h4Titles.map(title => title.trim());
-
-    // Log for debugging
-    console.log('Expected Titles:', expectedTitlesNormalized);
-    console.log('Received Titles:', normalizedH4Titles);
-
-    // Validate length
-    await expectSoftWithScreenshot(
-      page,
-      () => {
-        expect.soft(normalizedH4Titles.length).toBe(expectedTitlesNormalized.length);
-      },
-      `Verify H4 titles count: expected ${expectedTitlesNormalized.length}, actual ${normalizedH4Titles.length}`,
-      options?.testInfo,
-    );
-
-    // Validate content and order
-    if (options?.allowPartialMatch && normalizedH4Titles.length > 0 && expectedTitlesNormalized.length > 0) {
-      // First title uses contains, rest use exact match
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(normalizedH4Titles[0]).toContain(expectedTitlesNormalized[0]);
-        },
-        `Verify first H4 title contains expected: "${expectedTitlesNormalized[0]}"`,
-        options?.testInfo,
-      );
-
-      // Validate remaining titles with exact match
-      for (let i = 1; i < expectedTitlesNormalized.length; i++) {
-        if (i < normalizedH4Titles.length) {
-          await expectSoftWithScreenshot(
-            page,
-            () => {
-              expect.soft(normalizedH4Titles[i]).toBe(expectedTitlesNormalized[i]);
-            },
-            `Verify H4 title at index ${i}: expected "${expectedTitlesNormalized[i]}", actual "${normalizedH4Titles[i]}"`,
-            options?.testInfo,
-          );
-        }
-      }
-    } else {
-      // All titles use exact match
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(normalizedH4Titles).toEqual(expectedTitlesNormalized);
-        },
-        `Verify H4 titles match: expected ${JSON.stringify(expectedTitlesNormalized)}, actual ${JSON.stringify(normalizedH4Titles)}`,
-        options?.testInfo,
-      );
-    }
+    return this.modalHelper.validateModalH4Titles(page, modalTestId, expectedTitles, options);
   }
 
   /** Checks if a button is visible and active/inactive
@@ -3351,48 +1269,10 @@ export class PageObject extends AbstractPage {
    * @returns Promise<boolean> - true if button state matches expected, false otherwise
    */
   async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
-    const button = this.page.locator(selector, { hasText: name });
-
-    await expect(button).toBeVisible();
-
-    const classes = await button.getAttribute('class');
-
-    if (expectedState === 'active') {
-      return !classes?.includes('disabled-yui-kit');
-    } else {
-      return classes?.includes('disabled-yui-kit') ?? false;
-    }
+    return this.validationHelper.checkButtonState(name, selector, expectedState);
   }
   async extractNotificationMessage(page: Page): Promise<{ title: string; message: string } | null> {
-    // Extract using data-testid; poll briefly due to transient nature
-    const container = page.locator('[data-testid="Notification-Notification"]').last();
-    //let visible = await container.isVisible().catch(() => false);
-    // for (let i = 0; i < 10 && !visible; i++) {
-    //   await page.waitForTimeout(100);
-    //   visible = await container.isVisible().catch(() => false);
-    // }
-    // if (!visible) {
-    //   console.log('Notification not visible.');
-    //   return null;
-    // }
-    const titleLoc = container.locator('[data-testid="Notification-Notification-Title"]');
-    await titleLoc.evaluate(row => {
-      row.style.backgroundColor = 'yellow';
-      row.style.border = '2px solid red';
-      row.style.color = 'blue';
-    });
-    const descLoc = container.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION);
-    await descLoc.evaluate(row => {
-      row.style.backgroundColor = 'yellow';
-      row.style.border = '2px solid red';
-      row.style.color = 'blue';
-    });
-    // Highlight data-testid elements
-    //await titleLoc.evaluate((el: HTMLElement) => { el.style.backgroundColor = 'yellow'; el.style.border = '2px solid red'; el.style.color = 'blue'; }).catch(() => { });
-    //await descLoc.evaluate((el: HTMLElement) => { el.style.backgroundColor = 'yellow'; el.style.border = '2px solid red'; el.style.color = 'blue'; }).catch(() => { });
-    const title = ((await titleLoc.textContent().catch(() => '')) || '').trim();
-    const message = ((await descLoc.textContent().catch(() => '')) || '').trim();
-    return { title, message };
+    return this.notificationHelper.extractNotificationMessage(page);
   }
 
   /**
@@ -3400,10 +1280,7 @@ export class PageObject extends AbstractPage {
    * @returns The notification description text, or empty string if not visible
    */
   async getLatestNotificationText(): Promise<string> {
-    const desc = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
-    const visible = await desc.isVisible().catch(() => false);
-    if (!visible) return '';
-    return (await desc.textContent())?.trim() || '';
+    return this.notificationHelper.getLatestNotificationText();
   }
 
   async isButtonVisibleTestId(
@@ -3413,272 +1290,31 @@ export class PageObject extends AbstractPage {
     Benabled: boolean = true, // Default is true
     dialogContextTestId: string = '', // Optional: Specify dialog context testId for scoping
   ): Promise<boolean> {
-    try {
-      // Check if testId is already a full selector (starts with '[') or a pattern selector
-      const isFullSelector = testId.trim().startsWith('[');
-      // Check if dialogContextTestId is already a full selector (only if it's provided)
-      const isDialogContextFullSelector = dialogContextTestId ? dialogContextTestId.trim().startsWith('[') : false;
-
-      // Apply dialog context if provided
-      let scopedSelector: string;
-      if (isFullSelector) {
-        // If testId is already a full selector, use it directly
-        if (dialogContextTestId) {
-          // If dialogContextTestId is also a full selector, use it directly; otherwise wrap it
-          const dialogSelector = isDialogContextFullSelector ? dialogContextTestId : `[data-testid="${dialogContextTestId}"]`;
-          scopedSelector = `${dialogSelector} ${testId}`;
-        } else {
-          scopedSelector = testId;
-        }
-      } else {
-        // Otherwise, wrap it in data-testid attribute selector
-        if (dialogContextTestId) {
-          // If dialogContextTestId is a full selector, use it directly; otherwise wrap it
-          const dialogSelector = isDialogContextFullSelector ? dialogContextTestId : `[data-testid="${dialogContextTestId}"]`;
-          scopedSelector = `${dialogSelector} [data-testid="${testId}"]`;
-        } else {
-          scopedSelector = `[data-testid="${testId}"]`;
-        }
-      }
-
-      // Locate the button using the updated testId-based selector
-      const button = page.locator(scopedSelector, {
-        hasText: new RegExp(`^\\s*${label.trim()}\\s*$`),
-      });
-      console.log(`Found ${await button.count()} buttons matching testId "${testId}" and label "${label}".`);
-
-      // Debugging: Log initial info
-      console.log(`Starting isButtonVisibleTestId for label: "${label}" with Benabled: ${Benabled}`);
-      // Highlight the button for debugging
-      await button.evaluate(btn => {
-        btn.style.backgroundColor = 'yellow';
-        btn.style.border = '2px solid red';
-        btn.style.color = 'blue';
-      });
-      // Wait for the button to be attached to the DOM
-      await button.waitFor({ state: 'attached' });
-      console.log(`Button "${label}" is attached to the DOM.`);
-      // Verify visibility
-      const isVisible = await button.isVisible();
-
-      console.log(`Button "${label}" visibility: ${isVisible}`);
-      await expect(button).toBeVisible(); // Assert visibility explicitly
-      try {
-        await this.page.waitForTimeout(500);
-      } catch (error) {
-        console.warn(`Timeout waiting in button validation: ${error instanceof Error ? error.message : String(error)}`);
-        console.warn('Continuing without waiting.');
-      }
-      // Check for 'disabled-yui-kit' class and 'disabled' attribute
-      const hasDisabledClass = await button.evaluate(btn => {
-        const classList = Array.from(btn.classList);
-        console.log(`Button classList:`, classList);
-        const hasDisabled = btn.classList.contains('disabled-yui-kit');
-        console.log(`Button has disabled-yui-kit class:`, hasDisabled);
-        const hasDisabledAttr = btn.hasAttribute('disabled');
-        console.log(`Button has disabled attribute:`, hasDisabledAttr);
-        const outerHTML = btn.outerHTML;
-        console.log(`Button outerHTML:`, outerHTML);
-        return hasDisabled;
-      });
-
-      // Also check for disabled attribute
-      const hasDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
-
-      console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
-      console.log(`Disabled attribute present for button "${label}": ${hasDisabledAttribute}`);
-
-      if (Benabled) {
-        console.log(`Expecting button "${label}" to be enabled.`);
-        expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
-        expect(hasDisabledAttribute).toBeFalsy(); // Button should not have 'disabled' attribute
-      } else {
-        console.log(`Expecting button "${label}" to be disabled.`);
-        // Button should be disabled either by class or attribute
-        const isDisabled = hasDisabledClass || hasDisabledAttribute;
-        expect(isDisabled).toBeTruthy(); // Button should be disabled (class or attribute)
-      }
-      console.log(`Button "${label}" passed all checks.`);
-      return true; // If everything passes, the button is valid
-    } catch (error) {
-      console.error(`Error while checking button "${label}" state:`, error);
-      return false; // Return false on failure
-    }
+    return this.validationHelper.isButtonVisibleTestId(page, testId, label, Benabled, dialogContextTestId);
   }
 
   async getAllH3TitlesInModalClass(page: Page, className: string): Promise<string[]> {
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-    // Step 1: Locate the container by the specified class
-    const container = page.locator(`.${className}`);
-    const titles: string[] = [];
-
-    // Step 2: Find all <h3> elements within the container
-    const h3Elements = await container.locator('h3').all();
-    for (const h3Tag of h3Elements) {
-      try {
-        const title = await h3Tag.textContent();
-        if (title) {
-          titles.push(title.trim()); // Trim to remove unnecessary whitespace
-          await h3Tag.evaluate(row => {
-            row.style.backgroundColor = 'yellow';
-            row.style.border = '2px solid red';
-            row.style.color = 'blue';
-          });
-        }
-      } catch (error) {
-        console.error('Error processing H3 tag:', error);
-      }
-    }
-
-    // Step 3: Log the collected titles
-    logger.info(`H3 Titles Found Inside Class '${className}':`, titles);
-
-    return titles;
+    return this.modalHelper.getAllH3TitlesInModalClass(page, className);
   }
 
   async getAllH3TitlesInModalTestId(page: Page, testId: string): Promise<string[]> {
-    // Step 1: Locate the container by the specified data-testid
-    // Check if testId is already a full selector (contains [data-testid)
-    // Handles both cases: '[data-testid="..."]' and 'dialog[data-testid="..."]'
-    const isFullSelector = testId.includes('[data-testid');
-    const selector = isFullSelector ? `${testId}[open]` : `[data-testid^="${testId}"][open]`;
-    const container = page.locator(selector);
-    const titles: string[] = [];
-
-    // Step 2: Find all <h3> elements within the container
-    const h3Elements = await container.locator('h3').elementHandles();
-    for (const h3Tag of h3Elements) {
-      try {
-        const title = await h3Tag.textContent();
-        if (title) {
-          titles.push(title.trim()); // Trim to remove unnecessary whitespace
-          // Cast the element to HTMLElement before accessing style
-          await h3Tag.evaluate(row => {
-            (row as HTMLElement).style.backgroundColor = 'yellow';
-            (row as HTMLElement).style.border = '2px solid red';
-            (row as HTMLElement).style.color = 'blue';
-          });
-        }
-      } catch (error) {
-        console.error('Error processing H3 tag:', error);
-      }
-    }
-
-    // Step 3: Log the collected titles
-    logger.info(`H3 Titles Found Inside TestId '${testId}':`, titles);
-
-    return titles;
+    return this.modalHelper.getAllH3TitlesInModalTestId(page, testId);
   }
 
   async getAllH3AndH4TitlesInModalTestId(page: Page, testId: string): Promise<string[]> {
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-    // Step 1: Try different patterns to find the dialog
-    let dialog = page.locator(`dialog[data-testid^="${testId}"][open]`);
-    let dialogCount = await dialog.count();
-
-    // If no matches and testId doesn't end with -ModalRight, try with suffix pattern
-    if (dialogCount === 0 && !testId.endsWith('-ModalRight')) {
-      dialog = page.locator(`dialog[data-testid^="${testId}"][data-testid$="-ModalRight"][open]`);
-      dialogCount = await dialog.count();
-      console.log(`DEBUG: Found ${dialogCount} dialogs matching testId pattern with suffix: ${testId}*-ModalRight`);
-    } else {
-      console.log(`DEBUG: Found ${dialogCount} dialogs matching testId pattern: ${testId}*`);
-    }
-
-    const titles: string[] = [];
-
-    // Step 2: Find all <h3> and <h4> elements within the dialog
-    const h3Elements = await dialog.locator('h3').elementHandles();
-    const h4Elements = await dialog.locator('h4').elementHandles();
-
-    console.log(`DEBUG: Found ${h3Elements.length} H3 elements and ${h4Elements.length} H4 elements`);
-
-    // Process H3 elements
-    for (const h3Tag of h3Elements) {
-      try {
-        const title = await h3Tag.textContent();
-        console.log(`DEBUG: H3 element text: "${title}"`);
-        if (title) {
-          titles.push(title.trim()); // Trim to remove unnecessary whitespace
-          // Cast the element to HTMLElement before accessing style
-          await h3Tag.evaluate(row => {
-            (row as HTMLElement).style.backgroundColor = 'yellow';
-            (row as HTMLElement).style.border = '2px solid red';
-            (row as HTMLElement).style.color = 'blue';
-          });
-        }
-      } catch (error) {
-        console.error('Error processing H3 tag:', error);
-      }
-    }
-
-    // Process H4 elements
-    for (const h4Tag of h4Elements) {
-      try {
-        const title = await h4Tag.textContent();
-        console.log(`DEBUG: H4 element text: "${title}"`);
-        if (title) {
-          titles.push(title.trim()); // Trim to remove unnecessary whitespace
-          // Cast the element to HTMLElement before accessing style
-          await h4Tag.evaluate(row => {
-            (row as HTMLElement).style.backgroundColor = 'yellow';
-            (row as HTMLElement).style.border = '2px solid red';
-            (row as HTMLElement).style.color = 'blue';
-          });
-        }
-      } catch (error) {
-        console.error('Error processing H4 tag:', error);
-      }
-    }
-
-    // Step 3: Log the collected titles
-    logger.info(`H3 and H4 Titles Found Inside TestId '${testId}':`, titles);
-
-    return titles;
+    return this.modalHelper.getAllH3AndH4TitlesInModalTestId(page, testId);
   }
 
   async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
-    // Locate the dialog using the class and `open` attribute
-    const dialogLocator = page.locator(`dialog.${dialogClass}[open]`);
-
-    // Find all buttons inside the scoped dialog
-    return dialogLocator.locator(buttonSelector);
+    return this.modalHelper.getButtonsFromDialog(page, dialogClass, buttonSelector);
   }
 
   async getAllH3TitlesInModalClassNew(page: Page, className: string): Promise<string[]> {
-    // Step 1: Locate the container by the specified class
-    const container = page.locator(`${className}`);
-    const titles: string[] = [];
-
-    // Step 2: Find all <h3> elements within the container
-    const h3Elements = await container.locator('h3').all();
-    for (const h3Tag of h3Elements) {
-      try {
-        const title = await h3Tag.textContent();
-        if (title) {
-          titles.push(title.trim()); // Trim to remove unnecessary whitespace
-          await h3Tag.evaluate(row => {
-            row.style.backgroundColor = 'yellow';
-            row.style.border = '2px solid red';
-            row.style.color = 'blue';
-          });
-        }
-      } catch (error) {
-        console.error('Error processing H3 tag:', error);
-      }
-    }
-
-    // Step 3: Log the collected titles
-    logger.info(`H3 Titles Found Inside Class '${className}':`, titles);
-
-    return titles;
+    return this.modalHelper.getAllH3TitlesInModalClassNew(page, className);
   }
 
   async modalCompany() {
-    const modalWindow = '.modal-yui-kit__modal-content';
-    expect(await this.page.locator(modalWindow)).toBeVisible();
+    return this.modalHelper.modalCompany();
   }
 
   /**
@@ -3687,39 +1323,13 @@ export class PageObject extends AbstractPage {
    * @param dataTestId - The data-testid of the element to validate after navigation.
    * @returns Promise<void> - Logs navigation status and validates the presence of the specified element.
    */
+  /**
+   * Navigates to a page and validates the presence of an element
+   * @param url - The URL to navigate to
+   * @param dataTestId - The data-testid of the element to validate
+   */
   async navigateToPage(url: string, dataTestId: string): Promise<void> {
-    console.log(`Navigating to ${url}`);
-    console.log(`PageTitleId to ${dataTestId}`);
-
-    try {
-      await this.page.goto(url);
-    } catch (navigationError) {
-      // Handle navigation interruption
-      if (navigationError instanceof Error && navigationError.message.includes('interrupted')) {
-        console.log(`Navigation to ${url} was interrupted, waiting for page to stabilize...`);
-        await this.page.waitForLoadState('domcontentloaded');
-        await this.page.waitForTimeout(2000);
-      } else {
-        throw navigationError;
-      }
-    }
-
-    await this.page.waitForTimeout(500);
-    await this.page.waitForLoadState('networkidle');
-
-    // Validate the presence of an element using data-testid (accept either raw id or full selector)
-    let selector = dataTestId;
-    const match = dataTestId.match(/data-testid\s*=\s*["']([^"']+)["']/);
-    if (match && match[1]) {
-      selector = `[data-testid="${match[1]}"]`;
-    } else if (!dataTestId.includes('data-testid')) {
-      selector = `[data-testid="${dataTestId}"]`;
-    }
-    const locator = this.page.locator(selector);
-    await locator.waitFor({ state: 'visible', timeout: 20000 });
-    const isVisible = await locator.isVisible();
-    expect(isVisible).toBeTruthy();
-    console.log(`Navigation to ${url} and validation of element with data-testid: "${dataTestId}" completed.`);
+    return this.navigationHelper.navigateToPage(url, dataTestId);
   }
   /**
    * Validate page titles by checking the H3 elements within a given section, and apply styling for debugging.
@@ -3735,20 +1345,7 @@ export class PageObject extends AbstractPage {
    * @param allArrays - Optional object containing all arrays for logging purposes
    */
   async verifyTestDataAvailable<T>(testDataArray: T[], arrayName: string, allArrays?: { detail?: T[]; cbed?: T[]; izd?: T[] }): Promise<void> {
-    await allure.step('Verify test data is available', async () => {
-      if (allArrays) {
-        const detailCount = allArrays.detail?.length || 0;
-        const cbedCount = allArrays.cbed?.length || 0;
-        const izdCount = allArrays.izd?.length || 0;
-        console.log(`✅ Using test data - Details: ${detailCount}, CBED: ${cbedCount}, IZD: ${izdCount}`);
-      } else {
-        console.log(`✅ Using test data - ${arrayName}: ${testDataArray.length}`);
-      }
-    });
-
-    if (testDataArray.length === 0) {
-      throw new Error('Массив пустой.');
-    }
+    return this.miscHelper.verifyTestDataAvailable(testDataArray, arrayName, allArrays);
   }
 
   /**
@@ -3761,17 +1358,7 @@ export class PageObject extends AbstractPage {
    * @throws Error if the order number is not found
    */
   async findOrderRowIndexByOrderNumber(orderRowsLocator: Locator, targetOrderNumber: string, errorMessage?: string): Promise<number> {
-    const orderCount = await orderRowsLocator.count();
-
-    for (let i = 0; i < orderCount; i++) {
-      const orderNumberCell = orderRowsLocator.nth(i);
-      const orderNumber = (await orderNumberCell.innerText()).trim();
-      if (orderNumber === targetOrderNumber) {
-        return i;
-      }
-    }
-
-    throw new Error(errorMessage || `Could not find order ${targetOrderNumber} in the orders list`);
+    return this.orderHelper.findOrderRowIndexByOrderNumber(orderRowsLocator, targetOrderNumber, errorMessage);
   }
 
   /**
@@ -3790,46 +1377,7 @@ export class PageObject extends AbstractPage {
     targetOrderNumber: string,
     errorMessage?: string,
   ): Promise<number> {
-    // Wait for elements to be visible
-    await checkboxesLocator
-      .first()
-      .waitFor({ state: 'visible', timeout: 10000 })
-      .catch(() => {
-        // If first checkbox not found, continue to check count
-      });
-
-    const checkboxCount = await checkboxesLocator.count();
-    console.log(`Found ${checkboxCount} checkboxes, looking for order number: ${targetOrderNumber}`);
-
-    const foundOrderNumbers: string[] = [];
-
-    for (let i = 0; i < checkboxCount; i++) {
-      try {
-        const orderNumberCell = orderNumberCellsLocator.nth(i);
-        // Wait for cell to be visible
-        await orderNumberCell.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
-          console.log(`Order number cell ${i} not visible, skipping`);
-        });
-
-        const orderNumber = (await orderNumberCell.innerText()).trim();
-        foundOrderNumbers.push(orderNumber);
-
-        console.log(`Order number at index ${i}: "${orderNumber}"`);
-
-        if (orderNumber === targetOrderNumber) {
-          console.log(`✅ Found target order number "${targetOrderNumber}" at index ${i}`);
-          return i;
-        }
-      } catch (error) {
-        console.log(`Error reading order number at index ${i}: ${error}`);
-        foundOrderNumbers.push(`<error: ${error}>`);
-      }
-    }
-
-    const errorMsg = errorMessage || `Could not find checkbox for order ${targetOrderNumber}`;
-    console.log(`❌ ${errorMsg}`);
-    console.log(`Found order numbers: ${JSON.stringify(foundOrderNumbers)}`);
-    throw new Error(`${errorMsg}. Found order numbers: ${foundOrderNumbers.join(', ')}`);
+    return this.orderHelper.findCheckboxIndexByOrderNumber(checkboxesLocator, orderNumberCellsLocator, targetOrderNumber, errorMessage);
   }
 
   /**
@@ -3846,49 +1394,7 @@ export class PageObject extends AbstractPage {
     waitForModalSelector?: string,
     popoverPosition: 'first' | 'last' | number = 'first',
   ): Promise<void> {
-    await allure.step("Open context menu and click 'Заказы'", async () => {
-      // Click on the popover cell (ellipse with context menu)
-      let popoverCell = this.page.locator(popoverSelector);
-      if (popoverPosition === 'first') {
-        popoverCell = popoverCell.first();
-      } else if (popoverPosition === 'last') {
-        popoverCell = popoverCell.last();
-      } else if (typeof popoverPosition === 'number') {
-        popoverCell = popoverCell.nth(popoverPosition);
-      }
-
-      await popoverCell.waitFor({ state: 'visible', timeout: 5000 });
-
-      // Highlight the popover before clicking
-      await this.highlightElement(popoverCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-
-      await popoverCell.click();
-      console.log('Clicked on popover cell');
-
-      // Click on 'Заказы' in context menu
-      const ordersMenuItem = this.page.locator(menuItemSelector).first();
-      await ordersMenuItem.waitFor({ state: 'visible', timeout: 5000 });
-
-      // Highlight the menu item before clicking
-      await this.highlightElement(ordersMenuItem, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-
-      await ordersMenuItem.click();
-      console.log("Clicked on 'Заказы' menu item");
-
-      // Optionally wait for the orders modal to appear
-      if (waitForModalSelector) {
-        const ordersModal = this.page.locator(`${waitForModalSelector}[open]`);
-        await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
-      }
-    });
+    return this.orderHelper.openContextMenuAndClickOrders(this, popoverSelector, menuItemSelector, waitForModalSelector, popoverPosition);
   }
 
   /**
@@ -3915,94 +1421,17 @@ export class PageObject extends AbstractPage {
     useRowLocator: boolean = false,
     additionalWaitTimeout?: number,
   ): Promise<void> {
-    await allure.step(
-      itemTypeName ? `Verify orders modal opens and shows both ${itemTypeName} orders` : 'Verify orders modal opens and shows both orders',
-      async () => {
-        // Wait for the orders modal to appear
-        const ordersModal = this.page.locator(`${modalSelector}[open]`);
-        await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
-
-        // Highlight modal for IZD case
-        if (itemTypeName === 'IZD') {
-          await this.highlightElement(ordersModal, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-        }
-
-        // Check the orders table
-        const ordersTable = this.page.locator(tableSelector);
-        await ordersTable.waitFor({ state: 'visible', timeout: 5000 });
-
-        // Get all order rows
-        const orderRows = useRowLocator ? ordersModal.locator(orderRowsSelector) : this.page.locator(orderRowsSelector);
-        const orderCount = await orderRows.count();
-        const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-        console.log(`Found ${orderCount} ${logPrefix}orders in the modal`);
-
-        // Additional wait for IZD case
-        if (additionalWaitTimeout) {
-          await this.page.waitForTimeout(additionalWaitTimeout);
-        }
-
-        // Verify we have at least the expected number of orders
-        expect(orderCount).toBeGreaterThanOrEqual(expectedOrderNumbers.length);
-
-        // Get order numbers and quantities
-        const orderNumbers: string[] = [];
-        const quantities: string[] = [];
-
-        for (let i = 0; i < orderCount; i++) {
-          let orderNumberCell;
-          let quantityCell;
-
-          if (useRowLocator) {
-            // IZD case: order number and quantity are within the row
-            orderNumberCell = orderRows.nth(i).locator(SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER);
-            quantityCell = orderRows.nth(i).locator(quantityCellsSelector);
-
-            // Highlight cells for IZD case (different colors)
-            if (itemTypeName === 'IZD') {
-              await this.highlightElement(orderNumberCell, {
-                backgroundColor: 'red',
-                border: '2px solid yellow',
-                color: 'blue',
-              });
-              await this.highlightElement(quantityCell, {
-                backgroundColor: 'red',
-                border: '2px solid yellow',
-                color: 'blue',
-              });
-            }
-          } else {
-            // DETAIL/CBED case: order number from rows, quantity from separate locator with nth()
-            orderNumberCell = orderRows.nth(i);
-            quantityCell = this.page.locator(quantityCellsSelector).nth(i);
-          }
-
-          const orderNumber = (await orderNumberCell.innerText()).trim();
-          orderNumbers.push(orderNumber);
-
-          const quantity = (await quantityCell.innerText()).trim();
-          quantities.push(quantity);
-
-          if (itemTypeName === 'IZD') {
-            console.log(`${itemTypeName} Order ${i + 1}: Number="${orderNumber}", Quantity="${quantity}"`);
-          }
-        }
-
-        console.log(`${logPrefix}Order numbers: ${orderNumbers}`);
-        console.log(`${logPrefix}Quantities: ${quantities}`);
-
-        // Verify our orders are present
-        for (const expectedOrderNumber of expectedOrderNumbers) {
-          expect(orderNumbers).toContain(expectedOrderNumber);
-        }
-        for (const expectedQuantity of expectedQuantities) {
-          expect(quantities).toContain(expectedQuantity);
-        }
-      },
+    return this.orderHelper.verifyOrdersModal(
+      this,
+      modalSelector,
+      tableSelector,
+      orderRowsSelector,
+      quantityCellsSelector,
+      expectedOrderNumbers,
+      expectedQuantities,
+      itemTypeName,
+      useRowLocator,
+      additionalWaitTimeout,
     );
   }
 
@@ -4028,51 +1457,17 @@ export class PageObject extends AbstractPage {
     suffixId?: string,
     timeoutMs: number = WAIT_TIMEOUTS.STANDARD,
   ): Promise<number> {
-    const stepName =
-      expectedValue === 55
-        ? `Verify total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55`
-        : `Verify ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5`;
-
-    let stepResult = 0;
-    await allure.step(stepName, async () => {
-      // Build the selector based on type
-      let quantityCell: Locator;
-      if (useComplexSelector && prefixId && suffixId) {
-        // Build complex selector with prefix and suffix
-        quantityCell = this.page.locator(`[data-testid^="${prefixId}"][data-testid$="${suffixId}"]`).first();
-      } else {
-        quantityCell = this.page.locator(quantityCellSelector).first();
-      }
-
-      // Wait for element to be visible (with longer timeout for slow-loading tables)
-      await quantityCell.waitFor({ state: 'visible', timeout: timeoutMs });
-
-      // Highlight the quantity cell
-      await this.highlightElement(quantityCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-
-      const quantity = Number((await quantityCell.innerText()).trim());
-      const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-      const quantityTypeLabel = quantityType === 'Total ordered' ? 'Total ordered' : 'Remaining ordered';
-      console.log(`${logPrefix}${quantityTypeLabel} quantity: ${quantity}`);
-
-      // Verify expected value if provided
-      if (expectedValue !== undefined) {
-        expect(quantity).toBe(expectedValue);
-        const successMessage =
-          expectedValue === 55
-            ? `✅ Verified total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55 (50 + 5)`
-            : `✅ Verified ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5 - now showing ${quantity} instead of 55`;
-        console.log(successMessage);
-      }
-
-      stepResult = quantity;
-    });
-
-    return stepResult;
+    return this.orderHelper.getQuantityCellAndVerify(
+      this,
+      quantityCellSelector,
+      expectedValue,
+      quantityType,
+      itemTypeName,
+      useComplexSelector,
+      prefixId,
+      suffixId,
+      timeoutMs,
+    );
   }
 
   /**
@@ -4084,30 +1479,7 @@ export class PageObject extends AbstractPage {
    * @param itemTypeName - Optional item type for logging (e.g., "DETAIL", "CBED", "IZD")
    */
   async clickOrderToOpenEditDialog(orderRowsSelector: string, orderNumber: string, errorMessage?: string, itemTypeName?: string): Promise<void> {
-    await allure.step('Click on second order to open edit dialog', async () => {
-      // Find the row with the order and click on it
-      const orderRows = this.page.locator(orderRowsSelector);
-      const orderRowIndex = await this.findOrderRowIndexByOrderNumber(
-        orderRows,
-        orderNumber,
-        errorMessage || `Could not find ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber} in the orders list`,
-      );
-
-      // Click on the order number cell to open edit dialog
-      const orderCell = orderRows.nth(orderRowIndex);
-      await this.highlightElement(orderCell, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-
-      await orderCell.click();
-      const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-      console.log(`Clicked on ${logPrefix}order ${orderNumber} to open edit dialog`);
-
-      // Wait a bit for the dialog to open and content to load
-      await this.page.waitForTimeout(500);
-    });
+    return this.orderHelper.clickOrderToOpenEditDialog(this, orderRowsSelector, orderNumber, errorMessage, itemTypeName);
   }
 
   /**
@@ -4132,82 +1504,21 @@ export class PageObject extends AbstractPage {
     errorMessage?: string,
     itemTypeName?: string,
   ): Promise<void> {
-    await allure.step('Select checkbox and archive the second order', async () => {
-      // Wait for the edit dialog to appear
-      const editModal = this.page.locator(`${editModalSelector}[open]`);
-      await editModal.waitFor({ state: 'visible', timeout: 10000 });
-
-      // Wait a bit more for modal content to load
-      await this.page.waitForTimeout(1000);
-
-      // Find the checkbox for the order
-      const checkboxes = this.page.locator(checkboxesSelector);
-      const orderNumberCells = this.page.locator(orderNumberCellsSelector);
-
-      // Wait for at least one checkbox to be visible
-      await checkboxes
-        .first()
-        .waitFor({ state: 'visible', timeout: 10000 })
-        .catch(() => {
-          console.log('Warning: No checkboxes found in edit modal');
-        });
-      const checkboxIndex = await this.findCheckboxIndexByOrderNumber(
-        checkboxes,
-        orderNumberCells,
-        orderNumber,
-        errorMessage || `Could not find checkbox for ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber}`,
-      );
-
-      // Click the checkbox
-      const checkbox = checkboxes.nth(checkboxIndex);
-      await this.highlightElement(checkbox, {
-        backgroundColor: 'yellow',
-        border: '2px solid red',
-        color: 'blue',
-      });
-
-      await checkbox.click();
-      const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-      console.log(`Selected checkbox for ${logPrefix}order ${orderNumber}`);
-
-      // Archive and confirm
-      await this.archiveAndConfirm(archiveButtonSelector, confirmButtonSelector);
-      console.log('Archived and confirmed');
-    });
+    return this.archiveHelper.selectCheckboxAndArchiveOrder(
+      this,
+      orderNumber,
+      checkboxesSelector,
+      orderNumberCellsSelector,
+      archiveButtonSelector,
+      confirmButtonSelector,
+      editModalSelector,
+      errorMessage,
+      itemTypeName,
+    );
   }
 
   async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
-    // Normalize: accept raw testId or a full selector containing data-testid
-    let selector = testId;
-    const match = testId.match(/data-testid\s*=\s*["']([^"']+)["']/);
-    if (match && match[1]) {
-      selector = `[data-testid="${match[1]}"]`;
-    } else if (!testId.includes('data-testid')) {
-      selector = `[data-testid="${testId}"]`;
-    }
-
-    const locator = this.page.locator(`${selector} h3`); // Locate H3 elements within the section
-    const actualTitles = await locator.allTextContents();
-    const normalizedTitles = actualTitles.map(title => title.trim());
-
-    // Log expected and received titles for debugging
-    logger.info('Expected Titles:', expectedTitles);
-    logger.info('Received Titles:', normalizedTitles);
-
-    // Apply styling for debugging
-    await locator.evaluateAll(elements => {
-      elements.forEach(el => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-    });
-
-    // Validate length and content/order of titles
-    expect(normalizedTitles.length).toBe(expectedTitles.length);
-    expect(normalizedTitles).toEqual(expectedTitles);
-
-    console.log('Page titles validated successfully with styling applied.');
+    return this.validationHelper.validatePageTitlesWithStyling(testId, expectedTitles);
   }
   /**
    * Validate that a table is displayed and has rows.
@@ -4215,36 +1526,7 @@ export class PageObject extends AbstractPage {
    * @returns Promise<void> - Validates the presence and non-emptiness of the table.
    */
   async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
-    // Normalize selector: accept raw testId or full selector
-    let selector = tableTestId;
-    const match = tableTestId.match(/data-testid\s*=\s*["']([^"']+)["']/);
-    if (match && match[1]) {
-      selector = `[data-testid="${match[1]}"]`;
-    } else if (!tableTestId.includes('data-testid')) {
-      selector = `[data-testid="${tableTestId}"]`;
-    }
-
-    // Wait for the table to be visible
-    const tableElement = this.page.locator(selector);
-    await tableElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-
-    // Wait for at least one row to appear in the table
-    const tableLocator = this.page.locator(`${selector} tbody tr`);
-    await tableLocator.first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-
-    // Get the row count
-    const rowCount = await tableLocator.count();
-
-    // Highlight the table for debugging
-    await tableElement.evaluate(table => {
-      table.style.border = '2px solid green';
-      table.style.backgroundColor = 'lightyellow';
-    });
-
-    // Ensure the table has rows
-    expect(rowCount).toBeGreaterThan(0);
-
-    console.log(`Table with data-testid "${tableTestId}" has ${rowCount} rows.`);
+    return this.validationHelper.validateTableIsDisplayedWithRows(tableTestId);
   }
 
   /**
@@ -4255,36 +1537,7 @@ export class PageObject extends AbstractPage {
    * @param dialogSelector - Optional scoped selector for the dialog or container.
    */
   async validateButtons(page: Page, buttons: Array<{ datatestid: string; label: string; state: string }>, dialogSelector?: string): Promise<void> {
-    for (const button of buttons) {
-      const buttonTestId = button.datatestid.trim();
-      const buttonLabel = button.label.trim();
-      const expectedState = button.state === 'true'; // Convert state string to boolean
-
-      const scopedButtonSelector = dialogSelector ? `${dialogSelector} [data-testid="${buttonTestId}"]` : `[data-testid="${buttonTestId}"]`;
-
-      const buttonLocator = page.locator(scopedButtonSelector);
-
-      // Validate button visibility
-      const isButtonVisible = await buttonLocator.isVisible();
-
-      // Validate button enabled state (via attribute or CSS class)
-      const hasDisabledAttribute = await buttonLocator.evaluate(btn => btn.hasAttribute('disabled'));
-      const hasDisabledCSSClass = await buttonLocator.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
-      const isButtonEnabled = !hasDisabledAttribute && !hasDisabledCSSClass;
-
-      // Assertions for visibility and state
-      expect(isButtonVisible).toBeTruthy();
-      expect(isButtonEnabled).toBe(expectedState);
-
-      // Highlight button for debugging
-      await buttonLocator.evaluate(btn => {
-        btn.style.backgroundColor = 'yellow';
-        btn.style.border = '2px solid red';
-        btn.style.color = 'blue';
-      });
-
-      logger.info(`Button "${buttonLabel}" - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
-    }
+    return this.validationHelper.validateButtons(page, buttons, dialogSelector);
   }
   /**
    * Validates that the checkbox in the "Главный:" row is not checked.
@@ -4294,27 +1547,7 @@ export class PageObject extends AbstractPage {
    * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
    */
   async validateCheckbox(page: Page, section: Locator, sectionIndex: number) {
-    const row = section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-Main"]').filter({
-      has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-Main"]:has-text("Главный:")'),
-    });
-
-    await expect(row).toBeVisible();
-    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
-
-    const checkbox = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_CHECKBOX_MAIN);
-    await checkbox.evaluate(el => {
-      el.style.backgroundColor = 'yellow';
-      el.style.border = '2px solid red';
-      el.style.color = 'blue';
-    });
-
-    await expect(checkbox).toBeVisible();
-    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
-
-    const isChecked = await checkbox.isChecked();
-    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? 'Checked' : 'Not Checked'}`);
-
-    return isChecked; // Return the checkbox state
+    return this.validationHelper.validateCheckbox(page, section, sectionIndex);
   }
   /**
    * Checks the checkbox in the "Главный:" row and applies styling.
@@ -4324,30 +1557,7 @@ export class PageObject extends AbstractPage {
    * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
    */
   async checkCheckbox(page: Page, section: Locator, sectionIndex: number) {
-    const row = section.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-Main"]').filter({
-      has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-Main"]:has-text("Главный:")'),
-    });
-
-    await expect(row).toBeVisible();
-    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
-
-    const checkbox = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_CHECKBOX_MAIN);
-
-    // Restore the styling
-    await checkbox.evaluate(el => {
-      el.style.backgroundColor = 'green';
-      el.style.border = '2px solid red';
-      el.style.color = 'blue';
-    });
-
-    await expect(checkbox).toBeVisible();
-    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
-
-    await checkbox.check();
-    const isChecked = await checkbox.isChecked();
-    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? 'Checked' : 'Not Checked'}`);
-
-    return isChecked; // Return the checkbox state for validation
+    return this.validationHelper.checkCheckbox(page, section, sectionIndex);
   }
 
   /**
@@ -4357,46 +1567,17 @@ export class PageObject extends AbstractPage {
    * @param {string[]} uploadedFiles - Array of uploaded file names.
    */
   async validateFileNames(page: Page, fileSections: Locator[], uploadedFiles: string[]): Promise<void> {
-    if (fileSections.length !== uploadedFiles.length) {
-      throw new Error(`Mismatch: Expected ${uploadedFiles.length} files, but found ${fileSections.length} sections.`);
-    }
-
-    for (let i = 0; i < fileSections.length; i++) {
-      const fileSection = fileSections[i]; // Extract each file section dynamically
-
-      const row = fileSection.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-InputGroup-FileName"]').filter({
-        has: page.locator('[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Label-FileName"]:has-text("Файл:")'),
-      });
-      await row.evaluate((element: HTMLElement) => {
-        element.style.backgroundColor = 'yellow';
-        element.style.border = '2px solid red';
-        element.style.color = 'blue';
-      });
-
-      await expect(row).toBeVisible();
-      console.log(`Row for file ${i + 1} containing label 'Файл:' is visible.`);
-
-      const input = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_INPUT_FILE_NAME_INPUT);
-      await expect(input).toBeVisible();
-      console.log(`Input field for file ${i + 1} is visible.`);
-
-      const expectedFilename = uploadedFiles[i].split('.')[0];
-      const actualInputValue = await input.inputValue();
-      console.log(`Expected filename: ${expectedFilename}, Actual input value: ${actualInputValue}`);
-      expect(actualInputValue).toBe(expectedFilename);
-
-      // Highlight for debugging
-      await input.evaluate((element: HTMLElement) => {
-        element.style.backgroundColor = 'green';
-        element.style.border = '2px solid red';
-        element.style.color = 'blue';
-      });
-    }
+    return this.validationHelper.validateFileNames(page, fileSections, uploadedFiles);
   }
   /**
    * Highlights an element with standard debugging styles.
    * @param element - The Playwright locator to highlight
    * @param customStyles - Optional custom styles to apply
+   */
+  /**
+   * Highlights an element with custom styles
+   * @param element - The locator to highlight
+   * @param customStyles - Optional custom highlight styles
    */
   async highlightElement(
     element: Locator,
@@ -4410,30 +1591,9 @@ export class PageObject extends AbstractPage {
       transition?: string;
     },
   ): Promise<void> {
-    await element.evaluate(
-      (
-        el: HTMLElement,
-        styles: {
-          backgroundColor?: string;
-          border?: string;
-          color?: string;
-          outline?: string;
-          boxShadow?: string;
-          zIndex?: string;
-          transition?: string;
-        },
-      ) => {
-        el.style.backgroundColor = styles?.backgroundColor || 'green';
-        el.style.border = styles?.border || '2px solid red';
-        el.style.color = styles?.color || 'blue';
-        el.style.outline = styles?.outline || '3px solid magenta';
-        el.style.boxShadow = styles?.boxShadow || '0 0 0 4px rgba(255, 0, 255, 0.4)';
-        el.style.zIndex = styles?.zIndex || '2147483647';
-        el.style.transition = styles?.transition || 'none';
-      },
-      customStyles || {},
-    );
+    return this.elementHelper.highlightElement(element, customStyles);
   }
+
   /**
    * Locates an element by data-testid, highlights it, and waits for it to be visible.
    * @param dataTestId - The data-testid to locate
@@ -4441,10 +1601,7 @@ export class PageObject extends AbstractPage {
    * @returns The located element
    */
   async locateAndHighlightElement(dataTestId: string, timeout: number = 30000): Promise<Locator> {
-    const element = this.page.locator(`[data-testid="${dataTestId}"]`);
-    await element.waitFor({ state: 'visible', timeout });
-    await this.highlightElement(element);
-    return element;
+    return this.elementHelper.locateAndHighlightElement(dataTestId, timeout);
   }
 
   /**
@@ -4458,52 +1615,7 @@ export class PageObject extends AbstractPage {
     searchTerm: string,
     options?: { delay?: number; waitAfterSearch?: number; timeout?: number },
   ): Promise<void> {
-    const delay = options?.delay ?? 50;
-    const waitAfterSearch = options?.waitAfterSearch ?? 2000;
-    const timeout = options?.timeout ?? 10000;
-
-    // Try to extract data-testid value if it's a full selector
-    let dataTestId: string | null = null;
-    const match = searchInputSelector.match(/data-testid=["']([^"']+)["']/);
-    if (match && match[1]) {
-      dataTestId = match[1];
-    }
-
-    let searchInput;
-    if (dataTestId) {
-      // Try getByTestId first as it's more reliable
-      try {
-        searchInput = this.page.getByTestId(dataTestId);
-        await expect(searchInput).toBeVisible({ timeout: Math.min(timeout, 5000) });
-      } catch (e) {
-        // Fallback to locator if getByTestId fails
-        searchInput = this.page.locator(searchInputSelector);
-        await expect(searchInput).toBeVisible({ timeout });
-      }
-    } else {
-      searchInput = this.page.locator(searchInputSelector);
-      await expect(searchInput).toBeVisible({ timeout });
-    }
-
-    // Click to focus, then clear and type
-    await searchInput.click();
-    await this.page.waitForTimeout(300);
-
-    // Clear the input first
-    await searchInput.fill('');
-    await this.page.waitForTimeout(200);
-
-    // Type the search term using keyboard (more reliable with Vue)
-    await searchInput.pressSequentially(searchTerm, { delay });
-    await this.page.waitForTimeout(500);
-
-    // Verify the value was entered
-    const inputValue = await searchInput.inputValue();
-    console.log(`Search input value: "${inputValue}"`);
-
-    // Press Enter to trigger search
-    await searchInput.press('Enter');
-    await this.page.waitForTimeout(waitAfterSearch);
+    return this.tableHelper.searchWithPressSequentially(searchInputSelector, searchTerm, options);
   }
 
   /**
@@ -4513,16 +1625,13 @@ export class PageObject extends AbstractPage {
    */
 
   /**
-   * Helper function to fill input and wait for value to be set (replaces waitForTimeout after fill)
+   * Fill input and wait for value to be set
    * @param inputLocator - The input locator
    * @param value - Value to fill
-   * @param timeout - Maximum time to wait (default: TIMEOUTS.MEDIUM)
+   * @param timeout - Timeout for waiting (default: TIMEOUTS.MEDIUM)
    */
   async fillInputAndWaitForValue(inputLocator: Locator, value: string, timeout: number = TIMEOUTS.MEDIUM): Promise<void> {
-    await inputLocator.fill(value);
-    // For search inputs, just wait a brief moment for the value to be set
-    // The actual search will be validated by waiting for network idle and table results
-    await inputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+    return this.elementHelper.fillInputAndWaitForValue(inputLocator, value, timeout);
   }
 
   /**
@@ -4533,23 +1642,7 @@ export class PageObject extends AbstractPage {
    * @returns The final value in the input
    */
   async fillInputWithRetries(input: Locator, value: string, maxAttempts = 3): Promise<string> {
-    await input.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-    let currentValue = '';
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      await input.fill('');
-      await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-      await input.fill(value);
-      await this.page.waitForTimeout(TIMEOUTS.SHORT);
-      currentValue = (await input.inputValue())?.trim() || '';
-      if (currentValue === value) {
-        break;
-      }
-      console.warn(`Input mismatch on attempt ${attempt}. Expected "${value}", got "${currentValue}". Retrying...`);
-      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-    }
-
-    return currentValue;
+    return this.elementHelper.fillInputWithRetries(input, value, maxAttempts);
   }
 
   /**
@@ -4560,36 +1653,11 @@ export class PageObject extends AbstractPage {
    * @returns The actual input locator to use
    */
   async findSearchInput(page: Page, searchInputSelector: string, timeout: number = WAIT_TIMEOUTS.STANDARD): Promise<Locator> {
-    const searchInputWrapper = page.locator(searchInputSelector).first();
-    await searchInputWrapper.waitFor({ state: 'visible', timeout });
-    await searchInputWrapper.scrollIntoViewIfNeeded();
-
-    // Check if wrapper itself is an input
-    const tagName = await searchInputWrapper.evaluate(el => el.tagName.toLowerCase()).catch(() => '');
-    if (tagName === 'input') {
-      await searchInputWrapper.waitFor({ state: 'visible', timeout });
-      return searchInputWrapper;
-    }
-
-    // Look for input inside wrapper
-    const searchInput = searchInputWrapper.locator('input').first();
-    const inputCount = await searchInput.count();
-
-    if (inputCount === 0) {
-      // If no input found, try using the wrapper itself (might be contenteditable)
-      return searchInputWrapper;
-    }
-
-    // Wait for the input to be visible
-    await searchInput.waitFor({ state: 'visible', timeout });
-    return searchInput;
+    return this.elementHelper.findSearchInput(page, searchInputSelector, timeout);
   }
 }
 
-interface ValidationResult {
-  success: boolean;
-  errors: string[];
-}
+// ValidationResult is now exported from TableHelper
 
 
 
