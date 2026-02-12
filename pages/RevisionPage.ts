@@ -55,7 +55,7 @@ export class CreateRevisionPage extends PageObject {
     });
     await this.page.waitForTimeout(300);
 
-    const checkBalance = await checkBalanceCell.textContent();
+    const checkBalance = (await checkBalanceCell.textContent())?.trim() ?? '';
     expect(checkBalance).toBe(quantity);
   }
 

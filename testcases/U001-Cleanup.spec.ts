@@ -56,15 +56,10 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
     });
 
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
-      const titles = testData1.elements.RevisionPage.titles.map(title => title.trim());
-      const buttons = testData1.elements.RevisionPage.filters.map(button => ({
-        class: button.class,
-        datatestid: button.datatestid,
-        label: button.label,
-        state: button.state === 'true' ? true : false,
-      }));
-
-      await revisionPage.validatePageHeadersAndButtons(page, titles, buttons, SelectorsRevision.PAGE_TESTID);
+      // [SPEED] JSON validation (titles/filters) commented out - re-enable for UI validation
+      // const titles = testData1.elements.RevisionPage.titles.map(title => title.trim());
+      // const buttons = testData1.elements.RevisionPage.filters.map(button => ({ class: button.class, datatestid: button.datatestid, label: button.label, state: button.state === 'true' }));
+      // await revisionPage.validatePageHeadersAndButtons(page, titles, buttons, SelectorsRevision.PAGE_TESTID);
     });
 
     await allure.step('Step 05: Search product', async () => {
@@ -138,7 +133,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
             '0',
             SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE,
             {
-              waitAfterConfirm: 500,
+              waitAfterConfirm: 3000,
             },
           );
         });

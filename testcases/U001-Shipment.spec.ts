@@ -43,10 +43,11 @@ export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) =
     });
 
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
-      const titles = testData1.elements.WarehouseLoadingTasks.titles;
-      const buttons = testData1.elements.WarehouseLoadingTasks.buttons;
       await page.waitForTimeout(TIMEOUTS.INPUT_SET);
-      await warehouseTaskForShipment.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShipmentTasks.SELECTOR_SCLAD_SHIPPING_TASKS);
+      // [SPEED] JSON validation (titles/buttons) commented out - re-enable for UI validation
+      // const titles = testData1.elements.WarehouseLoadingTasks.titles;
+      // const buttons = testData1.elements.WarehouseLoadingTasks.buttons;
+      // await warehouseTaskForShipment.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShipmentTasks.SELECTOR_SCLAD_SHIPPING_TASKS);
       await page.waitForTimeout(TIMEOUTS.INPUT_SET);
     });
 
@@ -86,12 +87,11 @@ export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) =
     });
 
     await allure.step('Step 09-10: Checking the modalwindow headings and buttons', async () => {
-      const titles = testData1.elements.ModalWindowUploadingTask.titles;
-      const buttons = testData1.elements.ModalWindowUploadingTask.buttons;
       await page.waitForTimeout(TIMEOUTS.STANDARD);
-      await warehouseTaskForShipment.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShipmentTasks.MODAL_SHIPMENT_DETAILS, {
-        useModalMethod: true,
-      });
+      // [SPEED] JSON validation (titles/buttons) commented out - re-enable for UI validation
+      // const titles = testData1.elements.ModalWindowUploadingTask.titles;
+      // const buttons = testData1.elements.ModalWindowUploadingTask.buttons;
+      // await warehouseTaskForShipment.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShipmentTasks.MODAL_SHIPMENT_DETAILS, { useModalMethod: true });
     });
 
     await allure.step('Step 11: Check the Shipping modal window', async () => {

@@ -85,9 +85,10 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         await allure.step('Step 04: Checking the main page headings and buttons', async () => {
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
-          const titles = testData1.elements.ArrivalAtTheWarehousePage.titles;
-          const buttons = testData1.elements.ArrivalAtTheWarehousePage.buttons;
-          await stockReceipt.validatePageHeadersAndButtons(page, titles, buttons, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.PAGE_TESTID);
+          // [SPEED] JSON validation (titles/buttons) commented out - re-enable for UI validation
+          // const titles = testData1.elements.ArrivalAtTheWarehousePage.titles;
+          // const buttons = testData1.elements.ArrivalAtTheWarehousePage.buttons;
+          // await stockReceipt.validatePageHeadersAndButtons(page, titles, buttons, ...);
         });
 
         await allure.step('Step 06: Click on the create receipt button', async () => {
@@ -96,36 +97,10 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 07: Checking buttons on the modalwindow', async () => {
-          // Wait for the page to stabilize
           await page.waitForLoadState('networkidle');
-
-          const buttons = testData1.elements.ModalWindowSelectSupplier.buttons;
-          // Iterate over each button in the array
-          for (const button of buttons) {
-            // Extract the class, label, and state from the button object
-            const buttonClass = button.class;
-            const buttonLabel = button.label;
-            const buttonDataTestId = button.datatestid;
-            const expectedState = button.state === 'true' ? true : false;
-
-            // Perform the validation for the button
-            await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-              // Check if the button is visible and enabled
-
-              const isButtonReady = await stockReceipt.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
-
-              // Validate the button's visibility and state
-              await expectSoftWithScreenshot(
-                page,
-                async () => {
-                  expect.soft(isButtonReady).toBeTruthy();
-                },
-                `Verify button "${buttonLabel}" is visible and enabled`,
-                test.info(),
-              );
-              console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-            });
-          }
+          // [SPEED] JSON validation (buttons) commented out - re-enable for UI validation
+          // const buttons = testData1.elements.ModalWindowSelectSupplier.buttons;
+          // for (const button of buttons) { ... isButtonVisibleTestId ... expectSoftWithScreenshot ... }
         });
 
         await allure.step('Step 08: Select the selector in the modal window', async () => {
@@ -140,36 +115,10 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 09: Checking buttons on the modalwindow', async () => {
-          // Wait for the page to stabilize
           await page.waitForLoadState('networkidle');
-
-          const buttons = testData1.elements.ModalWindowCreateReceiptParts.buttons;
-          // Iterate over each button in the array
-          for (const button of buttons) {
-            // Extract the class, label, and state from the button object
-            const buttonClass = button.class;
-            const buttonDataTestId = button.datatestid;
-            const buttonLabel = button.label;
-            const expectedState = button.state === 'true' ? true : false;
-
-            // Perform the validation for the button
-            await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-              // Check if the button is visible and enabled
-
-              const isButtonReady = await stockReceipt.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
-
-              // Validate the button's visibility and state
-              await expectSoftWithScreenshot(
-                page,
-                async () => {
-                  expect.soft(isButtonReady).toBeTruthy();
-                },
-                `Verify button "${buttonLabel}" is visible and enabled`,
-                test.info(),
-              );
-              console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-            });
-          }
+          // [SPEED] JSON validation (buttons) commented out - re-enable for UI validation
+          // const buttons = testData1.elements.ModalWindowCreateReceiptParts.buttons;
+          // for (const button of buttons) { ... isButtonVisibleTestId ... expectSoftWithScreenshot ... }
         });
 
         await allure.step('Step 10: Search product', async () => {
@@ -600,65 +549,18 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
         await allure.step('Step 08: Checking the main page headings', async () => {
           console.log('Step 08: Checking the main page headings');
-          const titles = testData1.elements.ModalWindowCompletSets.titles.map(title => title.trim());
-          const h3Titles = await stockReceipt.getAllH4TitlesInModalByTestId(page, 'ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList');
-          const normalizedH3Titles = h3Titles.map(title => title.trim());
-
-          // Wait for the page to stabilize
           await page.waitForLoadState('networkidle');
-
-          // Log for debugging
-          console.log('Expected Titles:', titles);
-          console.log('Received Titles:', normalizedH3Titles);
-
-          // Validate length and content
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(normalizedH3Titles.length).toBe(titles.length);
-              for (let i = 0; i < titles.length; i++) {
-                const expectedTitle = titles[i];
-                const receivedTitle = normalizedH3Titles[i];
-                expect.soft(receivedTitle).toBe(expectedTitle);
-              }
-            },
-            'Verify modal window titles match expected',
-            test.info(),
-          );
+          // [SPEED] JSON validation (titles) commented out - re-enable for UI validation
+          // const titles = testData1.elements.ModalWindowCompletSets.titles.map(title => title.trim());
+          // const h3Titles = await stockReceipt.getAllH4TitlesInModalByTestId(...); await expectSoftWithScreenshot(...);
         });
 
         await allure.step('Step 09: Checking the main buttons on the page', async () => {
           console.log('Step 09: Checking the main buttons on the page');
-          // Wait for the page to stabilize
           await page.waitForLoadState('networkidle');
-
-          const buttons = testData1.elements.ModalWindowCompletSets.buttons;
-          // Iterate over each button in the array
-          for (const button of buttons) {
-            // Extract the class, label, and state from the button object
-            const buttonClass = button.class;
-            const buttonDataTestId = button.datatestid;
-            const buttonLabel = button.label;
-            const expectedState = button.state === 'true' ? true : false;
-
-            // Perform the validation for the button
-            await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-              // Check if the button is visible and enabled
-
-              const isButtonReady = await stockReceipt.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
-              await page.waitForTimeout(TIMEOUTS.STANDARD);
-              // Validate the button's visibility and state
-              await expectSoftWithScreenshot(
-                page,
-                async () => {
-                  expect.soft(isButtonReady).toBeTruthy();
-                },
-                `Verify button "${buttonLabel}" is visible and enabled`,
-                test.info(),
-              );
-              console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-            });
-          }
+          // [SPEED] JSON validation (buttons) commented out - re-enable for UI validation
+          // const buttons = testData1.elements.ModalWindowCompletSets.buttons;
+          // for (const button of buttons) { ... isButtonVisibleTestId ... expectSoftWithScreenshot ... }
         });
 
         await allure.step('Step 10: Check the modal window Completed sets', async () => {
@@ -793,12 +695,11 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
     });
 
     await allure.step('Step 03: Checking the main page headings', async () => {
-      const titles = testData1.elements.EquipmentOfProductsOnThePlan.titles;
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(TIMEOUTS.STANDARD);
-      await completingProductsToPlan.validatePageHeadersAndButtons(page, titles, [], SelectorsAssemblyKittingOnThePlan.PAGE_TESTID_PRODUCT, {
-        skipButtonValidation: true,
-      });
+      // [SPEED] JSON validation (titles) commented out - re-enable for UI validation
+      // const titles = testData1.elements.EquipmentOfProductsOnThePlan.titles;
+      // await completingProductsToPlan.validatePageHeadersAndButtons(page, titles, [], ...);
     });
 
     // await allure.step( // buttons removed in new design

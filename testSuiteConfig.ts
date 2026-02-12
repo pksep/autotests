@@ -13,7 +13,7 @@ import { runTC000 } from './testcases/TC000.spec';
 import { runTC001 } from './testcases/TC001.spec';
 import { runTC002 } from './testcases/TC002.spec';
 import { runTC100 } from './testcases/TC100.spec';
-import { runU001 } from './testcases/U001.spec';
+// import { runU001 } from './testcases/U001.spec';
 import { runU001_01_Setup } from './testcases/U001-Setup.spec';
 import { runU001_02_Orders } from './testcases/U001-Orders.spec';
 import { runU001_03_Production } from './testcases/U001-Production.spec';
@@ -479,15 +479,15 @@ export const testSuites = {
       },
     ],
   },
-  U001_Original: {
-    description: 'U001 Original - Complete original U001 test suite (all 37 test cases in one monolithic file). This is the original script before splitting. Independent from the new broken-up scripts.',
-    tests: [
-      {
-        test: runU001,
-        description: 'U001 Original - Complete original U001 test suite (all 37 test cases in one file).',
-      },
-    ],
-  },
+  // U001_Original: {
+  //   description: 'U001 Original - Complete original U001 test suite (all 37 test cases in one monolithic file). This is the original script before splitting. Independent from the new broken-up scripts.',
+  //   tests: [
+  //     {
+  //       test: runU001,
+  //       description: 'U001 Original - Complete original U001 test suite (all 37 test cases in one file).',
+  //     },
+  //   ],
+  // },
   V001: {
     description: 'V001 - Validation tour: walk the site page-by-page and validate titles, buttons, and filters from JSON (U001-PC1, U002-PC1). No functional testing; minimal actions only to open dialogs/sections.',
     tests: [

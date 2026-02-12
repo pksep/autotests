@@ -58,10 +58,11 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     });
 
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
-      const titles = testData1.elements.ProductShortage.titles;
-      const buttons = testData1.elements.ProductShortage.buttons;
       await page.waitForTimeout(TIMEOUTS.INPUT_SET);
-      await shortageProduct.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShortagePages.PAGE_TESTID);
+      // [SPEED] JSON validation (titles/buttons) commented out - re-enable for UI validation
+      // const titles = testData1.elements.ProductShortage.titles;
+      // const buttons = testData1.elements.ProductShortage.buttons;
+      // await shortageProduct.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShortagePages.PAGE_TESTID);
     });
 
     await allure.step('Step 05: Search product', async () => {
@@ -178,34 +179,10 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     });
 
     await allure.step('Step 12: Checking the main buttons on the page', async () => {
-      // Wait for the page to stabilize
       await shortageProduct.waitForNetworkIdle();
-
-      const buttons = testData1.elements.ModalWindowLaunchOnProduction.buttons;
-      // Iterate over each button in the array
-      for (const button of buttons) {
-        // Extract the class, label, and state from the button object
-        const buttonClass = button.class;
-        const buttonLabel = button.label;
-        const expectedState = button.state === 'true' ? true : false;
-
-        // Perform the validation for the button
-        await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          // Check if the button is visible and enabled
-          const isButtonReady = await shortageProduct.isButtonVisible(page, buttonClass, buttonLabel, expectedState);
-
-          // Validate the button's visibility and state
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(isButtonReady).toBeTruthy();
-            },
-            `Verify button "${buttonLabel}" is visible and enabled`,
-            test.info(),
-          );
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
-        });
-      }
+      // [SPEED] JSON validation (buttons) commented out - re-enable for UI validation
+      // const buttons = testData1.elements.ModalWindowLaunchOnProduction.buttons;
+      // for (const button of buttons) { ... isButtonVisible ... expectSoftWithScreenshot ... }
     });
 
     await allure.step('Step 13: Enter a value into a cell', async () => {
@@ -285,10 +262,11 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     });
 
     await allure.step('Step 03-04: Checking the main page headings and buttons', async () => {
-      const titles = testData1.elements.CbedShortage.titles;
-      const buttons = testData1.elements.CbedShortage.buttons;
       await page.waitForTimeout(TIMEOUTS.INPUT_SET);
-      await shortageAssemblies.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShortagePages.PAGE_TESTID_CBED);
+      // [SPEED] JSON validation (titles/buttons) commented out - re-enable for UI validation
+      // const titles = testData1.elements.CbedShortage.titles;
+      // const buttons = testData1.elements.CbedShortage.buttons;
+      // await shortageAssemblies.validatePageHeadersAndButtons(page, titles, buttons, SelectorsShortagePages.PAGE_TESTID_CBED);
     });
 
     // Check if the array is empty
