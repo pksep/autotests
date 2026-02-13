@@ -17,10 +17,12 @@ export const ENV = {
   //API_BASE_URL: process.env.API_BASE_URL || "http://localhost:5000/",
   API_BASE_URL: process.env.API_BASE_URL || 'http://dev.pksep.ru/',
   //HEADLESS: process.env.HEADLESS === "false" ? false : true,
-  HEADLESS: process.env.HEADLESS === 'true' ? true : false,
+  HEADLESS: process.env.HEADLESS === 'true', // true : false,
   TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
   //TEST_SUITE: 'U003',
-  TEST_SUITE: 'ERP_969',
+  TEST_SUITE: 'V001',  // Full U001 suite
+  //TEST_SUITE: 'U001_SecondTask',  // Quick debug: Run only Second Task suite (Test Cases 21-27)
+  //TEST_SUITE: 'U001_TestCase22_WithDependencies',  // Run Test Case 22 with dependencies (01-04, 05-07, 08-10, 21-27, 28)
   TEST_DIR: '.',
   DEBUG: true, // Enable debug mode for login testing
 };
@@ -132,7 +134,7 @@ export const SELECTORS = {
       DATA_TESTID: 'menu-parts',
     },
     MATERIALS: {
-      URL: 'basematerial',
+      URL: 'basematerials',
       TEXT_RUS: 'База материалов',
       TEXT_ENG: 'Materials',
       DATA_TESTID: 'menu-materials',
