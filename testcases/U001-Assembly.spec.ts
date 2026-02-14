@@ -29,7 +29,7 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import testData1 from '../testdata/U001-PC1.json';
 import testData2 from '../testdata/U002-PC1.json';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import * as U001Constants from './U001-Constants';
 const {
   urgencyDate,
@@ -49,10 +49,10 @@ let quantityProductLaunchOnProductionAfter = U001Constants.quantityProductLaunch
 let quantitySumLaunchOnProduction = U001Constants.quantitySumLaunchOnProduction;
 
 export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Assembly Operations (Test Cases 11-14)`);
+  logger.log(`Start of the test: U001 Assembly Operations (Test Cases 11-14)`);
 
   test('Test Case 11 - Marking Parts', async ({ page }) => {
-    console.log('Test Case 11 - Marking Parts');
+    logger.log('Test Case 11 - Marking Parts');
     test.setTimeout(TEST_TIMEOUTS.LONG);
     const shortageParts = new CreatShortagePartsPage(page);
     let checkOrderNumber: string;
@@ -106,7 +106,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           // Check if the checkbox is already checked
           const isChecked = await checkbox.isChecked();
           if (!isChecked) {
-            console.log('Checkbox is not checked, attempting to check it...');
+            logger.log('Checkbox is not checked, attempting to check it...');
             await checkbox.click();
             await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -115,9 +115,9 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
             if (!isCheckedAfter) {
               throw new Error('Failed to check the checkbox. Checkbox remains unchecked after click.');
             }
-            console.log('Checkbox successfully checked');
+            logger.log('Checkbox successfully checked');
           } else {
-            console.log('Checkbox is already checked, skipping click');
+            logger.log('Checkbox is already checked, skipping click');
           }
 
           // Wait for the table body to load
@@ -141,7 +141,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           const urgencyDateValue = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
           await expectSoftWithScreenshot(
             page,
@@ -163,7 +163,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           });
           quantityProductLaunchOnProductionBefore = (await quantityCell.textContent()) || '0';
 
-          console.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
+          logger.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
         });
 
         await allure.step('Step 09: Click on the Launch on production button ', async () => {
@@ -182,16 +182,16 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
             await roleCheckbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
             const roleIsChecked = await roleCheckbox.isChecked();
             if (!roleIsChecked) {
-              console.log('Checkbox (role) is not selected, selecting it now...');
+              logger.log('Checkbox (role) is not selected, selecting it now...');
               await roleCheckbox.click();
               ensuredChecked = true;
               await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
             } else {
-              console.log('Checkbox (role) is already selected');
+              logger.log('Checkbox (role) is already selected');
               ensuredChecked = true;
             }
           } catch (e) {
-            console.log('Role-based checkbox not available/visible, falling back to cell/input.');
+            logger.log('Role-based checkbox not available/visible, falling back to cell/input.');
           }
 
           if (!ensuredChecked) {
@@ -208,14 +208,14 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
               });
               const isChecked = await inputCheckbox.isChecked();
               if (!isChecked) {
-                console.log('Checkbox input is not selected, clicking input...');
+                logger.log('Checkbox input is not selected, clicking input...');
                 await inputCheckbox.click();
                 await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
               } else {
-                console.log('Checkbox input is already selected');
+                logger.log('Checkbox input is already selected');
               }
             } catch {
-              console.log('Checkbox input not visible, clicking the checkbox cell instead...');
+              logger.log('Checkbox input not visible, clicking the checkbox cell instead...');
               await checkboxCell.click();
               await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
             }
@@ -244,7 +244,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
         await allure.step('Step 12: We save the order number', async () => {
           // Get the order number
           checkOrderNumber = await shortageParts.checkOrderNumber();
-          console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+          logger.log(`Полученный номер заказа: ${checkOrderNumber}`);
         });
 
         await allure.step('Step 13: Click on the In launch button', async () => {
@@ -281,7 +281,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           const productionOrderedValue = await productionOrderedCell.textContent();
           quantityProductLaunchOnProductionAfter = productionOrderedValue?.trim() || '';
 
-          console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
+          logger.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
           quantitySumLaunchOnProduction = Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction);
 
@@ -305,7 +305,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
   //quantitySumLaunchOnProduction = 4; // Normally: quantityProductLaunchOnProductionBefore (2) + quantityProductLaunchOnProduction (2)
 
   test('Test Case 11b - Marking Parts Metalworking', async ({ page }) => {
-    console.log('Test Case 11b - Marking Parts Metalworking');
+    logger.log('Test Case 11b - Marking Parts Metalworking');
     test.setTimeout(TEST_TIMEOUTS.LONG);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
@@ -340,7 +340,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     } else {
       // Iterate through the array of parts
       for (const part of descendantsDetailArray) {
-        console.log('part.nameXXXX: ', part.name);
+        logger.log('part.nameXXXX: ', part.name);
         await allure.step('Step 05-06: Search product and verify first row', async () => {
           // Wait for the table to be visible (may be empty before search) - searchAndVerifyFirstRow will populate it
           await metalworkingWarehouse.waitingTableBody(MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE, {
@@ -377,7 +377,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           const urgencyDateValue = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
           await expectSoftWithScreenshot(
             page,
@@ -399,7 +399,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           });
           quantityProductLaunchOnProductionBefore = (await quantityCell.textContent()) || '0';
 
-          console.log('The value in the cells is orders befor:', quantityProductLaunchOnProductionBefore);
+          logger.log('The value in the cells is orders befor:', quantityProductLaunchOnProductionBefore);
 
           // The expected value should be at least quantitySumLaunchOnProduction (from Test Case 11)
           // but may be higher if there were additional operations. Check that it's >= expected minimum
@@ -413,7 +413,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           expect.soft(actualValue).toBeGreaterThanOrEqual(expectedMin);
 
           // Also log for debugging
-          console.log(`Expected minimum: ${expectedMin}, Actual: ${actualValue}`);
+          logger.log(`Expected minimum: ${expectedMin}, Actual: ${actualValue}`);
         });
 
         await allure.step('Step 09: Find and click on the operation icon', async () => {
@@ -489,7 +489,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           const operationValue = await operationCell.textContent();
           firstOperation = operationValue?.trim() || '';
 
-          console.log(firstOperation);
+          logger.log(firstOperation);
           logger.info(firstOperation);
         });
 
@@ -564,7 +564,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
         //     MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE
         //   );
         // });
-        console.log('part.nameYYYYYY: ', part.name);
+        logger.log('part.nameYYYYYY: ', part.name);
       }
     }
   });
@@ -575,7 +575,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
   // descendantsCbedArray.push({ name: '0Т4.11', designation: '-', quantity: 1 }, { name: '0Т4.12', designation: '-', quantity: 1 });
 
   test('Test Case 12 - Complete Set Of Cbed', async ({ page }) => {
-    console.log('Test Case 12 - Complete Set Of Cbed');
+    logger.log('Test Case 12 - Complete Set Of Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(page);
     // Use SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE for table selector
@@ -606,7 +606,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     if (descendantsCbedArray.length === 0) {
       throw new Error('Массив пустой. Перебор невозможен.');
     } else {
-      console.log('TTTTTTTTTTTTTTTTTTTT: ' + JSON.stringify(descendantsCbedArray, null, 2));
+      logger.log('TTTTTTTTTTTTTTTTTTTT: ' + JSON.stringify(descendantsCbedArray, null, 2));
       // Loop through the array of assemblies
       for (const cbed of descendantsCbedArray) {
         await allure.step('Step 05-06: Search product and verify first row', async () => {
@@ -650,10 +650,10 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           await completingAssembliesToPlan.waitAndHighlight(urgencyDateCell);
 
           urgencyDateOnTable = (await urgencyDateCell.textContent())?.trim() || '';
-          console.log(`Date cell populated with: "${urgencyDateOnTable}"`);
+          logger.log(`Date cell populated with: "${urgencyDateOnTable}"`);
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-          console.log('Дата по срочности в переменной: ', urgencyDate);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в переменной: ', urgencyDate);
 
           expect.soft(urgencyDateOnTable).toBe(urgencyDate);
         });
@@ -736,16 +736,23 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
 
   test('Test Case 13 - Disassembly of the set', async ({ page }) => {
     // doc test case 8
-    console.log('Test Case 13 - Disassembly of the set');
+    logger.log('Test Case 13 - Disassembly of the set');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
 
-    // Setup request failure logging to identify 404 sources
+    // Log request failures (skip image/static noise: ERR_ABORTED often from navigation closing in-flight loads)
     const failedRequests: Array<{ url: string; resourceType: string }> = [];
     page.on('requestfailed', request => {
       const url = request.url();
       const resourceType = request.resourceType();
       failedRequests.push({ url, resourceType });
-      logger.error(`Request FAILED (${resourceType}): ${url} - Status: ${request.failure()?.errorText || 'Unknown'}`);
+      const errorText = request.failure()?.errorText || 'Unknown';
+      // Image/font failures with ERR_ABORTED are usually aborted by navigation or DOM change; log at debug only
+      const isLikelyAbortedStatic = (resourceType === 'image' || resourceType === 'stylesheet' || resourceType === 'font') && errorText.includes('ERR_ABORTED');
+      if (!isLikelyAbortedStatic) {
+        logger.error(`Request FAILED (${resourceType}): ${url} - Status: ${errorText}`);
+      } else {
+        logger.debug(`Request aborted (${resourceType}): ${url}`);
+      }
     });
 
     const completeSets = new CreateCompleteSetsPage(page);
@@ -815,7 +822,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           const assembledValue = await assembledCell.textContent();
           qunatityCompleteSet = assembledValue?.trim() || '';
 
-          console.log('Количество собранных наборов: ', qunatityCompleteSet);
+          logger.log('Количество собранных наборов: ', qunatityCompleteSet);
           // TABLE_SCROLL is a scroll container, need to find the table inside it
           const completeSetsTableSelector = `${completeSetsTable} table`;
           await completeSets.checkNameInLineFromFirstRow(cbed.name, completeSetsTableSelector);
@@ -846,7 +853,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           // Check if the checkbox is already checked
           const isChecked = await checkbox.isChecked();
           if (!isChecked) {
-            console.log('Checkbox is not checked, attempting to check it...');
+            logger.log('Checkbox is not checked, attempting to check it...');
             await checkbox.click();
             await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -855,9 +862,9 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
             if (!isCheckedAfter) {
               throw new Error('Failed to check the checkbox. Checkbox remains unchecked after click.');
             }
-            console.log('Checkbox successfully checked');
+            logger.log('Checkbox successfully checked');
           } else {
-            console.log('Checkbox is already checked, skipping click');
+            logger.log('Checkbox is already checked, skipping click');
           }
         });
 
@@ -889,15 +896,15 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           //     "ModalUncomplectKit-AssemblyTable",
           //     "ModalUncomplectKit-AssemblyTableHeaderKitQuantity"
           // );
-          // console.log(
+          // logger.log(
           //     "numberColumn: AssemblyTableHeaderKitQuantity",
           //     numberColumn
           // );
           qunatityCompleteSet = await completeSets.getValueOrClickFromFirstRow(disassembly, 1);
           // Upd:
           const qunatityCompleteSetInModalWindow = await completeSets.getValueOrClickFromFirstRow(disassembly, 1);
-          console.log('Количество собранных наборов: ', qunatityCompleteSet);
-          console.log('Количество собранных наборов в модальном окне: ', qunatityCompleteSetInModalWindow);
+          logger.log('Количество собранных наборов: ', qunatityCompleteSet);
+          logger.log('Количество собранных наборов в модальном окне: ', qunatityCompleteSetInModalWindow);
           //expect(qunatityCompleteSet).toBe(qunatityCompleteSetInModalWindow);
         });
 
@@ -907,7 +914,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           await input.scrollIntoViewIfNeeded();
           await input.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           const currentValue = await input.inputValue();
-          console.log('К разкомплектовке: ', currentValue);
+          logger.log('К разкомплектовке: ', currentValue);
           await input.fill('1');
           await page.waitForTimeout(TIMEOUTS.LONG);
         });
@@ -963,7 +970,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     //doc test case 9
     page,
   }) => {
-    console.log('Test Case 14 - Complete Set Of Cbed After Desassembly');
+    logger.log('Test Case 14 - Complete Set Of Cbed After Desassembly');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(page);
     const TableComplect = await allure.step('Step 01: Open the warehouse page', async () => {
@@ -1011,8 +1018,8 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           const urgencyDateText = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateText?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-          console.log('Дата по срочности в переменной: ', urgencyDate);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в переменной: ', urgencyDate);
 
           if (urgencyDateOnTable) {
             await expectSoftWithScreenshot(

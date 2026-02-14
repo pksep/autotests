@@ -23,6 +23,7 @@ import { CreateCompletingProductsToPlanPage } from '../pages/CompletingProductsT
 import { expectSoftWithScreenshot, TypeInvoice } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
+import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
 const {
@@ -39,11 +40,11 @@ let remainingStockAfter = U001Constants.remainingStockAfter;
 let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
 export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Receiving Operations (Test Cases 15-18)`);
+  logger.log(`Start of the test: U001 Receiving Operations (Test Cases 15-18)`);
 
   test('Test Case 15 - Receiving Part And Check Stock', async ({ page }) => {
     // doc test case 10
-    console.log('Test Case 15 - Receiving Part And Check Stock');
+    logger.log('Test Case 15 - Receiving Part And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
@@ -140,7 +141,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           const isModalOpen = await detailModal.isVisible().catch(() => false);
 
           if (isModalOpen) {
-            console.log('Detail modal is open, closing it...');
+            logger.log('Detail modal is open, closing it...');
             // Try to close the modal by pressing Escape or clicking outside
             try {
               await page.keyboard.press('Escape');
@@ -148,15 +149,20 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
               // Wait for modal to close
               await detailModal.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
             } catch (e) {
-              console.log('Could not close modal with Escape, trying to click outside');
+              logger.log('Could not close modal with Escape, trying to click outside');
             }
           }
+
+          // Wait for the add-waybill modal table to be ready so the row cells are in the DOM
+          const modalTable = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE);
+          await modalTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Find the quantity input cell using data-testid pattern
           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdInput
           const quantityCell = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_TD_INPUT_PATTERN).first();
 
-          await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
           await quantityCell.scrollIntoViewIfNeeded();
 
           // Highlight the cell (td) in yellow first
@@ -166,7 +172,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             el.style.outline = '2px solid orange';
           });
 
-          console.log('Cell (td) highlighted in yellow/orange. Looking for input field...');
+          logger.log('Cell (td) highlighted in yellow/orange. Looking for input field...');
 
           // Wait a moment to see the cell highlight
           await page.waitForTimeout(TIMEOUTS.STANDARD);
@@ -182,7 +188,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             .catch(() => false);
 
           if (!inputFound) {
-            console.log('Input not found in cell, trying page-level search...');
+            logger.log('Input not found in cell, trying page-level search...');
             quantityInput = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_TD_INPUT_INPUT_INPUT_PATTERN).first();
           }
 
@@ -197,21 +203,21 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             el.style.zIndex = '9999';
           });
 
-          console.log('Input element highlighted in red. Setting quantity value...');
+          logger.log('Input element highlighted in red. Setting quantity value...');
 
           // Set the quantity value
           const valueToSet = incomingQuantity;
           const currentValue = await quantityInput.inputValue();
-          console.log(`Current value: "${currentValue}", setting to: "${valueToSet}"`);
+          logger.log(`Current value: "${currentValue}", setting to: "${valueToSet}"`);
 
           // Check if input is readonly or disabled
           const isReadonly = await quantityInput.evaluate((el: HTMLInputElement) => el.readOnly).catch(() => false);
           const isDisabled = await quantityInput.isDisabled().catch(() => false);
 
-          console.log(`Input state: readonly=${isReadonly}, disabled=${isDisabled}`);
+          logger.log(`Input state: readonly=${isReadonly}, disabled=${isDisabled}`);
 
           if (isReadonly || isDisabled) {
-            console.log('Input is readonly or disabled, trying to make it editable...');
+            logger.log('Input is readonly or disabled, trying to make it editable...');
             // Try to remove readonly attribute via JavaScript
             await quantityInput.evaluate((el: HTMLInputElement) => {
               el.readOnly = false;
@@ -227,7 +233,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             await quantityCell.dblclick({ force: true });
             await page.waitForTimeout(TIMEOUTS.MEDIUM); // Increased wait time
           } catch (e) {
-            console.log('Double-click failed, trying single click...');
+            logger.log('Double-click failed, trying single click...');
             await quantityCell.click({ force: true });
             await page.waitForTimeout(TIMEOUTS.SHORT);
             await quantityCell.click({ force: true });
@@ -275,11 +281,11 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
           // Verify the value was set
           const finalValue = await quantityInput.inputValue();
-          console.log(`Final value: "${finalValue}", expected: "${valueToSet}"`);
+          logger.log(`Final value: "${finalValue}", expected: "${valueToSet}"`);
 
           if (finalValue !== valueToSet) {
             // Fallback: Try direct JavaScript setting with more events
-            console.log('Type() failed, trying direct JavaScript setting...');
+            logger.log('Type() failed, trying direct JavaScript setting...');
             await quantityInput.evaluate((el: HTMLInputElement, val: string) => {
               el.focus();
               el.select();
@@ -296,15 +302,15 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
             const retryValue = await quantityInput.inputValue();
-            console.log(`After retry, value: "${retryValue}"`);
+            logger.log(`After retry, value: "${retryValue}"`);
 
             if (retryValue !== valueToSet) {
               // Last resort: try fill() method
-              console.log('JavaScript setting failed, trying fill() method...');
+              logger.log('JavaScript setting failed, trying fill() method...');
               await quantityInput.fill(valueToSet);
               await page.waitForTimeout(TIMEOUTS.MEDIUM);
               const fillValue = await quantityInput.inputValue();
-              console.log(`After fill(), value: "${fillValue}"`);
+              logger.log(`After fill(), value: "${fillValue}"`);
 
               if (fillValue !== valueToSet) {
                 throw new Error(`Failed to set quantity. Expected: "${valueToSet}", Actual: "${fillValue}". Input may be disabled or readonly.`);
@@ -312,7 +318,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             }
           }
 
-          console.log('Quantity successfully set!');
+          logger.log('Quantity successfully set!');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
         });
 
@@ -362,7 +368,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             const modal = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_MAIN);
             await modal.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {
               // Modal might not close, that's okay
-              console.log('Modal did not close automatically');
+              logger.log('Modal did not close automatically');
             });
           } catch (e) {
             // Modal might still be visible, continue anyway
@@ -376,8 +382,8 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         await allure.step('Step 15b: Check the number of parts in the warehouse after posting', async () => {
           // Wait for stock to update after posting using Playwright's expect.poll
           const expectedStock = Number(remainingStockBefore) + Number(incomingQuantity);
-          console.log(`Waiting for stock to update from ${remainingStockBefore} to ${expectedStock}...`);
-          console.log(`Detail name: ${detail.name}, incomingQuantity: ${incomingQuantity}`);
+          logger.log(`Waiting for stock to update from ${remainingStockBefore} to ${expectedStock}...`);
+          logger.log(`Detail name: ${detail.name}, incomingQuantity: ${incomingQuantity}`);
 
           await expect
             .poll(
@@ -385,14 +391,14 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
                 // checkingTheQuantityInStock already navigates to the stock page and refreshes data
                 remainingStockAfter = await stock.checkingTheQuantityInStock(detail.name, TableSelection.detail);
                 const currentStock = Number(remainingStockAfter);
-                console.log(`Stock check: current=${currentStock}, expected=${expectedStock}, before=${remainingStockBefore}`);
+                logger.log(`Stock check: current=${currentStock}, expected=${expectedStock}, before=${remainingStockBefore}`);
                 return currentStock;
               },
               { timeout: 60000, intervals: [3000] }, // Increased timeout to 60s and interval to 3s
             )
             .toBe(expectedStock);
 
-          console.log(`Stock updated successfully: ${remainingStockAfter} (expected: ${expectedStock})`);
+          logger.log(`Stock updated successfully: ${remainingStockAfter} (expected: ${expectedStock})`);
         });
 
         await allure.step('Step 16: Compare the quantity in cells', async () => {
@@ -407,7 +413,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           );
 
           // Output to the console
-          console.log(
+          logger.log(
             `Количество ${detail.name} на складе до оприходования: ${remainingStockBefore}, ` +
               `оприходовали в количестве: ${incomingQuantity}, ` +
               `и после оприходования: ${remainingStockAfter}.`,
@@ -421,7 +427,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
     // doc test case 11
     page,
   }) => {
-    console.log('Test Case 16 - Receiving Cbed And Check Stock');
+    logger.log('Test Case 16 - Receiving Cbed And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
@@ -433,20 +439,20 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
       // Loop through the array of assemblies
       for (const cbed of descendantsCbedArray) {
         await allure.step('Step 01: Receiving quantities from balances', async () => {
-          console.log(cbed.name);
+          logger.log(cbed.name);
           // Check the number of entities in the warehouse before posting
           remainingStockBefore = await stock.checkingTheQuantityInStock(cbed.name, TableSelection.cbed);
         });
 
         // Capitalization of the entity
         await allure.step('Step 02: Open the warehouse page', async () => {
-          console.log('Step 02: Open the warehouse page');
+          logger.log('Step 02: Open the warehouse page');
           // Go to the Warehouse page
           await stockReceipt.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         });
 
         await allure.step('Step 03: Open the stock receipt page', async () => {
-          console.log('Step 03: Open the stock receipt page');
+          logger.log('Step 03: Open the stock receipt page');
           // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
           await stockReceipt.findTable(
             SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION,
@@ -457,13 +463,13 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 04: Click on the create receipt button', async () => {
-          console.log('Step 04: Click on the create receipt button');
+          logger.log('Step 04: Click on the create receipt button');
           // Click on the button
           await stockReceipt.clickButton('Создать приход', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE_INCOME);
         });
 
         await allure.step('Step 05: Select the selector in the modal window', async () => {
-          console.log('Step 05: Select the selector in the modal window');
+          logger.log('Step 05: Select the selector in the modal window');
           // Select the selector in the modal window
           await stockReceipt.selectStockReceipt(StockReceipt.cbed);
           // Waiting for loading
@@ -475,7 +481,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 06: Search product', async () => {
-          console.log('Step 06: Search product');
+          logger.log('Step 06: Search product');
           // Using table search we look for the value of the variable
           await stockReceipt.searchTable(
             cbed.name,
@@ -491,7 +497,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 07: Find the checkbox column and click', async () => {
-          console.log('Step 07: Find the checkbox column and click');
+          logger.log('Step 07: Find the checkbox column and click');
           // Find the checkbox cell using data-testid pattern
           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdCheckbox
           const checkboxCell = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_CHECKBOX_PATTERN).first();
@@ -506,14 +512,14 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             el.style.outline = '2px solid red';
           });
 
-          console.log('Checkbox cell highlighted. Clicking checkbox...');
+          logger.log('Checkbox cell highlighted. Clicking checkbox...');
 
           // Click the checkbox
           await checkboxCell.click();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
         });
         await allure.step('Step 07a: Find the Кол-во на приход column and click', async () => {
-          console.log('Step 07a: Find the Кол-во на приход column and click');
+          logger.log('Step 07a: Find the Кол-во на приход column and click');
           // Ensure the main modal is visible first
           const mainModal = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_MAIN);
           await mainModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
@@ -535,7 +541,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             el.style.outline = '2px solid red';
           });
 
-          console.log('prihodQuantityCell cell highlighted. Clicking link...');
+          logger.log('prihodQuantityCell cell highlighted. Clicking link...');
 
           // Click the cell to open the Completed sets modal
           await prihodQuantityCell.click();
@@ -548,7 +554,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           });
         });
         await allure.step('Step 08: Checking the main page headings', async () => {
-          console.log('Step 08: Checking the main page headings');
+          logger.log('Step 08: Checking the main page headings');
           await page.waitForLoadState('networkidle');
           // [SPEED] JSON validation (titles) commented out - re-enable for UI validation
           // const titles = testData1.elements.ModalWindowCompletSets.titles.map(title => title.trim());
@@ -556,7 +562,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 09: Checking the main buttons on the page', async () => {
-          console.log('Step 09: Checking the main buttons on the page');
+          logger.log('Step 09: Checking the main buttons on the page');
           await page.waitForLoadState('networkidle');
           // [SPEED] JSON validation (buttons) commented out - re-enable for UI validation
           // const buttons = testData1.elements.ModalWindowCompletSets.buttons;
@@ -564,7 +570,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 10: Check the modal window Completed sets', async () => {
-          console.log('Step 10: Check the modal window Completed sets');
+          logger.log('Step 10: Check the modal window Completed sets');
           // Ensure the Completed sets modal is visible
           const completedSetsModal = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST);
           await completedSetsModal.waitFor({
@@ -594,12 +600,12 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           if (!isChecked) {
             await headerRowCell.click();
           } else {
-            console.log('Checkbox is already checked, skipping click');
+            logger.log('Checkbox is already checked, skipping click');
           }
         });
 
         await allure.step('Step 12: Enter the quantity in the cells', async () => {
-          console.log('Step 12: Enter the quantity in the cells');
+          logger.log('Step 12: Enter the quantity in the cells');
           // Enter the value into the input cell
 
           const inputlocator = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN;
@@ -612,19 +618,19 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
             throw new Error('Элемент заблокирован для ввода.');
           }
           const quantityPerShipment = await page.locator(inputlocator).nth(0).getAttribute('value');
-          console.log('Кол-во на отгрузку: ', quantityPerShipment);
+          logger.log('Кол-во на отгрузку: ', quantityPerShipment);
           await page.locator(inputlocator).nth(0).fill('1');
           await page.locator(inputlocator).nth(0).press('Enter');
         });
 
         await allure.step('Step 13: Click on the choice button on the modal window', async () => {
-          console.log('Step 13: Click on the choice button on the modal window');
+          logger.log('Step 13: Click on the choice button on the modal window');
           // Click on the button
           await stockReceipt.clickButton('Сохранить', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE);
         });
 
         await allure.step('Step 14: Check that the first row of the table contains the variable name', async () => {
-          console.log('Step 14: Check that the first row of the table contains the variable name');
+          logger.log('Step 14: Check that the first row of the table contains the variable name');
           // Wait for the table body to load
           const tableSelectedItems = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE;
           await stockReceipt.waitingTableBody(tableSelectedItems);
@@ -633,12 +639,12 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           await stockReceipt.checkNameInLineFromFirstRow(cbed.name, tableSelectedItems);
         });
         await allure.step('Step 15a: Click on the Добавить button on the modal window', async () => {
-          console.log('Step 15: Click on the create receipt button on the modal window');
+          logger.log('Step 15: Click on the create receipt button on the modal window');
           // Click on the button
           await stockReceipt.clickButton('Добавить', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_ADD);
         });
         await allure.step('Step 15: Click on the create receipt button on the modal window', async () => {
-          console.log('Step 15: Click on the create receipt button on the modal window');
+          logger.log('Step 15: Click on the create receipt button on the modal window');
           // Click on the button
           await stockReceipt.clickButton('Создать', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE);
           // Wait for modal to close and page to stabilize
@@ -650,13 +656,13 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 16: Check the number of parts in the warehouse after posting', async () => {
-          console.log('Step 16: Check the number of parts in the warehouse after posting');
+          logger.log('Step 16: Check the number of parts in the warehouse after posting');
           // Checking the remainder of the entity after capitalization
           remainingStockAfter = await stock.checkingTheQuantityInStock(cbed.name, TableSelection.cbed);
         });
 
         await allure.step('Step 17: Compare the quantity in cells', async () => {
-          console.log('Step 17: Compare the quantity in cells');
+          logger.log('Step 17: Compare the quantity in cells');
           // Compare the quantity in cells
           await expectSoftWithScreenshot(
             page,
@@ -668,7 +674,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           );
 
           // Output to the console
-          console.log(
+          logger.log(
             `Количество ${cbed.name} на складе до оприходования: ${remainingStockBefore}, ` +
               `оприходовали в количестве: ${incomingQuantity}, ` +
               `и после оприходования: ${remainingStockAfter}.`,
@@ -682,7 +688,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
   test('Test Case 17 - Complete Set Of Product', async ({ page }) => {
     // doc test case 12
-    console.log('Test Case 17 - Complete Set Of Product');
+    logger.log('Test Case 17 - Complete Set Of Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingProductsToPlan = new CreateCompletingProductsToPlanPage(page);
     const tableComplect = PartsDBSelectors.SCROLL_WRAPPER_SLOT;
@@ -730,7 +736,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
     //           // Validate the button's visibility and state
     //           expect(isButtonReady).toBeTruthy();
-    //           console.log(
+    //           logger.log(
     //             `Is the "${buttonLabel}" button visible and enabled?`,
     //             isButtonReady
     //           );
@@ -773,8 +779,8 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         throw new Error('Urgency date cell not found or empty');
       }
 
-      console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-      console.log('Дата по срочности в переменной: ', urgencyDate);
+      logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+      logger.log('Дата по срочности в переменной: ', urgencyDate);
 
       await expectSoftWithScreenshot(
         page,
@@ -803,7 +809,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
       // Get the text content for verification
       const designationText = await designationCell.textContent();
-      console.log(`Проверка текста ${designationText?.trim() || ''}`);
+      logger.log(`Проверка текста ${designationText?.trim() || ''}`);
 
       // Double-click the designation cell
       await designationCell.dblclick();
@@ -835,7 +841,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
   test('Test Case 18 - Receiving Product And Check Stock', async ({ page }) => {
     // doc test case 13
-    console.log('Test Case 18 - Receiving Product And Check Stock');
+    logger.log('Test Case 18 - Receiving Product And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
@@ -915,9 +921,9 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
       const isChecked = await headerCheckbox.isChecked();
       if (!isChecked) {
         await headerCheckbox.click();
-        console.log('Header checkbox clicked');
+        logger.log('Header checkbox clicked');
       } else {
-        console.log('Header checkbox is already checked, skipping click');
+        logger.log('Header checkbox is already checked, skipping click');
       }
     });
     await allure.step('Step 07a: Click the parish cell link', async () => {
@@ -967,9 +973,9 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
       const isChecked = await firstRowCheckbox.isChecked();
       if (!isChecked) {
         await firstRowCheckbox.click();
-        console.log('First row checkbox clicked');
+        logger.log('First row checkbox clicked');
       } else {
-        console.log('First row checkbox is already checked, skipping click');
+        logger.log('First row checkbox is already checked, skipping click');
       }
     });
 
@@ -984,13 +990,13 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         throw new Error('Элемент заблокирован для ввода.');
       }
       const quantityPerShipment = await page.locator(inputlocator).nth(0).getAttribute('value');
-      console.log('Кол-во на отгрузку: ', quantityPerShipment);
+      logger.log('Кол-во на отгрузку: ', quantityPerShipment);
       await page.locator(inputlocator).nth(0).fill('1');
       await page.locator(inputlocator).nth(0).press('Enter');
     });
 
     await allure.step('Step 11: Click on the choice button on the modal window', async () => {
-      console.log('Step 11: Click on the choice button on the modal window');
+      logger.log('Step 11: Click on the choice button on the modal window');
       // Click on the button
       await stockReceipt.clickButton('Сохранить', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE);
     });
@@ -1011,7 +1017,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
     //   }
     // );
     await allure.step('Step 14: Check that the first row of the table contains the variable name', async () => {
-      console.log('Step 14: Check that the first row of the table contains the variable name');
+      logger.log('Step 14: Check that the first row of the table contains the variable name');
       // Wait for the table body to load
       const tableSelectedItems = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE;
       await stockReceipt.waitingTableBody(tableSelectedItems);
@@ -1020,12 +1026,12 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
       await stockReceipt.checkNameInLineFromFirstRow(nameProduct, tableSelectedItems);
     });
     await allure.step('Step 12a: Click on the Добавить button on the modal window', async () => {
-      console.log('Step 15: Click on the create receipt button on the modal window');
+      logger.log('Step 15: Click on the create receipt button on the modal window');
       // Click on the button
       await stockReceipt.clickButton('Добавить', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_ADD);
     });
     await allure.step('Step 15: Click on the create receipt button on the modal window', async () => {
-      console.log('Step 15: Click on the create receipt button on the modal window');
+      logger.log('Step 15: Click on the create receipt button on the modal window');
       // Click on the button
       await stockReceipt.clickButton('Создать', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE);
       // Wait for modal to close and page to stabilize
@@ -1037,7 +1043,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
     });
 
     await allure.step('Step 16: Check the number of parts in the warehouse after posting', async () => {
-      console.log('Step 16: Check the number of parts in the warehouse after posting');
+      logger.log('Step 16: Check the number of parts in the warehouse after posting');
       // Checking the remainder of the entity after capitalization
       remainingStockAfter = await stock.checkingTheQuantityInStock(nameProduct, TableSelection.product);
     });
@@ -1049,14 +1055,14 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
     //   );
 
     //   // Output to the console
-    //   console.log(
+    //   logger.log(
     //     `Количество ${nameProduct} на складе до оприходования: ${remainingStockBefore}, ` +
     //       `оприходовали в количестве: ${incomingQuantity}, ` +
     //       `и после оприходования: ${remainingStockAfter}.`
     //   );
     // });
     await allure.step('Step 18: Compare the quantity in cells', async () => {
-      console.log('Step 18: Compare the quantity in cells');
+      logger.log('Step 18: Compare the quantity in cells');
       // Compare the quantity in cells
       await expectSoftWithScreenshot(
         page,
@@ -1068,7 +1074,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
       );
 
       // Output to the console
-      console.log(
+      logger.log(
         `Количество ${nameProduct} на складе до оприходования: ${remainingStockBefore}, ` +
           `оприходовали в количестве: ${incomingQuantity}, ` +
           `и после оприходования: ${remainingStockAfter}.`,

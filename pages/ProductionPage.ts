@@ -2,6 +2,7 @@ import { Page, Locator } from '@playwright/test';
 import { PageObject } from '../lib/Page';
 import * as SelectorsProductionPage from '../lib/Constants/SelectorsProductionPage';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import logger from '../lib/utils/logger';
 
 /**
  * ProductionPage class for interacting with the Production page

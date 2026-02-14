@@ -16,7 +16,7 @@ import { Page, expect, Locator, ElementHandle } from '@playwright/test';
 import { WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import * as SelectorsStartProduction from '../Constants/SelectorsStartProduction';
 import * as SelectorsOrderedFromSuppliers from '../Constants/SelectorsOrderedFromSuppliers';
-import logger from '../logger';
+import logger from '../utils/logger';
 
 export class OrderHelper {
   constructor(private page: Page) {}
@@ -222,7 +222,7 @@ export class OrderHelper {
 
     // Step 5: Confirm that the modal dates match the parent table dates
     // if (urgencyModalColValForCompare.trim() !== urgencyModalDate.trim() || plannedShipmentModalColValForCompare.trim() !== plannedShipmentModalDate.trim()) {
-    //    console.log("FFFFFF");
+    //    logger.log("FFFFFF");
     //    logger.error(`counter: ${counter}`);
     //    logger.error(`Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`);
     //    return {
@@ -230,7 +230,7 @@ export class OrderHelper {
     //        message: `Dates do not match. Parent table: ${urgencyModalColValForCompare}, ${plannedShipmentModalColValForCompare}. Modal: ${urgencyModalDate}, ${plannedShipmentModalDate}.`
     //    };
     // }
-    // console.log("GGGGG");
+    // logger.log("GGGGG");
     // logger.info(`Dates MATCH for row with urgency date ${urgencyModalColValForCompare} and planned shipment date ${plannedShipmentModalColValForCompare}.`);
     return { success: true };
   }
@@ -345,7 +345,7 @@ export class OrderHelper {
       });
 
     const checkboxCount = await checkboxesLocator.count();
-    console.log(`Found ${checkboxCount} checkboxes, looking for order number: ${targetOrderNumber}`);
+    logger.log(`Found ${checkboxCount} checkboxes, looking for order number: ${targetOrderNumber}`);
 
     const foundOrderNumbers: string[] = [];
 
@@ -354,27 +354,27 @@ export class OrderHelper {
         const orderNumberCell = orderNumberCellsLocator.nth(i);
         // Wait for cell to be visible
         await orderNumberCell.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
-          console.log(`Order number cell ${i} not visible, skipping`);
+          logger.log(`Order number cell ${i} not visible, skipping`);
         });
 
         const orderNumber = (await orderNumberCell.innerText()).trim();
         foundOrderNumbers.push(orderNumber);
 
-        console.log(`Order number at index ${i}: "${orderNumber}"`);
+        logger.log(`Order number at index ${i}: "${orderNumber}"`);
 
         if (orderNumber === targetOrderNumber) {
-          console.log(`✅ Found target order number "${targetOrderNumber}" at index ${i}`);
+          logger.log(`✅ Found target order number "${targetOrderNumber}" at index ${i}`);
           return i;
         }
       } catch (error) {
-        console.log(`Error reading order number at index ${i}: ${error}`);
+        logger.log(`Error reading order number at index ${i}: ${error}`);
         foundOrderNumbers.push(`<error: ${error}>`);
       }
     }
 
     const errorMsg = errorMessage || `Could not find checkbox for order ${targetOrderNumber}`;
-    console.log(`❌ ${errorMsg}`);
-    console.log(`Found order numbers: ${JSON.stringify(foundOrderNumbers)}`);
+    logger.log(`❌ ${errorMsg}`);
+    logger.log(`Found order numbers: ${JSON.stringify(foundOrderNumbers)}`);
     throw new Error(`${errorMsg}. Found order numbers: ${foundOrderNumbers.join(', ')}`);
   }
 
@@ -416,7 +416,7 @@ export class OrderHelper {
       });
 
       await popoverCell.click();
-      console.log('Clicked on popover cell');
+      logger.log('Clicked on popover cell');
 
       // Wait for the menu to appear
       await this.page.waitForTimeout(500);
@@ -433,13 +433,13 @@ export class OrderHelper {
       });
 
       await menuItem.click();
-      console.log("Clicked on 'Заказы' menu item");
+      logger.log("Clicked on 'Заказы' menu item");
 
       // Wait for the modal to appear if selector is provided
       if (waitForModalSelector) {
         const modal = this.page.locator(`${waitForModalSelector}[open]`);
         await modal.waitFor({ state: 'visible', timeout: 10000 });
-        console.log('Orders modal opened');
+        logger.log('Orders modal opened');
       }
     });
   }
@@ -495,7 +495,7 @@ export class OrderHelper {
         const orderRows = useRowLocator ? ordersModal.locator(orderRowsSelector) : this.page.locator(orderRowsSelector);
         const orderCount = await orderRows.count();
         const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-        console.log(`Found ${orderCount} ${logPrefix}orders in the modal`);
+        logger.log(`Found ${orderCount} ${logPrefix}orders in the modal`);
 
         // Additional wait for IZD case
         if (additionalWaitTimeout) {
@@ -544,12 +544,12 @@ export class OrderHelper {
           quantities.push(quantity);
 
           if (itemTypeName === 'IZD') {
-            console.log(`${itemTypeName} Order ${i + 1}: Number="${orderNumber}", Quantity="${quantity}"`);
+            logger.log(`${itemTypeName} Order ${i + 1}: Number="${orderNumber}", Quantity="${quantity}"`);
           }
         }
 
-        console.log(`${logPrefix}Order numbers: ${orderNumbers}`);
-        console.log(`${logPrefix}Quantities: ${quantities}`);
+        logger.log(`${logPrefix}Order numbers: ${orderNumbers}`);
+        logger.log(`${logPrefix}Quantities: ${quantities}`);
 
         // Verify our orders are present
         for (const expectedOrderNumber of expectedOrderNumbers) {
@@ -617,7 +617,7 @@ export class OrderHelper {
       const quantity = Number((await quantityCell.innerText()).trim());
       const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
       const quantityTypeLabel = quantityType === 'Total ordered' ? 'Total ordered' : 'Remaining ordered';
-      console.log(`${logPrefix}${quantityTypeLabel} quantity: ${quantity}`);
+      logger.log(`${logPrefix}${quantityTypeLabel} quantity: ${quantity}`);
 
       // Verify expected value if provided
       if (expectedValue !== undefined) {
@@ -626,7 +626,7 @@ export class OrderHelper {
           expectedValue === 55
             ? `✅ Verified total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55 (50 + 5)`
             : `✅ Verified ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5 - now showing ${quantity} instead of 55`;
-        console.log(successMessage);
+        logger.log(successMessage);
       }
 
       stepResult = quantity;
@@ -672,7 +672,7 @@ export class OrderHelper {
 
       await orderCell.click();
       const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-      console.log(`Clicked on ${logPrefix}order ${orderNumber} to open edit dialog`);
+      logger.log(`Clicked on ${logPrefix}order ${orderNumber} to open edit dialog`);
 
       // Wait a bit for the dialog to open and content to load
       await this.page.waitForTimeout(500);

@@ -17,6 +17,7 @@ import * as SelectorsMetalWorkingWarhouse from '../lib/Constants/SelectorsMetalW
 import * as SelectorsMetalworkingOperations from '../lib/Constants/SelectorsMetalworkingOperations';
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import logger from '../lib/utils/logger';
 
 // Global variable declarations
 declare global {
@@ -47,18 +48,18 @@ let firstOperation: string;
 let valueLeftToDo;
 
 export const runU002 = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Starting test: Verify Order From Suppliers Page Functionality`);
+  logger.info(`Starting test: Verify Order From Suppliers Page Functionality`);
 
   test('Setup - Ensure test data exists', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Setup - Ensuring test data exists');
+    logger.info('Setup - Ensuring test data exists');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Clean up existing test items', async () => {
       await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
       await partsDatabasePage.waitForNetworkIdle();
 
-      console.log('=== CLEANING UP EXISTING TEST ITEMS ===');
+      logger.info('=== CLEANING UP EXISTING TEST ITEMS ===');
 
       // Clean up DETAIL items
       await partsDatabasePage.cleanupTestItemsByPrefix(
@@ -87,7 +88,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         'first', // IZD search input is the first one
       );
 
-      console.log('=== CLEANUP COMPLETE ===');
+      logger.info('=== CLEANUP COMPLETE ===');
     });
 
     await allure.step('Initialize empty test data arrays', async () => {
@@ -95,17 +96,17 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       arrayDetail = [];
       arrayCbed = [];
       arrayIzd = [];
-      console.log('✅ Initialized empty test data arrays - Test Cases 5, 6, 7 will create the items');
+      logger.info('✅ Initialized empty test data arrays - Test Cases 5, 6, 7 will create the items');
     });
 
     await allure.step('Final verification', async () => {
-      console.log(`✅ Setup complete - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
+      logger.info(`✅ Setup complete - Details: ${arrayDetail.length}, CBED: ${arrayCbed.length}, IZD: ${arrayIzd.length}`);
     });
   });
 
   test('Test Case 01 - Check all elements on page Ordered from suppliers', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.LONG);
-    console.log('Test Case 01 - Check all elements on page Ordered from suppliers');
+    logger.info('Test Case 01 - Check all elements on page Ordered from suppliers');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     await allure.step('Step 1: Open the warehouse page', async () => {
       // Go to the Warehouse page
@@ -134,7 +135,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 05: Проверка свитчера', async () => {
-      console.log('Step 05: Проверка свитчера');
+      logger.info('Step 05: Проверка свитчера');
       const switchers = testData1.elements.MainPage.switcher;
 
       for (const switcher of switchers) {
@@ -145,7 +146,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         // Perform the validation for the button
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          console.log(`Validate button with label: "${buttonLabel}"`);
+          logger.info(`Validate button with label: "${buttonLabel}"`);
           // Check if the button is visible and enabled
 
           // Highlight the switch as we find it
@@ -159,7 +160,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           if (dataTestId) {
             isButtonReady = await orderedFromSuppliersPage.isButtonVisibleTestId(page, dataTestId, buttonLabel);
           } else {
-            console.log(`data-testid отсутствует в тестовых данных для переключателя "${buttonLabel}", используем проверку по классу.`);
+            logger.info(`data-testid отсутствует в тестовых данных для переключателя "${buttonLabel}", используем проверку по классу.`);
             isButtonReady = await orderedFromSuppliersPage.isButtonVisible(page, buttonClass, buttonLabel);
           }
 
@@ -172,7 +173,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             `Verify switcher button "${buttonLabel}" is visible and enabled`,
             test.info(),
           );
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+          logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
     });
@@ -197,7 +198,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 07: Проверяем модальное окно на наличие всех кнопок с поставщиками', async () => {
-      console.log('Step 07: Проверяем модальное окно на наличие всех кнопок с поставщиками');
+      logger.info('Step 07: Проверяем модальное окно на наличие всех кнопок с поставщиками');
       // Wait for the page to stabilize
       await orderedFromSuppliersPage.waitForNetworkIdle();
 
@@ -242,13 +243,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             `Verify modal button "${buttonLabel}" is visible and enabled`,
             test.info(),
           );
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+          logger.info(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
     });
 
     await allure.step('Step 08: Выбор поставщика "Детали"', async () => {
-      console.log('Step 08: Выбор поставщика "Детали"');
+      logger.info('Step 08: Выбор поставщика "Детали"');
       const modal = await page.locator(`${SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT}[open]`);
       const button = await modal.locator(SelectorsOrderedFromSuppliers.SELECT_TYPE_OBJECT_OPERATION_DETAILS);
       await button.click();
@@ -257,7 +258,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 09: Проверка модального окна Создание заказа поставщика', async () => {
-      console.log('Step 09: Проверка модального окна Создание заказа поставщика');
+      logger.info('Step 09: Проверка модального окна Создание заказа поставщика');
 
       const titles = testData1.elements.ModalCreateOrderSupplier.titles.map(title => title.trim());
       await orderedFromSuppliersPage.validateModalH4Titles(page, SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID, titles, {
@@ -317,7 +318,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
             .catch(() => '')
         ).trim();
         selectedItems.push({ id: idText, name: nameText });
-        console.log(`Выбрана строка ${i}: id="${idText}", name="${nameText}"`);
+        logger.info(`Выбрана строка ${i}: id="${idText}", name="${nameText}"`);
       }
     });
 
@@ -362,7 +363,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
     // This avoids duplication and maintains focused, maintainable tests.
   });
   test('Test Case 02 - Check all elements on page MetalWorkingWarehouse', async ({ page }) => {
-    console.log('Test Case 02 - Check all elements on page MetalWorkingWarehouse');
+    logger.info('Test Case 02 - Check all elements on page MetalWorkingWarehouse');
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
     await allure.step('Step 1: Open the warehouse page', async () => {
@@ -394,7 +395,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 03 - Check all elements on page Assembly Warehouse', async ({ page }) => {
-    console.log('Test Case 03 - Check all elements on page Assembly Warehouse');
+    logger.info('Test Case 03 - Check all elements on page Assembly Warehouse');
 
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
@@ -415,7 +416,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 05 - Create Parts', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 05 - Create Parts');
+    logger.info('Test Case 05 - Create Parts');
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Step 01: Open the parts database page', async () => {
@@ -511,11 +512,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         // Highlight the option for visual validation
         await partsDatabsePage.waitAndHighlight(filterOption);
-        console.log('🎯 Highlighted first filter option');
+        logger.info('🎯 Highlighted first filter option');
 
         // Click on the first filter option
         await filterOption.click();
-        console.log('✅ Clicked on first filter option');
+        logger.info('✅ Clicked on first filter option');
         await page.waitForTimeout(TIMEOUTS.STANDARD);
       });
 
@@ -529,7 +530,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const isNestedModalVisible = await nestedModal.isVisible();
 
         if (isNestedModalVisible) {
-          console.log('🔍 Found nested modal, saving it first');
+          logger.info('🔍 Found nested modal, saving it first');
 
           // Look for the Save button in the nested modal
           const nestedSaveButton = nestedModal.locator(`button${SelectorsPartsDataBase.BUTTON_ADD_OPERATION_SAVE}`);
@@ -538,14 +539,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           if (nestedSaveButtonCount > 0) {
             // Highlight the nested Save button
             await partsDatabsePage.waitAndHighlight(nestedSaveButton);
-            console.log('🎯 Highlighted Save button in nested modal');
+            logger.info('🎯 Highlighted Save button in nested modal');
 
             // Click the Save button in the nested modal
             await nestedSaveButton.click({ force: true });
-            console.log('✅ Clicked Save button in nested modal');
+            logger.info('✅ Clicked Save button in nested modal');
             await page.waitForTimeout(TIMEOUTS.LONG);
           } else {
-            console.log('⚠️ No Save button found in nested modal');
+            logger.info('⚠️ No Save button found in nested modal');
           }
         }
 
@@ -556,14 +557,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         if (mainSaveButtonCount > 0) {
           // Highlight the main Save button
           await partsDatabsePage.waitAndHighlight(mainSaveButton);
-          console.log('🎯 Highlighted main Save button in tech process modal');
+          logger.info('🎯 Highlighted main Save button in tech process modal');
 
           // Click the main Save button
           await mainSaveButton.click({ force: true });
-          console.log('✅ Clicked main Save button in tech process modal');
+          logger.info('✅ Clicked main Save button in tech process modal');
           await page.waitForTimeout(TIMEOUTS.LONG);
         } else {
-          console.log('⚠️ Main Save button not found in tech process modal');
+          logger.info('⚠️ Main Save button not found in tech process modal');
         }
 
         // Wait for the modal to close
@@ -574,12 +575,12 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         const remainingSaveButtons = page.locator('button').filter({ hasText: 'Сохранить' });
         const remainingCount = await remainingSaveButtons.count();
         if (remainingCount > 0) {
-          console.log('⚠️ Modal still open after Save click, trying alternative approach');
+          logger.info('⚠️ Modal still open after Save click, trying alternative approach');
           // Try pressing Enter as alternative
           await page.keyboard.press('Enter');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
         } else {
-          console.log('✅ Modal closed successfully');
+          logger.info('✅ Modal closed successfully');
         }
       });
 
@@ -587,43 +588,43 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // Debug: Check what modals are currently open
         const allModals = page.locator(SelectorsPartsDataBase.DEBUG_ALL_MODALS_SELECTOR);
         const modalCount = await allModals.count();
-        console.log(`🔍 Found ${modalCount} modals currently open`);
+        logger.info(`🔍 Found ${modalCount} modals currently open`);
 
         for (let i = 0; i < modalCount; i++) {
           const modal = allModals.nth(i);
           const isVisible = await modal.isVisible();
           const testId = await modal.getAttribute('data-testid');
-          console.log(`🔍 Modal ${i}: visible=${isVisible}, testid=${testId}`);
+          logger.info(`🔍 Modal ${i}: visible=${isVisible}, testid=${testId}`);
         }
 
         // Check if we're still in a modal
         if (modalCount > 0) {
-          console.log('⚠️ Still in modal, cannot proceed to Step 13');
+          logger.info('⚠️ Still in modal, cannot proceed to Step 13');
           return; // Exit early if still in modal
         }
 
         // Debug: Check what page we're on and what tables are available
         const pageTitle = await page.title();
-        console.log(`🔍 Current page title: ${pageTitle}`);
+        logger.info(`🔍 Current page title: ${pageTitle}`);
 
         const allTables = page.locator(SelectorsPartsDataBase.DEBUG_ALL_TABLES_SELECTOR);
         const tableCount = await allTables.count();
-        console.log(`🔍 Found ${tableCount} tables on the page`);
+        logger.info(`🔍 Found ${tableCount} tables on the page`);
 
         for (let i = 0; i < tableCount; i++) {
           const table = allTables.nth(i);
           const testId = await table.getAttribute('data-testid');
           const isVisible = await table.isVisible();
-          console.log(`🔍 Table ${i}: visible=${isVisible}, testid=${testId}`);
+          logger.info(`🔍 Table ${i}: visible=${isVisible}, testid=${testId}`);
         }
 
         // Check if the expected table exists
         const expectedTable = page.locator(SelectorsPartsDataBase.TABLE_PROCESS);
         const tableExists = (await expectedTable.count()) > 0;
-        console.log(`🔍 Expected table exists: ${tableExists}`);
+        logger.info(`🔍 Expected table exists: ${tableExists}`);
 
         if (!tableExists) {
-          console.log('⚠️ Expected table not found, skipping Step 13');
+          logger.info('⚠️ Expected table not found, skipping Step 13');
           return; // Exit early if table doesn't exist
         }
 
@@ -643,7 +644,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           throw new Error('Не удалось найти столбец имени операции в заголовке таблицы процесса');
         }
         nameOprerationOnProcess = await partsDatabsePage.getValueOrClickFromFirstRow(SelectorsPartsDataBase.TABLE_PROCESS, nameColIndex);
-        console.log('Name process: ', nameOprerationOnProcess);
+        logger.info('Name process: ', nameOprerationOnProcess);
       });
 
       await allure.step('Step 14: Click on the Save button', async () => {
@@ -661,7 +662,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // Check if the cancel button exists and is visible
         const cancelButtonCount = await cancelButton.count();
         if (cancelButtonCount === 0) {
-          console.log('⚠️ Cancel button not found - page may have navigated after save. Skipping Step 15.');
+          logger.info('⚠️ Cancel button not found - page may have navigated after save. Skipping Step 15.');
           return;
         }
 
@@ -674,7 +675,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 06 - Create Cbed', async ({ page }) => {
-    console.log('Test Case 06 - Create Cbed');
+    logger.info('Test Case 06 - Create Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -763,7 +764,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER,
           nameColIndex,
         );
-        console.log('Name process Assembly: ', nameOprerationOnProcessAssebly);
+        logger.info('Name process Assembly: ', nameOprerationOnProcessAssebly);
       });
 
       await allure.step('Step 09: Click on the Save button', async () => {
@@ -779,7 +780,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 07 - Create Product', async ({ page }) => {
-    console.log('Test Case 07 - Create Product');
+    logger.info('Test Case 07 - Create Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -853,14 +854,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           SelectorsPartsDataBase.TABLE_PROCESS_ASSYMBLY_NAME,
         );
 
-        console.log('Column number with process: ', numberColumnOnNameProcess);
+        logger.info('Column number with process: ', numberColumnOnNameProcess);
 
         nameOprerationOnProcessIzd = await partsDatabsePage.getValueOrClickFromFirstRow(
           SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER,
           numberColumnOnNameProcess,
         );
 
-        console.log('Name process Izd: ', nameOprerationOnProcessIzd);
+        logger.info('Name process Izd: ', nameOprerationOnProcessIzd);
       });
 
       await allure.step('Step 09: Click on the Save button', async () => {
@@ -877,7 +878,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 08 - Get Initial Ordered Quantity from Metalworking Warehouse', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 08 - Get Initial Ordered Quantity from Metalworking Warehouse');
+    logger.info('Test Case 08 - Get Initial Ordered Quantity from Metalworking Warehouse');
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
     // Verify test data is available (Setup should have prepared it)
@@ -924,18 +925,18 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
           // Store the initial quantity for later comparison
           global.initialOrderedQuantity = initialOrderedQuantity;
-          console.log(`Initial ordered quantity for ${detail.name}: ${initialOrderedQuantity}`);
+          logger.info(`Initial ordered quantity for ${detail.name}: ${initialOrderedQuantity}`);
         } else {
           // No results found - this is expected for new details
           global.initialOrderedQuantity = '0';
-          console.log(`No existing orders found for ${detail.name} - starting with 0`);
+          logger.info(`No existing orders found for ${detail.name} - starting with 0`);
         }
       });
     }
   });
   test('Test Case 10 - Create Two Orders, Verify Total, and Archive Second Order', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
-    console.log('Test Case 10 - Create Two Orders, Verify Total, and Archive Second Order');
+    logger.info('Test Case 10 - Create Two Orders, Verify Total, and Archive Second Order');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
@@ -951,19 +952,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       let secondOrderNumber: string;
 
       await allure.step('Step 1: Create first order with quantity 50', async () => {
-        console.log('Creating first order with quantity 50...');
+        logger.info('Creating first order with quantity 50...');
         const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(detail.name, '50', Supplier.details);
 
         firstOrderNumber = result.checkOrderNumber;
-        console.log(`✅ First order created - Order number: ${firstOrderNumber}, Quantity: 50`);
+        logger.info(`✅ First order created - Order number: ${firstOrderNumber}, Quantity: 50`);
       });
 
       await allure.step('Step 2: Create second order with quantity 5', async () => {
-        console.log('Creating second order with quantity 5...');
+        logger.info('Creating second order with quantity 5...');
         const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(detail.name, '5', Supplier.details);
 
         secondOrderNumber = result.checkOrderNumber;
-        console.log(`✅ Second order created - Order number: ${secondOrderNumber}, Quantity: 5`);
+        logger.info(`✅ Second order created - Order number: ${secondOrderNumber}, Quantity: 5`);
       });
 
       await allure.step('Step 3: Go to Metalworking Warehouse and verify total quantity is 55', async () => {
@@ -1049,7 +1050,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // Refresh the page
         await page.reload();
         await metalworkingWarehouse.waitForNetworkIdle();
-        console.log('Page refreshed');
+        logger.info('Page refreshed');
       });
 
       await allure.step('Step 10: Search for detail again and verify quantity decreased by 5', async () => {
@@ -1085,13 +1086,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // Set the global variable for subsequent test cases
         global.pushedIntoProductionQuantity = remainingOrderedQuantity.toString();
         quantityLaunchInProduct = remainingOrderedQuantity;
-        console.log(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
+        logger.info(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
       });
     }
   });
   test('Test Case 11 - Archive Task and Verify Removal', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 11 - Archive Task and Verify Removal');
+    logger.info('Test Case 11 - Archive Task and Verify Removal');
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
     // Verify test data is available (Setup should have prepared it)
@@ -1124,7 +1125,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // Get all rows that match the detail name
         let rows = page.locator(`${SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE} tbody tr`);
         let rowCount = await rows.count();
-        console.log(`Found ${rowCount} task(s) to archive for ${detail.name}`);
+        logger.info(`Found ${rowCount} task(s) to archive for ${detail.name}`);
 
         // Archive all matching tasks (there might be multiple from previous test runs)
         let archivedCount = 0;
@@ -1167,19 +1168,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           
           if (newRowCount === rowCount) {
             // No change - might be stuck, break to avoid infinite loop
-            console.log(`⚠️ Row count unchanged after archive (${rowCount}), stopping archive loop`);
+            logger.info(`⚠️ Row count unchanged after archive (${rowCount}), stopping archive loop`);
             break;
           }
           
           rowCount = newRowCount;
-          console.log(`Archived 1 task, ${rowCount} task(s) remaining for ${detail.name}`);
+          logger.info(`Archived 1 task, ${rowCount} task(s) remaining for ${detail.name}`);
         }
         
         if (archivedCount >= maxArchives) {
-          console.log(`⚠️ Reached maximum archive limit (${maxArchives}), stopping`);
+          logger.info(`⚠️ Reached maximum archive limit (${maxArchives}), stopping`);
         }
         
-        console.log(`✅ Completed archiving ${archivedCount} task(s) for ${detail.name}`);
+        logger.info(`✅ Completed archiving ${archivedCount} task(s) for ${detail.name}`);
       });
 
       await allure.step('Step 4: Verify all tasks are archived', async () => {
@@ -1209,13 +1210,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           `Verify all tasks archived - no rows for ${detail.name}`,
           test.info(),
         );
-        console.log(`✅ All tasks successfully archived - no rows found for ${detail.name}`);
+        logger.info(`✅ All tasks successfully archived - no rows found for ${detail.name}`);
       });
     }
   });
   test('Test Case 13 Cbed - Get Initial Ordered Quantity from Assembly Warehouse', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 13 - Get Initial Ordered Quantity from Assembly Warehouse');
+    logger.info('Test Case 13 - Get Initial Ordered Quantity from Assembly Warehouse');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
     // Verify test data is available (Setup should have prepared it)
@@ -1258,18 +1259,18 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
           // Store the initial quantity for later comparison
           global.initialOrderedQuantity = initialOrderedQuantity;
-          console.log(`Initial ordered quantity for ${cbed.name}: ${initialOrderedQuantity}`);
+          logger.info(`Initial ordered quantity for ${cbed.name}: ${initialOrderedQuantity}`);
         } else {
           // No results found - this is expected for new CBED items
           global.initialOrderedQuantity = '0';
-          console.log(`No existing orders found for ${cbed.name} - starting with 0`);
+          logger.info(`No existing orders found for ${cbed.name} - starting with 0`);
         }
       });
     }
   });
   test('Test Case 14 Cbed - Create Two CBED Orders, Verify Total, and Archive Second Order', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
-    console.log('Test Case 14 - Create Two CBED Orders, Verify Total, and Archive Second Order');
+    logger.info('Test Case 14 - Create Two CBED Orders, Verify Total, and Archive Second Order');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
@@ -1286,19 +1287,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       let secondOrderNumber: string;
 
       await allure.step('Step 1: Create first CBED order with quantity 50', async () => {
-        console.log('Creating first CBED order with quantity 50...');
+        logger.info('Creating first CBED order with quantity 50...');
         const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(cbed.name, '50', Supplier.cbed);
 
         firstOrderNumber = result.checkOrderNumber;
-        console.log(`✅ First CBED order created - Order number: ${firstOrderNumber}, Quantity: 50`);
+        logger.info(`✅ First CBED order created - Order number: ${firstOrderNumber}, Quantity: 50`);
       });
 
       await allure.step('Step 2: Create second CBED order with quantity 5', async () => {
-        console.log('Creating second CBED order with quantity 5...');
+        logger.info('Creating second CBED order with quantity 5...');
         const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(cbed.name, '5', Supplier.cbed);
 
         secondOrderNumber = result.checkOrderNumber;
-        console.log(`✅ Second CBED order created - Order number: ${secondOrderNumber}, Quantity: 5`);
+        logger.info(`✅ Second CBED order created - Order number: ${secondOrderNumber}, Quantity: 5`);
       });
 
       await allure.step('Step 3: Go to Assembly Warehouse and verify total quantity is 55', async () => {
@@ -1379,7 +1380,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // Refresh the page
         await page.reload();
         await assemblyWarehouse.waitForNetworkIdle();
-        console.log('Page refreshed');
+        logger.info('Page refreshed');
       });
 
       await allure.step('Step 10: Search for CBED again and verify quantity decreased by 5', async () => {
@@ -1411,13 +1412,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         // Set the global variable for subsequent test cases
         quantityLaunchInProduct = remainingOrderedQuantity;
-        console.log(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
+        logger.info(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
       });
     }
   });
   test('Test Case 15 Cbed - Archive Task and Verify Removal', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 18 - Archive CBED Task and Verify Removal');
+    logger.info('Test Case 18 - Archive CBED Task and Verify Removal');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
     // Verify test data is available
@@ -1480,13 +1481,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           `Verify CBED task archived - no rows for ${cbed.name}`,
           test.info(),
         );
-        console.log(`CBED task successfully archived - no rows found for ${cbed.name}`);
+        logger.info(`CBED task successfully archived - no rows found for ${cbed.name}`);
       });
     }
   });
   test('Test Case 16 Izd - Get Initial Ordered Quantity from Assembly Warehouse', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 16 - Get Initial Ordered Quantity from Assembly Warehouse for IZD');
+    logger.info('Test Case 16 - Get Initial Ordered Quantity from Assembly Warehouse for IZD');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
     // Verify test data is available (Setup should have prepared it)
@@ -1529,11 +1530,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
           // Store the initial quantity for later comparison
           global.initialOrderedQuantity = initialOrderedQuantity;
-          console.log(`Initial ordered quantity for ${izd.name}: ${initialOrderedQuantity}`);
+          logger.info(`Initial ordered quantity for ${izd.name}: ${initialOrderedQuantity}`);
         } else {
           // No results found - this is expected for new IZD items
           global.initialOrderedQuantity = '0';
-          console.log(`No existing orders found for ${izd.name} - starting with 0`);
+          logger.info(`No existing orders found for ${izd.name} - starting with 0`);
         }
       });
     }
@@ -1541,7 +1542,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 17 Izd - Create Two IZD Orders, Verify Total, and Archive Second Order', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
-    console.log('Test Case 17 - Create Two IZD Orders, Verify Total, and Archive Second Order');
+    logger.info('Test Case 17 - Create Two IZD Orders, Verify Total, and Archive Second Order');
     const orderedFromSuppliersPage = new CreateOrderedFromSuppliersPage(page);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
 
@@ -1557,19 +1558,19 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       let secondOrderNumber: string;
 
       await allure.step('Step 1: Create first IZD order with quantity 50', async () => {
-        console.log('Creating first IZD order with quantity 50...');
+        logger.info('Creating first IZD order with quantity 50...');
         const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(izd.name, '50', Supplier.product);
 
         firstOrderNumber = result.checkOrderNumber;
-        console.log(`✅ First IZD order created - Order number: ${firstOrderNumber}, Quantity: 50`);
+        logger.info(`✅ First IZD order created - Order number: ${firstOrderNumber}, Quantity: 50`);
       });
 
       await allure.step('Step 2: Create second IZD order with quantity 5', async () => {
-        console.log('Creating second IZD order with quantity 5...');
+        logger.info('Creating second IZD order with quantity 5...');
         const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(izd.name, '5', Supplier.product);
 
         secondOrderNumber = result.checkOrderNumber;
-        console.log(`✅ Second IZD order created - Order number: ${secondOrderNumber}, Quantity: 5`);
+        logger.info(`✅ Second IZD order created - Order number: ${secondOrderNumber}, Quantity: 5`);
       });
 
       await allure.step('Step 3: Go to Assembly Warehouse and verify total quantity is 55', async () => {
@@ -1652,7 +1653,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
         // Refresh the page
         await page.reload();
         await metalworkingWarehouse.waitForNetworkIdle();
-        console.log('Page refreshed');
+        logger.info('Page refreshed');
       });
 
       await allure.step('Step 10: Search for IZD again and verify quantity decreased by 5', async () => {
@@ -1684,14 +1685,14 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
         // Set the global variable for subsequent test cases
         quantityLaunchInProduct = remainingOrderedQuantity;
-        console.log(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
+        logger.info(`✅ Set quantityLaunchInProduct to ${remainingOrderedQuantity} for subsequent test cases`);
       });
     }
   });
 
   test('Test Case 18 Izd - Archive Task and Verify Removal', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 18 - Archive IZD Task and Verify Removal');
+    logger.info('Test Case 18 - Archive IZD Task and Verify Removal');
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
 
     // Verify test data is available
@@ -1754,7 +1755,7 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           `Verify IZD task archived - no rows for ${izd.name}`,
           test.info(),
         );
-        console.log(`IZD task successfully archived - no rows found for ${izd.name}`);
+        logger.info(`IZD task successfully archived - no rows found for ${izd.name}`);
       });
     }
   });

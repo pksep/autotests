@@ -2,7 +2,7 @@ import { test, expect, ElementHandle } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec'; // Adjust the import path as necessary
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import { ENV, SELECTORS } from '../config'; // Import the configuration
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { countColumns } from '../lib/utils/utilities';
 import { allure } from 'allure-playwright';
 
@@ -399,7 +399,7 @@ export const runP010 = () => {
                 const allRows = await page.locator(`[data-testid="${tableId}"] tbody tr`).elementHandles() as ElementHandle<Element>[];
 
                 // Check if any rows are found and log the number of rows found
-                console.log(`Number of rows found: ${allRows.length}`);
+                logger.log(`Number of rows found: ${allRows.length}`);
 
                 const headerRows: ElementHandle<Element>[] = [];
 
@@ -413,7 +413,7 @@ export const runP010 = () => {
 
                 // Filter out header rows to get valid data rows
                 const validRows = await allRows.filter(row => !headerRows.includes(row));
-                console.log(`Rows found: ${validRows.length}`);
+                logger.log(`Rows found: ${validRows.length}`);
 
                 // Log the number of valid rows found
                 logger.info(`Rows found: ${validRows.length}`);

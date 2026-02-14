@@ -16,6 +16,7 @@
  */
 
 import { Page } from '@playwright/test'; // Import the Page class from Playwright for handling page interactions
+import logger from './utils/logger';
 
 /**
  * Button class provides methods to interact with buttons on the web page.

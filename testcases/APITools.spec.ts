@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APITools } from "../pages/APITools";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runToolsAPI = () => {
     logger.info(`Starting Tools API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runToolsAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Create tool without authentication", async () => {
-            console.log("Testing unauthenticated tool creation...");
+            logger.log("Testing unauthenticated tool creation...");
 
             const toolData = {
                 name: API_CONST.API_TEST_TOOL_NAME,
@@ -35,11 +35,11 @@ export const runToolsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated tool creation correctly rejected with 401");
+            logger.log("✅ Unauthenticated tool creation correctly rejected with 401");
         });
 
         await test.step("Test 2: Create tool with SQL injection in name", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -61,11 +61,11 @@ export const runToolsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Create tool with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -87,7 +87,7 @@ export const runToolsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -98,7 +98,7 @@ export const runToolsAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -123,11 +123,11 @@ export const runToolsAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Create tool with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 name: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -149,11 +149,11 @@ export const runToolsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidCreateResponse.status);
             expect(invalidCreateResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Create tool with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 name: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -175,7 +175,7 @@ export const runToolsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptyCreateResponse.status);
             expect(emptyCreateResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
     });
 
@@ -186,7 +186,7 @@ export const runToolsAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -198,11 +198,11 @@ export const runToolsAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for create tool", async () => {
-            console.log("Testing create tool response time performance...");
+            logger.log("Testing create tool response time performance...");
 
             const toolData = {
                 name: API_CONST.API_TEST_TOOL_NAME,
@@ -218,11 +218,11 @@ export const runToolsAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceCreateResponse.status).toBe(201);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Create tool response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Create tool response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent tool operations", async () => {
-            console.log("Testing concurrent tool operations...");
+            logger.log("Testing concurrent tool operations...");
 
             const toolData = {
                 name: API_CONST.API_TEST_TOOL_NAME_UPDATED,
@@ -240,7 +240,7 @@ export const runToolsAPI = () => {
                 expect(response.status).toBe(201);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent tool operations handled successfully");
+            logger.log("✅ Concurrent tool operations handled successfully");
         });
     });
 };

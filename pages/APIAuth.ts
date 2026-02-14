@@ -1,7 +1,7 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { APIPageObject } from '../lib/APIPage';
 import { ENV } from '../config';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 
 export class AuthAPI extends APIPageObject {
     constructor(page: Page) {
@@ -60,10 +60,10 @@ export class AuthAPI extends APIPageObject {
 
         try {
             responseData = await response.json();
-            console.log(`🔍 JSON response parsed successfully: ${JSON.stringify(responseData).substring(0, 200)}...`);
+            logger.log(`🔍 JSON response parsed successfully: ${JSON.stringify(responseData).substring(0, 200)}...`);
         } catch (e) {
             responseData = await response.text();
-            console.log(`🔍 Text response: "${responseData}" (length: ${responseData.length})`);
+            logger.log(`🔍 Text response: "${responseData}" (length: ${responseData.length})`);
         }
 
         // Response processed

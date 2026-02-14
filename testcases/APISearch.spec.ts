@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APISearch } from "../pages/APISearch";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runSearchAPI = () => {
     logger.info(`Starting Search API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runSearchAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Search without authentication", async () => {
-            console.log("Testing unauthenticated search...");
+            logger.log("Testing unauthenticated search...");
 
             const searchData = {
                 query: API_CONST.API_TEST_SEARCH_QUERY,
@@ -34,11 +34,11 @@ export const runSearchAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated search correctly rejected with 401");
+            logger.log("✅ Unauthenticated search correctly rejected with 401");
         });
 
         await test.step("Test 2: Search with SQL injection in query", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 query: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -59,11 +59,11 @@ export const runSearchAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Search with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 query: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -84,7 +84,7 @@ export const runSearchAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -95,7 +95,7 @@ export const runSearchAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -120,11 +120,11 @@ export const runSearchAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Search with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 query: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -145,11 +145,11 @@ export const runSearchAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidSearchResponse.status);
             expect(invalidSearchResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Search with empty query", async () => {
-            console.log("Testing empty query validation...");
+            logger.log("Testing empty query validation...");
 
             const emptyData = {
                 query: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -170,7 +170,7 @@ export const runSearchAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptySearchResponse.status);
             expect(emptySearchResponse.data).toBeDefined();
-            console.log("✅ Empty query correctly rejected with 400");
+            logger.log("✅ Empty query correctly rejected with 400");
         });
     });
 
@@ -181,7 +181,7 @@ export const runSearchAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -193,11 +193,11 @@ export const runSearchAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for search", async () => {
-            console.log("Testing search response time performance...");
+            logger.log("Testing search response time performance...");
 
             const searchData = {
                 query: API_CONST.API_TEST_SEARCH_QUERY,
@@ -212,11 +212,11 @@ export const runSearchAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceSearchResponse.status).toBe(200);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Search response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Search response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent search attempts", async () => {
-            console.log("Testing concurrent search attempts...");
+            logger.log("Testing concurrent search attempts...");
 
             const searchData = {
                 query: API_CONST.API_TEST_SEARCH_QUERY_UPDATED,
@@ -233,7 +233,7 @@ export const runSearchAPI = () => {
                 expect(response.status).toBe(200);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent search attempts handled successfully");
+            logger.log("✅ Concurrent search attempts handled successfully");
         });
     });
 };

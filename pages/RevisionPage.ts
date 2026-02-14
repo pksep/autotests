@@ -1,6 +1,7 @@
 import { expect, Page } from '@playwright/test';
 import { PageObject } from '../lib/Page';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import { exec } from 'child_process';
 import { time } from 'console';
 import exp from 'constants';
@@ -25,13 +26,13 @@ export class CreateRevisionPage extends PageObject {
       inputLocator = this.page.locator('[data-testid="InputNumber-Input"]').first();
     }
 
-    await inputLocator.waitFor({ state: 'visible', timeout: 10000 });
+    await inputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     await inputLocator.fill(quantity);
     await inputLocator.press('Enter');
   }
 
   async checkWarehouseBalances(quantity: string, tableSelector?: string) {
-    await this.page.waitForTimeout(1000);
+    await this.page.waitForTimeout(TIMEOUTS.STANDARD);
 
     // If table selector is provided, scope to first row of that table
     // Otherwise, use the generic selector (for backward compatibility)
@@ -45,7 +46,7 @@ export class CreateRevisionPage extends PageObject {
       checkBalanceCell = this.page.locator('[data-testid="TableRevisionPagination-TableData-Current"]').first();
     }
 
-    await checkBalanceCell.waitFor({ state: 'visible', timeout: 10000 });
+    await checkBalanceCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     await checkBalanceCell.scrollIntoViewIfNeeded();
 
     // Highlight the balance cell
@@ -53,10 +54,10 @@ export class CreateRevisionPage extends PageObject {
       el.style.backgroundColor = 'lightyellow';
       el.style.border = '2px solid orange';
     });
-    await this.page.waitForTimeout(300);
+    await this.page.waitForTimeout(TIMEOUTS.SHORT);
 
-    const checkBalance = (await checkBalanceCell.textContent())?.trim() ?? '';
-    expect(checkBalance).toBe(quantity);
+    // Wait for the cell to show the expected balance (UI/backend may update after confirm)
+    await expect(checkBalanceCell).toHaveText(quantity, { timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
   }
 
   /**
@@ -70,6 +71,7 @@ export class CreateRevisionPage extends PageObject {
    *   - refreshAndSearchAfter: If true, refreshes page and searches again after confirmation
    *   - searchInputDataTestId: Data test ID for search input when refreshing (default: 'TableRevisionPagination-SearchInput-Dropdown-Input')
    *   - waitAfterConfirm: Timeout in ms after confirmation (default: 1000)
+   *   - switchToTabSelector: When refreshAndSearchAfter is true, click this tab after reload (e.g. Сборки/Детали) so the table is visible
    */
   async changeBalanceAndConfirmArchive(
     searchTerm: string,
@@ -80,6 +82,7 @@ export class CreateRevisionPage extends PageObject {
       refreshAndSearchAfter?: boolean;
       searchInputDataTestId?: string;
       waitAfterConfirm?: number;
+      switchToTabSelector?: string;
     }
   ): Promise<void> {
     // Check that the first row contains the search term
@@ -94,7 +97,7 @@ export class CreateRevisionPage extends PageObject {
     // Wait for confirmation to process
     await this.page.waitForTimeout(options?.waitAfterConfirm || 1000);
 
-    // Optionally refresh page and search again
+    // Optionally refresh page and search again (same pattern as product cleanup at start of Test Case 36)
     if (options?.refreshAndSearchAfter) {
       await this.page.waitForLoadState('networkidle');
       await this.page.waitForTimeout(2000);
@@ -103,6 +106,12 @@ export class CreateRevisionPage extends PageObject {
       await this.page.reload();
       await this.page.waitForLoadState('networkidle');
       await this.page.waitForTimeout(1000);
+
+      // If we're on a tabbed view (e.g. Сборки/Детали), switch to the correct tab so the table is visible
+      if (options.switchToTabSelector) {
+        await this.page.locator(options.switchToTabSelector).first().click();
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      }
 
       // Search again
       await this.searchTable(searchTerm, tableSelector, options.searchInputDataTestId || 'TableRevisionPagination-SearchInput-Dropdown-Input');

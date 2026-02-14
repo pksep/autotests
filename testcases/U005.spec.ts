@@ -1,7 +1,7 @@
 import { test, expect, Locator } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
 import { ENV, SELECTORS } from '../config';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U005-PC01.json'; // Import your test data
@@ -88,7 +88,7 @@ export const runU005 = () => {
 
         // Validate the filter's label (text content)
         const actualLabel = await filterLocator.textContent();
-        console.log(`Filter: Expected label = "${expectedFilter.label}", Actual label = "${actualLabel?.trim()}"`);
+        logger.log(`Filter: Expected label = "${expectedFilter.label}", Actual label = "${actualLabel?.trim()}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -100,7 +100,7 @@ export const runU005 = () => {
 
         // Validate whether the filter is enabled or disabled
         const isDisabled = await filterLocator.isDisabled();
-        console.log(`Filter: Expected state = "${expectedFilter.state}", Actual state = "${!isDisabled}"`);
+        logger.log(`Filter: Expected state = "${expectedFilter.state}", Actual state = "${!isDisabled}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -111,7 +111,7 @@ export const runU005 = () => {
         );
       }
 
-      console.log('All filters have been validated successfully.');
+      logger.log('All filters have been validated successfully.');
     });
     await allure.step('Step 04: Проверяем наличие кнопки (Verify the presence of buttons on the page)', async () => {
       // Wait for the page to stabilize
@@ -182,7 +182,7 @@ export const runU005 = () => {
           const buttonsLocator = await page.locator(`[data-testid="${buttonDataTestId}"]`);
           const buttonTexts = await buttonsLocator.evaluateAll(elements => elements.map(e => e.textContent!.trim()));
 
-          console.log('Button texts:', buttonTexts);
+          logger.log('Button texts:', buttonTexts);
 
           // Validate the button's visibility and state
           await expectSoftWithScreenshot(
@@ -224,8 +224,8 @@ export const runU005 = () => {
         await page.waitForLoadState('networkidle');
 
         // Log for debugging
-        console.log('Expected Titles:', titles);
-        console.log('Received Titles:', normalizedH3Titles);
+        logger.log('Expected Titles:', titles);
+        logger.log('Received Titles:', normalizedH3Titles);
 
         // Validate length
         await expectSoftWithScreenshot(
@@ -267,7 +267,7 @@ export const runU005 = () => {
           // Check if the button is visible and enabled
           await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
           const isButtonReady = await shortagePage.isButtonVisibleTestId(page, buttonDataTestId, buttonLabel, expectedState);
-          console.log('Button :' + buttonDataTestId + ' ' + buttonLabel + ' ' + expectedState);
+          logger.log('Button :' + buttonDataTestId + ' ' + buttonLabel + ' ' + expectedState);
           // Validate the button's visibility and state
           await expectSoftWithScreenshot(
             page,
@@ -301,7 +301,7 @@ export const runU005 = () => {
           // Placeholder function to validate the table
           const isTableValid = await shortagePage.validateTable(page, tableTitle, tableRows);
 
-          console.log(`Table validation for "${tableTitle}":`, isTableValid);
+          logger.log(`Table validation for "${tableTitle}":`, isTableValid);
           // Validate the table's content
           await expectSoftWithScreenshot(
             page,
@@ -373,8 +373,8 @@ export const runU005 = () => {
         await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         // Log for debugging
-        console.log('Expected Titles:', titles);
-        console.log('Received Titles:', h3Titles);
+        logger.log('Expected Titles:', titles);
+        logger.log('Received Titles:', h3Titles);
 
         // Validate length
         await expectSoftWithScreenshot(
@@ -461,7 +461,7 @@ export const runU005 = () => {
           // Now groupValue is an array of table definitions.
           for (const table of groupValue as any[]) {
             const tableTitle = table.title;
-            console.log(table);
+            logger.log(table);
             // Locate the table using its data-testid attribute.
 
             await page.waitForTimeout(TIMEOUTS.INPUT_SET);
@@ -741,14 +741,14 @@ export const runU005 = () => {
 
       // Retrieve all H3 titles from the specified class
       const h4Titles = await shortagePage.getAllH4TitlesInModalByTestId(page, SelectorsPartsDataBase.CONFIRM_MODAL);
-      console.log(h4Titles);
+      logger.log(h4Titles);
       const normalizedH4Titles = h4Titles.map(title => title.trim());
 
       // Wait for the page to stabilize
       await page.waitForLoadState('networkidle');
       // Log for debugging
-      console.log('Expected Titles:', titles);
-      console.log('Received Titles:', h4Titles);
+      logger.log('Expected Titles:', titles);
+      logger.log('Received Titles:', h4Titles);
 
         // Validate length
         await expectSoftWithScreenshot(
@@ -823,8 +823,8 @@ export const runU005 = () => {
       await page.waitForLoadState('networkidle');
 
       // Log for debugging
-      console.log('Expected Titles:', titles);
-      console.log('Received Titles:', normalizedH3Titles);
+      logger.log('Expected Titles:', titles);
+      logger.log('Received Titles:', normalizedH3Titles);
 
       // Validate length
       await expectSoftWithScreenshot(
@@ -862,7 +862,7 @@ export const runU005 = () => {
         // Perform the validation for the button
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
           await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-          console.log(buttonTestId + ' ' + buttonLabel + ' ' + expectedState);
+          logger.log(buttonTestId + ' ' + buttonLabel + ' ' + expectedState);
 
           const isButtonReady = await shortagePage.isButtonVisibleTestId(
             page,
@@ -872,7 +872,7 @@ export const runU005 = () => {
             'AddDetal-FileComponent-ModalBaseFiles', // Updated dialog testId without CSS class
           );
 
-          console.log('Button :' + buttonTestId + ' ' + buttonLabel + ' ' + expectedState);
+          logger.log('Button :' + buttonTestId + ' ' + buttonLabel + ' ' + expectedState);
           await expectSoftWithScreenshot(
         page,
         () => {
@@ -905,7 +905,7 @@ export const runU005 = () => {
 
         // Get the text content of the switch item and trim it
         const actualLabel = await switchItem.textContent();
-        console.log(`Switch item: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
+        logger.log(`Switch item: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
 
         // Compare the actual label with the expected label
         await expectSoftWithScreenshot(
@@ -923,10 +923,10 @@ export const runU005 = () => {
         // Wait briefly to let the UI update after clicking
         await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
-        console.log(`Clicked on switch item with label: "${expectedLabel}"`);
+        logger.log(`Clicked on switch item with label: "${expectedLabel}"`);
       }
 
-      console.log('Switcher validation completed successfully.');
+      logger.log('Switcher validation completed successfully.');
     });
     await allure.step('Step 28: Validate filter table (Validate filter above table in Добавить из базы dialog)', async () => {
       // Retrieve the expected filter labels from the JSON file
@@ -963,7 +963,7 @@ export const runU005 = () => {
 
         // Get the text content of the filter item and trim it
         const actualLabel = await filterItem.textContent();
-        console.log(`Filter item: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
+        logger.log(`Filter item: Expected = "${expectedLabel}", Actual = "${actualLabel?.trim()}"`);
 
         // Compare the actual label with the expected label
         await expectSoftWithScreenshot(
@@ -975,10 +975,10 @@ export const runU005 = () => {
           test.info(),
         );
 
-        console.log(`Validated filter item with label: "${expectedLabel}"`);
+        logger.log(`Validated filter item with label: "${expectedLabel}"`);
       }
 
-      console.log('Filter validation completed successfully.');
+      logger.log('Filter validation completed successfully.');
     });
     await allure.step('Step 29: Validate table headers in Добавить из базы dialog (Validate table headers in Добавить из базы dialog)', async () => {
       await page.waitForLoadState('networkidle');
@@ -1009,7 +1009,7 @@ export const runU005 = () => {
         'Verify header count matches expected',
         test.info(),
       );
-      console.log(`Number of headers: ${headerCount}`);
+      logger.log(`Number of headers: ${headerCount}`);
 
       // Iterate over each header and compare its text content with the expected value
       for (let i = 0; i < expectedHeaders.length; i++) {
@@ -1025,7 +1025,7 @@ export const runU005 = () => {
 
         // Get the text content of the header and trim it
         const actualTitle = await actualHeader.textContent();
-        console.log(`Header ${i + 1}: Expected = "${expectedTitle}", Actual = "${actualTitle?.trim()}"`);
+        logger.log(`Header ${i + 1}: Expected = "${expectedTitle}", Actual = "${actualTitle?.trim()}"`);
 
         // Compare the actual header text with the expected title
         await expectSoftWithScreenshot(
@@ -1038,7 +1038,7 @@ export const runU005 = () => {
         );
       }
 
-      console.log('Table headers have been validated successfully.');
+      logger.log('Table headers have been validated successfully.');
     });
     await allure.step('Step 30: Verify that search works for the files table (Verify that search works for each column)', async () => {
       // Locate the switch item using data-testid and highlight it for debugging
@@ -1082,7 +1082,7 @@ export const runU005 = () => {
 
       // Verify that the field contains the correct value
       const fieldValue = await searchField.inputValue();
-      console.log('Verified input value:', fieldValue);
+      logger.log('Verified input value:', fieldValue);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1107,7 +1107,7 @@ export const runU005 = () => {
       // Wait for the first row to be visible and validate its content
       await firstRow.waitFor({ state: 'visible' });
       const rowText = await firstRow.textContent();
-      console.log('First row text:', rowText);
+      logger.log('First row text:', rowText);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1117,7 +1117,7 @@ export const runU005 = () => {
         test.info(),
       );
 
-      console.log('Search verification completed successfully.');
+      logger.log('Search verification completed successfully.');
     });
   });
   test('TestCase 02 - создат дитайл', async ({ browser, page }) => {
@@ -1314,11 +1314,11 @@ export const runU005 = () => {
       const desiredValue = '999';
       await inputField.fill(desiredValue);
 
-      console.log(`Set the value "${desiredValue}" in the input field.`);
+      logger.log(`Set the value "${desiredValue}" in the input field.`);
 
       // Verify the value
       const currentValue = await inputField.inputValue();
-      console.log('Verified input value:', currentValue);
+      logger.log('Verified input value:', currentValue);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1350,7 +1350,7 @@ export const runU005 = () => {
         return element.files?.length || 0;
       });
 
-      console.log(`Number of files uploaded: ${uploadedFiles}`);
+      logger.log(`Number of files uploaded: ${uploadedFiles}`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1363,7 +1363,7 @@ export const runU005 = () => {
       // Optional: Wait for visual or backend updates
       await page.waitForLoadState('networkidle');
 
-      console.log('Files successfully uploaded via the hidden input.');
+      logger.log('Files successfully uploaded via the hidden input.');
     });
 
     await allure.step('Step 10: Проверяем, что в модальном окне отображаются заголовки(check the headers in the dialog)', async () => {
@@ -1486,20 +1486,20 @@ export const runU005 = () => {
 
         // Ensure the textarea is visible
         await expect(textarea).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-        console.log(`Textarea in file section ${i + 1} is visible.`);
+        logger.log(`Textarea in file section ${i + 1} is visible.`);
 
         // Focus on the textarea to verify it is writable
         await textarea.focus();
-        console.log(`Textarea in file section ${i + 1} is focused.`);
+        logger.log(`Textarea in file section ${i + 1} is focused.`);
 
         // Type text into the textarea
         const testValue = `Test note ${i + 1}`;
         await textarea.fill(testValue);
-        console.log(`Value entered into textarea in file section ${i + 1}: ${testValue}`);
+        logger.log(`Value entered into textarea in file section ${i + 1}: ${testValue}`);
 
         // Verify the entered value
         const currentValue = await textarea.inputValue();
-        console.log(`Textarea current value in file section ${i + 1}: ${currentValue}`);
+        logger.log(`Textarea current value in file section ${i + 1}: ${currentValue}`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1528,7 +1528,7 @@ export const runU005 = () => {
         // Perform the validation for the button
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
           await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-          console.log(`Checking button: ${buttonTestId} - ${buttonLabel} - Expected State: ${expectedState}`);
+          logger.log(`Checking button: ${buttonTestId} - ${buttonLabel} - Expected State: ${expectedState}`);
 
           // Map button data-testid to constants if needed, otherwise construct from test data
           const buttonSelector = `[data-testid="${buttonTestId}"]`;
@@ -1538,7 +1538,7 @@ export const runU005 = () => {
           const isButtonVisible = await buttonLocator.isVisible();
           const isButtonEnabled = await buttonLocator.isEnabled();
 
-          console.log(`Button: ${buttonTestId} - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
+          logger.log(`Button: ${buttonTestId} - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
 
           // Validate the button's visibility and state
           await expectSoftWithScreenshot(
@@ -1616,7 +1616,7 @@ export const runU005 = () => {
 
       const section = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_SECTION);
       await section.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-      console.log('Dynamic content in modal section loaded.');
+      logger.log('Dynamic content in modal section loaded.');
 
       // Extract individual file sections from the main section
       const fileSections = await section.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE).all();
@@ -1627,12 +1627,12 @@ export const runU005 = () => {
       // Call the function from shortagePage class, passing extracted filenames
       await shortagePage.validateFileNames(page, fileSections, filenamesWithoutExtension);
 
-      console.log('All file fields validated successfully.');
+      logger.log('All file fields validated successfully.');
       await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 16: Click the Загрузить все файлы button and confirm modal closure', async () => {
-      console.log('Starting file upload process...');
+      logger.log('Starting file upload process...');
 
       // Wait for the page to stabilize
       await page.waitForLoadState('networkidle');
@@ -1640,7 +1640,7 @@ export const runU005 = () => {
       // Locate the upload button using data-testid
       const uploadButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD);
       const modalLocator = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_DIALOG);
-      console.log('Upload button and modal located.');
+      logger.log('Upload button and modal located.');
 
       const maxRetries = 50;
       let retryCounter = 0;
@@ -1649,25 +1649,25 @@ export const runU005 = () => {
         // Check if modal exists in the DOM
         const modalCount = await modalLocator.count();
         if (modalCount === 0) {
-          console.log('Modal is no longer present in the DOM. Upload succeeded!');
+          logger.log('Modal is no longer present in the DOM. Upload succeeded!');
           break; // Exit the loop when the modal is gone
         }
 
-        console.log(`Attempt ${retryCounter + 1}: Clicking upload button.`);
+        logger.log(`Attempt ${retryCounter + 1}: Clicking upload button.`);
 
         // Highlight button for debugging
         await shortagePage.highlightElement(uploadButton, HIGHLIGHT_PENDING);
 
         // Click the upload button
         await uploadButton.click();
-        console.log('Upload button clicked.');
+        logger.log('Upload button clicked.');
 
         // Wait for notifications
         await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
         // Check modal visibility again after the button click
         if ((await modalLocator.count()) === 0) {
-          console.log('Modal closed after button click. Upload succeeded!');
+          logger.log('Modal closed after button click. Upload succeeded!');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
           break;
         }
@@ -1681,18 +1681,18 @@ export const runU005 = () => {
         }
 
         if (!notification) {
-          console.log('No notification detected. Assuming upload still in progress/succeeded.');
+          logger.log('No notification detected. Assuming upload still in progress/succeeded.');
         } else if (notification.message === 'Файл с таким именем уже существует') {
-          console.log('Duplicate filename detected. Updating all filenames.');
+          logger.log('Duplicate filename detected. Updating all filenames.');
           retryCounter++;
 
           const sectionsCount = await page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT).count();
-          console.log(`Found ${sectionsCount} file sections to update filenames.`);
+          logger.log(`Found ${sectionsCount} file sections to update filenames.`);
 
           for (let i = 0; i < sectionsCount; i++) {
             // Check if modal still exists before proceeding with the loop
             if ((await modalLocator.count()) === 0) {
-              console.log('Modal closed during filename updates. Exiting loop.');
+              logger.log('Modal closed during filename updates. Exiting loop.');
               break;
             }
 
@@ -1701,11 +1701,11 @@ export const runU005 = () => {
             try {
               // Check if field is visible before interaction
               if (!(await fileInput.isVisible())) {
-                console.log(`Input field in section ${i + 1} is no longer visible. Skipping...`);
+                logger.log(`Input field in section ${i + 1} is no longer visible. Skipping...`);
                 continue;
               }
 
-              console.log(`Updating filename for section ${i + 1}.`);
+              logger.log(`Updating filename for section ${i + 1}.`);
 
               const currentValue = await fileInput.inputValue();
               await fileInput.fill('');
@@ -1720,20 +1720,20 @@ export const runU005 = () => {
                 input.dispatchEvent(new Event('change', { bubbles: true }));
               });
 
-              console.log(`Filename updated to "${updatedValue}" for section ${i + 1}.`);
+              logger.log(`Filename updated to "${updatedValue}" for section ${i + 1}.`);
             } catch (error) {
-              console.log(`Error updating filename for section ${i + 1}. Skipping...`);
+              logger.log(`Error updating filename for section ${i + 1}. Skipping...`);
               break;
             }
           }
         } else if (notification) {
-          console.log(`Unexpected notification: ${notification.message}`);
+          logger.log(`Unexpected notification: ${notification.message}`);
           break; // Exit on unexpected notifications
         } else {
-          console.log('No notification detected. Assuming upload succeeded.');
+          logger.log('No notification detected. Assuming upload succeeded.');
         }
 
-        console.log('Waiting before retrying...');
+        logger.log('Waiting before retrying...');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
@@ -1741,11 +1741,11 @@ export const runU005 = () => {
         throw new Error(`Failed to upload files after ${maxRetries} retries.`);
       }
 
-      console.log('File upload process completed successfully.');
+      logger.log('File upload process completed successfully.');
     });
 
     await allure.step('Step 17: Verify uploaded file names with wildcard matching and extension validation', async () => {
-      console.log('Starting file verification process...');
+      logger.log('Starting file verification process...');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(TIMEOUTS.EXTENDED);
       // Locate the parent section for the specific table
@@ -1755,7 +1755,7 @@ export const runU005 = () => {
         row.style.border = '2px solid red';
         row.style.color = 'blue';
       });
-      console.log('Located parent section for the file table.');
+      logger.log('Located parent section for the file table.');
 
       await page.waitForTimeout(TIMEOUTS.STANDARD);
 
@@ -1765,11 +1765,11 @@ export const runU005 = () => {
       tableRows
         .evaluateAll(rows => rows.map(row => row.textContent))
         .then(texts => {
-          console.log('Table Rows Content:', texts);
+          logger.log('Table Rows Content:', texts);
         });
 
       for (const { name, extension } of baseFileNamesToVerify) {
-        console.log(`Verifying presence of file with base name: ${name} and extension: ${extension}`);
+        logger.log(`Verifying presence of file with base name: ${name} and extension: ${extension}`);
 
         // Locate rows where the second column contains the base name
         const matchingRows = tableRows.locator(`td:nth-child(2):has-text("${name}")`);
@@ -1783,16 +1783,16 @@ export const runU005 = () => {
             row.style.color = 'blue';
           });
 
-          console.log(`Found ${rowCount} rows matching base name "${name}".`);
+          logger.log(`Found ${rowCount} rows matching base name "${name}".`);
           let extensionMatch = false;
 
           for (let i = 0; i < rowCount; i++) {
             const rowText = await matchingRows.nth(i).textContent();
-            console.log(`Row ${i + 1}: ${rowText}`);
+            logger.log(`Row ${i + 1}: ${rowText}`);
 
             // Check if the row text contains the expected extension
             if (rowText && rowText.includes(extension)) {
-              console.log(`File "${name}" with extension "${extension}" is present.`);
+              logger.log(`File "${name}" with extension "${extension}" is present.`);
               extensionMatch = true;
               break;
             }
@@ -1808,7 +1808,7 @@ export const runU005 = () => {
         }
       }
 
-      console.log('File verification process completed successfully.');
+      logger.log('File verification process completed successfully.');
     });
     await allure.step('Step 18: Open Добавить из базы dialog (Open Добавить из базы dialog)', async () => {
       await page.waitForLoadState('networkidle');
@@ -1817,7 +1817,7 @@ export const runU005 = () => {
       const dragDropModal = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL);
       const modalCount = await dragDropModal.count();
       if (modalCount > 0) {
-        console.log('Drag and drop modal is open, closing it...');
+        logger.log('Drag and drop modal is open, closing it...');
         // Try to close the modal by clicking outside or pressing Escape
         await page.keyboard.press('Escape').catch(() => {});
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -1901,7 +1901,7 @@ export const runU005 = () => {
 
       // Verify that the field contains the correct value
       const fieldValue = await searchField.inputValue();
-      console.log('Verified input value:', fieldValue);
+      logger.log('Verified input value:', fieldValue);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1911,14 +1911,14 @@ export const runU005 = () => {
         test.info(),
       );
       const firstRow1 = leftTable.locator('tbody tr:first-child');
-      console.log('First Row:', await firstRow1.textContent());
+      logger.log('First Row:', await firstRow1.textContent());
       // Trigger the search by pressing 'Enter'
       await searchField.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       // Locate and highlight the first row in the table
       const firstRow = leftTable.locator('tbody tr:first-child');
-      console.log('First Row 2:', await firstRow.textContent());
+      logger.log('First Row 2:', await firstRow.textContent());
       await firstRow.evaluate(row => {
         row.style.backgroundColor = 'yellow';
         row.style.border = '2px solid red';
@@ -1928,7 +1928,7 @@ export const runU005 = () => {
       // Wait for the first row to be visible and validate its content
       await firstRow.waitFor({ state: 'visible' });
       const rowText = await firstRow.textContent();
-      console.log('First row text:', rowText);
+      logger.log('First row text:', rowText);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1938,7 +1938,7 @@ export const runU005 = () => {
         test.info(),
       );
 
-      console.log('Search verification completed successfully.');
+      logger.log('Search verification completed successfully.');
     });
 
     let selectedFileType: string = '';
@@ -2027,7 +2027,7 @@ export const runU005 = () => {
       );
 
       let isRowFound = false;
-      console.log(rowCount);
+      logger.log(rowCount);
       // Iterate through each row
       for (let i = 0; i < rowCount; i++) {
         const row = rowsLocator.nth(i);
@@ -2038,7 +2038,7 @@ export const runU005 = () => {
         const tableFileName = await row.locator('td').nth(2).textContent();
         const tableFileNameCell = await row.locator('td').nth(2);
 
-        console.log(`Row ${i + 1}: FileType=${tableFileType?.trim()}, FileName=${tableFileName?.trim()}`);
+        logger.log(`Row ${i + 1}: FileType=${tableFileType?.trim()}, FileName=${tableFileName?.trim()}`);
 
         // Compare the extracted values
         if (tableFileType?.trim() === selectedFileType) {
@@ -2056,7 +2056,7 @@ export const runU005 = () => {
             row.style.border = '2px solid red';
             row.style.color = 'white';
           });
-          console.log(`Selected row found in row ${i + 1}`);
+          logger.log(`Selected row found in row ${i + 1}`);
         }
       }
       await expectSoftWithScreenshot(
@@ -2089,7 +2089,7 @@ export const runU005 = () => {
       //const parentSection = page.locator('section.attach-file-component');
       await page.waitForTimeout(TIMEOUTS.STANDARD);
       const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
-      console.log('Located parent section for the file table.');
+      logger.log('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
       //const tableRows = parentSection.locator('tbody .table-yui-kit__tr');
@@ -2097,24 +2097,24 @@ export const runU005 = () => {
 
       const rowCount = await tableRows.count();
 
-      console.log(`Found ${rowCount} rows in the table.`);
+      logger.log(`Found ${rowCount} rows in the table.`);
 
       let fileFound = false;
 
       for (let i = 0; i < rowCount; i++) {
         const row = tableRows.nth(i);
         const rowHtml = await row.evaluate(rowElement => rowElement.outerHTML);
-        //console.log(`Row ${i + 1} HTML: ${rowHtml}`);table-td table-document__td
+        //logger.log(`Row ${i + 1} HTML: ${rowHtml}`);table-td table-document__td
         const fileNameCell = row.locator('[data-testid^="AddDetal-FileComponent-DocumentTable-Tbody-Name"]');
         await fileNameCell.waitFor({ state: 'visible' });
         const fileNameText = await fileNameCell.textContent();
 
-        console.log(`Row ${i + 1}: ${fileNameText}`);
+        logger.log(`Row ${i + 1}: ${fileNameText}`);
 
         // Check if the current row contains the selected file name
         if (fileNameText?.trim() === selectedFileName) {
           // Match exact name
-          console.log(`Selected file name "${selectedFileName}" found in row ${i + 1}. Highlighting...`);
+          logger.log(`Selected file name "${selectedFileName}" found in row ${i + 1}. Highlighting...`);
           await fileNameCell.evaluate(rowElement => {
             rowElement.style.backgroundColor = 'yellow';
             rowElement.style.border = '2px solid red';
@@ -2129,7 +2129,7 @@ export const runU005 = () => {
         throw new Error(`Selected file name "${selectedFileName}" was not found in the table.`);
       }
       await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-      console.log('File search and highlight process completed successfully.');
+      logger.log('File search and highlight process completed successfully.');
     });
     await allure.step('Step 24: Удалите первый файл из списка медиафайлов.(Remove the first file from the list of attached media files.)', async () => {
       await page.waitForLoadState('networkidle');
@@ -2158,7 +2158,7 @@ export const runU005 = () => {
       );
       // Locate the parent section for the specific table
       const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
-      console.log('Located parent section for the file table.');
+      logger.log('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
       const tableRows = parentSection.locator('[data-testid^="AddDetal-FileComponent-DocumentTable-Tbody-TableRow"]');

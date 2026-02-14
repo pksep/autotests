@@ -15,7 +15,8 @@ import { Page, expect, Locator } from '@playwright/test';
 import { Click } from '../Page';
 import { expectSoftWithScreenshot } from '../utils/utilities';
 import { TestInfo } from '@playwright/test';
-import logger from '../logger';
+import logger from '../utils/logger';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 
 export class RowCellHelper {
   constructor(private page: Page) {}
@@ -36,13 +37,16 @@ export class RowCellHelper {
       throw new Error('В таблице нет строк.');
     }
 
-    const firstRow = rows.nth(0);
+    const firstRow = rows.first();
+    const cellLocator = firstRow.locator('td').nth(cellIndex);
+    await cellLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+
     await firstRow.evaluate((el: HTMLElement) => {
       el.style.backgroundColor = 'yellow';
       el.style.border = '2px solid red';
       el.style.color = 'blue';
     });
-    await this.page.waitForTimeout(5000);
+    await this.page.waitForTimeout(TIMEOUTS.VERY_LONG);
     const cells = await firstRow.locator('td').allInnerTexts();
 
     if (cellIndex < 0 || cellIndex > cells.length) {
@@ -50,7 +54,6 @@ export class RowCellHelper {
     }
 
     const valueInCell = cells[cellIndex];
-    const cellLocator = firstRow.locator('td').nth(cellIndex);
     await cellLocator.evaluate((el: HTMLElement) => {
       el.style.backgroundColor = 'red';
       el.style.border = '2px solid red';
@@ -239,17 +242,17 @@ export class RowCellHelper {
     // Debug: Check if table has any rows at all
     const allRows = await this.page.locator(`${locator} tbody tr`);
     const rowCount = await allRows.count();
-    console.log(`DEBUG: Total rows in table: ${rowCount}`);
+    logger.log(`DEBUG: Total rows in table: ${rowCount}`);
 
     if (rowCount === 0) {
-      console.log(`DEBUG: Table is empty - no rows found`);
+      logger.log(`DEBUG: Table is empty - no rows found`);
       throw new Error(`Table is empty - no rows found in ${locator}`);
     }
 
     // Debug: Check what's in the first row
     const firstRow = await this.page.locator(`${locator} tbody tr:first-child`);
     const firstRowText = await firstRow.textContent();
-    console.log(`DEBUG: First row text content: "${firstRowText?.trim()}"`);
+    logger.log(`DEBUG: First row text content: "${firstRowText?.trim()}"`);
 
     // Получаем ячейки только первой строки
     const cells = await this.page.locator(`${locator} tbody tr:first-child td`);
@@ -257,8 +260,8 @@ export class RowCellHelper {
     const cellTexts = await cells.allInnerTexts();
 
     // Debug: Log all cell texts to see what's in the table
-    console.log(`DEBUG: All cell texts in first row: [${cellTexts.map(text => `"${text.trim()}"`).join(', ')}]`);
-    console.log(`DEBUG: Looking for: "${name.trim()}"`);
+    logger.log(`DEBUG: All cell texts in first row: [${cellTexts.map(text => `"${text.trim()}"`).join(', ')}]`);
+    logger.log(`DEBUG: Looking for: "${name.trim()}"`);
 
     // Находим ячейку, которая содержит искомое значение
     let foundValue = cellTexts.find(cellText => cellText.trim().toLowerCase().includes(name.trim().toLowerCase()));
@@ -268,11 +271,11 @@ export class RowCellHelper {
       // Дополнительная проверка: ищем значение в остальных строках таблицы
       const rows = await this.page.locator(`${locator} tbody tr`);
       const rowsCount = await rows.count();
-      console.log(`DEBUG: Searching remaining ${rowsCount} rows for "${name.trim()}"`);
+      logger.log(`DEBUG: Searching remaining ${rowsCount} rows for "${name.trim()}"`);
 
       for (let i = 0; i < rowsCount; i++) {
         const rowText = (await rows.nth(i).textContent())?.trim() || '';
-        console.log(`DEBUG: Row ${i} content: "${rowText}"`);
+        logger.log(`DEBUG: Row ${i} content: "${rowText}"`);
         if (rowText.toLowerCase().includes(name.trim().toLowerCase())) {
           foundValue = rowText;
           foundRowIndex = i;
@@ -309,7 +312,7 @@ export class RowCellHelper {
       );
     } else {
       // Выводим найденное значение в консоль
-      console.log(`Значение "${name}" найдено: ${foundValue || 'не найдено'}`);
+      logger.log(`Значение "${name}" найдено: ${foundValue || 'не найдено'}`);
     }
 
     return true;

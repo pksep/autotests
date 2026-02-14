@@ -9,7 +9,7 @@
  */
 
 import { Page } from '@playwright/test';
-import logger from '../logger';
+import logger from '../utils/logger';
 
 export class LoginHelper {
   constructor(private page: Page) {}
@@ -83,30 +83,30 @@ export class LoginHelper {
 
       // Step 1: Fill "Табельный номер" field
       await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-Input"]', { state: 'visible', timeout: 10000 });
-      console.log('Табельный номер field is visible.');
+      logger.log('Табельный номер field is visible.');
       await page.click('[data-testid="LoginForm-TabelNumber-Combobox-Input"]'); // Open dropdown
 
       await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"]', { state: 'visible' });
       await page.click(`[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"] >> text="${tabel}"`);
-      console.log(`Табельный номер set to: ${tabel}`);
+      logger.log(`Табельный номер set to: ${tabel}`);
 
       // Step 2: Fill "Логин" field
       await page.waitForSelector('[data-testid="LoginForm-Login-Combobox-Input"]', { state: 'visible', timeout: 10000 });
-      console.log('Логин field is visible.');
+      logger.log('Логин field is visible.');
       await page.fill('[data-testid="LoginForm-Login-Combobox-Input"]', login);
-      console.log(`Логин set to: ${login}`);
+      logger.log(`Логин set to: ${login}`);
 
       // Ensure login selection is applied
       await page.waitForTimeout(500);
 
       // Step 3: Fill "Пароль" field
-      console.log('Waiting for password field...');
+      logger.log('Waiting for password field...');
       await page.waitForSelector('[data-testid="Password-Inputs-Input-Input"]', { state: 'visible', timeout: 10000 });
-      console.log('Password field is visible.');
+      logger.log('Password field is visible.');
       await page.fill('[data-testid="Password-Inputs-Input-Input"]', password);
-      console.log('Password filled successfully.');
+      logger.log('Password filled successfully.');
 
-      console.log('Form filled successfully!');
+      logger.log('Form filled successfully!');
     } catch (error) {
       console.error('Error filling the login form:', error);
       throw error;

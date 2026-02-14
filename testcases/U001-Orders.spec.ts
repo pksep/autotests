@@ -16,6 +16,7 @@ import { CreateLoadingTaskPage } from '../pages/LoadingTaskPage';
 import { ISpetificationData, Click, expectSoftWithScreenshot } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
+import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
 const {
@@ -32,10 +33,10 @@ const {
 let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
 export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Order Management (Test Cases 05-07)`);
+  logger.log(`Start of the test: U001 Order Management (Test Cases 05-07)`);
 
   test('Test Case 05 - Deleting customer orders', async ({ page }) => {
-    console.log('Test Case 05 - Deleting customer orders');
+    logger.log('Test Case 05 - Deleting customer orders');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
@@ -60,7 +61,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       const firstRow = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).first();
       const rowCount = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).count();
       if (rowCount === 0) {
-        console.log(`No orders found for product "${nameProductNew}". Exiting...`);
+        logger.log(`No orders found for product "${nameProductNew}". Exiting...`);
         break;
       }
 
@@ -73,7 +74,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
 
       // Получаем номер заказа (3-я ячейка, индекс 2)
       const orderNumber = await firstRow.locator('td').nth(2).textContent();
-      console.log('AAAAAAAA' + orderNumber);
+      logger.log('AAAAAAAA' + orderNumber);
 
       // Select row and wait for archive button to be enabled using Playwright's built-in waiting
       const archiveButton = page.locator(LoadingTasksSelectors.buttonArchive, { hasText: 'Архив' });
@@ -86,7 +87,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
 
       // Wait for archive button to be enabled using Playwright's expect
       await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
-      console.log('Archive button enabled after row selection');
+      logger.log('Archive button enabled after row selection');
 
       // Archive and confirm
       await loadingTaskPage.archiveAndConfirm(LoadingTasksSelectors.buttonArchive, PartsDBSelectors.BUTTON_CONFIRM, {
@@ -98,7 +99,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       await page.waitForTimeout(TIMEOUTS.LONG);
 
       // Re-search to refresh the table before processing the next row
-      console.log('Re-searching after archive to refresh table...');
+      logger.log('Re-searching after archive to refresh table...');
       await loadingTaskPage.searchAndWaitForTable(nameProductNew, LoadingTasksSelectors.SHIPMENTS_TABLE, LoadingTasksSelectors.SHIPMENTS_TABLE_BODY, {
         useRedesign: true,
         timeoutBeforeWait: 3000,
@@ -107,7 +108,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
   });
 
   test('Test Case 06 - Loading Task', async ({ page }) => {
-    console.log('Test Case 06 - Loading Task');
+    logger.log('Test Case 06 - Loading Task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
@@ -264,7 +265,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
     });
 
     await allure.step('Step 19: We set the date according to urgency', async () => {
-      console.log('Step 19: We set the date according to urgency');
+      logger.log('Step 19: We set the date according to urgency');
       await page.locator(LoadingTasksSelectors.calendarTrigger).click();
       await page.locator(LoadingTasksSelectors.calendarPopover).isVisible();
 
@@ -322,18 +323,18 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       descendantsCbedArray.length = 0;
       descendantsDetailArray.length = 0;
       // Save Assembly units and Parts from the Specification to an array
-      console.log('Before preservingDescendants:');
-      console.log('descendantsCbedArray length:', descendantsCbedArray.length);
-      console.log('descendantsDetailArray length:', descendantsDetailArray.length);
+      logger.log('Before preservingDescendants:');
+      logger.log('descendantsCbedArray length:', descendantsCbedArray.length);
+      logger.log('descendantsDetailArray length:', descendantsDetailArray.length);
       
       await loadingTaskPage.preservingDescendants(descendantsCbedArray, descendantsDetailArray);
       
       // Verify that arrays were populated
-      console.log('After preservingDescendants:');
-      console.log('descendantsCbedArray:', descendantsCbedArray);
-      console.log('descendantsDetailArray:', descendantsDetailArray);
-      console.log('descendantsCbedArray length:', descendantsCbedArray.length);
-      console.log('descendantsDetailArray length:', descendantsDetailArray.length);
+      logger.log('After preservingDescendants:');
+      logger.log('descendantsCbedArray:', descendantsCbedArray);
+      logger.log('descendantsDetailArray:', descendantsDetailArray);
+      logger.log('descendantsCbedArray length:', descendantsCbedArray.length);
+      logger.log('descendantsDetailArray length:', descendantsDetailArray.length);
       
       await expectSoftWithScreenshot(
         page,
@@ -370,12 +371,12 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       // Update shared state
       orderNumber.orderNumber = orderInfo.orderNumber || '';
       orderNumber.orderDate = orderInfo.orderDate;
-      console.log('orderNumber: ', orderNumber);
+      logger.log('orderNumber: ', orderNumber);
     });
   });
 
   test('Test Case 07 - Checking the urgency date and quantity in a shipment task', async ({ page }) => {
-    console.log('Test Case 07 - Checking the urgency date and quantity in a shipment task');
+    logger.log('Test Case 07 - Checking the urgency date and quantity in a shipment task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const mainTableLoadingTask = 'IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-Table';
@@ -413,7 +414,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       const quantityValue = await quantityCell.textContent();
       const quantityOnTable = quantityValue?.trim() || '';
 
-      console.log('Количество заказанных сущностей в заказе: ', quantityOnTable);
+      logger.log('Количество заказанных сущностей в заказе: ', quantityOnTable);
 
       await expectSoftWithScreenshot(
         page,
@@ -429,7 +430,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       const urgencyDateText = await page.locator('tbody .date-picker-yui-kit__header-btn span').first().textContent();
       urgencyDateOnTable = urgencyDateText?.trim() || '';
 
-      console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+      logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
       await expectSoftWithScreenshot(
         page,

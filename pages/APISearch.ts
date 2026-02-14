@@ -1,7 +1,7 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { APIPageObject } from '../lib/APIPage';
 import { ENV } from '../config';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 
 export class SearchAPI extends APIPageObject {
     constructor(page: Page) {

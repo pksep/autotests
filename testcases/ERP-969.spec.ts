@@ -14,6 +14,7 @@ import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import * as HIGHLIGHT from '../lib/Constants/HighlightStyles';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
+import logger from '../lib/utils/logger';
 
 let orderNumber: string | null = null; // Declare outside to share between steps
 let orderedQuantity: number = 2; // Declare outside to share between steps
@@ -64,10 +65,10 @@ export const runERP_969 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -81,7 +82,7 @@ export const runERP_969 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${TEST_DATA.NEW_DETAIL_A}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${TEST_DATA.NEW_DETAIL_A}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -146,7 +147,7 @@ export const runERP_969 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test(`TestCase 06 - Архивация всех совпадающих деталей (Cleanup) ${TEST_DATA.NEW_SB_A}`, async ({ page }) => {
@@ -184,10 +185,10 @@ export const runERP_969 = () => {
       // Retrieve all rows.
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results for СБ: ${TEST_DATA.NEW_SB_A}.`);
+      logger.log(`Found ${rowCount} rows in search results for СБ: ${TEST_DATA.NEW_SB_A}.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving СБ.');
+        logger.log('No matching rows found for archiving СБ.');
         return;
       }
 
@@ -200,7 +201,7 @@ export const runERP_969 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${TEST_DATA.NEW_SB_A}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${TEST_DATA.NEW_SB_A}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving СБ.');
@@ -264,7 +265,7 @@ export const runERP_969 = () => {
         });
       }
 
-      console.log(`Все ${matchingRows.length} совпадающих деталей СБ были архивированы.`);
+      logger.log(`Все ${matchingRows.length} совпадающих деталей СБ были архивированы.`);
     });
   });
 
@@ -587,7 +588,7 @@ export const runERP_969 = () => {
       // Now get all <tr> within the last tbody
       const resultRows = allBodies.locator('tr');
       const rowCount = await resultRows.count();
-      console.log(`✅ Found ${rowCount} row(s) in the data tbody`);
+      logger.log(`✅ Found ${rowCount} row(s) in the data tbody`);
       await skladPage.waitForTimeout(TIMEOUTS.VERY_LONG);
       // Expect exactly one matching row from the search
       await expectSoftWithScreenshot(
@@ -712,7 +713,7 @@ export const runERP_969 = () => {
       const dataBody = allTbody.last();
       const rows = dataBody.locator('tr');
       const rowCount = await rows.count();
-      console.log(`Verified ${rowCount} row(s) in the updated table`);
+      logger.log(`Verified ${rowCount} row(s) in the updated table`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -738,7 +739,7 @@ export const runERP_969 = () => {
 
       const value = await editDiv.inputValue();
       if (value === null) throw new Error('Editable cell content is null.');
-      console.log('Confirmed saved value after reload:', value.trim());
+      logger.log('Confirmed saved value after reload:', value.trim());
 
       await expectSoftWithScreenshot(
         page,
@@ -792,7 +793,7 @@ export const runERP_969 = () => {
       // Verify exactly one matching row is returned
       const rows = residualsTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} row(s) in residuals table for detail "${TEST_DATA.NEW_DETAIL_A}".`);
+      logger.log(`Found ${rowCount} row(s) in residuals table for detail "${TEST_DATA.NEW_DETAIL_A}".`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -807,7 +808,7 @@ export const runERP_969 = () => {
       await detailsPage.highlightElement(fifthCell);
       const cellText = await fifthCell.textContent();
       if (cellText === null) throw new Error('Fifth column content is null.');
-      console.log('Residual quantity found in 5th column:', cellText.trim());
+      logger.log('Residual quantity found in 5th column:', cellText.trim());
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -887,12 +888,10 @@ export const runERP_969 = () => {
       await warehousePage.waitForLoadState('networkidle');
       await warehousePage.waitForTimeout(TIMEOUTS.LONG);
 
-      // const productionDialog = page.locator(`dialog[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE}"]`);
-      // productionTable = productionDialog.locator(SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE);
 
       const rows = productionTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} row(s) in production table for SB "${TEST_DATA.NEW_SB_A}".`);
+      logger.log(`Found ${rowCount} row(s) in production table for SB "${TEST_DATA.NEW_SB_A}".`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -933,7 +932,7 @@ export const runERP_969 = () => {
 
       const bottomRows = bottomTable.locator('tbody tr');
       const bottomRowCount = await bottomRows.count();
-      console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${TEST_DATA.NEW_SB_A}".`);
+      logger.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${TEST_DATA.NEW_SB_A}".`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -975,7 +974,7 @@ export const runERP_969 = () => {
       // If not found in row, try the full page locator
       const inputCount = await quantityInput.count();
       if (inputCount === 0) {
-        console.log('Input not found in row, trying full page locator...');
+        logger.log('Input not found in row, trying full page locator...');
         quantityInput = page.locator(SelectorsOrderedFromSuppliers.QUANTITY_INPUT_FULL);
       }
 
@@ -986,11 +985,11 @@ export const runERP_969 = () => {
       // Check if input is readonly or disabled
       const isReadonly = await quantityInput.evaluate((el: HTMLInputElement) => el.readOnly);
       const isDisabled = await quantityInput.evaluate((el: HTMLInputElement) => el.disabled);
-      console.log(`Input readonly: ${isReadonly}, disabled: ${isDisabled}`);
+      logger.log(`Input readonly: ${isReadonly}, disabled: ${isDisabled}`);
 
       // If readonly, try to remove it and set value via JavaScript
       if (isReadonly) {
-        console.log('Input is readonly, using JavaScript to set value...');
+        logger.log('Input is readonly, using JavaScript to set value...');
         await quantityInput.evaluate((el: HTMLInputElement, value: string) => {
           el.removeAttribute('readonly');
           el.value = value;
@@ -1018,11 +1017,11 @@ export const runERP_969 = () => {
 
       // Verify the value was set
       const inputValue = await quantityInput.inputValue();
-      console.log(`Quantity input value after setting: "${inputValue}", expected: "${orderedQuantity}"`);
+      logger.log(`Quantity input value after setting: "${inputValue}", expected: "${orderedQuantity}"`);
 
       // If still not set, try JavaScript direct assignment
       if (inputValue !== orderedQuantity.toString()) {
-        console.log('Value still not set, trying direct JavaScript assignment...');
+        logger.log('Value still not set, trying direct JavaScript assignment...');
         await quantityInput.evaluate((el: HTMLInputElement, value: string) => {
           el.value = value;
           el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1042,7 +1041,7 @@ export const runERP_969 = () => {
 
       // Verify the value is still there after Enter
       const finalValue = await quantityInput.inputValue();
-      console.log(`Quantity input final value: "${finalValue}"`);
+      logger.log(`Quantity input final value: "${finalValue}"`);
 
       // Verify the modal title
       const modalTitle = warehousePage.locator('h4').first();
@@ -1079,7 +1078,7 @@ export const runERP_969 = () => {
         }, orderNumber);
       }
 
-      console.log(`Captured order number: ${orderNumber}`);
+      logger.log(`Captured order number: ${orderNumber}`);
 
       const orderButton = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_CREATE_ORDER_SAVE_BUTTON);
       await detailsPage.highlightElement(orderButton);
@@ -1098,13 +1097,13 @@ export const runERP_969 = () => {
       const modalDialog = page.locator(SelectorsOrderedFromSuppliers.MODAL_CHOOSED_TABLE2_CBED);
       const isModalVisible = await modalDialog.isVisible().catch(() => false);
       if (isModalVisible) {
-        console.log('Modal dialog is open, closing it...');
+        logger.log('Modal dialog is open, closing it...');
         // Try to close the modal by pressing Escape
         await page.keyboard.press('Escape');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         // Wait for modal to be hidden
         await modalDialog.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {
-          console.log('Modal did not close with Escape, trying click outside...');
+          logger.log('Modal did not close with Escape, trying click outside...');
         });
         // If still visible, try clicking outside the modal
         if (await modalDialog.isVisible().catch(() => false)) {
@@ -1122,7 +1121,7 @@ export const runERP_969 = () => {
       const isSmallModalOpen = await smallModalDialog.isVisible().catch(() => false);
 
       if (isSmallModalOpen) {
-        console.log('Small modal dialog with 4 options is open, closing it...');
+        logger.log('Small modal dialog with 4 options is open, closing it...');
 
         // Highlight the dialog
         await detailsPage.highlightElement(smallModalDialog);
@@ -1137,12 +1136,12 @@ export const runERP_969 = () => {
           // First, try previous sibling
           if (dialog.previousElementSibling) {
             elementToClick = dialog.previousElementSibling as HTMLElement;
-            console.log('Found previous sibling element to click');
+            logger.log('Found previous sibling element to click');
           }
           // If no previous sibling, try parent element
           else if (dialog.parentElement) {
             elementToClick = dialog.parentElement;
-            console.log('Found parent element to click');
+            logger.log('Found parent element to click');
           }
 
           // If we found an element, click it
@@ -1154,18 +1153,18 @@ export const runERP_969 = () => {
             elementToClick.click();
             return true;
           }
-          console.log('No element found above dialog to click');
+          logger.log('No element found above dialog to click');
           return false;
         });
 
         if (!clicked) {
-          console.log('Failed to click element above dialog, trying parent locator...');
+          logger.log('Failed to click element above dialog, trying parent locator...');
           // Try using Playwright locator to click parent
           const parentElement = smallModalDialog.locator('..');
           const parentCount = await parentElement.count();
           if (parentCount > 0) {
             await parentElement.click();
-            console.log('Clicked parent element using locator');
+            logger.log('Clicked parent element using locator');
           }
         }
 
@@ -1175,14 +1174,14 @@ export const runERP_969 = () => {
         // Don't wait too long - just check if it's closed and proceed
         try {
           await smallModalDialog.waitFor({ state: 'hidden', timeout: 3000 });
-          console.log('✅ Small modal dialog successfully closed');
+          logger.log('✅ Small modal dialog successfully closed');
         } catch (error) {
           // Try waiting for detached state with shorter timeout
           try {
             await smallModalDialog.waitFor({ state: 'detached', timeout: 2000 });
-            console.log('✅ Small modal dialog successfully detached from DOM');
+            logger.log('✅ Small modal dialog successfully detached from DOM');
           } catch (detachedError) {
-            console.log('⚠️ Warning: Small modal may still be present, but proceeding with force click...');
+            logger.log('⚠️ Warning: Small modal may still be present, but proceeding with force click...');
             // As fallback, try clicking the parent element directly
             const parentElement = smallModalDialog.locator('..');
             if ((await parentElement.count()) > 0) {
@@ -1194,7 +1193,7 @@ export const runERP_969 = () => {
       }
 
       // Verify button is present and active before clicking
-      console.log('Verifying order button is present and active...');
+      logger.log('Verifying order button is present and active...');
 
       // Wait for button to be visible and attached to DOM
       await expectSoftWithScreenshot(
@@ -1205,12 +1204,12 @@ export const runERP_969 = () => {
         'Verify order button is visible',
         test.info(),
       );
-      console.log('✅ Order button is visible');
+      logger.log('✅ Order button is visible');
 
       // Verify button is enabled
       const isButtonEnabled = await orderButton.isEnabled().catch(() => false);
       if (!isButtonEnabled) {
-        console.log('Button is not enabled, waiting for it to become enabled...');
+        logger.log('Button is not enabled, waiting for it to become enabled...');
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1220,7 +1219,7 @@ export const runERP_969 = () => {
           test.info(),
         );
       }
-      console.log('✅ Order button is enabled');
+      logger.log('✅ Order button is enabled');
 
       // Change highlighting to indicate we're about to click (use PENDING style)
       await detailsPage.highlightElement(orderButton, HIGHLIGHT.HIGHLIGHT_PENDING);
@@ -1234,7 +1233,7 @@ export const runERP_969 = () => {
       await orderButton.waitFor({ state: 'visible' });
       await page.waitForTimeout(TIMEOUTS.SHORT);
 
-      console.log('About to click the order button...');
+      logger.log('About to click the order button...');
 
       // Try clicking at 1,1 first to close any modals
       await warehousePage.mouse.click(1, 1);
@@ -1245,43 +1244,43 @@ export const runERP_969 = () => {
       try {
         await orderButton.click({ timeout: 5000 });
         clickSuccessful = true;
-        console.log('✅ Order button clicked successfully (normal click)');
+        logger.log('✅ Order button clicked successfully (normal click)');
       } catch (error) {
-        console.log('Normal click failed, trying force click...');
+        logger.log('Normal click failed, trying force click...');
         try {
           // If normal click fails, try force click
           await orderButton.click({ force: true, timeout: 5000 });
           clickSuccessful = true;
-          console.log('✅ Order button clicked successfully (force click)');
+          logger.log('✅ Order button clicked successfully (force click)');
         } catch (forceError) {
-          console.log('Force click also failed, trying JavaScript click...');
+          logger.log('Force click also failed, trying JavaScript click...');
           // As last resort, use JavaScript click
           await orderButton.evaluate((button: HTMLElement) => {
             (button as HTMLButtonElement).click();
           });
           clickSuccessful = true;
-          console.log('✅ Order button clicked successfully (JavaScript click)');
+          logger.log('✅ Order button clicked successfully (JavaScript click)');
         }
       }
 
       if (!clickSuccessful) {
         throw new Error('Failed to click order button with all methods');
       }
-      console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
-      console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
-      console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
-      console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
-      console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
+      logger.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
+      logger.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
+      logger.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
+      logger.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
+      logger.log('XXXXXXXXXXXXXXXXXXXXXXXXXX');
       await warehousePage.waitForTimeout(TIMEOUTS.VERY_LONG);
       await warehousePage.waitForLoadState('networkidle');
       // Verify success notification contains the order number
       //await detailsPage.verifyDetailSuccessMessage(`Заказ №${orderNumber} отправлен в производство`);
-      console.log('НННННННННННННН');
-      console.log('НННННННННННННН');
-      console.log('НННННННННННННН');
-      console.log('НННННННННННННН');
-      console.log('НННННННННННННН');
-      console.log('НННННННННННННН');
+      logger.log('НННННННННННННН');
+      logger.log('НННННННННННННН');
+      logger.log('НННННННННННННН');
+      logger.log('НННННННННННННН');
+      logger.log('НННННННННННННН');
+      logger.log('НННННННННННННН');
       // Close the modal by clicking at position 1,1
       await page.mouse.click(1, 1);
       await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
@@ -1321,11 +1320,11 @@ export const runERP_969 = () => {
       const tbodyElements = orderTable.locator('tbody');
       const tbodyCount = await tbodyElements.count();
 
-      console.log(`Found ${tbodyCount} tbody element(s) in order table.`);
+      logger.log(`Found ${tbodyCount} tbody element(s) in order table.`);
 
       // Create the search pattern with "C" prefix
       const searchPattern = `${orderNumber}`;
-      console.log(`Looking for order with pattern: "${searchPattern}"`);
+      logger.log(`Looking for order with pattern: "${searchPattern}"`);
 
       let foundOrder = false;
 
@@ -1335,33 +1334,33 @@ export const runERP_969 = () => {
         const rows = tbody.locator('tr');
         const rowCount = await rows.count();
 
-        console.log(`Checking tbody ${i + 1}, found ${rowCount} rows`);
+        logger.log(`Checking tbody ${i + 1}, found ${rowCount} rows`);
 
         for (let j = 0; j < rowCount; j++) {
           const row = rows.nth(j);
           const firstCell = row.locator('td').first();
           const cellText = await firstCell.textContent();
 
-          console.log(`Row ${j + 1} in tbody ${i + 1}: "${cellText}"`);
+          logger.log(`Row ${j + 1} in tbody ${i + 1}: "${cellText}"`);
 
           if (cellText?.trim() === searchPattern) {
-            console.log(`✅ Found matching order: "${cellText}"`);
+            logger.log(`✅ Found matching order: "${cellText}"`);
 
             // Highlight the found row
             await detailsPage.highlightElement(row, HIGHLIGHT.HIGHLIGHT_SUCCESS);
 
             foundOrder = true;
             targetRow = row;
-            console.log(`✅ Target row assigned: ${targetRow ? 'success' : 'failed'}`);
+            logger.log(`✅ Target row assigned: ${targetRow ? 'success' : 'failed'}`);
             break;
           } else {
-            console.log(`❌ No matching order found in tbody ${i + 1}`);
+            logger.log(`❌ No matching order found in tbody ${i + 1}`);
             await detailsPage.highlightElement(row, HIGHLIGHT.HIGHLIGHT_ERROR);
           }
         }
 
         if (foundOrder) {
-          console.log(`✅ Breaking out of tbody loop, order found`);
+          logger.log(`✅ Breaking out of tbody loop, order found`);
           break;
         }
       }
@@ -1376,8 +1375,8 @@ export const runERP_969 = () => {
         'Verify order was found and target row is not null',
         test.info(),
       );
-      console.log(`✅ Order "${searchPattern}" was found and highlighted`);
-      console.log(`✅ Target row is ready for Step 15: ${targetRow ? 'yes' : 'no'}`);
+      logger.log(`✅ Order "${searchPattern}" was found and highlighted`);
+      logger.log(`✅ Target row is ready for Step 15: ${targetRow ? 'yes' : 'no'}`);
     });
 
     await allure.step('Step 15: Click the found order row and verify order details in modal', async () => {
@@ -1393,7 +1392,7 @@ export const runERP_969 = () => {
       );
       await detailsPage.highlightElement(dateCell, HIGHLIGHT.HIGHLIGHT_PENDING);
       const orderDate = await dateCell.textContent();
-      console.log(`Order date from table: "${orderDate}"`);
+      logger.log(`Order date from table: "${orderDate}"`);
 
       // Click the found row to open the modal
       await targetRow.dblclick();
@@ -1438,7 +1437,7 @@ export const runERP_969 = () => {
         test.info(),
       );
       const modalDate = await modalDateElement.textContent();
-      console.log(`Modal date: "${modalDate}"`);
+      logger.log(`Modal date: "${modalDate}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1461,7 +1460,7 @@ export const runERP_969 = () => {
         test.info(),
       );
       const modalOrderNumber = await modalOrderNumberElement.textContent();
-      console.log(`Modal order number: "${modalOrderNumber}"`);
+      logger.log(`Modal order number: "${modalOrderNumber}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1502,7 +1501,7 @@ export const runERP_969 = () => {
       const firstColumn = firstDataRow.locator('td').nth(1);
       await detailsPage.highlightElement(firstColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const firstColumnText = await firstColumn.textContent();
-      console.log(`First column (order number): "${firstColumnText}"`);
+      logger.log(`First column (order number): "${firstColumnText}"`);
       // Order number column contains plain order number without suffix
       await expectSoftWithScreenshot(
         page,
@@ -1517,7 +1516,7 @@ export const runERP_969 = () => {
       const thirdColumn = firstDataRow.locator('td').nth(3); // Item at index 3
       await detailsPage.highlightElement(thirdColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const thirdColumnText = await thirdColumn.textContent();
-      console.log(`Third column (item): "${thirdColumnText}"`);
+      logger.log(`Third column (item): "${thirdColumnText}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1531,7 +1530,7 @@ export const runERP_969 = () => {
       const fourthColumn = firstDataRow.locator('td').nth(4); // 4th column (index 3)
       await detailsPage.highlightElement(fourthColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const fourthColumnText = await fourthColumn.textContent();
-      console.log(`Fourth column (status): "${fourthColumnText}"`);
+      logger.log(`Fourth column (status): "${fourthColumnText}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1545,7 +1544,7 @@ export const runERP_969 = () => {
       const completedColumn = firstDataRow.locator('td').nth(5);
       await detailsPage.highlightElement(completedColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const completedColumnText = await completedColumn.textContent();
-      console.log(`Completed column (index 5): "${completedColumnText}"`);
+      logger.log(`Completed column (index 5): "${completedColumnText}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1561,7 +1560,7 @@ export const runERP_969 = () => {
       await detailsPage.highlightElement(orderedColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
       const orderedInput = orderedColumn.locator('input');
       const orderedColumnValue = await orderedInput.inputValue();
-      console.log(`Ordered column (index 6) input value: "${orderedColumnValue}"`);
+      logger.log(`Ordered column (index 6) input value: "${orderedColumnValue}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1643,10 +1642,10 @@ export const runERP_969 = () => {
 
       // Sub-step 16.5: Search for our SB in the table
       await allure.step('Sub-step 16.5: Search for our SB in the table', async () => {
-        console.log(`Searching for: "${TEST_DATA.NEW_SB_A}"`);
+        logger.log(`Searching for: "${TEST_DATA.NEW_SB_A}"`);
         await kittingPageHelper.searchWithPressSequentially(SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT, TEST_DATA.NEW_SB_A);
         const rowCount = await kittingTable.locator('tbody tr').count();
-        console.log(`Rows after search: ${rowCount}`);
+        logger.log(`Rows after search: ${rowCount}`);
       });
 
       // Sub-step 16.6: Verify search result in first row
@@ -1661,7 +1660,7 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(targetColumn, HIGHLIGHT.HIGHLIGHT_PENDING);
         await kittingPage.waitForTimeout(TIMEOUTS.LONG);
         const columnText = await targetColumn.textContent();
-        console.log(`Column 3 value: "${columnText}"`);
+        logger.log(`Column 3 value: "${columnText}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1689,13 +1688,13 @@ export const runERP_969 = () => {
         // Try to find any dialog element first
         // const anyDialog = kittingPage.locator('dialog[open]');
         // const dialogCount = await anyDialog.count();
-        // console.log(`Found ${dialogCount} open dialog(s)`);
+        // logger.log(`Found ${dialogCount} open dialog(s)`);
 
         // if (dialogCount > 0) {
         //     // Get the data-testid of the first dialog
         //     const firstDialog = anyDialog.first();
         //     const dialogTestId = await firstDialog.getAttribute('data-testid');
-        //     console.log(`First dialog data-testid: "${dialogTestId}"`);
+        //     logger.log(`First dialog data-testid: "${dialogTestId}"`);
         // }
 
         waybillModal = kittingPage.locator(SelectorsERP969.WAYBILL_MODAL_OPEN_PATTERN);
@@ -1727,7 +1726,7 @@ export const runERP_969 = () => {
 
       await allure.step('Sub-step 16.8: Verify waybill modal is visible', async () => {
         // Modal visibility is already verified in sub-step 16.7
-        console.log('Waybill modal is visible and ready for interaction');
+        logger.log('Waybill modal is visible and ready for interaction');
       });
 
       // Sub-step 16.9: Verify modal title contains today's date
@@ -1744,7 +1743,7 @@ export const runERP_969 = () => {
           test.info(),
         );
         const titleText = await modalTitle.textContent();
-        console.log(`Modal title: "${titleText}"`);
+        logger.log(`Modal title: "${titleText}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1762,7 +1761,7 @@ export const runERP_969 = () => {
         await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const collectedQuantityValue = await collectedQuantityCell.textContent();
         const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
-        console.log(`Collected quantity: "${collectedQuantityValue}"`);
+        logger.log(`Collected quantity: "${collectedQuantityValue}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1779,7 +1778,7 @@ export const runERP_969 = () => {
         const requiredQuantityCell = kittingPage.locator(SelectorsModalWaybill.WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL);
         await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const requiredQuantity = await requiredQuantityCell.textContent();
-        console.log(`Required quantity: "${requiredQuantity}"`);
+        logger.log(`Required quantity: "${requiredQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1796,7 +1795,7 @@ export const runERP_969 = () => {
         ownQuantityInput = kittingPage.locator(SelectorsModalWaybill.WAYBILL_DETAILS_OWN_QUANTITY_INPUT);
         await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT.HIGHLIGHT_PENDING);
         const ownQuantityValue = await ownQuantityInput.inputValue();
-        console.log(`Own quantity input: "${ownQuantityValue}"`);
+        logger.log(`Own quantity input: "${ownQuantityValue}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1813,7 +1812,7 @@ export const runERP_969 = () => {
         const nameCell = kittingPage.locator(SelectorsModalWaybill.WAYBILL_DETAILS_NAME_CELL);
         await detailsPage.highlightElement(nameCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const sbName = await nameCell.textContent();
-        console.log(`SB name: "${sbName}"`);
+        logger.log(`SB name: "${sbName}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1838,18 +1837,18 @@ export const runERP_969 = () => {
         for (const quantityCell of allQuantityCells) {
           const quantityText = await quantityCell.textContent();
           const quantity = parseInt(quantityText?.trim() || '0', 10);
-          console.log(`Quantity cell ${cellIndex + 1}: "${quantityText}" = ${quantity}`);
+          logger.log(`Quantity cell ${cellIndex + 1}: "${quantityText}" = ${quantity}`);
           calculatedTotal += quantity;
           cellIndex++;
         }
 
-        console.log(`Calculated total from order quantities: ${calculatedTotal}`);
+        logger.log(`Calculated total from order quantities: ${calculatedTotal}`);
 
         // Now verify the total quantity label shows the correct calculated value
         const totalQuantityLabel = kittingPage.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL);
         await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT.HIGHLIGHT_PENDING);
         const totalQuantityText = await totalQuantityLabel.textContent();
-        console.log(`Total quantity label: "${totalQuantityText}"`);
+        logger.log(`Total quantity label: "${totalQuantityText}"`);
 
         // Expect the total label to show "Всего: X" where X is the calculated total
         const expectedText = `Всего: ${calculatedTotal}`;
@@ -1888,11 +1887,11 @@ export const runERP_969 = () => {
 
         // Check if any order number cells exist
         const cellCount = await orderNumberCells.count();
-        console.log(`Found ${cellCount} order number cells in the table`);
+        logger.log(`Found ${cellCount} order number cells in the table`);
 
         if (cellCount === 0) {
-          console.log('No order number cells found - this СБ might not have any orders yet');
-          console.log('Skipping order number verification for this step');
+          logger.log('No order number cells found - this СБ might not have any orders yet');
+          logger.log('Skipping order number verification for this step');
           return;
         }
 
@@ -1905,7 +1904,7 @@ export const runERP_969 = () => {
         for (let i = 0; i < allOrderNumberCells.length; i++) {
           const orderNumberCell = allOrderNumberCells[i];
           const orderNumberText = await orderNumberCell.textContent();
-          console.log(`Order number cell ${i + 1}: "${orderNumberText}"`);
+          logger.log(`Order number cell ${i + 1}: "${orderNumberText}"`);
 
           // Check if this cell contains the expected order number
           if (orderNumberText?.trim().includes(orderNumber)) {
@@ -1927,7 +1926,7 @@ export const runERP_969 = () => {
           'Verify order number was found',
           test.info(),
         );
-        console.log(`✅ Found order number "${orderNumber}" in: "${foundOrderNumberText}"`);
+        logger.log(`✅ Found order number "${orderNumber}" in: "${foundOrderNumberText}"`);
 
         // Style the found cell as successful
         if (orderNumberFound) {
@@ -1942,7 +1941,7 @@ export const runERP_969 = () => {
         const remainingQuantityCell = kittingPage.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL).first();
         await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const remainingQuantity = await remainingQuantityCell.textContent();
-        console.log(`Remaining quantity: "${remainingQuantity}"`);
+        logger.log(`Remaining quantity: "${remainingQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1960,16 +1959,16 @@ export const runERP_969 = () => {
 
         // Check if the details table row exists
         const rowCount = await detailNameCell.count();
-        console.log(`Found ${rowCount} detail name cells in the table`);
+        logger.log(`Found ${rowCount} detail name cells in the table`);
 
         if (rowCount === 0) {
-          console.log('No detail name cells found - details table might not exist or have different structure');
+          logger.log('No detail name cells found - details table might not exist or have different structure');
           return;
         }
 
         await detailsPage.highlightElement(detailNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const detailName = await detailNameCell.textContent();
-        console.log(`Detail name: "${detailName}"`);
+        logger.log(`Detail name: "${detailName}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1985,14 +1984,14 @@ export const runERP_969 = () => {
       await allure.step('Sub-step 16.19: Verify quantity per unit', async () => {
         const nameCellDataTestId = await detailNameCell.getAttribute('data-testid');
         rowId = nameCellDataTestId?.replace('ModalAddWaybill-DetailsTable-Row', '').replace('-NameCell', '') || '';
-        console.log(`Row ID: "${rowId}"`);
+        logger.log(`Row ID: "${rowId}"`);
 
         const quantityPerUnitCell = kittingPage.locator(
           `[data-testid="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}${rowId}${SelectorsModalWaybill.DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`,
         );
         await detailsPage.highlightElement(quantityPerUnitCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const quantityPerUnit = await quantityPerUnitCell.textContent();
-        console.log(`Quantity per unit: "${quantityPerUnit}"`);
+        logger.log(`Quantity per unit: "${quantityPerUnit}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2009,7 +2008,7 @@ export const runERP_969 = () => {
         const materialCell = kittingPage.locator(`[data-testid="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}${rowId}-MaterialCell"]`);
         await detailsPage.highlightElement(materialCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const materialText = await materialCell.textContent();
-        console.log(`Material: "${materialText}"`);
+        logger.log(`Material: "${materialText}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2028,7 +2027,7 @@ export const runERP_969 = () => {
         );
         await detailsPage.highlightElement(needCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const needQuantity = await needCell.textContent();
-        console.log(`Need quantity: "${needQuantity}"`);
+        logger.log(`Need quantity: "${needQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2047,7 +2046,7 @@ export const runERP_969 = () => {
         );
         await detailsPage.highlightElement(freeQuantityCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const freeQuantity = await freeQuantityCell.textContent();
-        console.log(`Free quantity: "${freeQuantity}"`);
+        logger.log(`Free quantity: "${freeQuantity}"`);
 
         const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(TEST_DATA.NEW_DETAIL_A);
         await expectSoftWithScreenshot(
@@ -2068,7 +2067,7 @@ export const runERP_969 = () => {
         );
         await detailsPage.highlightElement(quantityCell, { ...HIGHLIGHT.HIGHLIGHT_PENDING });
         const quantityValue = await quantityCell.textContent();
-        console.log(`Quantity: "${quantityValue}"`);
+        logger.log(`Quantity: "${quantityValue}"`);
       });
 
       // Sub-step 16.24: Verify in kits cell
@@ -2078,7 +2077,7 @@ export const runERP_969 = () => {
         );
         await detailsPage.highlightElement(inKitsCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const inKitsValue = await inKitsCell.textContent();
-        console.log(`In kits: "${inKitsValue}"`);
+        logger.log(`In kits: "${inKitsValue}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2095,7 +2094,7 @@ export const runERP_969 = () => {
         deficitCell = kittingPage.locator(`[data-testid="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}${rowId}-DeficitCell"]`);
         await detailsPage.highlightElement(deficitCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const deficitValue = await deficitCell.textContent();
-        console.log(`Deficit: "${deficitValue}"`);
+        logger.log(`Deficit: "${deficitValue}"`);
 
         freeQuantityCellForDeficit = kittingPage.locator(
           `[data-testid="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}${rowId}${SelectorsModalWaybill.DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`,
@@ -2108,7 +2107,7 @@ export const runERP_969 = () => {
         const needValueForDeficit = await needCellForDeficit.textContent();
 
         const expectedDeficit = parseInt(freeQuantityValueForDeficit?.trim() || '0') - parseInt(needValueForDeficit?.trim() || '0');
-        console.log(`Calculated expected deficit: ${freeQuantityValueForDeficit} - ${needValueForDeficit} = ${expectedDeficit}`);
+        logger.log(`Calculated expected deficit: ${freeQuantityValueForDeficit} - ${needValueForDeficit} = ${expectedDeficit}`);
 
         await expectSoftWithScreenshot(
           page,
@@ -2124,7 +2123,7 @@ export const runERP_969 = () => {
       // Sub-step 16.26: Verify warning message if deficit is negative
       await allure.step('Sub-step 16.26: Verify warning message if deficit is negative', async () => {
         // This data-testid likely doesn't exist, so we'll skip this verification
-        console.log('Skipping warning message verification - data-testid not found');
+        logger.log('Skipping warning message verification - data-testid not found');
       });
 
       // Sub-step 16.27: Change own quantity input to build quantity
@@ -2141,7 +2140,7 @@ export const runERP_969 = () => {
       await allure.step('Sub-step 16.28: Verify updated need cell', async () => {
         await detailsPage.highlightElement(needCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const updatedNeedQuantity = await needCell.textContent();
-        console.log(`Updated need quantity: "${updatedNeedQuantity}"`);
+        logger.log(`Updated need quantity: "${updatedNeedQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2157,13 +2156,13 @@ export const runERP_969 = () => {
       await allure.step('Sub-step 16.29: Verify updated deficit cell', async () => {
         await detailsPage.highlightElement(deficitCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const updatedDeficitValue = await deficitCell.textContent();
-        console.log(`Updated deficit: "${updatedDeficitValue}"`);
+        logger.log(`Updated deficit: "${updatedDeficitValue}"`);
 
         const updatedFreeQuantityValueForDeficit = await freeQuantityCellForDeficit.textContent();
         const updatedNeedValueForDeficit = await needCellForDeficit.textContent();
 
         const updatedExpectedDeficit = parseInt(updatedFreeQuantityValueForDeficit?.trim() || '0') - parseInt(updatedNeedValueForDeficit?.trim() || '0');
-        console.log(`Recalculated expected deficit: ${updatedFreeQuantityValueForDeficit} - ${updatedNeedValueForDeficit} = ${updatedExpectedDeficit}`);
+        logger.log(`Recalculated expected deficit: ${updatedFreeQuantityValueForDeficit} - ${updatedNeedValueForDeficit} = ${updatedExpectedDeficit}`);
 
         await expectSoftWithScreenshot(
           page,
@@ -2234,7 +2233,7 @@ export const runERP_969 = () => {
           test.info(),
         );
         const selectOrderText = await selectOrderWarning.textContent();
-        console.log(`Select order warning: "${selectOrderText}"`);
+        logger.log(`Select order warning: "${selectOrderText}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2283,7 +2282,7 @@ export const runERP_969 = () => {
       // Sub-step 16.37: Refresh page and search for SB again after completion
       await allure.step('Sub-step 16.37: Refresh page and search for SB again after completion', async () => {
         // Refresh the page to get updated completion percentage from server
-        console.log('Refreshing page to get updated completion percentage...');
+        logger.log('Refreshing page to get updated completion percentage...');
         await kittingPage.reload({ waitUntil: 'networkidle' });
         await kittingPage.waitForTimeout(TIMEOUTS.EXTENDED);
 
@@ -2297,11 +2296,11 @@ export const runERP_969 = () => {
           test.info(),
         );
 
-        console.log(`Searching for: "${TEST_DATA.NEW_SB_A}"`);
+        logger.log(`Searching for: "${TEST_DATA.NEW_SB_A}"`);
         await kittingPageHelper.searchWithPressSequentially(SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT, TEST_DATA.NEW_SB_A);
 
         const rowCount = await kittingTable2.locator('tbody tr').count();
-        console.log(`Rows after search: ${rowCount}`);
+        logger.log(`Rows after search: ${rowCount}`);
       });
 
       // Sub-step 16.38: Get the first row after search
@@ -2328,7 +2327,7 @@ export const runERP_969 = () => {
         );
         await detailsPage.highlightElement(rowNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
         const rowName = await rowNameCell.textContent();
-        console.log(`Row name: "${rowName}"`);
+        logger.log(`Row name: "${rowName}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2358,7 +2357,7 @@ export const runERP_969 = () => {
           await page.waitForTimeout(TIMEOUTS.SHORT); // Small wait to ensure element is stable
           await detailsPage.highlightElement(orderedCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const orderedValue = await orderedCell.textContent();
-          console.log(`Ordered value: "${orderedValue}"`);
+          logger.log(`Ordered value: "${orderedValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2377,7 +2376,7 @@ export const runERP_969 = () => {
           );
           await detailsPage.highlightElement(operationsCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const operationsValue = await operationsCell.textContent();
-          console.log(`Operations value: "${operationsValue}"`);
+          logger.log(`Operations value: "${operationsValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2398,7 +2397,7 @@ export const runERP_969 = () => {
           );
           await detailsPage.highlightElement(statusCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const statusValue = await statusCell.textContent();
-          console.log(`Status value: "${statusValue}"`);
+          logger.log(`Status value: "${statusValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2417,7 +2416,7 @@ export const runERP_969 = () => {
           );
           await detailsPage.highlightElement(completionLevelCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const completionLevelValue = await completionLevelCell.textContent();
-          console.log(`Completion level: "${completionLevelValue}"`);
+          logger.log(`Completion level: "${completionLevelValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2470,7 +2469,7 @@ export const runERP_969 = () => {
 
           // Validate modal title
           const titleText = await modalTitle.textContent();
-          console.log(`Modal title: "${titleText}"`);
+          logger.log(`Modal title: "${titleText}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2488,7 +2487,7 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(collectedQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const collectedQuantityValue = await collectedQuantityCell.textContent();
           const collectedQuantity = collectedQuantityValue ? parseInt(collectedQuantityValue.replace(/[^\d-]/g, '').trim(), 10) : 0;
-          console.log(`Collected quantity: "${collectedQuantityValue}"`);
+          logger.log(`Collected quantity: "${collectedQuantityValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2504,7 +2503,7 @@ export const runERP_969 = () => {
           const requiredQuantityCell = kittingPage.locator(SelectorsModalWaybill.WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL);
           await detailsPage.highlightElement(requiredQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const requiredQuantityValue = await requiredQuantityCell.textContent();
-          console.log(`Required quantity: "${requiredQuantityValue}"`);
+          logger.log(`Required quantity: "${requiredQuantityValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2522,7 +2521,7 @@ export const runERP_969 = () => {
           await detailsPage.highlightElement(ownQuantityInput, HIGHLIGHT.HIGHLIGHT_PENDING);
           const ownQuantityValue = await ownQuantityInput.inputValue();
 
-          console.log(`Own quantity input: "${ownQuantityValue}"`);
+          logger.log(`Own quantity input: "${ownQuantityValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2540,7 +2539,7 @@ export const runERP_969 = () => {
           const waybillNameCell = kittingPage.locator(SelectorsModalWaybill.WAYBILL_DETAILS_NAME_CELL);
           await detailsPage.highlightElement(waybillNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const waybillNameValue = await waybillNameCell.textContent();
-          console.log(`Waybill name: "${waybillNameValue}"`);
+          logger.log(`Waybill name: "${waybillNameValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2557,7 +2556,7 @@ export const runERP_969 = () => {
           const totalQuantityLabel = kittingPage.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_TOTAL_QUANTITY_LABEL);
           await detailsPage.highlightElement(totalQuantityLabel, HIGHLIGHT.HIGHLIGHT_PENDING);
           const totalQuantityText = await totalQuantityLabel.textContent();
-          console.log(`Total quantity label: "${totalQuantityText}"`);
+          logger.log(`Total quantity label: "${totalQuantityText}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2574,7 +2573,7 @@ export const runERP_969 = () => {
           const orderNumberCell = kittingPage.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL);
           await detailsPage.highlightElement(orderNumberCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const orderNumberValue = await orderNumberCell.textContent();
-          console.log(`Order number: "${orderNumberValue}"`);
+          logger.log(`Order number: "${orderNumberValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2591,7 +2590,7 @@ export const runERP_969 = () => {
           const remainingQuantityCell = kittingPage.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL);
           await detailsPage.highlightElement(remainingQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const remainingQuantityValue = await remainingQuantityCell.textContent();
-          console.log(`Remaining quantity: "${remainingQuantityValue}"`);
+          logger.log(`Remaining quantity: "${remainingQuantityValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2608,7 +2607,7 @@ export const runERP_969 = () => {
           const totalLeftToDoLabel = kittingPage.locator(SelectorsModalWaybill.SHIPMENT_DETAILS_TABLE_TOTAL_LEFT_TO_DO_LABEL);
           await detailsPage.highlightElement(totalLeftToDoLabel, HIGHLIGHT.HIGHLIGHT_PENDING);
           const totalLeftToDoText = await totalLeftToDoLabel.textContent();
-          console.log(`Total left to do: "${totalLeftToDoText}"`);
+          logger.log(`Total left to do: "${totalLeftToDoText}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2625,7 +2624,7 @@ export const runERP_969 = () => {
           const detailNameCell = kittingPage.locator(SelectorsModalWaybill.DETAILS_TABLE_ROW_NAME_CELL);
           await detailsPage.highlightElement(detailNameCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const detailNameValue = await detailNameCell.textContent();
-          console.log(`Detail name: "${detailNameValue}"`);
+          logger.log(`Detail name: "${detailNameValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2648,7 +2647,7 @@ export const runERP_969 = () => {
           //Потребность cell
           await detailsPage.highlightElement(needCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const needValue = await needCell.textContent();
-          console.log(`Need value: "${needValue}"`);
+          logger.log(`Need value: "${needValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2664,7 +2663,7 @@ export const runERP_969 = () => {
         await allure.step('Sub-step 17.18: Validate deficit cell', async () => {
           await detailsPage.highlightElement(deficitCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const deficitValue = await deficitCell.textContent();
-          console.log(`Deficit value: "${deficitValue}"`);
+          logger.log(`Deficit value: "${deficitValue}"`);
           // Add validation logic for deficit cell here
           await detailsPage.highlightElement(deficitCell, HIGHLIGHT.HIGHLIGHT_SUCCESS);
         });
@@ -2674,7 +2673,7 @@ export const runERP_969 = () => {
           const quantityPerUnitCell = kittingPage.locator(SelectorsModalWaybill.DETAILS_TABLE_ROW_QUANTITY_PER_UNIT_CELL);
           await detailsPage.highlightElement(quantityPerUnitCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const quantityPerUnitValue = await quantityPerUnitCell.textContent();
-          console.log(`Quantity per unit: "${quantityPerUnitValue}"`);
+          logger.log(`Quantity per unit: "${quantityPerUnitValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2691,7 +2690,7 @@ export const runERP_969 = () => {
           const freeQuantityCell = kittingPage.locator(SelectorsModalWaybill.DETAILS_TABLE_ROW_FREE_QUANTITY_CELL);
           await detailsPage.highlightElement(freeQuantityCell, HIGHLIGHT.HIGHLIGHT_PENDING);
           const freeQuantityValue = await freeQuantityCell.textContent();
-          console.log(`Free quantity: "${freeQuantityValue}"`);
+          logger.log(`Free quantity: "${freeQuantityValue}"`);
           const expectedFreeQuantity = await detailsPage.calculateFreeQuantity(TEST_DATA.NEW_DETAIL_A);
           await expectSoftWithScreenshot(
             page,

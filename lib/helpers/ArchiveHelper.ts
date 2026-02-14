@@ -12,6 +12,7 @@
 import { Page } from '@playwright/test';
 import { ElementHelper } from './ElementHelper';
 import { TableHelper } from './TableHelper';
+import logger from '../utils/logger';
 
 export class ArchiveHelper {
   private elementHelper: ElementHelper;
@@ -91,7 +92,7 @@ export class ArchiveHelper {
 
     // Verify the item is archived by searching again
     if (options?.verifyArchived !== false && options?.tableBodySelector) {
-      console.log('Verifying item is archived by searching again...');
+      logger.log('Verifying item is archived by searching again...');
       const verifyTableSelector = options.verifyTableSelector || tableSelector;
 
       // Perform the search using redesign method (calls TableHelper)
@@ -111,9 +112,9 @@ export class ArchiveHelper {
       }
 
       if (rowCount > 0) {
-        console.log(`Warning: Item "${searchTerm}" still found in table after archiving (${rowCount} rows). It may not have been archived properly.`);
+        logger.log(`Warning: Item "${searchTerm}" still found in table after archiving (${rowCount} rows). It may not have been archived properly.`);
       } else {
-        console.log(`Item "${searchTerm}" successfully archived - not found in search results.`);
+        logger.log(`Item "${searchTerm}" successfully archived - not found in search results.`);
       }
     }
   }
@@ -222,7 +223,7 @@ export class ArchiveHelper {
         .first()
         .waitFor({ state: 'visible', timeout: 10000 })
         .catch(() => {
-          console.log('Warning: No checkboxes found in edit modal');
+          logger.log('Warning: No checkboxes found in edit modal');
         });
       
       // Calls OrderHelper through PageObject
@@ -244,11 +245,11 @@ export class ArchiveHelper {
 
       await checkbox.click();
       const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-      console.log(`Selected checkbox for ${logPrefix}order ${orderNumber}`);
+      logger.log(`Selected checkbox for ${logPrefix}order ${orderNumber}`);
 
       // Archive and confirm
       await this.archiveAndConfirm(pageObject, archiveButtonSelector, confirmButtonSelector);
-      console.log('Archived and confirmed');
+      logger.log('Archived and confirmed');
     });
   }
 }

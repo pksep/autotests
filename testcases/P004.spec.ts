@@ -1,7 +1,7 @@
 import { test, expect, Locator } from "@playwright/test";
 import { runTC000, performLogin } from "./TC000.spec";
 import { ENV, SELECTORS } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 import { allure } from "allure-playwright";
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U004-PC01.json'; // Import your test data

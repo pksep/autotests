@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APIProductionTasks } from "../pages/APIProductionTasks";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runProductionTasksAPI = () => {
     logger.info(`Starting Production Tasks API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runProductionTasksAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Create production task without authentication", async () => {
-            console.log("Testing unauthenticated production task creation...");
+            logger.log("Testing unauthenticated production task creation...");
 
             const taskData = {
                 name: API_CONST.API_TEST_PRODUCTION_TASK_NAME,
@@ -34,11 +34,11 @@ export const runProductionTasksAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated production task creation correctly rejected with 401");
+            logger.log("✅ Unauthenticated production task creation correctly rejected with 401");
         });
 
         await test.step("Test 2: Create production task with SQL injection in name", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -59,11 +59,11 @@ export const runProductionTasksAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Create production task with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -84,7 +84,7 @@ export const runProductionTasksAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -95,7 +95,7 @@ export const runProductionTasksAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -120,11 +120,11 @@ export const runProductionTasksAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Create production task with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 name: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -145,11 +145,11 @@ export const runProductionTasksAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidCreateResponse.status);
             expect(invalidCreateResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Create production task with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 name: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -170,7 +170,7 @@ export const runProductionTasksAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptyCreateResponse.status);
             expect(emptyCreateResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
     });
 
@@ -181,7 +181,7 @@ export const runProductionTasksAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -193,11 +193,11 @@ export const runProductionTasksAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for create production task", async () => {
-            console.log("Testing create production task response time performance...");
+            logger.log("Testing create production task response time performance...");
 
             const taskData = {
                 name: API_CONST.API_TEST_PRODUCTION_TASK_NAME,
@@ -212,11 +212,11 @@ export const runProductionTasksAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceCreateResponse.status).toBe(201);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Create production task response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Create production task response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent production task operations", async () => {
-            console.log("Testing concurrent production task operations...");
+            logger.log("Testing concurrent production task operations...");
 
             const taskData = {
                 name: API_CONST.API_TEST_PRODUCTION_TASK_NAME_UPDATED,
@@ -233,7 +233,7 @@ export const runProductionTasksAPI = () => {
                 expect(response.status).toBe(201);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent production task operations handled successfully");
+            logger.log("✅ Concurrent production task operations handled successfully");
         });
     });
 };

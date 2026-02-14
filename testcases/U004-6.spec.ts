@@ -3,7 +3,7 @@ import { SELECTORS } from '../config';
 import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS } from '../lib/Constants/TimeoutConstants';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import { expectSoftWithScreenshot } from '../lib/Page';

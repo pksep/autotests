@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { SELECTORS } from '../config';
 import { AbstractPage } from '../lib/AbstractPage';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 
 class ConcretePage extends AbstractPage {
     async open(url: string): Promise<void> {

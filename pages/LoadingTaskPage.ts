@@ -1,7 +1,7 @@
 import { expect, Page, Locator, TestInfo } from '@playwright/test';
 import { PageObject, ISpetificationData, expectSoftWithScreenshot } from '../lib/Page';
 import { normalizeOrderNumber } from '../lib/utils/utilities';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { exec } from 'child_process';
 import { time } from 'console';
 import * as LoadingTasksSelectors from '../lib/Constants/SelectorsLoadingTasksPage';
@@ -107,19 +107,19 @@ export class CreateLoadingTaskPage extends PageObject {
     const firstRow = this.page.locator('table tr:first-child');
 
     const cells = await firstRow.locator('td').allInnerTexts(); // Получаем текст всех ячеек
-    console.log('Cells:', cells); // Отладочное сообщение
+    logger.log('Cells:', cells); // Отладочное сообщение
 
     for (let i = 0; i < cells.length; i++) {
-      console.log(`Checking cell: ${cells[i].trim()}`); // Отладочное сообщение
+      logger.log(`Checking cell: ${cells[i].trim()}`); // Отладочное сообщение
       if (cells[i].trim() === ' X ') {
         const dateInput = await firstRow.locator(`[data-testid="DatePicter-DatePicker-Input"]`).nth(i); // Получаем соответствующий input
         if ((await dateInput.count()) > 0) {
           try {
             const value = await dateInput.getAttribute('value');
-            console.log('Found date:', value); // Отладочное сообщение
+            logger.log('Found date:', value); // Отладочное сообщение
             return value; // Возвращаем значение из атрибута value
           } catch (error) {
-            console.log('Error getting date value:', error);
+            logger.log('Error getting date value:', error);
             return null;
           }
         }
@@ -138,14 +138,14 @@ export class CreateLoadingTaskPage extends PageObject {
     try {
       await this.waitForTimeout(2000);
       const editTitleText = await this.page.locator(LoadingTasksSelectors.editTitle).innerText();
-      console.log('Text from editTitle:', editTitleText);
+      logger.log('Text from editTitle:', editTitleText);
 
       // Trim "Редактирование заказа" from the start - the rest is the order number
       const trimmed = editTitleText
         .trim()
         .replace(/^Редактирование заказа\s*/, '')
         .trim();
-      console.log('Trimmed text:', trimmed);
+      logger.log('Trimmed text:', trimmed);
 
       // Extract order number (format: "№ 25-4899" or "25-4899" or "25-4899 /0")
       // Handle "№" character that may appear before the number
@@ -155,12 +155,12 @@ export class CreateLoadingTaskPage extends PageObject {
         version = orderNumberMatch[2] || null;
       }
     } catch (e) {
-      console.log('Could not get order number from editTitle:', e);
+      logger.log('Could not get order number from editTitle:', e);
     }
 
     // Get date from the main locator
     const text = await this.page.locator(locator).innerText();
-    console.log('Text to parse from main locator:', text);
+    logger.log('Text to parse from main locator:', text);
 
     // Extract date
     const dateRegex = /Дата заказа:\s*([А-Яа-я]+ \d+, \d{4})/;
@@ -171,13 +171,13 @@ export class CreateLoadingTaskPage extends PageObject {
 
     // Order number is required
     if (!orderNumber) {
-      console.log('No order number found. editTitle text may not contain order number yet.');
+      logger.log('No order number found. editTitle text may not contain order number yet.');
       throw new Error('Не удалось извлечь номер заказа. Возможно, страница еще не перезагрузилась.');
     }
 
     // Order date is required
     if (!orderDate) {
-      console.log('No order date found in text:', text);
+      logger.log('No order date found in text:', text);
       throw new Error('Не удалось извлечь дату заказа из текста: ' + text);
     }
 
@@ -196,14 +196,14 @@ export class CreateLoadingTaskPage extends PageObject {
     try {
       await this.waitForTimeout(2000);
       const editTitleText = await this.page.locator(LoadingTasksSelectors.editTitle).innerText();
-      console.log('Text from editTitle:', editTitleText);
+      logger.log('Text from editTitle:', editTitleText);
 
       // Trim "Редактирование заказа" from the start - the rest is the order number
       const trimmed = editTitleText
         .trim()
         .replace(/^Редактирование заказа\s*/, '')
         .trim();
-      console.log('Trimmed text:', trimmed);
+      logger.log('Trimmed text:', trimmed);
 
       // Extract order number (format: "№ 25-4899" or "25-4899" or "25-4899 /0")
       // Handle "№" character that may appear before the number
@@ -213,12 +213,12 @@ export class CreateLoadingTaskPage extends PageObject {
         version = orderNumberMatch[2] || null;
       }
     } catch (e) {
-      console.log('Could not get order number from editTitle:', e);
+      logger.log('Could not get order number from editTitle:', e);
     }
 
     // Get date from the main locator
     const text = await this.page.locator(locator).innerText();
-    console.log('Text to parse from main locator:', text);
+    logger.log('Text to parse from main locator:', text);
 
     // Extract date - get everything after "от"
     const dateRegex = /от\s+(.+)/;
@@ -229,13 +229,13 @@ export class CreateLoadingTaskPage extends PageObject {
 
     // Order number is required
     if (!orderNumber) {
-      console.log('No order number found. editTitle text may not contain order number yet.');
+      logger.log('No order number found. editTitle text may not contain order number yet.');
       throw new Error('Не удалось извлечь номер заказа. Возможно, страница еще не перезагрузилась.');
     }
 
     // Order date is required
     if (!orderDate) {
-      console.log('No order date found in text:', text);
+      logger.log('No order date found in text:', text);
       throw new Error('Не удалось извлечь дату заказа из текста: ' + text);
     }
 
@@ -323,7 +323,7 @@ export class CreateLoadingTaskPage extends PageObject {
 
     const targetYear = 2025;
     const currentYearNum = parseInt(currentYear);
-    console.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
+    logger.log(`Current year: ${currentYear}, Target year: ${targetYear}`);
 
     // Если текущий год не равен целевому
     if (currentYearNum !== targetYear) {
@@ -341,12 +341,12 @@ export class CreateLoadingTaskPage extends PageObject {
         const newYearNum = parseInt(newYear);
 
         if (newYearNum === targetYear) {
-          console.log(`Year successfully set to ${targetYear}`);
+          logger.log(`Year successfully set to ${targetYear}`);
           break;
         }
       }
     } else {
-      console.log(`Year is already set to ${targetYear}`);
+      logger.log(`Year is already set to ${targetYear}`);
     }
 
     // Проверяем, что год установлен правильно

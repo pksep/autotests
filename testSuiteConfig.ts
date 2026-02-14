@@ -1,3 +1,4 @@
+import logger from './lib/utils/logger';
 import { runAPI001 } from './testcases/API001.spec';
 import { runP001 } from './testcases/P001.spec';
 import { runP002 } from './testcases/P002.spec';

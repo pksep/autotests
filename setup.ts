@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { performLogin } from './testcases/TC000.spec';
 import { ENV } from './config';
+import logger from './lib/utils/logger';
 
 export function runSetup() { // ✅ Use function declaration instead of arrow function
     test.beforeEach("Test Case 00 - Authorization", async ({ page }) => {

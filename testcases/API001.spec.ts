@@ -1,6 +1,7 @@
 import { test, expect, request } from '@playwright/test';
 import { APIPageObject } from '../lib/APIPage';
 import { ENV } from '../config'; // Import the configuration
+import logger from '../lib/utils/logger';
 
 export const runAPI001 = () => {
     test('API Login Test', async ({ page }) => {

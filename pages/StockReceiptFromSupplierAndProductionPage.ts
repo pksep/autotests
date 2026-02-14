@@ -1,6 +1,6 @@
 import { Page, expect } from '@playwright/test';
 import { PageObject, Click } from '../lib/Page';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { table } from 'console';
 
 export enum StockReceipt {
@@ -37,7 +37,7 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     const stockReceiptButton = this.page.getByTestId(testId);
     await stockReceiptButton.waitFor({ state: 'visible', timeout: 10000 });
     await stockReceiptButton.scrollIntoViewIfNeeded();
-    console.log(`Операция ${stockReceipt} выбрана.`);
+    logger.log(`Операция ${stockReceipt} выбрана.`);
     await stockReceiptButton.click();
 
     // Wait for the receipt modal dialog to appear after clicking
@@ -63,7 +63,7 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     });
 
     const blockTitle = await blockTitleElement.textContent();
-    console.log(`Заголовок блока: ${blockTitle}`);
+    logger.log(`Заголовок блока: ${blockTitle}`);
 
     if (!blockTitle) {
       throw new Error('Block title not found or empty');
@@ -72,7 +72,7 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     // Extract the last word from the title (e.g., "Потенциальные от Металлообработка" -> "Металлообработка")
     const words = blockTitle.trim().split(/\s+/);
     const extractedType = words[words.length - 1];
-    console.log(`Извлеченный тип поступления: ${extractedType}`);
+    logger.log(`Извлеченный тип поступления: ${extractedType}`);
 
     // Map "Поставщики" -> "Поставщик" for comparison
     const normalizedExtractedType =

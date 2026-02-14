@@ -5,7 +5,7 @@ import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 
 
 import { ENV, SELECTORS } from '../config'; // Import the configuration
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 
 import testData1 from '../testdata/PD18-T1.json'; // Import your test data
@@ -156,7 +156,7 @@ export const runTC100 = () => {
             await shortagePage.parseRecursiveStructuredTable(page, EDIT_PAGE_SPECIFICATIONS_TABLE, productDesignation);
             await shortagePage.printParsedTableData();
 
-            console.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
+            logger.log('Parsed Table Data:', JSON.stringify(shortagePage.parsedData, null, 2));
         });
         let specs: Record<string, any[]> = {};
 
@@ -164,11 +164,11 @@ export const runTC100 = () => {
             const openSpecificationButton = page.locator('[data-testid="Specification-Buttons-openSpecification"]').last();
             await openSpecificationButton.click();
             specs = await shortagePage.extractAllTableData(page, 'Specification-ModalCbed');
-            console.log(JSON.stringify(specs, null, 2));
+            logger.log(JSON.stringify(specs, null, 2));
         });
 
         await allure.step('Step 14: Validate Parsed Data Against Specification Table', async () => {
-            console.log("Comparing parsed data with extracted specification table...");
+            logger.log("Comparing parsed data with extracted specification table...");
 
             // Convert parsed data to JSON for comparison
             const parsedDataJSON = JSON.stringify(shortagePage.parsedData, null, 2);
@@ -176,10 +176,10 @@ export const runTC100 = () => {
 
             // Perform comparison
             if (parsedDataJSON === specsJSON) {
-                console.log("✅ Success: Parsed data matches the specification table.");
+                logger.log("✅ Success: Parsed data matches the specification table.");
             } else {
                 console.error("❌ Error: Parsed data does NOT match specification table.");
-                console.log("Differences detected:");
+                logger.log("Differences detected:");
 
                 // Compare objects deeply and log mismatches
                 const parsedEntries = Object.entries(shortagePage.parsedData);
@@ -192,8 +192,8 @@ export const runTC100 = () => {
                         items.forEach((item, index) => {
                             if (JSON.stringify(item) !== JSON.stringify(specs[group][index])) {
                                 console.error(`Mismatch in group ${group}, item ${index}:`);
-                                console.log("Parsed:", JSON.stringify(item, null, 2));
-                                console.log("Expected:", JSON.stringify(specs[group][index], null, 2));
+                                logger.log("Parsed:", JSON.stringify(item, null, 2));
+                                logger.log("Expected:", JSON.stringify(specs[group][index], null, 2));
                             }
                         });
                     }

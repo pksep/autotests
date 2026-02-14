@@ -16,7 +16,7 @@ import { Page, expect, Locator, TestInfo } from '@playwright/test';
 import { WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import * as SelectorsFileComponents from '../Constants/SelectorsFileComponents';
 import { expectSoftWithScreenshot } from '../utils/utilities';
-import logger from '../logger';
+import logger from '../utils/logger';
 import { ModalHelper } from './ModalHelper';
 
 export class ValidationHelper {
@@ -70,7 +70,7 @@ export class ValidationHelper {
       // If no titles found in container, try searching the entire page body (excluding modals)
       // This handles cases where page-level titles are outside the container
       if (h3Titles.length === 0) {
-        console.log('No H3 titles found in container, searching entire page body (excluding modals)...');
+        logger.log('No H3 titles found in container, searching entire page body (excluding modals)...');
         const pageBody = page.locator('body');
         const allH3Elements = await pageBody.locator('h3').all();
 
@@ -105,7 +105,7 @@ export class ValidationHelper {
             }
           } catch (error) {
             // Skip if element is detached or not accessible
-            console.log(`Skipping H3 element due to error: ${error}`);
+            logger.log(`Skipping H3 element due to error: ${error}`);
           }
         }
       }
@@ -113,8 +113,8 @@ export class ValidationHelper {
       const normalizedH3Titles = h3Titles.map(title => title.trim());
 
       // Log for debugging
-      console.log('Expected Titles:', expectedTitles);
-      console.log('Received Titles:', normalizedH3Titles);
+      logger.log('Expected Titles:', expectedTitles);
+      logger.log('Received Titles:', normalizedH3Titles);
 
       // Validate length
       await expectSoftWithScreenshot(
@@ -170,7 +170,7 @@ export class ValidationHelper {
             `Verify button "${buttonLabel}" is visible and enabled: expected true, actual ${isButtonReady}`,
             options?.testInfo,
           );
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+          logger.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
         });
       }
     }
@@ -213,7 +213,7 @@ export class ValidationHelper {
     expect(normalizedTitles.length).toBe(expectedTitles.length);
     expect(normalizedTitles).toEqual(expectedTitles);
 
-    console.log('Page titles validated successfully with styling applied.');
+    logger.log('Page titles validated successfully with styling applied.');
   }
 
   /**
@@ -251,7 +251,7 @@ export class ValidationHelper {
     // Ensure the table has rows
     expect(rowCount).toBeGreaterThan(0);
 
-    console.log(`Table with data-testid "${tableTestId}" has ${rowCount} rows.`);
+    logger.log(`Table with data-testid "${tableTestId}" has ${rowCount} rows.`);
   }
 
   /**
@@ -307,7 +307,7 @@ export class ValidationHelper {
     });
 
     await expect(row).toBeVisible();
-    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
+    logger.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
 
     const checkbox = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_CHECKBOX_MAIN);
     await checkbox.evaluate(el => {
@@ -317,10 +317,10 @@ export class ValidationHelper {
     });
 
     await expect(checkbox).toBeVisible();
-    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
+    logger.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
 
     const isChecked = await checkbox.isChecked();
-    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+    logger.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? 'Checked' : 'Not Checked'}`);
 
     return isChecked; // Return the checkbox state
   }
@@ -338,7 +338,7 @@ export class ValidationHelper {
     });
 
     await expect(row).toBeVisible();
-    console.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
+    logger.log(`Row containing label 'Главный:' is visible for section ${sectionIndex}.`);
 
     const checkbox = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_CHECKBOX_MAIN);
 
@@ -350,11 +350,11 @@ export class ValidationHelper {
     });
 
     await expect(checkbox).toBeVisible();
-    console.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
+    logger.log(`Checkbox in 'Главный:' row is visible for section ${sectionIndex}.`);
 
     await checkbox.check();
     const isChecked = await checkbox.isChecked();
-    console.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+    logger.log(`Checkbox state for section ${sectionIndex}: ${isChecked ? 'Checked' : 'Not Checked'}`);
 
     return isChecked; // Return the checkbox state for validation
   }
@@ -383,15 +383,15 @@ export class ValidationHelper {
       });
 
       await expect(row).toBeVisible();
-      console.log(`Row for file ${i + 1} containing label 'Файл:' is visible.`);
+      logger.log(`Row for file ${i + 1} containing label 'Файл:' is visible.`);
 
       const input = row.locator(SelectorsFileComponents.ADD_DETAIL_FILE_COMPONENT_INPUT_FILE_NAME_INPUT);
       await expect(input).toBeVisible();
-      console.log(`Input field for file ${i + 1} is visible.`);
+      logger.log(`Input field for file ${i + 1} is visible.`);
 
       const expectedFilename = uploadedFiles[i].split('.')[0];
       const actualInputValue = await input.inputValue();
-      console.log(`Expected filename: ${expectedFilename}, Actual input value: ${actualInputValue}`);
+      logger.log(`Expected filename: ${expectedFilename}, Actual input value: ${actualInputValue}`);
       expect(actualInputValue).toBe(expectedFilename);
 
       // Highlight for debugging
@@ -441,10 +441,10 @@ export class ValidationHelper {
       const button = page.locator(scopedSelector, {
         hasText: new RegExp(`^\\s*${label.trim()}\\s*$`),
       });
-      console.log(`Found ${await button.count()} buttons matching selector "${scopedSelector}" and label "${label}".`);
+      logger.log(`Found ${await button.count()} buttons matching selector "${scopedSelector}" and label "${label}".`);
 
       // Debugging: Log initial info
-      console.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}, waitForEnabled: ${waitForEnabled}`);
+      logger.log(`Starting isButtonVisible for label: "${label}" with Benabled: ${Benabled}, waitForEnabled: ${waitForEnabled}`);
 
       // Highlight the button for debugging
       await button.evaluate(row => {
@@ -455,18 +455,18 @@ export class ValidationHelper {
 
       // Wait for the button to be attached to the DOM
       await button.waitFor({ state: 'attached' });
-      console.log(`Button "${label}" is attached to the DOM.`);
+      logger.log(`Button "${label}" is attached to the DOM.`);
 
       // Verify visibility
       const isVisible = await button.isVisible();
-      console.log(`Button "${label}" visibility: ${isVisible}`);
+      logger.log(`Button "${label}" visibility: ${isVisible}`);
       await expect(button).toBeVisible(); // Assert visibility explicitly
 
       if (Benabled) {
-        console.log(`Expecting button "${label}" to be enabled.`);
+        logger.log(`Expecting button "${label}" to be enabled.`);
 
         if (waitForEnabled) {
-          console.log(`Waiting for button "${label}" to become enabled (timeout: ${waitTimeout}ms)...`);
+          logger.log(`Waiting for button "${label}" to become enabled (timeout: ${waitTimeout}ms)...`);
 
           // Wait for button to become enabled (with timeout)
           const checkInterval = 200; // Check every 200ms
@@ -479,7 +479,7 @@ export class ValidationHelper {
 
             if (!hasDisabledClass && !hasDisabledAttr) {
               isEnabled = true;
-              console.log(`Button "${label}" is now enabled.`);
+              logger.log(`Button "${label}" is now enabled.`);
               break;
             }
 
@@ -490,7 +490,7 @@ export class ValidationHelper {
           if (!isEnabled) {
             const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
             const hasDisabledAttr = await button.evaluate(btn => btn.hasAttribute('disabled'));
-            console.log(`Button "${label}" still disabled after waiting. Disabled class: ${hasDisabledClass}, Disabled attr: ${hasDisabledAttr}`);
+            logger.log(`Button "${label}" still disabled after waiting. Disabled class: ${hasDisabledClass}, Disabled attr: ${hasDisabledAttr}`);
             expect(hasDisabledClass).toBeFalsy(); // This will throw if still disabled
             expect(hasDisabledAttr).toBeFalsy(); // This will throw if still disabled
           }
@@ -498,21 +498,21 @@ export class ValidationHelper {
           // Original behavior: check immediately without waiting
           const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
           const isDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
-          console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+          logger.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
           expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
-          console.log(`Disabled attribute present for button "${label}": ${isDisabledAttribute}`);
+          logger.log(`Disabled attribute present for button "${label}": ${isDisabledAttribute}`);
           expect(isDisabledAttribute).toBeFalsy(); // Button should not have 'disabled' attribute
         }
       } else {
-        console.log(`Expecting button "${label}" to be disabled.`);
+        logger.log(`Expecting button "${label}" to be disabled.`);
         const hasDisabledClass = await button.evaluate(btn => btn.classList.contains('disabled-yui-kit'));
         const isDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
         const isDisabled = hasDisabledClass || isDisabledAttribute;
-        console.log(`Disabled class present for button "${label}": ${isDisabled}`);
+        logger.log(`Disabled class present for button "${label}": ${isDisabled}`);
         expect(isDisabled).toBeTruthy(); // Button should be disabled
       }
 
-      console.log(`Button "${label}" passed all checks.`);
+      logger.log(`Button "${label}" passed all checks.`);
       return true; // If everything passes, the button is valid
     } catch (error) {
       console.error(`Error while checking button "${label}" state:`, error);
@@ -568,10 +568,10 @@ export class ValidationHelper {
       const button = page.locator(scopedSelector, {
         hasText: new RegExp(`^\\s*${label.trim()}\\s*$`),
       });
-      console.log(`Found ${await button.count()} buttons matching testId "${testId}" and label "${label}".`);
+      logger.log(`Found ${await button.count()} buttons matching testId "${testId}" and label "${label}".`);
 
       // Debugging: Log initial info
-      console.log(`Starting isButtonVisibleTestId for label: "${label}" with Benabled: ${Benabled}`);
+      logger.log(`Starting isButtonVisibleTestId for label: "${label}" with Benabled: ${Benabled}`);
       // Highlight the button for debugging
       await button.evaluate(btn => {
         btn.style.backgroundColor = 'yellow';
@@ -580,11 +580,11 @@ export class ValidationHelper {
       });
       // Wait for the button to be attached to the DOM
       await button.waitFor({ state: 'attached' });
-      console.log(`Button "${label}" is attached to the DOM.`);
+      logger.log(`Button "${label}" is attached to the DOM.`);
       // Verify visibility
       const isVisible = await button.isVisible();
 
-      console.log(`Button "${label}" visibility: ${isVisible}`);
+      logger.log(`Button "${label}" visibility: ${isVisible}`);
       await expect(button).toBeVisible(); // Assert visibility explicitly
       try {
         await this.page.waitForTimeout(500);
@@ -595,33 +595,33 @@ export class ValidationHelper {
       // Check for 'disabled-yui-kit' class and 'disabled' attribute
       const hasDisabledClass = await button.evaluate(btn => {
         const classList = Array.from(btn.classList);
-        console.log(`Button classList:`, classList);
+        logger.log(`Button classList:`, classList);
         const hasDisabled = btn.classList.contains('disabled-yui-kit');
-        console.log(`Button has disabled-yui-kit class:`, hasDisabled);
+        logger.log(`Button has disabled-yui-kit class:`, hasDisabled);
         const hasDisabledAttr = btn.hasAttribute('disabled');
-        console.log(`Button has disabled attribute:`, hasDisabledAttr);
+        logger.log(`Button has disabled attribute:`, hasDisabledAttr);
         const outerHTML = btn.outerHTML;
-        console.log(`Button outerHTML:`, outerHTML);
+        logger.log(`Button outerHTML:`, outerHTML);
         return hasDisabled;
       });
 
       // Also check for disabled attribute
       const hasDisabledAttribute = await button.evaluate(btn => btn.hasAttribute('disabled'));
 
-      console.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
-      console.log(`Disabled attribute present for button "${label}": ${hasDisabledAttribute}`);
+      logger.log(`Disabled class present for button "${label}": ${hasDisabledClass}`);
+      logger.log(`Disabled attribute present for button "${label}": ${hasDisabledAttribute}`);
 
       if (Benabled) {
-        console.log(`Expecting button "${label}" to be enabled.`);
+        logger.log(`Expecting button "${label}" to be enabled.`);
         expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
         expect(hasDisabledAttribute).toBeFalsy(); // Button should not have 'disabled' attribute
       } else {
-        console.log(`Expecting button "${label}" to be disabled.`);
+        logger.log(`Expecting button "${label}" to be disabled.`);
         // Button should be disabled either by class or attribute
         const isDisabled = hasDisabledClass || hasDisabledAttribute;
         expect(isDisabled).toBeTruthy(); // Button should be disabled (class or attribute)
       }
-      console.log(`Button "${label}" passed all checks.`);
+      logger.log(`Button "${label}" passed all checks.`);
       return true; // If everything passes, the button is valid
     } catch (error) {
       console.error(`Error while checking button "${label}" state:`, error);

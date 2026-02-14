@@ -1,6 +1,6 @@
 import { Page, TestInfo } from "@playwright/test";
 import { PageObject } from "../lib/Page";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 import { SELECTORS } from "../config";
 import * as SelectorsAssemblyWarehouse from "../lib/Constants/SelectorsAssemblyWarehouse";
 import * as SelectorsOrderedFromSuppliers from "../lib/Constants/SelectorsOrderedFromSuppliers";
@@ -43,7 +43,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                     // Check if the table is still present
                     const tableExists = await this.page.locator(SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE).isVisible().catch(() => false);
                     if (!tableExists) {
-                        console.log(`Table not found, navigating back to assembly warehouse page for prefix "${itemPrefix}"`);
+                        logger.log(`Table not found, navigating back to assembly warehouse page for prefix "${itemPrefix}"`);
                         await this.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
                         await this.page.locator(SelectorsAssemblyWarehouse.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON).click();
                         await this.waitForNetworkIdle();
@@ -65,7 +65,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                     const rowCount = await rows.count();
 
                     if (rowCount === 0) {
-                        console.log(`No items found with prefix "${itemPrefix}" - skipping order cleanup`);
+                        logger.log(`No items found with prefix "${itemPrefix}" - skipping order cleanup`);
                         continue;
                     }
 
@@ -80,11 +80,11 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             const nameText = await nameCell.textContent();
                             
                             if (!nameText || !nameText.toLowerCase().includes(itemPrefix.toLowerCase())) {
-                                console.log(`Row ${i} name "${nameText}" does not match prefix "${itemPrefix}" - skipping`);
+                                logger.log(`Row ${i} name "${nameText}" does not match prefix "${itemPrefix}" - skipping`);
                                 continue;
                             }
 
-                            console.log(`✅ Found matching product "${nameText}" in row ${i}`);
+                            logger.log(`✅ Found matching product "${nameText}" in row ${i}`);
 
                             // Step 3: Click the second cell to open context menu
                             // The second cell should be the one with the popover
@@ -118,7 +118,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             await this.highlightElement(ordersListModalTable, { border: '3px solid red' });
                             
                             if (!ordersListModalTable) {
-                                console.log(`Orders modal did not appear for row ${i} with prefix "${itemPrefix}"`);
+                                logger.log(`Orders modal did not appear for row ${i} with prefix "${itemPrefix}"`);
                                 // Close any open dialogs and continue
                                 await this.page.keyboard.press('Escape');
                                 await this.waitForTimeout(TIMEOUTS.SHORT);
@@ -137,7 +137,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             // const ordersTableRowCount = await ordersTableRows.count();
 
                             // if (ordersTableRowCount === 0) {
-                            //     console.log(`No orders found in "Заказы склада" table for row ${i} with prefix "${itemPrefix}" - orders already deleted`);
+                            //     logger.log(`No orders found in "Заказы склада" table for row ${i} with prefix "${itemPrefix}" - orders already deleted`);
                             //     // Close modal and continue to delete the row
                             //     await this.page.keyboard.press('Escape');
                             //     await this.waitForTimeout(TIMEOUTS.SHORT);
@@ -147,7 +147,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             //     continue;
                             // }
 
-                            console.log(`Found ${ordersListModalTable} order(s) in "Заказы склада" table`);
+                            logger.log(`Found ${ordersListModalTable} order(s) in "Заказы склада" table`);
 
                             // Step 7: Click on the first row in the orders table to open the edit modal
                             const firstOrderRow = ordersListModalTable.locator('tbody tr').first();
@@ -164,7 +164,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             // const isEditModalVisible = await editOrderModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => false);
 
                             // if (!isEditModalVisible) {
-                            //     console.log(`Edit order modal did not appear for row ${i} with prefix "${itemPrefix}"`);
+                            //     logger.log(`Edit order modal did not appear for row ${i} with prefix "${itemPrefix}"`);
                             //     await this.page.keyboard.press('Escape');
                             //     await this.waitForTimeout(TIMEOUTS.SHORT);
                             //     continue;
@@ -183,7 +183,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             await this.waitAndHighlight(stockOrderItemsTable);
                             await this.waitForTimeout(TIMEOUTS.LONG);
                             if (!stockOrderItemsTable) {
-                                console.log(`No "Заказы склада" table found in edit dialog - orders already deleted`);
+                                logger.log(`No "Заказы склада" table found in edit dialog - orders already deleted`);
                                 // Close dialogs and continue to delete the row
                                 await this.page.keyboard.press('Escape');
                                 await this.waitForTimeout(TIMEOUTS.SHORT);
@@ -217,7 +217,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             }
 
                             if (!isEnabled) {
-                                console.log(`Archive button not enabled for row ${i} with prefix "${itemPrefix}"`);
+                                logger.log(`Archive button not enabled for row ${i} with prefix "${itemPrefix}"`);
                                 await this.page.keyboard.press('Escape');
                                 await this.waitForTimeout(TIMEOUTS.SHORT);
                                 continue;
@@ -234,7 +234,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             await confirmButton.click();
                             await this.waitForTimeout(TIMEOUTS.LONG); // Wait for dialogs to close
 
-                            console.log(`✅ Archived all order(s) for row ${i} with prefix "${itemPrefix}"`);
+                            logger.log(`✅ Archived all order(s) for row ${i} with prefix "${itemPrefix}"`);
                             const rowCount = await ordersListModalTable.locator('tbody tr').count();
                             totalArchivedOrders += rowCount;
 
@@ -269,7 +269,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             
                             // Wait for orders modal to appear
                             await ordersListModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {
-                                console.log(`Orders modal did not appear for verification`);
+                                logger.log(`Orders modal did not appear for verification`);
                             });
                             
                             // Check if orders table is empty
@@ -278,9 +278,9 @@ export class CreateAssemblyWarehousePage extends PageObject {
                             const finalOrderCount = await ordersTableRowsForVerification.count();
                             
                             if (finalOrderCount === 0) {
-                                console.log(`✅ Verified: All orders are archived for row ${i} with prefix "${itemPrefix}"`);
+                                logger.log(`✅ Verified: All orders are archived for row ${i} with prefix "${itemPrefix}"`);
                             } else {
-                                console.log(`⚠️ Warning: ${finalOrderCount} order(s) still remain after archiving`);
+                                logger.log(`⚠️ Warning: ${finalOrderCount} order(s) still remain after archiving`);
                             }
                             
                             // Close orders modal
@@ -302,13 +302,13 @@ export class CreateAssemblyWarehousePage extends PageObject {
 
                             const rowsAfterDeletion = this.page.locator(`${SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE} tbody tr`);
                             const rowCountAfterDeletion = await rowsAfterDeletion.count();
-                            console.log(`After deletion, found ${rowCountAfterDeletion} row(s) with prefix "${itemPrefix}"`);
+                            logger.log(`After deletion, found ${rowCountAfterDeletion} row(s) with prefix "${itemPrefix}"`);
 
                             // Break out of the loop after successful deletion to re-search and get fresh rows
                             break;
 
                         } catch (error) {
-                            console.log(`⚠️ Could not process orders for row ${i} with prefix "${itemPrefix}": ${error}`);
+                            logger.log(`⚠️ Could not process orders for row ${i} with prefix "${itemPrefix}": ${error}`);
                             // Close any open dialogs
                             try {
                                 await this.page.keyboard.press('Escape');
@@ -325,19 +325,19 @@ export class CreateAssemblyWarehousePage extends PageObject {
                                 // Break after deletion attempt to re-search and get fresh rows
                                 break;
                             } catch (deleteError) {
-                                console.log(`⚠️ Could not delete row ${i} from main table: ${deleteError}`);
+                                logger.log(`⚠️ Could not delete row ${i} from main table: ${deleteError}`);
                                 // Break even if deletion failed, as table state may have changed
                                 break;
                             }
                         }
                     }
                 } catch (error) {
-                    console.log(`⚠️ Could not process orders for item prefix "${itemPrefix}": ${error}`);
+                    logger.log(`⚠️ Could not process orders for item prefix "${itemPrefix}": ${error}`);
                     // Continue with next prefix
                 }
             }
 
-            console.log(`✅ Completed archiving ${totalArchivedOrders} order(s) for test items`);
+            logger.log(`✅ Completed archiving ${totalArchivedOrders} order(s) for test items`);
         });
         
         return totalArchivedOrders;
@@ -373,7 +373,7 @@ export class CreateAssemblyWarehousePage extends PageObject {
                 }
 
                 if (!isEnabled) {
-                    console.log(`Archive button not enabled for row ${rowIndex} with prefix "${itemPrefix}"`);
+                    logger.log(`Archive button not enabled for row ${rowIndex} with prefix "${itemPrefix}"`);
                     return;
                 }
 
@@ -388,9 +388,9 @@ export class CreateAssemblyWarehousePage extends PageObject {
                 await confirmButton.click();
                 await this.waitForTimeout(TIMEOUTS.LONG);
 
-                console.log(`✅ Deleted row ${rowIndex} from main table for prefix "${itemPrefix}"`);
+                logger.log(`✅ Deleted row ${rowIndex} from main table for prefix "${itemPrefix}"`);
             } catch (error) {
-                console.log(`⚠️ Could not delete row ${rowIndex} from main table: ${error}`);
+                logger.log(`⚠️ Could not delete row ${rowIndex} from main table: ${error}`);
             }
         });
     }

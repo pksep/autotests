@@ -20,19 +20,20 @@ import { CreateLoadingTaskPage } from '../pages/LoadingTaskPage';
 import { Click } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
+import logger from '../lib/utils/logger';
 import {
   designation,
   nameProduct,
 } from './U001-Constants';
 
 export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Archive Operations (Test Cases 33-35)`);
+  logger.log(`Start of the test: U001 Archive Operations (Test Cases 33-35)`);
 
   test('Test Case 33 - Archive Metalworking Warehouse Task All', async ({
     // doc test case 28
     page,
   }) => {
-    console.log('Test Case 33 - Archive Metalworking Warehouse Task All');
+    logger.log('Test Case 33 - Archive Metalworking Warehouse Task All');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
     const warehouseTable = MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE;
@@ -46,15 +47,21 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
       const selector = MetalWorkingWarhouseSelectors.SELECTOR_METAL_WORKING_WARHOUSE;
       await metalworkingWarehouse.findTable(selector);
       await page.waitForTimeout(TIMEOUTS.LONG);
-      // Wait for loading
       await page.waitForLoadState('networkidle');
-      await metalworkingWarehouse.waitingTableBody(warehouseTable);
+      // Wait for table to be visible; allow empty table (no rows) so test does not timeout when there are no tasks
+      await metalworkingWarehouse.waitingTableBody(warehouseTable, {
+        minRows: 0,
+        timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
+      });
     });
 
     await allure.step('Step 03: Search product', async () => {
       await metalworkingWarehouse.searchTable(designation, warehouseTable, MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_SEARCH_INPUT);
 
-      await metalworkingWarehouse.waitingTableBody(warehouseTable);
+      await metalworkingWarehouse.waitingTableBody(warehouseTable, {
+        minRows: 0,
+        timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
+      });
     });
 
     await allure.step('Step 04-06: Archive all matching items', async () => {
@@ -65,10 +72,12 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
 
       while (hasMoreItems && iterationCount < maxIterations) {
         iterationCount++;
-        console.log(`Archive iteration ${iterationCount}`);
+        logger.log(`Archive iteration ${iterationCount}`);
 
-        // Wait for table to be ready
-        await metalworkingWarehouse.waitingTableBody(warehouseTable);
+        await metalworkingWarehouse.waitingTableBody(warehouseTable, {
+          minRows: 0,
+          timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
+        });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         // Check if there are any rows in the table
@@ -76,7 +85,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         const rowCount = await rows.count();
 
         if (rowCount === 0) {
-          console.log('No more items to archive');
+          logger.log('No more items to archive');
           hasMoreItems = false;
           break;
         }
@@ -99,10 +108,10 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         const remainingCount = await remainingRows.count();
 
         if (remainingCount === 0) {
-          console.log('All items archived');
+          logger.log('All items archived');
           hasMoreItems = false;
         } else {
-          console.log(`Remaining items: ${remainingCount}`);
+          logger.log(`Remaining items: ${remainingCount}`);
         }
       }
 
@@ -116,7 +125,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
     // doc test case 29
     page,
   }) => {
-    console.log('Test Case 34 - Archive Assembly Warehouse Task All');
+    logger.log('Test Case 34 - Archive Assembly Warehouse Task All');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const assemblyWarehouse = new CreateAssemblyWarehousePage(page);
     const warehouseTable = SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE;
@@ -129,7 +138,10 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
     await allure.step('Step 03: Search product', async () => {
       await assemblyWarehouse.searchTable(designation, warehouseTable, '${props.dataTestid}-TableHead-Search-Dropdown-Input');
 
-      await assemblyWarehouse.waitingTableBody(warehouseTable);
+      await assemblyWarehouse.waitingTableBody(warehouseTable, {
+        minRows: 0,
+        timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
+      });
     });
 
     await allure.step('Step 04-06: Archive item', async () => {
@@ -151,7 +163,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
     // doc test case 30
     page,
   }) => {
-    console.log('Test Case 35 - Moving Task For Shipment To The Archive');
+    logger.log('Test Case 35 - Moving Task For Shipment To The Archive');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     let numberColumn: number;
@@ -179,10 +191,13 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
 
       while (hasMoreItems && iterationCount < maxIterations) {
         iterationCount++;
-        console.log(`Archive iteration ${iterationCount}`);
+        logger.log(`Archive iteration ${iterationCount}`);
 
         // Wait for table to be ready (allow empty table since items may have been archived)
-        await loadingTaskPage.waitingTableBody(LoadingTasksSelectors.SHIPMENTS_TABLE, { minRows: 0 });
+        await loadingTaskPage.waitingTableBody(LoadingTasksSelectors.SHIPMENTS_TABLE, {
+          minRows: 0,
+          timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
+        });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         // Check if there are any rows in the table
@@ -190,7 +205,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         const rowCount = await rows.count();
 
         if (rowCount === 0) {
-          console.log('No more items to archive');
+          logger.log('No more items to archive');
           hasMoreItems = false;
           break;
         }
@@ -221,10 +236,10 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         const remainingCount = await remainingRows.count();
 
         if (remainingCount === 0) {
-          console.log('All items archived');
+          logger.log('All items archived');
           hasMoreItems = false;
         } else {
-          console.log(`Remaining items: ${remainingCount}`);
+          logger.log(`Remaining items: ${remainingCount}`);
         }
       }
 

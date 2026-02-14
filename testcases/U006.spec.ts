@@ -1,7 +1,7 @@
 import { test, expect, Locator, TestInfo } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
 import { ENV, SELECTORS } from '../config';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U005-PC01.json'; // Import your test data
@@ -84,7 +84,7 @@ export const runU006 = () => {
       const rows = table.locator('tbody tr');
 
       let rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows to archive`);
+      logger.log(`Found ${rowCount} rows to archive`);
 
       let archivedCount = 0;
 
@@ -98,7 +98,7 @@ export const runU006 = () => {
         const tdCount = await tdElements.count();
 
         if (tdCount === 0) {
-          console.log('Found empty row (no td elements) - search returned no results');
+          logger.log('Found empty row (no td elements) - search returned no results');
           break;
         }
 
@@ -109,7 +109,7 @@ export const runU006 = () => {
           color: 'white',
         });
 
-        console.log(`Processing row ${archivedCount + 1} of ${rowCount}`);
+        logger.log(`Processing row ${archivedCount + 1} of ${rowCount}`);
 
         // Click the row to select it
         await firstRow.click();
@@ -165,17 +165,17 @@ export const runU006 = () => {
         await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         archivedCount++;
-        console.log(`✅ Archived item ${archivedCount}`);
+        logger.log(`✅ Archived item ${archivedCount}`);
 
         // Update row count after archiving
         rowCount = await rows.count();
-        console.log(`Remaining rows: ${rowCount}`);
+        logger.log(`Remaining rows: ${rowCount}`);
 
         // Small delay to make the process visible
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
-      console.log(`✅ Successfully archived all ${archivedCount} items`);
+      logger.log(`✅ Successfully archived all ${archivedCount} items`);
       logger.info(`All items have been archived successfully. Total archived: ${archivedCount}`);
     });
 
@@ -203,7 +203,7 @@ export const runU006 = () => {
         `Verify table has no content rows: ${contentRowCount} content rows, ${finalRowCount} total rows`,
         test.info(),
       );
-      console.log(`✅ Table has no content rows (${contentRowCount} content rows, ${finalRowCount} total rows)`);
+      logger.log(`✅ Table has no content rows (${contentRowCount} content rows, ${finalRowCount} total rows)`);
       logger.info('Table verification complete - all items archived');
     });
   });
@@ -241,10 +241,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -258,7 +258,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -321,7 +321,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('Cleanup TestCase 00aa - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}`', async ({ page }) => {
@@ -357,10 +357,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -374,7 +374,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -437,7 +437,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 01 - создат дитайл', async ({ browser, page }) => {
@@ -654,11 +654,11 @@ export const runU006 = () => {
       const desiredValue = '999';
       await inputField.fill(desiredValue);
 
-      console.log(`Set the value "${desiredValue}" in the input field.`);
+      logger.log(`Set the value "${desiredValue}" in the input field.`);
 
       // Verify the value
       const currentValue = await inputField.inputValue();
-      console.log('Verified input value:', currentValue);
+      logger.log('Verified input value:', currentValue);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -815,20 +815,20 @@ export const runU006 = () => {
           `Verify textarea in file section ${i + 1} is visible`,
           test.info(),
         );
-        console.log(`Textarea in file section ${i + 1} is visible.`);
+        logger.log(`Textarea in file section ${i + 1} is visible.`);
 
         // Focus on the textarea to verify it is writable
         await textarea.focus();
-        console.log(`Textarea in file section ${i + 1} is focused.`);
+        logger.log(`Textarea in file section ${i + 1} is focused.`);
 
         // Type text into the textarea
         const testValue = `Test note ${i + 1}`;
         await textarea.fill(testValue);
-        console.log(`Value entered into textarea in file section ${i + 1}: ${testValue}`);
+        logger.log(`Value entered into textarea in file section ${i + 1}: ${testValue}`);
 
         // Verify the entered value
         const currentValue = await textarea.inputValue();
-        console.log(`Textarea current value in file section ${i + 1}: ${currentValue}`);
+        logger.log(`Textarea current value in file section ${i + 1}: ${currentValue}`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -872,7 +872,7 @@ export const runU006 = () => {
         // Perform the validation for the button
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
           await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-          console.log(`Checking button: ${buttonSelector} - ${buttonLabel} - Expected State: ${expectedState}`);
+          logger.log(`Checking button: ${buttonSelector} - ${buttonLabel} - Expected State: ${expectedState}`);
 
           // Locate the button using selector constant
           const buttonLocator = page.locator(buttonSelector);
@@ -881,7 +881,7 @@ export const runU006 = () => {
           const isButtonVisible = await buttonLocator.isVisible();
           const isButtonEnabled = await buttonLocator.isEnabled();
 
-          console.log(`Button: ${buttonSelector} - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
+          logger.log(`Button: ${buttonSelector} - Visible: ${isButtonVisible}, Enabled: ${isButtonEnabled}`);
 
           // Validate the button's visibility and state
           await expectSoftWithScreenshot(
@@ -987,7 +987,7 @@ export const runU006 = () => {
 
       const section = await page.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_SECTION);
       await section.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-      console.log('Dynamic content in modal section loaded.');
+      logger.log('Dynamic content in modal section loaded.');
 
       // Extract individual file sections from the main section
       const fileSections = await section.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_FILE).all();
@@ -998,12 +998,12 @@ export const runU006 = () => {
       // Call the function from shortagePage class, passing extracted filenames
       await shortagePage.validateFileNames(page, fileSections, filenamesWithoutExtension);
 
-      console.log('All file fields validated successfully.');
+      logger.log('All file fields validated successfully.');
       await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 16: Click the Загрузить все файлы button and confirm modal closure', async () => {
-      console.log('Starting file upload process...');
+      logger.log('Starting file upload process...');
 
       // Wait for the page to stabilize
       await page.waitForLoadState('networkidle');
@@ -1011,7 +1011,7 @@ export const runU006 = () => {
       // Locate the upload button using data-testid
       const uploadButton = page.locator(SelectorsPartsDataBase.FILE_UPLOAD_BUTTON);
       const modalLocator = page.locator(SelectorsPartsDataBase.FILE_DRAG_DROP_MODAL);
-      console.log('Upload button and modal located.');
+      logger.log('Upload button and modal located.');
 
       const maxRetries = 50;
       let retryCounter = 0;
@@ -1020,11 +1020,11 @@ export const runU006 = () => {
         // Check if modal exists in the DOM
         const modalCount = await modalLocator.count();
         if (modalCount === 0) {
-          console.log('Modal is no longer present in the DOM. Upload succeeded!');
+          logger.log('Modal is no longer present in the DOM. Upload succeeded!');
           break; // Exit the loop when the modal is gone
         }
 
-        console.log(`Attempt ${retryCounter + 1}: Clicking upload button.`);
+        logger.log(`Attempt ${retryCounter + 1}: Clicking upload button.`);
 
         // Change button color for debugging
         const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
@@ -1032,18 +1032,18 @@ export const runU006 = () => {
           backgroundColor: randomColor,
           border: `2px solid ${randomColor}`,
         });
-        console.log(`Button color changed to ${randomColor}.`);
+        logger.log(`Button color changed to ${randomColor}.`);
 
         // Click the upload button
         await uploadButton.click();
-        console.log('Upload button clicked.');
+        logger.log('Upload button clicked.');
 
         // Wait for notifications
         await page.waitForTimeout(TIMEOUTS.INPUT_SET);
 
         // Check modal visibility again after the button click
         if ((await modalLocator.count()) === 0) {
-          console.log('Modal closed after button click. Upload succeeded!');
+          logger.log('Modal closed after button click. Upload succeeded!');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
           break;
         }
@@ -1057,18 +1057,18 @@ export const runU006 = () => {
         }
 
         if (!notification) {
-          console.log('No notification detected. Assuming upload still in progress/succeeded.');
+          logger.log('No notification detected. Assuming upload still in progress/succeeded.');
         } else if (notification.message === 'Файл с таким именем уже существует') {
-          console.log('Duplicate filename detected. Updating all filenames.');
+          logger.log('Duplicate filename detected. Updating all filenames.');
           retryCounter++;
 
           const sectionsCount = await page.locator(SelectorsPartsDataBase.FILE_NAME_INPUT).count();
-          console.log(`Found ${sectionsCount} file sections to update filenames.`);
+          logger.log(`Found ${sectionsCount} file sections to update filenames.`);
 
           for (let i = 0; i < sectionsCount; i++) {
             // Check if modal still exists before proceeding with the loop
             if ((await modalLocator.count()) === 0) {
-              console.log('Modal closed during filename updates. Exiting loop.');
+              logger.log('Modal closed during filename updates. Exiting loop.');
               break;
             }
 
@@ -1077,11 +1077,11 @@ export const runU006 = () => {
             try {
               // Check if field is visible before interaction
               if (!(await fileInput.isVisible())) {
-                console.log(`Input field in section ${i + 1} is no longer visible. Skipping...`);
+                logger.log(`Input field in section ${i + 1} is no longer visible. Skipping...`);
                 continue;
               }
 
-              console.log(`Updating filename for section ${i + 1}.`);
+              logger.log(`Updating filename for section ${i + 1}.`);
 
               const currentValue = await fileInput.inputValue();
               await fileInput.fill('');
@@ -1096,18 +1096,18 @@ export const runU006 = () => {
                 input.dispatchEvent(new Event('change', { bubbles: true }));
               });
 
-              console.log(`Filename updated to "${updatedValue}" for section ${i + 1}.`);
+              logger.log(`Filename updated to "${updatedValue}" for section ${i + 1}.`);
             } catch (error) {
-              console.log(`Error updating filename for section ${i + 1}. Skipping...`);
+              logger.log(`Error updating filename for section ${i + 1}. Skipping...`);
               break;
             }
           }
         } else if (notification) {
-          console.log(`Unexpected notification: ${notification.message}`);
+          logger.log(`Unexpected notification: ${notification.message}`);
           break; // Exit on unexpected notifications
         }
 
-        console.log('Waiting before retrying...');
+        logger.log('Waiting before retrying...');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
@@ -1115,7 +1115,7 @@ export const runU006 = () => {
         throw new Error(`Failed to upload files after ${maxRetries} retries.`);
       }
 
-      console.log('File upload process completed successfully.');
+      logger.log('File upload process completed successfully.');
     });
 
     await allure.step('Step 17: Verify uploaded file names with wildcard matching and extension validation', async () => {
@@ -1416,7 +1416,7 @@ export const runU006 = () => {
       ); // Ensure the table is not empty
 
       let isRowFound = false;
-      console.log(rowCount);
+      logger.log(rowCount);
       // Iterate through each row
       for (let i = 0; i < rowCount; i++) {
         const row = rowsLocator.nth(i);
@@ -1427,7 +1427,7 @@ export const runU006 = () => {
         const tableFileName = await row.locator('td').nth(2).textContent();
         const tableFileNameCell = await row.locator('td').nth(2);
 
-        console.log(`Row ${i + 1}: FileType=${tableFileType?.trim()}, FileName=${tableFileName?.trim()}`);
+        logger.log(`Row ${i + 1}: FileType=${tableFileType?.trim()}, FileName=${tableFileName?.trim()}`);
 
         // Compare the extracted values
         if (tableFileType?.trim() === selectedFileType) {
@@ -1445,7 +1445,7 @@ export const runU006 = () => {
             border: '2px solid red',
             color: 'white',
           });
-          console.log(`Selected row found in row ${i + 1}`);
+          logger.log(`Selected row found in row ${i + 1}`);
         }
       }
       await expectSoftWithScreenshot(
@@ -1625,10 +1625,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -1642,7 +1642,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -1705,7 +1705,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   // TestCase 02: Do not select a material and verify that saving is not allowed.
@@ -1728,7 +1728,7 @@ export const runU006 = () => {
 
     await allure.step('Step 03: Пропустите выбор материала', async () => {
       // For this negative test we intentionally skip material selection.
-      console.log('Skipping material selection as required for this test case.');
+      logger.log('Skipping material selection as required for this test case.');
     });
 
     await allure.step('Step 04: Попытайтесь сохранить деталь без выбора материала', async () => {
@@ -1745,7 +1745,7 @@ export const runU006 = () => {
     // await allure.step("Step 06: Проверьте, что уведомление содержит текст 'Выберите материал'", async () => {
     //     // Retrieve the notification text for further logging and assertion.
     //     const errorText = await page.locator(`[data-testid="${NOTIFICATION_DESCRIPTION}"]`).last().textContent();
-    //     console.log("Notification text:", errorText);
+    //     logger.log("Notification text:", errorText);
     //     expect(errorText).toContain("Деталь успешно Создана.");
     // });
 
@@ -1762,7 +1762,7 @@ export const runU006 = () => {
 
       // Debug: Log the count of matching table elements.
       const tableCount = await detailTable.count();
-      console.log('Found tables:', tableCount);
+      logger.log('Found tables:', tableCount);
       if (tableCount === 0) {
         console.error("No table found with data-testid 'BasePaginationTable-Table-detal'");
         throw new Error('Table not found');
@@ -1804,7 +1804,7 @@ export const runU006 = () => {
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         const rowText = await currentRow.textContent();
-        console.log(`Row ${i + 1} text:`, rowText);
+        logger.log(`Row ${i + 1} text:`, rowText);
         if (rowText && rowText.trim() === SelectorsPartsDataBase.TEST_DETAIL_NAME) {
           isMatch = true;
           break;
@@ -1853,10 +1853,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -1870,7 +1870,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -1933,7 +1933,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 02a - Выбрать материал, но оставить атрибуты пустыми', async ({ page }) => {
@@ -2179,10 +2179,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -2196,7 +2196,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2259,7 +2259,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 03 - Валидация атрибутов на уровне границ', async ({ page }) => {
@@ -2416,7 +2416,7 @@ export const runU006 = () => {
       // Get all table rows (excluding header)
       const tableRows = chrTble.locator('tbody tr');
       const rowCount = await tableRows.count();
-      console.log(`Found ${rowCount} rows to validate for NaN values`);
+      logger.log(`Found ${rowCount} rows to validate for NaN values`);
 
       // Cycle through each row and validate all content
       for (let i = 0; i < rowCount; i++) {
@@ -2432,7 +2432,7 @@ export const runU006 = () => {
         // Get row name for logging
         const rowNameCell = currentRow.locator('td').first();
         const rowName = await rowNameCell.textContent();
-        console.log(`Validating row ${i + 1}: "${rowName?.trim()}"`);
+        logger.log(`Validating row ${i + 1}: "${rowName?.trim()}"`);
 
         // Check all cells in the row for NaN values
         const cells = currentRow.locator('td');
@@ -2448,7 +2448,7 @@ export const runU006 = () => {
             // expect(cellText.trim()).not.toBe('NaN');
             // expect(cellText.trim()).not.toBe('nan');
             // expect(cellText.trim()).not.toBe('NAN');
-            console.log(`  Cell ${j + 1}: "${cellText.trim()}" - OK`);
+            logger.log(`  Cell ${j + 1}: "${cellText.trim()}" - OK`);
           }
 
           // Check for input fields in the cell
@@ -2496,9 +2496,9 @@ export const runU006 = () => {
                 'Verify numeric value is valid',
                 test.info(),
               );
-              console.log(`    Input ${k + 1}: "${inputValue}" - Valid number: ${numericValue}`);
+              logger.log(`    Input ${k + 1}: "${inputValue}" - Valid number: ${numericValue}`);
             } else {
-              console.log(`    Input ${k + 1}: Empty field - OK`);
+              logger.log(`    Input ${k + 1}: Empty field - OK`);
             }
           }
         }
@@ -2509,7 +2509,7 @@ export const runU006 = () => {
         await page.waitForTimeout(TIMEOUTS.SHORT);
       }
 
-      console.log(`✅ All ${rowCount} rows validated - no NaN values found`);
+      logger.log(`✅ All ${rowCount} rows validated - no NaN values found`);
       logger.info(`All characteristic blanks table rows validated successfully - no NaN values detected`);
     });
 
@@ -2615,10 +2615,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -2632,7 +2632,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2695,7 +2695,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 04 - Попытка сохранения с очень длинным наименованием', async ({ page }) => {
@@ -2898,10 +2898,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -2915,7 +2915,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -2978,7 +2978,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 05 - Использование специальных символов в поле наименования', async ({ page }) => {
@@ -3335,10 +3335,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -3352,7 +3352,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -3415,7 +3415,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 06 - Попытка сохранения с числовым наименованием', async ({ page }) => {
@@ -3500,10 +3500,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -3517,7 +3517,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -3580,7 +3580,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 07 - Выбор различных категорий материалов', async ({ page }) => {
@@ -3876,10 +3876,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -3893,7 +3893,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -3956,7 +3956,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 08 - Сохранение при заполнении всех обязательных атрибутов', async ({ page }) => {
@@ -4205,10 +4205,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -4222,7 +4222,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -4285,7 +4285,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 09 - Подтверждение сохраненных значений после редактирования', async ({ page }) => {
@@ -4588,10 +4588,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -4605,7 +4605,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -4668,7 +4668,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 10 - Попытка удаления материала и сохранения', async ({ page }) => {
@@ -4823,7 +4823,7 @@ export const runU006 = () => {
     });
 
     await allure.step("Шаг 4: Нажать 'Сохранить'", async () => {
-      console.log("Шаг 4: Нажать 'Сохранить'");
+      logger.log("Шаг 4: Нажать 'Сохранить'");
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
       await expectSoftWithScreenshot(
         page,
@@ -4875,10 +4875,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -4892,7 +4892,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -4955,7 +4955,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 11 - Удалить материал перед сохранением', async ({ page }) => {
@@ -5160,10 +5160,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -5177,7 +5177,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -5240,7 +5240,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 12 - Переключение между категориями материалов', async ({ page }) => {
@@ -5572,10 +5572,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -5589,7 +5589,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -5652,7 +5652,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 13 - Дублирование наименования и обозначения', async ({ page }) => {
@@ -5936,10 +5936,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -5953,7 +5953,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -6016,7 +6016,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 14 - Попытка сохранения без заполнения полей', async ({ page }) => {
@@ -6126,10 +6126,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -6143,7 +6143,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -6206,7 +6206,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test("TestCase 15 - Быстрое нажатие кнопки 'Сохранить'", async ({ page }) => {
@@ -6555,10 +6555,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -6572,7 +6572,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -6635,7 +6635,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 16 - Переход без сохранения', async ({ page }) => {
@@ -6810,10 +6810,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -6827,7 +6827,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -6890,7 +6890,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 17 - Валидация сохраненных данных на бэкенде', async ({ page }) => {
@@ -7088,7 +7088,7 @@ export const runU006 = () => {
 
       // Проверить, что деталь открыта в режиме редактирования используя улучшенный метод
       const pageType = await detailsPage.getCurrentPageType();
-      console.log(`Page type: ${pageType}`);
+      logger.log(`Page type: ${pageType}`);
       if (pageType === 'unknown') {
         logger.warn('Page type is unknown - waiting for page to stabilize');
         await page.waitForTimeout(TIMEOUTS.EXTENDED);
@@ -7259,10 +7259,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -7276,7 +7276,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -7339,7 +7339,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 19 - Массовое добавление, удаление и редактирование материалов в одной сессии', async ({ page }) => {
@@ -7641,10 +7641,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -7658,7 +7658,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -7721,7 +7721,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
   test('TestCase 20 - Попытка сохранения пустой формы', async ({ page }) => {
@@ -7854,10 +7854,10 @@ export const runU006 = () => {
       // Retrieve all rows
       const rows = detailTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in search results.`);
+      logger.log(`Found ${rowCount} rows in search results.`);
 
       if (rowCount === 0) {
-        console.log('No matching rows found for archiving.');
+        logger.log('No matching rows found for archiving.');
         return;
       }
 
@@ -7871,7 +7871,7 @@ export const runU006 = () => {
         }
       }
 
-      console.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
+      logger.log(`Found ${matchingRows.length} exact matches for '${SelectorsPartsDataBase.TEST_DETAIL_NAME}'.`);
 
       if (matchingRows.length === 0) {
         console.error('No exact matches found for archiving.');
@@ -7934,7 +7934,7 @@ export const runU006 = () => {
         });
       }
 
-      console.log(`All ${matchingRows.length} exact matching details have been archived.`);
+      logger.log(`All ${matchingRows.length} exact matching details have been archived.`);
     });
   });
 };

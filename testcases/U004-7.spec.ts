@@ -3,7 +3,7 @@ import { SELECTORS } from '../config';
 import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS } from '../lib/Constants/TimeoutConstants';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U004-PC01.json'; // Import your test data

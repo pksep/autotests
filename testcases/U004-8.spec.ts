@@ -3,7 +3,7 @@ import { SELECTORS, PRODUCT_SPECS } from '../config';
 import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS } from '../lib/Constants/TimeoutConstants';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import { expectSoftWithScreenshot } from '../lib/Page';
@@ -421,7 +421,7 @@ export const runU004_8 = () => {
     } = PRODUCT_SPECS.T15;
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      console.log('Step: Clean up Т15 product specifications');
+      logger.log('Step: Clean up Т15 product specifications');
       await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
         assemblies: T15_ASSEMBLIES,
         details: T15_DETAILS,

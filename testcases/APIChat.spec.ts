@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APIChat } from "../pages/APIChat";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runChatAPI = () => {
     logger.info(`Starting Chat API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runChatAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Create chat room without authentication", async () => {
-            console.log("Testing unauthenticated chat room creation...");
+            logger.log("Testing unauthenticated chat room creation...");
 
             const chatRoomData = {
                 name: API_CONST.API_TEST_CHAT_ROOM_NAME
@@ -33,11 +33,11 @@ export const runChatAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated chat room creation correctly rejected with 401");
+            logger.log("✅ Unauthenticated chat room creation correctly rejected with 401");
         });
 
         await test.step("Test 2: Send message with SQL injection in content", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 content: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -58,11 +58,11 @@ export const runChatAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Send message with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 content: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -83,7 +83,7 @@ export const runChatAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -94,7 +94,7 @@ export const runChatAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -119,11 +119,11 @@ export const runChatAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Send message with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 content: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -144,11 +144,11 @@ export const runChatAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidSendResponse.status);
             expect(invalidSendResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Send message with empty content", async () => {
-            console.log("Testing empty content validation...");
+            logger.log("Testing empty content validation...");
 
             const emptyData = {
                 content: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -169,7 +169,7 @@ export const runChatAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptySendResponse.status);
             expect(emptySendResponse.data).toBeDefined();
-            console.log("✅ Empty content correctly rejected with 400");
+            logger.log("✅ Empty content correctly rejected with 400");
         });
     });
 
@@ -180,7 +180,7 @@ export const runChatAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -192,11 +192,11 @@ export const runChatAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for get messages", async () => {
-            console.log("Testing get messages response time performance...");
+            logger.log("Testing get messages response time performance...");
 
             const startTime = Date.now();
             const performanceGetResponse = await chatAPI.getMessages(request, API_CONST.API_TEST_CHAT_ROOM_ID, API_CONST.API_TEST_USER_ID);
@@ -206,11 +206,11 @@ export const runChatAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceGetResponse.status).toBe(200);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Get messages response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Get messages response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent message sending", async () => {
-            console.log("Testing concurrent message sending...");
+            logger.log("Testing concurrent message sending...");
 
             const messageData = {
                 content: API_CONST.API_TEST_CHAT_MESSAGE_CONTENT_UPDATED,
@@ -227,7 +227,7 @@ export const runChatAPI = () => {
                 expect(response.status).toBe(201);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent message sending handled successfully");
+            logger.log("✅ Concurrent message sending handled successfully");
         });
     });
 };

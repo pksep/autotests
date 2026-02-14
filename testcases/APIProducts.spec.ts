@@ -3,7 +3,7 @@ import { ProductsAPI } from "../pages/APIProducts";
 import { AuthAPI } from "../pages/APIAuth";
 import { SpecificationsAPI } from "../pages/APISpecifications";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 import { allure } from "allure-playwright";
 
 export const runProductsAPI = () => {
@@ -19,7 +19,7 @@ export const runProductsAPI = () => {
         let createdSpecificationId: number;
 
         await allure.step("Step 1: Authenticate user", async () => {
-            console.log("Step 1: Authenticate user");
+            logger.log("Step 1: Authenticate user");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -30,11 +30,11 @@ export const runProductsAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("Authentication successful, token received");
+            logger.log("Authentication successful, token received");
         });
 
         await allure.step("Step 2: Create Product Specification", async () => {
-            console.log("Step 2: Create Product Specification");
+            logger.log("Step 2: Create Product Specification");
 
             const specData = {
                 name: "Test Product Specification",
@@ -48,11 +48,11 @@ export const runProductsAPI = () => {
             expect(specResponse.status).toBe(201);
             expect(specResponse.data).toHaveProperty('id');
             createdSpecificationId = specResponse.data.id;
-            console.log(`Specification created successfully with ID: ${createdSpecificationId}`);
+            logger.log(`Specification created successfully with ID: ${createdSpecificationId}`);
         });
 
         await allure.step("Step 3: Create Product", async () => {
-            console.log("Step 3: Create Product");
+            logger.log("Step 3: Create Product");
 
             const productData = {
                 name: API_CONST.API_TEST_PRODUCT_NAME,
@@ -68,11 +68,11 @@ export const runProductsAPI = () => {
             expect(createResponse.status).toBe(201);
             expect(createResponse.data).toHaveProperty('id');
             createdProductId = createResponse.data.id;
-            console.log(`Product created successfully with ID: ${createdProductId}`);
+            logger.log(`Product created successfully with ID: ${createdProductId}`);
         });
 
         await allure.step("Step 4: Get Product by ID", async () => {
-            console.log("Step 4: Get Product by ID");
+            logger.log("Step 4: Get Product by ID");
 
             const getResponse = await productsAPI.getProductById(request, createdProductId);
 
@@ -80,31 +80,31 @@ export const runProductsAPI = () => {
             expect(getResponse.data.id).toBe(createdProductId);
             expect(getResponse.data.name).toBe(API_CONST.API_TEST_PRODUCT_NAME);
             expect(getResponse.data.specificationId).toBe(createdSpecificationId);
-            console.log("Product retrieved successfully by ID");
+            logger.log("Product retrieved successfully by ID");
         });
 
         await allure.step("Step 5: Get Product Specifications", async () => {
-            console.log("Step 5: Get Product Specifications");
+            logger.log("Step 5: Get Product Specifications");
 
             const specsResponse = await productsAPI.getProductSpecifications(request, createdProductId);
 
             expect(specsResponse.status).toBe(200);
             expect(Array.isArray(specsResponse.data)).toBe(true);
-            console.log(`Retrieved ${specsResponse.data.length} specifications for product`);
+            logger.log(`Retrieved ${specsResponse.data.length} specifications for product`);
         });
 
         await allure.step("Step 6: Get Product Components", async () => {
-            console.log("Step 6: Get Product Components");
+            logger.log("Step 6: Get Product Components");
 
             const componentsResponse = await productsAPI.getProductComponents(request, createdProductId);
 
             expect(componentsResponse.status).toBe(200);
             expect(Array.isArray(componentsResponse.data)).toBe(true);
-            console.log(`Retrieved ${componentsResponse.data.length} components for product`);
+            logger.log(`Retrieved ${componentsResponse.data.length} components for product`);
         });
 
         await allure.step("Step 7: Update Product", async () => {
-            console.log("Step 7: Update Product");
+            logger.log("Step 7: Update Product");
 
             const updateData = {
                 id: createdProductId,
@@ -120,11 +120,11 @@ export const runProductsAPI = () => {
 
             expect(updateResponse.status).toBe(200);
             expect(updateResponse.data.name).toBe(API_CONST.API_TEST_PRODUCT_NAME_UPDATED);
-            console.log("Product updated successfully");
+            logger.log("Product updated successfully");
         });
 
         await allure.step("Step 8: Validate Product", async () => {
-            console.log("Step 8: Validate Product");
+            logger.log("Step 8: Validate Product");
 
             const validateData = {
                 id: createdProductId,
@@ -136,36 +136,36 @@ export const runProductsAPI = () => {
 
             expect(validateResponse.status).toBe(200);
             expect(validateResponse.data.valid).toBe(true);
-            console.log("Product validation successful");
+            logger.log("Product validation successful");
         });
 
         await allure.step("Step 9: Delete Product", async () => {
-            console.log("Step 9: Delete Product");
+            logger.log("Step 9: Delete Product");
 
             const deleteResponse = await productsAPI.deleteProduct(request, createdProductId, API_CONST.API_TEST_USER_ID);
 
             expect(deleteResponse.status).toBe(204);
-            console.log("Product deleted successfully");
+            logger.log("Product deleted successfully");
         });
 
         await allure.step("Step 10: Delete Specification", async () => {
-            console.log("Step 10: Delete Specification");
+            logger.log("Step 10: Delete Specification");
 
             const deleteSpecResponse = await specificationsAPI.deleteSpecification(request, createdSpecificationId, API_CONST.API_TEST_USER_ID);
 
             expect(deleteSpecResponse.status).toBe(204);
-            console.log("Specification deleted successfully");
+            logger.log("Specification deleted successfully");
         });
 
         await allure.step("Step 11: Verify Product deletion", async () => {
-            console.log("Step 11: Verify Product deletion");
+            logger.log("Step 11: Verify Product deletion");
 
             try {
                 await productsAPI.getProductById(request, createdProductId);
                 throw new Error("Product should not exist after deletion");
             } catch (error) {
                 expect(error.message).toContain("404");
-                console.log("Product deletion verified - Product no longer exists");
+                logger.log("Product deletion verified - Product no longer exists");
             }
         });
     });
@@ -177,7 +177,7 @@ export const runProductsAPI = () => {
         let authToken: string;
 
         await allure.step("Step 1: Authenticate user", async () => {
-            console.log("Step 1: Authenticate user");
+            logger.log("Step 1: Authenticate user");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -188,11 +188,11 @@ export const runProductsAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("Authentication successful, token received");
+            logger.log("Authentication successful, token received");
         });
 
         await allure.step("Step 2: Get all products with pagination", async () => {
-            console.log("Step 2: Get all products with pagination");
+            logger.log("Step 2: Get all products with pagination");
 
             const paginationData = {
                 page: 1,
@@ -207,11 +207,11 @@ export const runProductsAPI = () => {
             expect(paginationResponse.data).toHaveProperty('items');
             expect(paginationResponse.data).toHaveProperty('total');
             expect(Array.isArray(paginationResponse.data.items)).toBe(true);
-            console.log(`Retrieved ${paginationResponse.data.items.length} products with pagination`);
+            logger.log(`Retrieved ${paginationResponse.data.items.length} products with pagination`);
         });
 
         await allure.step("Step 3: Search products", async () => {
-            console.log("Step 3: Search products");
+            logger.log("Step 3: Search products");
 
             const searchData = {
                 query: "test",
@@ -227,7 +227,7 @@ export const runProductsAPI = () => {
 
             expect(searchResponse.status).toBe(200);
             expect(Array.isArray(searchResponse.data)).toBe(true);
-            console.log(`Search returned ${searchResponse.data.length} products`);
+            logger.log(`Search returned ${searchResponse.data.length} products`);
         });
     });
 };

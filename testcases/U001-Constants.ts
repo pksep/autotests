@@ -11,6 +11,7 @@ import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction';
 import * as SelectorsShipmentTasks from '../lib/Constants/SelectorsShipmentTasks';
 import * as PartsDBSelectors from '../lib/Constants/SelectorsPartsDataBase';
+import logger from '../lib/utils/logger';
 
 // Shared state variables (will be set by test cases)
 export let incomingQuantity = '1';

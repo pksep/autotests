@@ -18,6 +18,7 @@ import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages';
 import * as SelectorsRevision from '../lib/Constants/SelectorsRevision';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import logger from '../lib/utils/logger';
 
 // Global variable declarations
 declare global {
@@ -76,11 +77,11 @@ const deficitTable = SelectorsShortagePages.TABLE_DEFICIT_IZD;
 const tableMainUploading = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE;
 
 export const runU003 = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Starting test: U003 - Shipment Tasks Management`);
+  logger.log(`Starting test: U003 - Shipment Tasks Management`);
 
   test('Test Case 0 - Cleanup: Delete all test items', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.LONG); // 10 minutes for cleanup
-    console.log('Test Case 0 - Cleanup: Delete all test items');
+    logger.log('Test Case 0 - Cleanup: Delete all test items');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
@@ -114,12 +115,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
     });
 
-    console.log(`✅ Cleanup completed successfully`);
+    logger.log(`✅ Cleanup completed successfully`);
   });
 
   test('Test Case 1 - Создать тестовое изделие', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 1 - Create test product');
+    logger.log('Test Case 1 - Create test product');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
     // Use the global test products constant
@@ -159,7 +160,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
 
         await createButton.click();
-        console.log('Clicked on Create button');
+        logger.log('Clicked on Create button');
       });
 
       await allure.step('Step 3: Wait for dialog and click on Изделие', async () => {
@@ -187,7 +188,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           test.info(),
         );
         await productButton.click();
-        console.log('Clicked on Изделие button');
+        logger.log('Clicked on Изделие button');
       });
 
       await allure.step('Step 4: Wait for creation page to load', async () => {
@@ -218,7 +219,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         await partsDatabasePage.waitForNetworkIdle();
-        console.log('Creation page loaded');
+        logger.log('Creation page loaded');
       });
 
       await allure.step('Step 5: Enter article number (Артикул)', async () => {
@@ -253,7 +254,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Verify article number matches: ${product.articleNumber}`,
           test.info(),
         );
-        console.log(`Entered article number: ${product.articleNumber}`);
+        logger.log(`Entered article number: ${product.articleNumber}`);
       });
 
       await allure.step('Step 6: Enter name (Наименование)', async () => {
@@ -288,7 +289,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Verify product name matches: ${product.name}`,
           test.info(),
         );
-        console.log(`Entered name: ${product.name}`);
+        logger.log(`Entered name: ${product.name}`);
       });
 
       await allure.step('Step 7: Enter designation (Обозначение)', async () => {
@@ -323,7 +324,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Verify designation matches: ${product.designation}`,
           test.info(),
         );
-        console.log(`Entered designation: ${product.designation}`);
+        logger.log(`Entered designation: ${product.designation}`);
       });
 
       await allure.step('Step 8: Click Save button', async () => {
@@ -347,7 +348,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Verify product "${product.name}" was saved successfully`,
           test.info(),
         );
-        console.log('Clicked Save button and waited for loading to complete');
+        logger.log('Clicked Save button and waited for loading to complete');
       });
 
       await allure.step('Step 9: Click Cancel button', async () => {
@@ -378,7 +379,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Verify cancellation successful and returned to list page for product "${product.name}"`,
           test.info(),
         );
-        console.log('Clicked Cancel button');
+        logger.log('Clicked Cancel button');
       });
 
       // Store product names for later use (first, second, and the latest product)
@@ -395,19 +396,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       testProductArticleNumber = product.articleNumber;
       global.testProductName = product.name;
       global.testProductArticleNumber = product.articleNumber;
-      console.log(`Set global.testProductName to: ${global.testProductName} (product: ${product.name})`);
+      logger.log(`Set global.testProductName to: ${global.testProductName} (product: ${product.name})`);
     }
 
     // Final verification log
-    console.log(`Test Case 1 completed. Final values:`);
-    console.log(`  global.firstProductName = ${global.firstProductName}`);
-    console.log(`  global.secondProductName = ${global.secondProductName}`);
-    console.log(`  global.testProductName = ${global.testProductName}`);
+    logger.log(`Test Case 1 completed. Final values:`);
+    logger.log(`  global.firstProductName = ${global.firstProductName}`);
+    logger.log(`  global.secondProductName = ${global.secondProductName}`);
+    logger.log(`  global.testProductName = ${global.testProductName}`);
   });
 
   test('Test Case 2 - Создать Задачу на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 2 - Create shipment task');
+    logger.log('Test Case 2 - Create shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
     // Use the first product from TEST_PRODUCTS constant (adding products in order: 1, 2, 3)
@@ -556,13 +557,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify urgency date selected successfully: 23.01.2025 - actual: "${actualDateText}"`,
         test.info(),
       );
-      console.log('Selected urgency date: 23.01.2025');
+      logger.log('Selected urgency date: 23.01.2025');
     });
 
     await allure.step('Step 20: Enter shipment plan date', async () => {
       // TODO: Find the selector for shipment plan date input
       // This will need to be implemented based on the actual UI
-      console.log('Step 20: Enter shipment plan date - TODO');
+      logger.log('Step 20: Enter shipment plan date - TODO');
       // Placeholder step - no actual implementation yet
       const shipmentPlanDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY);
       const isFieldVisible = await shipmentPlanDateDisplay.isVisible();
@@ -579,7 +580,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 21: Enter order date', async () => {
       // TODO: Find the selector for order date input
       // This will need to be implemented based on the actual UI
-      console.log('Step 21: Enter order date - TODO');
+      logger.log('Step 21: Enter order date - TODO');
       // Placeholder step - no actual implementation yet
       const orderDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_ORDER_DISPLAY);
       const isFieldVisible = await orderDateDisplay.isVisible();
@@ -602,7 +603,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.preservingDescendants(descendantsCbedArray, descendantsDetailArray);
 
       // Verify that the operation completed (arrays may be empty, but operation should complete)
-      console.log(`Saved ${descendantsCbedArray.length} CBED and ${descendantsDetailArray.length} DETAIL items`);
+      logger.log(`Saved ${descendantsCbedArray.length} CBED and ${descendantsDetailArray.length} DETAIL items`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -650,15 +651,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         test.info(),
       );
 
-      console.log(`Order Number saved: ${shipmentTaskNumber}`);
-      console.log(`Full Order Number saved: ${fullOrderNumber}`);
-      console.log(`Order Date saved: ${shipmentOrderDate}`);
+      logger.log(`Order Number saved: ${shipmentTaskNumber}`);
+      logger.log(`Full Order Number saved: ${fullOrderNumber}`);
+      logger.log(`Order Date saved: ${shipmentOrderDate}`);
     });
   });
 
   test('Test Case 3 - Проверить создание Задачи на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.EXTENDED);
-    console.log('Test Case 3 - Verify shipment task creation (edit verification)');
+    logger.log('Test Case 3 - Verify shipment task creation (edit verification)');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
@@ -727,21 +728,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(orderNumberCell);
 
       const orderNumberWithDate = (await orderNumberCell.textContent())?.trim() || '';
-      console.log('Order number from row:', orderNumberWithDate);
+      logger.log('Order number from row:', orderNumberWithDate);
 
       // Extract date from order number if it contains " от "
       let extractedDate = '';
       if (orderNumberWithDate.includes(' от ')) {
         extractedDate = orderNumberWithDate.split(' от ')[1]?.trim() || '';
-        console.log('Extracted date from row:', extractedDate);
+        logger.log('Extracted date from row:', extractedDate);
       }
 
       const editTitle = page.locator('h3').filter({ hasText: 'Редактирование заказа' }).first();
       await loadingTaskPage.waitAndHighlight(editTitle);
 
       const titleText = (await editTitle.textContent())?.trim() || '';
-      console.log('Title text:', titleText);
-      console.log('Order number value:', orderNumberValue);
+      logger.log('Title text:', titleText);
+      logger.log('Order number value:', orderNumberValue);
 
       // Normalize order numbers for comparison (remove "№" symbol and extract base number)
       const getBaseOrderNumber = (orderNum: string): string => {
@@ -753,8 +754,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const baseTitleOrder = getBaseOrderNumber(normalizedTitle);
       const baseOrderValue = getBaseOrderNumber(normalizedOrderValue);
 
-      console.log(`Test Case 3: Normalized title: "${normalizedTitle}", base: "${baseTitleOrder}"`);
-      console.log(`Test Case 3: Normalized order value: "${normalizedOrderValue}", base: "${baseOrderValue}"`);
+      logger.log(`Test Case 3: Normalized title: "${normalizedTitle}", base: "${baseTitleOrder}"`);
+      logger.log(`Test Case 3: Normalized order value: "${normalizedOrderValue}", base: "${baseOrderValue}"`);
 
       // Check if order number is in title (more flexible - handles spacing variations)
       // The title format is: "Редактирование заказа № 25-4546 /0 от 18.11.2025"
@@ -825,7 +826,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           dataRowCount++;
           dataRows.push(row);
         } else {
-          console.log(`Excluding totals row ${i + 1} (Итого: ${hasItogo}, colspan: ${colspan})`);
+          logger.log(`Excluding totals row ${i + 1} (Итого: ${hasItogo}, colspan: ${colspan})`);
         }
       }
 
@@ -1000,10 +1001,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const cellUrgencyDate = (await urgencyDateCell.textContent())?.trim() || '';
 
       // Log the date values for debugging
-      console.log(`Test Case 3: displayUrgencyDate = "${displayUrgencyDate}"`);
-      console.log(`Test Case 3: cellUrgencyDate = "${cellUrgencyDate}"`);
-      console.log(`Test Case 3: urgencyDate = "${urgencyDate}"`);
-      console.log(`Test Case 3: urgencyDateNewFormat = "${urgencyDateNewFormat}"`);
+      logger.log(`Test Case 3: displayUrgencyDate = "${displayUrgencyDate}"`);
+      logger.log(`Test Case 3: cellUrgencyDate = "${cellUrgencyDate}"`);
+      logger.log(`Test Case 3: urgencyDate = "${urgencyDate}"`);
+      logger.log(`Test Case 3: urgencyDateNewFormat = "${urgencyDateNewFormat}"`);
 
       // Check if dates match (could be in different formats)
       const dateMatch =
@@ -1014,7 +1015,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         displayUrgencyDate.includes(urgencyDate) ||
         displayUrgencyDate.includes(urgencyDateNewFormat);
 
-      console.log(`Test Case 3: dateMatch = ${dateMatch}`);
+      logger.log(`Test Case 3: dateMatch = ${dateMatch}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -1128,7 +1129,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         try {
           await partsDatabasePage.waitAndHighlight(characteristicElement, { waitAfter: 1500 });
         } catch (error) {
-          console.log('Characteristic element not found within timeout, continuing...');
+          logger.log('Characteristic element not found within timeout, continuing...');
         }
 
         let characteristicValue = '';
@@ -1280,7 +1281,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Verify order number "${fullOrderNumberValue}" found in search results`,
           test.info(),
         );
-        console.log(`Tab 1: Order ${fullOrderNumberValue} found in results`);
+        logger.log(`Tab 1: Order ${fullOrderNumberValue} found in results`);
 
         // Store Tab 1 reference for later use (we'll need to access it in Step 26)
         (global as any).tab1 = page;
@@ -1345,7 +1346,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await tab2LoadingTaskPage.waitAndHighlight(editButton);
         await editButton.click();
         await tab2LoadingTaskPage.waitForNetworkIdle();
-        console.log(`Tab 2: Order opened in edit mode`);
+        logger.log(`Tab 2: Order opened in edit mode`);
 
         // Store tab2 reference for later use (we'll need to access it in subsequent steps)
         (global as any).tab2 = tab2;
@@ -1354,7 +1355,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Switch back to Tab 1
       await page.bringToFront();
-      console.log('Switched back to Tab 1');
+      logger.log('Switched back to Tab 1');
     });
 
     // Comparison steps between Tab 1 (list) and Tab 2 (edit)
@@ -1367,7 +1368,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       if (orderNumberTab1.includes(' от ')) {
         orderNumberTab1 = orderNumberTab1.split(' от ')[0].trim();
       }
-      console.log(`Tab 1 order number: ${orderNumberTab1}`);
+      logger.log(`Tab 1 order number: ${orderNumberTab1}`);
 
       // Tab 2: Get order number from edit title
       const tab2 = (global as any).tab2 as Page;
@@ -1430,21 +1431,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify order numbers match: ${orderNumberTab1} vs ${orderNumberTab2}`,
         test.info(),
       );
-      console.log(`✅ Order numbers match: ${orderNumberTab1}`);
+      logger.log(`✅ Order numbers match: ${orderNumberTab1}`);
     });
 
     await allure.step('Step 17: Compare article numbers between Tab 1 and Tab 2', async () => {
       // Tab 1: Get article number from list
       await page.bringToFront();
       const articleNumberTab1 = await loadingTaskPage.getCellValueFromShipmentsTable('tr', SelectorsLoadingTasksPage.SHIPMENTS_ARTICLE_PATTERN);
-      console.log(`Tab 1 article number: ${articleNumberTab1}`);
+      logger.log(`Tab 1 article number: ${articleNumberTab1}`);
 
       // Tab 2: Get article number from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
       const articleNumberTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN);
-      console.log(`Tab 2 article number: ${articleNumberTab2}`);
+      logger.log(`Tab 2 article number: ${articleNumberTab2}`);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1455,21 +1456,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify article numbers match: ${articleNumberTab1} vs ${articleNumberTab2}`,
         test.info(),
       );
-      console.log(`✅ Article numbers match: ${articleNumberTab1}`);
+      logger.log(`✅ Article numbers match: ${articleNumberTab1}`);
     });
 
     await allure.step('Step 18: Compare product names between Tab 1 and Tab 2', async () => {
       // Tab 1: Get product name from list
       await page.bringToFront();
       const productNameTab1 = await loadingTaskPage.getCellValueFromShipmentsTable('tr', SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN);
-      console.log(`Tab 1 product name: ${productNameTab1}`);
+      logger.log(`Tab 1 product name: ${productNameTab1}`);
 
       // Tab 2: Get product name from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
       const productNameTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN);
-      console.log(`Tab 2 product name: ${productNameTab2}`);
+      logger.log(`Tab 2 product name: ${productNameTab2}`);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1480,21 +1481,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify product names match: ${productNameTab1} vs ${productNameTab2}`,
         test.info(),
       );
-      console.log(`✅ Product names match: ${productNameTab1}`);
+      logger.log(`✅ Product names match: ${productNameTab1}`);
     });
 
     await allure.step('Step 19: Compare quantity between Tab 1 and Tab 2', async () => {
       // Tab 1: Get quantity from list
       await page.bringToFront();
       const quantityTab1 = await loadingTaskPage.getCellValueFromShipmentsTable('tr', SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN);
-      console.log(`Tab 1 quantity: ${quantityTab1}`);
+      logger.log(`Tab 1 quantity: ${quantityTab1}`);
 
       // Tab 2: Get quantity from edit page
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
       await tab2.bringToFront();
       const quantityTab2 = await tab2LoadingTaskPage.getCellValueFromEditPage(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN);
-      console.log(`Tab 2 quantity: ${quantityTab2}`);
+      logger.log(`Tab 2 quantity: ${quantityTab2}`);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1505,7 +1506,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify quantities match: ${quantityTab1} vs ${quantityTab2}`,
         test.info(),
       );
-      console.log(`✅ Quantities match: ${quantityTab1}`);
+      logger.log(`✅ Quantities match: ${quantityTab1}`);
     });
 
     await allure.step('Step 20: Compare DateOrder (Кол-во дней) between Tab 1 and Tab 2', async () => {
@@ -1516,7 +1517,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateOrderCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateOrderCellTab1);
       const dateOrderTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
+      logger.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
 
       // Tab 2: Get DateOrder from edit page
       const tab2 = (global as any).tab2 as Page;
@@ -1526,7 +1527,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateOrderCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateOrderCellTab2);
       const dateOrderTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
+      logger.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1537,7 +1538,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify DateOrder values match: ${dateOrderTab1} vs ${dateOrderTab2}`,
         test.info(),
       );
-      console.log(`✅ DateOrder values match: ${dateOrderTab1}`);
+      logger.log(`✅ DateOrder values match: ${dateOrderTab1}`);
     });
 
     await allure.step('Step 21: Compare DateShipments (Дата плановой отгрузки) between Tab 1 and Tab 2', async () => {
@@ -1548,7 +1549,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
+      logger.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
 
       // Tab 2: Get DateShipments from edit page
       const tab2 = (global as any).tab2 as Page;
@@ -1558,7 +1559,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab2);
       const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
+      logger.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1569,7 +1570,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify DateShipments values match: ${dateShipmentsTab1} vs ${dateShipmentsTab2}`,
         test.info(),
       );
-      console.log(`✅ DateShipments values match: ${dateShipmentsTab1}`);
+      logger.log(`✅ DateShipments values match: ${dateShipmentsTab1}`);
     });
 
     await allure.step('Step 22: Compare Buyers (Покупатель) between Tab 1 and Tab 2', async () => {
@@ -1580,7 +1581,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const buyersCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_BUYERS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(buyersCellTab1);
       const buyersTab1 = (await buyersCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 Buyers: ${buyersTab1}`);
+      logger.log(`Tab 1 Buyers: ${buyersTab1}`);
 
       // Tab 2: Get Buyers from edit page
       const tab2 = (global as any).tab2 as Page;
@@ -1590,7 +1591,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const buyersCellTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first();
       await tab2LoadingTaskPage.waitAndHighlight(buyersCellTab2);
       const buyersTab2 = (await buyersCellTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 Buyers: ${buyersTab2}`);
+      logger.log(`Tab 2 Buyers: ${buyersTab2}`);
 
       // Compare
       await expectSoftWithScreenshot(
@@ -1601,7 +1602,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify buyers match: ${buyersTab1} vs ${buyersTab2}`,
         test.info(),
       );
-      console.log(`✅ Buyers match: ${buyersTab1}`);
+      logger.log(`✅ Buyers match: ${buyersTab1}`);
     });
 
     await allure.step('Step 23: Compare DateByUrgency between Tab 1 and Tab 2', async () => {
@@ -1616,7 +1617,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const calendarDisplayTab1 = dateByUrgencyCellTab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
       await loadingTaskPage.waitAndHighlight(calendarDisplayTab1);
       const dateByUrgencyTab1 = (await calendarDisplayTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1}`);
+      logger.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1}`);
 
       // Tab 2: Get DateByUrgency from edit page
       const tab2 = (global as any).tab2 as Page;
@@ -1626,7 +1627,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2);
       const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateByUrgency: ${dateByUrgencyTab2}`);
+      logger.log(`Tab 2 DateByUrgency: ${dateByUrgencyTab2}`);
 
       // Normalize dates to same format before comparing
       const normalizedDateTab1 = normalizeDate(dateByUrgencyTab1);
@@ -1641,7 +1642,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify DateByUrgency values match: ${normalizedDateTab1} vs ${normalizedDateTab2}`,
         test.info(),
       );
-      console.log(`✅ DateByUrgency values match: ${normalizedDateTab1}`);
+      logger.log(`✅ DateByUrgency values match: ${normalizedDateTab1}`);
     });
 
     await allure.step('Step 24: Compare DateShipments (Дата плановой отгрузки) between Tab 1 and Tab 2', async () => {
@@ -1652,7 +1653,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_TBODY_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
+      logger.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
 
       // Tab 2: Get DateShipments from edit page calendar
       const tab2 = (global as any).tab2 as Page;
@@ -1662,7 +1663,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
       await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2);
       const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
+      logger.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
 
       // Normalize dates to same format before comparing
       const normalizedDateTab1 = normalizeDate(dateShipmentsTab1);
@@ -1677,7 +1678,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify DateShipments values match: ${normalizedDateTab1} vs ${normalizedDateTab2}`,
         test.info(),
       );
-      console.log(`✅ DateShipments values match: ${normalizedDateTab1}`);
+      logger.log(`✅ DateShipments values match: ${normalizedDateTab1}`);
     });
 
     await allure.step('Step 25: Compare time from DateShipments with product characteristic', async () => {
@@ -1690,7 +1691,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsTimeTab1 = (await dateShipmentsTimeCellTab1.textContent())?.trim() || '';
       // Split by '/' and take first part
       const timeValue = dateShipmentsTimeTab1.split('/')[0].trim();
-      console.log(`Tab 1 time value (first part): ${timeValue}`);
+      logger.log(`Tab 1 time value (first part): ${timeValue}`);
 
       // Get product name for searching
       const productNameCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
@@ -1765,11 +1766,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         try {
           await partsDatabasePage.waitAndHighlight(characteristicElement);
         } catch (error) {
-          console.log('Characteristic element not found within timeout, continuing...');
+          logger.log('Characteristic element not found within timeout, continuing...');
         }
 
         const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
-        console.log(`Product characteristic value: ${characteristicValue}`);
+        logger.log(`Product characteristic value: ${characteristicValue}`);
 
         // Compare
         await expectSoftWithScreenshot(
@@ -1780,7 +1781,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           `Verify characteristic matches time value: ${characteristicValue} vs ${timeValue}`,
           test.info(),
         );
-        console.log(`✅ Time value matches product characteristic: ${timeValue}`);
+        logger.log(`✅ Time value matches product characteristic: ${timeValue}`);
       } finally {
         // Close the new page
         await newPage.close();
@@ -1797,13 +1798,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
       await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateByUrgency (for comparison): ${dateByUrgencyTab2}`);
+      logger.log(`Tab 2 DateByUrgency (for comparison): ${dateByUrgencyTab2}`);
 
       // Get shipment plan date from Tab 2
       const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
       await dateShipmentsDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateShipments (for comparison): ${dateShipmentsTab2}`);
+      logger.log(`Tab 2 DateShipments (for comparison): ${dateShipmentsTab2}`);
 
       // Normalize dates using page class method
       const normalizedUrgencyDate = normalizeDate(dateByUrgencyTab2);
@@ -1872,7 +1873,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify search results show exactly 1 row in OrderFilterTable`,
         test.info(),
       );
-      console.log(`Found ${rowCount} row(s) in OrderFilterTable`);
+      logger.log(`Found ${rowCount} row(s) in OrderFilterTable`);
 
       // Get the first row
       const firstRow = rows.first();
@@ -1882,7 +1883,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const orderNumberCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_NAME_PATTERN).first();
       await deficitLoadingTaskPage.waitAndHighlight(orderNumberCell);
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
-      console.log(`Order number in table: ${cellOrderNumber}`);
+      logger.log(`Order number in table: ${cellOrderNumber}`);
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1896,7 +1897,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const editTitleTab2 = tab2.locator(SelectorsLoadingTasksPage.editTitle).first();
       await tab2LoadingTaskPage.waitAndHighlight(editTitleTab2);
       const editTitleText = (await editTitleTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 edit title: ${editTitleText}`);
+      logger.log(`Tab 2 edit title: ${editTitleText}`);
       await expectSoftWithScreenshot(
         tab2,
         () => {
@@ -1912,8 +1913,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(urgencyDateCell);
       const urgencyDateValue = (await urgencyDateCell.textContent())?.trim() || '';
       const normalizedUrgencyDateFromTable = normalizeDate(urgencyDateValue);
-      console.log(`Urgency date in table: ${urgencyDateValue} (normalized: ${normalizedUrgencyDateFromTable})`);
-      console.log(`Expected urgency date: ${normalizedUrgencyDate}`);
+      logger.log(`Urgency date in table: ${urgencyDateValue} (normalized: ${normalizedUrgencyDateFromTable})`);
+      logger.log(`Expected urgency date: ${normalizedUrgencyDate}`);
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1928,7 +1929,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPage.waitAndHighlight(tab2UrgencyDisplay);
       const tab2UrgencyValue = (await tab2UrgencyDisplay.textContent())?.trim() || '';
       const normalizedTab2Urgency = normalizeDate(tab2UrgencyValue);
-      console.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
+      logger.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1944,8 +1945,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(shipmentPlanDateCell);
       const shipmentPlanDateValue = (await shipmentPlanDateCell.textContent())?.trim() || '';
       const normalizedShipmentPlanDateFromTable = normalizeDate(shipmentPlanDateValue);
-      console.log(`Shipment plan date in table: ${shipmentPlanDateValue} (normalized: ${normalizedShipmentPlanDateFromTable})`);
-      console.log(`Expected shipment plan date: ${normalizedShipmentPlanDate}`);
+      logger.log(`Shipment plan date in table: ${shipmentPlanDateValue} (normalized: ${normalizedShipmentPlanDateFromTable})`);
+      logger.log(`Expected shipment plan date: ${normalizedShipmentPlanDate}`);
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -1961,7 +1962,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPage.waitAndHighlight(tab2PlanDisplay);
       const tab2PlanValue = (await tab2PlanDisplay.textContent())?.trim() || '';
       const normalizedTab2Plan = normalizeDate(tab2PlanValue);
-      console.log(`Tab 2 plan shipment date: ${tab2PlanValue} (normalized: ${normalizedTab2Plan})`);
+      logger.log(`Tab 2 plan shipment date: ${tab2PlanValue} (normalized: ${normalizedTab2Plan})`);
       await expectSoftWithScreenshot(
         deficitPage,
         () => {
@@ -2003,7 +2004,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         `Verify deficit table has at least 1 row (found: ${deficitRowCount})`,
         test.info(),
       );
-      console.log(`Found ${deficitRowCount} row(s) in DeficitIzd-Main-Table`);
+      logger.log(`Found ${deficitRowCount} row(s) in DeficitIzd-Main-Table`);
 
       const firstDeficitRow = deficitRows.first();
       await deficitLoadingTaskPage.waitAndHighlight(firstDeficitRow);
@@ -2012,7 +2013,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const deficitArticleCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_ARTICLE).first();
       await deficitLoadingTaskPage.waitAndHighlight(deficitArticleCell);
       const deficitArticleValue = (await deficitArticleCell.textContent())?.trim() || '';
-      console.log(`Deficit table article: ${deficitArticleValue}`);
+      logger.log(`Deficit table article: ${deficitArticleValue}`);
 
       // Switch to orders page (Tab 1 - shipments page) to compare
       if (tab1) {
@@ -2021,7 +2022,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await shipmentsArticleCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsArticleCell.scrollIntoViewIfNeeded();
         const shipmentsArticleValue = (await shipmentsArticleCell.textContent())?.trim() || '';
-        console.log(`Shipments table article: ${shipmentsArticleValue}`);
+        logger.log(`Shipments table article: ${shipmentsArticleValue}`);
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -2032,14 +2033,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
-        console.log('Tab 1 (shipments page) not found, skipping article comparison');
+        logger.log('Tab 1 (shipments page) not found, skipping article comparison');
       }
 
       // Step 26.10: Validate product name
       const deficitNameCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_NAME).first();
       await deficitLoadingTaskPage.waitAndHighlight(deficitNameCell);
       const deficitNameValue = (await deficitNameCell.textContent())?.trim() || '';
-      console.log(`Deficit table name: ${deficitNameValue}`);
+      logger.log(`Deficit table name: ${deficitNameValue}`);
 
       // Switch to orders page to compare
       if (tab1) {
@@ -2048,7 +2049,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await shipmentsNameWrapper.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await shipmentsNameWrapper.scrollIntoViewIfNeeded();
         const shipmentsNameValue = (await shipmentsNameWrapper.textContent())?.trim() || '';
-        console.log(`Shipments table name: ${shipmentsNameValue}`);
+        logger.log(`Shipments table name: ${shipmentsNameValue}`);
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -2059,7 +2060,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
-        console.log('Tab 1 (shipments page) not found, skipping name comparison');
+        logger.log('Tab 1 (shipments page) not found, skipping name comparison');
       }
 
       // Step 26.11: Validate urgency date
@@ -2067,7 +2068,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(deficitDateUrgencyCell);
       const deficitDateUrgencyValue = (await deficitDateUrgencyCell.textContent())?.trim() || '';
       const normalizedDeficitDateUrgency = normalizeDate(deficitDateUrgencyValue);
-      console.log(`Deficit table urgency date: ${deficitDateUrgencyValue} (normalized: ${normalizedDeficitDateUrgency})`);
+      logger.log(`Deficit table urgency date: ${deficitDateUrgencyValue} (normalized: ${normalizedDeficitDateUrgency})`);
 
       // Switch to orders page to compare
       if (tab1) {
@@ -2077,7 +2078,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await shipmentsDateUrgencyDisplay.scrollIntoViewIfNeeded();
         const shipmentsDateUrgencyValue = (await shipmentsDateUrgencyDisplay.textContent())?.trim() || '';
         const normalizedShipmentsDateUrgency = normalizeDate(shipmentsDateUrgencyValue);
-        console.log(`Shipments table urgency date: ${shipmentsDateUrgencyValue} (normalized: ${normalizedShipmentsDateUrgency})`);
+        logger.log(`Shipments table urgency date: ${shipmentsDateUrgencyValue} (normalized: ${normalizedShipmentsDateUrgency})`);
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -2088,7 +2089,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
-        console.log('Tab 1 (shipments page) not found, skipping urgency date comparison');
+        logger.log('Tab 1 (shipments page) not found, skipping urgency date comparison');
       }
 
       // Step 26.12: Validate shipment date
@@ -2096,7 +2097,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitLoadingTaskPage.waitAndHighlight(deficitDateShipmentsCell);
       const deficitDateShipmentsValue = (await deficitDateShipmentsCell.textContent())?.trim() || '';
       const normalizedDeficitDateShipments = normalizeDate(deficitDateShipmentsValue);
-      console.log(`Deficit table shipment date: ${deficitDateShipmentsValue} (normalized: ${normalizedDeficitDateShipments})`);
+      logger.log(`Deficit table shipment date: ${deficitDateShipmentsValue} (normalized: ${normalizedDeficitDateShipments})`);
 
       // Switch to orders page to compare
       if (tab1) {
@@ -2106,7 +2107,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await shipmentsDateShipmentsCell.scrollIntoViewIfNeeded();
         const shipmentsDateShipmentsValue = (await shipmentsDateShipmentsCell.textContent())?.trim() || '';
         const normalizedShipmentsDateShipments = normalizeDate(shipmentsDateShipmentsValue);
-        console.log(`Shipments table shipment date: ${shipmentsDateShipmentsValue} (normalized: ${normalizedShipmentsDateShipments})`);
+        logger.log(`Shipments table shipment date: ${shipmentsDateShipmentsValue} (normalized: ${normalizedShipmentsDateShipments})`);
         await expectSoftWithScreenshot(
           tab1,
           () => {
@@ -2118,7 +2119,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         );
         await deficitPage.bringToFront(); // Switch back to deficit page
       } else {
-        console.log('Tab 1 (shipments page) not found, skipping shipment date comparison');
+        logger.log('Tab 1 (shipments page) not found, skipping shipment date comparison');
       }
     });
     await allure.step('Step 28: Navigate to warehouse page and click shipping tasks', async () => {
@@ -2127,16 +2128,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Step 28.1: Close all open tabs except the main page
       const context = page.context();
       const allPages = context.pages();
-      console.log(`Found ${allPages.length} open tab(s)`);
+      logger.log(`Found ${allPages.length} open tab(s)`);
 
       // Keep the main page, close all others
       for (const p of allPages) {
         if (p !== page && !p.isClosed()) {
           try {
             await p.close();
-            console.log('Closed a tab');
+            logger.log('Closed a tab');
           } catch (error) {
-            console.log(`Error closing tab: ${error}`);
+            logger.log(`Error closing tab: ${error}`);
           }
         }
       }
@@ -2156,7 +2157,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await shippingTasksElement.click();
       await loadingTaskPage.waitForNetworkIdle();
       await page.waitForTimeout(TIMEOUTS.STANDARD);
-      console.log('Clicked on Sclad-shippingTasks element');
+      logger.log('Clicked on Sclad-shippingTasks element');
 
       // Step 28.4: Get the values we need for searching (Test Case 2 now uses PRODUCT_1)
       const fullOrderNumberValue = global.fullOrderNumber || fullOrderNumber;
@@ -2217,9 +2218,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await actualInput.press('Enter');
           await loadingTaskPage.waitForNetworkIdle();
           await page.waitForTimeout(TIMEOUTS.STANDARD);
-          console.log('Cleared existing search before performing new search');
+          logger.log('Cleared existing search before performing new search');
         } catch (error) {
-          console.log('Could not clear existing search, continuing with new search:', error);
+          logger.log('Could not clear existing search, continuing with new search:', error);
         }
 
         // Perform the search by order number
@@ -2247,15 +2248,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         const normalizedCellOrder = normalizeOrderNumber(cellOrderNumber);
         const normalizedExpected = normalizeOrderNumber(fullOrderNumberValue);
-        console.log(`Test Case 3 Step 28 Method 1: Searching for: "${fullOrderNumberValue}"`);
-        console.log(`Test Case 3 Step 28 Method 1: Found in cell: "${cellOrderNumber}"`);
-        console.log(`Test Case 3 Step 28 Method 1: Normalized cell: "${normalizedCellOrder}"`);
-        console.log(`Test Case 3 Step 28 Method 1: Normalized expected: "${normalizedExpected}"`);
-        console.log(`Test Case 3 Step 28 Method 1: Check 1 (cell includes expected): ${normalizedCellOrder.includes(normalizedExpected)}`);
-        console.log(
+        logger.log(`Test Case 3 Step 28 Method 1: Searching for: "${fullOrderNumberValue}"`);
+        logger.log(`Test Case 3 Step 28 Method 1: Found in cell: "${cellOrderNumber}"`);
+        logger.log(`Test Case 3 Step 28 Method 1: Normalized cell: "${normalizedCellOrder}"`);
+        logger.log(`Test Case 3 Step 28 Method 1: Normalized expected: "${normalizedExpected}"`);
+        logger.log(`Test Case 3 Step 28 Method 1: Check 1 (cell includes expected): ${normalizedCellOrder.includes(normalizedExpected)}`);
+        logger.log(
           `Test Case 3 Step 28 Method 1: Check 2 (expected includes cell base): ${normalizedExpected.includes(normalizedCellOrder.split(' от ')[0])}`,
         );
-        console.log(`Test Case 3 Step 28 Method 1: Cell base (split by ' от '): "${normalizedCellOrder.split(' от ')[0]}"`);
+        logger.log(`Test Case 3 Step 28 Method 1: Cell base (split by ' от '): "${normalizedCellOrder.split(' от ')[0]}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2523,7 +2524,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await editButton.click();
           await tab2LoadingTaskPage.waitForNetworkIdle();
           await tab2.waitForTimeout(TIMEOUTS.STANDARD);
-          console.log('Clicked edit button in Tab 2');
+          logger.log('Clicked edit button in Tab 2');
         } else {
           console.warn('Edit button is disabled. Skipping click.');
         }
@@ -2531,7 +2532,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         // Store Tab 2 reference for future use
         (global as any).tab2 = tab2;
         (global as any).tab2LoadingTaskPage = tab2LoadingTaskPage;
-        console.log('Tab 2: Order opened in edit mode');
+        logger.log('Tab 2: Order opened in edit mode');
       } catch (error) {
         console.error('Error in Step 28 (opening edit tab):', error);
         throw error;
@@ -2563,13 +2564,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const orderNumberCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(orderNumberCellTab1);
       const orderNumberTab1 = (await orderNumberCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 order number: ${orderNumberTab1}`);
+      logger.log(`Tab 1 order number: ${orderNumberTab1}`);
 
       await tab2ForCompare.bringToFront();
       const editTitleTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.editTitle).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(editTitleTab2);
       const editTitleTextTab2 = (await editTitleTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 edit title: ${editTitleTextTab2}`);
+      logger.log(`Tab 2 edit title: ${editTitleTextTab2}`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2585,13 +2586,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const articleCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(articleCellTab1);
       const articleTab1 = (await articleCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 article: ${articleTab1}`);
+      logger.log(`Tab 1 article: ${articleTab1}`);
 
       await tab2ForCompare.bringToFront();
       const articleCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(articleCellTab2);
       const articleTab2 = (await articleCellTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 article: ${articleTab2}`);
+      logger.log(`Tab 2 article: ${articleTab2}`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2607,13 +2608,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const productWrapperTab1 = matchingRow.locator(SelectorsShipmentTasks.PRODUCT_WRAPPER).first();
       await loadingTaskPage.waitAndHighlight(productWrapperTab1);
       const productWrapperValueTab1 = (await productWrapperTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 product wrapper: ${productWrapperValueTab1}`);
+      logger.log(`Tab 1 product wrapper: ${productWrapperValueTab1}`);
 
       await tab2ForCompare.bringToFront();
       const productWrapperTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(productWrapperTab2);
       const productWrapperValueTab2 = (await productWrapperTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 product wrapper: ${productWrapperValueTab2}`);
+      logger.log(`Tab 2 product wrapper: ${productWrapperValueTab2}`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2629,7 +2630,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCellTab1);
       const quantityTab1 = (await quantityCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 quantity: ${quantityTab1}`);
+      logger.log(`Tab 1 quantity: ${quantityTab1}`);
 
       await tab2ForCompare.bringToFront();
       // Compare with input field
@@ -2637,7 +2638,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await quantityInputTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityInputTab2);
       const quantityInputValueTab2 = (await quantityInputTab2.inputValue())?.trim() || '';
-      console.log(`Tab 2 quantity input: ${quantityInputValueTab2}`);
+      logger.log(`Tab 2 quantity input: ${quantityInputValueTab2}`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2652,7 +2653,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(quantityCellTab2);
       const quantityCellValueTab2 = (await quantityCellTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 quantity cell: ${quantityCellValueTab2}`);
+      logger.log(`Tab 2 quantity cell: ${quantityCellValueTab2}`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2668,13 +2669,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateOrderCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_ORDER_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateOrderCellTab1);
       const dateOrderTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
+      logger.log(`Tab 1 DateOrder: ${dateOrderTab1}`);
 
       await tab2ForCompare.bringToFront();
       const dateOrderCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateOrderCellTab2);
       const dateOrderTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
+      logger.log(`Tab 2 DateOrder: ${dateOrderTab2}`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2690,13 +2691,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const dateShipmentsCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
       const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
+      logger.log(`Tab 1 DateShipments: ${dateShipmentsTab1}`);
 
       await tab2ForCompare.bringToFront();
       const dateShipmentsCellTab2 = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipmentsCellTab2);
       const dateShipmentsTab2 = (await dateShipmentsCellTab2.textContent())?.trim() || '';
-      console.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
+      logger.log(`Tab 2 DateShipments: ${dateShipmentsTab2}`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2713,14 +2714,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(dateByUrgencyCellTab1);
       const dateByUrgencyTab1Raw = (await dateByUrgencyCellTab1.textContent())?.trim() || '';
       const dateByUrgencyTab1 = normalizeDate(dateByUrgencyTab1Raw);
-      console.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1Raw} (normalized: ${dateByUrgencyTab1})`);
+      logger.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1Raw} (normalized: ${dateByUrgencyTab1})`);
 
       await tab2ForCompare.bringToFront();
       const dateByUrgencyDisplayLocator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyDisplayLocator);
       const dateByUrgencyDisplayTab2Raw = (await dateByUrgencyDisplayLocator.textContent())?.trim() || '';
       const dateByUrgencyDisplayTab2Normalized = normalizeDate(dateByUrgencyDisplayTab2Raw);
-      console.log(`Tab 2 DateByUrgency display: ${dateByUrgencyDisplayTab2Raw} (normalized: ${dateByUrgencyDisplayTab2Normalized})`);
+      logger.log(`Tab 2 DateByUrgency display: ${dateByUrgencyDisplayTab2Raw} (normalized: ${dateByUrgencyDisplayTab2Normalized})`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2735,7 +2736,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyCellTab2Locator);
       const dateByUrgencyCellTab2Raw = (await dateByUrgencyCellTab2Locator.textContent())?.trim() || '';
       const dateByUrgencyCellTab2Value = normalizeDate(dateByUrgencyCellTab2Raw);
-      console.log(`Tab 2 DateByUrgency cell: ${dateByUrgencyCellTab2Raw} (normalized: ${dateByUrgencyCellTab2Value})`);
+      logger.log(`Tab 2 DateByUrgency cell: ${dateByUrgencyCellTab2Raw} (normalized: ${dateByUrgencyCellTab2Value})`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2752,14 +2753,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(dateShipmentsTbodyCellTab1);
       const dateShipmentsTbodyTab1Raw = (await dateShipmentsTbodyCellTab1.textContent())?.trim() || '';
       const dateShipmentsTbodyTab1 = normalizeDate(dateShipmentsTbodyTab1Raw);
-      console.log(`Tab 1 DateShipments (tbody): ${dateShipmentsTbodyTab1Raw} (normalized: ${dateShipmentsTbodyTab1})`);
+      logger.log(`Tab 1 DateShipments (tbody): ${dateShipmentsTbodyTab1Raw} (normalized: ${dateShipmentsTbodyTab1})`);
 
       await tab2ForCompare.bringToFront();
       const dateShipPlanDisplayLocator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipPlanDisplayLocator);
       const dateShipPlanDisplayTab2Raw = (await dateShipPlanDisplayLocator.textContent())?.trim() || '';
       const dateShipPlanDisplayTab2Value = normalizeDate(dateShipPlanDisplayTab2Raw);
-      console.log(`Tab 2 DateShipments display: ${dateShipPlanDisplayTab2Raw} (normalized: ${dateShipPlanDisplayTab2Value})`);
+      logger.log(`Tab 2 DateShipments display: ${dateShipPlanDisplayTab2Raw} (normalized: ${dateShipPlanDisplayTab2Value})`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2774,7 +2775,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab2LoadingTaskPageForCompare.waitAndHighlight(dateShipmentsTbodyCellTab2Locator);
       const dateShipmentsTbodyCellTab2Raw = (await dateShipmentsTbodyCellTab2Locator.textContent())?.trim() || '';
       const dateShipmentsTbodyCellTab2Value = normalizeDate(dateShipmentsTbodyCellTab2Raw);
-      console.log(`Tab 2 DateShipments cell: ${dateShipmentsTbodyCellTab2Raw} (normalized: ${dateShipmentsTbodyCellTab2Value})`);
+      logger.log(`Tab 2 DateShipments cell: ${dateShipmentsTbodyCellTab2Raw} (normalized: ${dateShipmentsTbodyCellTab2Value})`);
 
       await expectSoftWithScreenshot(
         tab2ForCompare,
@@ -2800,14 +2801,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         test.info(),
       );
       await tab2ForCompare.waitForTimeout(TIMEOUTS.MEDIUM);
-      console.log('Changed quantity to 10');
+      logger.log('Changed quantity to 10');
 
       const saveButton = tab2ForCompare.locator(SelectorsLoadingTasksPage.buttonSaveOrder).first();
       await tab2LoadingTaskPageForCompare.waitAndHighlight(saveButton);
       await saveButton.click();
       await tab2LoadingTaskPageForCompare.waitForNetworkIdle();
       await tab2ForCompare.waitForTimeout(TIMEOUTS.STANDARD);
-      console.log('Clicked save button');
+      logger.log('Clicked save button');
 
       // Step 28.7.10: Switch back to Tab 1, search again, and verify the quantity has changed
       await tab1.bringToFront();
@@ -2848,7 +2849,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const updatedQuantityCellTab1 = refreshedFirstRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(updatedQuantityCellTab1);
       const updatedQuantityTab1 = (await updatedQuantityCellTab1.textContent())?.trim() || '';
-      console.log(`Tab 1 updated quantity: ${updatedQuantityTab1}`);
+      logger.log(`Tab 1 updated quantity: ${updatedQuantityTab1}`);
 
       await expectSoftWithScreenshot(
         tab1,
@@ -2862,7 +2863,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   });
 
   // ============================================
-  // CONSTANTS FOR RUNNING TEST CASE 4 IN ISOLATION
+  // CON STANTS FOR RUNNING TEST CASE 4 IN ISOLATION
   // Set RUN_TEST_CASE_4_ONLY to true and update order number/date below
   // Then change 'test(' to 'test.only(' on Test Case 4
   // ============================================
@@ -2881,7 +2882,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 4 - Добавить два изделия к задаче на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
-    console.log('Test Case 4 - Add two products to shipment task');
+    logger.log('Test Case 4 - Add two products to shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
     const firstProductNameValue = global.firstProductName || firstProductName;
@@ -2914,7 +2915,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 2: Search for the first product and confirm it appears in results', async () => {
-      console.log(`Test Case 4: Searching for product name: ${firstProductNameValue}`);
+      logger.log(`Test Case 4: Searching for product name: ${firstProductNameValue}`);
 
       // Get search input using the same approach as searchAndVerifyRowMatches
       const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
@@ -2949,7 +2950,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify the value was set
       const valueAfterType = await searchInput.inputValue();
-      console.log(`Test Case 4: Search input value after type: "${valueAfterType}"`);
+      logger.log(`Test Case 4: Search input value after type: "${valueAfterType}"`);
 
       await searchInput.press('Enter');
       await loadingTaskPage.waitForNetworkIdle();
@@ -3189,7 +3190,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         .toBeTruthy();
 
       const rowCountAfterSave1 = await bodyRowsAfterSave1.count();
-      console.log(`Test Case 4: After saving second product and navigating back, positions table has ${rowCountAfterSave1} rows`);
+      logger.log(`Test Case 4: After saving second product and navigating back, positions table has ${rowCountAfterSave1} rows`);
 
       // Should have at least 2 rows (original /0 with PRODUCT_1 and new row with PRODUCT_2 creating /1)
       await expectSoftWithScreenshot(
@@ -3282,7 +3283,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await positionsTableAfterSave2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const bodyRowsAfterSave2 = positionsTableAfterSave2.locator('tbody tr');
       const rowCountAfterSave2 = await bodyRowsAfterSave2.count();
-      console.log(`Test Case 4: After saving first product and reloading twice, positions table has ${rowCountAfterSave2} rows`);
+      logger.log(`Test Case 4: After saving first product and reloading twice, positions table has ${rowCountAfterSave2} rows`);
 
       // Should have at least 3 data rows (/0, /1, /2) plus 1 total row = 4 rows minimum
       await expectSoftWithScreenshot(
@@ -3400,7 +3401,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await searchInput.press('Enter');
         await loadingTaskPage.waitForNetworkIdle();
         await page.waitForTimeout(TIMEOUTS.LONG);
-        console.log(`Test Case 4: Searched for order ${baseOrderNumberValue3} to trigger /2 creation`);
+        logger.log(`Test Case 4: Searched for order ${baseOrderNumberValue3} to trigger /2 creation`);
 
         // Navigate back to edit mode one more time after search (similar to how /1 is created)
         const editSuccess3 = await loadingTaskPage.findOrderAndClickEdit(baseOrderNumberValue3);
@@ -3411,7 +3412,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await page.reload({ waitUntil: 'load', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await page.waitForTimeout(TIMEOUTS.LONG);
           await loadingTaskPage.waitForNetworkIdle();
-          console.log(`Test Case 4: Navigated back to edit mode and reloaded to trigger /2 creation`);
+          logger.log(`Test Case 4: Navigated back to edit mode and reloaded to trigger /2 creation`);
         }
       }
 
@@ -3421,7 +3422,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 5 - Добавление количества экземпляров в заказе', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG); // 5 minutes - increased due to multiple tab operations and comparisons
-    console.log('Test Case 5 - Increase quantity of instances in order');
+    logger.log('Test Case 5 - Increase quantity of instances in order');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -3461,7 +3462,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     const firstProductNameValue = global.firstProductName || firstProductName || TEST_PRODUCTS[0].name;
 
     await allure.step('Step 2: Search for the order with /2 suffix and confirm it appears', async () => {
-      console.log(`Test Case 5: Searching for order number: ${orderNumberForCase5}`);
+      logger.log(`Test Case 5: Searching for order number: ${orderNumberForCase5}`);
 
       // Wait for /2 to appear - it may be created asynchronously by the backend
       // Search using base order number (without /0 or /2) to find all variants, then look for /2
@@ -3495,7 +3496,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => null);
             const rows = tableBody.locator('tr');
             const rowCount = await rows.count();
-            console.log(`Test Case 5: Found ${rowCount} rows when searching for base order number: ${baseOrderNumberOnly}`);
+            logger.log(`Test Case 5: Found ${rowCount} rows when searching for base order number: ${baseOrderNumberOnly}`);
 
             // Log all order numbers found
             for (let i = 0; i < rowCount; i++) {
@@ -3503,9 +3504,9 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
               if ((await orderNumberCell.count()) > 0) {
                 const cellText = (await orderNumberCell.textContent())?.trim() || '';
-                console.log(`Test Case 5: Row ${i} order number: "${cellText}"`);
+                logger.log(`Test Case 5: Row ${i} order number: "${cellText}"`);
               } else {
-                console.log(`Test Case 5: Row ${i} - no order number cell found`);
+                logger.log(`Test Case 5: Row ${i} - no order number cell found`);
               }
             }
 
@@ -3623,7 +3624,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         'Verify Tab 2 created and order /0 opened',
         test.info(),
       );
-      console.log('Tab 2: Order /0 opened in edit mode');
+      logger.log('Tab 2: Order /0 opened in edit mode');
 
       // Tab 3: Open order /1 in new tab
       tab3ForOrder1 = await loadingTaskPage.openOrderInNewTab(orderNumberWith1);
@@ -3636,7 +3637,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         'Verify Tab 3 created and order /1 opened',
         test.info(),
       );
-      console.log('Tab 3: Order /1 opened in edit mode');
+      logger.log('Tab 3: Order /1 opened in edit mode');
     });
 
     await allure.step('Step 4: Verify positions table has 4 rows and validate each data row', async () => {
@@ -3648,13 +3649,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
-      console.log(`Test Case 5: Positions table has ${rowCount} rows`);
+      logger.log(`Test Case 5: Positions table has ${rowCount} rows`);
 
       // Log all rows to understand what's in the table
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
         const rowText = await row.textContent();
-        console.log(`Test Case 5: Row ${i}: ${rowText?.substring(0, 100)}...`);
+        logger.log(`Test Case 5: Row ${i}: ${rowText?.substring(0, 100)}...`);
       }
 
       // Expected data after reordering products:
@@ -3712,7 +3713,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const dateByUrgencyCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(dateByUrgencyCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
         const dateByUrgencyCellValue = (await dateByUrgencyCell.textContent())?.trim() || '';
-        console.log(`Row ${expected.rowIndex + 1}: DateByUrgency (cell) = "${dateByUrgencyCellValue}"`);
+        logger.log(`Row ${expected.rowIndex + 1}: DateByUrgency (cell) = "${dateByUrgencyCellValue}"`);
 
         // Determine which tab to use based on order suffix
         let comparisonTab: Page;
@@ -3733,7 +3734,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const dateByUrgencyDisplay = comparisonTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
         await comparisonLoadingTaskPage.waitAndHighlight(dateByUrgencyDisplay);
         const dateByUrgencyDisplayValue = (await dateByUrgencyDisplay.textContent())?.trim() || '';
-        console.log(`Row ${expected.rowIndex + 1}: DateByUrgency (display from tab ${expected.orderSuffix}) = "${dateByUrgencyDisplayValue}"`);
+        logger.log(`Row ${expected.rowIndex + 1}: DateByUrgency (display from tab ${expected.orderSuffix}) = "${dateByUrgencyDisplayValue}"`);
 
         // Switch back to main tab
         await page.bringToFront();
@@ -3755,14 +3756,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const dateShipmentsCell = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first();
         await loadingTaskPage.waitAndHighlight(dateShipmentsCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
         const dateShipmentsCellValue = (await dateShipmentsCell.textContent())?.trim() || '';
-        console.log(`Row ${expected.rowIndex + 1}: DateShipments (cell) = "${dateShipmentsCellValue}"`);
+        logger.log(`Row ${expected.rowIndex + 1}: DateShipments (cell) = "${dateShipmentsCellValue}"`);
 
         // Use the same comparison tab as determined above
         await comparisonTab.bringToFront();
         const dateShipmentsDisplay = comparisonTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
         await comparisonLoadingTaskPage.waitAndHighlight(dateShipmentsDisplay);
         const dateShipmentsDisplayValue = (await dateShipmentsDisplay.textContent())?.trim() || '';
-        console.log(`Row ${expected.rowIndex + 1}: DateShipments (display from tab ${expected.orderSuffix}) = "${dateShipmentsDisplayValue}"`);
+        logger.log(`Row ${expected.rowIndex + 1}: DateShipments (display from tab ${expected.orderSuffix}) = "${dateShipmentsDisplayValue}"`);
 
         // Switch back to main tab
         await page.bringToFront();
@@ -3790,7 +3791,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const dateShipmentsTimeValue = (await dateShipmentsTimeCell.textContent())?.trim() || '';
         // Split by '/' and take first part
         const timeValue = dateShipmentsTimeValue.split('/')[0].trim();
-        console.log(`Row ${expected.rowIndex + 1}: Time value (first part) = "${timeValue}"`);
+        logger.log(`Row ${expected.rowIndex + 1}: Time value (first part) = "${timeValue}"`);
 
         // Open new tab and navigate to parts database to search for the product
         const context = page.context();
@@ -3860,12 +3861,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             await characteristicElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
             await partsDatabasePageForTime.waitAndHighlight(characteristicElement);
           } catch (error) {
-            console.log('Characteristic element not found within timeout, continuing...');
+            logger.log('Characteristic element not found within timeout, continuing...');
           }
 
           const characteristicValue = (await characteristicElement.textContent())?.trim() || '';
-          console.log(`Row ${expected.rowIndex + 1}: Characteristic value = "${characteristicValue}"`);
-          console.log(`Row ${expected.rowIndex + 1}: Time value to compare = "${timeValue}"`);
+          logger.log(`Row ${expected.rowIndex + 1}: Characteristic value = "${characteristicValue}"`);
+          logger.log(`Row ${expected.rowIndex + 1}: Time value to compare = "${timeValue}"`);
 
           await expectSoftWithScreenshot(
             partsDatabaseTab,
@@ -3886,7 +3887,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Verify consistency within the row: the order number, article, and product name should all belong to the same product
         // We'll verify this by checking that the product name in this row matches the expected product for this order suffix
-        console.log(`Row ${expected.rowIndex + 1}: Verified order ${expected.orderSuffix} with product ${expected.productName}`);
+        logger.log(`Row ${expected.rowIndex + 1}: Verified order ${expected.orderSuffix} with product ${expected.productName}`);
       }
 
       // Additional verification: ensure rows are not mixed up
@@ -3901,18 +3902,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         (await bodyRows.nth(2).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
       const row3Product = (await bodyRows.nth(2).locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first().textContent())?.trim() || '';
 
-      console.log('=== Final Verification Values ===');
+      logger.log('=== Final Verification Values ===');
       // After ordering change: /0 = PRODUCT_1, /1 = PRODUCT_2, /2 = PRODUCT_3
-      console.log(`Row 1: Order="${row1Order}", Product="${row1Product}", Expected: /0 and ${firstProductNameValue}`);
-      console.log(`Row 2: Order="${row2Order}", Product="${row2Product}", Expected: /1 and ${secondProductNameValue}`);
-      console.log(`Row 3: Order="${row3Order}", Product="${row3Product}", Expected: /2 and ${thirdProductName}`);
+      logger.log(`Row 1: Order="${row1Order}", Product="${row1Product}", Expected: /0 and ${firstProductNameValue}`);
+      logger.log(`Row 2: Order="${row2Order}", Product="${row2Product}", Expected: /1 and ${secondProductNameValue}`);
+      logger.log(`Row 3: Order="${row3Order}", Product="${row3Product}", Expected: /2 and ${thirdProductName}`);
 
       await expectSoftWithScreenshot(
         page,
         () => {
           const row1HasOrder0 = row1Order.includes('/0');
           const row1HasProduct = row1Product.includes(firstProductNameValue);
-          console.log(`Row 1 check: has /0=${row1HasOrder0}, has product=${row1HasProduct}`);
+          logger.log(`Row 1 check: has /0=${row1HasOrder0}, has product=${row1HasProduct}`);
           expect.soft(row1HasOrder0 && row1HasProduct).toBe(true);
         },
         `Verify Row 1: order /0 matches first product: order="${row1Order}", product="${row1Product}"`,
@@ -3924,7 +3925,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         () => {
           const row2HasOrder1 = row2Order.includes('/1');
           const row2HasProduct = row2Product.includes(secondProductNameValue);
-          console.log(`Row 2 check: has /1=${row2HasOrder1}, has product=${row2HasProduct} (expected: ${secondProductNameValue})`);
+          logger.log(`Row 2 check: has /1=${row2HasOrder1}, has product=${row2HasProduct} (expected: ${secondProductNameValue})`);
           expect.soft(row2HasOrder1 && row2HasProduct).toBe(true);
         },
         `Verify Row 2: order /1 matches second product: order="${row2Order}", product="${row2Product}"`,
@@ -3948,7 +3949,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await tab.close();
         }
       }
-      console.log('Closed all tabs except the main tab');
+      logger.log('Closed all tabs except the main tab');
     });
 
     await allure.step('Step 5: Perform 3 search methods with order /0', async () => {
@@ -4013,7 +4014,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 6: Compare values between orders list and edit page for order /0', async () => {
-      console.log('Start: step 6');
+      logger.log('Start: step 6');
       // Use normalizeDate from page class
       // normalizeDate is already imported from utilities
 
@@ -4037,7 +4038,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const tableBodyTab1 = tab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab1 = tableBodyTab1.locator('tr').first();
       await firstRowTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      console.log('Tab 1: Order /0 found in list');
+      logger.log('Tab 1: Order /0 found in list');
 
       // Create Tab 2: Orders page, search for order with /0, select and edit
       const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
@@ -4066,7 +4067,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await editButtonTab2.click();
       await tab2LoadingTaskPage.waitForNetworkIdle();
       await tab2.waitForTimeout(TIMEOUTS.STANDARD);
-      console.log('Tab 2: Order /0 opened in edit mode');
+      logger.log('Tab 2: Order /0 opened in edit mode');
 
       // Compare order numbers
       await allure.step('Compare order numbers between Tab 1 and Tab 2', async () => {
@@ -4178,13 +4179,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const orderDateElement = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_ORDER_DISPLAY);
         await tab2LoadingTaskPage.waitAndHighlight(orderDateElement);
         const orderDateText = (await orderDateElement.textContent())?.trim() || '';
-        console.log(`Tab 2 Order Date (from picker): ${orderDateText}`);
+        logger.log(`Tab 2 Order Date (from picker): ${orderDateText}`);
 
         // Get shipment plan date from date picker
         const shipmentPlanDateElement = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY);
         await tab2LoadingTaskPage.waitAndHighlight(shipmentPlanDateElement);
         const shipmentPlanDateText = (await shipmentPlanDateElement.textContent())?.trim() || '';
-        console.log(`Tab 2 Shipment Plan Date (from picker): ${shipmentPlanDateText}`);
+        logger.log(`Tab 2 Shipment Plan Date (from picker): ${shipmentPlanDateText}`);
 
         // Parse dates and calculate difference
         const parseDate = (dateStr: string): Date => {
@@ -4220,7 +4221,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const shipmentDate = parseDate(shipmentPlanDateText);
         const diffTime = shipmentDate.getTime() - orderDate.getTime();
         const calculatedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        console.log(`Calculated days difference: ${calculatedDays}`);
+        logger.log(`Calculated days difference: ${calculatedDays}`);
 
         // Get number of days from Tab 1 (main table) - DateOrder cell contains the number
         await tab1.bringToFront();
@@ -4228,7 +4229,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await tab1LoadingTaskPage.waitAndHighlight(dateOrderCellTab1);
         const daysFromTab1 = (await dateOrderCellTab1.textContent())?.trim() || '';
         const daysNumberTab1 = parseInt(daysFromTab1) || 0;
-        console.log(`Tab 1 Кол-во дней (number): ${daysNumberTab1}`);
+        logger.log(`Tab 1 Кол-во дней (number): ${daysNumberTab1}`);
 
         // Get number of days from Tab 2 (bottom table) - DateOrder cell contains the number
         await tab2.bringToFront();
@@ -4236,7 +4237,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await tab2LoadingTaskPage.waitAndHighlight(dateOrderCellTab2);
         const daysFromTab2 = (await dateOrderCellTab2.textContent())?.trim() || '';
         const daysNumberTab2 = parseInt(daysFromTab2) || 0;
-        console.log(`Tab 2 Кол-во дней (number): ${daysNumberTab2}`);
+        logger.log(`Tab 2 Кол-во дней (number): ${daysNumberTab2}`);
 
         // Compare: calculated days should match both displayed values
         await expectSoftWithScreenshot(
@@ -4351,7 +4352,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await dateShipmentsCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await tab1LoadingTaskPage.waitAndHighlight(dateShipmentsCellTab1);
         const dateShipmentsTab1 = (await dateShipmentsCellTab1.textContent())?.trim() || '';
-        console.log(`Tab 1 DateShipments (days until shipment): ${dateShipmentsTab1}`);
+        logger.log(`Tab 1 DateShipments (days until shipment): ${dateShipmentsTab1}`);
 
         // Extract the number of days (first part before "/" if it exists, or the whole value if it's just a number)
         let daysUntilShipmentTab1 = 0;
@@ -4361,14 +4362,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         } else {
           daysUntilShipmentTab1 = parseInt(dateShipmentsTab1) || 0;
         }
-        console.log(`Tab 1 extracted days until shipment: ${daysUntilShipmentTab1}`);
+        logger.log(`Tab 1 extracted days until shipment: ${daysUntilShipmentTab1}`);
 
         // Get actual shipment plan date from Tab 2 (edit page) date picker
         await tab2.bringToFront();
         const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
         await tab2LoadingTaskPage.waitAndHighlight(dateShipmentsDisplayTab2);
         const dateShipmentsTab2 = (await dateShipmentsDisplayTab2.textContent())?.trim() || '';
-        console.log(`Tab 2 DateShippingPlan (from picker): ${dateShipmentsTab2}`);
+        logger.log(`Tab 2 DateShippingPlan (from picker): ${dateShipmentsTab2}`);
 
         // Parse the date and calculate days from today
         const parseDate = (dateStr: string): Date => {
@@ -4406,7 +4407,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         shipmentPlanDate.setHours(0, 0, 0, 0);
         const diffTime = shipmentPlanDate.getTime() - today.getTime();
         const calculatedDaysUntilShipment = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        console.log(`Calculated days until shipment from Tab 2 date: ${calculatedDaysUntilShipment}`);
+        logger.log(`Calculated days until shipment from Tab 2 date: ${calculatedDaysUntilShipment}`);
 
         // Compare: Tab 1's displayed days should match calculated days from Tab 2's date
         await expectSoftWithScreenshot(
@@ -4500,7 +4501,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           try {
             await partsDatabasePage.waitAndHighlight(characteristicElement);
           } catch (error) {
-            console.log('Characteristic element not found within timeout, continuing...');
+            logger.log('Characteristic element not found within timeout, continuing...');
           }
 
           let characteristicValue = '';
@@ -4531,7 +4532,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await tab1.close();
       await tab2.close();
       await page.waitForTimeout(TIMEOUTS.STANDARD);
-      console.log('End: step 6');
+      logger.log('End: step 6');
     });
 
     await allure.step('Step 7: Open modal from orders list and compare with edit page', async () => {
@@ -4918,7 +4919,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Cleanup: Close tab2
       await tab2.close();
-      console.log('FINISHED STEP 7');
+      logger.log('FINISHED STEP 7');
     });
 
     await allure.step('Step 8: Navigate to deficit products page and compare with edit order page', async () => {
@@ -5141,7 +5142,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 9: Search deficit products by article and designation, then verify order details', async () => {
-      console.log('Step 9: Search deficit products by article and designation, then verify order details');
+      logger.log('Step 9: Search deficit products by article and designation, then verify order details');
       // Helper function to scroll into view and then scroll down a bit more for smaller viewports
       // Use scrollIntoViewWithExtra from PageObject base class
 
@@ -5247,14 +5248,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await designationCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(designationCell, { scrollExtra: true });
       const designationValue = (await designationCell.textContent())?.trim() || '';
-      console.log(`Deficit page designation: ${designationValue}`);
+      logger.log(`Deficit page designation: ${designationValue}`);
 
       // Get the Name (Наименование) from the deficit row
       const nameCellDeficit = firstDeficitRow.locator(SelectorsShortagePages.ROW_NAME).first();
       await nameCellDeficit.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(nameCellDeficit, { scrollExtra: true });
       const nameValueDeficit = (await nameCellDeficit.textContent())?.trim() || '';
-      console.log(`Deficit page name: ${nameValueDeficit}`);
+      logger.log(`Deficit page name: ${nameValueDeficit}`);
 
       // Open Tab 2 and go to orders page, search for order with /0, edit it
       const context = page.context();
@@ -5310,28 +5311,28 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await articleCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(articleCellTab2, { scrollExtra: true });
           const articleCellValueTab2 = (await articleCellTab2.textContent())?.trim() || '';
-          console.log(`Found Article cell value in /0 row: ${articleCellValueTab2}`);
+          logger.log(`Found Article cell value in /0 row: ${articleCellValueTab2}`);
 
           // Get Name cell
           nameCellTab2 = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN).first();
           await nameCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(nameCellTab2, { scrollExtra: true });
           const nameCellValueTab2 = (await nameCellTab2.textContent())?.trim() || '';
-          console.log(`Found Name cell value in /0 row: ${nameCellValueTab2}`);
+          logger.log(`Found Name cell value in /0 row: ${nameCellValueTab2}`);
 
           // Get Product Wrapper cell
           productWrapperCellTab2 = row.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
           await productWrapperCellTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(productWrapperCellTab2, { scrollExtra: true });
           const productWrapperValueTab2 = (await productWrapperCellTab2.textContent())?.trim() || '';
-          console.log(`Found Product Wrapper value in /0 row: ${productWrapperValueTab2}`);
+          logger.log(`Found Product Wrapper value in /0 row: ${productWrapperValueTab2}`);
 
           // Get AttachmentsValue-Link element (outside the table)
           const attachmentsValueLink = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_ATTACHMENTS_VALUE_LINK).first();
           await attachmentsValueLink.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await tab2LoadingTaskPage.waitAndHighlight(attachmentsValueLink, { scrollExtra: true });
           const attachmentsValueLinkValue = (await attachmentsValueLink.textContent())?.trim() || '';
-          console.log(`Found AttachmentsValue-Link value: ${attachmentsValueLinkValue}`);
+          logger.log(`Found AttachmentsValue-Link value: ${attachmentsValueLinkValue}`);
 
           // Compare Article from deficit page with Article from order edit page
           await page.bringToFront();
@@ -5430,7 +5431,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(demandLinkCellTab1, { scrollExtra: true });
       const demandValueTab1 = (await demandLinkCellTab1.textContent())?.trim() || '';
       const demandValueTab1Number = parseInt(demandValueTab1, 10) || 0;
-      console.log(`Tab 1 Demand value: ${demandValueTab1} (parsed: ${demandValueTab1Number})`);
+      logger.log(`Tab 1 Demand value: ${demandValueTab1} (parsed: ${demandValueTab1Number})`);
 
       // Tab 2: Get Quantity from Product-Kol cell in the row with /0 order number
       await tab2.bringToFront();
@@ -5482,7 +5483,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const deficitValueTab1 = (await deficitCellTab1.textContent())?.trim() || '';
       const deficitValueTab1Number = parseInt(deficitValueTab1, 10) || 0;
       const expectedDeficitValue = -demandValueTab1Number;
-      console.log(`Tab 1 Deficit value: ${deficitValueTab1} (parsed: ${deficitValueTab1Number}), expected: ${expectedDeficitValue}`);
+      logger.log(`Tab 1 Deficit value: ${deficitValueTab1} (parsed: ${deficitValueTab1Number}), expected: ${expectedDeficitValue}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -5866,7 +5867,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await tableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         await validateFirstRow();
-        console.log(`Warehouse search "${description}" completed.`);
+        logger.log(`Warehouse search "${description}" completed.`);
       };
 
       await runWarehouseSearch(orderNumberWith0Only, 'Order number /0');
@@ -5945,7 +5946,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await locator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await loadingTaskPage.waitAndHighlight(locator, { scrollExtra: true });
         const value = (await locator.textContent())?.trim() || '';
-        console.log(`Warehouse ${description}: ${value}`);
+        logger.log(`Warehouse ${description}: ${value}`);
         return value;
       };
 
@@ -6072,7 +6073,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await locator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await highlightPage.waitAndHighlight(locator, { scrollExtra: true });
           const value = (await locator.textContent())?.trim() || '';
-          console.log(`Edit page ${description}: ${value}`);
+          logger.log(`Edit page ${description}: ${value}`);
           return value;
         };
 
@@ -6227,13 +6228,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       await page.bringToFront();
       await page.waitForTimeout(TIMEOUTS.STANDARD);
-      console.log('End of step 11');
+      logger.log('End of step 11');
     });
   });
 
   test('Test Case 6 - Увеличение количества экземпляров в заказе', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
-    console.log('Test Case 6 - Increase quantity of instances in order');
+    logger.log('Test Case 6 - Increase quantity of instances in order');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -6326,7 +6327,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitCell);
       initialDeficitValue = (await deficitCell.textContent())?.trim() || '';
-      console.log(`Test Case 6: Initial deficit value stored: ${initialDeficitValue}`);
+      logger.log(`Test Case 6: Initial deficit value stored: ${initialDeficitValue}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -6355,7 +6356,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 2: Search for the order with /0 suffix and confirm it appears', async () => {
-      console.log(`Test Case 6: Searching for order number: ${orderNumberWith0}`);
+      logger.log(`Test Case 6: Searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: TIMEOUTS.STANDARD,
@@ -6371,7 +6372,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(orderNumberCell);
 
       const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
-      console.log(`Test Case 6: Found order number cell text: ${cellOrderNumber}`);
+      logger.log(`Test Case 6: Found order number cell text: ${cellOrderNumber}`);
       const normalizedCellOrder = normalizeOrderNumber(cellOrderNumber);
       const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
       await expectSoftWithScreenshot(
@@ -6407,7 +6408,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
-      console.log(`Test Case 6: Found ${rowCount} rows in positions table`);
+      logger.log(`Test Case 6: Found ${rowCount} rows in positions table`);
 
       // Find the row containing order number with /0
       let targetRow = null;
@@ -6418,17 +6419,17 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         try {
           await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
-          console.log(`Row ${i}: Order number = "${orderNumberText}"`);
+          logger.log(`Row ${i}: Order number = "${orderNumberText}"`);
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
           const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
           if (normalizedRowOrder.includes(normalizedExpected)) {
             targetRow = row;
             targetRowIndex = i;
-            console.log(`Found target row at index ${i} with order number: ${orderNumberText}`);
+            logger.log(`Found target row at index ${i} with order number: ${orderNumberText}`);
             break;
           }
         } catch (error) {
-          console.log(`Row ${i}: Could not read order number, skipping...`);
+          logger.log(`Row ${i}: Could not read order number, skipping...`);
         }
       }
 
@@ -6452,7 +6453,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(quantityCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       initialQuantity = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 6: Initial quantity in cell: ${initialQuantity}`);
+      logger.log(`Test Case 6: Initial quantity in cell: ${initialQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -6484,7 +6485,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the /0 row with TEST_PRODUCT_1 (first product)
       const firstProductNameValue = global.firstProductName || TEST_PRODUCTS[0].name;
       let targetRow = null;
-      console.log(`Test Case 6: Searching for /0 row with product: ${firstProductNameValue}`);
+      logger.log(`Test Case 6: Searching for /0 row with product: ${firstProductNameValue}`);
 
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
@@ -6508,24 +6509,24 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               await productNameCellAlt.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               productNameText = (await productNameCellAlt.textContent())?.trim() || '';
             } catch (altError) {
-              console.log(`Test Case 6: Row ${i}: Could not read product name`);
+              logger.log(`Test Case 6: Row ${i}: Could not read product name`);
             }
           }
 
-          console.log(`Test Case 6: Row ${i}: Order="${normalizedRowOrder}", Product="${productNameText}", Expected: /0 and ${firstProductNameValue}`);
+          logger.log(`Test Case 6: Row ${i}: Order="${normalizedRowOrder}", Product="${productNameText}", Expected: /0 and ${firstProductNameValue}`);
 
           if (normalizedRowOrder.includes(normalizedExpected)) {
             // If order number matches /0, check if product matches
             if (productNameText.includes(firstProductNameValue)) {
               targetRow = row;
-              console.log(`Test Case 6: Found /0 row with TEST_PRODUCT_1 (${firstProductNameValue}) at index ${i}`);
+              logger.log(`Test Case 6: Found /0 row with TEST_PRODUCT_1 (${firstProductNameValue}) at index ${i}`);
               break;
             } else {
-              console.log(`Test Case 6: Row ${i} has /0 but product is "${productNameText}" (expected ${firstProductNameValue})`);
+              logger.log(`Test Case 6: Row ${i} has /0 but product is "${productNameText}" (expected ${firstProductNameValue})`);
             }
           }
         } catch (error) {
-          console.log(`Test Case 6: Row ${i}: Error reading row - ${error}`);
+          logger.log(`Test Case 6: Row ${i}: Error reading row - ${error}`);
           // Continue searching
         }
       }
@@ -6567,7 +6568,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const mainQuantityInput = page.locator(SelectorsLoadingTasksPage.quantityInput);
       await mainQuantityInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const mainInputValue = await mainQuantityInput.inputValue();
-      console.log(`Test Case 6: Main quantity input value after clicking /0 row with TEST_PRODUCT_1: ${mainInputValue}, expected: ${initialQuantity}`);
+      logger.log(`Test Case 6: Main quantity input value after clicking /0 row with TEST_PRODUCT_1: ${mainInputValue}, expected: ${initialQuantity}`);
 
       // Verify it matches the /0 row's quantity
       if (mainInputValue !== initialQuantity) {
@@ -6580,7 +6581,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const rowProductNameElement = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
       await rowProductNameElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const rowProductName = (await rowProductNameElement.textContent())?.trim() || '';
-      console.log(`Test Case 6: Product name in /0 table row: ${rowProductName}, expected: ${firstProductNameValue}`);
+      logger.log(`Test Case 6: Product name in /0 table row: ${rowProductName}, expected: ${firstProductNameValue}`);
 
       if (!rowProductName.includes(firstProductNameValue)) {
         throw new Error(
@@ -6620,7 +6621,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Find the row containing order number with /0 and TEST_PRODUCT_1
       const firstProductNameValue = global.firstProductName || TEST_PRODUCTS[0].name;
       let targetRow = null;
-      console.log(`Test Case 6 Step 7: Searching for /0 row with product: ${firstProductNameValue}`);
+      logger.log(`Test Case 6 Step 7: Searching for /0 row with product: ${firstProductNameValue}`);
 
       for (let i = 0; i < rowCount; i++) {
         const row = bodyRows.nth(i);
@@ -6636,15 +6637,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameText = (await productNameCell.textContent())?.trim() || '';
 
-          console.log(`Test Case 6 Step 7: Row ${i}: Order="${normalizedRowOrder}", Product="${productNameText}"`);
+          logger.log(`Test Case 6 Step 7: Row ${i}: Order="${normalizedRowOrder}", Product="${productNameText}"`);
 
           if (normalizedRowOrder.includes(normalizedExpected) && productNameText.includes(firstProductNameValue)) {
             targetRow = row;
-            console.log(`Test Case 6: Found /0 row with product ${firstProductNameValue} at index ${i}`);
+            logger.log(`Test Case 6: Found /0 row with product ${firstProductNameValue} at index ${i}`);
             break;
           }
         } catch (error) {
-          console.log(`Test Case 6 Step 7: Row ${i}: Error - ${error}`);
+          logger.log(`Test Case 6 Step 7: Row ${i}: Error - ${error}`);
           // Continue searching
         }
       }
@@ -6659,7 +6660,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const productNameCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first();
       await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const productNameText = (await productNameCell.textContent())?.trim() || '';
-      console.log(`Test Case 6: Verifying quantity for product: ${productNameText} (expected: ${firstProductNameValue})`);
+      logger.log(`Test Case 6: Verifying quantity for product: ${productNameText} (expected: ${firstProductNameValue})`);
 
       // Check the quantity cell value
       const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
@@ -6667,7 +6668,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(quantityCell, { highlightColor: 'cyan', highlightBorder: '2px solid blue', highlightTextColor: 'black' });
       const updatedQuantity = (await quantityCell.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
-      console.log(`Test Case 6: Updated quantity in cell: ${updatedQuantity}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 6: Updated quantity in cell: ${updatedQuantity}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -6701,7 +6702,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 9: Search for order with /0 again and confirm it appears', async () => {
-      console.log(`Test Case 6: Re-searching for order number: ${orderNumberWith0}`);
+      logger.log(`Test Case 6: Re-searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: TIMEOUTS.STANDARD,
@@ -6735,7 +6736,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(quantityCell);
       const quantityCellValue = (await quantityCell.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
-      console.log(`Test Case 6: Quantity cell value: ${quantityCellValue}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 6: Quantity cell value: ${quantityCellValue}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -6800,7 +6801,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
       const orderNumberModal = orderNumberMatch ? orderNumberMatch[1].trim() : '';
-      console.log(`Test Case 6: Modal title: "${h3Text}", extracted order number: "${orderNumberModal}"`);
+      logger.log(`Test Case 6: Modal title: "${h3Text}", extracted order number: "${orderNumberModal}"`);
 
       // Normalize both strings by removing № symbol (it's not part of the order number) and date part for comparison
       const normalizedModal = normalizeOrderNumber(orderNumberModal).split(' от ')[0].trim();
@@ -6821,7 +6822,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(countElement);
       const countModal = (await countElement.textContent())?.trim() || '';
       const expectedQuantity = newQuantity;
-      console.log(`Test Case 6: Modal quantity: ${countModal}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 6: Modal quantity: ${countModal}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -6889,8 +6890,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await deficitCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(deficitCell);
       newDeficitValue = (await deficitCell.textContent())?.trim() || '';
-      console.log(`Test Case 6: New deficit value after quantity change: ${newDeficitValue}`);
-      console.log(`Test Case 6: Initial deficit value was: ${initialDeficitValue}`);
+      logger.log(`Test Case 6: New deficit value after quantity change: ${newDeficitValue}`);
+      logger.log(`Test Case 6: Initial deficit value was: ${initialDeficitValue}`);
 
       // Validate the new deficit value is correct
       // The deficit should have decreased by 2 (the amount we increased the quantity)
@@ -6912,7 +6913,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await realBalanceCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await loadingTaskPage.waitAndHighlight(realBalanceCell);
       const realBalanceValue = (await realBalanceCell.textContent())?.trim() || '';
-      console.log(`Test Case 6: RealBalance value: ${realBalanceValue}, Deficit value: ${newDeficitValue}`);
+      logger.log(`Test Case 6: RealBalance value: ${realBalanceValue}, Deficit value: ${newDeficitValue}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -6999,11 +7000,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
             const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
-            console.log(`Test Case 6 Step 13: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
+            logger.log(`Test Case 6 Step 13: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
 
             if (normalizedOrder.includes(orderNumberForSearch) && productNameInRow.includes(productNameValue)) {
               targetWarehouseRow = row;
-              console.log(`Test Case 6 Step 13: Found matching row at index ${i} with /0 order and TEST_PRODUCT_1`);
+              logger.log(`Test Case 6 Step 13: Found matching row at index ${i} with /0 order and TEST_PRODUCT_1`);
               break;
             }
           } catch (error) {
@@ -7045,7 +7046,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const quantityNum = parseInt(quantityValue, 10) || 0;
         const deficitNum = parseInt(newDeficitValue, 10) || 0;
         const expectedQuantity = Math.abs(deficitNum); // Deficit is negative, so we use absolute value
-        console.log(`Test Case 6: Warehouse quantity value: ${quantityValue}, deficit value: ${newDeficitValue}, expected quantity: ${expectedQuantity}`);
+        logger.log(`Test Case 6: Warehouse quantity value: ${quantityValue}, deficit value: ${newDeficitValue}, expected quantity: ${expectedQuantity}`);
 
         await expectSoftWithScreenshot(
           warehouseTab,
@@ -7064,7 +7065,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 7 - Verify order quantity in edit page', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
-    console.log('Test Case 7 - Verify order quantity in edit page');
+    logger.log('Test Case 7 - Verify order quantity in edit page');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -7106,7 +7107,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Search for the order with /0 suffix
-      console.log(`Test Case 7: Searching for order number: ${orderNumberWith0}`);
+      logger.log(`Test Case 7: Searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: TIMEOUTS.STANDARD,
@@ -7141,7 +7142,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       expectedQuantity = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 7: Read expected quantity from main orders page: ${expectedQuantity}`);
+      logger.log(`Test Case 7: Read expected quantity from main orders page: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7186,7 +7187,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
-      console.log(`Test Case 7: Found ${rowCount} rows in positions table`);
+      logger.log(`Test Case 7: Found ${rowCount} rows in positions table`);
 
       // Find the row containing order number with /0
       let targetRow = null;
@@ -7196,16 +7197,16 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         try {
           await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
-          console.log(`Row ${i}: Order number = "${orderNumberText}"`);
+          logger.log(`Row ${i}: Order number = "${orderNumberText}"`);
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
           const normalizedExpected = normalizeOrderNumber(orderNumberWith0);
           if (normalizedRowOrder.includes(normalizedExpected)) {
             targetRow = row;
-            console.log(`Found target row at index ${i} with order number: ${orderNumberText}`);
+            logger.log(`Found target row at index ${i} with order number: ${orderNumberText}`);
             break;
           }
         } catch (error) {
-          console.log(`Row ${i}: Could not read order number, skipping...`);
+          logger.log(`Row ${i}: Could not read order number, skipping...`);
         }
       }
 
@@ -7233,7 +7234,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 7: Quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 7: Quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7259,7 +7260,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Search for the order with /0 again
-      console.log(`Test Case 7: Re-searching for order number: ${orderNumberWith0}`);
+      logger.log(`Test Case 7: Re-searching for order number: ${orderNumberWith0}`);
       await loadingTaskPage.searchAndWaitForTable(orderNumberWith0, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
         timeoutBeforeWait: TIMEOUTS.STANDARD,
@@ -7295,7 +7296,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 7: Main orders page quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 7: Main orders page quantity cell value: ${quantityValue}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7360,7 +7361,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const h3Text = (await orderNumberH3.textContent())?.trim() || '';
       const orderNumberMatch = h3Text.match(/Заказ\s+№\s+(.+)/);
       const orderNumberModal = orderNumberMatch ? orderNumberMatch[1].trim() : '';
-      console.log(`Test Case 7: Modal title: "${h3Text}", extracted order number: "${orderNumberModal}"`);
+      logger.log(`Test Case 7: Modal title: "${h3Text}", extracted order number: "${orderNumberModal}"`);
 
       // Normalize both strings by removing № symbol (it's not part of the order number) and date part for comparison
       const normalizedModal = normalizeOrderNumber(orderNumberModal).split(' от ')[0].trim();
@@ -7379,7 +7380,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const countElement = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT).first();
       await loadingTaskPage.waitAndHighlight(countElement, { waitAfter: 1500 });
       const countModal = (await countElement.textContent())?.trim() || '';
-      console.log(`Test Case 7: Modal quantity: ${countModal}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 7: Modal quantity: ${countModal}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7400,7 +7401,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await shipmentTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const shipmentRows = shipmentTableBody.locator('tr');
       const shipmentRowCount = await shipmentRows.count();
-      console.log(`Test Case 7: Found ${shipmentRowCount} rows in Shipment-Table`);
+      logger.log(`Test Case 7: Found ${shipmentRowCount} rows in Shipment-Table`);
 
       let targetShipmentRow = null;
       const normalizedExpectedOrder = normalizeOrderNumber(orderNumberWith0);
@@ -7424,12 +7425,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             if ((await orderNumberCell.count()) > 0) {
               await orderNumberCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
-              console.log(`Shipment table Row ${i}: Order number = "${orderNumberText}" (pattern: ${pattern})`);
+              logger.log(`Shipment table Row ${i}: Order number = "${orderNumberText}" (pattern: ${pattern})`);
               const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
               if (normalizedRowOrder.includes(normalizedExpectedOrder)) {
                 targetShipmentRow = row;
                 foundOrderNumber = true;
-                console.log(`Found target row in shipment table at index ${i} with order number: ${orderNumberText}`);
+                logger.log(`Found target row in shipment table at index ${i} with order number: ${orderNumberText}`);
                 break;
               }
             }
@@ -7451,12 +7452,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               if (normalizedCellText.includes(normalizedExpectedOrder)) {
                 targetShipmentRow = row;
                 foundOrderNumber = true;
-                console.log(`Found target row in shipment table at index ${i} by checking all cells, order number found in cell ${j}: "${cellText}"`);
+                logger.log(`Found target row in shipment table at index ${i} by checking all cells, order number found in cell ${j}: "${cellText}"`);
                 break;
               }
             }
           } catch (error) {
-            console.log(`Shipment table Row ${i}: Could not read cells, skipping...`);
+            logger.log(`Shipment table Row ${i}: Could not read cells, skipping...`);
           }
         }
 
@@ -7467,14 +7468,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       if (!targetShipmentRow) {
         // Log all row contents for debugging
-        console.log(`Test Case 7: Could not find row with order number ${orderNumberWith0}. Checking all rows...`);
+        logger.log(`Test Case 7: Could not find row with order number ${orderNumberWith0}. Checking all rows...`);
         for (let i = 0; i < shipmentRowCount; i++) {
           const row = shipmentRows.nth(i);
           try {
             const rowText = (await row.textContent())?.trim() || '';
-            console.log(`Shipment table Row ${i} full text: "${rowText.substring(0, 200)}..."`);
+            logger.log(`Shipment table Row ${i} full text: "${rowText.substring(0, 200)}..."`);
           } catch (error) {
-            console.log(`Shipment table Row ${i}: Could not read row text`);
+            logger.log(`Shipment table Row ${i}: Could not read row text`);
           }
         }
         throw new Error(`Could not find row containing order number with /0 in Shipment-Table: ${orderNumberWith0}`);
@@ -7491,7 +7492,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 7: Shipment table quantity cell value: ${shipmentQuantityValue}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 7: Shipment table quantity cell value: ${shipmentQuantityValue}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7584,7 +7585,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Calculate expected deficit as negative of the quantity
       const quantityNum = parseInt(expectedQuantity, 10) || 0;
       const expectedDeficitValue = `-${quantityNum}`;
-      console.log(`Test Case 7: Deficit value: ${deficitValue}, expected: ${expectedDeficitValue} (based on quantity: ${expectedQuantity})`);
+      logger.log(`Test Case 7: Deficit value: ${deficitValue}, expected: ${expectedDeficitValue} (based on quantity: ${expectedQuantity})`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7599,7 +7600,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const demandCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEMAND_LINK).first();
       await loadingTaskPage.waitAndHighlight(demandCell, { waitAfter: 1500 });
       const demandValue = (await demandCell.textContent())?.trim() || '';
-      console.log(`Test Case 7: Needed quantity (Demand) value: ${demandValue}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 7: Needed quantity (Demand) value: ${demandValue}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7670,7 +7671,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find the row that matches both the order number and the product name
       let targetWarehouseRow = null;
-      console.log(`Test Case 7 Step 7: Searching for /0 order (${orderNumberForSearch}) with product: ${productNameValue}`);
+      logger.log(`Test Case 7 Step 7: Searching for /0 order (${orderNumberForSearch}) with product: ${productNameValue}`);
 
       for (let i = 0; i < warehouseRowCount; i++) {
         const row = warehouseRows.nth(i);
@@ -7686,15 +7687,15 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
-          console.log(`Test Case 7 Step 7: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
+          logger.log(`Test Case 7 Step 7: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
 
           if (normalizedOrder.includes(orderNumberForSearch) && productNameInRow.includes(productNameValue)) {
             targetWarehouseRow = row;
-            console.log(`Test Case 7 Step 7: Found matching row at index ${i} with /0 order and TEST_PRODUCT_1`);
+            logger.log(`Test Case 7 Step 7: Found matching row at index ${i} with /0 order and TEST_PRODUCT_1`);
             break;
           }
         } catch (error) {
-          console.log(`Test Case 7 Step 7: Row ${i}: Error - ${error}`);
+          logger.log(`Test Case 7 Step 7: Row ${i}: Error - ${error}`);
           // Continue searching
         }
       }
@@ -7723,7 +7724,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 7: Warehouse quantity value: ${quantityValue}, expected: ${expectedQuantity}`);
+      logger.log(`Test Case 7: Warehouse quantity value: ${quantityValue}, expected: ${expectedQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7738,7 +7739,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 8 - Decrease order quantity and verify deficit changes', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
-    console.log('Test Case 8 - Decrease order quantity and verify deficit changes');
+    logger.log('Test Case 8 - Decrease order quantity and verify deficit changes');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -7829,25 +7830,25 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const deficitCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEFICIT).first();
       await deficitCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialDeficit = (await deficitCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Initial deficit value: ${initialDeficit}`);
+      logger.log(`Test Case 8: Initial deficit value: ${initialDeficit}`);
 
       // Store required (Demand) value
       const requiredCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DEMAND_LINK).first();
       await requiredCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialRequired = (await requiredCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Initial required value: ${initialRequired}`);
+      logger.log(`Test Case 8: Initial required value: ${initialRequired}`);
 
       // Store remainder (Quantity) value
       const remainderCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_QUANTITY).first();
       await remainderCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialRemainder = (await remainderCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Initial remainder value: ${initialRemainder}`);
+      logger.log(`Test Case 8: Initial remainder value: ${initialRemainder}`);
 
       // Store real remainder (RealBalance) value
       const realRemainderCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_REAL_BALANCE).first();
       await realRemainderCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialRealRemainder = (await realRemainderCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Initial real remainder value: ${initialRealRemainder}`);
+      logger.log(`Test Case 8: Initial real remainder value: ${initialRealRemainder}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -7881,7 +7882,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 2: Search for order by product name and confirm it is the only one', async () => {
       // Search by product name ending with _3
-      console.log(`Test Case 8: Searching for product: ${productNameWith3}`);
+      logger.log(`Test Case 8: Searching for product: ${productNameWith3}`);
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         useRedesign: true,
         timeoutBeforeWait: TIMEOUTS.STANDARD,
@@ -7910,7 +7911,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             firstDataRow = row;
           }
         } else {
-          console.log(`Test Case 8: Excluding totals row ${i + 1} (Итого: ${hasItogo}, colspan: ${colspan})`);
+          logger.log(`Test Case 8: Excluding totals row ${i + 1} (Итого: ${hasItogo}, colspan: ${colspan})`);
         }
       }
 
@@ -7954,7 +7955,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           if (productNameInRow.includes(productNameWith3) && orderNumberText.includes('/2')) {
             targetRow = row;
-            console.log(`Test Case 8 Step 2: Found target row at index ${i} with product ${productNameWith3} and /2 order: ${orderNumberText}`);
+            logger.log(`Test Case 8 Step 2: Found target row at index ${i} with product ${productNameWith3} and /2 order: ${orderNumberText}`);
             break;
           }
         } catch (error) {
@@ -8013,7 +8014,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           if (productNameInRow.includes(productNameWith3) && orderNumberText.includes('/2')) {
             targetRow = row;
-            console.log(`Test Case 8 Step 3: Found target row at index ${i} with product ${productNameWith3} and /2 order: ${orderNumberText}`);
+            logger.log(`Test Case 8 Step 3: Found target row at index ${i} with product ${productNameWith3} and /2 order: ${orderNumberText}`);
             break;
           }
         } catch (error) {
@@ -8073,19 +8074,19 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const editTitle = page.locator(SelectorsLoadingTasksPage.editTitle).first();
       await editTitle.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const titleText = (await editTitle.textContent())?.trim() || '';
-      console.log(`Test Case 8: Page title: ${titleText}`);
+      logger.log(`Test Case 8: Page title: ${titleText}`);
 
       // Extract order number from title (format: "Редактирование заказа № 25-5083 /2 от 23.12.2025")
       const orderMatch = titleText.match(/№\s*([\d\-]+\s*\/\s*\d+)/);
       if (orderMatch && orderMatch[1]) {
         orderNumberWith2 = orderMatch[1].trim();
-        console.log(`Test Case 8: Extracted order number from title: ${orderNumberWith2}`);
+        logger.log(`Test Case 8: Extracted order number from title: ${orderNumberWith2}`);
       } else {
         // Fallback: try to extract from title text
         if (titleText.includes('№') && titleText.includes(' от ')) {
           const afterNo = titleText.split('№')[1]?.trim() || '';
           orderNumberWith2 = afterNo.split(' от ')[0]?.trim() || '';
-          console.log(`Test Case 8: Extracted order number from title (fallback): ${orderNumberWith2}`);
+          logger.log(`Test Case 8: Extracted order number from title (fallback): ${orderNumberWith2}`);
         }
       }
 
@@ -8100,7 +8101,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
-      console.log(`Test Case 8: Found ${rowCount} rows in positions table`);
+      logger.log(`Test Case 8: Found ${rowCount} rows in positions table`);
 
       // Find the row containing our product
       let targetRow = null;
@@ -8112,11 +8113,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           const productNameText = (await productNameCell.textContent())?.trim() || '';
           if (productNameText.includes(productNameWith3)) {
             targetRow = row;
-            console.log(`Found target row at index ${i} with product: ${productNameText}`);
+            logger.log(`Found target row at index ${i} with product: ${productNameText}`);
             break;
           }
         } catch (error) {
-          console.log(`Row ${i}: Could not read product name, skipping...`);
+          logger.log(`Row ${i}: Could not read product name, skipping...`);
         }
       }
 
@@ -8139,7 +8140,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first();
       await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       initialQuantity = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Initial quantity: ${initialQuantity}`);
+      logger.log(`Test Case 8: Initial quantity: ${initialQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8158,7 +8159,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       if (decreaseBy === 0) {
         // Quantity is already at minimum (1), cannot decrease further
-        console.log(`Test Case 8: Initial quantity is ${initialQuantity} (minimum), skipping decrease step`);
+        logger.log(`Test Case 8: Initial quantity is ${initialQuantity} (minimum), skipping decrease step`);
         newQuantity = initialQuantity; // Quantity remains the same
         actualDecreaseBy = 0; // No decrease was made
         await expectSoftWithScreenshot(
@@ -8170,7 +8171,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           test.info(),
         );
       } else {
-        console.log(`Test Case 8: Decreasing quantity from ${initialQuantity} by ${decreaseBy} (minimum quantity is 1)`);
+        logger.log(`Test Case 8: Decreasing quantity from ${initialQuantity} by ${decreaseBy} (minimum quantity is 1)`);
         const newValue = await loadingTaskPage.decreaseQuantityAndSave(decreaseBy);
 
         await expectSoftWithScreenshot(
@@ -8190,7 +8191,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           newQuantity = newValue;
           const newQuantityNum = parseInt(newValue, 10) || 0;
           actualDecreaseBy = initialQuantityNum - newQuantityNum; // Calculate actual decrease
-          console.log(`Test Case 8: Actual decrease: ${actualDecreaseBy} (from ${initialQuantity} to ${newValue})`);
+          logger.log(`Test Case 8: Actual decrease: ${actualDecreaseBy} (from ${initialQuantity} to ${newValue})`);
         }
       }
     });
@@ -8243,7 +8244,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
       const updatedQuantity = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Updated quantity in cell: ${updatedQuantity}, expected: ${newQuantity}`);
+      logger.log(`Test Case 8: Updated quantity in cell: ${updatedQuantity}, expected: ${newQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8273,7 +8274,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 8: Search for order again and confirm product and quantity', async () => {
       // Search by product name again
-      console.log(`Test Case 8: Re-searching for product: ${productNameWith3}`);
+      logger.log(`Test Case 8: Re-searching for product: ${productNameWith3}`);
 
       // Manually handle search input for main orders page
       const searchInputWrapper = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
@@ -8319,11 +8320,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           const productNameCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
           await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
-          console.log(`Test Case 8 Step 7: Row ${i}: Product="${productNameInRow}"`);
+          logger.log(`Test Case 8 Step 7: Row ${i}: Product="${productNameInRow}"`);
 
           if (productNameInRow.includes(productNameWith3)) {
             targetRow = row;
-            console.log(`Test Case 8 Step 7: Found matching row at index ${i} with product ${productNameWith3}`);
+            logger.log(`Test Case 8 Step 7: Found matching row at index ${i} with product ${productNameWith3}`);
             break;
           }
         } catch (error) {
@@ -8360,7 +8361,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Main orders page quantity: ${quantityValue}, expected: ${newQuantity}`);
+      logger.log(`Test Case 8: Main orders page quantity: ${quantityValue}, expected: ${newQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8387,7 +8388,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           if (productNameInRow.includes(productNameWith3)) {
             targetRow = row;
-            console.log(`Test Case 8 Step 9: Found target row at index ${i} with product ${productNameWith3}`);
+            logger.log(`Test Case 8 Step 9: Found target row at index ${i} with product ${productNameWith3}`);
             break;
           }
         } catch (error) {
@@ -8445,7 +8446,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const countElement = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT).first();
       await loadingTaskPage.waitAndHighlight(countElement, { waitAfter: 1500 });
       const countModal = (await countElement.textContent())?.trim() || '';
-      console.log(`Test Case 8: Modal quantity: ${countModal}, expected: ${newQuantity}`);
+      logger.log(`Test Case 8: Modal quantity: ${countModal}, expected: ${newQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8466,10 +8467,10 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await shipmentTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const shipmentRows = shipmentTableBody.locator('tr');
       const shipmentRowCount = await shipmentRows.count();
-      console.log(`Test Case 8: Found ${shipmentRowCount} rows in Shipment-Table`);
+      logger.log(`Test Case 8: Found ${shipmentRowCount} rows in Shipment-Table`);
 
       let targetShipmentRow = null;
-      console.log(`Test Case 8 Step 9: Searching for product ${productNameWith3} in ${shipmentRowCount} rows inside modal`);
+      logger.log(`Test Case 8 Step 9: Searching for product ${productNameWith3} in ${shipmentRowCount} rows inside modal`);
       for (let i = 0; i < shipmentRowCount; i++) {
         const row = shipmentRows.nth(i);
         await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT }).catch(() => {});
@@ -8501,29 +8502,29 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           try {
             const allCells = row.locator('td');
             const cellCount = await allCells.count();
-            console.log(`Test Case 8 Step 9: Row ${i}: Checking ${cellCount} cells`);
+            logger.log(`Test Case 8 Step 9: Row ${i}: Checking ${cellCount} cells`);
             const allCellContents: string[] = [];
             for (let j = 0; j < cellCount; j++) {
               const cell = allCells.nth(j);
               const cellText = (await cell.textContent())?.trim() || '';
               allCellContents.push(cellText);
-              console.log(`Test Case 8 Step 9: Row ${i}, Cell ${j}: "${cellText}"`);
+              logger.log(`Test Case 8 Step 9: Row ${i}, Cell ${j}: "${cellText}"`);
               if (cellText.includes(productNameWith3)) {
                 productNameText = cellText;
-                console.log(`Test Case 8 Step 9: Row ${i}: Found product in cell ${j}: "${cellText}"`);
+                logger.log(`Test Case 8 Step 9: Row ${i}: Found product in cell ${j}: "${cellText}"`);
                 break;
               }
             }
-            console.log(`Test Case 8 Step 9: Row ${i} all cell contents: [${allCellContents.join(' | ')}]`);
+            logger.log(`Test Case 8 Step 9: Row ${i} all cell contents: [${allCellContents.join(' | ')}]`);
           } catch (error) {
-            console.log(`Test Case 8 Step 9: Row ${i}: Could not read cells - ${error}`);
+            logger.log(`Test Case 8 Step 9: Row ${i}: Could not read cells - ${error}`);
           }
         }
 
-        console.log(`Test Case 8 Step 9: Row ${i}: Product="${productNameText}"`);
+        logger.log(`Test Case 8 Step 9: Row ${i}: Product="${productNameText}"`);
         if (productNameText && productNameText.includes(productNameWith3)) {
           targetShipmentRow = row;
-          console.log(`Test Case 8 Step 9: Found target row at index ${i} with product: ${productNameText}`);
+          logger.log(`Test Case 8 Step 9: Found target row at index ${i} with product: ${productNameText}`);
           break;
         }
       }
@@ -8552,7 +8553,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Shipment table quantity: ${shipmentQuantityValue}, expected: ${newQuantity}`);
+      logger.log(`Test Case 8: Shipment table quantity: ${shipmentQuantityValue}, expected: ${newQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8644,7 +8645,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const newDeficitNum = parseInt(newDeficitValue, 10) || 0;
       // Deficit should increase by the amount we decreased quantity (if we decreased at all)
       const expectedNewDeficit = initialDeficitNum + actualDecreaseBy;
-      console.log(
+      logger.log(
         `Test Case 8: New deficit value: ${newDeficitValue}, expected: ${expectedNewDeficit}, initial was: ${initialDeficit}, actual decrease: ${actualDecreaseBy}`,
       );
 
@@ -8665,7 +8666,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // If we didn't decrease (actualDecreaseBy === 0), required value should remain the same as initial
       // Otherwise, it should match newQuantity
       const expectedRequiredValue = actualDecreaseBy === 0 ? initialRequired : newQuantity;
-      console.log(
+      logger.log(
         `Test Case 8: New required value: ${newRequiredValue}, expected: ${expectedRequiredValue} (initial was: ${initialRequired}, actual decrease: ${actualDecreaseBy})`,
       );
 
@@ -8682,13 +8683,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const remainderCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_QUANTITY).first();
       await loadingTaskPage.waitAndHighlight(remainderCell, { waitAfter: 1500 });
       const newRemainderValue = (await remainderCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: New remainder value: ${newRemainderValue}, initial was: ${initialRemainder}`);
+      logger.log(`Test Case 8: New remainder value: ${newRemainderValue}, initial was: ${initialRemainder}`);
 
       // Verify real remainder (RealBalance) value changed
       const realRemainderCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_REAL_BALANCE).first();
       await loadingTaskPage.waitAndHighlight(realRemainderCell, { waitAfter: 1500 });
       const newRealRemainderValue = (await realRemainderCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: New real remainder value: ${newRealRemainderValue}, expected: ${newDeficitValue}`);
+      logger.log(`Test Case 8: New real remainder value: ${newRealRemainderValue}, expected: ${newDeficitValue}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8753,7 +8754,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Find the row that matches both the order number and the product name
       let targetWarehouseRow = null;
-      console.log(`Test Case 8 Step 11: Searching for order ${orderNumberForSearch} with product: ${productNameWith3}`);
+      logger.log(`Test Case 8 Step 11: Searching for order ${orderNumberForSearch} with product: ${productNameWith3}`);
 
       for (let i = 0; i < warehouseRowCount; i++) {
         const row = warehouseRows.nth(i);
@@ -8769,7 +8770,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await productNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
-          console.log(`Test Case 8 Step 11: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
+          logger.log(`Test Case 8 Step 11: Row ${i}: Order="${normalizedOrder}", Product="${productNameInRow}"`);
 
           // Match if order number matches (if we have it) AND product name matches
           const orderMatches = !orderNumberWith2 || normalizedOrder.includes(orderNumberForSearch);
@@ -8777,11 +8778,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
           if (orderMatches && productMatches) {
             targetWarehouseRow = row;
-            console.log(`Test Case 8 Step 11: Found matching row at index ${i} with order ${orderNumberForSearch} and product ${productNameWith3}`);
+            logger.log(`Test Case 8 Step 11: Found matching row at index ${i} with order ${orderNumberForSearch} and product ${productNameWith3}`);
             break;
           }
         } catch (error) {
-          console.log(`Test Case 8 Step 11: Row ${i}: Error - ${error}`);
+          logger.log(`Test Case 8 Step 11: Row ${i}: Error - ${error}`);
           // Continue searching
         }
       }
@@ -8810,7 +8811,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = targetWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Warehouse quantity value: ${quantityValue}, expected: ${newQuantity}`);
+      logger.log(`Test Case 8: Warehouse quantity value: ${quantityValue}, expected: ${newQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8831,7 +8832,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Search by product name ending with _3
-      console.log(`Test Case 8: Searching for product: ${productNameWith3}`);
+      logger.log(`Test Case 8: Searching for product: ${productNameWith3}`);
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         useRedesign: true,
         timeoutBeforeWait: TIMEOUTS.STANDARD,
@@ -8871,7 +8872,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await loadingTaskPage.waitAndHighlight(orderNumberCell, { waitAfter: 1500 });
       const orderNumberFromRow = (await orderNumberCell.textContent())?.trim() || '';
       const normalizedOrderNumberFromRow = normalizeOrderNumber(orderNumberFromRow);
-      console.log(`Test Case 8: Order number from row: ${orderNumberFromRow} (normalized: ${normalizedOrderNumberFromRow})`);
+      logger.log(`Test Case 8: Order number from row: ${orderNumberFromRow} (normalized: ${normalizedOrderNumberFromRow})`);
 
       // Verify it's the correct order number (should match the order for this product)
       // We can check if it contains the expected pattern (order number with /0 or /1)
@@ -8888,7 +8889,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = firstDataRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityFromRow = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 8: Quantity from row: ${quantityFromRow}, expected: ${newQuantity}`);
+      logger.log(`Test Case 8: Quantity from row: ${quantityFromRow}, expected: ${newQuantity}`);
 
       // Verify quantity matches what we set earlier
       await expectSoftWithScreenshot(
@@ -8931,7 +8932,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       const titleText = (await editTitleElement.textContent())?.trim() || '';
-      console.log(`Test Case 8: Edit page title: ${titleText}`);
+      logger.log(`Test Case 8: Edit page title: ${titleText}`);
 
       await loadingTaskPage.waitAndHighlight(editTitleElement);
 
@@ -8959,7 +8960,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityInput = page.locator(SelectorsLoadingTasksPage.quantityInput);
       await loadingTaskPage.waitAndHighlight(quantityInput);
       const quantityInInput = await quantityInput.inputValue();
-      console.log(`Test Case 8: Quantity in edit page input: ${quantityInInput}, expected: ${newQuantity}`);
+      logger.log(`Test Case 8: Quantity in edit page input: ${quantityInInput}, expected: ${newQuantity}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8997,7 +8998,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 9 - Verify quantity is 1 after setting it in edit page', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
-    console.log('Test Case 9 - Verify quantity is 1 after setting it in edit page');
+    logger.log('Test Case 9 - Verify quantity is 1 after setting it in edit page');
 
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const shipmentsTableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -9036,7 +9037,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Search by product name ending with _3
-      console.log(`Test Case 9: Searching for product: ${productNameWith3}`);
+      logger.log(`Test Case 9: Searching for product: ${productNameWith3}`);
       // We're on the main orders page, so use SHIPMENTS_SEARCH_INPUT
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
@@ -9068,7 +9069,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           if (orderNumberText.includes('/2') && productNameInRow.includes(productNameWith3) && !hasItogo) {
             targetRow = row;
             orderNumberFromRow = orderNumberText; // Store the full order number for later steps
-            console.log(`Test Case 9 Step 1: Found target row at index ${i} with product ${productNameWith3} and /2 order: ${orderNumberFromRow}`);
+            logger.log(`Test Case 9 Step 1: Found target row at index ${i} with product ${productNameWith3} and /2 order: ${orderNumberFromRow}`);
             break;
           }
         }
@@ -9108,7 +9109,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         test.info(),
       );
 
-      console.log(`Test Case 9: Order number from row: ${orderNumberFromRow}`);
+      logger.log(`Test Case 9: Order number from row: ${orderNumberFromRow}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -9135,7 +9136,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           if (orderNumberText.includes(orderNumberFromRow) && !hasItogo) {
             targetRow = row;
-            console.log(`Test Case 9 Step 2: Found target row at index ${i} with /2 order: ${orderNumberFromRow}`);
+            logger.log(`Test Case 9 Step 2: Found target row at index ${i} with /2 order: ${orderNumberFromRow}`);
             break;
           }
         }
@@ -9205,7 +9206,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityInput = page.locator(SelectorsLoadingTasksPage.quantityInput);
       await loadingTaskPage.waitAndHighlight(quantityInput);
       const quantityInInput = await quantityInput.inputValue();
-      console.log(`Test Case 9: Quantity in edit page input: ${quantityInInput}, expected: 1`);
+      logger.log(`Test Case 9: Quantity in edit page input: ${quantityInInput}, expected: 1`);
 
       await expectSoftWithScreenshot(
         page,
@@ -9223,7 +9224,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       const bodyRows = positionsTable.locator('tbody tr');
       const rowCount = await bodyRows.count();
-      console.log(`Test Case 9: Found ${rowCount} rows in positions table`);
+      logger.log(`Test Case 9: Found ${rowCount} rows in positions table`);
 
       // Find the row containing our order number
       let targetRow = null;
@@ -9238,11 +9239,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           const normalizedRowOrder = normalizeOrderNumber(orderNumberText);
           if (normalizedRowOrder.includes(normalizedExpectedOrder) || normalizedExpectedOrder.includes(normalizedRowOrder.split(' от ')[0])) {
             targetRow = row;
-            console.log(`Found target row at index ${i} with order number: ${orderNumberText}`);
+            logger.log(`Found target row at index ${i} with order number: ${orderNumberText}`);
             break;
           }
         } catch (error) {
-          console.log(`Row ${i}: Could not read order number, skipping...`);
+          logger.log(`Row ${i}: Could not read order number, skipping...`);
         }
       }
 
@@ -9270,7 +9271,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 9: Quantity in bottom table: ${quantityValue}, expected: 1`);
+      logger.log(`Test Case 9: Quantity in bottom table: ${quantityValue}, expected: 1`);
 
       await expectSoftWithScreenshot(
         page,
@@ -9295,7 +9296,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Search by product name again
-      console.log(`Test Case 9: Re-searching for product: ${productNameWith3}`);
+      logger.log(`Test Case 9: Re-searching for product: ${productNameWith3}`);
       // We're on the main orders page, so use SHIPMENTS_SEARCH_INPUT
       await loadingTaskPage.searchAndWaitForTable(productNameWith3, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
         searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
@@ -9335,7 +9336,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const quantityCell = targetRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_QUANTITY_PATTERN).first();
       await loadingTaskPage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
       const quantityValue = (await quantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 9: Main orders page quantity: ${quantityValue}, expected: 1`);
+      logger.log(`Test Case 9: Main orders page quantity: ${quantityValue}, expected: 1`);
 
       await expectSoftWithScreenshot(
         page,
@@ -9420,7 +9421,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const countElement = modal.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT).first();
       await loadingTaskPage.waitAndHighlight(countElement, { waitAfter: 1500 });
       const countModal = (await countElement.textContent())?.trim() || '';
-      console.log(`Test Case 9: Modal quantity: ${countModal}, expected: 1`);
+      logger.log(`Test Case 9: Modal quantity: ${countModal}, expected: 1`);
 
       await expectSoftWithScreenshot(
         page,
@@ -9441,7 +9442,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await shipmentTableBody.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const shipmentRows = shipmentTableBody.locator('tr');
       const shipmentRowCount = await shipmentRows.count();
-      console.log(`Test Case 9: Found ${shipmentRowCount} rows in Shipment-Table`);
+      logger.log(`Test Case 9: Found ${shipmentRowCount} rows in Shipment-Table`);
 
       let targetShipmentRow = null;
       for (let i = 0; i < shipmentRowCount; i++) {
@@ -9456,7 +9457,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
             const productNameText = (await productNameCell.textContent())?.trim() || '';
             if (productNameText.includes(productNameWith3)) {
               targetShipmentRow = row;
-              console.log(`Found target row in shipment table at index ${i} with product: ${productNameText}`);
+              logger.log(`Found target row in shipment table at index ${i} with product: ${productNameText}`);
               break;
             }
           }
@@ -9474,12 +9475,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
               const cellText = (await cell.textContent())?.trim() || '';
               if (cellText.includes(productNameWith3)) {
                 targetShipmentRow = row;
-                console.log(`Found target row in shipment table at index ${i} by checking all cells, product found in cell ${j}`);
+                logger.log(`Found target row in shipment table at index ${i} by checking all cells, product found in cell ${j}`);
                 break;
               }
             }
           } catch (error) {
-            console.log(`Shipment table Row ${i}: Could not read cells, skipping...`);
+            logger.log(`Shipment table Row ${i}: Could not read cells, skipping...`);
           }
         }
 
@@ -9503,7 +9504,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         waitAfter: 1500,
       });
       const shipmentQuantityValue = (await shipmentQuantityCell.textContent())?.trim() || '';
-      console.log(`Test Case 9: Shipment table quantity: ${shipmentQuantityValue}, expected: 1`);
+      logger.log(`Test Case 9: Shipment table quantity: ${shipmentQuantityValue}, expected: 1`);
 
       await expectSoftWithScreenshot(
         page,
@@ -9592,7 +9593,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await deficitPage.waitAndHighlight(deficitCell, { waitAfter: 1500 });
         const deficitValue = (await deficitCell.textContent())?.trim() || '';
         const deficitNum = parseInt(deficitValue, 10) || 0;
-        console.log(`Test Case 9: Deficit value: ${deficitValue} (includes all orders with ${productNameWith3})`);
+        logger.log(`Test Case 9: Deficit value: ${deficitValue} (includes all orders with ${productNameWith3})`);
 
         await expectSoftWithScreenshot(
           newPage,
@@ -9664,7 +9665,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         // Verify the value was set
         const valueAfterType = await searchInput.inputValue();
-        console.log(`Test Case 9: Search input value after type: "${valueAfterType}"`);
+        logger.log(`Test Case 9: Search input value after type: "${valueAfterType}"`);
 
         await searchInput.press('Enter');
         await newPage.waitForTimeout(TIMEOUTS.STANDARD); // Wait for search results to populate
@@ -9702,7 +9703,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const quantityCell = firstWarehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first();
         await warehousePage.waitAndHighlight(quantityCell, { waitAfter: 1500 });
         const quantityValue = (await quantityCell.textContent())?.trim() || '';
-        console.log(`Test Case 9: Warehouse quantity value: ${quantityValue}, expected: 1`);
+        logger.log(`Test Case 9: Warehouse quantity value: ${quantityValue}, expected: 1`);
 
         await expectSoftWithScreenshot(
           newPage,
@@ -9720,7 +9721,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 10 - Set warehouse revision values to 0', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
-    console.log('Test Case 10 - Set warehouse revision values to 0');
+    logger.log('Test Case 10 - Set warehouse revision values to 0');
     const revisionPage = new CreateRevisionPage(page);
     // Use the global test product names constant
     const testProducts = TEST_PRODUCT_NAMES;
@@ -9738,7 +9739,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 3: Set revision balances to 0 for all test products', async () => {
       for (const productName of testProducts) {
-        console.log(`Setting warehouse revision balance to 0 for product: ${productName}`);
+        logger.log(`Setting warehouse revision balance to 0 for product: ${productName}`);
         const success = await revisionPage.setRevisionBalanceToZeroForProduct(productName, SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE);
 
         await expectSoftWithScreenshot(
@@ -9752,12 +9753,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
     });
 
-    console.log(`✅ All test products (${testProducts.length}) have been set to 0 in warehouse revisions`);
+    logger.log(`✅ All test products (${testProducts.length}) have been set to 0 in warehouse revisions`);
   });
 
   test('Test Case 11 - Удаление задачи на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 11 - Delete shipment task');
+    logger.log('Test Case 11 - Delete shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
     // For now, we archive all shipment tasks that contain this base product name.
@@ -9782,7 +9783,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 2: Архивировать все задачи для тестовых изделий', async () => {
       for (const name of productNamesToArchive) {
-        console.log(`Archiving all shipment tasks for product name: ${name}`);
+        logger.log(`Archiving all shipment tasks for product name: ${name}`);
         const archivedCount = await loadingTaskPage.archiveAllShipmentTasksByProduct(name);
 
         await expectSoftWithScreenshot(
@@ -9799,7 +9800,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
   test('Test Case 12 - Delete all test products', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
-    console.log('Test Case 13 - Delete all test products');
+    logger.log('Test Case 13 - Delete all test products');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
     const searchPrefix = 'TEST_PRODUCT';
@@ -9817,12 +9818,12 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
     });
 
-    console.log(`✅ All test products with prefix "${searchPrefix}" have been archived`);
+    logger.log(`✅ All test products with prefix "${searchPrefix}" have been archived`);
   });
 
   test('Test Case 13 - Verify all items are deleted', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
-    console.log('Test Case 12 - Verify all items are deleted');
+    logger.log('Test Case 12 - Verify all items are deleted');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 

@@ -5,6 +5,7 @@ import * as SelectorsSettingsPage from '../lib/Constants/SelectorsSettingsPage';
 import * as SelectorsUsersPage from '../lib/Constants/SelectorsUsersPage';
 import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import logger from '../lib/utils/logger';
 
 export type CreateUserParams = {
   username: string;
@@ -409,7 +410,7 @@ export class CreateUsersPage extends PageObject {
             }
           } catch (e) {
             // Notification might not be ready yet, continue polling
-            console.log(`Notification not ready yet (attempt ${i + 1}/5)`);
+            logger.log(`Notification not ready yet (attempt ${i + 1}/5)`);
           }
           await this.page.waitForTimeout(TIMEOUTS.SHORT);
         }
@@ -419,7 +420,7 @@ export class CreateUsersPage extends PageObject {
         
         if (isConflict) {
           // Table number is already in use - decrement and try again in next iteration
-          console.log(`⚠️ Table number ${currentTableNumber} conflict detected. Notification: "${notificationText}". Decrementing to ${currentTableNumber - 1} and retrying...`);
+          logger.log(`⚠️ Table number ${currentTableNumber} conflict detected. Notification: "${notificationText}". Decrementing to ${currentTableNumber - 1} and retrying...`);
           currentTableNumber -= 1;
           continue; // Continue to next iteration to try with decremented table number
         }
@@ -442,22 +443,22 @@ export class CreateUsersPage extends PageObject {
               await notificationDesc.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
               await this.highlightElement(notificationDesc);
               const recheckText = (await notificationDesc.textContent({ timeout: WAIT_TIMEOUTS.SHORT }))?.trim() || '';
-              console.log(`Form still open, rechecking notification: "${recheckText}"`);
+              logger.log(`Form still open, rechecking notification: "${recheckText}"`);
               
               if (recheckText && this.isTableNumberConflictMessage(recheckText)) {
-                console.log(`⚠️ Table number ${currentTableNumber} conflict detected on recheck. Decrementing to ${currentTableNumber - 1} and retrying...`);
+                logger.log(`⚠️ Table number ${currentTableNumber} conflict detected on recheck. Decrementing to ${currentTableNumber - 1} and retrying...`);
                 currentTableNumber -= 1;
                 continue;
               }
             }
           } catch (e) {
             // Notification not available, continue with form visibility check
-            console.log(`Recheck notification not available: ${e}`);
+            logger.log(`Recheck notification not available: ${e}`);
           }
           
           // If form is still open and no conflict notification, log warning but continue
           // (might be a different error, but we'll try with decremented number anyway)
-          console.log(`⚠️ Form still open after save attempt with table number ${currentTableNumber}. Assuming conflict and decrementing to ${currentTableNumber - 1}...`);
+          logger.log(`⚠️ Form still open after save attempt with table number ${currentTableNumber}. Assuming conflict and decrementing to ${currentTableNumber - 1}...`);
           currentTableNumber -= 1;
           continue;
         }
@@ -475,7 +476,7 @@ export class CreateUsersPage extends PageObject {
           }
         } catch (e) {
           // Final notification not available, but save succeeded (form closed)
-          console.log(`Final notification not available: ${e}`);
+          logger.log(`Final notification not available: ${e}`);
         }
 
         result = {
@@ -537,7 +538,7 @@ export class CreateUsersPage extends PageObject {
       // Get initial row count before search (for comparison)
       const rowsBeforeSearch = table.locator('tbody tr');
       const initialRowCount = await rowsBeforeSearch.count();
-      console.log(`Initial row count before search: ${initialRowCount}`);
+      logger.log(`Initial row count before search: ${initialRowCount}`);
 
       // Find the search input - it's inside the table container
       const searchInput = this.page.locator(SelectorsUsersPage.USERS_LIST_SEARCH_INPUT).first();
@@ -576,11 +577,11 @@ export class CreateUsersPage extends PageObject {
       // Find all rows in the table after search
       const rows = table.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} rows in table after searching for prefix "${searchPrefix}" (was ${initialRowCount} before search)`);
+      logger.log(`Found ${rowCount} rows in table after searching for prefix "${searchPrefix}" (was ${initialRowCount} before search)`);
       
       // Safety check: if search didn't filter and we have many rows, verify they all match
       if (rowCount > 0 && rowCount === initialRowCount && initialRowCount > 10) {
-        console.log(`⚠️ WARNING: Search may not be filtering - row count unchanged (${rowCount} rows). Will verify each row matches prefix before deleting.`);
+        logger.log(`⚠️ WARNING: Search may not be filtering - row count unchanged (${rowCount} rows). Will verify each row matches prefix before deleting.`);
       }
 
       // Safety check: if rowCount is very large, the search might not be working
@@ -612,13 +613,13 @@ export class CreateUsersPage extends PageObject {
         // Verify the row contains the search prefix (check username in row text)
         // This is critical: we only delete rows that actually match the search prefix
         if (!rowTextLower.includes(searchPrefixLower)) {
-          console.log(`⏭️ Skipping row ${i}: does not contain prefix "${searchPrefix}". Row text preview: "${rowText?.substring(0, 80).trim()}..."`);
+          logger.log(`⏭️ Skipping row ${i}: does not contain prefix "${searchPrefix}". Row text preview: "${rowText?.substring(0, 80).trim()}..."`);
           skippedCount++;
           continue; // Skip this row - it doesn't match the search prefix
         }
         
         // Log that we found a matching row
-        console.log(`✅ Row ${i} matches prefix "${searchPrefix}". Row text preview: "${rowText?.substring(0, 80).trim()}..."`);
+        logger.log(`✅ Row ${i} matches prefix "${searchPrefix}". Row text preview: "${rowText?.substring(0, 80).trim()}..."`);
         
         // Verify row matches before deleting (double-check)
         await expectSoftWithScreenshot(
@@ -667,7 +668,7 @@ export class CreateUsersPage extends PageObject {
         deletedCount++;
       }
 
-      console.log(`Deleted ${deletedCount} users with prefix "${searchPrefix}" (skipped ${skippedCount} rows that didn't match)`);
+      logger.log(`Deleted ${deletedCount} users with prefix "${searchPrefix}" (skipped ${skippedCount} rows that didn't match)`);
       
       // Verify we actually deleted users if any were found
       // If no users were found (rowCount === 0), that's fine - cleanup may have already happened
@@ -681,7 +682,7 @@ export class CreateUsersPage extends PageObject {
           testInfo,
         );
       } else {
-        console.log(`No users found with prefix "${searchPrefix}" - cleanup may have already been completed`);
+        logger.log(`No users found with prefix "${searchPrefix}" - cleanup may have already been completed`);
       }
     });
   }

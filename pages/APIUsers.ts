@@ -1,7 +1,7 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { APIPageObject } from '../lib/APIPage';
 import { ENV } from '../config';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 
 export class UsersAPI extends APIPageObject {
     constructor(page: Page) {
@@ -17,15 +17,15 @@ export class UsersAPI extends APIPageObject {
             ...(authToken && { 'authorization': authToken })
         };
 
-        console.log(`🔍 Creating user with headers:`, headers);
-        console.log(`🔍 Auth token: ${authToken ? authToken.substring(0, 50) + '...' : 'none'}`);
+        logger.log(`🔍 Creating user with headers:`, headers);
+        logger.log(`🔍 Auth token: ${authToken ? authToken.substring(0, 50) + '...' : 'none'}`);
 
         const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users', userData, headers);
 
         const responseData = await response.json();
 
-        console.log(`🔍 Create user response status: ${response.status()}`);
-        console.log(`🔍 Create user response data:`, responseData);
+        logger.log(`🔍 Create user response status: ${response.status()}`);
+        logger.log(`🔍 Create user response data:`, responseData);
 
         if (response.ok()) {
             logger.info(`User created successfully`);

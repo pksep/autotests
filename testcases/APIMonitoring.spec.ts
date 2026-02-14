@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APIMonitoring } from "../pages/APIMonitoring";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runMonitoringAPI = () => {
     logger.info(`Starting Monitoring API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runMonitoringAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Get monitoring metrics without authentication", async () => {
-            console.log("Testing unauthenticated monitoring metrics access...");
+            logger.log("Testing unauthenticated monitoring metrics access...");
 
             const unauthenticatedResponse = await monitoringAPI.getMetrics(request, "invalid_user");
 
@@ -29,11 +29,11 @@ export const runMonitoringAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated monitoring metrics access correctly rejected with 401");
+            logger.log("✅ Unauthenticated monitoring metrics access correctly rejected with 401");
         });
 
         await test.step("Test 2: Create alert with SQL injection in metric", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 metric: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -55,11 +55,11 @@ export const runMonitoringAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Create alert with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 metric: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -81,7 +81,7 @@ export const runMonitoringAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -92,7 +92,7 @@ export const runMonitoringAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -117,11 +117,11 @@ export const runMonitoringAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Create alert with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 metric: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -143,11 +143,11 @@ export const runMonitoringAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidCreateResponse.status);
             expect(invalidCreateResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Create alert with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 metric: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -169,7 +169,7 @@ export const runMonitoringAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptyCreateResponse.status);
             expect(emptyCreateResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
     });
 
@@ -180,7 +180,7 @@ export const runMonitoringAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -192,11 +192,11 @@ export const runMonitoringAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for get metrics", async () => {
-            console.log("Testing get metrics response time performance...");
+            logger.log("Testing get metrics response time performance...");
 
             const startTime = Date.now();
             const performanceGetResponse = await monitoringAPI.getMetrics(request, API_CONST.API_TEST_USER_ID);
@@ -206,11 +206,11 @@ export const runMonitoringAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceGetResponse.status).toBe(200);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Get metrics response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Get metrics response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent monitoring operations", async () => {
-            console.log("Testing concurrent monitoring operations...");
+            logger.log("Testing concurrent monitoring operations...");
 
             const alertData = {
                 metric: API_CONST.API_TEST_MONITORING_METRIC_UPDATED,
@@ -228,7 +228,7 @@ export const runMonitoringAPI = () => {
                 expect(response.status).toBe(201);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent monitoring operations handled successfully");
+            logger.log("✅ Concurrent monitoring operations handled successfully");
         });
     });
 };

@@ -16,7 +16,7 @@
 
 import { Page } from '@playwright/test'; // Import the Page class from Playwright for handling page interactions
 import { ENV, SELECTORS } from '../config'; // Import environment settings and selector configurations
-import logger from '../lib/logger'; // Import the logger utility for logging debug information
+import logger from './utils/logger'; // Import the logger utility for logging debug information
 
 /**
  * Input class provides methods to interact with input fields and text areas on the web page.

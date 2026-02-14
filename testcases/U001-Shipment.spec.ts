@@ -15,6 +15,7 @@ import { CreateWarehouseTaskForShipmentPage } from '../pages/WarehouseTaskForShi
 import { Click, expectSoftWithScreenshot } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
+import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import {
   orderNumber,
@@ -26,11 +27,11 @@ import {
 } from './U001-Constants';
 
 export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Shipment Operations (Test Cases 19-20)`);
+  logger.log(`Start of the test: U001 Shipment Operations (Test Cases 19-20)`);
 
   test('Test Case 19 - Uploading Shipment Task', async ({ page }) => {
     // doc test case 14
-    console.log('Test Case 19 - Uploading Shipment Task');
+    logger.log('Test Case 19 - Uploading Shipment Task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(page);
     let numberColumn: number;
@@ -76,7 +77,7 @@ export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) =
 
       // Click the cell
       await firstRowCell.click();
-      console.log('First row cell clicked');
+      logger.log('First row cell clicked');
     });
 
     await allure.step('Step 08: Click on the ship button', async () => {
@@ -109,7 +110,7 @@ export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) =
     // doc test case 15
     page,
   }) => {
-    console.log('Test Case 20 - Checking the number of shipped entities');
+    logger.log('Test Case 20 - Checking the number of shipped entities');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(page);
     let numberColumn: number;
@@ -147,7 +148,7 @@ export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) =
     });
 
     await allure.step('Step 05: Find the checkbox column and click', async () => {
-      // console.log("numberColumn: ", numberColumn);
+      // logger.log("numberColumn: ", numberColumn);
       await warehouseTaskForShipment.getValueOrClickFromFirstRow(tableMainUploading, 2, Click.Yes, Click.No);
     });
 
@@ -176,7 +177,7 @@ export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) =
       const shippedValue = await shippedCell.textContent();
       const valueInShipped = shippedValue?.trim() || '';
 
-      console.log('Shipped quantity: ', valueInShipped);
+      logger.log('Shipped quantity: ', valueInShipped);
 
       await expectSoftWithScreenshot(
         page,

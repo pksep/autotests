@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APIImportExport } from "../pages/APIImportExport";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runImportExportAPI = () => {
     logger.info(`Starting Import/Export API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runImportExportAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Import data without authentication", async () => {
-            console.log("Testing unauthenticated data import...");
+            logger.log("Testing unauthenticated data import...");
 
             const importData = {
                 type: API_CONST.API_TEST_IMPORT_TYPE,
@@ -34,11 +34,11 @@ export const runImportExportAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated data import correctly rejected with 401");
+            logger.log("✅ Unauthenticated data import correctly rejected with 401");
         });
 
         await test.step("Test 2: Import data with SQL injection", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 type: API_CONST.API_TEST_IMPORT_TYPE,
@@ -59,11 +59,11 @@ export const runImportExportAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Import data with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 type: API_CONST.API_TEST_IMPORT_TYPE,
@@ -84,7 +84,7 @@ export const runImportExportAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -95,7 +95,7 @@ export const runImportExportAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -120,11 +120,11 @@ export const runImportExportAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Import data with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 type: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -145,11 +145,11 @@ export const runImportExportAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidImportResponse.status);
             expect(invalidImportResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Import data with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 type: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -170,7 +170,7 @@ export const runImportExportAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptyImportResponse.status);
             expect(emptyImportResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
     });
 
@@ -181,7 +181,7 @@ export const runImportExportAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -193,11 +193,11 @@ export const runImportExportAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for export data", async () => {
-            console.log("Testing export data response time performance...");
+            logger.log("Testing export data response time performance...");
 
             const exportData = {
                 type: API_CONST.API_TEST_EXPORT_TYPE,
@@ -212,11 +212,11 @@ export const runImportExportAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceExportResponse.status).toBe(200);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Export data response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Export data response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent import/export attempts", async () => {
-            console.log("Testing concurrent import/export attempts...");
+            logger.log("Testing concurrent import/export attempts...");
 
             const importData = {
                 type: API_CONST.API_TEST_IMPORT_TYPE,
@@ -233,7 +233,7 @@ export const runImportExportAPI = () => {
                 expect(response.status).toBe(201);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent import/export attempts handled successfully");
+            logger.log("✅ Concurrent import/export attempts handled successfully");
         });
     });
 };

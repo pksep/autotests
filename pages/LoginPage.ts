@@ -1,6 +1,7 @@
 // LoginPage.ts
 import { Page } from '@playwright/test';
 import { PageObject } from '../lib/Page'; // Adjust the path as necessary
+import logger from '../lib/utils/logger';
 
 // Страница: Авторизации
 export class LoginPage extends PageObject {

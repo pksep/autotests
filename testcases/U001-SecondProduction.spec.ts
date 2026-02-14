@@ -18,6 +18,7 @@ import { CreatShortagePartsPage } from '../pages/ShortagePartsPage';
 import { expectSoftWithScreenshot } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
+import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
 const {
@@ -44,11 +45,11 @@ let quantityProductLaunchOnProductionAfter = U001Constants.quantityProductLaunch
 let quantitySumLaunchOnProduction = U001Constants.quantitySumLaunchOnProduction;
 
 export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Second Production Launch (Test Cases 28-30)`);
+  logger.log(`Start of the test: U001 Second Production Launch (Test Cases 28-30)`);
 
   test('Test Case 28 - Launch Into Production Product', async ({ page }) => {
     // doc test case 23
-    console.log('Test Case 28 - Launch Into Production Product');
+    logger.log('Test Case 28 - Launch Into Production Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageProduct = new CreateShortageProductPage(page);
     let checkOrderNumber: string;
@@ -101,7 +102,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
       // Check if the checkbox is already checked
       const isChecked = await checkbox.isChecked();
       if (!isChecked) {
-        console.log('Checkbox is not checked, attempting to check it...');
+        logger.log('Checkbox is not checked, attempting to check it...');
         await checkbox.click();
         await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -110,9 +111,9 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
         if (!isCheckedAfter) {
           throw new Error('Failed to check the checkbox. Checkbox remains unchecked after click.');
         }
-        console.log('Checkbox successfully checked');
+        logger.log('Checkbox successfully checked');
       } else {
-        console.log('Checkbox is already checked, skipping click');
+        logger.log('Checkbox is already checked, skipping click');
       }
 
       // Wait for the table body to load
@@ -136,7 +137,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
       const urgencyDateValue = await urgencyDateCell.textContent();
       urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
-      console.log('Date by urgency in the table: ', urgencyDateOnTable);
+      logger.log('Date by urgency in the table: ', urgencyDateOnTable);
 
       await expectSoftWithScreenshot(
         page,
@@ -168,7 +169,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
       const productionOrderedValue = await productionOrderedCell.textContent();
       quantityProductLaunchOnProductionBefore = productionOrderedValue?.trim() || '';
 
-      console.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
+      logger.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
     });
 
     await allure.step('Step 07: Click on the Launch on production button', async () => {
@@ -193,7 +194,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
     await allure.step('Step 10: We save the order number', async () => {
       // Get the order number
       checkOrderNumber = await shortageProduct.checkOrderNumber();
-      console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+      logger.log(`Полученный номер заказа: ${checkOrderNumber}`);
     });
 
     await allure.step('Step 11: Click on the In launch button', async () => {
@@ -226,7 +227,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
       const productionOrderedValue = await productionOrderedCell.textContent();
       quantityProductLaunchOnProductionAfter = productionOrderedValue?.trim() || '';
 
-      console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
+      logger.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
       quantitySumLaunchOnProduction = Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction);
       await expectSoftWithScreenshot(
         page,
@@ -243,7 +244,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
 
   test('Test Case 29 - Launch Into Production Cbed', async ({ page }) => {
     // doc test case 24
-    console.log('Test Case 29 - Launch Into Production Cbed');
+    logger.log('Test Case 29 - Launch Into Production Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageAssemblies = new CreatShortageAssembliesPage(page);
     let checkOrderNumber: string;
@@ -307,7 +308,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           // Check if the checkbox is already checked
           const isChecked = await checkbox.isChecked();
           if (!isChecked) {
-            console.log('Checkbox is not checked, attempting to check it...');
+            logger.log('Checkbox is not checked, attempting to check it...');
             await checkbox.click();
             await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -316,9 +317,9 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
             if (!isCheckedAfter) {
               throw new Error('Failed to check the checkbox. Checkbox remains unchecked after click.');
             }
-            console.log('Checkbox successfully checked');
+            logger.log('Checkbox successfully checked');
           } else {
-            console.log('Checkbox is already checked, skipping click');
+            logger.log('Checkbox is already checked, skipping click');
           }
 
           // Wait for the table body to load
@@ -342,7 +343,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           const urgencyDateText = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateText?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
           // Test Cases 29-30 are part of the "Second Production Launch" suite, which is for the second task.
           // The second task uses urgencyDateSecond ('21.01.2025'), so we expect that date here.
@@ -373,7 +374,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           const orderedValue = await orderedCell.textContent();
           quantityProductLaunchOnProductionBefore = orderedValue?.trim() || '';
 
-          console.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
+          logger.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
         });
 
         await allure.step('Step 07: Click on the Launch on production button', async () => {
@@ -414,7 +415,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
         await allure.step('Step 10: We save the order number', async () => {
           // Get the order number
           checkOrderNumber = await shortageAssemblies.checkOrderNumber();
-          console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+          logger.log(`Полученный номер заказа: ${checkOrderNumber}`);
         });
 
         await allure.step('Step 11: Click on the In launch button', async () => {
@@ -451,7 +452,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           const orderedValue = await orderedCell.textContent();
           quantityProductLaunchOnProductionAfter = orderedValue?.trim() || '';
 
-          console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
+          logger.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
           await expectSoftWithScreenshot(
             page,
@@ -470,7 +471,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
 
   test('Test Case 30 - Launch Into Production Parts', async ({ page }) => {
     // doc test case 25
-    console.log('Test Case 30 - Launch Into Production Parts');
+    logger.log('Test Case 30 - Launch Into Production Parts');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageParts = new CreatShortagePartsPage(page);
     let checkOrderNumber: string;
@@ -531,7 +532,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           // Check if the checkbox is already checked
           const isChecked = await checkbox.isChecked();
           if (!isChecked) {
-            console.log('Checkbox is not checked, attempting to check it...');
+            logger.log('Checkbox is not checked, attempting to check it...');
             await checkbox.click();
             await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -540,9 +541,9 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
             if (!isCheckedAfter) {
               throw new Error('Failed to check the checkbox. Checkbox remains unchecked after click.');
             }
-            console.log('Checkbox successfully checked');
+            logger.log('Checkbox successfully checked');
           } else {
-            console.log('Checkbox is already checked, skipping click');
+            logger.log('Checkbox is already checked, skipping click');
           }
 
           // Wait for the table body to load
@@ -566,7 +567,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           const urgencyDateValue = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
           // Test Cases 29-30 are part of the "Second Production Launch" suite, which is for the second task.
           // The second task uses urgencyDateSecond ('21.01.2025'), so we expect that date here.
@@ -600,7 +601,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           const productionOrderedValue = await productionOrderedCell.textContent();
           quantityProductLaunchOnProductionBefore = productionOrderedValue?.trim() || '';
 
-          console.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
+          logger.log('The value in the cells is put into production befor:', quantityProductLaunchOnProductionBefore);
         });
 
         await allure.step('Step 07: Click on the Launch on production button ', async () => {
@@ -625,7 +626,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
         await allure.step('Step 10: We save the order number', async () => {
           // Get the order number
           checkOrderNumber = await shortageParts.checkOrderNumber();
-          console.log(`Полученный номер заказа: ${checkOrderNumber}`);
+          logger.log(`Полученный номер заказа: ${checkOrderNumber}`);
         });
 
         await allure.step('Step 11: Click on the In launch button', async () => {
@@ -663,7 +664,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           const productionOrderedValue = await productionOrderedCell.textContent();
           quantityProductLaunchOnProductionAfter = productionOrderedValue?.trim() || '';
 
-          console.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
+          logger.log('The value in the cells is put into production after:', quantityProductLaunchOnProductionAfter);
 
           await expectSoftWithScreenshot(
             page,

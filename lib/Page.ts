@@ -19,7 +19,7 @@ import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponen
 import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrderedFromSuppliers'; // Import Ordered From Suppliers selectors
 import { Input } from './Input'; // Import the Input helper class for handling input fields
 import { Button } from './Button'; // Import the Button helper class for handling button clicks
-import logger from './logger'; // Import logger utility for logging messages
+import logger from './utils/logger'; // Import logger utility for logging messages
 import { allure } from 'allure-playwright';
 import { TIMEOUTS, WAIT_TIMEOUTS } from './Constants/TimeoutConstants'; // Import timeout constants
 import { expectSoftWithScreenshot, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities'; // Import utility functions
@@ -706,7 +706,7 @@ export class PageObject extends AbstractPage {
    * @param locator - the full locator of the table
    */
   async searchTable(nameSearch: string, locator: string, searchInputDataTestId?: string) {
-    console.log('Search Table', nameSearch, locator, searchInputDataTestId);
+    logger.log('Search Table', nameSearch, locator, searchInputDataTestId);
     const table = this.page.locator(locator);
     await table.evaluate(el => {
       el.style.backgroundColor = 'green';
@@ -759,7 +759,7 @@ export class PageObject extends AbstractPage {
 
     // Verify the value was set before pressing Enter
     const currentValue = await searchTable.inputValue();
-    console.log(`Search field value before Enter: "${currentValue}"`);
+    logger.log(`Search field value before Enter: "${currentValue}"`);
 
     // Press Enter to trigger search
     await searchTable.press('Enter');
@@ -770,11 +770,11 @@ export class PageObject extends AbstractPage {
 
     // Check the final value
     const finalValue = await searchTable.inputValue();
-    console.log(`Search field value after Enter: "${finalValue}"`);
+    logger.log(`Search field value after Enter: "${finalValue}"`);
 
     // Don't assert the value matches exactly, as some search fields clear after search
     // Just verify the search was performed
-    console.log(`Search performed for: "${nameSearch}"`);
+    logger.log(`Search performed for: "${nameSearch}"`);
   }
 
   /**
@@ -930,9 +930,15 @@ export class PageObject extends AbstractPage {
    * @param textButton - The button text to match
    * @param locator - The locator for the button
    * @param click - Whether to actually click (Click.Yes) or just verify (Click.No)
+   * @param options - Optional: waitForEnabled (wait for button to be enabled), enabledTimeout (ms)
    */
-  async clickButton(textButton: string, locator: string, click: Click = Click.Yes) {
-    return this.elementHelper.clickButton(textButton, locator, click);
+  async clickButton(
+    textButton: string,
+    locator: string,
+    click: Click = Click.Yes,
+    options?: { waitForEnabled?: boolean; enabledTimeout?: number },
+  ) {
+    return this.elementHelper.clickButton(textButton, locator, click, options);
   }
 
   /**

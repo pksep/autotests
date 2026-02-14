@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { DocumentsAPI } from "../pages/APIDocuments";
 import { AuthAPI } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 import { allure } from "allure-playwright";
 
 export const runDocumentsAPI = () => {
@@ -14,7 +14,7 @@ export const runDocumentsAPI = () => {
         const authAPI = new AuthAPI(page);
 
         await test.step("Test 1: Attach file without authentication", async () => {
-            console.log("Testing unauthenticated file attachment...");
+            logger.log("Testing unauthenticated file attachment...");
 
             const unauthenticatedResponse = await documentsAPI.attachFileToUser(
                 request,
@@ -36,11 +36,11 @@ export const runDocumentsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated file attachment correctly rejected with 401");
+            logger.log("✅ Unauthenticated file attachment correctly rejected with 401");
         });
 
         await test.step("Test 2: Get file without authentication", async () => {
-            console.log("Testing unauthenticated file access...");
+            logger.log("Testing unauthenticated file access...");
 
             const unauthenticatedResponse = await documentsAPI.getFileById(request, 1, true);
 
@@ -56,11 +56,11 @@ export const runDocumentsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated file access correctly rejected with 401");
+            logger.log("✅ Unauthenticated file access correctly rejected with 401");
         });
 
         await test.step("Test 3: Change document type without authentication", async () => {
-            console.log("Testing unauthenticated document type change...");
+            logger.log("Testing unauthenticated document type change...");
 
             const unauthenticatedResponse = await documentsAPI.changeDocumentType(
                 request,
@@ -72,7 +72,7 @@ export const runDocumentsAPI = () => {
             expect(unauthenticatedResponse.status).toBe(401);
             expect(unauthenticatedResponse.status).not.toBe(200);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated document type change correctly rejected with 401");
+            logger.log("✅ Unauthenticated document type change correctly rejected with 401");
         });
     });
 
@@ -83,7 +83,7 @@ export const runDocumentsAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate with valid credentials", async () => {
-            console.log("Authenticating with valid credentials...");
+            logger.log("Authenticating with valid credentials...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -101,11 +101,11 @@ export const runDocumentsAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Attach file with invalid user ID", async () => {
-            console.log("Testing file attachment with invalid user ID...");
+            logger.log("Testing file attachment with invalid user ID...");
 
             const invalidUserResponse = await documentsAPI.attachFileToUser(
                 request,
@@ -119,11 +119,11 @@ export const runDocumentsAPI = () => {
             expect(invalidUserResponse.status).toBe(400);
             expect(invalidUserResponse.status).not.toBe(200);
             expect(invalidUserResponse.data).toBeDefined();
-            console.log("✅ Invalid user ID correctly rejected with 400");
+            logger.log("✅ Invalid user ID correctly rejected with 400");
         });
 
         await test.step("Test 5: Attach file with invalid file ID", async () => {
-            console.log("Testing file attachment with invalid file ID...");
+            logger.log("Testing file attachment with invalid file ID...");
 
             const invalidFileResponse = await documentsAPI.attachFileToUser(
                 request,
@@ -137,11 +137,11 @@ export const runDocumentsAPI = () => {
             expect(invalidFileResponse.status).toBe(400);
             expect(invalidFileResponse.status).not.toBe(200);
             expect(invalidFileResponse.data).toBeDefined();
-            console.log("✅ Invalid file ID correctly rejected with 400");
+            logger.log("✅ Invalid file ID correctly rejected with 400");
         });
 
         await test.step("Test 6: Get file with invalid ID", async () => {
-            console.log("Testing file retrieval with invalid ID...");
+            logger.log("Testing file retrieval with invalid ID...");
 
             const invalidIdResponse = await documentsAPI.getFileById(
                 request,
@@ -153,11 +153,11 @@ export const runDocumentsAPI = () => {
             expect(invalidIdResponse.status).toBe(400);
             expect(invalidIdResponse.status).not.toBe(200);
             expect(invalidIdResponse.data).toBeDefined();
-            console.log("✅ Invalid file ID correctly rejected with 400");
+            logger.log("✅ Invalid file ID correctly rejected with 400");
         });
 
         await test.step("Test 7: Get non-existent file", async () => {
-            console.log("Testing retrieval of non-existent file...");
+            logger.log("Testing retrieval of non-existent file...");
 
             const nonExistentResponse = await documentsAPI.getFileById(request, 999999, true);
 
@@ -165,11 +165,11 @@ export const runDocumentsAPI = () => {
             expect(nonExistentResponse.status).toBe(404);
             expect(nonExistentResponse.status).not.toBe(200);
             expect(nonExistentResponse.data).toBeDefined();
-            console.log("✅ Non-existent file correctly rejected with 404");
+            logger.log("✅ Non-existent file correctly rejected with 404");
         });
 
         await test.step("Test 8: Change document type with invalid ID", async () => {
-            console.log("Testing document type change with invalid ID...");
+            logger.log("Testing document type change with invalid ID...");
 
             const invalidIdResponse = await documentsAPI.changeDocumentType(
                 request,
@@ -181,11 +181,11 @@ export const runDocumentsAPI = () => {
             expect(invalidIdResponse.status).toBe(400);
             expect(invalidIdResponse.status).not.toBe(200);
             expect(invalidIdResponse.data).toBeDefined();
-            console.log("✅ Invalid document ID correctly rejected with 400");
+            logger.log("✅ Invalid document ID correctly rejected with 400");
         });
 
         await test.step("Test 9: Change document type with empty type", async () => {
-            console.log("Testing document type change with empty type...");
+            logger.log("Testing document type change with empty type...");
 
             const emptyTypeResponse = await documentsAPI.changeDocumentType(
                 request,
@@ -197,11 +197,11 @@ export const runDocumentsAPI = () => {
             expect(emptyTypeResponse.status).toBe(400);
             expect(emptyTypeResponse.status).not.toBe(200);
             expect(emptyTypeResponse.data).toBeDefined();
-            console.log("✅ Empty document type correctly rejected with 400");
+            logger.log("✅ Empty document type correctly rejected with 400");
         });
 
         await test.step("Test 10: Change document type with XSS payload", async () => {
-            console.log("Testing document type change with XSS payload...");
+            logger.log("Testing document type change with XSS payload...");
 
             const xssResponse = await documentsAPI.changeDocumentType(
                 request,
@@ -213,7 +213,7 @@ export const runDocumentsAPI = () => {
             expect(xssResponse.status).toBe(400);
             expect(xssResponse.status).not.toBe(200);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS payload in document type correctly rejected with 400");
+            logger.log("✅ XSS payload in document type correctly rejected with 400");
         });
     });
 
@@ -232,11 +232,11 @@ export const runDocumentsAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toBeDefined();
             expect(loginResponse.data.token).toBeTruthy();
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 11: Test file operations with valid data", async () => {
-            console.log("Testing file operations with valid data...");
+            logger.log("Testing file operations with valid data...");
 
             // Test attach file to user with valid data
             const attachResponse = await documentsAPI.attachFileToUser(
@@ -252,7 +252,7 @@ export const runDocumentsAPI = () => {
             expect(attachResponse.status).not.toBe(400);
             expect(attachResponse.status).not.toBe(401);
             expect(attachResponse.data).toBeDefined();
-            console.log("✅ File attachment with valid data working");
+            logger.log("✅ File attachment with valid data working");
 
             // Test get file by ID with valid data
             const getFileResponse = await documentsAPI.getFileById(
@@ -266,7 +266,7 @@ export const runDocumentsAPI = () => {
             expect(getFileResponse.status).not.toBe(400);
             expect(getFileResponse.status).not.toBe(404);
             expect(getFileResponse.data).toBeDefined();
-            console.log("✅ File retrieval with valid data working");
+            logger.log("✅ File retrieval with valid data working");
 
             // Test change document type with valid data
             const changeTypeResponse = await documentsAPI.changeDocumentType(
@@ -280,11 +280,11 @@ export const runDocumentsAPI = () => {
             expect(changeTypeResponse.status).not.toBe(400);
             expect(changeTypeResponse.status).not.toBe(404);
             expect(changeTypeResponse.data).toBeDefined();
-            console.log("✅ Document type change with valid data working");
+            logger.log("✅ Document type change with valid data working");
         });
 
         await test.step("Test 12: Test file operations with boundary values", async () => {
-            console.log("Testing file operations with boundary values...");
+            logger.log("Testing file operations with boundary values...");
 
             // Test with maximum integer ID
             const maxIdResponse = await documentsAPI.getFileById(
@@ -297,7 +297,7 @@ export const runDocumentsAPI = () => {
             expect(maxIdResponse.status).toBe(404);
             expect(maxIdResponse.status).not.toBe(200);
             expect(maxIdResponse.data).toBeDefined();
-            console.log("✅ Maximum integer ID correctly rejected with 404");
+            logger.log("✅ Maximum integer ID correctly rejected with 404");
 
             // Test with minimum integer ID
             const minIdResponse = await documentsAPI.getFileById(
@@ -310,7 +310,7 @@ export const runDocumentsAPI = () => {
             expect(minIdResponse.status).toBe(400);
             expect(minIdResponse.status).not.toBe(200);
             expect(minIdResponse.data).toBeDefined();
-            console.log("✅ Minimum integer ID correctly rejected with 400");
+            logger.log("✅ Minimum integer ID correctly rejected with 400");
         });
     });
 };

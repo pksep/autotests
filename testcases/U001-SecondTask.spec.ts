@@ -36,7 +36,7 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import testData1 from '../testdata/U001-PC1.json';
 import testData2 from '../testdata/U002-PC1.json';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import * as U001Constants from './U001-Constants';
 const {
   nameProduct,
@@ -67,11 +67,11 @@ let remainingStockBefore = U001Constants.remainingStockBefore;
 let remainingStockAfter = U001Constants.remainingStockAfter;
 
 export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Second Task Operations (Test Cases 21-27)`);
+  logger.log(`Start of the test: U001 Second Task Operations (Test Cases 21-27)`);
 
   test('Test Case 21 - Loading The Second Task', async ({ page }) => {
     // doc test case 16
-    console.log('Test Case 21 - Loading The Second Task');
+    logger.log('Test Case 21 - Loading The Second Task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
 
@@ -185,7 +185,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
       await loadingTaskPage.clickButton('Добавить', LoadingTasksSelectors.buttonAddBuyerOnModalWindow);
     });
     await allure.step('Step 11: We set the date according to urgency', async () => {
-      console.log('Step 11: We set the date according to urgency');
+      logger.log('Step 11: We set the date according to urgency');
       await page.locator(LoadingTasksSelectors.calendarTrigger).click();
       await page.locator(LoadingTasksSelectors.calendarPopover).isVisible();
 
@@ -246,7 +246,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(TIMEOUTS.EXTENDED);
       const orderNumber = await loadingTaskPage.getOrderDateInfoFromLocator(LoadingTasksSelectors.editTitle);
-      console.log('orderNumber: ', orderNumber);
+      logger.log('orderNumber: ', orderNumber);
     });
   });
 
@@ -267,7 +267,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
   test('Test Case 22 - Marking Parts', async ({ page }) => {
     // doc test case 17
-    console.log('Test Case 22 - Marking Parts');
+    logger.log('Test Case 22 - Marking Parts');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
     const tableMetalworkingWarehouse = MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE;
@@ -354,8 +354,8 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           const urgencyDateText = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateText?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-          console.log('Дата по срочности в переменной: ', urgencyDateSecond);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в переменной: ', urgencyDateSecond);
 
           await expectSoftWithScreenshot(
             page,
@@ -385,7 +385,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           quantityProductLaunchOnProductionBefore = (await orderedCell.textContent()) || '0';
           quantityProductLaunchOnProductionBefore = quantityProductLaunchOnProductionBefore.trim();
 
-          console.log('The value in the cells is orders befor:', quantityProductLaunchOnProductionBefore);
+          logger.log('The value in the cells is orders befor:', quantityProductLaunchOnProductionBefore);
 
           // The expected value should be quantitySumLaunchOnProduction (set in Test Case 11)
           // which is quantityProductLaunchOnProductionBefore (2) + quantityProductLaunchOnProduction (2) = 4
@@ -410,7 +410,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
           // Click the operations cell directly
           await operationsCell.click();
-          console.log('Operation cell clicked');
+          logger.log('Operation cell clicked');
 
           // Waiting for loading
           await page.waitForLoadState('networkidle');
@@ -467,7 +467,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           const operationValue = await operationCell.textContent();
           firstOperation = operationValue?.trim() || '';
 
-          console.log(firstOperation);
+          logger.log(firstOperation);
           logger.info(firstOperation);
         });
 
@@ -511,7 +511,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
   test('Test Case 23 - Checking new date by urgency', async ({ page }) => {
     // doc test case 18
-    console.log('Test Case 23 - Checking new date by urgency');
+    logger.log('Test Case 23 - Checking new date by urgency');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     // Проверка изделия на дату по срочности
     const shortageProduct = new CreateShortageProductPage(page);
@@ -564,7 +564,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
       const urgencyDateValue = await urgencyDateCell.textContent();
       urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
-      console.log('Date by urgency in the table: ', urgencyDateOnTable);
+      logger.log('Date by urgency in the table: ', urgencyDateOnTable);
 
       expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
     });
@@ -631,7 +631,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           const urgencyDateValue = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
           await expectSoftWithScreenshot(
             page,
@@ -712,7 +712,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           // Check if the checkbox is already checked
           const isChecked = await checkbox.isChecked();
           if (!isChecked) {
-            console.log('Checkbox is not checked, attempting to check it...');
+            logger.log('Checkbox is not checked, attempting to check it...');
             await checkbox.click();
             await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -721,9 +721,9 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
             if (!isCheckedAfter) {
               throw new Error('Failed to check the checkbox. Checkbox remains unchecked after click.');
             }
-            console.log('Checkbox successfully checked');
+            logger.log('Checkbox successfully checked');
           } else {
-            console.log('Checkbox is already checked, skipping click');
+            logger.log('Checkbox is already checked, skipping click');
           }
 
           // Wait for the table body to load
@@ -747,7 +747,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           const urgencyDateValue = await urgencyDateCell.textContent();
           urgencyDateOnTable = urgencyDateValue?.trim() || '';
 
-          console.log('Дата по срочности в таблице: ', urgencyDateOnTable);
+          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
           await expectSoftWithScreenshot(
             page,
@@ -764,7 +764,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
   test('Test Case 24 - Receiving Part And Check Stock', async ({ page }) => {
     // doc test case 19
-    console.log('Test Case 24 - Receiving Part And Check Stock');
+    logger.log('Test Case 24 - Receiving Part And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
@@ -854,9 +854,9 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           const isChecked = await headerCheckbox.isChecked();
           if (!isChecked) {
             await headerCheckbox.click();
-            console.log('Header checkbox clicked');
+            logger.log('Header checkbox clicked');
           } else {
-            console.log('Header checkbox is already checked, skipping click');
+            logger.log('Header checkbox is already checked, skipping click');
           }
         });
 
@@ -871,7 +871,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
         //   }
         // );
         await allure.step('Step 09: Check that the first row of the table contains the variable name', async () => {
-          console.log('Step 09: Check that the first row of the table contains the variable name');
+          logger.log('Step 09: Check that the first row of the table contains the variable name');
           // Wait for the table body to load
           const tableSelectedItems = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE;
           await stockReceipt.waitingTableBody(tableSelectedItems);
@@ -880,7 +880,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await stockReceipt.checkNameInLineFromFirstRow(detail.name, tableSelectedItems);
         });
         await allure.step('Step 9a: Click on the Добавить button on the modal window', async () => {
-          console.log('Step 15: Click on the create receipt button on the modal window');
+          logger.log('Step 15: Click on the create receipt button on the modal window');
           // Click on the button
           await stockReceipt.clickButton('Добавить', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_ADD);
         });
@@ -911,7 +911,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           );
 
           // Output to the console
-          console.log(
+          logger.log(
             `Количество ${detail.name} на складе до оприходования: ${remainingStockBefore}, ` +
               `оприходовали в количестве: ${incomingQuantity}, ` +
               `и после оприходования: ${remainingStockAfter}.`,
@@ -923,7 +923,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
   test('Test Case 25 - Receiving Cbed And Check Stock', async ({ page }) => {
     // doc test case 20
-    console.log('Test Case 25 - Receiving Cbed And Check Stock');
+    logger.log('Test Case 25 - Receiving Cbed And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const stockReceipt = new CreateStockReceiptFromSupplierAndProductionPage(page);
     const stock = new CreateStockPage(page);
@@ -1002,11 +1002,11 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           // Get the value from the cell
           const prihodValue = await prihodQuantityCell.textContent();
           const prihodQuantity = prihodValue?.trim() || '0';
-          console.log(`Кол-во на приход value: ${prihodQuantity}`);
+          logger.log(`Кол-во на приход value: ${prihodQuantity}`);
 
           // If the value is 0, we need to complete assembly kitting
           if (prihodQuantity === '0' || prihodQuantity === '') {
-            console.log('Кол-во на приход is 0, completing assembly kitting in new tab...');
+            logger.log('Кол-во на приход is 0, completing assembly kitting in new tab...');
 
             // Create a new page/tab to perform assembly kitting without losing current context
             const newPage = await page.context().newPage();
@@ -1066,7 +1066,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
                 timeout: WAIT_TIMEOUTS.STANDARD,
               });
               await expect(completeButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
-              console.log('Скомплектовать button is enabled, clicking...');
+              logger.log('Скомплектовать button is enabled, clicking...');
 
               // Click the "Скомплектовать" button
               await newCompletingAssembliesToPlan.clickButton('Скомплектовать', SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON);
@@ -1076,17 +1076,17 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
               await newPage.waitForLoadState('networkidle');
               await newPage.waitForTimeout(TIMEOUTS.LONG);
 
-              console.log(`Assembly kitting completed for ${cbed.name}`);
+              logger.log(`Assembly kitting completed for ${cbed.name}`);
             } finally {
               // Close the new tab and return to the original page
               await newPage.close();
-              console.log('New tab closed, returning to original page');
+              logger.log('New tab closed, returning to original page');
               // Wait for the server to process the kitting
               await page.waitForTimeout(TIMEOUTS.EXTENDED);
             }
 
             // Wait for data to propagate using Playwright's expect.poll
-            console.log('Waiting for kitting to propagate and refresh search...');
+            logger.log('Waiting for kitting to propagate and refresh search...');
 
             const refreshAndCheckQuantity = async (): Promise<string> => {
               // Close the modal by clicking Cancel to force fresh data load
@@ -1123,7 +1123,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
               .poll(
                 async () => {
                   const qty = await refreshAndCheckQuantity();
-                  console.log(`Кол-во на приход after kitting: ${qty}`);
+                  logger.log(`Кол-во на приход after kitting: ${qty}`);
                   return qty !== '0' && qty !== '' ? qty : null;
                 },
                 { timeout: 300000, intervals: [3000, 5000, 10000] },
@@ -1133,7 +1133,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
             // Wait a bit after successful update to ensure UI is stable
             await page.waitForTimeout(TIMEOUTS.STANDARD);
           } else {
-            console.log(`Кол-во на приход is ${prihodQuantity}, no assembly kitting needed`);
+            logger.log(`Кол-во на приход is ${prihodQuantity}, no assembly kitting needed`);
           }
         });
 
@@ -1166,7 +1166,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
             state: 'visible',
             timeout: WAIT_TIMEOUTS.STANDARD,
           });
-          console.log('Скомплектованные наборы modal opened');
+          logger.log('Скомплектованные наборы modal opened');
         });
 
         await allure.step('Step 06c: Check that the modal window Скомплектованные наборы is displayed and wait for input field', async () => {
@@ -1178,7 +1178,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row{id}-TdCount-Label-Input-Input
           const inputlocator = SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN;
           await page.locator(inputlocator).first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
-          console.log('Кол-во на отгрузку input field is visible');
+          logger.log('Кол-во на отгрузку input field is visible');
         });
 
         await allure.step('Step 06d: Enter quantity in Кол-во на отгрузку input field', async () => {
@@ -1207,7 +1207,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
           // Get the current value
           const quantityPerShipment = await quantityInput.getAttribute('value');
-          console.log('Кол-во на отгрузку current value: ', quantityPerShipment);
+          logger.log('Кол-во на отгрузку current value: ', quantityPerShipment);
 
           // Enter the quantity (using incomingQuantity variable)
           await quantityInput.fill(incomingQuantity);
@@ -1215,7 +1215,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await quantityInput.press('Enter');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           await page.waitForLoadState('networkidle');
-          console.log(`Кол-во на отгрузку set to: ${incomingQuantity}`);
+          logger.log(`Кол-во на отгрузку set to: ${incomingQuantity}`);
         });
 
         await allure.step('Step 06e: Click the save button in Скомплектованные наборы modal', async () => {
@@ -1224,7 +1224,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           // Wait for modal to close and return to main table
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
-          console.log('Сохранить button clicked, modal closed');
+          logger.log('Сохранить button clicked, modal closed');
         });
 
         await allure.step('Step 06f: Check the checkbox in the first row', async () => {
@@ -1255,7 +1255,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           const isChecked = await checkbox.isChecked();
 
           if (!isChecked) {
-            console.log('Checkbox is not checked, attempting to check it...');
+            logger.log('Checkbox is not checked, attempting to check it...');
             await checkbox.click();
             await page.waitForTimeout(TIMEOUTS.SHORT);
 
@@ -1264,9 +1264,9 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
             if (!isCheckedAfter) {
               throw new Error('Failed to check the checkbox. Checkbox remains unchecked after click.');
             }
-            console.log('Checkbox successfully checked');
+            logger.log('Checkbox successfully checked');
           } else {
-            console.log('Checkbox is already checked, skipping click');
+            logger.log('Checkbox is already checked, skipping click');
           }
         });
       }

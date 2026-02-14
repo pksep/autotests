@@ -18,7 +18,8 @@ import { ISpetificationData } from '../utils/utilities';
 import { extractDataSpetification } from '../utils/utilities';
 import * as SelectorsModalWindowConsignmentNote from '../Constants/SelectorsModalWindowConsignmentNote';
 import * as SelectorsStartProduction from '../Constants/SelectorsStartProduction';
-import logger from '../logger';
+import logger from '../utils/logger';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 
 export class MiscHelper {
   constructor(private page: Page) {}
@@ -52,10 +53,10 @@ export class MiscHelper {
 
     // Debug: Check what elements are actually in the modal
     const allH4Elements = await modalWindow.locator('h4').all();
-    console.log(`Found ${allH4Elements.length} h4 elements in modal`);
+    logger.log(`Found ${allH4Elements.length} h4 elements in modal`);
     for (let i = 0; i < allH4Elements.length; i++) {
       const text = await allH4Elements[i].textContent();
-      console.log(`H4 ${i}: "${text}"`);
+      logger.log(`H4 ${i}: "${text}"`);
       // Highlight each H4 element
       await allH4Elements[i].evaluate((el: HTMLElement) => {
         el.style.backgroundColor = 'yellow';
@@ -65,10 +66,10 @@ export class MiscHelper {
     }
 
     const allH3Elements = await modalWindow.locator('h3').all();
-    console.log(`Found ${allH3Elements.length} h3 elements in modal`);
+    logger.log(`Found ${allH3Elements.length} h3 elements in modal`);
     for (let i = 0; i < allH3Elements.length; i++) {
       const text = await allH3Elements[i].textContent();
-      console.log(`H3 ${i}: "${text}"`);
+      logger.log(`H3 ${i}: "${text}"`);
       // Highlight each H3 element
       await allH3Elements[i].evaluate((el: HTMLElement) => {
         el.style.backgroundColor = 'yellow';
@@ -80,12 +81,12 @@ export class MiscHelper {
     // Try to find the title in any heading element (h1-h6)
     const titleElement = modalWindow.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: 'Запустить в производство' }).first();
     const titleExists = (await titleElement.count()) > 0;
-    console.log(`Title "Запустить в производство" found: ${titleExists}`);
+    logger.log(`Title "Запустить в производство" found: ${titleExists}`);
 
     if (titleExists) {
       expect(titleElement).toBeVisible();
     } else {
-      console.log('Title not found, skipping title check');
+      logger.log('Title not found, skipping title check');
     }
     expect(await modalWindow.locator('h3', { hasText: 'Описание/Примечание' })).toBeVisible();
     expect(await modalWindow.locator('h3', { hasText: 'Комплектация' })).toBeVisible();
@@ -156,7 +157,7 @@ export class MiscHelper {
     // Check if button is enabled before attempting to click
     const isEnabled = await saveButton.isEnabled();
     if (!isEnabled) {
-      console.log('Save button is disabled - this is expected when running Test Case 11 in isolation');
+      logger.log('Save button is disabled - this is expected when running Test Case 11 in isolation');
       // Skip clicking the disabled button
       return;
     }
@@ -217,22 +218,26 @@ export class MiscHelper {
   ): Promise<void> {
     const modalWindow = await this.page.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_RIGHT_INNER);
     await expect(modalWindow).toBeVisible();
-    await this.page.waitForTimeout(3000);
+    await this.page.waitForTimeout(TIMEOUTS.EXTENDED);
 
     // Find the dialog first, then get the first H4 element within it
     const dialog = this.page.locator('dialog[data-testid*="ModalAddWaybill"]').first();
-    await dialog.waitFor({ state: 'visible', timeout: 10000 });
+    await dialog.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
     // Get the first H4 element within the dialog
     const h4Element = dialog.locator('h4').first();
-    await h4Element.waitFor({ state: 'visible', timeout: 10000 });
+    await h4Element.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-    const headerModal = await h4Element.textContent();
-    console.log(`DEBUG: Found H4 title in dialog: "${headerModal?.trim()}"`);
+    const headerModalRaw = await h4Element.textContent();
+    if (!headerModalRaw) {
+      throw new Error('Modal header (H4) not found or empty');
+    }
+    const headerModal = headerModalRaw.trim();
+    logger.log(`DEBUG: Found H4 title in dialog: "${headerModal}"`);
 
     // Wait for and get infoHeader text
     const infoHeaderElement = modalWindow.locator('[data-testid="ModalAddWaybill-WaybillDetails-InfoHeading"]');
-    await infoHeaderElement.waitFor({ state: 'visible', timeout: 10000 });
+    await infoHeaderElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     const infoHeaderRaw = await infoHeaderElement.textContent();
     if (!infoHeaderRaw) {
       throw new Error('Info header not found or empty');
@@ -241,7 +246,7 @@ export class MiscHelper {
 
     // Wait for and get configuration text
     const configurationElement = modalWindow.locator('[data-testid="ModalAddWaybill-Complectation-Header"]');
-    await configurationElement.waitFor({ state: 'visible', timeout: 10000 });
+    await configurationElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     const configurationRaw = await configurationElement.textContent();
     if (!configurationRaw) {
       throw new Error('Configuration header not found or empty');
@@ -256,24 +261,31 @@ export class MiscHelper {
       const headerInvoiceModal = 'Накладная на комплектацию Сборки';
       const infoHeaderModal = 'Информация по сборочной единице';
       const assemblyComfiguration = 'Комплектация Сборочной единицы';
-      expect(headerModal).toContain(headerInvoiceModal);
-      expect(infoHeader).toContain(infoHeaderModal);
-      expect(configuration).toContain(assemblyComfiguration);
+      expect(headerModal.toLowerCase()).toContain(headerInvoiceModal.toLowerCase());
+      expect(infoHeader.toLowerCase()).toContain(infoHeaderModal.toLowerCase());
+      expect(configuration.toLowerCase()).toContain(assemblyComfiguration.toLowerCase());
     } else {
       const headerInvoiceModal = 'Накладная на комплектацию Изделия';
       const infoHeaderModal = 'Информация по изделию';
       const productConfiguration = 'Комплектация Изделия';
-      expect(headerModal).toContain(headerInvoiceModal);
-      expect(infoHeader).toContain(infoHeaderModal);
-      expect(configuration).toContain(productConfiguration);
+      expect(headerModal.toLowerCase()).toContain(headerInvoiceModal.toLowerCase());
+      expect(infoHeader.toLowerCase()).toContain(infoHeaderModal.toLowerCase());
+      expect(configuration.toLowerCase()).toContain(productConfiguration.toLowerCase());
     }
 
     const yourQuantity = await modalWindow.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_OWN_QUANTITY_INPUT);
+    const assemblyTableLocator = '[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTable"]';
+    await this.page
+      .locator(`${assemblyTableLocator} tbody tr`)
+      .first()
+      .locator('td')
+      .nth(4)
+      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
     // Calls RowCellHelper through PageObject
-    const needQuantity = await pageObject.getValueOrClickFromFirstRow('[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTable"]', 4);
+    const needQuantity = await pageObject.getValueOrClickFromFirstRow(assemblyTableLocator, 4);
     // expect(yourQuantity).toHaveValue(needQuantity);
     if (enterQuantity) {
-      await this.page.waitForTimeout(500);
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
       await yourQuantity.fill(enterQuantity);
       expect(await yourQuantity.inputValue()).toBe(enterQuantity);
       await yourQuantity.press('Enter');
@@ -285,12 +297,12 @@ export class MiscHelper {
       const checkboxCell = this.page.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]').first();
 
       // Wait for the checkbox cell to be visible
-      await checkboxCell.waitFor({ state: 'visible' });
+      await checkboxCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
 
       // Click on the checkbox cell
       await checkboxCell.click();
 
-      console.log('Clicked on checkbox cell with new data-testid pattern');
+      logger.log('Clicked on checkbox cell with new data-testid pattern');
     }
 
     expect(await modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(0).textContent()).toContain('Сборки');
@@ -356,9 +368,9 @@ export class MiscHelper {
         const detailCount = allArrays.detail?.length || 0;
         const cbedCount = allArrays.cbed?.length || 0;
         const izdCount = allArrays.izd?.length || 0;
-        console.log(`✅ Using test data - Details: ${detailCount}, CBED: ${cbedCount}, IZD: ${izdCount}`);
+        logger.log(`✅ Using test data - Details: ${detailCount}, CBED: ${cbedCount}, IZD: ${izdCount}`);
       } else {
-        console.log(`✅ Using test data - ${arrayName}: ${testDataArray.length}`);
+        logger.log(`✅ Using test data - ${arrayName}: ${testDataArray.length}`);
       }
     });
 

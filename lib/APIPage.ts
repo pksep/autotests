@@ -12,7 +12,7 @@ import { AbstractPage } from './AbstractPage'; // Import the base AbstractPage c
 import { ENV, SELECTORS } from '../config'; // Import environment and selector configurations
 import { Input } from './Input'; // Import the Input helper class for handling input fields
 import { Button } from './Button'; // Import the Button helper class for handling button clicks
-import logger from './logger'; // Import logger utility for logging messages
+import logger from './utils/logger'; // Import logger utility for logging messages
 
 export class APIPageObject extends AbstractPage {
   /**
@@ -56,7 +56,7 @@ export class APIPageObject extends AbstractPage {
   }
 
   async apiLogin(request: APIRequestContext, username: string, password: string, tabel: string) {
-    console.log(ENV.BASE_URL + '/api/auth/login');
+    logger.log(ENV.BASE_URL + '/api/auth/login');
     const response = await request.post(ENV.BASE_URL + 'api/auth/login', {
       headers: {
         'Content-Type': 'application/json'

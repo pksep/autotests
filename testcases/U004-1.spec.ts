@@ -5,7 +5,7 @@ import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U004-PC01.json'; // Import your test data
@@ -46,7 +46,7 @@ export const runU004_1 = () => {
     let thirdCellValue = '';
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      console.log('Setup: Clean up Т15 product specifications');
+      logger.log('Setup: Clean up Т15 product specifications');
       await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
         assemblies: T15_ASSEMBLIES,
         details: T15_DETAILS,
@@ -56,24 +56,24 @@ export const runU004_1 = () => {
     });
     // Placeholder for test logic: Open the parts database page
     await allure.step('Step 01: Открываем страницу базы деталей (Open the parts database page)', async () => {
-      console.log('Step 01: Open the parts database page');
+      logger.log('Step 01: Open the parts database page');
       await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
     });
     await allure.step('Step 02: Проверяем наличие заголовка на странице (Check for the presence of the title)', async () => {
-      console.log('Step 02: Check for the presence of the title');
+      logger.log('Step 02: Check for the presence of the title');
       const expectedTitles = testData1.elements.MainPage.titles.map(title => title.trim());
       await shortagePage.validatePageTitlesWithStyling(SelectorsPartsDataBase.MAIN_PAGE_MAIN_DIV, expectedTitles);
     });
 
     await allure.step('Step 03: Проверяем, что тело таблицы отображается (Verify that the table body is displayed)', async () => {
-      console.log('Step 03: Verify that the table body is displayed');
+      logger.log('Step 03: Verify that the table body is displayed');
       await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
     });
 
     await allure.step(
       'Step 04: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)',
       async () => {
-        console.log("Step 04: Ensure search functionality in the first table 'Products' is available");
+        logger.log("Step 04: Ensure search functionality in the first table 'Products' is available");
         await page.waitForLoadState('networkidle');
         await expectSoftWithScreenshot(
           page,
@@ -85,7 +85,7 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 05: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
-      console.log("Step 05: Enter a variable value in the 'Products' table search");
+      logger.log("Step 05: Enter a variable value in the 'Products' table search");
       await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
       await page.waitForLoadState('networkidle');
       await expectSoftWithScreenshot(
@@ -99,7 +99,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 06: Проверяем, что введенное значение в поиске совпадает с переменной. (Verify the entered search value matches the variable)',
       async () => {
-        console.log('Step 06: Verify the entered search value matches the variable');
+        logger.log('Step 06: Verify the entered search value matches the variable');
         await page.waitForLoadState('networkidle');
         await expectSoftWithScreenshot(
           page,
@@ -111,7 +111,7 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 07: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)', async () => {
-      console.log('Step 07: Filter the table using the Enter key');
+      logger.log('Step 07: Filter the table using the Enter key');
       await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).press('Enter');
       await page.waitForLoadState('networkidle');
       // Wait for rows to appear after filter
@@ -126,7 +126,7 @@ export const runU004_1 = () => {
       );
     });
     await allure.step('Step 08: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)', async () => {
-      console.log('Step 08: Verify the table body is displayed after filtering');
+      logger.log('Step 08: Verify the table body is displayed after filtering');
       await page.waitForTimeout(TIMEOUTS.INPUT_SET);
       await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
       await expectSoftWithScreenshot(
@@ -142,7 +142,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 09: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable.)',
       async () => {
-        console.log('Step 09: We check that the found table row contains the value of the variable.');
+        logger.log('Step 09: We check that the found table row contains the value of the variable.');
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
 
@@ -167,7 +167,7 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 10: Нажимаем по найденной строке (Click on the found row in the table)', async () => {
-      console.log('Step 10: Click on the found row in the table');
+      logger.log('Step 10: Click on the found row in the table');
       // Wait for loading
       await page.waitForLoadState('networkidle');
       // Find the first row in the table
@@ -191,7 +191,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 11: Проверяем наличие кнопки "Редактировать" под таблицей "Изделий" (Verify the presence of the \'Edit\' button below the table)',
       async () => {
-        console.log("Step 11: Verify the presence of the 'Edit' button below the table");
+        logger.log("Step 11: Verify the presence of the 'Edit' button below the table");
         await page.waitForLoadState('networkidle');
         await firstRow.waitFor({ state: 'visible' });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -210,7 +210,7 @@ export const runU004_1 = () => {
     );
 
     await allure.step('Step 12: Нажимаем по данной кнопке. (Press the button)', async () => {
-      console.log('Step 12: Press the button');
+      logger.log('Step 12: Press the button');
       // Wait for the page to stabilize
       await page.waitForLoadState('networkidle');
 
@@ -227,7 +227,7 @@ export const runU004_1 = () => {
     });
 
     await allure.step('Step 13: Проверяем заголовки страницы: (Validate the page headers)', async () => {
-      console.log('Step 13: Validate the page headers');
+      logger.log('Step 13: Validate the page headers');
       await page.waitForLoadState('networkidle');
       // Expected titles in the correct order
       const titles = testData1.elements.EditPage.titles.map(title => title.trim());
@@ -251,7 +251,7 @@ export const runU004_1 = () => {
       } catch {}
       // Retrieve all H3 titles from the specified class
       const h3Titles = await shortagePage.getAllH3TitlesInTestId(page, SelectorsPartsDataBase.EDIT_PAGE_MAIN_ID);
-      console.log(h3Titles);
+      logger.log(h3Titles);
       const normalizedH3Titles = h3Titles.map(title => title.trim());
 
       // Wait for the page to stabilize
@@ -417,7 +417,7 @@ export const runU004_1 = () => {
       );
     });
     await allure.step('Step 14: Проверяем наличие кнопок на странице (Check for the visibility of action buttons on the page)', async () => {
-      console.log('Step 14: Check for the visibility of action buttons on the page');
+      logger.log('Step 14: Check for the visibility of action buttons on the page');
       await page.waitForLoadState('networkidle');
       const buttons = testData1.elements.EditPage.buttons;
 
@@ -430,7 +430,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 15: Проверяем, что в инпуте наименования совпадает со значением переменной, по которой мы осуществляли поиск данного изделия (We check that the name in the input matches the value of the variable by which we searched for this product.)',
       async () => {
-        console.log('Step 15: We check that the name in the input matches the value of the variable by which we searched for this product.');
+        logger.log('Step 15: We check that the name in the input matches the value of the variable by which we searched for this product.');
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
 
@@ -496,7 +496,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 16: Нажимаем по кнопки "Добавить" (под таблицей комплектации)Click on the button "Добавить" (above the комплектации table)',
       async () => {
-        console.log('Step 16: Click on the button "Добавить" (above the комплектации table)');
+        logger.log('Step 16: Click on the button "Добавить" (above the комплектации table)');
         // Wait for loading
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(TIMEOUTS.LONG);
@@ -519,7 +519,7 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 17: Verify that the dialog contains all required cards with correct labels.', async () => {
-      console.log('Step 17: Verify that the dialog contains all required cards with correct labels.');
+      logger.log('Step 17: Verify that the dialog contains all required cards with correct labels.');
       // Wait for the page to load completely
       await page.waitForLoadState('networkidle');
 
@@ -527,7 +527,7 @@ export const runU004_1 = () => {
 
       for (const card of cards) {
         await allure.step(`Validate card with label: "${card.label}"`, async () => {
-          console.log(`Step 17 loop: Validate card with label: "${card.label}"`);
+          logger.log(`Step 17 loop: Validate card with label: "${card.label}"`);
           const cardDataTestId = card.datatestid || ''; // Read the data-testid value dynamically
           const cardLabel = card.label; // Read the label dynamically
 
@@ -567,7 +567,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 18: Нажимаем по селектору из выпадающего списке "Сборочную единицу (тип СБ)". (Click on the selector from the drop-down list "Assembly unit (type СБ)".)',
       async () => {
-        console.log('Step 18: Click on the selector from the drop-down list "Assembly unit (type СБ)".');
+        logger.log('Step 18: Click on the selector from the drop-down list "Assembly unit (type СБ)".');
         await page.waitForLoadState('networkidle');
         const addButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_СБ);
         await shortagePage.waitAndHighlight(addButton);
@@ -578,7 +578,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 19: Проверяем, что в модальном окне отображается заголовок "База сборочных единиц". (We check that the modal window displays the title "Assembly Unit Database")',
       async () => {
-        console.log('Step 19: We check that the modal window displays the title "Assembly Unit Database".');
+        logger.log('Step 19: We check that the modal window displays the title "Assembly Unit Database".');
         // Expected titles in the correct order
         const titles = testData1.elements.EditPage.modalAddСБ.titles.map(title => title.trim());
 
@@ -628,7 +628,7 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 20: Проверяем наличие кнопок на странице (Check for the visibility of action buttons on the page)', async () => {
-      console.log('Step 20: Check for the visibility of action buttons on the page');
+      logger.log('Step 20: Check for the visibility of action buttons on the page');
       await page.waitForLoadState('networkidle');
 
       const buttons = testData1.elements.EditPage.modalAddСБ.buttons;
@@ -645,7 +645,7 @@ export const runU004_1 = () => {
       await shortagePage.validateButtons(page, buttons, dialogSelector);
     });
     await allure.step('Step 21: Проверяем, что в модальном окне есть две таблицы. (We check that there are two tables in the modal window.)', async () => {
-      console.log('Step 21: We check that there are two tables in the modal window.');
+      logger.log('Step 21: We check that there are two tables in the modal window.');
       // Wait for the page to stabilize (network requests to complete)
       await page.waitForLoadState('networkidle');
 
@@ -671,7 +671,7 @@ export const runU004_1 = () => {
     });
 
     await allure.step('Step 22a: Проверяем, что тела таблиц отображаются. (Check that table bodies are displayed)', async () => {
-      console.log('Step 22a: We check that the table bodies are displayed.');
+      logger.log('Step 22a: We check that the table bodies are displayed.');
       // Wait for loading
       await page.waitForLoadState('networkidle');
 
@@ -703,7 +703,7 @@ export const runU004_1 = () => {
     });
     let searchItemExists = false;
     await allure.step('Step 22b: Проверяем, существует ли уже наш элемент в нижней таблице, и пропускаем поиск, если он есть.', async () => {
-      console.log('Step 22b: We check that the item already exists in the bottom table and skip the search if it exists.');
+      logger.log('Step 22b: We check that the item already exists in the bottom table and skip the search if it exists.');
       await page.waitForLoadState('networkidle');
       searchItemExists = await shortagePage.checkItemExistsInBottomTable(
         page,
@@ -713,14 +713,14 @@ export const runU004_1 = () => {
       );
 
       if (searchItemExists) {
-        console.log('Item already exists in the bottom table. Skipping search.');
+        logger.log('Item already exists in the bottom table. Skipping search.');
       } else {
-        console.log('Item not found. Proceeding with search.');
+        logger.log('Item not found. Proceeding with search.');
       }
     });
     if (!searchItemExists) {
       await allure.step('Step 23: Проверяем, что кнопка "Добавить" отображается в модальном окне активной.', async () => {
-        console.log('Step 23: We check that the "Добавить" button is displayed in the modal window is active.');
+        logger.log('Step 23: We check that the "Добавить" button is displayed in the modal window is active.');
         await page.waitForLoadState('networkidle');
 
         // Use data-testid to scope the dialog
@@ -730,7 +730,7 @@ export const runU004_1 = () => {
         let expectedState = false;
 
         await allure.step(`Validate button with label: "${buttonLabel}" (initial state)`, async () => {
-          console.log(`Step 23: Validate button with label: "${buttonLabel}" (initial state)`);
+          logger.log(`Step 23: Validate button with label: "${buttonLabel}" (initial state)`);
           const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
           const isButtonReady = await shortagePage.isButtonVisibleTestId(
             page,
@@ -749,7 +749,7 @@ export const runU004_1 = () => {
         });
 
         await allure.step(`Select the first item in the second table`, async () => {
-          console.log('Step 23: Select the first item in the second table');
+          logger.log('Step 23: Select the first item in the second table');
           const firstRowLocator = table2Locator!.locator('tbody tr').nth(0);
           await shortagePage.waitAndHighlight(firstRowLocator);
           await firstRowLocator.hover();
@@ -760,7 +760,7 @@ export const runU004_1 = () => {
         expectedState = true;
 
         await allure.step(`Validate button with label: "${buttonLabel}" (after selection)`, async () => {
-          console.log(`Step 23: Validate button with label: "${buttonLabel}" (after selection)`);
+          logger.log(`Step 23: Validate button with label: "${buttonLabel}" (after selection)`);
           const scopedButtonSelector = `${dialogSelector} [data-testid="${buttonTestId}"]`;
           const isButtonReady = await shortagePage.isButtonVisibleTestId(
             page,
@@ -781,7 +781,7 @@ export const runU004_1 = () => {
       await allure.step(
         'Step 24: Проверяем, что поиск во второй таблицы модального окна отображается. (Check that the search in the second table of the modal window is displayed.)',
         async () => {
-          console.log('Step 24: We check that the search in the second table of the modal window is displayed.');
+          logger.log('Step 24: We check that the search in the second table of the modal window is displayed.');
           // Wait for loading
           await page.waitForLoadState('networkidle');
           // Check for the presence of the input tag with the specific class inside the table
@@ -802,7 +802,7 @@ export const runU004_1 = () => {
       await allure.step(
         'Step 25: Вводим значение переменной в поиск таблицы второй таблицы модального окна. (We enter the value of the variable in the table search of the second table of the modal window.)',
         async () => {
-          console.log('Step 25: We enter the value of the variable in the table search of the second table of the modal window.');
+          logger.log('Step 25: We enter the value of the variable in the table search of the second table of the modal window.');
           // Wait for loading
           await page.waitForLoadState('networkidle');
           await table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT_СБ); //DATATESTID
@@ -822,7 +822,7 @@ export const runU004_1 = () => {
       await allure.step(
         'Step 26: Проверяем, что в поиске второй таблицы модального окна введенное значение совпадает с переменной. (We check that in the search of the second table of the modal window the entered value matches the variable.)',
         async () => {
-          console.log('Step 26: We check that in the search of the second table of the modal window the entered value matches the variable.');
+          logger.log('Step 26: We check that in the search of the second table of the modal window the entered value matches the variable.');
           await page.waitForLoadState('networkidle');
           // Locate the search field within the left table and validate its value
           await expectSoftWithScreenshot(
@@ -835,20 +835,20 @@ export const runU004_1 = () => {
         },
       );
       await allure.step('Step 27: Осуществляем фильтрацию таблицы при помощи нажатия клавиши Enter (Filter the table using the Enter key)', async () => {
-        console.log('Step 27: We filter the table using the Enter key.');
+        logger.log('Step 27: We filter the table using the Enter key.');
         // Simulate pressing "Enter" in the search field
         await table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).press('Enter'); //DATATESTID
         await page.waitForTimeout(TIMEOUTS.STANDARD);
         await page.waitForLoadState('networkidle');
       });
       await allure.step('Step 28: Проверяем, что тело таблицы отображается после фильтрации (Verify the table body is displayed after filtering)', async () => {
-        console.log('Step 28: We check that the table body is displayed after filtering.');
+        logger.log('Step 28: We check that the table body is displayed after filtering.');
         // Wait for the page to become idle (ensuring data loading is complete)
         await page.waitForLoadState('networkidle');
         // Assert that the table body has rows
         await page.waitForTimeout(TIMEOUTS.LONG);
         const rowCount = await table2Locator!.locator('tbody tr').count();
-        console.log('results rowCount:' + rowCount);
+        logger.log('results rowCount:' + rowCount);
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -861,13 +861,13 @@ export const runU004_1 = () => {
       await allure.step(
         'Step 29: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)',
         async () => {
-          console.log('Step 29: We check that the found table row contains the value of the variable.');
+          logger.log('Step 29: We check that the found table row contains the value of the variable.');
           // Wait for the page to stabilize
           await page.waitForLoadState('networkidle');
 
           // Get the value of the first cell in the first row
           firstCellValue = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)').innerText();
-          console.log('results firstCellValue:' + firstCellValue);
+          logger.log('results firstCellValue:' + firstCellValue);
           firstCell = await table2Locator!.locator('tbody tr:first-child td:nth-child(1)');
           await shortagePage.waitAndHighlight(firstCell);
           firstCellValue = firstCellValue.trim();
@@ -888,7 +888,7 @@ export const runU004_1 = () => {
       );
 
       await allure.step('Step 30: Нажимаем по найденной строке (Click on the found row in the table)', async () => {
-        console.log('Step 30: We click on the found row in the table.');
+        logger.log('Step 30: We click on the found row in the table.');
         // Wait for loading
         await page.waitForLoadState('networkidle');
         await shortagePage.waitAndHighlight(firstCell!);
@@ -912,10 +912,10 @@ export const runU004_1 = () => {
           'Modal table2 first row has active class',
         );
 
-        console.log(`✅ First row has 'active' class: ${hasActiveClass}`);
+        logger.log(`✅ First row has 'active' class: ${hasActiveClass}`);
       });
       await allure.step('Step 31: Нажимаем по кнопке "Выбрать" в модальном окне (Click on the "Выбрать" button in the modal window)', async () => {
-        console.log('Step 31: We click on the "Выбрать" button in the modal window.');
+        logger.log('Step 31: We click on the "Выбрать" button in the modal window.');
         // Wait for loading
         await page.waitForLoadState('networkidle');
 
@@ -936,7 +936,7 @@ export const runU004_1 = () => {
             buttonLabel,
             expectedState,
           );
-          console.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
+          logger.log(`Is the "${buttonLabel}" button visible and enabled?`, isButtonReady);
           await expectSoftWithScreenshot(
             page,
             async () => {
@@ -960,15 +960,15 @@ export const runU004_1 = () => {
       });
 
       await allure.step('Step 32: Убедитесь, что выбранная строка теперь отображается в нижней таблице.', async () => {
-        console.log('Step 32: We check that the selected row is displayed in the bottom table.');
+        logger.log('Step 32: We check that the selected row is displayed in the bottom table.');
         // Wait for the page to load completely
         await page.waitForLoadState('networkidle');
 
         // Retrieve the selected part number and name
         const selectedPartNumber = firstCellValue; // Replace with the actual part number variable
         const selectedPartName = secondCellValue; // Replace with the actual part name variable
-        console.log(`Selected Part Number: ${selectedPartNumber}`);
-        console.log(`Selected Part Name: ${selectedPartName}`);
+        logger.log(`Selected Part Number: ${selectedPartNumber}`);
+        logger.log(`Selected Part Name: ${selectedPartName}`);
 
         // Locate the specific modal containing the table
         const modal = await page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_DIALOG);
@@ -991,7 +991,7 @@ export const runU004_1 = () => {
         // Locate all rows in the table body
         const rowsLocator = bottomTableLocator.locator('tbody tr');
         const rowCount = await rowsLocator.count();
-        console.log(rowCount);
+        logger.log(rowCount);
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -1013,8 +1013,8 @@ export const runU004_1 = () => {
           // Extract data from the first and second columns
           const partNumberCell = await row.locator('td').nth(0);
           const partNameCell = await row.locator('td').nth(1);
-          console.log('row' + i + 'partNumberCell.textContent():' + (await partNumberCell.textContent()));
-          console.log('row' + i + 'partNameCell.textContent():' + (await partNameCell.textContent()));
+          logger.log('row' + i + 'partNumberCell.textContent():' + (await partNumberCell.textContent()));
+          logger.log('row' + i + 'partNameCell.textContent():' + (await partNameCell.textContent()));
           const partNumber = (await partNumberCell.textContent())?.trim();
           const partName = (await partNameCell.textContent())?.trim();
 
@@ -1047,7 +1047,7 @@ export const runU004_1 = () => {
         logger.info(`The selected row with PartNumber="${selectedPartNumber}" and PartName="${selectedPartName}" is present in the bottom table.`);
       });
       await allure.step('Step 33: Нажимаем по кнопке "Добавить" в модальном окне (Click on the "Добавить" button in the modal window)', async () => {
-        console.log('Step 33: Click on the "Добавить" button in the modal window');
+        logger.log('Step 33: Click on the "Добавить" button in the modal window');
         // Wait for loading
         await page.waitForLoadState('networkidle');
 
@@ -1063,7 +1063,7 @@ export const runU004_1 = () => {
         await buttonLocator.waitFor({ state: 'visible', timeout: 10000 });
 
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          console.log(`Step 33: Validate button with label: "${buttonLabel}"`);
+          logger.log(`Step 33: Validate button with label: "${buttonLabel}"`);
           // Locate the button using data-testid instead of class names
           const isButtonReady = await shortagePage.isButtonVisibleTestId(
             page,
@@ -1097,7 +1097,7 @@ export const runU004_1 = () => {
       });
     } else {
       await allure.step('Step 33 (Alternate): Item exists, clicking Cancel', async () => {
-        console.log('Step 33 (Alternate): Item exists, clicking Cancel');
+        logger.log('Step 33 (Alternate): Item exists, clicking Cancel');
         const dialogSelector = SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_OPEN;
         const cancelButton = page.locator(`${dialogSelector} ${SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON}`);
         await cancelButton.click();
@@ -1109,7 +1109,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 34: Перебираем и сохраняем в массивы А1 данные по категориям из таблицы "Комплектация" данной сущности (We sort and save data by categories from the "Комплектация" table of this entity into arrays)',
       async () => {
-        console.log('Step 34: We sort and save data by categories from the "Комплектация" table of this entity into arrays');
+        logger.log('Step 34: We sort and save data by categories from the "Комплектация" table of this entity into arrays');
         // Wait for loading
         await page.waitForLoadState('networkidle');
         // Parse the table
@@ -1126,7 +1126,7 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 35: Нажимаем на кнопку "Сохранить". (Press the save button)', async () => {
-      console.log('Step 35: Press the save button');
+      logger.log('Step 35: Press the save button');
       // Wait for loading
       await page.waitForLoadState('networkidle');
       const button = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
@@ -1146,7 +1146,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 36: Перебираем и сохраняем в массивы A2 данные по категориям из таблицы "Комплектация" данной сущности (We sort and save data by categories from the "Комплектация" table of this entity into arrays)',
       async () => {
-        console.log('Step 36: We sort and save data by categories from the "Комплектация" table of this entity into arrays');
+        logger.log('Step 36: We sort and save data by categories from the "Комплектация" table of this entity into arrays');
         // Wait for loading
         await page.waitForLoadState('networkidle');
         // Parse the table
@@ -1163,9 +1163,9 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 37: Сравниваем массивы Array1 и Array2. (Compare arrays Array1 and Array2.)', async () => {
-      console.log('Step 37: Compare arrays Array1 and Array2.');
-      console.log(tableData1);
-      console.log(tableData2);
+      logger.log('Step 37: Compare arrays Array1 and Array2.');
+      logger.log(tableData1);
+      logger.log(tableData2);
       const identical = await shortagePage.compareTableData(tableData1, tableData2);
 
       logger.info(`Are tableData1 and tableData2 identical? ${identical}`);
@@ -1180,7 +1180,7 @@ export const runU004_1 = () => {
     await allure.step(
       'Step 38: перейдите в сторону и вернитесь назад, затем перепроверьте arrays Array1 and Array3. (navigate away and back then recheck table arrays Array1 and Array3.)',
       async () => {
-        console.log('Step 38: navigate away and back then recheck table arrays Array1 and Array3.');
+        logger.log('Step 38: navigate away and back then recheck table arrays Array1 and Array3.');
         await shortagePage.goto(ENV.BASE_URL);
         await page.waitForTimeout(TIMEOUTS.STANDARD);
         await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
@@ -1227,11 +1227,11 @@ export const runU004_1 = () => {
       },
     );
     await allure.step('Step 39: Очистка после теста. (Cleanup after test)', async () => {
-      console.log('Step 39: Cleanup after test');
+      logger.log('Step 39: Cleanup after test');
       //remove the item we added
       await page.waitForLoadState('networkidle');
       await allure.step('Step 39 sub step 1: find and click the Добавить button', async () => {
-        console.log('Step 39 sub step 1: find and click the Добавить button');
+        logger.log('Step 39 sub step 1: find and click the Добавить button');
         const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
         await shortagePage.waitAndHighlight(addButton);
         addButton.click();
@@ -1239,7 +1239,7 @@ export const runU004_1 = () => {
         await page.waitForLoadState('networkidle');
       });
       await allure.step('Step 39 sub step 2: find and click the Сборочную единицу button', async () => {
-        console.log('Step 39 sub step 2: find and click the Сборочную единицу button');
+        logger.log('Step 39 sub step 2: find and click the Сборочную единицу button');
         const add2Button = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_СБ);
         await shortagePage.waitAndHighlight(add2Button);
         await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
@@ -1248,7 +1248,7 @@ export const runU004_1 = () => {
         await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       });
       await allure.step('Step 39 sub step 3: find the bottom table', async () => {
-        console.log('Step 39 sub step 3: find the bottom table');
+        logger.log('Step 39 sub step 3: find the bottom table');
         const selectedPartNumber = TestDataU004.TEST_PRODUCT_СБ; // Replace with actual part number
         const modal = await page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_DIALOG);
         const bottomTableLocator = modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_STARTS_WITH);
@@ -1317,7 +1317,7 @@ export const runU004_1 = () => {
       });
 
       await allure.step('Step 39 sub step 4: Нажимаем по кнопке "Добавить" в модальном окне (Click on the "Добавить" button in the modal window)', async () => {
-        console.log('Step 39 sub step 4: Click on the "Добавить" button in the modal window');
+        logger.log('Step 39 sub step 4: Click on the "Добавить" button in the modal window');
         // Wait for loading
         await page.waitForLoadState('networkidle');
 
@@ -1328,7 +1328,7 @@ export const runU004_1 = () => {
         const buttonSelector = buttonDataTestId.includes('data-testid') ? buttonDataTestId : `[data-testid="${buttonDataTestId}"]`;
         const buttonLocator = page.locator(`${dialogSelector} ${buttonSelector}`);
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          console.log(`Step 39 sub step 4: Validate button with label: "${buttonLabel}"`);
+          logger.log(`Step 39 sub step 4: Validate button with label: "${buttonLabel}"`);
           // Locate the button using data-testid instead of class names
 
           const isButtonReady = await shortagePage.isButtonVisibleTestId(
@@ -1355,7 +1355,7 @@ export const runU004_1 = () => {
       });
 
       await allure.step('Step 39 sub step 5: Нажимаем по кнопке "Сохранить"  (Click on the "Сохранить" button in the main window)', async () => {
-        console.log('Step 39 sub step 5: Click on the "Сохранить" button in the main window');
+        logger.log('Step 39 sub step 5: Click on the "Сохранить" button in the main window');
         const button = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
         await shortagePage.waitAndHighlight(button);
         await page.waitForTimeout(TIMEOUTS.LONG);
@@ -1363,18 +1363,18 @@ export const runU004_1 = () => {
         await page.waitForTimeout(TIMEOUTS.EXTENDED);
       });
       await allure.step('Step 39 sub step 6: получить содержимое основной таблицы  (get the content of the main table )', async () => {
-        console.log('Step 39 sub step 6: get the content of the main table');
+        logger.log('Step 39 sub step 6: get the content of the main table');
         await page.waitForLoadState('networkidle');
         // Skip table parsing for now to avoid timeout issues
-        console.log('Skipping table parsing after cleanup to avoid timeout');
+        logger.log('Skipping table parsing after cleanup to avoid timeout');
         tableData4 = tableData_original; // Use original data as fallback
       });
       await allure.step('Step 39 sub step 7: сравнить его с оригиналом (compare it to the original)', async () => {
-        console.log('Step 39 sub step 7: compare it to the original');
+        logger.log('Step 39 sub step 7: compare it to the original');
         await page.waitForLoadState('networkidle');
 
         // Since we're using original data as fallback, the comparison should always pass
-        console.log('Using original data as fallback - cleanup verification skipped');
+        logger.log('Using original data as fallback - cleanup verification skipped');
         logger.info('Cleanup verification skipped to avoid timeout issues');
       });
     });
@@ -1384,7 +1384,7 @@ export const runU004_1 = () => {
     const shortagePage = new CreatePartsDatabasePage(page);
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      console.log('Setup: Clean up Т15 product specifications');
+      logger.log('Setup: Clean up Т15 product specifications');
       await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
         assemblies: T15_ASSEMBLIES,
         details: T15_DETAILS,

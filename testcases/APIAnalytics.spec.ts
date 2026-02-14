@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APIAnalytics } from "../pages/APIAnalytics";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runAnalyticsAPI = () => {
     logger.info(`Starting Analytics API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runAnalyticsAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Get analytics data without authentication", async () => {
-            console.log("Testing unauthenticated analytics data access...");
+            logger.log("Testing unauthenticated analytics data access...");
 
             const unauthenticatedResponse = await analyticsAPI.getAnalyticsData(request, "invalid_user");
 
@@ -29,11 +29,11 @@ export const runAnalyticsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated analytics data access correctly rejected with 401");
+            logger.log("✅ Unauthenticated analytics data access correctly rejected with 401");
         });
 
         await test.step("Test 2: Create KPI with SQL injection", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 type: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -55,11 +55,11 @@ export const runAnalyticsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Create KPI with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 type: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -81,7 +81,7 @@ export const runAnalyticsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -92,7 +92,7 @@ export const runAnalyticsAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -117,11 +117,11 @@ export const runAnalyticsAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Create KPI with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 type: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -143,11 +143,11 @@ export const runAnalyticsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidCreateResponse.status);
             expect(invalidCreateResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Create KPI with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 type: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -169,7 +169,7 @@ export const runAnalyticsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptyCreateResponse.status);
             expect(emptyCreateResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
     });
 
@@ -180,7 +180,7 @@ export const runAnalyticsAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -192,11 +192,11 @@ export const runAnalyticsAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for get analytics data", async () => {
-            console.log("Testing get analytics data response time performance...");
+            logger.log("Testing get analytics data response time performance...");
 
             const startTime = Date.now();
             const performanceGetResponse = await analyticsAPI.getAnalyticsData(request, API_CONST.API_TEST_USER_ID);
@@ -206,11 +206,11 @@ export const runAnalyticsAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceGetResponse.status).toBe(200);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Get analytics data response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Get analytics data response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent analytics operations", async () => {
-            console.log("Testing concurrent analytics operations...");
+            logger.log("Testing concurrent analytics operations...");
 
             const kpiData = {
                 type: API_CONST.API_TEST_ANALYTICS_KPI_TYPE_UPDATED,
@@ -228,7 +228,7 @@ export const runAnalyticsAPI = () => {
                 expect(response.status).toBe(201);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent analytics operations handled successfully");
+            logger.log("✅ Concurrent analytics operations handled successfully");
         });
     });
 };

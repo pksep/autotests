@@ -1,5 +1,5 @@
 import { Page, APIRequestContext } from '@playwright/test';
-import logger from './logger';
+import logger from './utils/logger';
 import { ENV, SELECTORS } from '../config'; // Assuming there's a config file for configuration
 
 /**

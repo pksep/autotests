@@ -13,6 +13,7 @@ import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS, RETRY_COUNTS, ROW_COLLECTION } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
 import { ENV } from '../config';
+import logger from '../lib/utils/logger';
 
 // Global variables for sharing data between steps
 let orderNumber: string | null = null;
@@ -718,11 +719,11 @@ export const runERP_3015 = () => {
               await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               const rowTestIdCheck = await currentRow.getAttribute('data-testid');
               if (!rowTestIdCheck || rowTestIdCheck.includes('-Operation') || rowTestIdCheck.includes('-NonOperation')) {
-                console.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
+                logger.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
                 continue; // Skip to next row in the loop
               }
             } catch (e) {
-              console.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
+              logger.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
               continue; // Skip to next row in the loop
             }
             
@@ -761,13 +762,13 @@ export const runERP_3015 = () => {
               try {
                 await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
               } catch (e) {
-                console.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
+                logger.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
               }
               
               // Re-verify this is still a main row after scrolling (DOM might have changed)
               const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
               if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation') || rowTestIdAfterScroll.includes('-NonOperation')) {
-                console.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
+                logger.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
                 return; // Skip the rest of the steps for this row
               }
               
@@ -785,7 +786,7 @@ export const runERP_3015 = () => {
               // Re-verify this is still a main row before accessing cells (DOM might have changed after highlighting)
               const rowTestIdBeforeCells = await freshRow.getAttribute('data-testid');
               if (!rowTestIdBeforeCells || rowTestIdBeforeCells.includes('-Operation') || rowTestIdBeforeCells.includes('-NonOperation')) {
-                console.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
+                logger.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
                 return; // Skip the rest of the steps for this row
               }
 
@@ -883,7 +884,7 @@ export const runERP_3015 = () => {
 
           // Skip this row if both values are 0
           if (leftValue === 0 && rightValue === 0) {
-            console.log(`Skipping row ${rowIndex + 1} - both leftValue and rightValue are 0`);
+            logger.log(`Skipping row ${rowIndex + 1} - both leftValue and rightValue are 0`);
             return; // Skip to next row
           }
 
@@ -929,7 +930,7 @@ export const runERP_3015 = () => {
                     await popoverMenuContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.VERY_SHORT });
                     await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Additional wait for popover to fully render
                   } catch (e) {
-                    console.log('Popover menu container not visible, will continue anyway');
+                    logger.log('Popover menu container not visible, will continue anyway');
                   }
                 }
               });
@@ -965,7 +966,7 @@ export const runERP_3015 = () => {
                   // Check if it's enabled
                   const isEnabled = await menuItem.isEnabled();
                   if (!isEnabled) {
-                    console.log('Menu item is visible but not enabled, will use force click');
+                    logger.log('Menu item is visible but not enabled, will use force click');
                     useForceClick = true;
                   } else {
                     // Brief wait to ensure it's fully ready
@@ -973,7 +974,7 @@ export const runERP_3015 = () => {
                   }
                 } catch (e) {
                   // If it's still hidden, we'll use force click
-                  console.log('Menu item is attached but not visible, will use force click');
+                  logger.log('Menu item is attached but not visible, will use force click');
                   useForceClick = true;
                 }
                 
@@ -1050,7 +1051,7 @@ export const runERP_3015 = () => {
                         responseResolve();
                       }
                     } catch (error) {
-                      console.log(`Failed to parse API response: ${error}`);
+                      logger.log(`Failed to parse API response: ${error}`);
                       apiResponse = {
                         status: response.status(),
                         url: url,
@@ -1268,11 +1269,11 @@ export const runERP_3015 = () => {
           } // End of loop through rows
           
           // Print validation results table
-          console.log('\n' + '='.repeat(120));
-          console.log('VALIDATION RESULTS TABLE'.padStart(70));
-          console.log('='.repeat(120));
-          console.log('Row'.padEnd(5) + '| ' + 'Employee Name'.padEnd(50) + '| ' + 'Unique Entity IDs'.padEnd(30) + '| ' + 'Left/Right Values');
-          console.log('-'.repeat(120));
+          logger.log('\n' + '='.repeat(120));
+          logger.log('VALIDATION RESULTS TABLE'.padStart(70));
+          logger.log('='.repeat(120));
+          logger.log('Row'.padEnd(5) + '| ' + 'Employee Name'.padEnd(50) + '| ' + 'Unique Entity IDs'.padEnd(30) + '| ' + 'Left/Right Values');
+          logger.log('-'.repeat(120));
           for (const result of validationResults) {
             const rowNum = result.rowNumber.toString().padEnd(4);
             const employee = (result.employeeName.length > 48 ? result.employeeName.substring(0, 45) + '...' : result.employeeName).padEnd(50);
@@ -1288,19 +1289,19 @@ export const runERP_3015 = () => {
               ? `PASS (${result.leftRightValueValidation.leftValue}/${result.leftRightValueValidation.rightValue})`
               : `FAIL (${result.leftRightValueValidation.leftValue}/${result.leftRightValueValidation.rightValue})`;
             const leftRight = leftRightStatus.padEnd(30);
-            console.log(`${rowNum}| ${employee}| ${unique}| ${leftRight}`);
+            logger.log(`${rowNum}| ${employee}| ${unique}| ${leftRight}`);
           }
-          console.log('-'.repeat(120));
-          console.log(`Total Rows Processed: ${validationResults.length}`);
+          logger.log('-'.repeat(120));
+          logger.log(`Total Rows Processed: ${validationResults.length}`);
           const uniquePassed = validationResults.filter(r => r.uniqueEntityIdsValidation.status === 'PASS').length;
           const uniqueFailed = validationResults.filter(r => r.uniqueEntityIdsValidation.status === 'FAIL').length;
           const uniqueSkipped = validationResults.filter(r => r.uniqueEntityIdsValidation.status === 'SKIP').length;
           const leftRightPassed = validationResults.filter(r => r.leftRightValueValidation.status === 'PASS').length;
           const leftRightFailed = validationResults.filter(r => r.leftRightValueValidation.status === 'FAIL').length;
           const leftRightSkipped = validationResults.filter(r => r.leftRightValueValidation.status === 'SKIP').length;
-          console.log(`Unique Entity IDs: ${uniquePassed} PASS, ${uniqueFailed} FAIL, ${uniqueSkipped} SKIP`);
-          console.log(`Left/Right Values: ${leftRightPassed} PASS, ${leftRightFailed} FAIL, ${leftRightSkipped} SKIP`);
-          console.log('='.repeat(120) + '\n');
+          logger.log(`Unique Entity IDs: ${uniquePassed} PASS, ${uniqueFailed} FAIL, ${uniqueSkipped} SKIP`);
+          logger.log(`Left/Right Values: ${leftRightPassed} PASS, ${leftRightFailed} FAIL, ${leftRightSkipped} SKIP`);
+          logger.log('='.repeat(120) + '\n');
         }); // End of "Validate first N main rows" step
       });
     });
@@ -1500,7 +1501,7 @@ export const runERP_3015 = () => {
             // Wait a bit more for table to render
             await page.waitForTimeout(TIMEOUTS.MEDIUM);
           } else {
-            console.log('Switch element not found for Equipment table - skipping switch step');
+            logger.log('Switch element not found for Equipment table - skipping switch step');
             // Wait a bit for the table to be ready
             await page.waitForTimeout(TIMEOUTS.MEDIUM);
             await page.waitForLoadState('networkidle');
@@ -1591,11 +1592,11 @@ export const runERP_3015 = () => {
                     await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
                     const rowTestIdCheck = await currentRow.getAttribute('data-testid');
                     if (!rowTestIdCheck || rowTestIdCheck.includes('-Operation') || rowTestIdCheck.includes('-NonOperation')) {
-                      console.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
+                      logger.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
                       continue; // Skip to next row in the loop
                     }
                   } catch (e) {
-                    console.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
+                    logger.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
                     continue; // Skip to next row in the loop
                   }
                   
@@ -1636,14 +1637,14 @@ export const runERP_3015 = () => {
                     try {
                       await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
                     } catch (e) {
-                      console.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
+                      logger.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
                     }
                     
                     // Re-verify this is still a main row after scrolling (DOM might have changed)
                     // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
                     const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
                     if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation') || rowTestIdAfterScroll.includes('-NonOperation')) {
-                      console.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
+                      logger.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
                       return; // Skip the rest of the steps for this row
                     }
                     
@@ -1661,7 +1662,7 @@ export const runERP_3015 = () => {
                     // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
                     const rowTestIdBeforeCells = await freshRow.getAttribute('data-testid');
                     if (!rowTestIdBeforeCells || rowTestIdBeforeCells.includes('-Operation') || rowTestIdBeforeCells.includes('-NonOperation')) {
-                      console.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
+                      logger.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
                       return; // Skip the rest of the steps for this row
                     }
 
@@ -1753,7 +1754,7 @@ export const runERP_3015 = () => {
 
                 // Skip this row if value is 0
                 if (leftValue === 0) {
-                  console.log(`Skipping row ${rowIndex + 1} - leftValue is 0`);
+                  logger.log(`Skipping row ${rowIndex + 1} - leftValue is 0`);
                   return; // Skip to next row
                 }
 
@@ -2079,7 +2080,7 @@ export const runERP_3015 = () => {
                     while (tableCount === 0 && retries > 0) {
                       tableCount = await allTablesPattern.count();
                       if (tableCount === 0) {
-                        console.log(`No TaskByEquipment tables found on new page yet, waiting longer... (${retries} retries left)`);
+                        logger.log(`No TaskByEquipment tables found on new page yet, waiting longer... (${retries} retries left)`);
                         await newPage.waitForTimeout(TIMEOUTS.STANDARD);
                         await newPage.waitForLoadState('networkidle');
                         retries--;
@@ -2095,7 +2096,7 @@ export const runERP_3015 = () => {
                       test.info(),
                     );
                     
-                    console.log(`Found ${tableCount} TaskByEquipment table(s) on new page to process`);
+                    logger.log(`Found ${tableCount} TaskByEquipment table(s) on new page to process`);
                     
                     // Process each table and sum up valid rows from all tables
                     let totalValidRowCount = 0;
@@ -2107,7 +2108,7 @@ export const runERP_3015 = () => {
                         
                         // Get table data-testid for logging
                         const tableTestId = await table.getAttribute('data-testid');
-                        console.log(`Processing table ${tableIndex + 1} on new page: ${tableTestId}`);
+                        logger.log(`Processing table ${tableIndex + 1} on new page: ${tableTestId}`);
                         
                         // Wait for table to be attached and visible
                         await expectSoftWithScreenshot(
@@ -2198,7 +2199,7 @@ export const runERP_3015 = () => {
                           }
                         }
                         
-                        console.log(`Table ${tableIndex + 1}: Found ${currentTableRowCount} total rows, ${totalValidRowCount} valid rows so far`);
+                        logger.log(`Table ${tableIndex + 1}: Found ${currentTableRowCount} total rows, ${totalValidRowCount} valid rows so far`);
                       });
                     }
                     
@@ -2297,7 +2298,7 @@ export const runERP_3015 = () => {
 
                 // Skip this row if value is 0
                 if (countEntityValue === 0) {
-                  console.log(`Skipping row ${rowIndex + 1} - countEntityValue is 0`);
+                  logger.log(`Skipping row ${rowIndex + 1} - countEntityValue is 0`);
                   return; // Skip to next row
                 }
 
@@ -2788,11 +2789,11 @@ export const runERP_3015 = () => {
                 } // End of loop through rows
                 
                 // Print validation results table
-                console.log('\n' + '='.repeat(120));
-                console.log('VALIDATION RESULTS TABLE'.padStart(70));
-                console.log('='.repeat(120));
-                console.log('Row'.padEnd(5) + '| ' + 'Equipment Name'.padEnd(50) + '| ' + 'Cell 3 (CountPosition)'.padEnd(30) + '| ' + 'Cell 4 (CountEntity)');
-                console.log('-'.repeat(120));
+                logger.log('\n' + '='.repeat(120));
+                logger.log('VALIDATION RESULTS TABLE'.padStart(70));
+                logger.log('='.repeat(120));
+                logger.log('Row'.padEnd(5) + '| ' + 'Equipment Name'.padEnd(50) + '| ' + 'Cell 3 (CountPosition)'.padEnd(30) + '| ' + 'Cell 4 (CountEntity)');
+                logger.log('-'.repeat(120));
                 for (const result of validationResults) {
                   const rowNum = result.rowNumber.toString().padEnd(4);
                   const equipment = (result.equipmentName.length > 48 ? result.equipmentName.substring(0, 45) + '...' : result.equipmentName).padEnd(50);
@@ -2808,19 +2809,19 @@ export const runERP_3015 = () => {
                     ? `PASS (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`
                     : `FAIL (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`;
                   const cell4 = cell4Status.padEnd(30);
-                  console.log(`${rowNum}| ${equipment}| ${cell3}| ${cell4}`);
+                  logger.log(`${rowNum}| ${equipment}| ${cell3}| ${cell4}`);
                 }
-                console.log('-'.repeat(120));
-                console.log(`Total Rows Processed: ${validationResults.length}`);
+                logger.log('-'.repeat(120));
+                logger.log(`Total Rows Processed: ${validationResults.length}`);
                 const cell3Passed = validationResults.filter(r => r.cell3CountPosition.status === 'PASS').length;
                 const cell3Failed = validationResults.filter(r => r.cell3CountPosition.status === 'FAIL').length;
                 const cell3Skipped = validationResults.filter(r => r.cell3CountPosition.status === 'SKIP').length;
                 const cell4Passed = validationResults.filter(r => r.cell4CountEntity.status === 'PASS').length;
                 const cell4Failed = validationResults.filter(r => r.cell4CountEntity.status === 'FAIL').length;
                 const cell4Skipped = validationResults.filter(r => r.cell4CountEntity.status === 'SKIP').length;
-                console.log(`Cell 3 (CountPosition): ${cell3Passed} PASS, ${cell3Failed} FAIL, ${cell3Skipped} SKIP`);
-                console.log(`Cell 4 (CountEntity): ${cell4Passed} PASS, ${cell4Failed} FAIL, ${cell4Skipped} SKIP`);
-                console.log('='.repeat(120) + '\n');
+                logger.log(`Cell 3 (CountPosition): ${cell3Passed} PASS, ${cell3Failed} FAIL, ${cell3Skipped} SKIP`);
+                logger.log(`Cell 4 (CountEntity): ${cell4Passed} PASS, ${cell4Failed} FAIL, ${cell4Skipped} SKIP`);
+                logger.log('='.repeat(120) + '\n');
               }); // End of "Validate first N main rows" step
       });
 

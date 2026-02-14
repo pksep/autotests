@@ -2,13 +2,14 @@ import { test, expect, Page } from "@playwright/test";
 import { ENV, SELECTORS, CONST } from "../config";
 import { allure } from "allure-playwright";
 import { PageObject } from "../lib/Page";
+import logger from "../lib/utils/logger";
 
 export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) => {
-    console.log("Starting test: Check Table Totals Functionality");
+    logger.log("Starting test: Check Table Totals Functionality");
 
     test('Test Case 01 - Check Металлообработка Table Totals', async ({ page }) => {
         test.setTimeout(920000);
-        console.log("Test Case 01 - Check Table Totals");
+        logger.log("Test Case 01 - Check Table Totals");
 
         // Step 1: Go to homepage
         await allure.step("Step 1: Go to homepage", async () => {
@@ -37,7 +38,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
             const cardElements = page.locator(`[data-testid="${CONST.CARD}"]`);
             const cardCount = await cardElements.count();
 
-            console.log(`Found ${cardCount} card elements`);
+            logger.log(`Found ${cardCount} card elements`);
 
             for (let i = 0; i < cardCount; i++) {
                 const currentCard = cardElements.nth(i);
@@ -50,7 +51,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                     const expectedCount = parseInt(bracketMatch[1]);
                     const cardTitle = cardText?.replace(/\s*\(\d+\)/, '').trim();
 
-                    console.log(`Processing card: ${cardTitle} with expected count: ${expectedCount}`);
+                    logger.log(`Processing card: ${cardTitle} with expected count: ${expectedCount}`);
 
                     // Step 5: Click on the card
                     await currentCard.evaluate((el: HTMLElement) => {
@@ -74,7 +75,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                         let currentRowCount = await initialDataRows.count();
 
                         if (currentRowCount === 0) {
-                            console.log(`No initial rows found for ${cardTitle}, waiting longer...`);
+                            logger.log(`No initial rows found for ${cardTitle}, waiting longer...`);
                             await page.waitForTimeout(5000);
                             currentRowCount = await initialDataRows.count();
                         }
@@ -114,7 +115,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                         const result = currentRowCount === expectedCount ? 'PASSED' : 'FAILED';
                         const colorCode = result === 'PASSED' ? '\x1b[32m' : '\x1b[31m'; // Green for PASSED, Red for FAILED
                         const resetCode = '\x1b[0m'; // Reset color
-                        console.log(`${cardTitle}, ${currentRowCount}, ${colorCode}${result}${resetCode}`);
+                        logger.log(`${cardTitle}, ${currentRowCount}, ${colorCode}${result}${resetCode}`);
 
                         expect(currentRowCount).toBe(expectedCount);
                     });
@@ -129,18 +130,18 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                     await sliderRefresh.click();
                     await page.waitForTimeout(1000);
                 } else {
-                    console.log(`Skipping card "${cardText}" - no numeric value found in brackets`);
+                    logger.log(`Skipping card "${cardText}" - no numeric value found in brackets`);
                 }
             }
         });
     });
     test('Test Case 02 - Check Сборка Table Totals', async ({ page }) => {
         test.setTimeout(920000);
-        console.log("Test Case 01 - Check Сборка Table Totals");
+        logger.log("Test Case 01 - Check Сборка Table Totals");
 
         // Step 4: Click the slider with Switch-Item1
         await allure.step("Step 1: Click the slider with Switch-Item1", async () => {
-            console.log("Step 1: Click the slider with Switch-Item1");
+            logger.log("Step 1: Click the slider with Switch-Item1");
             const sliderSwitch = page.locator(`[data-testid="${CONST.SWITCH_ITEM1}"]`);
             await sliderSwitch.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -157,11 +158,11 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
 
         // Step 5: Cycle through all Card items and capture values (Switch-Item1)
         await allure.step("Step 2: Cycle through all Card items and capture values (Switch-Item1)", async () => {
-            console.log("Step 2: Cycle through all Card items and capture values (Switch-Item1)");
+            logger.log("Step 2: Cycle through all Card items and capture values (Switch-Item1)");
             const cardElements = page.locator(`[data-testid="${CONST.CARD}"]`);
             const cardCount = await cardElements.count();
 
-            console.log(`Found ${cardCount} card elements`);
+            logger.log(`Found ${cardCount} card elements`);
 
             for (let i = 0; i < cardCount; i++) {
                 const currentCard = cardElements.nth(i);
@@ -174,7 +175,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                     const expectedCount = parseInt(bracketMatch[1]);
                     const cardTitle = cardText?.replace(/\s*\(\d+\)/, '').trim();
 
-                    console.log(`Processing card: ${cardTitle} with expected count: ${expectedCount}`);
+                    logger.log(`Processing card: ${cardTitle} with expected count: ${expectedCount}`);
 
                     // Step 6: Click on the card
                     await currentCard.evaluate((el: HTMLElement) => {
@@ -187,7 +188,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
 
                     // Step 7: Validate table totals
                     await allure.step(`Step 3: Validate table totals for "${cardTitle}"`, async () => { //
-                        console.log("Step 3: Validate table totals for \"${cardTitle}\"");
+                        logger.log("Step 3: Validate table totals for \"${cardTitle}\"");
                         const table = page.locator(`[data-testid="${CONST.TABLE_SBORKA}"]`);
                         await table.waitFor({ state: 'attached' });
 
@@ -199,7 +200,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                         let currentRowCount = await initialDataRows.count();
 
                         if (currentRowCount === 0) {
-                            console.log(`No initial rows found for ${cardTitle}, waiting longer...`);
+                            logger.log(`No initial rows found for ${cardTitle}, waiting longer...`);
                             await page.waitForTimeout(5000);
                             currentRowCount = await initialDataRows.count();
                         }
@@ -247,9 +248,9 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                             currentRowCount = rowCount / 2;
                         }
 
-                        console.log(`Spec rows found: ${rowCount}`);
-                        console.log(`Calculated count: ${currentRowCount}`);
-                        console.log(`Expected count: ${expectedCount}`);
+                        logger.log(`Spec rows found: ${rowCount}`);
+                        logger.log(`Calculated count: ${currentRowCount}`);
+                        logger.log(`Expected count: ${expectedCount}`);
 
                         // Use the expected count directly since we're now excluding the problematic rows
                         const expectedTableCount = expectedCount;
@@ -257,7 +258,7 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                         const result = currentRowCount === expectedTableCount ? 'PASSED' : 'FAILED';
                         const colorCode = result === 'PASSED' ? '\x1b[32m' : '\x1b[31m'; // Green for PASSED, Red for FAILED
                         const resetCode = '\x1b[0m'; // Reset color
-                        console.log(`${cardTitle}, ${currentRowCount}, ${colorCode}${result}${resetCode}`);
+                        logger.log(`${cardTitle}, ${currentRowCount}, ${colorCode}${result}${resetCode}`);
 
                         expect(currentRowCount).toBe(expectedTableCount);
                     });
@@ -290,9 +291,9 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                             el.classList.contains('active');
                     });
 
-                    console.log(`After reload - Switch-Item0 selected: ${item0Selected}, Switch-Item1 selected: ${item1Selected}`);
+                    logger.log(`After reload - Switch-Item0 selected: ${item0Selected}, Switch-Item1 selected: ${item1Selected}`);
                 } else {
-                    console.log(`Skipping card "${cardText}" - no numeric value found in brackets`);
+                    logger.log(`Skipping card "${cardText}" - no numeric value found in brackets`);
                 }
             }
         });

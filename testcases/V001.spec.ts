@@ -19,6 +19,7 @@ import * as SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction from '../li
 import * as MetalWorkingWarhouseSelectors from '../lib/Constants/SelectorsMetalWorkingWarhouse';
 import * as SelectorsAssemblyKittingOnThePlan from '../lib/Constants/SelectorsAssemblyKittingOnThePlan';
 import * as SelectorsCompleteSets from '../lib/Constants/SelectorsCompleteSets';
+import logger from '../lib/utils/logger';
 
 type ElementSpec = {
   titles?: string[];

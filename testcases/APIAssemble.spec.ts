@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { AssembleAPI } from "../pages/APIAssemble";
 import { AuthAPI } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 import { allure } from "allure-playwright";
 
 export const runAssembleAPI = () => {
@@ -14,7 +14,7 @@ export const runAssembleAPI = () => {
         const authAPI = new AuthAPI(page);
 
         await test.step("Test 1: Create assemble without authentication", async () => {
-            console.log("Testing unauthenticated access...");
+            logger.log("Testing unauthenticated access...");
 
             const assembleData = {
                 name: API_CONST.API_TEST_ASSEMBLE_NAME,
@@ -35,11 +35,11 @@ export const runAssembleAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated access correctly rejected with 401");
+            logger.log("✅ Unauthenticated access correctly rejected with 401");
         });
 
         await test.step("Test 2: Create assemble with SQL injection in name", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -60,11 +60,11 @@ export const runAssembleAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Create assemble with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -85,7 +85,7 @@ export const runAssembleAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -97,7 +97,7 @@ export const runAssembleAPI = () => {
         let createdAssembleId: number;
 
         await test.step("Step 1: Authenticate with valid credentials", async () => {
-            console.log("Authenticating with valid credentials...");
+            logger.log("Authenticating with valid credentials...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -122,11 +122,11 @@ export const runAssembleAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Create assemble with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 name: 12345, // Should be string
@@ -149,11 +149,11 @@ export const runAssembleAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidCreateResponse.status);
             expect(invalidCreateResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Create assemble with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 name: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -167,11 +167,11 @@ export const runAssembleAPI = () => {
             expect(emptyResponse.status).not.toBe(201);
             expect(emptyResponse.status).not.toBe(200);
             expect(emptyResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
 
         await test.step("Test 6: Create assemble with extremely long name", async () => {
-            console.log("Testing input length validation...");
+            logger.log("Testing input length validation...");
 
             const longNameData = {
                 name: API_CONST.API_TEST_EDGE_CASES.VERY_LONG_STRING,
@@ -185,11 +185,11 @@ export const runAssembleAPI = () => {
             expect(longNameResponse.status).not.toBe(201);
             expect(longNameResponse.status).not.toBe(200);
             expect(longNameResponse.data).toBeDefined();
-            console.log("✅ Extremely long name correctly rejected");
+            logger.log("✅ Extremely long name correctly rejected");
         });
 
         await test.step("Test 7: Create assemble with valid data", async () => {
-            console.log("Creating assemble with valid data...");
+            logger.log("Creating assemble with valid data...");
 
             const assembleData = {
                 name: API_CONST.API_TEST_ASSEMBLE_NAME,
@@ -207,11 +207,11 @@ export const runAssembleAPI = () => {
             expect(typeof createResponse.data.id).toBe('number');
             expect(createResponse.data.id).toBeGreaterThan(0);
             createdAssembleId = createResponse.data.id;
-            console.log(`✅ Assemble created successfully with ID: ${createdAssembleId}`);
+            logger.log(`✅ Assemble created successfully with ID: ${createdAssembleId}`);
         });
 
         await test.step("Test 8: Update assemble with invalid data", async () => {
-            console.log("Testing update with invalid data...");
+            logger.log("Testing update with invalid data...");
 
             const invalidUpdateData = {
                 id: createdAssembleId,
@@ -225,11 +225,11 @@ export const runAssembleAPI = () => {
             expect(invalidUpdateResponse.status).toBe(400);
             expect(invalidUpdateResponse.status).not.toBe(200);
             expect(invalidUpdateResponse.data).toBeDefined();
-            console.log("✅ Invalid update data correctly rejected with 400");
+            logger.log("✅ Invalid update data correctly rejected with 400");
         });
 
         await test.step("Test 9: Update non-existent assemble", async () => {
-            console.log("Testing update of non-existent assemble...");
+            logger.log("Testing update of non-existent assemble...");
 
             const nonExistentUpdateData = {
                 id: 999999,
@@ -243,11 +243,11 @@ export const runAssembleAPI = () => {
             expect(nonExistentUpdateResponse.status).toBe(404);
             expect(nonExistentUpdateResponse.status).not.toBe(200);
             expect(nonExistentUpdateResponse.data).toBeDefined();
-            console.log("✅ Update of non-existent assemble correctly rejected with 404");
+            logger.log("✅ Update of non-existent assemble correctly rejected with 404");
         });
 
         await test.step("Test 10: Update assemble with valid data", async () => {
-            console.log("Updating assemble with valid data...");
+            logger.log("Updating assemble with valid data...");
 
             const updateData = {
                 id: createdAssembleId,
@@ -264,7 +264,7 @@ export const runAssembleAPI = () => {
             expect(updateResponse.data).toBeDefined();
             expect(updateResponse.data.name).toBe(API_CONST.API_TEST_ASSEMBLE_NAME_UPDATED);
             expect(updateResponse.data.description).toBe(API_CONST.API_TEST_ASSEMBLE_DESCRIPTION_UPDATED);
-            console.log("✅ Assemble updated successfully");
+            logger.log("✅ Assemble updated successfully");
         });
     });
 
@@ -283,11 +283,11 @@ export const runAssembleAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toBeDefined();
             expect(loginResponse.data.token).toBeTruthy();
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 11: Pagination with invalid parameters", async () => {
-            console.log("Testing pagination with invalid parameters...");
+            logger.log("Testing pagination with invalid parameters...");
 
             // Test with negative page number
             const negativePageData = {
@@ -301,7 +301,7 @@ export const runAssembleAPI = () => {
             expect(negativePageResponse.status).toBe(400);
             expect(negativePageResponse.status).not.toBe(201);
             expect(negativePageResponse.data).toBeDefined();
-            console.log("✅ Negative page number correctly rejected with 400");
+            logger.log("✅ Negative page number correctly rejected with 400");
 
             // Test with zero page size
             const zeroPageSizeData = {
@@ -315,7 +315,7 @@ export const runAssembleAPI = () => {
             expect(zeroPageSizeResponse.status).toBe(400);
             expect(zeroPageSizeResponse.status).not.toBe(201);
             expect(zeroPageSizeResponse.data).toBeDefined();
-            console.log("✅ Zero page size correctly rejected with 400");
+            logger.log("✅ Zero page size correctly rejected with 400");
 
             // Test with extremely large page size
             const largePageSizeData = {
@@ -329,11 +329,11 @@ export const runAssembleAPI = () => {
             expect(largePageSizeResponse.status).toBe(400);
             expect(largePageSizeResponse.status).not.toBe(201);
             expect(largePageSizeResponse.data).toBeDefined();
-            console.log("✅ Extremely large page size correctly rejected with 400");
+            logger.log("✅ Extremely large page size correctly rejected with 400");
         });
 
         await test.step("Test 12: Response time performance", async () => {
-            console.log("Testing response time performance...");
+            logger.log("Testing response time performance...");
 
             const validPaginationData = {
                 page: 1,
@@ -352,18 +352,18 @@ export const runAssembleAPI = () => {
             expect(performanceResponse.data).toBeDefined();
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
             expect(responseTime).toBeGreaterThan(0);
-            console.log(`✅ Response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 13: Test additional assemble endpoints", async () => {
-            console.log("Testing additional assemble endpoints...");
+            logger.log("Testing additional assemble endpoints...");
 
             // Test get actual assemble orders
             const ordersResponse = await assembleAPI.getActualAssembleOrders(request);
             expect(ordersResponse.status).toBe(200);
             expect(ordersResponse.status).not.toBe(400);
             expect(ordersResponse.data).toBeDefined();
-            console.log("✅ Get actual assemble orders working");
+            logger.log("✅ Get actual assemble orders working");
 
             // Test get assemble by parent with invalid ID
             const invalidParentData = {
@@ -375,7 +375,7 @@ export const runAssembleAPI = () => {
             expect(invalidParentResponse.status).toBe(400);
             expect(invalidParentResponse.status).not.toBe(201);
             expect(invalidParentResponse.data).toBeDefined();
-            console.log("✅ Invalid parent ID correctly rejected with 400");
+            logger.log("✅ Invalid parent ID correctly rejected with 400");
 
             // Test get deep deficit object with invalid ID
             const invalidDeficitData = {
@@ -387,7 +387,7 @@ export const runAssembleAPI = () => {
             expect(invalidDeficitResponse.status).toBe(400);
             expect(invalidDeficitResponse.status).not.toBe(201);
             expect(invalidDeficitResponse.data).toBeDefined();
-            console.log("✅ Invalid deficit ID correctly rejected with 400");
+            logger.log("✅ Invalid deficit ID correctly rejected with 400");
         });
     });
 };

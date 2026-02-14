@@ -16,7 +16,7 @@ import { TIMEOUTS, WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import * as SelectorsSearchInputs from '../Constants/SelectorsSearchInputs';
 import { normalizeText } from '../utils/utilities';
 import { expectSoftWithScreenshot } from '../utils/utilities';
-import logger from '../logger';
+import logger from '../utils/logger';
 
 export interface ValidationResult {
   success: boolean;
@@ -395,9 +395,9 @@ export class TableHelper {
 
         // Проверка на наличие элемента
         if (table) {
-          console.log('Элемент найден:', table);
+          logger.log('Элемент найден:', table);
         } else {
-          console.log('Элемент не найден');
+          logger.log('Элемент не найден');
         }
 
         if (!table) {
@@ -498,7 +498,7 @@ export class TableHelper {
    * @param searchInputDataTestId - Optional data-testid for the search input
    */
   async searchTable(nameSearch: string, locator: string, searchInputDataTestId?: string) {
-    console.log('Search Table', nameSearch, locator, searchInputDataTestId);
+    logger.log('Search Table', nameSearch, locator, searchInputDataTestId);
     const table = this.page.locator(locator);
     await table.evaluate(el => {
       el.style.backgroundColor = 'green';
@@ -551,7 +551,7 @@ export class TableHelper {
 
     // Verify the value was set before pressing Enter
     const currentValue = await searchTable.inputValue();
-    console.log(`Search field value before Enter: "${currentValue}"`);
+    logger.log(`Search field value before Enter: "${currentValue}"`);
 
     // Press Enter to trigger search
     await searchTable.press('Enter');
@@ -562,11 +562,11 @@ export class TableHelper {
 
     // Check the final value
     const finalValue = await searchTable.inputValue();
-    console.log(`Search field value after Enter: "${finalValue}"`);
+    logger.log(`Search field value after Enter: "${finalValue}"`);
 
     // Don't assert the value matches exactly, as some search fields clear after search
     // Just verify the search was performed
-    console.log(`Search performed for: "${nameSearch}"`);
+    logger.log(`Search performed for: "${nameSearch}"`);
   }
 
   /**
@@ -854,7 +854,7 @@ export class TableHelper {
     await page.waitForTimeout(1000); // Даем время на рендеринг
 
     const rows = await table.$$('tbody tr');
-    console.log(`Найдено строк: ${rows.length}`);
+    logger.log(`Найдено строк: ${rows.length}`);
 
     for (const row of rows) {
       const cells = await row.$$('td');
@@ -876,20 +876,20 @@ export class TableHelper {
           return '';
         });
 
-        console.log(`Проверяем ячейку с текстом: "${cellText}"`);
+        logger.log(`Проверяем ячейку с текстом: "${cellText}"`);
 
         // Более гибкое сравнение текста
         if (cellText.toLowerCase().includes(variableName.toLowerCase())) {
-          console.log(`Найдена ячейка с переменной "${variableName}"`);
+          logger.log(`Найдена ячейка с переменной "${variableName}"`);
 
           if (targetCellIndex < cells.length) {
             const targetCell = cells[targetCellIndex];
-            console.log(`Обрабатываем целевую ячейку с индексом ${targetCellIndex}`);
+            logger.log(`Обрабатываем целевую ячейку с индексом ${targetCellIndex}`);
 
             // Проверяем наличие input в ячейке
             const inputField = await targetCell.$('input[type="number"], input[type="text"]');
             if (!inputField) {
-              console.log('Input не найден, проверяем наличие других элементов ввода');
+              logger.log('Input не найден, проверяем наличие других элементов ввода');
               const anyInput = await targetCell.$('input');
               if (!anyInput) {
                 throw new Error(`Поле ввода не найдено в целевой ячейке.`);
@@ -897,7 +897,7 @@ export class TableHelper {
             }
 
             if (value) {
-              console.log(`Пытаемся ввести значение: ${value}`);
+              logger.log(`Пытаемся ввести значение: ${value}`);
               try {
                 // Кликаем по ячейке для активации input
                 await targetCell.click();
@@ -917,7 +917,7 @@ export class TableHelper {
                   return input ? input.value : '';
                 });
 
-                console.log(`Текущее значение в input: ${inputValue}`);
+                logger.log(`Текущее значение в input: ${inputValue}`);
                 if (inputValue !== value) {
                   throw new Error(`Не удалось ввести значение ${value}. Текущее значение: ${inputValue}`);
                 }
@@ -931,7 +931,7 @@ export class TableHelper {
                 const input = el.querySelector('input');
                 return input ? input.value : '';
               });
-              console.log(`Текущее значение: ${currentValue}`);
+              logger.log(`Текущее значение: ${currentValue}`);
               return currentValue;
             }
             return;
@@ -997,7 +997,7 @@ export class TableHelper {
 
     // Verify the value was entered
     const inputValue = await searchInput.inputValue();
-    console.log(`Search input value: "${inputValue}"`);
+    logger.log(`Search input value: "${inputValue}"`);
 
     // Press Enter to trigger search
     await searchInput.press('Enter');

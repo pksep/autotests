@@ -4,7 +4,7 @@ import { ENV, SELECTORS, PRODUCT_SPECS } from '../config';
 import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS } from '../lib/Constants/TimeoutConstants';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U004-PC01.json'; // Import your test data
@@ -479,7 +479,7 @@ export const runU004_5 = () => {
         logger.info(tableData_full);
         await page.waitForTimeout(TIMEOUTS.STANDARD);
         const nestedArray = await tableData_full.map(group => group.items).flat();
-        nestedArray.forEach((item, index) => console.log(`Index ${index}: ${typeof item} - ${JSON.stringify(item)}`));
+        nestedArray.forEach((item, index) => logger.log(`Index ${index}: ${typeof item} - ${JSON.stringify(item)}`));
 
         const result = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_ASSIGNEMENT); // Output: true
 
@@ -505,7 +505,7 @@ export const runU004_5 = () => {
     } = PRODUCT_SPECS.T15;
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      console.log('Step: Clean up Т15 product specifications');
+      logger.log('Step: Clean up Т15 product specifications');
       await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
         assemblies: T15_ASSEMBLIES,
         details: T15_DETAILS,

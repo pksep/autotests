@@ -17,6 +17,7 @@ import { HIGHLIGHT_PENDING, HIGHLIGHT_SUCCESS, HIGHLIGHT_ERROR } from '../lib/Co
 import * as SelectorsERP969 from '../lib/Constants/SelectorsERP969';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import { expectSoftWithScreenshot } from '../lib/Page';
+import logger from '../lib/utils/logger';
 
 // Additional test data variables for the new steps
 let orderNumber: string | null = null; // Declare outside to share between steps
@@ -314,7 +315,7 @@ export const runERP_969_2 = () => {
         test.info(),
       );
 
-      console.log(`✅ Assembly "${TEST_DATA.ASSEMBLY_NAME}" created successfully with both details`);
+      logger.log(`✅ Assembly "${TEST_DATA.ASSEMBLY_NAME}" created successfully with both details`);
     });
 
     await allure.step(`Step 7: Verify assembly "${TEST_DATA.ASSEMBLY_NAME}" was saved`, async () => {
@@ -408,12 +409,12 @@ export const runERP_969_2 = () => {
       // Debug: Check total rows in table before filtering
       const allRows = cbedTable.locator('tbody tr');
       const totalRows = await allRows.count();
-      console.log(`Total rows in СБ table: ${totalRows}`);
+      logger.log(`Total rows in СБ table: ${totalRows}`);
 
       // Debug: Log first few rows to see what's in the table
       for (let i = 0; i < Math.min(totalRows, 3); i++) {
         const rowText = await allRows.nth(i).textContent();
-        console.log(`Row ${i + 1}: ${rowText}`);
+        logger.log(`Row ${i + 1}: ${rowText}`);
       }
 
       // Verify assembly exists
@@ -421,9 +422,9 @@ export const runERP_969_2 = () => {
       const count = await resultRows.count();
 
       if (count === 0) {
-        console.log(`❌ Assembly "${TEST_DATA.ASSEMBLY_NAME}" not found in СБ table`);
-        console.log(`Search term used: "${TEST_DATA.ASSEMBLY_NAME}"`);
-        console.log(`Total rows in table: ${totalRows}`);
+        logger.log(`❌ Assembly "${TEST_DATA.ASSEMBLY_NAME}" not found in СБ table`);
+        logger.log(`Search term used: "${TEST_DATA.ASSEMBLY_NAME}"`);
+        logger.log(`Total rows in table: ${totalRows}`);
 
         // Try a broader search to see if the assembly exists with a different name
         await assemblySearchInput.fill('ERP9692');
@@ -432,11 +433,11 @@ export const runERP_969_2 = () => {
 
         const broaderResults = cbedTable.locator('tbody tr');
         const broaderCount = await broaderResults.count();
-        console.log(`Broader search results for "ERP9692": ${broaderCount} rows`);
+        logger.log(`Broader search results for "ERP9692": ${broaderCount} rows`);
 
         for (let i = 0; i < Math.min(broaderCount, 5); i++) {
           const rowText = await broaderResults.nth(i).textContent();
-          console.log(`Broader search row ${i + 1}: ${rowText}`);
+          logger.log(`Broader search row ${i + 1}: ${rowText}`);
         }
       }
 
@@ -508,7 +509,7 @@ export const runERP_969_2 = () => {
         }
       }
 
-      console.log(`✅ Assembly "${TEST_DATA.ASSEMBLY_NAME}" created successfully with both details`);
+      logger.log(`✅ Assembly "${TEST_DATA.ASSEMBLY_NAME}" created successfully with both details`);
     });
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -568,7 +569,7 @@ export const runERP_969_2 = () => {
       await revisionPage.waitForTimeout(TIMEOUTS.STANDARD);
 
       // Set quantity for first detail
-      console.log(`Setting quantity for detail "${TEST_DATA.DETAIL_1_NAME}"`);
+      logger.log(`Setting quantity for detail "${TEST_DATA.DETAIL_1_NAME}"`);
       await searchInput.fill(TEST_DATA.DETAIL_1_NAME);
       await searchInput.press('Enter');
       await revisionPage.waitForLoadState('networkidle');
@@ -577,7 +578,7 @@ export const runERP_969_2 = () => {
       // Find and update the first detail
       const resultRows = revisionTable.locator('tbody tr');
       const count = await resultRows.count();
-      console.log(`Found ${count} rows for detail "${TEST_DATA.DETAIL_1_NAME}"`);
+      logger.log(`Found ${count} rows for detail "${TEST_DATA.DETAIL_1_NAME}"`);
 
       if (count > 0) {
         // Find the row containing our detail
@@ -586,7 +587,7 @@ export const runERP_969_2 = () => {
           const rowText = await resultRows.nth(i).textContent();
           if (rowText && rowText.includes(TEST_DATA.DETAIL_1_NAME)) {
             foundRow = resultRows.nth(i);
-            console.log(`Found detail "${TEST_DATA.DETAIL_1_NAME}" in row ${i + 1}`);
+            logger.log(`Found detail "${TEST_DATA.DETAIL_1_NAME}" in row ${i + 1}`);
             break;
           }
         }
@@ -652,12 +653,12 @@ export const runERP_969_2 = () => {
           await confirmButton.click();
           await revisionPage.waitForLoadState('networkidle');
 
-          console.log(`✅ Detail "${TEST_DATA.DETAIL_1_NAME}" quantity set to 5`);
+          logger.log(`✅ Detail "${TEST_DATA.DETAIL_1_NAME}" quantity set to 5`);
         }
       }
 
       // Now set quantity for second detail
-      console.log(`Setting quantity for detail "${TEST_DATA.DETAIL_2_NAME}"`);
+      logger.log(`Setting quantity for detail "${TEST_DATA.DETAIL_2_NAME}"`);
 
       // Clear search and search for second detail
       await searchInput.fill('');
@@ -672,7 +673,7 @@ export const runERP_969_2 = () => {
       // Find and update the second detail
       const resultRows2 = revisionTable.locator('tbody tr');
       const count2 = await resultRows2.count();
-      console.log(`Found ${count2} rows for detail "${TEST_DATA.DETAIL_2_NAME}"`);
+      logger.log(`Found ${count2} rows for detail "${TEST_DATA.DETAIL_2_NAME}"`);
 
       if (count2 > 0) {
         // Find the row containing our detail
@@ -681,7 +682,7 @@ export const runERP_969_2 = () => {
           const rowText = await resultRows2.nth(i).textContent();
           if (rowText && rowText.includes(TEST_DATA.DETAIL_2_NAME)) {
             foundRow2 = resultRows2.nth(i);
-            console.log(`Found detail "${TEST_DATA.DETAIL_2_NAME}" in row ${i + 1}`);
+            logger.log(`Found detail "${TEST_DATA.DETAIL_2_NAME}" in row ${i + 1}`);
             break;
           }
         }
@@ -747,11 +748,11 @@ export const runERP_969_2 = () => {
           await confirmButton2.click();
           await revisionPage.waitForLoadState('networkidle');
 
-          console.log(`✅ Detail "${TEST_DATA.DETAIL_2_NAME}" quantity set to 5`);
+          logger.log(`✅ Detail "${TEST_DATA.DETAIL_2_NAME}" quantity set to 5`);
         }
       }
 
-      console.log(`✅ Both details quantities set to 5 in revision page`);
+      logger.log(`✅ Both details quantities set to 5 in revision page`);
     });
 
     const warehousePage = await page.context().newPage();
@@ -819,14 +820,14 @@ export const runERP_969_2 = () => {
 
       // Capture the order number from the modal title
       const modalTitleText = await modalTitle.textContent();
-      console.log(`Modal title text: ${modalTitleText}`);
+      logger.log(`Modal title text: ${modalTitleText}`);
 
       // Extract order number from the title text using regex
       // The format is "Создание заказа на сборку № 25-6067 от 23.07.2025"
       const orderNumberMatch = modalTitleText?.match(/№\s*([^\s]+)/);
       if (orderNumberMatch && orderNumberMatch[1]) {
         orderNumber = orderNumberMatch[1];
-        console.log(`Captured order number: ${orderNumber}`);
+        logger.log(`Captured order number: ${orderNumber}`);
       } else {
         console.error('Could not extract order number from modal title');
         throw new Error('Order number not found in modal title');
@@ -862,7 +863,7 @@ export const runERP_969_2 = () => {
       // Verify exactly one row is returned
       const rows = productionTable.locator('tbody tr');
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} row(s) in production table for SB "${TEST_DATA.ASSEMBLY_NAME}".`);
+      logger.log(`Found ${rowCount} row(s) in production table for SB "${TEST_DATA.ASSEMBLY_NAME}".`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -896,7 +897,7 @@ export const runERP_969_2 = () => {
       );
       const bottomRows = bottomTable.locator('tbody tr');
       const bottomRowCount = await bottomRows.count();
-      console.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${TEST_DATA.ASSEMBLY_NAME}".`);
+      logger.log(`Found ${bottomRowCount} row(s) in bottom table for SB "${TEST_DATA.ASSEMBLY_NAME}".`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -996,11 +997,11 @@ export const runERP_969_2 = () => {
       const tbodyElements = orderTable.locator('tbody');
       const tbodyCount = await tbodyElements.count();
 
-      console.log(`Found ${tbodyCount} tbody element(s) in order table.`);
+      logger.log(`Found ${tbodyCount} tbody element(s) in order table.`);
 
       // Create the search pattern with "C" prefix
       const searchPattern = `${orderNumber}`;
-      console.log(`Looking for order with pattern: "${searchPattern}"`);
+      logger.log(`Looking for order with pattern: "${searchPattern}"`);
 
       let foundOrder = false;
 
@@ -1010,30 +1011,30 @@ export const runERP_969_2 = () => {
         const rows = tbody.locator('tr');
         const rowCount = await rows.count();
 
-        console.log(`Checking tbody ${i + 1}, found ${rowCount} rows`);
+        logger.log(`Checking tbody ${i + 1}, found ${rowCount} rows`);
 
         for (let j = 0; j < rowCount; j++) {
           const row = rows.nth(j);
           const firstCell = row.locator('td').first();
           const cellText = await firstCell.textContent();
 
-          console.log(`Row ${j + 1} in tbody ${i + 1}: "${cellText}"`);
+          logger.log(`Row ${j + 1} in tbody ${i + 1}: "${cellText}"`);
 
           if (cellText?.trim() === searchPattern) {
-            console.log(`✅ Found matching order: "${cellText}"`);
+            logger.log(`✅ Found matching order: "${cellText}"`);
 
             // Highlight the found row
             await detailsPage.highlightElement(row, HIGHLIGHT_SUCCESS);
 
             foundOrder = true;
             targetRow = row;
-            console.log(`✅ Target row assigned: ${targetRow ? 'success' : 'failed'}`);
+            logger.log(`✅ Target row assigned: ${targetRow ? 'success' : 'failed'}`);
             break;
           }
         }
 
         if (foundOrder) {
-          console.log(`✅ Breaking out of tbody loop, order found`);
+          logger.log(`✅ Breaking out of tbody loop, order found`);
           break;
         }
       }
@@ -1048,8 +1049,8 @@ export const runERP_969_2 = () => {
         'Verify order was found and target row is not null',
         test.info(),
       );
-      console.log(`✅ Order "${searchPattern}" was found and highlighted`);
-      console.log(`✅ Target row is ready for Step 15: ${targetRow ? 'yes' : 'no'}`);
+      logger.log(`✅ Order "${searchPattern}" was found and highlighted`);
+      logger.log(`✅ Target row is ready for Step 15: ${targetRow ? 'yes' : 'no'}`);
     });
 
     await allure.step('Step 13: Click the found order row and verify order details in modal', async () => {
@@ -1065,7 +1066,7 @@ export const runERP_969_2 = () => {
       );
       await detailsPage.highlightElement(dateCell, HIGHLIGHT_PENDING);
       const orderDate = await dateCell.textContent();
-      console.log(`Order date from table: "${orderDate}"`);
+      logger.log(`Order date from table: "${orderDate}"`);
 
       // Click the found row to open the modal
       await targetRow.dblclick();
@@ -1110,7 +1111,7 @@ export const runERP_969_2 = () => {
         test.info(),
       );
       const modalDate = await modalDateElement.textContent();
-      console.log(`Modal date: "${modalDate}"`);
+      logger.log(`Modal date: "${modalDate}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1133,7 +1134,7 @@ export const runERP_969_2 = () => {
         test.info(),
       );
       const modalOrderNumber = await modalOrderNumberElement.textContent();
-      console.log(`Modal order number: "${modalOrderNumber}"`);
+      logger.log(`Modal order number: "${modalOrderNumber}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1174,7 +1175,7 @@ export const runERP_969_2 = () => {
       const firstColumn = firstDataRow.locator('td').nth(1);
       await detailsPage.highlightElement(firstColumn, HIGHLIGHT_PENDING);
       const firstColumnText = await firstColumn.textContent();
-      console.log(`First column (order number): "${firstColumnText}"`);
+      logger.log(`First column (order number): "${firstColumnText}"`);
       // Order number column contains plain order number without suffix
       await expectSoftWithScreenshot(
         page,
@@ -1189,7 +1190,7 @@ export const runERP_969_2 = () => {
       const thirdColumn = firstDataRow.locator('td').nth(3); // 3rd column (index 2)
       await detailsPage.highlightElement(thirdColumn, HIGHLIGHT_PENDING);
       const thirdColumnText = await thirdColumn.textContent();
-      console.log(`Third column (item): "${thirdColumnText}"`);
+      logger.log(`Third column (item): "${thirdColumnText}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1203,7 +1204,7 @@ export const runERP_969_2 = () => {
       const fourthColumn = firstDataRow.locator('td').nth(4); // 4th column (index 3)
       await detailsPage.highlightElement(fourthColumn, HIGHLIGHT_PENDING);
       const fourthColumnText = await fourthColumn.textContent();
-      console.log(`Fourth column (status): "${fourthColumnText}"`);
+      logger.log(`Fourth column (status): "${fourthColumnText}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1218,7 +1219,7 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(fifthColumn, HIGHLIGHT_PENDING);
       // Column 5 is "Кол-во сделанных" (completed) - should be "0"
       const fifthColumnText = await fifthColumn.textContent();
-      console.log(`Completed column (index 5): "${fifthColumnText}"`);
+      logger.log(`Completed column (index 5): "${fifthColumnText}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1234,7 +1235,7 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(orderedColumn, HIGHLIGHT_PENDING);
       const orderedInput = orderedColumn.locator('input');
       const orderedColumnValue = await orderedInput.inputValue();
-      console.log(`Ordered column (index 6) input value: "${orderedColumnValue}"`);
+      logger.log(`Ordered column (index 6) input value: "${orderedColumnValue}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1306,7 +1307,7 @@ export const runERP_969_2 = () => {
 
       // Check current count for debugging
       const currentCount = await resultRows.count();
-      console.log(`Current row count after search: ${currentCount}`);
+      logger.log(`Current row count after search: ${currentCount}`);
 
       // Wait for count to be 1 (the search should filter to one result)
       await expectSoftWithScreenshot(
@@ -1577,7 +1578,7 @@ export const runERP_969_2 = () => {
       await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
       // Verify the value was set
       const inputValue = await searchInput.inputValue();
-      console.log(`Search input value after fill: "${inputValue}"`);
+      logger.log(`Search input value after fill: "${inputValue}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1596,10 +1597,10 @@ export const runERP_969_2 = () => {
       // Wait for results to show and handle non-standard table structure
       const resultRows = kittingTable.locator(SelectorsERP969.KITTING_TABLE_NON_KIT_ROWS);
       const rowCount = await resultRows.count();
-      console.log(`Found ${rowCount} rows in the table after search`);
+      logger.log(`Found ${rowCount} rows in the table after search`);
 
       if (rowCount === 0) {
-        console.log('No rows found in table after search - this might be expected if the item was completed');
+        logger.log('No rows found in table after search - this might be expected if the item was completed');
         return;
       }
 
@@ -1611,7 +1612,7 @@ export const runERP_969_2 = () => {
       const nameCell = firstRow.locator(SelectorsERP969.TABLE_COMPLECT_NAME_CELL_PATTERN);
       await detailsPage.highlightElement(nameCell, HIGHLIGHT_PENDING);
       const nameValue = await nameCell.textContent();
-      console.log(`Found SB name: "${nameValue}"`);
+      logger.log(`Found SB name: "${nameValue}"`);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1662,12 +1663,12 @@ export const runERP_969_2 = () => {
           test.info(),
         );
         const titleText = await modalTitle.textContent();
-        console.log(`Modal title: "${titleText}"`);
-        console.log(`Expected order number: "${orderNumber}"`);
+        logger.log(`Modal title: "${titleText}"`);
+        logger.log(`Expected order number: "${orderNumber}"`);
 
         // Check if the title contains the order number or if it's a waybill format
         if (titleText?.includes('Накладная на комплектацию')) {
-          console.log('Modal title is in waybill format - this is expected');
+          logger.log('Modal title is in waybill format - this is expected');
           // For waybill modals, we might not have the order number in the title
           // Let's just verify it's a valid waybill title
           await expectSoftWithScreenshot(
@@ -1708,7 +1709,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const nameValue = await nameCell.textContent();
-        console.log(`Name cell value: "${nameValue}"`);
+        logger.log(`Name cell value: "${nameValue}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1735,7 +1736,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const requiredQuantity = await requiredQuantityCell.textContent();
-        console.log(`Required quantity: "${requiredQuantity}"`);
+        logger.log(`Required quantity: "${requiredQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1762,7 +1763,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const collectedQuantity = await collectedQuantityCell.textContent();
-        console.log(`Collected quantity: "${collectedQuantity}"`);
+        logger.log(`Collected quantity: "${collectedQuantity}"`);
         const collectedValue = parseInt(collectedQuantity?.trim() || '0');
 
         // Use async validation method for complex lookup
@@ -1795,7 +1796,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const ownQuantityValue = await ownQuantityInput.inputValue();
-        console.log(`Own quantity input value: "${ownQuantityValue}"`);
+        logger.log(`Own quantity input value: "${ownQuantityValue}"`);
         // This should be the remaining quantity to build
         const ownValue = parseInt(ownQuantityValue || '0');
         await expectSoftWithScreenshot(
@@ -1883,7 +1884,7 @@ export const runERP_969_2 = () => {
         test.info(),
       );
         const orderNumberCellText = await orderNumberCell.textContent();
-        console.log(`Order number cell: "${orderNumberCellText}"`);
+        logger.log(`Order number cell: "${orderNumberCellText}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1920,7 +1921,7 @@ export const runERP_969_2 = () => {
         test.info(),
       );
         const remainingQuantity = await remainingQuantityCell.textContent();
-        console.log(`Remaining quantity: "${remainingQuantity}"`);
+        logger.log(`Remaining quantity: "${remainingQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1947,7 +1948,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const totalLeftText = await totalLeftToDoLabel.textContent();
-        console.log(`Total left to do: "${totalLeftText}"`);
+        logger.log(`Total left to do: "${totalLeftText}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -1984,7 +1985,7 @@ export const runERP_969_2 = () => {
         // Get count of rows in tbody
         const detailRows = detailsTable.locator('tbody tr');
         const rowCount = await detailRows.count();
-        console.log(`Found ${rowCount} rows in details table`);
+        logger.log(`Found ${rowCount} rows in details table`);
 
         // Instead of expecting exactly 2 rows, let's find our specific details
         let foundDetail1 = false;
@@ -2007,7 +2008,7 @@ export const runERP_969_2 = () => {
           // Check if the name cell exists and is visible
           const nameCellExists = await nameCell.count();
           if (nameCellExists === 0) {
-            console.log(`Row ${i + 1} has no name cell - skipping validation`);
+            logger.log(`Row ${i + 1} has no name cell - skipping validation`);
             await detailsPage.highlightElement(row, {
               backgroundColor: 'blue',
               border: '2px solid gray',
@@ -2027,15 +2028,15 @@ export const runERP_969_2 = () => {
             test.info(),
           );
           const detailName = await nameCell.textContent();
-          console.log(`Row ${i + 1} detail name: "${detailName}"`);
+          logger.log(`Row ${i + 1} detail name: "${detailName}"`);
 
           // Check if this row contains one of our details
           if (detailName?.trim() === TEST_DATA.DETAIL_1_NAME) {
             foundDetail1 = true;
-            console.log(`Found ${TEST_DATA.DETAIL_1_NAME} in row ${i + 1}`);
+            logger.log(`Found ${TEST_DATA.DETAIL_1_NAME} in row ${i + 1}`);
           } else if (detailName?.trim() === TEST_DATA.DETAIL_2_NAME) {
             foundDetail2 = true;
-            console.log(`Found ${TEST_DATA.DETAIL_2_NAME} in row ${i + 1}`);
+            logger.log(`Found ${TEST_DATA.DETAIL_2_NAME} in row ${i + 1}`);
           }
 
           // Only validate details if this row contains one of our details
@@ -2052,7 +2053,7 @@ export const runERP_969_2 = () => {
             });
             await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
             const quantityValue = await quantityCell.textContent();
-            console.log(`Row ${i + 1} quantity: "${quantityValue}"`);
+            logger.log(`Row ${i + 1} quantity: "${quantityValue}"`);
             await expectSoftWithScreenshot(
               page,
               () => {
@@ -2073,7 +2074,7 @@ export const runERP_969_2 = () => {
             });
             await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
             const inKitsValue = await inKitsCell.textContent();
-            console.log(`Row ${i + 1} in kits: "${inKitsValue}"`);
+            logger.log(`Row ${i + 1} in kits: "${inKitsValue}"`);
             const inKitsValueNum = parseInt(inKitsValue?.trim() || '0');
             await expectSoftWithScreenshot(
               page,
@@ -2096,7 +2097,7 @@ export const runERP_969_2 = () => {
             });
             await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
             const freeQuantityValue = await freeQuantityCell.textContent();
-            console.log(`Row ${i + 1} free quantity: "${freeQuantityValue}"`);
+            logger.log(`Row ${i + 1} free quantity: "${freeQuantityValue}"`);
             const freeValue = parseInt(freeQuantityValue?.trim() || '0');
             await expectSoftWithScreenshot(
               page,
@@ -2129,7 +2130,7 @@ export const runERP_969_2 = () => {
             });
             await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
             const scladNeedValue = await scladNeedCell.textContent();
-            console.log(`Row ${i + 1} sclad need: "${scladNeedValue}"`);
+            logger.log(`Row ${i + 1} sclad need: "${scladNeedValue}"`);
             const scladNeedValueNum = parseInt(scladNeedValue?.trim() || '0');
 
             // Use async validation method for complex lookup
@@ -2155,7 +2156,7 @@ export const runERP_969_2 = () => {
             });
             await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
             const needValue = await needCell.textContent();
-            console.log(`Row ${i + 1} need: "${needValue}"`);
+            logger.log(`Row ${i + 1} need: "${needValue}"`);
             const needValueNum = parseInt(needValue?.trim() || '0');
 
             // Use async validation method for complex calculation
@@ -2188,7 +2189,7 @@ export const runERP_969_2 = () => {
           'Verify both details found',
           test.info(),
         );
-        console.log(`✅ Found both details: ${TEST_DATA.DETAIL_1_NAME} and ${TEST_DATA.DETAIL_2_NAME}`);
+        logger.log(`✅ Found both details: ${TEST_DATA.DETAIL_1_NAME} and ${TEST_DATA.DETAIL_2_NAME}`);
         await warehousePage.waitForTimeout(TIMEOUTS.VERY_LONG);
       });
     });
@@ -2219,7 +2220,7 @@ export const runERP_969_2 = () => {
       // Get all detail rows
       const detailRows = detailsTable.locator('tbody tr');
       const rowCount = await detailRows.count();
-      console.log(`Found ${rowCount} rows in details table for Step 19`);
+      logger.log(`Found ${rowCount} rows in details table for Step 19`);
 
       // Process each row that contains our details
       for (let i = 0; i < rowCount; i++) {
@@ -2233,7 +2234,7 @@ export const runERP_969_2 = () => {
         // Check if the name cell exists
         const nameCellExists = await nameCell.count();
         if (nameCellExists === 0) {
-          console.log(`Row ${i + 1} has no name cell - skipping`);
+          logger.log(`Row ${i + 1} has no name cell - skipping`);
           continue;
         }
 
@@ -2247,21 +2248,21 @@ export const runERP_969_2 = () => {
           test.info(),
         );
         const detailName = await nameCell.textContent();
-        console.log(`Row ${i + 1} detail name: "${detailName}"`);
+        logger.log(`Row ${i + 1} detail name: "${detailName}"`);
 
         // Only process rows that contain our details
         if (detailName?.trim() === TEST_DATA.DETAIL_1_NAME || detailName?.trim() === TEST_DATA.DETAIL_2_NAME) {
-          console.log(`Processing detail: ${detailName}`);
+          logger.log(`Processing detail: ${detailName}`);
 
           // Close all other tabs except the current one before clicking the name cell
           const pages = warehousePage.context().pages();
-          console.log(`Found ${pages.length} tabs before closing`);
+          logger.log(`Found ${pages.length} tabs before closing`);
 
           // Close tabs that are not the current warehouse page
           for (let i = pages.length - 1; i >= 0; i--) {
             if (pages[i] !== warehousePage) {
               await pages[i].close();
-              console.log(`Closed tab ${i}`);
+              logger.log(`Closed tab ${i}`);
               await warehousePage.waitForTimeout(TIMEOUTS.MEDIUM); // Small delay to see tabs closing
             }
           }
@@ -2299,8 +2300,8 @@ export const runERP_969_2 = () => {
 
           // Get the modal title text and validate it matches the detail name
           const modalTitleText = await modalTitleElement.textContent();
-          console.log(`Modal title: "${modalTitleText}"`);
-          console.log(`Expected detail name: "${detailName}"`);
+          logger.log(`Modal title: "${modalTitleText}"`);
+          logger.log(`Expected detail name: "${detailName}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2360,8 +2361,8 @@ export const runERP_969_2 = () => {
             test.info(),
           );
           const nameFieldValue = await nameField.inputValue();
-          console.log(`Name field value: "${nameFieldValue}"`);
-          console.log(`Expected detail name: "${detailName}"`);
+          logger.log(`Name field value: "${nameFieldValue}"`);
+          logger.log(`Expected detail name: "${detailName}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2458,14 +2459,14 @@ export const runERP_969_2 = () => {
           await warehousePage.mouse.click(1, 1);
           await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
 
-          console.log(`✅ Completed interaction with detail: ${detailName}`);
+          logger.log(`✅ Completed interaction with detail: ${detailName}`);
 
           // Break after processing the first detail
           break;
         }
       }
 
-      console.log(`✅ Step 19 completed - processed detail name interactions`);
+      logger.log(`✅ Step 19 completed - processed detail name interactions`);
     });
 
     await allure.step('Step 20: Click the actualize button to reload the waybill modal', async () => {
@@ -2506,7 +2507,7 @@ export const runERP_969_2 = () => {
       await warehousePage.waitForLoadState('networkidle');
       await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
 
-      console.log(`✅ Step 20 completed - actualize button clicked and page reloaded`);
+      logger.log(`✅ Step 20 completed - actualize button clicked and page reloaded`);
     });
 
     await allure.step('Step 21: Validate cell values after reload', async () => {
@@ -2531,7 +2532,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const requiredQuantity = await requiredQuantityCell.textContent();
-        console.log(`Required quantity after reload: "${requiredQuantity}"`);
+        logger.log(`Required quantity after reload: "${requiredQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2557,7 +2558,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const collectedQuantity = await collectedQuantityCell.textContent();
-        console.log(`Collected quantity after reload: "${collectedQuantity}"`);
+        logger.log(`Collected quantity after reload: "${collectedQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2583,7 +2584,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const ownQuantityValue = await ownQuantityInput.inputValue();
-        console.log(`Own quantity input after reload: "${ownQuantityValue}"`);
+        logger.log(`Own quantity input after reload: "${ownQuantityValue}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2657,7 +2658,7 @@ export const runERP_969_2 = () => {
         test.info(),
       );
         const remainingQuantity = await remainingQuantityCell.textContent();
-        console.log(`Remaining quantity after reload: "${remainingQuantity}"`);
+        logger.log(`Remaining quantity after reload: "${remainingQuantity}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2683,7 +2684,7 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         const totalLeftText = await totalLeftToDoLabel.textContent();
-        console.log(`Total left to do after reload: "${totalLeftText}"`);
+        logger.log(`Total left to do after reload: "${totalLeftText}"`);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -2714,7 +2715,7 @@ export const runERP_969_2 = () => {
         // Get the first row (should be the remaining detail after archiving one)
         const detailRows = detailsTable.locator('tbody tr');
         const rowCount = await detailRows.count();
-        console.log(`Found ${rowCount} rows in details table after reload`);
+        logger.log(`Found ${rowCount} rows in details table after reload`);
 
         if (rowCount > 0) {
           const firstRow = detailRows.first();
@@ -2724,7 +2725,7 @@ export const runERP_969_2 = () => {
             `[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`,
           );
           const detailName = await nameCell.textContent();
-          console.log(`Validating detail: "${detailName}"`);
+          logger.log(`Validating detail: "${detailName}"`);
 
           // Validate need cell contains original order quantity
           const needCell = firstRow.locator(
@@ -2737,7 +2738,7 @@ export const runERP_969_2 = () => {
           });
           await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
           const needValue = await needCell.textContent();
-          console.log(`Need cell value: "${needValue}"`);
+          logger.log(`Need cell value: "${needValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2763,12 +2764,12 @@ export const runERP_969_2 = () => {
           });
           await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
           const deficitValue = await deficitCell.textContent();
-          console.log(`Deficit cell value: "${deficitValue}"`);
+          logger.log(`Deficit cell value: "${deficitValue}"`);
           const deficitNum = parseInt(deficitValue?.trim() || '0');
 
           // Calculate expected deficit: quantity needed (orderedQuantity2) minus available quantity (DETAIL_NEW_QUANTITY)
           const expectedDeficit = parseInt(TEST_DATA.DETAIL_NEW_QUANTITY) - orderedQuantity2;
-          console.log(`Expected deficit: ${TEST_DATA.DETAIL_NEW_QUANTITY} - ${orderedQuantity2} = ${expectedDeficit}`);
+          logger.log(`Expected deficit: ${TEST_DATA.DETAIL_NEW_QUANTITY} - ${orderedQuantity2} = ${expectedDeficit}`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2795,7 +2796,7 @@ export const runERP_969_2 = () => {
           });
           await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
           const freeQuantityValue = await freeQuantityCell.textContent();
-          console.log(`Free quantity cell value: "${freeQuantityValue}"`);
+          logger.log(`Free quantity cell value: "${freeQuantityValue}"`);
           const freeValue = parseInt(freeQuantityValue?.trim() || '0');
 
           // Validate free quantity against warehouse data (same as Step 18)
@@ -2830,7 +2831,7 @@ export const runERP_969_2 = () => {
           });
           await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
           const quantityValue = await quantityCell.textContent();
-          console.log(`Quantity cell value: "${quantityValue}"`);
+          logger.log(`Quantity cell value: "${quantityValue}"`);
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -2861,7 +2862,7 @@ export const runERP_969_2 = () => {
           });
           await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
           const inKitsValue = await inKitsCell.textContent();
-          console.log(`In kits cell value: "${inKitsValue}"`);
+          logger.log(`In kits cell value: "${inKitsValue}"`);
           const inKitsValueNum = parseInt(inKitsValue?.trim() || '0');
           await expectSoftWithScreenshot(
             page,
@@ -2884,7 +2885,7 @@ export const runERP_969_2 = () => {
         }
       });
 
-      console.log(`✅ Step 21 completed - all cell values validated after reload`);
+      logger.log(`✅ Step 21 completed - all cell values validated after reload`);
     });
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -2906,7 +2907,7 @@ export const runERP_969_2 = () => {
     //     await detailsPage.cleanupTestDetail(page, DETAIL_2_NAME, TEST_DATA.PARTS_PAGE_DETAL_TABLE);
     //     await detailsPage.verifyDetailSuccessMessage("Сущность перемещена в архив");
 
-    //     console.log("✅ Test data cleanup completed");
+    //     logger.log("✅ Test data cleanup completed");
     // });
   });
 };

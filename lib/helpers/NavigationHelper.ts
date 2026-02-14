@@ -13,7 +13,7 @@
 import { Page } from '@playwright/test';
 import { ENV } from '../../config';
 import { PageObject } from '../Page';
-import logger from '../logger';
+import logger from '../utils/logger';
 
 export class NavigationHelper {
   constructor(private page: Page) {}
@@ -70,15 +70,15 @@ export class NavigationHelper {
    * @param dataTestId - The data-testid of the element to validate
    */
   async navigateToPage(url: string, dataTestId: string): Promise<void> {
-    console.log(`Navigating to ${url}`);
-    console.log(`PageTitleId to ${dataTestId}`);
+    logger.log(`Navigating to ${url}`);
+    logger.log(`PageTitleId to ${dataTestId}`);
 
     try {
       await this.page.goto(url);
     } catch (navigationError) {
       // Handle navigation interruption
       if (navigationError instanceof Error && navigationError.message.includes('interrupted')) {
-        console.log(`Navigation to ${url} was interrupted, waiting for page to stabilize...`);
+        logger.log(`Navigation to ${url} was interrupted, waiting for page to stabilize...`);
         await this.page.waitForLoadState('domcontentloaded');
         await this.page.waitForTimeout(2000);
       } else {

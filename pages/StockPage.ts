@@ -1,6 +1,7 @@
 import { expect, Page } from "@playwright/test";
 import { PageObject } from "../lib/Page";
 import { ENV, SELECTORS } from "../config";
+import logger from "../lib/utils/logger";
 
 export enum TableSelection {
     product = "Изделие",
@@ -59,7 +60,7 @@ export class CreateStockPage extends PageObject {
         //     tableDataTestId,
         //     "ModalAddWaybill-ShipmentDetailsTable-SelectColumn"
         // );
-        // console.log("numberColumn: ", numberColumn);
+        // logger.log("numberColumn: ", numberColumn);
         let remainingStock
         if (tableSelection === TableSelection.product) {
             remainingStock = await this.getValueOrClickFromFirstRow(
@@ -73,7 +74,7 @@ export class CreateStockPage extends PageObject {
             );
         }
         // Output to the console
-        console.log(
+        logger.log(
             `Количество ${serachName} на складе ${remainingStock}`
         );
 
@@ -121,7 +122,7 @@ export class CreateStockPage extends PageObject {
             ".scroll-table.detal",
             "OstatkiPCBDTable-Header-Stock"
         );
-        console.log("numberColumn: ", numberColumn);
+        logger.log("numberColumn: ", numberColumn);
         // Upd:
         let remainingStock = await this.getValueOrClickFromFirstRow(
             tableLocator,
@@ -129,7 +130,7 @@ export class CreateStockPage extends PageObject {
         );
 
         // Output to the console
-        console.log(
+        logger.log(
             `Количество ${serachName} на складе до оприходования  ${remainingStock}`
         );
 

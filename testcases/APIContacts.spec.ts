@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APIContacts } from "../pages/APIContacts";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runContactsAPI = () => {
     logger.info(`Starting Contacts API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runContactsAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Create contact without authentication", async () => {
-            console.log("Testing unauthenticated contact creation...");
+            logger.log("Testing unauthenticated contact creation...");
 
             const contactData = {
                 name: API_CONST.API_TEST_CONTACT_NAME,
@@ -36,11 +36,11 @@ export const runContactsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated contact creation correctly rejected with 401");
+            logger.log("✅ Unauthenticated contact creation correctly rejected with 401");
         });
 
         await test.step("Test 2: Create contact with SQL injection in name", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -63,11 +63,11 @@ export const runContactsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Create contact with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -90,7 +90,7 @@ export const runContactsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -101,7 +101,7 @@ export const runContactsAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -126,11 +126,11 @@ export const runContactsAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Create contact with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 name: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -153,11 +153,11 @@ export const runContactsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidCreateResponse.status);
             expect(invalidCreateResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Create contact with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 name: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -180,7 +180,7 @@ export const runContactsAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptyCreateResponse.status);
             expect(emptyCreateResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
     });
 
@@ -191,7 +191,7 @@ export const runContactsAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -203,11 +203,11 @@ export const runContactsAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for create contact", async () => {
-            console.log("Testing create contact response time performance...");
+            logger.log("Testing create contact response time performance...");
 
             const contactData = {
                 name: API_CONST.API_TEST_CONTACT_NAME,
@@ -224,11 +224,11 @@ export const runContactsAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceCreateResponse.status).toBe(201);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Create contact response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Create contact response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent contact operations", async () => {
-            console.log("Testing concurrent contact operations...");
+            logger.log("Testing concurrent contact operations...");
 
             const contactData = {
                 name: API_CONST.API_TEST_CONTACT_NAME_UPDATED,
@@ -247,7 +247,7 @@ export const runContactsAPI = () => {
                 expect(response.status).toBe(201);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent contact operations handled successfully");
+            logger.log("✅ Concurrent contact operations handled successfully");
         });
     });
 };

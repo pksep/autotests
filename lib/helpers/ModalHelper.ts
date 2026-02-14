@@ -14,7 +14,7 @@ import { Page, expect, Locator, TestInfo } from '@playwright/test';
 import { WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import { extractIdFromSelector } from '../utils/utilities';
 import { expectSoftWithScreenshot } from '../utils/utilities';
-import logger from '../logger';
+import logger from '../utils/logger';
 
 export class ModalHelper {
   constructor(private page: Page) {}
@@ -209,7 +209,7 @@ export class ModalHelper {
           .map(node => node.textContent?.trim() || '')
           .join(' ');
       });
-      console.log(`H4 Element ${i + 1}:`, title);
+      logger.log(`H4 Element ${i + 1}:`, title);
 
       if (title) {
         titles.push(title);
@@ -280,7 +280,7 @@ export class ModalHelper {
       });
 
       const title = await h4Tag.textContent();
-      console.log(`H4 Element ${i + 1}:`, title);
+      logger.log(`H4 Element ${i + 1}:`, title);
 
       if (title) {
         titles.push(title.trim());
@@ -420,9 +420,9 @@ export class ModalHelper {
     if (dialogCount === 0 && !testId.endsWith('-ModalRight')) {
       dialog = page.locator(`dialog[data-testid^="${testId}"][data-testid$="-ModalRight"][open]`);
       dialogCount = await dialog.count();
-      console.log(`DEBUG: Found ${dialogCount} dialogs matching testId pattern with suffix: ${testId}*-ModalRight`);
+      logger.log(`DEBUG: Found ${dialogCount} dialogs matching testId pattern with suffix: ${testId}*-ModalRight`);
     } else {
-      console.log(`DEBUG: Found ${dialogCount} dialogs matching testId pattern: ${testId}*`);
+      logger.log(`DEBUG: Found ${dialogCount} dialogs matching testId pattern: ${testId}*`);
     }
 
     const titles: string[] = [];
@@ -431,13 +431,13 @@ export class ModalHelper {
     const h3Elements = await dialog.locator('h3').elementHandles();
     const h4Elements = await dialog.locator('h4').elementHandles();
 
-    console.log(`DEBUG: Found ${h3Elements.length} H3 elements and ${h4Elements.length} H4 elements`);
+    logger.log(`DEBUG: Found ${h3Elements.length} H3 elements and ${h4Elements.length} H4 elements`);
 
     // Process H3 elements
     for (const h3Tag of h3Elements) {
       try {
         const title = await h3Tag.textContent();
-        console.log(`DEBUG: H3 element text: "${title}"`);
+        logger.log(`DEBUG: H3 element text: "${title}"`);
         if (title) {
           titles.push(title.trim()); // Trim to remove unnecessary whitespace
           // Cast the element to HTMLElement before accessing style
@@ -456,7 +456,7 @@ export class ModalHelper {
     for (const h4Tag of h4Elements) {
       try {
         const title = await h4Tag.textContent();
-        console.log(`DEBUG: H4 element text: "${title}"`);
+        logger.log(`DEBUG: H4 element text: "${title}"`);
         if (title) {
           titles.push(title.trim()); // Trim to remove unnecessary whitespace
           // Cast the element to HTMLElement before accessing style
@@ -499,8 +499,8 @@ export class ModalHelper {
     const normalizedH4Titles = h4Titles.map(title => title.trim());
 
     // Log for debugging
-    console.log('Expected Titles:', expectedTitlesNormalized);
-    console.log('Received Titles:', normalizedH4Titles);
+    logger.log('Expected Titles:', expectedTitlesNormalized);
+    logger.log('Received Titles:', normalizedH4Titles);
 
     // Validate length
     await expectSoftWithScreenshot(

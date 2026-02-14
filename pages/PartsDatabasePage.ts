@@ -3,7 +3,7 @@ import { Page, Locator, expect, TestInfo } from '@playwright/test';
 import { PageObject, expectSoftWithScreenshot } from '../lib/Page';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { ENV, SELECTORS, CONST } from '../config';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { title } from 'process';
 import { toNamespacedPath } from 'path';
 import testData from '../testdata/PU18-Names.json'; // Import your test data
@@ -1003,7 +1003,7 @@ export class CreatePartsDatabasePage extends PageObject {
     return;
   }
   async printParsedTableData(): Promise<void> {
-    console.log('Parsed Table Data Overview:');
+    logger.log('Parsed Table Data Overview:');
 
     // Define the ordered keys for structured output
     const orderedKeys = ['СБ', 'Д', 'ПД', 'МД', 'РМ'];
@@ -1013,11 +1013,11 @@ export class CreatePartsDatabasePage extends PageObject {
       const groupItems = this.parsedData[key] || [];
       const totalCount = Array.isArray(groupItems) ? groupItems.length : 0; // Count items in the group safely
 
-      console.log(`\n${key} (Items in this Group: ${totalCount}):`);
+      logger.log(`\n${key} (Items in this Group: ${totalCount}):`);
       console.table(groupItems);
     });
 
-    console.log('\nEnd of Parsed Table Data.');
+    logger.log('\nEnd of Parsed Table Data.');
   }
 
   async processTableDataAndHandleModals(
@@ -1558,7 +1558,7 @@ export class CreatePartsDatabasePage extends PageObject {
     const itemExists = await this.checkItemExistsInBottomTable(page, searchValue, dialogTestId, bottomTableTestId);
 
     if (!itemExists) {
-      //     console.log(`Skipping addition: '${searchValue}' already exists in the bottom table.`);
+      //     logger.log(`Skipping addition: '${searchValue}' already exists in the bottom table.`);
       //     return; // ✅ Skip the addition process
       // }
 
@@ -2370,7 +2370,7 @@ export class CreatePartsDatabasePage extends PageObject {
         return false;
       }
 
-      console.log(`Table "${tableTitle}" validation passed.`);
+      logger.log(`Table "${tableTitle}" validation passed.`);
       return true;
     } catch (error) {
       console.error(`Error validating table "${tableTitle}":`, error);
@@ -2445,9 +2445,9 @@ export class CreatePartsDatabasePage extends PageObject {
           }
         }
 
-        console.log(`Field "${field.title}" is visible and ${field.type === 'input' && field.title === 'Медиа файлы' ? 'present' : 'writable'}.`);
+        logger.log(`Field "${field.title}" is visible and ${field.type === 'input' && field.title === 'Медиа файлы' ? 'present' : 'writable'}.`);
       }
-      console.log('All input fields validated successfully.');
+      logger.log('All input fields validated successfully.');
       return true;
     } catch (error) {
       console.error('Error during input field validation:', error);
@@ -2500,7 +2500,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 if (!groupDetected.has(group)) {
                   currentGroup = group;
                   groupDetected.add(group);
-                  console.log(`Detected group header: ${currentGroup}`);
+                  logger.log(`Detected group header: ${currentGroup}`);
                 }
                 continue;
               }
@@ -2548,7 +2548,7 @@ export class CreatePartsDatabasePage extends PageObject {
                 }
 
                 if (currentGroup === 'СБ') {
-                  console.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
+                  logger.log(`Opening modal for СБ item: ${rowData[1]} (quantity: ${item.quantity})`);
                   await nestedRow.click();
                   await page.waitForTimeout(500);
 
@@ -2572,7 +2572,7 @@ export class CreatePartsDatabasePage extends PageObject {
                       row.style.border = '2px solid red';
                     });
                     const parentDesignation = await designationElement.textContent();
-                    console.log(`Extracted ParentDesignation: ${parentDesignation}`);
+                    logger.log(`Extracted ParentDesignation: ${parentDesignation}`);
 
                     // ✅ Ensure recursion happens only if parentDesignation is valid
                     if (parentDesignation) {
@@ -2582,11 +2582,11 @@ export class CreatePartsDatabasePage extends PageObject {
 
                   await page.mouse.click(1, 1);
                   await page.waitForTimeout(1000);
-                  console.log(`Closed modal for ${rowData[1]}`);
+                  logger.log(`Closed modal for ${rowData[1]}`);
                 }
 
                 if (currentGroup === 'Д') {
-                  console.log(`Opening material modal for Д item: ${rowData[1]}`);
+                  logger.log(`Opening material modal for Д item: ${rowData[1]}`);
                   await nestedRow.click();
 
                   const materialElement = page.locator(`[data-testid^="ModalDetal"][data-testid$="CharacteristicsMaterial-Items"]`);
@@ -2605,26 +2605,26 @@ export class CreatePartsDatabasePage extends PageObject {
                   // ✅ Call the helper function to find the correct material type
                   if (materialText) {
                     materialGroup = await this.findMaterialType(page, materialText);
-                    console.log('Searching for material: ' + materialText);
-                    console.log('Found in group: ' + materialGroup);
+                    logger.log('Searching for material: ' + materialText);
+                    logger.log('Found in group: ' + materialGroup);
                   } else {
                     console.warn('Material text is null, skipping material type lookup.');
                   }
 
                   if (materialText) {
-                    console.log(`🔎 Processing material: ${materialText}`);
-                    console.log(`📌 Found in group: ${materialGroup}`);
+                    logger.log(`🔎 Processing material: ${materialText}`);
+                    logger.log(`📌 Found in group: ${materialGroup}`);
 
                     if (materialGroup === 'ПД') {
-                      console.log(`🛠 Checking if ${materialText} exists in ПД...`);
+                      logger.log(`🛠 Checking if ${materialText} exists in ПД...`);
                       const existingMaterial = this.parsedData['ПД'].find(mat => mat.name === materialText.trim());
 
                       if (existingMaterial) {
-                        console.log(`✅ Existing ПД item found: ${existingMaterial.name}, current quantity: ${existingMaterial.quantity}`);
+                        logger.log(`✅ Existing ПД item found: ${existingMaterial.name}, current quantity: ${existingMaterial.quantity}`);
                         existingMaterial.quantity += item.quantity;
-                        console.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
+                        logger.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
                       } else {
-                        console.log(`➕ Adding new ПД item: ${materialText}, quantity: ${item.quantity}`);
+                        logger.log(`➕ Adding new ПД item: ${materialText}, quantity: ${item.quantity}`);
                         this.parsedData['ПД'].push({
                           designation: '-',
                           name: materialText.trim(),
@@ -2633,29 +2633,29 @@ export class CreatePartsDatabasePage extends PageObject {
                         });
                       }
                     } else if (materialGroup === 'МД') {
-                      console.log(`🛠 Checking if ${materialText} exists in МД...`);
+                      logger.log(`🛠 Checking if ${materialText} exists in МД...`);
                       const existingMaterial = this.parsedData['МД'].find(mat => mat.material === materialText.trim());
 
                       if (existingMaterial) {
-                        console.log(`✅ Existing МД item found: ${existingMaterial.material}, overriding quantity to 1.`);
+                        logger.log(`✅ Existing МД item found: ${existingMaterial.material}, overriding quantity to 1.`);
                         existingMaterial.quantity = 1;
                       } else {
-                        console.log(`➕ Adding new МД item: ${materialText}, quantity: 1`);
+                        logger.log(`➕ Adding new МД item: ${materialText}, quantity: 1`);
                         this.parsedData['МД'].push({
                           material: materialText.trim(),
                           quantity: 1,
                         });
                       }
                     } else {
-                      console.log(`🛠 Checking if ${materialText} exists in ${materialGroup}...`);
+                      logger.log(`🛠 Checking if ${materialText} exists in ${materialGroup}...`);
                       const existingMaterial = this.parsedData[materialGroup].find(mat => mat.material === materialText.trim());
 
                       if (existingMaterial) {
-                        console.log(`✅ Existing ${materialGroup} item found: ${existingMaterial.material}, current quantity: ${existingMaterial.quantity}`);
+                        logger.log(`✅ Existing ${materialGroup} item found: ${existingMaterial.material}, current quantity: ${existingMaterial.quantity}`);
                         existingMaterial.quantity += item.quantity;
-                        console.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
+                        logger.log(`🔄 Updated quantity: ${existingMaterial.quantity}`);
                       } else {
-                        console.log(`➕ Adding new ${materialGroup} item: ${materialText}, quantity: ${item.quantity}`);
+                        logger.log(`➕ Adding new ${materialGroup} item: ${materialText}, quantity: ${item.quantity}`);
                         this.parsedData[materialGroup].push({
                           material: materialText.trim(),
                           quantity: item.quantity,
@@ -2856,21 +2856,21 @@ export class CreatePartsDatabasePage extends PageObject {
       const table = dialog.locator(selector);
 
       if ((await table.count()) === 0) {
-        console.log(`Skipping ${group}: Table does not exist.`);
+        logger.log(`Skipping ${group}: Table does not exist.`);
         continue;
       }
 
       try {
         await table.waitFor({ state: 'attached', timeout: 3000 });
       } catch {
-        console.log(`Skipping ${group}: Table is not attached.`);
+        logger.log(`Skipping ${group}: Table is not attached.`);
         continue;
       }
 
       await page.waitForTimeout(500);
 
       if ((await table.locator('tbody > tr').count()) === 0) {
-        console.log(`Skipping ${group}: Table is empty.`);
+        logger.log(`Skipping ${group}: Table is empty.`);
         continue;
       }
 
@@ -2892,7 +2892,7 @@ export class CreatePartsDatabasePage extends PageObject {
         );
 
         if (group === 'ПД') {
-          console.log(rowData);
+          logger.log(rowData);
         }
 
         // ✅ Handle РМ items separately (only 3 columns)
@@ -3080,7 +3080,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
       // Retrieve and log the text content for debugging
       const dialogText = await successDialog.textContent();
-      console.log('Success dialog text:', dialogText);
+      logger.log('Success dialog text:', dialogText);
 
       // Verify that the notification contains the expected text
       if (dialogText) {
@@ -3388,7 +3388,7 @@ export class CreatePartsDatabasePage extends PageObject {
     const rowCount = await rows.count();
 
     if (rowCount === 0) {
-      console.log(`No existing ${detailName} found for cleanup`);
+      logger.log(`No existing ${detailName} found for cleanup`);
       return;
     }
 
@@ -3429,7 +3429,7 @@ export class CreatePartsDatabasePage extends PageObject {
       await page.waitForTimeout(1000);
     }
 
-    console.log(`✅ Cleaned up ${matchingRows.length} instances of ${detailName}`);
+    logger.log(`✅ Cleaned up ${matchingRows.length} instances of ${detailName}`);
   }
 
   /**
@@ -3453,7 +3453,7 @@ export class CreatePartsDatabasePage extends PageObject {
     confirmButtonSelector: string = SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
   ): Promise<void> {
     await allure.step(`Clean up ${itemTypeName} items`, async () => {
-      console.log(`${itemTypeName}: Cleaning up ${itemTypeName} items...`);
+      logger.log(`${itemTypeName}: Cleaning up ${itemTypeName} items...`);
 
       // Handle multiple search inputs by selecting the correct one based on position
       let searchInput = this.page.locator(searchInputSelector);
@@ -3473,7 +3473,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
       const rows = this.page.locator(`${tableSelector} tbody tr`);
       const rowCount = await rows.count();
-      console.log(`Found ${rowCount} ${itemTypeName} items to delete`);
+      logger.log(`Found ${rowCount} ${itemTypeName} items to delete`);
 
       // Delete items from bottom up
       for (let i = rowCount - 1; i >= 0; i--) {
@@ -3505,7 +3505,7 @@ export class CreatePartsDatabasePage extends PageObject {
         await this.waitForNetworkIdle();
       }
 
-      console.log(`Deleted ${rowCount} ${itemTypeName} items`);
+      logger.log(`Deleted ${rowCount} ${itemTypeName} items`);
     });
   }
 
@@ -3580,7 +3580,7 @@ export class CreatePartsDatabasePage extends PageObject {
     // Check for any notification message when detail is added to assembly
     await this.verifyDetailSuccessMessage('Деталь добавлена в спецификацию');
 
-    console.log(`✅ Added detail "${detailName}" to assembly`);
+    logger.log(`✅ Added detail "${detailName}" to assembly`);
   }
 
   // --- End Additional U006 reusable methods ---
@@ -3948,7 +3948,7 @@ export class CreatePartsDatabasePage extends PageObject {
     const inKits = parseInt(inKitsValue?.trim() || '0', 10);
     const freeQuantity = stock - inKits;
 
-    console.log(`Warehouse data for ${detailName}: Stock=${stock}, InKits=${inKits}, FreeQuantity=${freeQuantity}`);
+    logger.log(`Warehouse data for ${detailName}: Stock=${stock}, InKits=${inKits}, FreeQuantity=${freeQuantity}`);
 
     await warehousePage.close();
     return freeQuantity;
@@ -3968,7 +3968,7 @@ export class CreatePartsDatabasePage extends PageObject {
       // 1. Query all orders for this assembly
       // 2. Sum up all completed quantities
       // 3. Compare with the provided value
-      console.log(`Validating collected quantity for assembly: ${assemblyName}, minimum expected: ${expectedMinimum}`);
+      logger.log(`Validating collected quantity for assembly: ${assemblyName}, minimum expected: ${expectedMinimum}`);
       return true;
     } catch (error) {
       console.error(`Error validating collected quantity: ${error}`);
@@ -3990,7 +3990,7 @@ export class CreatePartsDatabasePage extends PageObject {
       // 1. Query all active orders that use this detail
       // 2. Sum up all required quantities
       // 3. Compare with the provided value
-      console.log(`Validating sclad need for detail: ${detailName}, current value: ${currentValue}`);
+      logger.log(`Validating sclad need for detail: ${detailName}, current value: ${currentValue}`);
       return currentValue >= 0;
     } catch (error) {
       console.error(`Error validating sclad need: ${error}`);
@@ -4015,7 +4015,7 @@ export class CreatePartsDatabasePage extends PageObject {
       // 2. Calculate total required for the order
       // 3. Subtract what's already prepared (inKitsValue)
       // 4. Compare with the provided need value
-      console.log(`Validating need quantity for detail: ${detailName} in assembly: ${assemblyName}, current need: ${currentNeed}, in kits: ${inKitsValue}`);
+      logger.log(`Validating need quantity for detail: ${detailName} in assembly: ${assemblyName}, current need: ${currentNeed}, in kits: ${inKitsValue}`);
       return currentNeed >= 0 && currentNeed >= inKitsValue;
     } catch (error) {
       console.error(`Error validating need quantity: ${error}`);
@@ -4033,12 +4033,12 @@ export class CreatePartsDatabasePage extends PageObject {
   async validateProgressPercentage(collectedQuantity: number, requiredQuantity: number, expectedPercentage?: number): Promise<boolean> {
     try {
       if (requiredQuantity === 0) {
-        console.log('Required quantity is 0, cannot calculate percentage');
+        logger.log('Required quantity is 0, cannot calculate percentage');
         return true;
       }
 
       const calculatedPercentage = Math.round((collectedQuantity / requiredQuantity) * 100);
-      console.log(`Progress percentage: ${collectedQuantity}/${requiredQuantity} = ${calculatedPercentage}%`);
+      logger.log(`Progress percentage: ${collectedQuantity}/${requiredQuantity} = ${calculatedPercentage}%`);
 
       if (expectedPercentage !== undefined) {
         return calculatedPercentage === expectedPercentage;
@@ -4089,7 +4089,7 @@ export class CreatePartsDatabasePage extends PageObject {
     const rowCount = await rows.count();
 
     if (rowCount === 0) {
-      console.log(`No existing ${itemName} found for archiving`);
+      logger.log(`No existing ${itemName} found for archiving`);
       return;
     }
 
@@ -4099,7 +4099,7 @@ export class CreatePartsDatabasePage extends PageObject {
       const rowText = await rows.nth(i).textContent();
       if (rowText && rowText.trim() === itemName) {
         foundRow = rows.nth(i);
-        console.log(`Found ${itemName} in row ${i + 1}`);
+        logger.log(`Found ${itemName} in row ${i + 1}`);
         break;
       }
     }
@@ -4140,7 +4140,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
       // Get the modal text and verify it contains the correct detail name
       const modalText = await confirmModal.textContent();
-      console.log(`Modal text: "${modalText}"`);
+      logger.log(`Modal text: "${modalText}"`);
       expect(modalText).toContain(itemName);
       expect(modalText).toContain('Вы уверены, что хотите перенести в архив');
       expect(modalText).toContain('Все, связанные с этой сущностью, наборы будут деактивированы');
@@ -4170,9 +4170,9 @@ export class CreatePartsDatabasePage extends PageObject {
       });
       await page.waitForTimeout(1000);
 
-      console.log(`✅ Successfully archived: ${itemName}`);
+      logger.log(`✅ Successfully archived: ${itemName}`);
     } else {
-      console.log(`Item "${itemName}" not found in table for archiving`);
+      logger.log(`Item "${itemName}" not found in table for archiving`);
     }
   }
 
@@ -4194,7 +4194,7 @@ export class CreatePartsDatabasePage extends PageObject {
 
     while (iteration < maxIterations) {
       iteration++;
-      console.log(`Archive iteration ${iteration} for products with prefix: ${searchPrefix}`);
+      logger.log(`Archive iteration ${iteration} for products with prefix: ${searchPrefix}`);
 
       // Search for products
       const table = this.page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
@@ -4214,7 +4214,7 @@ export class CreatePartsDatabasePage extends PageObject {
       const rowCount = await rows.count();
 
       if (rowCount === 0) {
-        console.log(`✅ No more products found with prefix "${searchPrefix}"`);
+        logger.log(`✅ No more products found with prefix "${searchPrefix}"`);
         break;
       }
 
@@ -4226,7 +4226,7 @@ export class CreatePartsDatabasePage extends PageObject {
       const currentRows = tableBody.locator('tr');
       const currentRowCount = await currentRows.count();
       if (currentRowCount === 0) {
-        console.log('Table became empty during operation');
+        logger.log('Table became empty during operation');
         break;
       }
 
@@ -4236,7 +4236,7 @@ export class CreatePartsDatabasePage extends PageObject {
       try {
         await targetRow.click({ timeout: 5000 });
       } catch (error) {
-        console.log(`Row click failed (may have been deleted): ${error}`);
+        logger.log(`Row click failed (may have been deleted): ${error}`);
         // Re-search and continue
         continue;
       }
@@ -4257,7 +4257,7 @@ export class CreatePartsDatabasePage extends PageObject {
       }
 
       if (!isEnabled) {
-        console.log('Archive button is disabled after retries. Re-checking if item still exists...');
+        logger.log('Archive button is disabled after retries. Re-checking if item still exists...');
         // Re-search to see if the item was actually archived or if it still exists
         await this.page.waitForTimeout(1000);
         const recheckTable = this.page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
@@ -4267,18 +4267,18 @@ export class CreatePartsDatabasePage extends PageObject {
         const recheckRowCount = await recheckRows.count();
 
         if (recheckRowCount === 0) {
-          console.log('Item was actually archived (table is now empty).');
+          logger.log('Item was actually archived (table is now empty).');
           archivedCount++;
           break;
         }
 
         if (recheckRowCount < rowCount) {
-          console.log('Item count decreased, item may have been archived. Continuing...');
+          logger.log('Item count decreased, item may have been archived. Continuing...');
           archivedCount++;
           continue;
         }
 
-        console.log('Archive button is disabled and item still exists, stopping');
+        logger.log('Archive button is disabled and item still exists, stopping');
         break;
       }
 
@@ -4297,7 +4297,7 @@ export class CreatePartsDatabasePage extends PageObject {
     if (iteration >= maxIterations) {
       console.warn(`⚠️ Reached maximum iterations (${maxIterations}) for archiving products with prefix "${searchPrefix}"`);
     } else {
-      console.log(`✅ Completed archiving products with prefix "${searchPrefix}" after ${iteration} iterations`);
+      logger.log(`✅ Completed archiving products with prefix "${searchPrefix}" after ${iteration} iterations`);
     }
 
     return archivedCount;
@@ -4586,14 +4586,14 @@ export class CreatePartsDatabasePage extends PageObject {
       });
     } catch (error) {
       // If search fails because table is empty/hidden (no results), this is actually success
-      console.log(`Search completed - table may be empty (success condition): ${String(error)}`);
+      logger.log(`Search completed - table may be empty (success condition): ${String(error)}`);
       await page.waitForTimeout(1000); // Give time for any UI updates
     }
 
     const table = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
     const rows = table.locator('tbody tr');
     const remainingCount = await rows.count().catch(() => 0); // If table doesn't exist, count is 0 (success)
-    console.log(`Verify products: found ${remainingCount} test products with prefix "${searchPrefix}"`);
+    logger.log(`Verify products: found ${remainingCount} test products with prefix "${searchPrefix}"`);
 
     await expectSoftWithScreenshot(
       page,
@@ -4605,7 +4605,7 @@ export class CreatePartsDatabasePage extends PageObject {
     );
 
     if (remainingCount === 0) {
-      console.log(`✅ Все тестовые изделия с префиксом "${searchPrefix}" успешно удалены.`);
+      logger.log(`✅ Все тестовые изделия с префиксом "${searchPrefix}" успешно удалены.`);
     } else {
       console.warn(`⚠️ Осталось ${remainingCount} изделий с префиксом "${searchPrefix}" после удаления.`);
     }
@@ -5104,7 +5104,7 @@ export class CreatePartsDatabasePage extends PageObject {
     inCreatorMode: boolean = false,
   ): Promise<boolean> {
     if (operationTypes.length === 0) {
-      console.log(`No tech processes to add for ${objectType} "${objectName}"`);
+      logger.log(`No tech processes to add for ${objectType} "${objectName}"`);
       return true;
     }
 
@@ -5230,12 +5230,12 @@ export class CreatePartsDatabasePage extends PageObject {
       for (let i = 0; i < operationTypes.length; i++) {
         const operationType = operationTypes[i];
         await allure.step(`Add operation "${operationType}" (${i + 1}/${operationTypes.length})`, async () => {
-          console.log(`🔄 Starting to add operation ${i + 1}/${operationTypes.length}: "${operationType}"`);
+          logger.log(`🔄 Starting to add operation ${i + 1}/${operationTypes.length}: "${operationType}"`);
           
           // If this is not the first operation, the modal might have closed after saving
           // Check if modal is still open, if not, click the tech process button again
           if (i > 0) {
-            console.log(`📋 Checking if modal is still open for operation ${i + 1}...`);
+            logger.log(`📋 Checking if modal is still open for operation ${i + 1}...`);
             await this.waitForNetworkIdle();
             await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
             
@@ -5243,10 +5243,10 @@ export class CreatePartsDatabasePage extends PageObject {
             const modalContent = this.page.locator(SelectorsPartsDataBase.MODAL_CONTENT);
             const isModalOpen = await modalContent.isVisible().catch(() => false);
             
-            console.log(`📋 Modal is ${isModalOpen ? 'open' : 'closed'} for operation ${i + 1}`);
+            logger.log(`📋 Modal is ${isModalOpen ? 'open' : 'closed'} for operation ${i + 1}`);
             
             if (!isModalOpen) {
-              console.log(`🔄 Modal closed, reopening for operation ${i + 1}...`);
+              logger.log(`🔄 Modal closed, reopening for operation ${i + 1}...`);
               // Modal closed, reopen it
               // Wait for the page to be ready first
               await this.waitForNetworkIdle();
@@ -5262,7 +5262,7 @@ export class CreatePartsDatabasePage extends PageObject {
               await this.page.waitForSelector(SelectorsPartsDataBase.MODAL_CONTENT, { timeout: WAIT_TIMEOUTS.STANDARD });
               await this.waitForNetworkIdle();
               await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-              console.log(`✅ Modal reopened for operation ${i + 1}`);
+              logger.log(`✅ Modal reopened for operation ${i + 1}`);
             }
           }
 
@@ -5364,7 +5364,7 @@ export class CreatePartsDatabasePage extends PageObject {
           await mainSaveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await this.waitAndHighlight(mainSaveButton);
           
-          console.log(`💾 Clicking save button for operation "${operationType}" (${i + 1}/${operationTypes.length})`);
+          logger.log(`💾 Clicking save button for operation "${operationType}" (${i + 1}/${operationTypes.length})`);
           await mainSaveButton.click({ force: true });
           await this.page.waitForTimeout(TIMEOUTS.LONG);
           await this.waitForNetworkIdle();
@@ -5373,7 +5373,7 @@ export class CreatePartsDatabasePage extends PageObject {
           await this.page.waitForTimeout(TIMEOUTS.LONG);
           await this.waitForNetworkIdle();
 
-          console.log(`✅ Added operation "${operationType}" to ${objectType} "${objectName}"`);
+          logger.log(`✅ Added operation "${operationType}" to ${objectType} "${objectName}"`);
         });
       }
 

@@ -1,6 +1,6 @@
 import { Page, Locator, expect, TestInfo } from "@playwright/test";
 import { PageObject, expectSoftWithScreenshot } from "../lib/Page";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 import { title } from "process";
 import { toNamespacedPath } from "path";
 //import testData from '../testdata/PU18-Names.json'; // Import your test data
@@ -254,14 +254,14 @@ export class CreateMaterialsDatabasePage extends PageObject {
     async cleanupTestMaterials(materialNames: string[], testInfo: TestInfo): Promise<void> {
         await allure.step(`Clean up ${materialNames.length} test materials`, async () => {
             if (materialNames.length === 0) {
-                console.log('No materials to clean up');
+                logger.log('No materials to clean up');
                 return;
             }
 
             // Extract prefix from first material name (remove trailing underscore and number)
             // e.g., "ERP2969_MATERIAL_001" -> "ERP2969_MATERIAL"
             const materialPrefix = materialNames[0]?.replace(/_\d+$/, '') || '';
-            console.log(`Searching for materials with prefix: "${materialPrefix}"`);
+            logger.log(`Searching for materials with prefix: "${materialPrefix}"`);
 
             // Navigate to materials database page
             await this.goto(SELECTORS.MAINMENU.MATERIALS.URL);
@@ -316,7 +316,7 @@ export class CreateMaterialsDatabasePage extends PageObject {
             // Find all rows in the table
             const rows = materialTable.locator('tbody tr');
             const rowCount = await rows.count();
-            console.log(`Found ${rowCount} rows after searching for material prefix "${materialPrefix}"`);
+            logger.log(`Found ${rowCount} rows after searching for material prefix "${materialPrefix}"`);
 
             // Create a set of material names for quick lookup
             const materialNamesSet = new Set(materialNames.map(name => name.toLowerCase()));
@@ -349,7 +349,7 @@ export class CreateMaterialsDatabasePage extends PageObject {
                     testInfo,
                 );
             } else {
-                console.log(`No materials found with prefix "${materialPrefix}" - cleanup may have already been completed`);
+                logger.log(`No materials found with prefix "${materialPrefix}" - cleanup may have already been completed`);
             }
 
             // Archive from bottom up - archive all rows that match any of the material names
@@ -422,7 +422,7 @@ export class CreateMaterialsDatabasePage extends PageObject {
                 }
                 
                 if (!isEnabled) {
-                    console.log(`⚠️ Archive button is disabled for material "${matchedMaterialName}" - material may be in use or row not properly selected. Skipping...`);
+                    logger.log(`⚠️ Archive button is disabled for material "${matchedMaterialName}" - material may be in use or row not properly selected. Skipping...`);
                     continue; // Skip this row and continue with next
                 }
                 
@@ -464,11 +464,11 @@ export class CreateMaterialsDatabasePage extends PageObject {
                 await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
                 await this.waitForNetworkIdle();
 
-                console.log(`✅ Archived material "${matchedMaterialName}" from row ${i}`);
+                logger.log(`✅ Archived material "${matchedMaterialName}" from row ${i}`);
                 archivedCount++;
             }
 
-            console.log(`✅ Completed archiving ${archivedCount} materials with prefix "${materialPrefix}"`);
+            logger.log(`✅ Completed archiving ${archivedCount} materials with prefix "${materialPrefix}"`);
         });
     }
 }

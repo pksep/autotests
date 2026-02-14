@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { SELECTORS } from '../config';
 import { AbstractPage } from '../lib/AbstractPage';
-import logger from '../lib/logger'; // Added logger import
+import logger from '../lib/utils/logger'; // Added logger import
 
 export function runTC002(dataTestId: string) {
     test(`TC002 - Verify Page URL for data-testid: ${dataTestId}`, async ({ page }) => {

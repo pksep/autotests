@@ -3,14 +3,17 @@ import DailyRotateFile from 'winston-daily-rotate-file'; // Import DailyRotateFi
 import fs from 'fs'; // Import fs module to check and create directories
 import path from 'path'; // Import path module for working with file and directory paths
 
-// Import ENV configuration
-import { ENV } from '../config'; // Update the path to your actual config file location
+// Import ENV configuration (from project root config)
+import { ENV } from '../../config';
 
 // Ensure the logs directory exists, creating it if necessary
 const logsDir = path.resolve('logs'); // Define the path for the logs directory
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir); // Create the directory if it doesn't exist
 }
+
+// All log levels driven by ENV.LOG_LEVEL (set in config.ts or LOG_LEVEL env var)
+const logLevel = ENV.LOG_LEVEL;
 
 // Transport for general info and debug logs, rotating daily
 const infoTransport = new DailyRotateFile({
@@ -20,7 +23,7 @@ const infoTransport = new DailyRotateFile({
     zippedArchive: true, // Compress old log files
     maxSize: '20m', // Maximum log file size before rotating
     maxFiles: '14d', // Retain logs for 14 days
-    level: ENV.DEBUG ? 'debug' : 'info', // Log level for this transport based on ENV.DEBUG
+    level: logLevel,
 });
 
 // Transport for warnings and errors, rotating daily
@@ -34,9 +37,9 @@ const errorTransport = new DailyRotateFile({
     level: 'error', // Log level for this transport (error and above)
 });
 
-// Transport for console output, with colored logs
+// Console output uses the same LOG_LEVEL you set in config
 const consoleTransport = new transports.Console({
-    level: ENV.DEBUG ? 'debug' : 'warn', // Set log level to 'debug' if ENV.DEBUG is true, otherwise 'warn'
+    level: logLevel,
     format: format.combine(
         format.colorize(), // Adds color to console output based on log level
         format.printf(({ level, message, timestamp }) => `${timestamp} [${level}]: ${message}`) // Log format for console output
@@ -45,7 +48,7 @@ const consoleTransport = new transports.Console({
 
 // Logger configuration, combining multiple transports
 const logger = createLogger({
-    level: ENV.DEBUG ? 'debug' : 'info', // Default log level based on ENV.DEBUG
+    level: logLevel,
     format: format.combine(
         format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), // Timestamp format for logs
         format.printf(({ timestamp, level, message }) => `${timestamp} [${level.toUpperCase()}]: ${message}`) // Log message format
@@ -57,4 +60,21 @@ const logger = createLogger({
     ],
 });
 
-export default logger; // Export the logger for use in other files
+// Expose .log(message, ...meta) for general messages (same as info).
+// Winston's .log(level, msg) expects LogEntry, so we export a wrapper with .log(message: string, ...meta).
+export interface LoggerWithLog {
+    log(message: string, ...meta: any[]): void;
+    info: typeof logger.info;
+    warn: typeof logger.warn;
+    error: typeof logger.error;
+    debug: typeof logger.debug;
+}
+const appLogger: LoggerWithLog = {
+    info: logger.info.bind(logger),
+    warn: logger.warn.bind(logger),
+    error: logger.error.bind(logger),
+    debug: logger.debug.bind(logger),
+    log: (message: string, ...meta: any[]) => { logger.info(message, ...meta); },
+};
+
+export default appLogger; // Export the logger for use in other files

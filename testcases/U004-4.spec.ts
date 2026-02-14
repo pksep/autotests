@@ -4,7 +4,7 @@ import { ENV, SELECTORS, PRODUCT_SPECS } from '../config';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import * as TestDataU004 from '../lib/Constants/TestDataU004';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U004-PC01.json'; // Import your test data
@@ -354,8 +354,6 @@ export const runU004_4 = () => {
         // Compare the extracted values
         if (partName?.trim() === selectedPartName) {
           isRowFound = true;
-          //table_before_changequantity = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
-          //value_before_changequantity = await shortagePage.getQuantityByLineItem(table_before_changequantity, CONST.TESTCASE_2_PRODUCT_Д)
           await expectSoftWithScreenshot(
             page,
             async () => {
@@ -629,7 +627,7 @@ export const runU004_4 = () => {
     } = PRODUCT_SPECS.T15;
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      console.log('Step: Clean up Т15 product specifications');
+      logger.log('Step: Clean up Т15 product specifications');
       await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
         assemblies: T15_ASSEMBLIES,
         details: T15_DETAILS,

@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { APISecurity } from "../pages/APISecurity";
 import { APIAuth } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 
 export const runSecurityAPI = () => {
     logger.info(`Starting Security API defensive tests - looking for API problems`);
@@ -13,7 +13,7 @@ export const runSecurityAPI = () => {
         const authAPI = new APIAuth(page);
 
         await test.step("Test 1: Update security settings without authentication", async () => {
-            console.log("Testing unauthenticated security settings update...");
+            logger.log("Testing unauthenticated security settings update...");
 
             const securityData = {
                 key: API_CONST.API_TEST_SECURITY_SETTING_KEY,
@@ -35,11 +35,11 @@ export const runSecurityAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([401, 400, 422]).toContain(unauthenticatedResponse.status);
             expect(unauthenticatedResponse.data).toBeDefined();
-            console.log("✅ Unauthenticated security settings update correctly rejected with 401");
+            logger.log("✅ Unauthenticated security settings update correctly rejected with 401");
         });
 
         await test.step("Test 2: Update security settings with SQL injection", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 key: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -61,11 +61,11 @@ export const runSecurityAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(sqlInjectionResponse.status);
             expect(sqlInjectionResponse.data).toBeDefined();
-            console.log("✅ SQL injection attempt correctly blocked");
+            logger.log("✅ SQL injection attempt correctly blocked");
         });
 
         await test.step("Test 3: Update security settings with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 key: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -87,7 +87,7 @@ export const runSecurityAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(xssResponse.status);
             expect(xssResponse.data).toBeDefined();
-            console.log("✅ XSS attempt correctly blocked");
+            logger.log("✅ XSS attempt correctly blocked");
         });
     });
 
@@ -98,7 +98,7 @@ export const runSecurityAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -123,11 +123,11 @@ export const runSecurityAPI = () => {
             expect(loginResponse.data.token).toBeTruthy();
             expect(typeof loginResponse.data.token).toBe('string');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
         });
 
         await test.step("Test 4: Update security settings with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 key: API_CONST.API_TEST_EDGE_CASES.INVALID_NUMBER,
@@ -149,11 +149,11 @@ export const runSecurityAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(invalidUpdateResponse.status);
             expect(invalidUpdateResponse.data).toBeDefined();
-            console.log("✅ Invalid data types correctly rejected with 400");
+            logger.log("✅ Invalid data types correctly rejected with 400");
         });
 
         await test.step("Test 5: Update security settings with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 key: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -175,7 +175,7 @@ export const runSecurityAPI = () => {
             // Catch-all: Any other status code indicates API inconsistency
             expect([400, 422, 401]).toContain(emptyUpdateResponse.status);
             expect(emptyUpdateResponse.data).toBeDefined();
-            console.log("✅ Empty required fields correctly rejected with 400");
+            logger.log("✅ Empty required fields correctly rejected with 400");
         });
     });
 
@@ -186,7 +186,7 @@ export const runSecurityAPI = () => {
         let authToken: string;
 
         await test.step("Step 1: Authenticate user for performance tests", async () => {
-            console.log("Authenticating user...");
+            logger.log("Authenticating user...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -198,11 +198,11 @@ export const runSecurityAPI = () => {
             expect(loginResponse.status).toBe(200);
             expect(loginResponse.data).toHaveProperty('token');
             authToken = loginResponse.data.token;
-            console.log("✅ Authentication successful for performance tests");
+            logger.log("✅ Authentication successful for performance tests");
         });
 
         await test.step("Test 6: Response time performance for get security settings", async () => {
-            console.log("Testing get security settings response time performance...");
+            logger.log("Testing get security settings response time performance...");
 
             const startTime = Date.now();
             const performanceGetResponse = await securityAPI.getSecuritySettings(request, API_CONST.API_TEST_USER_ID);
@@ -212,11 +212,11 @@ export const runSecurityAPI = () => {
             // API PROBLEM: If response time is too slow, there's a performance issue
             expect(performanceGetResponse.status).toBe(200);
             expect(responseTime).toBeLessThan(API_CONST.API_TEST_EDGE_CASES.PERFORMANCE_THRESHOLD_MS);
-            console.log(`✅ Get security settings response time: ${responseTime}ms (acceptable)`);
+            logger.log(`✅ Get security settings response time: ${responseTime}ms (acceptable)`);
         });
 
         await test.step("Test 7: Test concurrent security operations", async () => {
-            console.log("Testing concurrent security operations...");
+            logger.log("Testing concurrent security operations...");
 
             const securityData = {
                 key: API_CONST.API_TEST_SECURITY_SETTING_KEY_UPDATED,
@@ -234,7 +234,7 @@ export const runSecurityAPI = () => {
                 expect(response.status).toBe(200);
                 expect(response.data).toBeDefined();
             });
-            console.log("✅ Concurrent security operations handled successfully");
+            logger.log("✅ Concurrent security operations handled successfully");
         });
     });
 };

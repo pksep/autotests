@@ -4,7 +4,7 @@ import { CreateMetalworkingWarehousePage } from '../pages/MetalworkingWarehouseP
 import { ENV, SELECTORS } from '../config'; // Import the configuration
 import testData from '../testdata/MW18-T2.json'; // Import your test data
 import testData2 from '../testdata/MW18-T1.json'; // Import your test data
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { countColumns } from '../lib/utils/utilities';
 
@@ -549,8 +549,8 @@ export const runP005 = () => {
                 let found = false;
 
                 // Log initial information
-                console.log(`Starting to search for valid rows in table with ID: ${tableId}`);
-                console.log(`Initial column IDs: ${JSON.stringify(columnIds)}`);
+                logger.log(`Starting to search for valid rows in table with ID: ${tableId}`);
+                logger.log(`Initial column IDs: ${JSON.stringify(columnIds)}`);
 
                 // Ensure the table is visible
                 const tableSelector = `[data-testid="${tableId}"] tbody tr`;
@@ -566,14 +566,14 @@ export const runP005 = () => {
 
                 // Get the total number of rows in the table
                 const totalRowCount = await page.locator(tableSelector).count();
-                console.log(`Total rows in table: ${totalRowCount}`);
+                logger.log(`Total rows in table: ${totalRowCount}`);
 
                 while (!found && rowIndex <= totalRowCount) {
                     const row = await page.locator(`${tableSelector}:nth-child(${rowIndex})`);
                     const cells = await row.locator('td');
                     const cellCount = await cells.count();
 
-                    console.log(`Checking row ${rowIndex} with ${cellCount} cells`);
+                    logger.log(`Checking row ${rowIndex} with ${cellCount} cells`);
 
                     if (cellCount > 0) {
                         let rowHasAllContent = true;
@@ -582,7 +582,7 @@ export const runP005 = () => {
                         for (const columnId of columnIds) {
                             if (columnId < cellCount) {
                                 const cellValue = await cells.nth(columnId).innerText();
-                                console.log(`Cell value from column ${columnId}: ${cellValue}`);
+                                logger.log(`Cell value from column ${columnId}: ${cellValue}`);
 
                                 if (cellValue.trim() === '') {
                                     rowHasAllContent = false;
@@ -609,7 +609,7 @@ export const runP005 = () => {
                 if (!found) {
                     console.error('No valid rows found');
                 } else {
-                    console.log('First valid row data:', firstRowData);
+                    logger.log('First valid row data:', firstRowData);
                     logger.info('First valid row data for search: ', firstRowData);
                 }
             });

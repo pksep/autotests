@@ -1,7 +1,7 @@
 import { Page, TestInfo, TestInfoError, Locator } from '@playwright/test';
 import { SELECTORS } from '../../config';
 import * as SelectorsPartsDataBase from '../Constants/SelectorsPartsDataBase';
-import logger from '../logger';
+import logger from './logger';
 
 /**
  * Interface representing specification data.
@@ -60,10 +60,10 @@ export async function populateTestData(page: Page, skipNavigation = false) {
           designation: detailDesignation?.trim() || '-',
         },
       ];
-      console.log(`Found existing detail: ${arrayDetail[0].name}`);
+      logger.log(`Found existing detail: ${arrayDetail[0].name}`);
     } else {
       arrayDetail = [];
-      console.log('No existing details found');
+      logger.log('No existing details found');
     }
   } catch (error) {
     console.error('Error populating detail array:', error);
@@ -87,10 +87,10 @@ export async function populateTestData(page: Page, skipNavigation = false) {
           designation: cbedDesignation?.trim() || '-',
         },
       ];
-      console.log(`Found existing assembly: ${arrayCbed[0].name}`);
+      logger.log(`Found existing assembly: ${arrayCbed[0].name}`);
     } else {
       arrayCbed = [];
-      console.log('No existing assemblies found');
+      logger.log('No existing assemblies found');
     }
   } catch (error) {
     console.error('Error populating cbed array:', error);
@@ -114,10 +114,10 @@ export async function populateTestData(page: Page, skipNavigation = false) {
           designation: izdDesignation?.trim() || '-',
         },
       ];
-      console.log(`Found existing product: ${arrayIzd[0].name}`);
+      logger.log(`Found existing product: ${arrayIzd[0].name}`);
     } else {
       arrayIzd = [];
-      console.log('No existing products found');
+      logger.log('No existing products found');
     }
   } catch (error) {
     console.error('Error populating izd array:', error);
@@ -180,12 +180,12 @@ export async function expectSoftWithScreenshot(
       const attachmentNote = testInfo
         ? ' (attached to test report - will appear in HTML report on failure)'
         : '';
-      console.log(`📸 Screenshot captured for soft assertion: ${description}`);
-      console.log(`   Screenshot path: ${screenshotPath}${attachmentNote}`);
+      logger.log(`📸 Screenshot captured for soft assertion: ${description}`);
+      logger.log(`   Screenshot path: ${screenshotPath}${attachmentNote}`);
 
       (page as any).__lastSoftAssertScreenshot = screenshotPath;
     } catch (error) {
-      console.log(`Could not capture screenshot for soft assertion: ${error}`);
+      logger.log(`Could not capture screenshot for soft assertion: ${error}`);
     }
   }
 }
@@ -359,7 +359,7 @@ export async function extractDataSpetification(table: Locator): Promise<ISpetifi
   // Get all draggable tables
   const draggableTables = table.locator('.draggable-table');
   const tableCount = await draggableTables.count();
-  console.log(`Found ${tableCount} draggable tables`);
+  logger.log(`Found ${tableCount} draggable tables`);
 
   // Wait for the first table to be attached to DOM (may be hidden initially)
   await draggableTables.first().waitFor({ state: 'attached' });
@@ -369,15 +369,15 @@ export async function extractDataSpetification(table: Locator): Promise<ISpetifi
 
     // Check if table is visible or hidden
     const isVisible = await currentTable.isVisible();
-    console.log(`Table ${tableIndex} visibility: ${isVisible}`);
+    logger.log(`Table ${tableIndex} visibility: ${isVisible}`);
 
     const tbody = currentTable.locator('tbody');
     const tbodyRows = tbody.locator('tr');
     const rowCount = await tbodyRows.count();
-    console.log(`Table ${tableIndex} has ${rowCount} rows`);
+    logger.log(`Table ${tableIndex} has ${rowCount} rows`);
 
     if (rowCount === 0) {
-      console.log(`Table ${tableIndex} is empty, skipping`);
+      logger.log(`Table ${tableIndex} is empty, skipping`);
       continue;
     }
 
@@ -387,7 +387,7 @@ export async function extractDataSpetification(table: Locator): Promise<ISpetifi
       const tdCount = await rowData.count();
 
       if (tdCount === 0) {
-        console.log(`Row ${rowIndex} has no td elements, skipping`);
+        logger.log(`Row ${rowIndex} has no td elements, skipping`);
         continue;
       }
 
@@ -399,7 +399,7 @@ export async function extractDataSpetification(table: Locator): Promise<ISpetifi
       const name = cell3?.trim() || '';
       const quantity = Number(cell5?.trim()) || 0;
 
-      console.log(`Processing row ${rowIndex} in table ${tableIndex}:`, {
+      logger.log(`Processing row ${rowIndex} in table ${tableIndex}:`, {
         designation,
         name,
         quantity,
@@ -424,10 +424,10 @@ export async function extractDataSpetification(table: Locator): Promise<ISpetifi
   }
 
   // Log the contents of each array
-  console.log('Сборки (cbeds):', JSON.stringify(cbedListData, null, 2));
-  console.log('Детали (detals):', JSON.stringify(detalListData, null, 2));
-  console.log('Покупные детали (listPokDet):', JSON.stringify(listPokDetListData, null, 2));
-  console.log('Материалы (materialList):', JSON.stringify(materialListData, null, 2));
+  logger.log('Сборки (cbeds):', JSON.stringify(cbedListData, null, 2));
+  logger.log('Детали (detals):', JSON.stringify(detalListData, null, 2));
+  logger.log('Покупные детали (listPokDet):', JSON.stringify(listPokDetListData, null, 2));
+  logger.log('Материалы (materialList):', JSON.stringify(materialListData, null, 2));
 
   return {
     cbeds: cbedListData,

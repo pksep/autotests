@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { PageObject } from '../lib/Page';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 
 // Страница: Комплектация сборок на план
 export class CreateCompletingAssembliesToPlanPage extends PageObject {

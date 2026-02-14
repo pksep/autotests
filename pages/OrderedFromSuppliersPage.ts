@@ -1,6 +1,6 @@
 import { expect, Page } from "@playwright/test";
 import { PageObject, Click } from "../lib/Page";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 import { exec } from "child_process";
 import { time } from "console";
 import { allure } from "allure-playwright";
@@ -82,7 +82,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             await linkImage.click();
         } else {
             // If no link image found, try double-clicking the row
-            console.log("No link image found, trying double-click on row");
+            logger.log("No link image found, trying double-click on row");
             await orderRow.dblclick();
         }
 
@@ -102,7 +102,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         const checkOrderNumber = heaheaderOrderNumber.textContent();
 
         expect(await checkOrderNumber).toBe(orderNumber);
-        console.log(`Номера заказов совпадают.`);
+        logger.log(`Номера заказов совпадают.`);
     }
 
     // async launchIntoProductionSupplier(
@@ -165,7 +165,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
     //         // Fallback: if no results for the provided name, clear and use the first available row
     //         if (rowCount === 0) {
-    //             console.log(`No rows for search term: ${name}. Falling back to first available item.`);
+    //             logger.log(`No rows for search term: ${name}. Falling back to first available item.`);
     //             await searchField.clear();
     //             await searchField.press("Enter");
     //             await this.page.waitForTimeout(800);
@@ -173,7 +173,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     //             rows = table.locator('tbody tr');
     //             rowCount = await rows.count();
     //             if (rowCount === 0) {
-    //                 console.log("No items available in the table, skipping the test");
+    //                 logger.log("No items available in the table, skipping the test");
     //                 await this.page.keyboard.press('Escape');
     //                 return;
     //             }
@@ -192,7 +192,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     //         const rowCount = await rows.count();
 
     //         if (rowCount === 0) {
-    //             console.log("No rows available in search results");
+    //             logger.log("No rows available in search results");
     //             await this.page.keyboard.press('Escape');
     //             return;
     //         }
@@ -236,7 +236,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     //         const newRowCount = await rows.count();
 
     //         if (newRowCount === 0) {
-    //             console.log("No additional items found after clearing search");
+    //             logger.log("No additional items found after clearing search");
     //             return;
     //         }
 
@@ -269,10 +269,10 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
     //         const rows = bottomTable.locator('tbody tr');
     //         const rowCount = await rows.count();
-    //         console.log(`Bottom table has ${rowCount} rows`);
+    //         logger.log(`Bottom table has ${rowCount} rows`);
 
     //         if (rowCount < 1) {
-    //             console.log("No rows in bottom table for the test");
+    //             logger.log("No rows in bottom table for the test");
     //             return;
     //         }
 
@@ -303,7 +303,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     //         await this.page.waitForTimeout(1000);
     //         const successNotif = await this.extractNotificationMessage(this.page);
     //         if (successNotif) {
-    //             console.log(`Success notification: ${successNotif.title} - ${successNotif.message}`);
+    //             logger.log(`Success notification: ${successNotif.title} - ${successNotif.message}`);
     //             expect(successNotif.title).toBe(CONST.SUCCESS_NOTIFICATION_TITLE);
     //             expect(successNotif.message).toContain(CONST.ORDER_NUMBER_PREFIX);
     //             expect(successNotif.message).toContain(CONST.ORDER_SENT_TO_PRODUCTION_TEXT);
@@ -312,7 +312,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     //             const orderMatch = successNotif.message.match(new RegExp(`${CONST.ORDER_NUMBER_PREFIX}\\s*([\\d-]+)`));
     //             if (orderMatch) {
     //                 checkOrderNumber = orderMatch[1];
-    //                 console.log(`Captured order number: ${checkOrderNumber}`);
+    //                 logger.log(`Captured order number: ${checkOrderNumber}`);
     //             }
     //         }
     //     });
@@ -320,7 +320,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     //     await allure.step("Step 8: Set quantity for both rows and submit successfully", async () => {
     //         // This step is for testing the scenario where both items have quantity set
     //         // For now, we'll skip this as the main test focuses on single item processing
-    //         console.log("Step 8: Skipping both items scenario for this test");
+    //         logger.log("Step 8: Skipping both items scenario for this test");
     //     });
 
 
@@ -430,7 +430,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 });
 
                 await checkbox.click();
-                console.log("Clicked checkbox in first row");
+                logger.log("Clicked checkbox in first row");
             }
         );
 
@@ -441,7 +441,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 const pushedIntoProductionCell = this.page.locator('[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row"][data-testid$="-TdOrderedOnProduction"]').first();
                 await pushedIntoProductionCell.waitFor({ state: 'visible', timeout: 10000 });
                 quantityLaunchInProduct = (await pushedIntoProductionCell.innerText()).trim();
-                console.log("Ordered for production:", quantityLaunchInProduct);
+                logger.log("Ordered for production:", quantityLaunchInProduct);
             }
         );
 
@@ -460,7 +460,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 });
 
                 await chooseButton.click();
-                console.log("Clicked Choose button to add item to bottom table");
+                logger.log("Clicked Choose button to add item to bottom table");
             }
         );
 
@@ -488,7 +488,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             await this.page.waitForTimeout(1000);
 
                 await quantityInput.fill(quantityOrder);
-                console.log('Количество запускаемых в производство сущности:', quantityOrder);
+                logger.log('Количество запускаемых в производство сущности:', quantityOrder);
             }
         );
 
@@ -505,7 +505,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             });
 
             await orderButton.click();
-            console.log("Clicked Order button");
+            logger.log("Clicked Order button");
         });
 
         await allure.step(
@@ -517,20 +517,20 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 // Extract notification message
                 const notification = await this.extractNotificationMessage(this.page);
                 if (notification) {
-                    console.log(`Notification title: ${notification.title}`);
-                    console.log(`Notification message: ${notification.message}`);
+                    logger.log(`Notification title: ${notification.title}`);
+                    logger.log(`Notification message: ${notification.message}`);
 
                     // Extract order number from message (format: "Заказ №25-7147 отправлен в производство")
                     const orderMatch = notification.message.match(/№([\d-]+)/i);
                 if (orderMatch) {
                     checkOrderNumber = orderMatch[1];
-                        console.log(`Extracted order number: ${checkOrderNumber}`);
+                        logger.log(`Extracted order number: ${checkOrderNumber}`);
                     } else {
-                        console.log("Could not extract order number from notification");
+                        logger.log("Could not extract order number from notification");
                         checkOrderNumber = "TEST_ORDER_" + Date.now();
                     }
                 } else {
-                    console.log("No notification found");
+                    logger.log("No notification found");
                     checkOrderNumber = "TEST_ORDER_" + Date.now();
                 }
             }
@@ -538,9 +538,9 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
         await allure.step("Step 11: Check quantity on order", async () => {
             // Skip quantity check since we're back on main page after notification
-            console.log("Order created successfully, skipping quantity check");
-            console.log(`Final order number: ${checkOrderNumber}`);
-            console.log(`Quantity launched: ${quantityLaunchInProduct}`);
+            logger.log("Order created successfully, skipping quantity check");
+            logger.log(`Final order number: ${checkOrderNumber}`);
+            logger.log(`Quantity launched: ${quantityLaunchInProduct}`);
         });
 
         return { quantityLaunchInProduct, checkOrderNumber };
@@ -602,7 +602,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             
             // Extract prefix from name (remove trailing _001, _002, etc.)
             const searchPrefix = name.replace(/_\d+$/, '');
-            console.log(`Searching for items with prefix: "${searchPrefix}" (original name: "${name}")`);
+            logger.log(`Searching for items with prefix: "${searchPrefix}" (original name: "${name}")`);
             
             await this.searchTable(searchPrefix, SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE, SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT_DATA_TESTID);
             await this.page.waitForLoadState("networkidle");
@@ -616,7 +616,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 // Find all rows that match the prefix
                 const allCheckboxes = this.page.locator(SelectorsOrderedFromSuppliers.TABLE1_ROW_CHECKBOX_PATTERN);
                 const checkboxCount = await allCheckboxes.count();
-                console.log(`Found ${checkboxCount} items matching the prefix`);
+                logger.log(`Found ${checkboxCount} items matching the prefix`);
                 
                 if (checkboxCount === 0) {
                     throw new Error(`No items found matching prefix "${name.replace(/_\d+$/, '')}"`);
@@ -635,10 +635,10 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                     });
                     
                     await checkbox.click();
-                    console.log(`Clicked checkbox ${i + 1} of ${checkboxCount}`);
+                    logger.log(`Clicked checkbox ${i + 1} of ${checkboxCount}`);
                     await this.waitForTimeout(200); // Small delay between clicks
                 }
-                console.log(`✅ Checked all ${checkboxCount} matching items`);
+                logger.log(`✅ Checked all ${checkboxCount} matching items`);
             }
         );
 
@@ -649,7 +649,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 const pushedIntoProductionCell = this.page.locator(SelectorsOrderedFromSuppliers.TABLE1_ROW_ORDERED_ON_PRODUCTION_PATTERN).first();
                 await pushedIntoProductionCell.waitFor({ state: 'visible', timeout: 10000 });
                 quantityLaunchInProduct = (await pushedIntoProductionCell.innerText()).trim();
-                console.log("Ordered for production (first row):", quantityLaunchInProduct);
+                logger.log("Ordered for production (first row):", quantityLaunchInProduct);
             }
         );
 
@@ -668,7 +668,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 });
 
                 await chooseButton.click();
-                console.log("Clicked Choose button to add item to bottom table");
+                logger.log("Clicked Choose button to add item to bottom table");
             }
         );
 
@@ -684,7 +684,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 // Find all quantity inputs in the bottom table (ChoosedTable2)
                 const allQuantityInputs = this.page.locator(SelectorsOrderedFromSuppliers.QUANTITY_INPUT_FULL);
                 const inputCount = await allQuantityInputs.count();
-                console.log(`Found ${inputCount} rows in bottom table to set quantity`);
+                logger.log(`Found ${inputCount} rows in bottom table to set quantity`);
                 
                 if (inputCount === 0) {
                     throw new Error('No rows found in bottom table after selecting items');
@@ -706,10 +706,10 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                     await this.page.waitForTimeout(300);
 
                     await quantityInput.fill(quantityOrder);
-                    console.log(`Set quantity ${quantityOrder} for row ${i + 1} of ${inputCount}`);
+                    logger.log(`Set quantity ${quantityOrder} for row ${i + 1} of ${inputCount}`);
                     await this.page.waitForTimeout(200); // Small delay between fills
                 }
-                console.log(`✅ Set quantity ${quantityOrder} for all ${inputCount} items`);
+                logger.log(`✅ Set quantity ${quantityOrder} for all ${inputCount} items`);
             }
         );
 
@@ -726,7 +726,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             });
 
             await orderButton.click();
-            console.log("Clicked Order button");
+            logger.log("Clicked Order button");
         });
 
         await allure.step(
@@ -738,20 +738,20 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
                 // Extract notification message
                 const notification = await this.extractNotificationMessage(this.page);
                 if (notification) {
-                    console.log(`Notification title: ${notification.title}`);
-                    console.log(`Notification message: ${notification.message}`);
+                    logger.log(`Notification title: ${notification.title}`);
+                    logger.log(`Notification message: ${notification.message}`);
 
                     // Extract order number from message (format: "Заказ №25-7147 отправлен в производство")
                     const orderMatch = notification.message.match(/№([\d-]+)/i);
                 if (orderMatch) {
                     checkOrderNumber = orderMatch[1];
-                        console.log(`Extracted order number: ${checkOrderNumber}`);
+                        logger.log(`Extracted order number: ${checkOrderNumber}`);
                     } else {
-                        console.log("Could not extract order number from notification");
+                        logger.log("Could not extract order number from notification");
                         checkOrderNumber = "TEST_ORDER_" + Date.now();
                     }
                 } else {
-                    console.log("No notification found");
+                    logger.log("No notification found");
                     checkOrderNumber = "TEST_ORDER_" + Date.now();
                 }
             }
@@ -759,9 +759,9 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
         await allure.step("Step 11: Check quantity on order", async () => {
             // Skip quantity check since we're back on main page after notification
-            console.log("Order created successfully, skipping quantity check");
-            console.log(`Final order number: ${checkOrderNumber}`);
-            console.log(`Quantity launched: ${quantityLaunchInProduct}`);
+            logger.log("Order created successfully, skipping quantity check");
+            logger.log(`Final order number: ${checkOrderNumber}`);
+            logger.log(`Quantity launched: ${quantityLaunchInProduct}`);
         });
 
         return { quantityLaunchInProduct, checkOrderNumber };

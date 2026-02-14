@@ -2,6 +2,7 @@ import { test, Page } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage'; // Adjust the path as necessary
 import testData from '../testdata/uc000.json'; // Import your test data
 import { ENV } from '../config';
+import logger from '../lib/utils/logger';
 
 // Define the login function
 export async function performLogin(page: Page, table: string, login: string, password: string): Promise<void> {

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// HIGHLIGHT STYLE CONSTANTS (for highlightElement from PageObject)
+// HIGHLIGHT STYLE constants (for highlightElement from PageObject)
 // ─────────────────────────────────────────────────────────────────────────────
 // Standardized highlight styles for visual debugging across all test files
 

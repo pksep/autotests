@@ -20,12 +20,13 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import testData1 from '../testdata/U001-PC1.json';
 import { arrayDetail, arrayCbed, nameProductNew, choiceCbed, choiceDetail } from './U001-Constants';
+import logger from '../lib/utils/logger';
 
 export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
-  console.log(`Start of the test: U001 Setup & Creation (Test Cases 01-04)`);
+  logger.log(`Start of the test: U001 Setup & Creation (Test Cases 01-04)`);
 
   test('Test Case 01- Delete Product before create', async ({ page }) => {
-    console.log('Test Case 01 - Delete Product before create');
+    logger.log('Test Case 01 - Delete Product before create');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -232,7 +233,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
 
     // Cleanup warehouse residues before creating new items
     await allure.step('Step 08: Cleanup warehouse residues', async () => {
-      console.log('Cleaning up warehouse residues before creating new items');
+      logger.log('Cleaning up warehouse residues before creating new items');
       const revisionPage = new CreateRevisionPage(page);
       const tableMain = SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE;
       const tableMainCbed = SelectorsRevision.TABLE_REVISION_PAGINATION_CBEDS_TABLE;
@@ -257,7 +258,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         const rowCount = await rows.count();
         
         if (rowCount === 0) {
-          console.log(`No warehouse residues found for product: ${nameProductNew}. Skipping cleanup.`);
+          logger.log(`No warehouse residues found for product: ${nameProductNew}. Skipping cleanup.`);
           return;
         }
         
@@ -281,7 +282,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           const rowCount = await rows.count();
           
           if (rowCount === 0) {
-            console.log(`No warehouse residues found for CBED: ${cbed.name}. Skipping cleanup.`);
+            logger.log(`No warehouse residues found for CBED: ${cbed.name}. Skipping cleanup.`);
             return;
           }
           
@@ -306,7 +307,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           const rowCount = await rows.count();
           
           if (rowCount === 0) {
-            console.log(`No warehouse residues found for Detail: ${detail.name}. Skipping cleanup.`);
+            logger.log(`No warehouse residues found for Detail: ${detail.name}. Skipping cleanup.`);
             return;
           }
           
@@ -321,7 +322,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 02 - Create Parts', async ({ page }) => {
-    console.log('Test Case 02 - Create Parts');
+    logger.log('Test Case 02 - Create Parts');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -343,7 +344,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         
         if (createButtonCount === 0) {
           // Button not found - might need to navigate back to parts database page
-          console.log('⚠️ Create button not found, navigating back to parts database page');
+          logger.log('⚠️ Create button not found, navigating back to parts database page');
           await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
           await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -459,7 +460,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         // Check if the cancel button exists and is visible
         const cancelButtonCount = await cancelButton.count();
         if (cancelButtonCount === 0) {
-          console.log('⚠️ Cancel button not found - page may have navigated after save. Skipping Step 14.');
+          logger.log('⚠️ Cancel button not found - page may have navigated after save. Skipping Step 14.');
           return;
         }
 
@@ -472,7 +473,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 03 - Create Cbed', async ({ page }) => {
-    console.log('Test Case 03 - Create Cbed');
+    logger.log('Test Case 03 - Create Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -539,7 +540,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
   });
 
   test('Test Case 04 - Create Product', async ({ page }) => {
-    console.log('Test Case 04 - Create Product');
+    logger.log('Test Case 04 - Create Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
 
@@ -562,14 +563,14 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 04: Enter the name of the part', async () => {
       await partsDatabsePage.waitForNetworkIdle();
-      const nameParts = page.locator(PartsDBSelectors.INPUT_NAME_IZD);
+      const nameParts = page.locator(PartsDBSelectors.INPUT_NAME_IZD).first();
 
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await nameParts.fill(nameProductNew);
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await nameParts.inputValue()).toBe(nameProductNew);
+          await expect.soft(nameParts).toHaveValue(nameProductNew);
         },
         `Verify product name input value equals "${nameProductNew}"`,
         test.info(),

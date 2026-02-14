@@ -1,7 +1,7 @@
 import { test, expect, Locator } from '@playwright/test';
 import { runTC000, performLogin } from './TC000.spec';
 import { ENV, SELECTORS, PRODUCT_SPECS } from '../config';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { allure } from 'allure-playwright';
 import { CreatePartsDatabasePage, Item } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U004-PC01.json'; // Import your test data
@@ -51,7 +51,7 @@ export const runU004_9 = () => {
       } = PRODUCT_SPECS.T15;
 
       await allure.step('Setup: Clean up Т15 product specifications', async () => {
-        console.log('Step: Clean up Т15 product specifications');
+        logger.log('Step: Clean up Т15 product specifications');
         await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
           assemblies: T15_ASSEMBLIES,
           details: T15_DETAILS,
@@ -215,11 +215,11 @@ export const runU004_9 = () => {
       // Highlight the СБ table and pause
       await shortagePage.waitAndHighlight(table2Locator!);
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      console.log('22222');
+      logger.log('22222');
       // Ensure search input is visible and ready
       // Prefer the table-scoped input for СБ – it's consistently present; add robust fallbacks
       let searchInput = table2Locator!.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).first();
-      console.log('33333');
+      logger.log('33333');
       let candidatesCount = await searchInput.count();
       if (candidatesCount === 0) {
         const testIdCandidates = modalСБ.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
@@ -233,29 +233,29 @@ export const runU004_9 = () => {
           }
         }
       }
-      console.log('44444');
+      logger.log('44444');
       if (candidatesCount === 0) {
         searchInput = modalСБ.locator(`${SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE} ${SelectorsPartsDataBase.TABLE_SEARCH_INPUT}`).first();
         //highlight the input field here
         candidatesCount = await searchInput.count();
         await shortagePage.waitAndHighlight(searchInput, { waitAfter: 50 });
       }
-      console.log('55555');
+      logger.log('55555');
       if (candidatesCount === 0) {
         // Last resort: any visible contenteditable in the modal header area
         searchInput = modalСБ.locator('[contenteditable="true"]').first();
         await shortagePage.waitAndHighlight(searchInput, { waitAfter: 50 });
       }
-      console.log('66666');
+      logger.log('66666');
       await searchInput.waitFor({ state: 'visible', timeout: 20000 });
 
       // Highlight search input and pause
       await shortagePage.waitAndHighlight(searchInput, { waitAfter: 50 });
-      console.log('77777');
+      logger.log('77777');
       // Clear any existing content and close history overlay
       await searchInput.fill('');
       await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-      console.log('88888');
+      logger.log('88888');
       // Fill the search input
 
       const valueToSet = TestDataU004.TESTCASE_2_PRODUCT_СБ;
@@ -282,13 +282,13 @@ export const runU004_9 = () => {
           .catch(() => {});
       }
 
-      console.log('99999');
+      logger.log('99999');
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       // Verify the input was filled correctly
       const inputValue = await searchInput.inputValue().catch(() => '');
-      console.log(`Search input value: "${inputValue}"`);
-      console.log('101010');
+      logger.log(`Search input value: "${inputValue}"`);
+      logger.log('101010');
       await page.waitForTimeout(TIMEOUTS.LONG);
       await expectSoftWithScreenshot(
         page,
@@ -358,27 +358,27 @@ export const runU004_9 = () => {
       'Step 11: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)',
       async () => {
         if (sbNoResultsFound) {
-          console.log('Step 11 skipped: no results in top table; item exists in bottom table.');
+          logger.log('Step 11 skipped: no results in top table; item exists in bottom table.');
           return;
         }
         // Wait for the page to stabilize
         await page.waitForLoadState('networkidle');
-        console.log('111111');
+        logger.log('111111');
         // Ensure table has at least one row visible
         const firstRow = table2Locator!.locator('tbody tr').first();
         await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-        console.log('2222222');
+        logger.log('2222222');
         // Get the value of the first cell in the first row
         firstCellValue = await table2Locator!.locator(SelectorsPartsDataBase.TABLE_FIRST_CELL_SELECTOR).innerText();
         firstCell = await table2Locator!.locator(SelectorsPartsDataBase.TABLE_FIRST_CELL_SELECTOR);
         await shortagePage.highlightElement(firstCell, { backgroundColor: 'yellow', border: '2px solid red', color: 'blue' });
-        console.log('11333333331111');
+        logger.log('11333333331111');
         firstCellValue = firstCellValue.trim();
         // Get the value of the second cell in the first row
         secondCellValue = await table2Locator!.locator(SelectorsPartsDataBase.TABLE_SECOND_CELL_SELECTOR).innerText();
         const secondCell = await table2Locator!.locator(SelectorsPartsDataBase.TABLE_SECOND_CELL_SELECTOR);
         await shortagePage.highlightElement(secondCell, { backgroundColor: 'yellow', border: '2px solid red', color: 'blue' });
-        console.log('11444444441111');
+        logger.log('11444444441111');
         secondCellValue = secondCellValue.trim();
         // Confirm that the second cell contains the search term
         await expectSoftWithScreenshot(
@@ -392,7 +392,7 @@ export const runU004_9 = () => {
     );
     await allure.step('Step 12: Нажимаем по найденной строке (Click on the found row in the table)', async () => {
       if (sbNoResultsFound) {
-        console.log('Step 12 skipped: no results in top table; item exists in bottom table.');
+        logger.log('Step 12 skipped: no results in top table; item exists in bottom table.');
         return;
       }
       // Wait for loading
@@ -487,7 +487,7 @@ export const runU004_9 = () => {
 
     await allure.step('Step 14: Ensure the selected row is now showing in the bottom table', async () => {
       if (sbSkippedAdd) {
-        console.log('Step 14 skipped: add to bottom was skipped because item already existed.');
+        logger.log('Step 14 skipped: add to bottom was skipped because item already existed.');
         sbSkippedAdd = false;
         return;
       }
@@ -552,7 +552,7 @@ export const runU004_9 = () => {
       'Step 15: Нажимаем по bottom кнопке "Добавить" в модальном окне (Click on the bottom "Добавить" button in the modal window)',
       async () => {
         if (sbSkippedAdd) {
-          console.log('Step 15 skipped: bottom add not applicable because item already existed and modal was cancelled.');
+          logger.log('Step 15 skipped: bottom add not applicable because item already existed and modal was cancelled.');
           sbSkippedAdd = false;
           return;
         }
@@ -568,7 +568,7 @@ export const runU004_9 = () => {
             .isVisible()
             .catch(() => false))
         ) {
-          console.log('Step 15 skipped: СБ dialog not open.');
+          logger.log('Step 15 skipped: СБ dialog not open.');
           return;
         }
         const buttonDataTestId = SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON; // Use the testId constant
@@ -633,7 +633,7 @@ export const runU004_9 = () => {
     await shortagePage.highlightElement(table2Locator, { border: '2px solid red' });
     await page.waitForTimeout(TIMEOUTS.STANDARD);
     await allure.step('Step 18: Найдите элемент, который мы собираемся добавить.. (Sesarch for the item we are going to add)', async () => {
-      console.log('Step 18: Найдите элемент, который мы собираемся добавить');
+      logger.log('Step 18: Найдите элемент, который мы собираемся добавить');
       await page.waitForLoadState('networkidle');
 
       // Ensure search input is visible and ready (modal-scoped)
@@ -684,7 +684,7 @@ export const runU004_9 = () => {
 
       // Verify the input was filled correctly
       const inputValue = await searchInput.inputValue().catch(() => '');
-      console.log(`Search input value: "${inputValue}"`);
+      logger.log(`Search input value: "${inputValue}"`);
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -751,7 +751,7 @@ export const runU004_9 = () => {
       'Step 19: Проверяем, что в найденной строке таблицы содержится значение переменной (We check that the found table row contains the value of the variable)',
       async () => {
         if (dNoResultsFound) {
-          console.log('Step 19 skipped: no results in top table; item exists in bottom table.');
+          logger.log('Step 19 skipped: no results in top table; item exists in bottom table.');
           return;
         }
         // Wait for the page to stabilize
@@ -779,7 +779,7 @@ export const runU004_9 = () => {
     );
     await allure.step('Step 20: Нажимаем по найденной строке (Click on the found row in the table)', async () => {
       if (dNoResultsFound) {
-        console.log('Step 20 skipped: no results in top table; item exists in bottom table.');
+        logger.log('Step 20 skipped: no results in top table; item exists in bottom table.');
         return;
       }
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -1028,7 +1028,7 @@ export const runU004_9 = () => {
 
       // Verify value
       const inputValue = await searchInput.inputValue().catch(() => '');
-      console.log(`Search input value: "${inputValue}"`);
+      logger.log(`Search input value: "${inputValue}"`);
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -1385,7 +1385,7 @@ export const runU004_9 = () => {
 
       // Verify value and search
       const inputValue = await searchInput.inputValue().catch(() => '');
-      console.log(`Search input value: "${inputValue}"`);
+      logger.log(`Search input value: "${inputValue}"`);
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -1690,7 +1690,7 @@ export const runU004_9 = () => {
     } = PRODUCT_SPECS.T15;
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      console.log('Step: Clean up Т15 product specifications');
+      logger.log('Step: Clean up Т15 product specifications');
       await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
         assemblies: T15_ASSEMBLIES,
         details: T15_DETAILS,

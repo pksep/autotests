@@ -1,6 +1,6 @@
 /**
  * Test data constants for U004 test files
- * These values were previously in config.ts CONST object
+ * These values were previously in config.ts C O N S T object
  */
 
 // Product names for testing

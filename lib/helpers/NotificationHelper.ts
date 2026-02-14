@@ -12,6 +12,7 @@
 
 import { Page, expect } from '@playwright/test';
 import * as SelectorsNotifications from '../Constants/SelectorsNotifications';
+import logger from '../utils/logger';
 
 export class NotificationHelper {
   constructor(private page: Page) {}

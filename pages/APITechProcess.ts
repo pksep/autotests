@@ -1,6 +1,6 @@
 import { Page, APIRequestContext } from '@playwright/test';
 import { APIPageObject } from '../lib/APIPage';
-import logger from '../lib/logger';
+import logger from '../lib/utils/logger';
 import { ENV } from '../config';
 
 export class TechProcessAPI extends APIPageObject {

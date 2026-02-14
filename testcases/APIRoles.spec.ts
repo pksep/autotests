@@ -2,7 +2,7 @@ import { test, expect, request } from "@playwright/test";
 import { RolesAPI } from "../pages/APIRoles";
 import { AuthAPI } from "../pages/APIAuth";
 import { ENV, API_CONST } from "../config";
-import logger from "../lib/logger";
+import logger from "../lib/utils/logger";
 // import { allure } from "allure-playwright";
 
 export const runRolesAPI = () => {
@@ -17,7 +17,7 @@ export const runRolesAPI = () => {
         let testsFailed = 0;
 
         await test.step("Test 1: Create role without authentication", async () => {
-            console.log("Testing unauthenticated role creation...");
+            logger.log("Testing unauthenticated role creation...");
 
             const roleData = {
                 name: API_CONST.API_TEST_ROLE_NAME,
@@ -31,14 +31,14 @@ export const runRolesAPI = () => {
             const actualStatus = unauthenticatedResponse.status;
 
             if (actualStatus === expectedStatus) {
-                console.log("✅ Unauthenticated role creation correctly rejected with 401");
+                logger.log("✅ Unauthenticated role creation correctly rejected with 401");
                 testsPassed++;
             } else if (actualStatus === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role creation allowed without authentication!");
-                console.log("🚨 This allows anyone to create roles in the system");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role creation allowed without authentication!");
+                logger.log("🚨 This allows anyone to create roles in the system");
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role creation returned ${actualStatus}, expected ${expectedStatus}`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role creation returned ${actualStatus}, expected ${expectedStatus}`);
                 testsFailed++;
             }
 
@@ -46,7 +46,7 @@ export const runRolesAPI = () => {
 
             // Validate response data exists
             if (!unauthenticatedResponse.data) {
-                console.log("❌ SECURITY ISSUE: No response data for unauthenticated request");
+                logger.log("❌ SECURITY ISSUE: No response data for unauthenticated request");
                 testsFailed++;
             }
 
@@ -54,7 +54,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 2: Create role with SQL injection in name", async () => {
-            console.log("Testing SQL injection protection...");
+            logger.log("Testing SQL injection protection...");
 
             const sqlInjectionData = {
                 name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -65,17 +65,17 @@ export const runRolesAPI = () => {
 
             // API ANALYSIS: Check what status we get for SQL injection attempt
             if (sqlInjectionResponse.status === 400) {
-                console.log("✅ SQL injection attempt correctly blocked with 400");
+                logger.log("✅ SQL injection attempt correctly blocked with 400");
                 testsPassed++;
             } else if (sqlInjectionResponse.status === 401) {
-                console.log("✅ SQL injection attempt correctly blocked with 401 (authentication required first)");
+                logger.log("✅ SQL injection attempt correctly blocked with 401 (authentication required first)");
                 testsPassed++;
             } else if (sqlInjectionResponse.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: SQL injection successful!");
-                console.log("   → This allows SQL injection attacks on role creation");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: SQL injection successful!");
+                logger.log("   → This allows SQL injection attacks on role creation");
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: SQL injection returned ${sqlInjectionResponse.status}, expected 400 or 401`);
+                logger.log(`❌ SECURITY ISSUE: SQL injection returned ${sqlInjectionResponse.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -85,7 +85,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 3: Create role with XSS payload", async () => {
-            console.log("Testing XSS protection...");
+            logger.log("Testing XSS protection...");
 
             const xssData = {
                 name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
@@ -96,17 +96,17 @@ export const runRolesAPI = () => {
 
             // API ANALYSIS: Check what status we get for XSS attempt
             if (xssResponse.status === 400) {
-                console.log("✅ XSS attempt correctly blocked with 400");
+                logger.log("✅ XSS attempt correctly blocked with 400");
                 testsPassed++;
             } else if (xssResponse.status === 401) {
-                console.log("✅ XSS attempt correctly blocked with 401 (authentication required first)");
+                logger.log("✅ XSS attempt correctly blocked with 401 (authentication required first)");
                 testsPassed++;
             } else if (xssResponse.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: XSS successful!");
-                console.log("   → This allows XSS attacks on role creation");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: XSS successful!");
+                logger.log("   → This allows XSS attacks on role creation");
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: XSS returned ${xssResponse.status}, expected 400 or 401`);
+                logger.log(`❌ SECURITY ISSUE: XSS returned ${xssResponse.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -116,7 +116,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 4: Get roles without authentication", async () => {
-            console.log("Testing unauthenticated role retrieval...");
+            logger.log("Testing unauthenticated role retrieval...");
 
             const unauthenticatedResponse = await rolesAPI.getAllRoles(request);
 
@@ -125,20 +125,20 @@ export const runRolesAPI = () => {
             const actualStatus = unauthenticatedResponse.status;
 
             if (actualStatus === expectedStatus) {
-                console.log("✅ Unauthenticated role retrieval correctly rejected with 401");
+                logger.log("✅ Unauthenticated role retrieval correctly rejected with 401");
                 testsPassed++;
             } else if (actualStatus === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role list accessible without authentication!");
-                console.log("🚨 This allows anyone to retrieve role data without proper authorization");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role list accessible without authentication!");
+                logger.log("🚨 This allows anyone to retrieve role data without proper authorization");
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval returned ${actualStatus}, expected ${expectedStatus}`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval returned ${actualStatus}, expected ${expectedStatus}`);
                 testsFailed++;
             }
 
             // Validate response data exists
             if (!unauthenticatedResponse.data) {
-                console.log("❌ SECURITY ISSUE: No response data for unauthenticated role retrieval");
+                logger.log("❌ SECURITY ISSUE: No response data for unauthenticated role retrieval");
                 testsFailed++;
             }
 
@@ -146,11 +146,11 @@ export const runRolesAPI = () => {
         });
 
         // Test execution summary
-        console.log(`\n📊 TEST EXECUTION SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 TEST EXECUTION SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - Data Validation & Edge Cases", async ({ request }) => {
@@ -164,7 +164,7 @@ export const runRolesAPI = () => {
         let testsFailed = 0;
 
         await test.step("Step 1: Authenticate with valid credentials", async () => {
-            console.log("Authenticating with valid credentials...");
+            logger.log("Authenticating with valid credentials...");
 
             const loginResponse = await authAPI.login(
                 request,
@@ -188,12 +188,12 @@ export const runRolesAPI = () => {
             } else {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 5: Create role with invalid data types", async () => {
-            console.log("Testing data type validation...");
+            logger.log("Testing data type validation...");
 
             const invalidData = {
                 name: 12345, // Should be string
@@ -206,17 +206,17 @@ export const runRolesAPI = () => {
 
             // API ANALYSIS: Check what status we get for invalid data types
             if (invalidCreateResponse.status === 400) {
-                console.log("✅ Invalid data types correctly rejected with 400");
+                logger.log("✅ Invalid data types correctly rejected with 400");
                 testsPassed++;
             } else if (invalidCreateResponse.status === 401) {
-                console.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (invalidCreateResponse.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
-                console.log("   → This allows invalid data to be stored in the system");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
+                logger.log("   → This allows invalid data to be stored in the system");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid data types returned ${invalidCreateResponse.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Invalid data types returned ${invalidCreateResponse.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -225,7 +225,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 6: Create role with empty required fields", async () => {
-            console.log("Testing required field validation...");
+            logger.log("Testing required field validation...");
 
             const emptyData = {
                 name: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
@@ -236,17 +236,17 @@ export const runRolesAPI = () => {
 
             // API ANALYSIS: Check what status we get for empty required fields
             if (emptyResponse.status === 400) {
-                console.log("✅ Empty required fields correctly rejected with 400");
+                logger.log("✅ Empty required fields correctly rejected with 400");
                 testsPassed++;
             } else if (emptyResponse.status === 401) {
-                console.log("✅ Empty required fields correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Empty required fields correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (emptyResponse.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Empty required fields accepted!");
-                console.log("   → This allows incomplete data to be stored in the system");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Empty required fields accepted!");
+                logger.log("   → This allows incomplete data to be stored in the system");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Empty required fields returned ${emptyResponse.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Empty required fields returned ${emptyResponse.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -255,7 +255,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 7: Create role with extremely long name", async () => {
-            console.log("Testing input length validation...");
+            logger.log("Testing input length validation...");
 
             const longNameData = {
                 name: API_CONST.API_TEST_EDGE_CASES.VERY_LONG_STRING,
@@ -266,17 +266,17 @@ export const runRolesAPI = () => {
 
             // API ANALYSIS: Check what status we get for extremely long name
             if (longNameResponse.status === 400) {
-                console.log("✅ Extremely long name correctly rejected with 400");
+                logger.log("✅ Extremely long name correctly rejected with 400");
                 testsPassed++;
             } else if (longNameResponse.status === 401) {
-                console.log("✅ Extremely long name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Extremely long name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (longNameResponse.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Extremely long name accepted!");
-                console.log("   → This allows oversized data to be stored in the system");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Extremely long name accepted!");
+                logger.log("   → This allows oversized data to be stored in the system");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Extremely long name returned ${longNameResponse.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Extremely long name returned ${longNameResponse.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -285,7 +285,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 8: Create role with valid data", async () => {
-            console.log("Creating role with valid data...");
+            logger.log("Creating role with valid data...");
 
             const roleData = {
                 name: API_CONST.API_TEST_ROLE_NAME,
@@ -302,31 +302,31 @@ export const runRolesAPI = () => {
                     expect(typeof createResponse.data.id).toBe('number');
                     expect(createResponse.data.id).toBeGreaterThan(0);
                     createdRoleId = createResponse.data.id;
-                    console.log(`✅ Role created successfully with ID: ${createdRoleId}`);
+                    logger.log(`✅ Role created successfully with ID: ${createdRoleId}`);
                 } else {
-                    console.log(`✅ Role created successfully (no ID returned)`);
+                    logger.log(`✅ Role created successfully (no ID returned)`);
                 }
                 testsPassed++;
             } else if (createResponse.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Valid role creation rejected with 401!`);
-                console.log(`   → This indicates authentication system integration failure`);
-                console.log(`   → Valid user ID ${API_CONST.API_CREATOR_USER_ID_66} is being rejected`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 201 Created`);
-                console.log(`   10. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot create roles even with valid user ID`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Valid role creation rejected with 401!`);
+                logger.log(`   → This indicates authentication system integration failure`);
+                logger.log(`   → Valid user ID ${API_CONST.API_CREATOR_USER_ID_66} is being rejected`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 201 Created`);
+                logger.log(`   10. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot create roles even with valid user ID`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Valid role creation returned ${createResponse.status}, expected 201`);
+                logger.log(`❌ API ISSUE: Valid role creation returned ${createResponse.status}, expected 201`);
                 testsFailed++;
             }
 
@@ -334,11 +334,11 @@ export const runRolesAPI = () => {
         });
 
         // Test execution summary
-        console.log(`\n📊 TEST EXECUTION SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 TEST EXECUTION SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - CRUD Operations & Data Integrity", async ({ request }) => {
@@ -371,22 +371,22 @@ export const runRolesAPI = () => {
             }
 
             // Debug: Log the actual token format and value
-            console.log(`🔍 DEBUG: Login response data: ${JSON.stringify(loginResponse.data)}`);
-            console.log(`🔍 DEBUG: Auth token type: ${typeof authToken}`);
-            console.log(`🔍 DEBUG: Auth token length: ${authToken.length}`);
-            console.log(`🔍 DEBUG: Auth token preview: "${authToken.substring(0, 50)}..."`);
-            console.log(`🔍 DEBUG: Auth token starts with Bearer: ${authToken.startsWith('Bearer ')}`);
-            console.log(`🔍 DEBUG: Auth token ends with newline: ${authToken.endsWith('\n')}`);
-            console.log(`🔍 DEBUG: Auth token has whitespace: ${authToken !== authToken.trim()}`);
+            logger.log(`🔍 DEBUG: Login response data: ${JSON.stringify(loginResponse.data)}`);
+            logger.log(`🔍 DEBUG: Auth token type: ${typeof authToken}`);
+            logger.log(`🔍 DEBUG: Auth token length: ${authToken.length}`);
+            logger.log(`🔍 DEBUG: Auth token preview: "${authToken.substring(0, 50)}..."`);
+            logger.log(`🔍 DEBUG: Auth token starts with Bearer: ${authToken.startsWith('Bearer ')}`);
+            logger.log(`🔍 DEBUG: Auth token ends with newline: ${authToken.endsWith('\n')}`);
+            logger.log(`🔍 DEBUG: Auth token has whitespace: ${authToken !== authToken.trim()}`);
 
             // Note: Bearer prefix will be added by the API method
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 9: Test valid operations", async () => {
-            console.log("Testing valid operations...");
+            logger.log("Testing valid operations...");
 
             // Test get all roles
             const allRolesResponse = await rolesAPI.getAllRoles(request, authToken);
@@ -394,27 +394,27 @@ export const runRolesAPI = () => {
             // API ANALYSIS: Check what status we get for authenticated role retrieval
             if (allRolesResponse.status === 200) {
                 expect(Array.isArray(allRolesResponse.data)).toBe(true);
-                console.log("✅ Get all roles working");
+                logger.log("✅ Get all roles working");
                 testsPassed++;
             } else if (allRolesResponse.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval rejected with 401!`);
-                console.log(`   → This indicates authentication system integration failure`);
-                console.log(`   → Valid auth token is being rejected by Roles API`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: authorization: ${authToken}, compress: no-compress`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 200 OK with roles array`);
-                console.log(`   9. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot retrieve roles even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval rejected with 401!`);
+                logger.log(`   → This indicates authentication system integration failure`);
+                logger.log(`   → Valid auth token is being rejected by Roles API`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: authorization: ${authToken}, compress: no-compress`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 200 OK with roles array`);
+                logger.log(`   9. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot retrieve roles even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Get all roles returned ${allRolesResponse.status}, expected 200`);
+                logger.log(`❌ API ISSUE: Get all roles returned ${allRolesResponse.status}, expected 200`);
                 testsFailed++;
             }
 
@@ -426,30 +426,30 @@ export const runRolesAPI = () => {
             // API ANALYSIS: Check what status we get for authenticated role retrieval by name
             if (validNameResponse.status === 200) {
                 expect(validNameResponse.data).toBeDefined();
-                console.log("✅ Get role by valid name working");
+                logger.log("✅ Get role by valid name working");
                 testsPassed++;
             } else if (validNameResponse.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval by name rejected with 401!`);
-                console.log(`   → This confirms authentication system integration failure`);
-                console.log(`   → Valid auth token is being rejected by Roles API for name-based queries`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/${API_CONST.API_TEST_ROLE_NAME}`);
-                console.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 200 OK or 404 Not Found`);
-                console.log(`   9. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot retrieve roles by name even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval by name rejected with 401!`);
+                logger.log(`   → This confirms authentication system integration failure`);
+                logger.log(`   → Valid auth token is being rejected by Roles API for name-based queries`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/${API_CONST.API_TEST_ROLE_NAME}`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 200 OK or 404 Not Found`);
+                logger.log(`   9. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot retrieve roles by name even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else if (validNameResponse.status === 404) {
-                console.log(`ℹ️ Role "${API_CONST.API_TEST_ROLE_NAME}" not found - this is expected if the role doesn't exist`);
+                logger.log(`ℹ️ Role "${API_CONST.API_TEST_ROLE_NAME}" not found - this is expected if the role doesn't exist`);
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Get role by name returned ${validNameResponse.status}, expected 200 or 404`);
+                logger.log(`❌ API ISSUE: Get role by name returned ${validNameResponse.status}, expected 200 or 404`);
                 testsFailed++;
             }
 
@@ -457,23 +457,23 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 10: Get role by invalid name", async () => {
-            console.log("Testing get role by invalid name...");
+            logger.log("Testing get role by invalid name...");
 
             const invalidNameResponse = await rolesAPI.getRoleByName(request, API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING, authToken);
 
             // API ANALYSIS: Check what status we get for invalid role name
             if (invalidNameResponse.status === 400) {
-                console.log("✅ Invalid role name correctly rejected with 400");
+                logger.log("✅ Invalid role name correctly rejected with 400");
                 testsPassed++;
             } else if (invalidNameResponse.status === 401) {
-                console.log("✅ Invalid role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (invalidNameResponse.status === 200) {
-                console.log("✅ Empty role name request falls back to returning all roles (expected behavior)");
-                console.log("   → When requesting role with empty name, API returns full roles list");
+                logger.log("✅ Empty role name request falls back to returning all roles (expected behavior)");
+                logger.log("   → When requesting role with empty name, API returns full roles list");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid role name returned ${invalidNameResponse.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Invalid role name returned ${invalidNameResponse.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -482,11 +482,11 @@ export const runRolesAPI = () => {
         });
 
         // Test execution summary
-        console.log(`\n📊 TEST EXECUTION SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 TEST EXECUTION SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - createRole Method Comprehensive Testing", async ({ request }) => {
@@ -517,12 +517,12 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Create role with valid data", async () => {
-            console.log("Testing valid role creation...");
+            logger.log("Testing valid role creation...");
 
             const roleData = {
                 name: API_CONST.API_TEST_ROLE_NAME,
@@ -537,30 +537,30 @@ export const runRolesAPI = () => {
                 if (response.data && response.data.id) {
                     expect(typeof response.data.id).toBe('number');
                     expect(response.data.id).toBeGreaterThan(0);
-                    console.log(`✅ Role created successfully with ID: ${response.data.id}`);
+                    logger.log(`✅ Role created successfully with ID: ${response.data.id}`);
                 } else {
-                    console.log(`✅ Role created successfully (no ID returned)`);
+                    logger.log(`✅ Role created successfully (no ID returned)`);
                 }
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Valid role creation rejected with 401!`);
-                console.log(`   → Authentication integration failure`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 201 Created`);
-                console.log(`   10. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot create roles even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Valid role creation rejected with 401!`);
+                logger.log(`   → Authentication integration failure`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 201 Created`);
+                logger.log(`   10. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot create roles even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Valid role creation returned ${response.status}, expected 201`);
+                logger.log(`❌ API ISSUE: Valid role creation returned ${response.status}, expected 201`);
                 testsFailed++;
             }
 
@@ -568,7 +568,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 2: Create role with duplicate name", async () => {
-            console.log("Testing duplicate role name...");
+            logger.log("Testing duplicate role name...");
 
             // First create a role with "Duplicate" in the name
             const firstRoleData = {
@@ -587,30 +587,30 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.createRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Duplicate role name correctly rejected with 400");
+                logger.log("✅ Duplicate role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Duplicate role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Duplicate role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Duplicate role name accepted!");
-                console.log("   → This allows duplicate role names in the system");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 400 Bad Request (duplicate name)`);
-                console.log(`   10. Actual: 201 Created (duplicate accepted)`);
-                console.log(`🚨 IMPACT: Duplicate role names allowed in system`);
-                console.log(`🚨 SEVERITY: MEDIUM - Data integrity issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Duplicate role name accepted!");
+                logger.log("   → This allows duplicate role names in the system");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 400 Bad Request (duplicate name)`);
+                logger.log(`   10. Actual: 201 Created (duplicate accepted)`);
+                logger.log(`🚨 IMPACT: Duplicate role names allowed in system`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Data integrity issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Duplicate role name returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Duplicate role name returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -618,7 +618,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 3: Create role with empty name", async () => {
-            console.log("Testing empty role name...");
+            logger.log("Testing empty role name...");
 
             const roleData = {
                 name: "",
@@ -628,30 +628,30 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.createRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Empty role name correctly rejected with 400");
+                logger.log("✅ Empty role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Empty role name accepted!");
-                console.log("   → This allows roles with empty names in the system");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 400 Bad Request (empty name)`);
-                console.log(`   10. Actual: 201 Created (empty name accepted)`);
-                console.log(`🚨 IMPACT: Roles with empty names allowed in system`);
-                console.log(`🚨 SEVERITY: MEDIUM - Data integrity issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Empty role name accepted!");
+                logger.log("   → This allows roles with empty names in the system");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 400 Bad Request (empty name)`);
+                logger.log(`   10. Actual: 201 Created (empty name accepted)`);
+                logger.log(`🚨 IMPACT: Roles with empty names allowed in system`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Data integrity issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Empty role name returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Empty role name returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -659,7 +659,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 4: Create role with extremely long name", async () => {
-            console.log("Testing extremely long role name...");
+            logger.log("Testing extremely long role name...");
 
             const roleData = {
                 name: "A".repeat(1000), // 1000 character name
@@ -669,30 +669,30 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.createRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Extremely long role name correctly rejected with 400");
+                logger.log("✅ Extremely long role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Extremely long role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Extremely long role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Extremely long role name accepted!");
-                console.log("   → This allows oversized data to be stored in the system");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 400 Bad Request (name too long)`);
-                console.log(`   10. Actual: 201 Created (oversized data accepted)`);
-                console.log(`🚨 IMPACT: Oversized data allowed in system`);
-                console.log(`🚨 SEVERITY: MEDIUM - Performance and storage issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Extremely long role name accepted!");
+                logger.log("   → This allows oversized data to be stored in the system");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 400 Bad Request (name too long)`);
+                logger.log(`   10. Actual: 201 Created (oversized data accepted)`);
+                logger.log(`🚨 IMPACT: Oversized data allowed in system`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Performance and storage issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Extremely long role name returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Extremely long role name returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -700,7 +700,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 5: Create role with special characters", async () => {
-            console.log("Testing special characters in role name...");
+            logger.log("Testing special characters in role name...");
 
             const roleData = {
                 name: "API Test Role !@#$%^&*()_+-=[]{}|;':\",./<>?",
@@ -710,16 +710,16 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.createRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 201) {
-                console.log("✅ Special characters in role name accepted");
+                logger.log("✅ Special characters in role name accepted");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Special characters in role name correctly rejected with 400");
+                logger.log("✅ Special characters in role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Special characters in role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Special characters in role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Special characters in role name returned ${response.status}, expected 201, 400, or 401`);
+                logger.log(`❌ API ISSUE: Special characters in role name returned ${response.status}, expected 201, 400, or 401`);
                 testsFailed++;
             }
 
@@ -727,7 +727,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 6: Create role with Unicode characters", async () => {
-            console.log("Testing Unicode characters in role name...");
+            logger.log("Testing Unicode characters in role name...");
 
             const roleData = {
                 name: "Тестовая роль 测试角色 🎭",
@@ -737,16 +737,16 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.createRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 201) {
-                console.log("✅ Unicode characters in role name accepted");
+                logger.log("✅ Unicode characters in role name accepted");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Unicode characters in role name correctly rejected with 400");
+                logger.log("✅ Unicode characters in role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Unicode characters in role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Unicode characters in role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Unicode characters in role name returned ${response.status}, expected 201, 400, or 401`);
+                logger.log(`❌ API ISSUE: Unicode characters in role name returned ${response.status}, expected 201, 400, or 401`);
                 testsFailed++;
             }
 
@@ -754,7 +754,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 7: Create role with missing description", async () => {
-            console.log("Testing missing description...");
+            logger.log("Testing missing description...");
 
             const roleData = {
                 name: "API Test Role No Description"
@@ -764,16 +764,16 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.createRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 201) {
-                console.log("✅ Role creation without description accepted");
+                logger.log("✅ Role creation without description accepted");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Role creation without description correctly rejected with 400");
+                logger.log("✅ Role creation without description correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Role creation without description correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Role creation without description correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Role creation without description returned ${response.status}, expected 201, 400, or 401`);
+                logger.log(`❌ API ISSUE: Role creation without description returned ${response.status}, expected 201, 400, or 401`);
                 testsFailed++;
             }
 
@@ -781,7 +781,7 @@ export const runRolesAPI = () => {
         });
 
         await test.step("Test 8: Create role with invalid data types", async () => {
-            console.log("Testing invalid data types...");
+            logger.log("Testing invalid data types...");
 
             const roleData = {
                 name: 12345, // Should be string, not number
@@ -791,30 +791,30 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.createRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Invalid data types correctly rejected with 400");
+                logger.log("✅ Invalid data types correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 201) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
-                console.log("   → This allows invalid data to be stored in the system");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 400 Bad Request (invalid data types)`);
-                console.log(`   10. Actual: 201 Created (invalid data accepted)`);
-                console.log(`🚨 IMPACT: Invalid data types allowed in system`);
-                console.log(`🚨 SEVERITY: HIGH - Data integrity and type safety issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
+                logger.log("   → This allows invalid data to be stored in the system");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 400 Bad Request (invalid data types)`);
+                logger.log(`   10. Actual: 201 Created (invalid data accepted)`);
+                logger.log(`🚨 IMPACT: Invalid data types allowed in system`);
+                logger.log(`🚨 SEVERITY: HIGH - Data integrity and type safety issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
 
@@ -822,11 +822,11 @@ export const runRolesAPI = () => {
         });
 
         // Test execution summary
-        console.log(`\n📊 CREATE ROLE METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 CREATE ROLE METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - getAllRoles Method Comprehensive Testing", async ({ request }) => {
@@ -857,124 +857,124 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Get all roles with valid authentication", async () => {
-            console.log("Testing get all roles with valid authentication...");
+            logger.log("Testing get all roles with valid authentication...");
 
             const response = await rolesAPI.getAllRoles(request, authToken);
 
             if (response.status === 200) {
                 expect(Array.isArray(response.data)).toBe(true);
-                console.log(`✅ Get all roles successful, found ${response.data.length} roles`);
+                logger.log(`✅ Get all roles successful, found ${response.data.length} roles`);
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval rejected with 401!`);
-                console.log(`   → Authentication integration failure`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 200 OK with roles array`);
-                console.log(`   9. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot retrieve roles even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval rejected with 401!`);
+                logger.log(`   → Authentication integration failure`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 200 OK with roles array`);
+                logger.log(`   9. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot retrieve roles even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Get all roles returned ${response.status}, expected 200`);
+                logger.log(`❌ API ISSUE: Get all roles returned ${response.status}, expected 200`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 2: Get all roles without authentication", async () => {
-            console.log("Testing get all roles without authentication...");
+            logger.log("Testing get all roles without authentication...");
 
             const response = await rolesAPI.getAllRoles(request); // No auth token
 
             if (response.status === 401) {
-                console.log("✅ Unauthenticated role retrieval correctly rejected with 401");
+                logger.log("✅ Unauthenticated role retrieval correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role list accessible without authentication!");
-                console.log("   → This allows anyone to retrieve role data without proper authorization");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   3. Headers: compress: no-compress`);
-                console.log(`   4. Send request (no authorization header)`);
-                console.log(`   5. Expected: 401 Unauthorized`);
-                console.log(`   6. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Role data accessible without authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Security vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role list accessible without authentication!");
+                logger.log("   → This allows anyone to retrieve role data without proper authorization");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   3. Headers: compress: no-compress`);
+                logger.log(`   4. Send request (no authorization header)`);
+                logger.log(`   5. Expected: 401 Unauthorized`);
+                logger.log(`   6. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Role data accessible without authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Security vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 3: Get all roles with invalid token", async () => {
-            console.log("Testing get all roles with invalid token...");
+            logger.log("Testing get all roles with invalid token...");
 
             const response = await rolesAPI.getAllRoles(request, "invalid_token_12345");
 
             if (response.status === 401) {
-                console.log("✅ Invalid token correctly rejected with 401");
+                logger.log("✅ Invalid token correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
-                console.log("   → This allows unauthorized access with fake tokens");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   3. Headers: compress: no-compress, authorization: invalid_token_12345`);
-                console.log(`   4. Send request`);
-                console.log(`   5. Expected: 401 Unauthorized`);
-                console.log(`   6. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Fake tokens accepted for authentication`);
-                console.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
+                logger.log("   → This allows unauthorized access with fake tokens");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   3. Headers: compress: no-compress, authorization: invalid_token_12345`);
+                logger.log(`   4. Send request`);
+                logger.log(`   5. Expected: 401 Unauthorized`);
+                logger.log(`   6. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Fake tokens accepted for authentication`);
+                logger.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 4: Get all roles with expired token", async () => {
-            console.log("Testing get all roles with expired token...");
+            logger.log("Testing get all roles with expired token...");
 
             const response = await rolesAPI.getAllRoles(request, "expired_token_12345");
 
             if (response.status === 401) {
-                console.log("✅ Expired token correctly rejected with 401");
+                logger.log("✅ Expired token correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Expired token accepted!");
-                console.log("   → This allows access with expired authentication");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
-                console.log(`   3. Headers: compress: no-compress, authorization: expired_token_12345`);
-                console.log(`   4. Send request`);
-                console.log(`   5. Expected: 401 Unauthorized`);
-                console.log(`   6. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Expired tokens accepted for authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Token expiration bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Expired token accepted!");
+                logger.log("   → This allows access with expired authentication");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles`);
+                logger.log(`   3. Headers: compress: no-compress, authorization: expired_token_12345`);
+                logger.log(`   4. Send request`);
+                logger.log(`   5. Expected: 401 Unauthorized`);
+                logger.log(`   6. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Expired tokens accepted for authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Token expiration bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Expired token returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Expired token returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 5: Verify response structure", async () => {
-            console.log("Testing response structure...");
+            logger.log("Testing response structure...");
 
             const response = await rolesAPI.getAllRoles(request, authToken);
 
@@ -987,24 +987,24 @@ export const runRolesAPI = () => {
                     expect(firstRole).toHaveProperty('name');
                     expect(typeof firstRole.id).toBe('number');
                     expect(typeof firstRole.name).toBe('string');
-                    console.log("✅ Response structure validation passed");
+                    logger.log("✅ Response structure validation passed");
                     testsPassed++;
                 } else {
-                    console.log("ℹ️ No roles found in system - structure validation skipped");
+                    logger.log("ℹ️ No roles found in system - structure validation skipped");
                     testsSkipped++;
                 }
             } else {
-                console.log(`❌ API ISSUE: Cannot validate response structure, status: ${response.status}`);
+                logger.log(`❌ API ISSUE: Cannot validate response structure, status: ${response.status}`);
                 testsFailed++;
             }
         });
 
         // Test execution summary
-        console.log(`\n📊 GET ALL ROLES METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 GET ALL ROLES METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - getRoleByName Method Comprehensive Testing", async ({ request }) => {
@@ -1035,12 +1035,12 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Get role by valid name", async () => {
-            console.log("Testing get role by valid name...");
+            logger.log("Testing get role by valid name...");
 
             const response = await rolesAPI.getRoleByName(request, "Администратор", authToken);
 
@@ -1048,196 +1048,196 @@ export const runRolesAPI = () => {
                 expect(response.data).toBeDefined();
                 expect(response.data).toHaveProperty('id');
                 expect(response.data).toHaveProperty('name');
-                console.log("✅ Get role by valid name successful");
+                logger.log("✅ Get role by valid name successful");
                 testsPassed++;
             } else if (response.status === 404) {
-                console.log("ℹ️ Role 'Администратор' not found - this is expected if the role doesn't exist");
+                logger.log("ℹ️ Role 'Администратор' not found - this is expected if the role doesn't exist");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval by name rejected with 401!`);
-                console.log(`   → Authentication integration failure`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/Администратор`);
-                console.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 200 OK or 404 Not Found`);
-                console.log(`   9. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot retrieve roles by name even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval by name rejected with 401!`);
+                logger.log(`   → Authentication integration failure`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/Администратор`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 200 OK or 404 Not Found`);
+                logger.log(`   9. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot retrieve roles by name even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Get role by valid name returned ${response.status}, expected 200 or 404`);
+                logger.log(`❌ API ISSUE: Get role by valid name returned ${response.status}, expected 200 or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 2: Get role by non-existent name", async () => {
-            console.log("Testing get role by non-existent name...");
+            logger.log("Testing get role by non-existent name...");
 
             const response = await rolesAPI.getRoleByName(request, "NonExistentRole12345", authToken);
 
             if (response.status === 404) {
-                console.log("✅ Non-existent role correctly returned 404");
+                logger.log("✅ Non-existent role correctly returned 404");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Non-existent role correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Non-existent role correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role returned 200!");
-                console.log("   → This indicates incorrect role lookup logic");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/NonExistentRole12345`);
-                console.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 404 Not Found`);
-                console.log(`   9. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Non-existent roles returned as valid`);
-                console.log(`🚨 SEVERITY: HIGH - Data integrity issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role returned 200!");
+                logger.log("   → This indicates incorrect role lookup logic");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/NonExistentRole12345`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 404 Not Found`);
+                logger.log(`   9. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Non-existent roles returned as valid`);
+                logger.log(`🚨 SEVERITY: HIGH - Data integrity issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Non-existent role returned ${response.status}, expected 404 or 401`);
+                logger.log(`❌ API ISSUE: Non-existent role returned ${response.status}, expected 404 or 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 3: Get role by empty name", async () => {
-            console.log("Testing get role by empty name...");
+            logger.log("Testing get role by empty name...");
 
             const response = await rolesAPI.getRoleByName(request, "", authToken);
 
             if (response.status === 400) {
-                console.log("✅ Empty role name correctly rejected with 400");
+                logger.log("✅ Empty role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Empty role name request correctly falls back to returning all roles");
-                console.log("   → When requesting role with empty name, API returns full roles list (expected behavior)");
+                logger.log("✅ Empty role name request correctly falls back to returning all roles");
+                logger.log("   → When requesting role with empty name, API returns full roles list (expected behavior)");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Empty role name returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Empty role name returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 4: Get role by name with special characters", async () => {
-            console.log("Testing get role by name with special characters...");
+            logger.log("Testing get role by name with special characters...");
 
             const response = await rolesAPI.getRoleByName(request, "API Test Role !@#$%^&*()", authToken);
 
             if (response.status === 404) {
-                console.log("✅ Role with special characters correctly returned 404 (not found)");
+                logger.log("✅ Role with special characters correctly returned 404 (not found)");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Role with special characters correctly rejected with 400");
+                logger.log("✅ Role with special characters correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Role with special characters correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Role with special characters correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Role with special characters found and retrieved");
+                logger.log("✅ Role with special characters found and retrieved");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Role with special characters returned ${response.status}, expected 200, 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Role with special characters returned ${response.status}, expected 200, 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 5: Get role by name with Unicode characters", async () => {
-            console.log("Testing get role by name with Unicode characters...");
+            logger.log("Testing get role by name with Unicode characters...");
 
             const response = await rolesAPI.getRoleByName(request, "Тестовая роль 测试角色", authToken);
 
             if (response.status === 404) {
-                console.log("✅ Role with Unicode characters correctly returned 404 (not found)");
+                logger.log("✅ Role with Unicode characters correctly returned 404 (not found)");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Role with Unicode characters correctly rejected with 400");
+                logger.log("✅ Role with Unicode characters correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Role with Unicode characters correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Role with Unicode characters correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Role with Unicode characters found and retrieved");
+                logger.log("✅ Role with Unicode characters found and retrieved");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Role with Unicode characters returned ${response.status}, expected 200, 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Role with Unicode characters returned ${response.status}, expected 200, 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 6: Get role by name without authentication", async () => {
-            console.log("Testing get role by name without authentication...");
+            logger.log("Testing get role by name without authentication...");
 
             const response = await rolesAPI.getRoleByName(request, "Администратор"); // No auth token
 
             if (response.status === 401) {
-                console.log("✅ Unauthenticated role retrieval by name correctly rejected with 401");
+                logger.log("✅ Unauthenticated role retrieval by name correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role retrieval by name accessible without authentication!");
-                console.log("   → This allows anyone to retrieve role data without proper authorization");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles/Администратор`);
-                console.log(`   3. Headers: compress: no-compress`);
-                console.log(`   4. Send request (no authorization header)`);
-                console.log(`   5. Expected: 401 Unauthorized`);
-                console.log(`   6. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Role data accessible without authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Security vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role retrieval by name accessible without authentication!");
+                logger.log("   → This allows anyone to retrieve role data without proper authorization");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles/Администратор`);
+                logger.log(`   3. Headers: compress: no-compress`);
+                logger.log(`   4. Send request (no authorization header)`);
+                logger.log(`   5. Expected: 401 Unauthorized`);
+                logger.log(`   6. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Role data accessible without authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Security vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval by name returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval by name returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 7: Get role by name with invalid token", async () => {
-            console.log("Testing get role by name with invalid token...");
+            logger.log("Testing get role by name with invalid token...");
 
             const response = await rolesAPI.getRoleByName(request, "Администратор", "invalid_token_12345");
 
             if (response.status === 401) {
-                console.log("✅ Invalid token correctly rejected with 401");
+                logger.log("✅ Invalid token correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
-                console.log("   → This allows unauthorized access with fake tokens");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/Администратор`);
-                console.log(`   6. Headers: compress: no-compress, authorization: invalid_token_12345`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 401 Unauthorized`);
-                console.log(`   9. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Fake tokens accepted for authentication`);
-                console.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
+                logger.log("   → This allows unauthorized access with fake tokens");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/Администратор`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: invalid_token_12345`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 401 Unauthorized`);
+                logger.log(`   9. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Fake tokens accepted for authentication`);
+                logger.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         // Test execution summary
-        console.log(`\n📊 GET ROLE BY NAME METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 GET ROLE BY NAME METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - updateRoleAccess Method Comprehensive Testing", async ({ request }) => {
@@ -1268,13 +1268,13 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Update role access with valid data", async () => {
-            console.log("Testing valid role access update...");
-            console.log(`🔍 DEBUG: Using role ID: 1 (Администратор role) instead of user ID 66`);
+            logger.log("Testing valid role access update...");
+            logger.log(`🔍 DEBUG: Using role ID: 1 (Администратор role) instead of user ID 66`);
 
             const accessData = {
                 id: 1, // Use role ID 1 (Администратор) instead of user ID 66
@@ -1435,63 +1435,63 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRoleAccess(request, accessData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 200 || response.status === 201) {
-                console.log(`✅ Role access update successful (${response.status})`);
+                logger.log(`✅ Role access update successful (${response.status})`);
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Valid role access update rejected with 401!`);
-                console.log(`   → Authentication integration failure`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(accessData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK`);
-                console.log(`   10. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot update role access even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Valid role access update rejected with 401!`);
+                logger.log(`   → Authentication integration failure`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(accessData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK`);
+                logger.log(`   10. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot update role access even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else if (response.status === 404) {
-                console.log(`🚨 CRITICAL API ISSUE: Role access update endpoint not found (404)!`);
-                console.log(`   → Either the endpoint "/api/roles/accesses" doesn't exist or the role ID doesn't exist`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(accessData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK`);
-                console.log(`   10. Actual: 404 Not Found`);
-                console.log(`🚨 IMPACT: Role access update endpoint missing or role ID ${accessData.id} doesn't exist`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality missing`);
+                logger.log(`🚨 CRITICAL API ISSUE: Role access update endpoint not found (404)!`);
+                logger.log(`   → Either the endpoint "/api/roles/accesses" doesn't exist or the role ID doesn't exist`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(accessData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK`);
+                logger.log(`   10. Actual: 404 Not Found`);
+                logger.log(`🚨 IMPACT: Role access update endpoint missing or role ID ${accessData.id} doesn't exist`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality missing`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Valid role access update returned ${response.status}, expected 200`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(accessData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK or 201 Created`);
-                console.log(`   10. Actual: ${response.status} ${response.status === 201 ? 'Created' : response.status === 200 ? 'OK' : response.status === 403 ? 'Forbidden' : 'Unknown'}`);
-                console.log(`🚨 IMPACT: Role access update returned unexpected status`);
-                console.log(`🚨 SEVERITY: MEDIUM - Unexpected API behavior`);
+                logger.log(`❌ API ISSUE: Valid role access update returned ${response.status}, expected 200`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(accessData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK or 201 Created`);
+                logger.log(`   10. Actual: ${response.status} ${response.status === 201 ? 'Created' : response.status === 200 ? 'OK' : response.status === 403 ? 'Forbidden' : 'Unknown'}`);
+                logger.log(`🚨 IMPACT: Role access update returned unexpected status`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Unexpected API behavior`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 2: Update role access without authentication", async () => {
-            console.log("Testing role access update without authentication...");
+            logger.log("Testing role access update without authentication...");
 
             const accessData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66),
@@ -1508,30 +1508,30 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRoleAccess(request, accessData, API_CONST.API_CREATOR_USER_ID_66); // No auth token
 
             if (response.status === 401) {
-                console.log("✅ Unauthenticated role access update correctly rejected with 401");
+                logger.log("✅ Unauthenticated role access update correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role access update allowed without authentication!");
-                console.log("   → This allows unauthorized permission changes");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
-                console.log(`   3. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   4. Body: ${JSON.stringify(accessData)}`);
-                console.log(`   5. Send request (no authorization header)`);
-                console.log(`   6. Expected: 401 Unauthorized`);
-                console.log(`   7. Actual: 200 OK (permission changes allowed)`);
-                console.log(`🚨 IMPACT: Role permissions can be changed without authentication`);
-                console.log(`🚨 SEVERITY: CRITICAL - Authorization bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role access update allowed without authentication!");
+                logger.log("   → This allows unauthorized permission changes");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
+                logger.log(`   3. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   4. Body: ${JSON.stringify(accessData)}`);
+                logger.log(`   5. Send request (no authorization header)`);
+                logger.log(`   6. Expected: 401 Unauthorized`);
+                logger.log(`   7. Actual: 200 OK (permission changes allowed)`);
+                logger.log(`🚨 IMPACT: Role permissions can be changed without authentication`);
+                logger.log(`🚨 SEVERITY: CRITICAL - Authorization bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role access update returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role access update returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 3: Update role access with invalid role ID", async () => {
-            console.log("Testing role access update with invalid role ID...");
+            logger.log("Testing role access update with invalid role ID...");
 
             const accessData = {
                 id: 99999, // Non-existent role ID
@@ -1548,39 +1548,39 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRoleAccess(request, accessData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 404) {
-                console.log("✅ Invalid role ID correctly rejected with 404");
+                logger.log("✅ Invalid role ID correctly rejected with 404");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Invalid role ID correctly rejected with 400");
+                logger.log("✅ Invalid role ID correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid role ID correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid role ID correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid role ID accepted!");
-                console.log("   → This allows access updates for non-existent roles");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(accessData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 404 Not Found (role doesn't exist)`);
-                console.log(`   10. Actual: 200 OK (access updated for non-existent role)`);
-                console.log(`🚨 IMPACT: Access permissions updated for non-existent roles`);
-                console.log(`🚨 SEVERITY: HIGH - Data integrity issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid role ID accepted!");
+                logger.log("   → This allows access updates for non-existent roles");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(accessData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 404 Not Found (role doesn't exist)`);
+                logger.log(`   10. Actual: 200 OK (access updated for non-existent role)`);
+                logger.log(`🚨 IMPACT: Access permissions updated for non-existent roles`);
+                logger.log(`🚨 SEVERITY: HIGH - Data integrity issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid role ID returned ${response.status}, expected 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Invalid role ID returned ${response.status}, expected 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 4: Update role access with empty accesses", async () => {
-            console.log("Testing role access update with empty accesses...");
+            logger.log("Testing role access update with empty accesses...");
 
             const accessData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66),
@@ -1590,35 +1590,35 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRoleAccess(request, accessData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 200) {
-                console.log("✅ Empty accesses update accepted");
+                logger.log("✅ Empty accesses update accepted");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Empty accesses correctly rejected with 400");
+                logger.log("✅ Empty accesses correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Empty accesses correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Empty accesses correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Empty accesses returned ${response.status}, expected 200, 400, or 401`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: {"id":1,"accesses":{}}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Empty access objects not properly validated - may require minimum access data`);
-                console.log(`🚨 SEVERITY: MEDIUM - API validation inconsistency`);
+                logger.log(`❌ API ISSUE: Empty accesses returned ${response.status}, expected 200, 400, or 401`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: {"id":1,"accesses":{}}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Empty access objects not properly validated - may require minimum access data`);
+                logger.log(`🚨 SEVERITY: MEDIUM - API validation inconsistency`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 5: Update role access with invalid data types", async () => {
-            console.log("Testing role access update with invalid data types...");
+            logger.log("Testing role access update with invalid data types...");
 
             const accessData = {
                 id: "invalid_id", // Should be number, not string
@@ -1635,40 +1635,40 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRoleAccess(request, accessData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Invalid data types correctly rejected with 400");
+                logger.log("✅ Invalid data types correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
-                console.log("   → This allows invalid data to be stored in the system");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(accessData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 400 Bad Request (invalid data types)`);
-                console.log(`   10. Actual: 200 OK (invalid data accepted)`);
-                console.log(`🚨 IMPACT: Invalid data types stored in role access system`);
-                console.log(`🚨 SEVERITY: HIGH - Data integrity and type safety issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
+                logger.log("   → This allows invalid data to be stored in the system");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/accesses`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(accessData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 400 Bad Request (invalid data types)`);
+                logger.log(`   10. Actual: 200 OK (invalid data accepted)`);
+                logger.log(`🚨 IMPACT: Invalid data types stored in role access system`);
+                logger.log(`🚨 SEVERITY: HIGH - Data integrity and type safety issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
         });
 
         // Test execution summary
-        console.log(`\n📊 UPDATE ROLE ACCESS METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 UPDATE ROLE ACCESS METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - checkRoleNameUnique Method Comprehensive Testing", async ({ request }) => {
@@ -1699,12 +1699,12 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Check unique role name", async () => {
-            console.log("Testing unique role name check...");
+            logger.log("Testing unique role name check...");
 
             const nameData = {
                 type: "TYPE",
@@ -1715,46 +1715,46 @@ export const runRolesAPI = () => {
 
             if (response.status === 200) {
                 expect(response.data).toBeDefined();
-                console.log("✅ Unique role name check successful");
+                logger.log("✅ Unique role name check successful");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Role name uniqueness check rejected with 401!`);
-                console.log(`   → Authentication integration failure`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/name/unique`);
-                console.log(`   6. Headers: Content-Type: application/json, compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Body: ${JSON.stringify(nameData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK`);
-                console.log(`   10. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot check role name uniqueness even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Role name uniqueness check rejected with 401!`);
+                logger.log(`   → Authentication integration failure`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/name/unique`);
+                logger.log(`   6. Headers: Content-Type: application/json, compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Body: ${JSON.stringify(nameData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK`);
+                logger.log(`   10. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot check role name uniqueness even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Unique role name check returned ${response.status}, expected 200`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
-                console.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(nameData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Role name uniqueness check endpoint returns unexpected status`);
-                console.log(`🚨 SEVERITY: MEDIUM - API behavior inconsistency`);
+                logger.log(`❌ API ISSUE: Unique role name check returned ${response.status}, expected 200`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
+                logger.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(nameData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Role name uniqueness check endpoint returns unexpected status`);
+                logger.log(`🚨 SEVERITY: MEDIUM - API behavior inconsistency`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 2: Check duplicate role name", async () => {
-            console.log("Testing duplicate role name check...");
+            logger.log("Testing duplicate role name check...");
 
             const nameData = {
                 type: "TYPE",
@@ -1765,35 +1765,35 @@ export const runRolesAPI = () => {
 
             if (response.status === 200) {
                 expect(response.data).toBeDefined();
-                console.log("✅ Duplicate role name check successful");
+                logger.log("✅ Duplicate role name check successful");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Duplicate role name correctly rejected with 400");
+                logger.log("✅ Duplicate role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Duplicate role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Duplicate role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Duplicate role name check returned ${response.status}, expected 200, 400, or 401`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
-                console.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(nameData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Duplicate role name not properly detected - data integrity issue`);
-                console.log(`🚨 SEVERITY: HIGH - Allows duplicate role names`);
+                logger.log(`❌ API ISSUE: Duplicate role name check returned ${response.status}, expected 200, 400, or 401`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
+                logger.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(nameData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Duplicate role name not properly detected - data integrity issue`);
+                logger.log(`🚨 SEVERITY: HIGH - Allows duplicate role names`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 3: Check role name without authentication", async () => {
-            console.log("Testing role name check without authentication...");
+            logger.log("Testing role name check without authentication...");
 
             const nameData = {
                 type: "TYPE",
@@ -1803,30 +1803,30 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.checkRoleNameUnique(request, nameData); // No auth token
 
             if (response.status === 401) {
-                console.log("✅ Unauthenticated role name check correctly rejected with 401");
+                logger.log("✅ Unauthenticated role name check correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role name check accessible without authentication!");
-                console.log("   → This allows unauthorized role name validation");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/roles/name/unique`);
-                console.log(`   3. Headers: Content-Type: application/json, compress: no-compress`);
-                console.log(`   4. Body: ${JSON.stringify(nameData)}`);
-                console.log(`   5. Send request (no authorization header)`);
-                console.log(`   6. Expected: 401 Unauthorized`);
-                console.log(`   7. Actual: 200 OK (role name validation allowed)`);
-                console.log(`🚨 IMPACT: Role name validation accessible without authentication`);
-                console.log(`🚨 SEVERITY: MEDIUM - Information disclosure vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role name check accessible without authentication!");
+                logger.log("   → This allows unauthorized role name validation");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/roles/name/unique`);
+                logger.log(`   3. Headers: Content-Type: application/json, compress: no-compress`);
+                logger.log(`   4. Body: ${JSON.stringify(nameData)}`);
+                logger.log(`   5. Send request (no authorization header)`);
+                logger.log(`   6. Expected: 401 Unauthorized`);
+                logger.log(`   7. Actual: 200 OK (role name validation allowed)`);
+                logger.log(`🚨 IMPACT: Role name validation accessible without authentication`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Information disclosure vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role name check returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role name check returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 4: Check role name with empty name", async () => {
-            console.log("Testing role name check with empty name...");
+            logger.log("Testing role name check with empty name...");
 
             const nameData = {
                 type: "TYPE",
@@ -1836,35 +1836,35 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.checkRoleNameUnique(request, nameData, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Empty role name correctly rejected with 400");
+                logger.log("✅ Empty role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Empty role name check accepted");
+                logger.log("✅ Empty role name check accepted");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Empty role name check returned ${response.status}, expected 200, 400, or 401`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
-                console.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(nameData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Empty role names allowed without validation`);
-                console.log(`🚨 SEVERITY: MEDIUM - Input validation bypass`);
+                logger.log(`❌ API ISSUE: Empty role name check returned ${response.status}, expected 200, 400, or 401`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
+                logger.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(nameData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Empty role names allowed without validation`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Input validation bypass`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 5: Check role name with special characters", async () => {
-            console.log("Testing role name check with special characters...");
+            logger.log("Testing role name check with special characters...");
 
             const nameData = {
                 type: "TYPE",
@@ -1874,35 +1874,35 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.checkRoleNameUnique(request, nameData, authToken);
 
             if (response.status === 200) {
-                console.log("✅ Role name with special characters check accepted");
+                logger.log("✅ Role name with special characters check accepted");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Role name with special characters correctly rejected with 400");
+                logger.log("✅ Role name with special characters correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Role name with special characters correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Role name with special characters correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Role name with special characters returned ${response.status}, expected 200, 400, or 401`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
-                console.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(nameData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Special characters in role names not properly validated`);
-                console.log(`🚨 SEVERITY: MEDIUM - Input sanitization bypass`);
+                logger.log(`❌ API ISSUE: Role name with special characters returned ${response.status}, expected 200, 400, or 401`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/uniqueness`);
+                logger.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(nameData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Special characters in role names not properly validated`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Input sanitization bypass`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 6: Check role name with invalid data types", async () => {
-            console.log("Testing role name check with invalid data types...");
+            logger.log("Testing role name check with invalid data types...");
 
             const nameData = {
                 type: 123, // Should be string, not number
@@ -1912,40 +1912,40 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.checkRoleNameUnique(request, nameData, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Invalid data types correctly rejected with 400");
+                logger.log("✅ Invalid data types correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
-                console.log("   → This allows invalid data to be processed");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/name/unique`);
-                console.log(`   6. Headers: Content-Type: application/json, compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Body: ${JSON.stringify(nameData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 400 Bad Request (invalid data types)`);
-                console.log(`   10. Actual: 200 OK (invalid data processed)`);
-                console.log(`🚨 IMPACT: Invalid data types processed in role name validation`);
-                console.log(`🚨 SEVERITY: MEDIUM - Input validation issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
+                logger.log("   → This allows invalid data to be processed");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/name/unique`);
+                logger.log(`   6. Headers: Content-Type: application/json, compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Body: ${JSON.stringify(nameData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 400 Bad Request (invalid data types)`);
+                logger.log(`   10. Actual: 200 OK (invalid data processed)`);
+                logger.log(`🚨 IMPACT: Invalid data types processed in role name validation`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Input validation issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
         });
 
         // Test execution summary
-        console.log(`\n📊 CHECK ROLE NAME UNIQUE METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 CHECK ROLE NAME UNIQUE METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - getRoleById Method Comprehensive Testing", async ({ request }) => {
@@ -1976,12 +1976,12 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Get role by valid ID", async () => {
-            console.log("Testing get role by valid ID...");
+            logger.log("Testing get role by valid ID...");
 
             const response = await rolesAPI.getRoleById(request, "1", authToken);
 
@@ -1989,209 +1989,209 @@ export const runRolesAPI = () => {
                 expect(response.data).toBeDefined();
                 expect(response.data).toHaveProperty('id');
                 expect(response.data).toHaveProperty('name');
-                console.log("✅ Get role by valid ID successful");
+                logger.log("✅ Get role by valid ID successful");
                 testsPassed++;
             } else if (response.status === 404) {
-                console.log("ℹ️ Role with ID 1 not found - this is expected if the role doesn't exist");
+                logger.log("ℹ️ Role with ID 1 not found - this is expected if the role doesn't exist");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval by ID rejected with 401!`);
-                console.log(`   → Authentication integration failure`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/1`);
-                console.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 200 OK or 404 Not Found`);
-                console.log(`   9. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot retrieve roles by ID even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Authenticated role retrieval by ID rejected with 401!`);
+                logger.log(`   → Authentication integration failure`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/1`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 200 OK or 404 Not Found`);
+                logger.log(`   9. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot retrieve roles by ID even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Get role by valid ID returned ${response.status}, expected 200 or 404`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/1`);
-                console.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, compress: no-compress`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 200 OK or 404 Not Found`);
-                console.log(`   9. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Role ID 1 may not exist or endpoint issue`);
-                console.log(`🚨 SEVERITY: MEDIUM - Role retrieval failing`);
+                logger.log(`❌ API ISSUE: Get role by valid ID returned ${response.status}, expected 200 or 404`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/1`);
+                logger.log(`   6. Headers: accept: */*, Authorization: Bearer ${authToken}, compress: no-compress`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 200 OK or 404 Not Found`);
+                logger.log(`   9. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Role ID 1 may not exist or endpoint issue`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Role retrieval failing`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 2: Get role by non-existent ID", async () => {
-            console.log("Testing get role by non-existent ID...");
+            logger.log("Testing get role by non-existent ID...");
 
             const response = await rolesAPI.getRoleById(request, "99999", authToken);
 
             if (response.status === 404) {
-                console.log("✅ Non-existent role ID correctly returned 404");
+                logger.log("✅ Non-existent role ID correctly returned 404");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Non-existent role ID correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Non-existent role ID correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role ID returned 200!");
-                console.log("   → This indicates incorrect role lookup logic");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/99999`);
-                console.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 404 Not Found`);
-                console.log(`   9. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Non-existent role IDs returned as valid`);
-                console.log(`🚨 SEVERITY: HIGH - Data integrity issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role ID returned 200!");
+                logger.log("   → This indicates incorrect role lookup logic");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/99999`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 404 Not Found`);
+                logger.log(`   9. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Non-existent role IDs returned as valid`);
+                logger.log(`🚨 SEVERITY: HIGH - Data integrity issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Non-existent role ID returned ${response.status}, expected 404 or 401`);
+                logger.log(`❌ API ISSUE: Non-existent role ID returned ${response.status}, expected 404 or 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 3: Get role by invalid ID format", async () => {
-            console.log("Testing get role by invalid ID format...");
+            logger.log("Testing get role by invalid ID format...");
 
             const response = await rolesAPI.getRoleById(request, "invalid_id", authToken);
 
             if (response.status === 400) {
-                console.log("✅ Invalid ID format correctly rejected with 400");
+                logger.log("✅ Invalid ID format correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid ID format correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid ID format correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid ID format accepted!");
-                console.log("   → This allows invalid role lookups");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/invalid_id`);
-                console.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 400 Bad Request (invalid ID format)`);
-                console.log(`   9. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Invalid ID formats accepted for role lookup`);
-                console.log(`🚨 SEVERITY: MEDIUM - Input validation issue`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid ID format accepted!");
+                logger.log("   → This allows invalid role lookups");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/invalid_id`);
+                logger.log(`   6. Headers: compress: no-compress, authorization: ${authToken}`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 400 Bad Request (invalid ID format)`);
+                logger.log(`   9. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Invalid ID formats accepted for role lookup`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Input validation issue`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid ID format returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Invalid ID format returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 4: Get role by negative ID", async () => {
-            console.log("Testing get role by negative ID...");
+            logger.log("Testing get role by negative ID...");
 
             const response = await rolesAPI.getRoleById(request, "-1", authToken);
 
             if (response.status === 400) {
-                console.log("✅ Negative ID correctly rejected with 400");
+                logger.log("✅ Negative ID correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Negative ID correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Negative ID correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 404) {
-                console.log("✅ Negative ID correctly returned 404 (not found)");
+                logger.log("✅ Negative ID correctly returned 404 (not found)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Negative ID accepted!");
-                console.log("   → This allows invalid role lookups");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Negative ID accepted!");
+                logger.log("   → This allows invalid role lookups");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Negative ID returned ${response.status}, expected 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Negative ID returned ${response.status}, expected 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 5: Get role by zero ID", async () => {
-            console.log("Testing get role by zero ID...");
+            logger.log("Testing get role by zero ID...");
 
             const response = await rolesAPI.getRoleById(request, "0", authToken);
 
             if (response.status === 400) {
-                console.log("✅ Zero ID correctly rejected with 400");
+                logger.log("✅ Zero ID correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Zero ID correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Zero ID correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 404) {
-                console.log("✅ Zero ID correctly returned 404 (not found)");
+                logger.log("✅ Zero ID correctly returned 404 (not found)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Zero ID accepted and role found");
+                logger.log("✅ Zero ID accepted and role found");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Zero ID returned ${response.status}, expected 200, 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Zero ID returned ${response.status}, expected 200, 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 6: Get role by ID without authentication", async () => {
-            console.log("Testing get role by ID without authentication...");
+            logger.log("Testing get role by ID without authentication...");
 
             const response = await rolesAPI.getRoleById(request, "1"); // No auth token
 
             if (response.status === 401) {
-                console.log("✅ Unauthenticated role retrieval by ID correctly rejected with 401");
+                logger.log("✅ Unauthenticated role retrieval by ID correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role retrieval by ID accessible without authentication!");
-                console.log("   → This allows anyone to retrieve role data without proper authorization");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/1`);
-                console.log(`   3. Headers: compress: no-compress`);
-                console.log(`   4. Send request (no authorization header)`);
-                console.log(`   5. Expected: 401 Unauthorized`);
-                console.log(`   6. Actual: 200 OK with role data`);
-                console.log(`🚨 IMPACT: Role data accessible without authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Security vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role retrieval by ID accessible without authentication!");
+                logger.log("   → This allows anyone to retrieve role data without proper authorization");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create GET request to: ${ENV.API_BASE_URL}api/roles/one/1`);
+                logger.log(`   3. Headers: compress: no-compress`);
+                logger.log(`   4. Send request (no authorization header)`);
+                logger.log(`   5. Expected: 401 Unauthorized`);
+                logger.log(`   6. Actual: 200 OK with role data`);
+                logger.log(`🚨 IMPACT: Role data accessible without authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Security vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval by ID returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role retrieval by ID returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 7: Get role by ID with invalid token", async () => {
-            console.log("Testing get role by ID with invalid token...");
+            logger.log("Testing get role by ID with invalid token...");
 
             const response = await rolesAPI.getRoleById(request, "1", "invalid_token_12345");
 
             if (response.status === 401) {
-                console.log("✅ Invalid token correctly rejected with 401");
+                logger.log("✅ Invalid token correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
-                console.log("   → This allows unauthorized access with fake tokens");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
+                logger.log("   → This allows unauthorized access with fake tokens");
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         // Test execution summary
-        console.log(`\n📊 GET ROLE BY ID METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 GET ROLE BY ID METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - deleteRole Method Comprehensive Testing", async ({ request }) => {
@@ -2222,213 +2222,213 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Delete role without authentication", async () => {
-            console.log("Testing role deletion without authentication...");
+            logger.log("Testing role deletion without authentication...");
 
             const response = await rolesAPI.deleteRole(request, "999", API_CONST.API_CREATOR_USER_ID_66); // No auth token
 
             if (response.status === 401) {
-                console.log("✅ Unauthenticated role deletion correctly rejected with 401");
+                logger.log("✅ Unauthenticated role deletion correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role deletion allowed without authentication!");
-                console.log("   → This allows unauthorized role deletion");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/999`);
-                console.log(`   3. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, accept: */*, compress: no-compress`);
-                console.log(`   4. Send request (no authorization header)`);
-                console.log(`   5. Expected: 401 Unauthorized`);
-                console.log(`   6. Actual: 200 OK (role deleted)`);
-                console.log(`🚨 IMPACT: Roles can be deleted without authentication`);
-                console.log(`🚨 SEVERITY: CRITICAL - Authorization bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role deletion allowed without authentication!");
+                logger.log("   → This allows unauthorized role deletion");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/999`);
+                logger.log(`   3. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, accept: */*, compress: no-compress`);
+                logger.log(`   4. Send request (no authorization header)`);
+                logger.log(`   5. Expected: 401 Unauthorized`);
+                logger.log(`   6. Actual: 200 OK (role deleted)`);
+                logger.log(`🚨 IMPACT: Roles can be deleted without authentication`);
+                logger.log(`🚨 SEVERITY: CRITICAL - Authorization bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role deletion returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role deletion returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 2: Delete role with invalid token", async () => {
-            console.log("Testing role deletion with invalid token...");
+            logger.log("Testing role deletion with invalid token...");
 
             const response = await rolesAPI.deleteRole(request, "999", API_CONST.API_CREATOR_USER_ID_66, "invalid_token_12345");
 
             if (response.status === 401) {
-                console.log("✅ Invalid token correctly rejected with 401");
+                logger.log("✅ Invalid token correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
-                console.log("   → This allows unauthorized access with fake tokens");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/999`);
-                console.log(`   6. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, accept: */*, compress: no-compress, authorization: invalid_token_12345`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 401 Unauthorized`);
-                console.log(`   9. Actual: 200 OK (role deleted with fake token)`);
-                console.log(`🚨 IMPACT: Fake tokens accepted for role deletion`);
-                console.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
+                logger.log("   → This allows unauthorized access with fake tokens");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/999`);
+                logger.log(`   6. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, accept: */*, compress: no-compress, authorization: invalid_token_12345`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 401 Unauthorized`);
+                logger.log(`   9. Actual: 200 OK (role deleted with fake token)`);
+                logger.log(`🚨 IMPACT: Fake tokens accepted for role deletion`);
+                logger.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 3: Delete non-existent role", async () => {
-            console.log("Testing deletion of non-existent role...");
+            logger.log("Testing deletion of non-existent role...");
 
             const response = await rolesAPI.deleteRole(request, "99999", API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 404) {
-                console.log("✅ Non-existent role deletion correctly returned 404");
+                logger.log("✅ Non-existent role deletion correctly returned 404");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Non-existent role deletion correctly rejected with 400");
+                logger.log("✅ Non-existent role deletion correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Non-existent role deletion correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Non-existent role deletion correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role deletion returned 200!");
-                console.log("   → This indicates incorrect deletion logic");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role deletion returned 200!");
+                logger.log("   → This indicates incorrect deletion logic");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Non-existent role deletion returned ${response.status}, expected 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Non-existent role deletion returned ${response.status}, expected 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 4: Delete role with invalid ID format", async () => {
-            console.log("Testing role deletion with invalid ID format...");
+            logger.log("Testing role deletion with invalid ID format...");
 
             const response = await rolesAPI.deleteRole(request, "invalid_id", API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Invalid ID format correctly rejected with 400");
+                logger.log("✅ Invalid ID format correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid ID format correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid ID format correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid ID format accepted!");
-                console.log("   → This allows invalid role deletions");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid ID format accepted!");
+                logger.log("   → This allows invalid role deletions");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid ID format returned ${response.status}, expected 400 or 401`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/invalid_id`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, compress: no-compress`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 400 Bad Request or 401 Unauthorized`);
-                console.log(`   9. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Invalid role ID format not properly validated`);
-                console.log(`🚨 SEVERITY: MEDIUM - Input validation bypass`);
+                logger.log(`❌ API ISSUE: Invalid ID format returned ${response.status}, expected 400 or 401`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/invalid_id`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, compress: no-compress`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 400 Bad Request or 401 Unauthorized`);
+                logger.log(`   9. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Invalid role ID format not properly validated`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Input validation bypass`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 5: Delete role with negative ID", async () => {
-            console.log("Testing role deletion with negative ID...");
+            logger.log("Testing role deletion with negative ID...");
 
             const response = await rolesAPI.deleteRole(request, "-1", API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Negative ID correctly rejected with 400");
+                logger.log("✅ Negative ID correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Negative ID correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Negative ID correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 404) {
-                console.log("✅ Negative ID correctly returned 404 (not found)");
+                logger.log("✅ Negative ID correctly returned 404 (not found)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Negative ID accepted!");
-                console.log("   → This allows invalid role deletions");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Negative ID accepted!");
+                logger.log("   → This allows invalid role deletions");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Negative ID returned ${response.status}, expected 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Negative ID returned ${response.status}, expected 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 6: Delete role with zero ID", async () => {
-            console.log("Testing role deletion with zero ID...");
+            logger.log("Testing role deletion with zero ID...");
 
             const response = await rolesAPI.deleteRole(request, "0", API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Zero ID correctly rejected with 400");
+                logger.log("✅ Zero ID correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Zero ID correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Zero ID correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 404) {
-                console.log("✅ Zero ID correctly returned 404 (not found)");
+                logger.log("✅ Zero ID correctly returned 404 (not found)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Zero ID accepted and role deleted");
+                logger.log("✅ Zero ID accepted and role deleted");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Zero ID returned ${response.status}, expected 200, 400, 401, or 404`);
+                logger.log(`❌ API ISSUE: Zero ID returned ${response.status}, expected 200, 400, 401, or 404`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 7: Delete role with invalid user ID", async () => {
-            console.log("Testing role deletion with invalid user ID...");
+            logger.log("Testing role deletion with invalid user ID...");
 
             const response = await rolesAPI.deleteRole(request, "999", "invalid_user_id", authToken);
 
             if (response.status === 400) {
-                console.log("✅ Invalid user ID correctly rejected with 400");
+                logger.log("✅ Invalid user ID correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid user ID correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid user ID correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 403) {
-                console.log("✅ Invalid user ID correctly rejected with 403 (forbidden)");
+                logger.log("✅ Invalid user ID correctly rejected with 403 (forbidden)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid user ID accepted!");
-                console.log("   → This allows unauthorized role deletions");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid user ID accepted!");
+                logger.log("   → This allows unauthorized role deletions");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid user ID returned ${response.status}, expected 400, 401, or 403`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/999`);
-                console.log(`   6. Headers: accept: */*, user-id: 999, Authorization: Bearer ${authToken}, compress: no-compress`);
-                console.log(`   7. Send request`);
-                console.log(`   8. Expected: 400 Bad Request, 401 Unauthorized, or 403 Forbidden`);
-                console.log(`   9. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Invalid user ID not properly validated for authorization`);
-                console.log(`🚨 SEVERITY: MEDIUM - Authorization bypass possibility`);
+                logger.log(`❌ API ISSUE: Invalid user ID returned ${response.status}, expected 400, 401, or 403`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create DELETE request to: ${ENV.API_BASE_URL}api/roles/999`);
+                logger.log(`   6. Headers: accept: */*, user-id: 999, Authorization: Bearer ${authToken}, compress: no-compress`);
+                logger.log(`   7. Send request`);
+                logger.log(`   8. Expected: 400 Bad Request, 401 Unauthorized, or 403 Forbidden`);
+                logger.log(`   9. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Invalid user ID not properly validated for authorization`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Authorization bypass possibility`);
                 testsFailed++;
             }
         });
 
         // Test execution summary
-        console.log(`\n📊 DELETE ROLE METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 DELETE ROLE METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 
     test("Roles API - updateRole Method Comprehensive Testing", async ({ request }) => {
@@ -2459,12 +2459,12 @@ export const runRolesAPI = () => {
                 throw new Error(`Unexpected login response format: ${typeof loginResponse.data}`);
             }
 
-            console.log("✅ Authentication successful");
+            logger.log("✅ Authentication successful");
             testsPassed++;
         });
 
         await test.step("Test 1: Update role with valid data", async () => {
-            console.log("Testing valid role update...");
+            logger.log("Testing valid role update...");
 
             const roleData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66),
@@ -2475,49 +2475,49 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 200) {
-                console.log("✅ Role update successful");
+                logger.log("✅ Role update successful");
                 testsPassed++;
             } else if (response.status === 404) {
-                console.log("ℹ️ Role with ID 1 not found - this is expected if the role doesn't exist");
+                logger.log("ℹ️ Role with ID 1 not found - this is expected if the role doesn't exist");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log(`🚨 CRITICAL SECURITY ISSUE: Valid role update rejected with 401!`);
-                console.log(`   → Authentication integration failure`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK`);
-                console.log(`   10. Actual: 401 Unauthorized`);
-                console.log(`🚨 IMPACT: Users cannot update roles even with valid authentication`);
-                console.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
+                logger.log(`🚨 CRITICAL SECURITY ISSUE: Valid role update rejected with 401!`);
+                logger.log(`   → Authentication integration failure`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK`);
+                logger.log(`   10. Actual: 401 Unauthorized`);
+                logger.log(`🚨 IMPACT: Users cannot update roles even with valid authentication`);
+                logger.log(`🚨 SEVERITY: HIGH - Core functionality broken due to authentication integration failure`);
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Valid role update returned ${response.status}, expected 200 or 404`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK or 404 Not Found`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Valid role update causing server error`);
-                console.log(`🚨 SEVERITY: HIGH - Server error on valid operation`);
+                logger.log(`❌ API ISSUE: Valid role update returned ${response.status}, expected 200 or 404`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK or 404 Not Found`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Valid role update causing server error`);
+                logger.log(`🚨 SEVERITY: HIGH - Server error on valid operation`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 2: Update role without authentication", async () => {
-            console.log("Testing role update without authentication...");
+            logger.log("Testing role update without authentication...");
 
             const roleData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66),
@@ -2528,30 +2528,30 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66); // No auth token
 
             if (response.status === 401) {
-                console.log("✅ Unauthenticated role update correctly rejected with 401");
+                logger.log("✅ Unauthenticated role update correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Role update allowed without authentication!");
-                console.log("   → This allows unauthorized role modifications");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
-                console.log(`   3. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   4. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   5. Send request (no authorization header)`);
-                console.log(`   6. Expected: 401 Unauthorized`);
-                console.log(`   7. Actual: 200 OK (role updated)`);
-                console.log(`🚨 IMPACT: Roles can be modified without authentication`);
-                console.log(`🚨 SEVERITY: CRITICAL - Authorization bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Role update allowed without authentication!");
+                logger.log("   → This allows unauthorized role modifications");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
+                logger.log(`   3. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   4. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   5. Send request (no authorization header)`);
+                logger.log(`   6. Expected: 401 Unauthorized`);
+                logger.log(`   7. Actual: 200 OK (role updated)`);
+                logger.log(`🚨 IMPACT: Roles can be modified without authentication`);
+                logger.log(`🚨 SEVERITY: CRITICAL - Authorization bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Unauthenticated role update returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Unauthenticated role update returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 3: Update role with invalid token", async () => {
-            console.log("Testing role update with invalid token...");
+            logger.log("Testing role update with invalid token...");
 
             const roleData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66),
@@ -2562,33 +2562,33 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, "invalid_token_12345");
 
             if (response.status === 401) {
-                console.log("✅ Invalid token correctly rejected with 401");
+                logger.log("✅ Invalid token correctly rejected with 401");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
-                console.log("   → This allows unauthorized access with fake tokens");
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
-                console.log(`   6. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Content-Type: application/json, compress: no-compress, authorization: invalid_token_12345`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 401 Unauthorized`);
-                console.log(`   10. Actual: 200 OK (role updated with fake token)`);
-                console.log(`🚨 IMPACT: Fake tokens accepted for role updates`);
-                console.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid token accepted!");
+                logger.log("   → This allows unauthorized access with fake tokens");
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
+                logger.log(`   6. Headers: user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Content-Type: application/json, compress: no-compress, authorization: invalid_token_12345`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 401 Unauthorized`);
+                logger.log(`   10. Actual: 200 OK (role updated with fake token)`);
+                logger.log(`🚨 IMPACT: Fake tokens accepted for role updates`);
+                logger.log(`🚨 SEVERITY: CRITICAL - Authentication bypass vulnerability`);
                 testsFailed++;
             } else {
-                console.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
+                logger.log(`❌ SECURITY ISSUE: Invalid token returned ${response.status}, expected 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 4: Update non-existent role", async () => {
-            console.log("Testing update of non-existent role...");
+            logger.log("Testing update of non-existent role...");
 
             const roleData = {
                 id: 99999,
@@ -2599,39 +2599,39 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 404) {
-                console.log("✅ Non-existent role update correctly returned 404");
+                logger.log("✅ Non-existent role update correctly returned 404");
                 testsPassed++;
             } else if (response.status === 400) {
-                console.log("✅ Non-existent role update correctly rejected with 400");
+                logger.log("✅ Non-existent role update correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Non-existent role update correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Non-existent role update correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role update returned 200!");
-                console.log("   → This indicates incorrect update logic");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Non-existent role update returned 200!");
+                logger.log("   → This indicates incorrect update logic");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Non-existent role update returned ${response.status}, expected 400, 401, or 404`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 400 Bad Request, 401 Unauthorized, or 404 Not Found`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Non-existent role update not properly handled`);
-                console.log(`🚨 SEVERITY: MEDIUM - Data validation issue`);
+                logger.log(`❌ API ISSUE: Non-existent role update returned ${response.status}, expected 400, 401, or 404`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 400 Bad Request, 401 Unauthorized, or 404 Not Found`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Non-existent role update not properly handled`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Data validation issue`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 5: Update role with empty name", async () => {
-            console.log("Testing role update with empty name...");
+            logger.log("Testing role update with empty name...");
 
             const roleData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66),
@@ -2642,22 +2642,22 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Empty role name correctly rejected with 400");
+                logger.log("✅ Empty role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Empty role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Empty role name update accepted");
+                logger.log("✅ Empty role name update accepted");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Empty role name update returned ${response.status}, expected 200, 400, or 401`);
+                logger.log(`❌ API ISSUE: Empty role name update returned ${response.status}, expected 200, 400, or 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 6: Update role with invalid data types", async () => {
-            console.log("Testing role update with invalid data types...");
+            logger.log("Testing role update with invalid data types...");
 
             const roleData = {
                 id: "invalid_id", // Should be number, not string
@@ -2668,23 +2668,23 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Invalid data types correctly rejected with 400");
+                logger.log("✅ Invalid data types correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Invalid data types correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
-                console.log("   → This allows invalid data to be stored in the system");
+                logger.log("🚨 CRITICAL SECURITY VULNERABILITY: Invalid data types accepted!");
+                logger.log("   → This allows invalid data to be stored in the system");
                 testsFailed++;
             } else {
-                console.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
+                logger.log(`❌ API ISSUE: Invalid data types returned ${response.status}, expected 400 or 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 7: Update role with missing required fields", async () => {
-            console.log("Testing role update with missing required fields...");
+            logger.log("Testing role update with missing required fields...");
 
             const roleData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66)
@@ -2694,22 +2694,22 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Missing required fields correctly rejected with 400");
+                logger.log("✅ Missing required fields correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Missing required fields correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Missing required fields correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Missing required fields update accepted");
+                logger.log("✅ Missing required fields update accepted");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Missing required fields returned ${response.status}, expected 200, 400, or 401`);
+                logger.log(`❌ API ISSUE: Missing required fields returned ${response.status}, expected 200, 400, or 401`);
                 testsFailed++;
             }
         });
 
         await test.step("Test 8: Update role with extremely long name", async () => {
-            console.log("Testing role update with extremely long name...");
+            logger.log("Testing role update with extremely long name...");
 
             const roleData = {
                 id: parseInt(API_CONST.API_CREATOR_USER_ID_66),
@@ -2720,38 +2720,38 @@ export const runRolesAPI = () => {
             const response = await rolesAPI.updateRole(request, roleData, API_CONST.API_CREATOR_USER_ID_66, authToken);
 
             if (response.status === 400) {
-                console.log("✅ Extremely long role name correctly rejected with 400");
+                logger.log("✅ Extremely long role name correctly rejected with 400");
                 testsPassed++;
             } else if (response.status === 401) {
-                console.log("✅ Extremely long role name correctly rejected with 401 (authentication required first)");
+                logger.log("✅ Extremely long role name correctly rejected with 401 (authentication required first)");
                 testsPassed++;
             } else if (response.status === 200) {
-                console.log("✅ Extremely long role name update accepted");
+                logger.log("✅ Extremely long role name update accepted");
                 testsPassed++;
             } else {
-                console.log(`❌ API ISSUE: Extremely long role name returned ${response.status}, expected 200, 400, or 401`);
-                console.log(`📋 POSTMAN REPRODUCTION STEPS:`);
-                console.log(`   1. Open Postman`);
-                console.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
-                console.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
-                console.log(`   4. Send request and copy the token from response`);
-                console.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
-                console.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
-                console.log(`   7. Body: ${JSON.stringify(roleData)}`);
-                console.log(`   8. Send request`);
-                console.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
-                console.log(`   10. Actual: ${response.status}`);
-                console.log(`🚨 IMPACT: Extremely long role names causing server error`);
-                console.log(`🚨 SEVERITY: MEDIUM - Input length validation issue`);
+                logger.log(`❌ API ISSUE: Extremely long role name returned ${response.status}, expected 200, 400, or 401`);
+                logger.log(`📋 POSTMAN REPRODUCTION STEPS:`);
+                logger.log(`   1. Open Postman`);
+                logger.log(`   2. Create POST request to: ${ENV.API_BASE_URL}api/auth/login`);
+                logger.log(`   3. Body: {"login": "${API_CONST.API_TEST_USERNAME}", "password": "${API_CONST.API_TEST_PASSWORD}", "tabel": "${API_CONST.API_TEST_TABEL}"}`);
+                logger.log(`   4. Send request and copy the token from response`);
+                logger.log(`   5. Create POST request to: ${ENV.API_BASE_URL}api/roles/update`);
+                logger.log(`   6. Headers: accept: */*, user-id: ${API_CONST.API_CREATOR_USER_ID_66}, Authorization: Bearer ${authToken}, Content-Type: application/json, compress: no-compress`);
+                logger.log(`   7. Body: ${JSON.stringify(roleData)}`);
+                logger.log(`   8. Send request`);
+                logger.log(`   9. Expected: 200 OK, 400 Bad Request, or 401 Unauthorized`);
+                logger.log(`   10. Actual: ${response.status}`);
+                logger.log(`🚨 IMPACT: Extremely long role names causing server error`);
+                logger.log(`🚨 SEVERITY: MEDIUM - Input length validation issue`);
                 testsFailed++;
             }
         });
 
         // Test execution summary
-        console.log(`\n📊 UPDATE ROLE METHOD TEST SUMMARY:`);
-        console.log(`   ✅ Tests Passed: ${testsPassed}`);
-        console.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
-        console.log(`   ❌ Tests Failed: ${testsFailed}`);
-        console.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
+        logger.log(`\n📊 UPDATE ROLE METHOD TEST SUMMARY:`);
+        logger.log(`   ✅ Tests Passed: ${testsPassed}`);
+        logger.log(`   ⏭️ Tests Skipped: ${testsSkipped}`);
+        logger.log(`   ❌ Tests Failed: ${testsFailed}`);
+        logger.log(`   🔍 Total Tests: ${testsPassed + testsSkipped + testsFailed}`);
     });
 };

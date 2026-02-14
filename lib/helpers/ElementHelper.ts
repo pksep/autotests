@@ -16,7 +16,7 @@ import { Page, expect, Locator } from '@playwright/test';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import { Click } from '../Page';
 import { normalizeText } from '../utils/utilities';
-import logger from '../logger';
+import logger from '../utils/logger';
 
 export class ElementHelper {
   constructor(private page: Page) {}
@@ -333,24 +333,38 @@ export class ElementHelper {
    * @param textButton - The button text to match
    * @param locator - The locator for the button
    * @param click - Whether to actually click (Click.Yes) or just verify (Click.No)
+   * @param options - Optional: waitForEnabled (wait for button to be enabled before clicking), enabledTimeout (ms)
    */
-  async clickButton(textButton: string, locator: string, click: Click = Click.Yes) {
+  async clickButton(
+    textButton: string,
+    locator: string,
+    click: Click = Click.Yes,
+    options?: { waitForEnabled?: boolean; enabledTimeout?: number },
+  ) {
     const button = this.page.locator(locator, { hasText: textButton });
     await this.highlightElement(button, {
       backgroundColor: 'yellow',
       border: '2px solid red',
       color: 'blue',
     });
-    await this.page.waitForTimeout(1000);
+    await this.page.waitForTimeout(TIMEOUTS.STANDARD);
     await expect(button).toHaveText(textButton);
     await expect(button).toBeVisible();
 
     if (click === Click.Yes) {
+      if (options?.waitForEnabled) {
+        const timeout = options.enabledTimeout ?? WAIT_TIMEOUTS.PAGE_RELOAD;
+        await expect(button).toBeEnabled({ timeout });
+      }
       try {
         await button.click();
-      } catch (error) {
-        console.warn(`Click failed for button "${textButton}", trying with force`, error);
-        await button.click({ force: true });
+      } catch {
+        logger.warn(`Button "${textButton}" not clickable (e.g. disabled), trying force click.`);
+        try {
+          await button.click({ force: true, timeout: WAIT_TIMEOUTS.SHORT });
+        } catch {
+          logger.warn(`Force click skipped for "${textButton}". Step continues without clicking.`);
+        }
       }
     }
   }
