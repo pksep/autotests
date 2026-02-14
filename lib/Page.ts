@@ -1462,6 +1462,7 @@ export class PageObject extends AbstractPage {
     prefixId?: string,
     suffixId?: string,
     timeoutMs: number = WAIT_TIMEOUTS.STANDARD,
+    tableSelector?: string,
   ): Promise<number> {
     return this.orderHelper.getQuantityCellAndVerify(
       this,
@@ -1473,6 +1474,7 @@ export class PageObject extends AbstractPage {
       prefixId,
       suffixId,
       timeoutMs,
+      tableSelector,
     );
   }
 

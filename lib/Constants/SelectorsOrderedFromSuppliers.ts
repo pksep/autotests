@@ -90,6 +90,14 @@ export const ORDER_MODAL_TOP_ORDER_NUMBER = '[data-testid="OrderSuppliers-Main-C
 export const ORDER_SUPPLIERS_TABLE = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table"]';
 export const ORDER_SUPPLIERS_TABLE_SEARCH_INPUT = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Search-Dropdown-Input"]';
 
+// CreateOrderedFromSuppliersPage: next-ready and modal selectors (replacing CONST from config)
+export const TABLE_MODAL_WINDOW = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1"]';
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_PAGE = '[data-testid="ModalAddOrder-ProductionTable-Table"]';
+export const ORDER_FROM_SUPPLIERS_TYPE_COMING_DISPLAY = '[data-testid="ModalAddOrder-SupplierOrderDetails-TypeComingDisplay"]';
+export const ORDER_SUPPLIERS_LINK_IMAGE = '[data-testid="OrderSuppliers-LinkImage"]';
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_DIALOG_OPEN = 'dialog[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker"][open]';
+export const MODAL_WORKER_MAIN_TITLE = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Main-Title"]';
+
 // Quantity input selectors for ChoosedTable2
 export const QUANTITY_INPUT_SUFFIX = '[data-testid$="-TdQuantity-InputNumber-Input"]';
 export const QUANTITY_INPUT_FULL =

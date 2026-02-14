@@ -4,8 +4,9 @@ import logger from "../lib/utils/logger";
 import { exec } from "child_process";
 import { time } from "console";
 import { allure } from "allure-playwright";
-import { ENV, SELECTORS, CONST } from "../config";
+import { ENV, SELECTORS } from "../config";
 import * as SelectorsOrderedFromSuppliers from "../lib/Constants/SelectorsOrderedFromSuppliers";
+import { ORDER_EDIT_MODAL_TITLE_TEXT } from "../lib/Constants/TestDataOrderedFromSuppliers";
 
 
 export enum Supplier {
@@ -25,26 +26,27 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     // Выбираем поставщика и проверяем, что отображается выбранный тип поставщика
     async selectSupplier(supplier: Supplier) {
         const cardBySupplier: Record<Supplier, string> = {
-            [Supplier.details]: CONST.SELECT_TYPE_OBJECT_OPERATION_DETAILS,
-            [Supplier.cbed]: CONST.SELECT_TYPE_OBJECT_OPERATION_ASSEMBLIES,
-            [Supplier.product]: CONST.SELECT_TYPE_OBJECT_OPERATION_PRODUCT,
-            [Supplier.suppler]: CONST.SELECT_TYPE_OBJECT_OPERATION_PROVIDER,
+            [Supplier.details]: SelectorsOrderedFromSuppliers.MODAL_SELECT_SUPPLIER_DETAL_CARD,
+            [Supplier.cbed]: SelectorsOrderedFromSuppliers.MODAL_SELECT_SUPPLIER_ASSEMBLE_CARD,
+            [Supplier.product]: SelectorsOrderedFromSuppliers.MODAL_SELECT_SUPPLIER_PRODUCT_CARD,
+            [Supplier.suppler]: SelectorsOrderedFromSuppliers.MODAL_SELECT_SUPPLIER_PROVIDER_CARD,
         };
 
         // Click the supplier card
-        const card = this.page.locator(`[data-testid="${cardBySupplier[supplier]}"]`).first();
+        const card = this.page.locator(cardBySupplier[supplier]).first();
         await card.waitFor({ state: 'visible' });
         await card.click();
 
         // Wait for “next” UI to be ready: either the stock-order table or a visible card inside the dialog
-        const nextReady = this.page.locator(
-            `[data-testid="${CONST.TABLEMODALWINDOW}"], ` +
-            `[data-testid="${CONST.ORDERED_SUPPLIERS_PAGE_MODAL_ADD_ORDER_PRODUCTION_TABLE}"]`
-        ).first();
+        const nextReady = this.page
+            .locator(
+                `${SelectorsOrderedFromSuppliers.TABLE_MODAL_WINDOW}, ${SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_TABLE_PAGE}`,
+            )
+            .first();
         await nextReady.waitFor({ state: 'visible', timeout: 10000 });
 
         // Soft-check supplier type if present
-        const typeValue = this.page.locator(`[data-testid="${CONST.ORDER_FROM_SUPPLIERS_TYPE_COMING_DISPLAY}"]`).first();
+        const typeValue = this.page.locator(SelectorsOrderedFromSuppliers.ORDER_FROM_SUPPLIERS_TYPE_COMING_DISPLAY).first();
         if (await typeValue.isVisible().catch(() => false)) {
             const text = (await typeValue.textContent() || '').trim();
             if (text) {
@@ -58,7 +60,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     async compareOrderNumbers(orderNumber: string) {
 
         // First, make sure we're on the main orders table
-        const mainTable = this.page.locator(`[data-testid="${CONST.ORDER_SUPPLIERS_TABLE_ORDER_TABLE}"]`).first();
+        const mainTable = this.page.locator(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_TABLE).first();
         await mainTable.evaluate((el: HTMLElement) => {
             el.style.border = '2px solid red';
         });
@@ -77,7 +79,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         await this.page.waitForTimeout(1000);
 
         // Try to find the link image in this specific row
-        const linkImage = orderRow.locator(`[data-testid="${CONST.ORDERED_SUPPLIERS_PAGE_ORDER_SUPPLIERS_LINK_IMAGE}"]`).first();
+        const linkImage = orderRow.locator(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_LINK_IMAGE).first();
         if (await linkImage.isVisible().catch(() => false)) {
             await linkImage.click();
         } else {
@@ -90,12 +92,12 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         await this.page.waitForLoadState("networkidle");
         await this.page.waitForTimeout(2000);
 
-        const headerModalWindow = this.page.locator(`dialog[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_DIALOG}"][open]`);
-        const headerTitle = headerModalWindow.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_TABLE_ROW_ORDERED_ON_PRODUCTION_TITLE}"]`);
-        expect(await headerTitle.textContent()).toBe(CONST.ORDER_EDIT_MODAL_TITLE_TEXT);
+        const headerModalWindow = this.page.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_TABLE_DIALOG_OPEN);
+        const headerTitle = headerModalWindow.locator(SelectorsOrderedFromSuppliers.MODAL_WORKER_MAIN_TITLE);
+        expect(await headerTitle.textContent()).toBe(ORDER_EDIT_MODAL_TITLE_TEXT);
 
         await this.page.waitForLoadState('networkidle')
-        const heaheaderOrderNumber = headerModalWindow.locator(`[data-testid="${CONST.ORDER_MODAL_TOP_ORDER_NUMBER}"]`);
+        const heaheaderOrderNumber = headerModalWindow.locator(SelectorsOrderedFromSuppliers.ORDER_MODAL_TOP_ORDER_NUMBER);
 
 
         await expect(heaheaderOrderNumber).toBeVisible();
@@ -449,7 +451,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
             "Step 7.5: Click Choose button to add item to bottom table",
             async () => {
                 // Use the specific data-testid for the Choose button
-                const chooseButton = this.page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON}"]`);
+                const chooseButton = this.page.locator(SelectorsOrderedFromSuppliers.MODAL_CREATE_ORDER_CHOOSE_BUTTON);
                 await chooseButton.waitFor({ state: 'visible', timeout: 10000 });
 
                 // Highlight the button before clicking
@@ -494,7 +496,7 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
 
         await allure.step("Step 9: Click on the Order button", async () => {
             // Use the correct data-testid for the Order button
-            const orderButton = this.page.locator(`[data-testid="${CONST.MODAL_ADD_ORDER_PRODUCTION_TABLE_ORDER_BUTTON}"]`);
+            const orderButton = this.page.locator(SelectorsOrderedFromSuppliers.MODAL_CREATE_ORDER_SAVE_BUTTON);
             await orderButton.waitFor({ state: 'visible', timeout: 10000 });
 
             // Highlight the button before clicking

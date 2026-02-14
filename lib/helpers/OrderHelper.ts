@@ -13,7 +13,7 @@
  */
 
 import { Page, expect, Locator, ElementHandle } from '@playwright/test';
-import { WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
+import { WAIT_TIMEOUTS, TIMEOUTS } from '../Constants/TimeoutConstants';
 import * as SelectorsStartProduction from '../Constants/SelectorsStartProduction';
 import * as SelectorsOrderedFromSuppliers from '../Constants/SelectorsOrderedFromSuppliers';
 import logger from '../utils/logger';
@@ -586,6 +586,7 @@ export class OrderHelper {
     prefixId?: string,
     suffixId?: string,
     timeoutMs: number = WAIT_TIMEOUTS.STANDARD,
+    tableSelector?: string,
   ): Promise<number> {
     const { allure } = await import('allure-playwright');
     const stepName =
@@ -597,7 +598,15 @@ export class OrderHelper {
     await allure.step(stepName, async () => {
       // Build the selector based on type
       let quantityCell: Locator;
-      if (useComplexSelector && prefixId && suffixId) {
+      if (useComplexSelector && suffixId && tableSelector) {
+        // Scope to table's first visible row (robust after search/filter when row indices may change)
+        quantityCell = this.page
+          .locator(tableSelector)
+          .locator('tbody tr')
+          .first()
+          .locator(`[data-testid$="${suffixId}"]`)
+          .first();
+      } else if (useComplexSelector && prefixId && suffixId) {
         // Build complex selector with prefix and suffix
         quantityCell = this.page.locator(`[data-testid^="${prefixId}"][data-testid$="${suffixId}"]`).first();
       } else {
@@ -606,6 +615,17 @@ export class OrderHelper {
 
       // Wait for element to be visible (with longer timeout for slow-loading tables)
       await quantityCell.waitFor({ state: 'visible', timeout: timeoutMs });
+
+      // When expecting a specific value, poll until it appears (handles slow UI updates after archive/refresh)
+      if (expectedValue !== undefined && timeoutMs > 2000) {
+        const pollInterval = TIMEOUTS.MEDIUM;
+        const deadline = Date.now() + Math.min(timeoutMs, 15000);
+        let quantity = Number((await quantityCell.innerText()).trim());
+        while (quantity !== expectedValue && Date.now() < deadline) {
+          await this.page.waitForTimeout(pollInterval);
+          quantity = Number((await quantityCell.innerText()).trim());
+        }
+      }
 
       // Highlight the quantity cell
       await pageObject.highlightElement(quantityCell, {

@@ -393,13 +393,7 @@ export class TableHelper {
           table = document.getElementById(tableId);
         }
 
-        // Проверка на наличие элемента
-        if (table) {
-          logger.log('Элемент найден:', table);
-        } else {
-          logger.log('Элемент не найден');
-        }
-
+        // Note: do not use logger inside evaluate() - it runs in browser context
         if (!table) {
           console.error(`Table with data-testid or id "${tableId}" not found.`);
           return -1;

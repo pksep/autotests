@@ -107,7 +107,7 @@ export const testSuites = {
     ],
   },
   ERP_3015: {
-    description: 'ERP-2969 test suite to verify functionalities specific to ERP-3015.',
+    description: 'ERP-3015 test suite to verify functionalities specific to ERP-3015 (OrderedFromSuppliers, launch into production).',
     tests: [
       {
         test: runERP_3015,

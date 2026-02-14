@@ -440,11 +440,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 03: Click on the Detail button', async () => {
         await partsDatabsePage.clickButton('Деталь', SelectorsPartsDataBase.U002_BUTTON_DETAIL);
+        await partsDatabsePage.waitForNetworkIdle();
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       });
 
       await allure.step('Step 04: Enter the name of the part', async () => {
-        const nameParts = page.locator(SelectorsPartsDataBase.ADD_DETAL_INFORMATION_INPUT_INPUT);
-
+        const nameParts = page.locator(SelectorsPartsDataBase.ADD_DETAL_INFORMATION_INPUT_INPUT).first();
+        await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await nameParts.fill(detail.name || ''); //ERP-2099
         await expectSoftWithScreenshot(
@@ -458,13 +460,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
-        const nameParts = page.locator(SelectorsPartsDataBase.ADD_DETAL_DESIGNATION_INPUT_INPUT);
-
-        await nameParts.fill(detail.designation || '-');
+        const designationInput = page.locator(SelectorsPartsDataBase.ADD_DETAL_DESIGNATION_INPUT_INPUT).first();
+        await designationInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await designationInput.fill(detail.designation || '-');
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await nameParts.inputValue()).toBe(detail.designation || '-');
+            expect.soft(await designationInput.inputValue()).toBe(detail.designation || '-');
           },
           'Verify detail designation input value',
           test.info(),
@@ -473,11 +475,16 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 06: Click on the Save button', async () => {
         await partsDatabsePage.clickButton('Сохранить', SelectorsPartsDataBase.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
+        await page.waitForTimeout(TIMEOUTS.LONG);
       });
 
       await allure.step('Step 07: Click on the Process', async () => {
         await partsDatabsePage.waitForNetworkIdle();
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const techProcessBtn = page.locator(SelectorsPartsDataBase.BUTTON_OPERATION);
+        await techProcessBtn.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await partsDatabsePage.clickButton('Технологический процесс', SelectorsPartsDataBase.BUTTON_OPERATION);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       });
 
       await allure.step('Step 08: Click on the Add Operation', async () => {
@@ -702,13 +709,17 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 03: Click on the Detail button', async () => {
         await partsDatabsePage.clickButton('Сборочную единицу', SelectorsPartsDataBase.U002_BUTTON_CBED);
+        // Wait for Creator modal to finish loading (loader disappears, form appears)
+        const loader = page.locator(SelectorsPartsDataBase.CREATOR_LOADER);
+        await loader.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       });
 
       await allure.step('Step 04: Enter the name of the part', async () => {
         await partsDatabsePage.waitForNetworkIdle();
+        const nameParts = page.locator(SelectorsPartsDataBase.CREATOR_INFORMATION_INPUT).first();
+        await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const nameParts = page.locator(SelectorsPartsDataBase.CREATOR_INFORMATION_INPUT);
-
         await nameParts.fill(cbed.name || '');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await expectSoftWithScreenshot(
@@ -742,11 +753,18 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 07: Click on the Process', async () => {
         await partsDatabsePage.waitForNetworkIdle();
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const techProcessBtn = page.locator(SelectorsPartsDataBase.U002_CREATOR_BUTTONS_TECHPROCESS);
+        await techProcessBtn.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await partsDatabsePage.clickButton('Технологический процесс', SelectorsPartsDataBase.U002_CREATOR_BUTTONS_TECHPROCESS);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       });
 
       await allure.step('Step 08: Getting the name of the operation', async () => {
-        await partsDatabsePage.waitingTableBody(SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER);
+        await partsDatabsePage.waitingTableBody(SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER, {
+          minRows: 1,
+          timeoutMs: WAIT_TIMEOUTS.LONG,
+        });
         const headerCells = page.locator(`${SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER} thead th`);
         const headerCount = await headerCells.count();
         let nameColIndex = -1;
@@ -805,12 +823,15 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 03: Click on the Detail button', async () => {
         await partsDatabsePage.clickButton('Изделие', SelectorsPartsDataBase.U002_BUTTON_PRODUCT);
+        const loader = page.locator(SelectorsPartsDataBase.CREATOR_LOADER);
+        await loader.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       });
 
       await allure.step('Step 04: Enter the name of the part', async () => {
         await partsDatabsePage.waitForNetworkIdle();
-        const nameParts = page.locator(SelectorsPartsDataBase.CREATOR_INFORMATION_INPUT);
-
+        const nameParts = page.locator(SelectorsPartsDataBase.CREATOR_INFORMATION_INPUT).first();
+        await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await nameParts.fill(izd.name || '');
         await expectSoftWithScreenshot(
@@ -824,13 +845,13 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
-        const nameParts = page.locator(SelectorsPartsDataBase.INPUT_DESUGNTATION_IZD);
-
-        await nameParts.fill(izd.designation || '-');
+        const designationInput = page.locator(SelectorsPartsDataBase.INPUT_DESUGNTATION_IZD).first();
+        await designationInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await designationInput.fill(izd.designation || '-');
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await nameParts.inputValue()).toBe(izd.designation || '-');
+            expect.soft(await designationInput.inputValue()).toBe(izd.designation || '-');
           },
           'Verify IZD designation input value',
           test.info(),
@@ -843,10 +864,18 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 07: Click on the Process', async () => {
         await partsDatabsePage.waitForNetworkIdle();
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const techProcessBtn = page.locator(SelectorsPartsDataBase.U002_CREATOR_BUTTONS_TECHPROCESS);
+        await techProcessBtn.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await partsDatabsePage.clickButton('Технологический процесс', SelectorsPartsDataBase.U002_CREATOR_BUTTONS_TECHPROCESS);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       });
 
       await allure.step('Step 08: Getting the name of the operation', async () => {
+        await partsDatabsePage.waitingTableBody(SelectorsPartsDataBase.U002_CREATOR_TECHPROCESS_TABLE_WRAPPER, {
+          minRows: 1,
+          timeoutMs: WAIT_TIMEOUTS.LONG,
+        });
         await page.waitForTimeout(TIMEOUTS.STANDARD);
         const numberColumnOnNameProcess = await partsDatabsePage.findColumn(
           page,
@@ -1070,7 +1099,11 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           },
         );
 
-        // Wait for system to update
+        // Wait for table to have rows and system to update after archive
+        await metalworkingWarehouse.waitingTableBody(SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE, {
+          minRows: 1,
+          timeoutMs: WAIT_TIMEOUTS.LONG,
+        });
         await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
         const remainingOrderedQuantity = await metalworkingWarehouse.getQuantityCellAndVerify(
@@ -1081,6 +1114,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
           true,
           SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_PREFIX,
           SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED,
+          WAIT_TIMEOUTS.LONG,
+          SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
         );
 
         // Set the global variable for subsequent test cases

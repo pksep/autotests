@@ -593,15 +593,9 @@ export class ValidationHelper {
         console.warn('Continuing without waiting.');
       }
       // Check for 'disabled-yui-kit' class and 'disabled' attribute
+      // Note: evaluate() runs in browser context - do not use logger or other Node APIs inside the callback
       const hasDisabledClass = await button.evaluate(btn => {
-        const classList = Array.from(btn.classList);
-        logger.log(`Button classList:`, classList);
         const hasDisabled = btn.classList.contains('disabled-yui-kit');
-        logger.log(`Button has disabled-yui-kit class:`, hasDisabled);
-        const hasDisabledAttr = btn.hasAttribute('disabled');
-        logger.log(`Button has disabled attribute:`, hasDisabledAttr);
-        const outerHTML = btn.outerHTML;
-        logger.log(`Button outerHTML:`, outerHTML);
         return hasDisabled;
       });
 
