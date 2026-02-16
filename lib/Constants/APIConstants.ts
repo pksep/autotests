@@ -1,0 +1,423 @@
+/**
+ * API test data and validation constants.
+ * Used by testcases/API*.spec.ts. Previously in config.ts.
+ */
+
+export const API_CONST = {
+  // Auth Test Data
+  API_TEST_USERNAME: 'Джойс Р.Г.',
+  API_TEST_PASSWORD: 'O0_f2!3@34OInU',
+  API_TEST_TABEL: '105',
+  API_TEST_AUTHORIZATION_TOKEN: 'Bearer test-token-12345',
+
+  // Users Test Data
+  API_TEST_USER_ID: '1',
+  API_TEST_USER_ID_72: '72', // Real user account created on dev server
+  API_CREATOR_USER_ID_66: '66', // Real user account created on dev server
+  API_TEST_USER_INITIALS: 'TU',
+  API_TEST_USER_INITIALS_UPDATED: 'TU2',
+  API_TEST_USER_TABEL: '12345',
+  API_TEST_USER_TABEL_UPDATED: '12346',
+
+  // Roles Test Data
+  API_TEST_ROLE_NAME: 'API Test Role',
+  API_TEST_ROLE_NAME_UPDATED: 'Updated API Test Role',
+  API_TEST_ROLE_DESCRIPTION: 'API test role for automated testing',
+  API_TEST_ROLE_DESCRIPTION_UPDATED: 'Updated API test role for automated testing',
+
+  // Details Test Data
+  API_TEST_DETAIL_ID: '2',
+  API_TEST_DETAIL_NAME: 'API Test Detail',
+  API_TEST_DETAIL_DESIGNATION: 'API-TEST-001',
+  API_TEST_DETAIL_DESCRIPTION: 'API test detail for automated testing',
+  API_TEST_DETAIL_ID_LARGE: '999',
+
+  // Documents Test Data
+  API_TEST_DOCUMENT_ID: '1',
+  API_TEST_FILE_ID: '1',
+  API_TEST_USER_TO_UPDATE_ID: '1',
+  API_TEST_DOCUMENT_TYPE: 'test-type',
+  API_TEST_DOCUMENT_TYPE_UPDATED: 'updated-test-type',
+
+  // Assemble Test Data
+  API_TEST_ASSEMBLE_ID: '1',
+  API_TEST_ASSEMBLE_NAME: 'Test Assemble',
+  API_TEST_ASSEMBLE_NAME_UPDATED: 'Updated Test Assemble',
+  API_TEST_ASSEMBLE_DESCRIPTION: 'Test assemble description',
+  API_TEST_ASSEMBLE_DESCRIPTION_UPDATED: 'Updated test assemble description',
+
+  // Materials Test Data
+  API_TEST_MATERIAL_ID: '1',
+  API_TEST_MATERIAL_NAME: 'Test Material',
+  API_TEST_MATERIAL_NAME_UPDATED: 'Updated Test Material',
+  API_TEST_MATERIAL_TYPE: 'test-type',
+  API_TEST_MATERIAL_TYPE_UPDATED: 'updated-test-type',
+  API_TEST_SUBTYPE_INSTANS: '1',
+
+  // CBED Test Data
+  API_TEST_CBED_ID: '1',
+  API_TEST_CBED_NAME: 'Test CBED',
+  API_TEST_CBED_NAME_UPDATED: 'Updated Test CBED',
+  API_TEST_CBED_DESCRIPTION: 'Test CBED description',
+  API_TEST_CBED_DESCRIPTION_UPDATED: 'Updated test CBED description',
+
+  // Products Test Data
+  API_TEST_PRODUCT_ID: '1',
+  API_TEST_PRODUCT_NAME: 'Test Product',
+  API_TEST_PRODUCT_NAME_UPDATED: 'Updated Test Product',
+  API_TEST_PRODUCT_DESCRIPTION: 'Test product description',
+  API_TEST_PRODUCT_DESCRIPTION_UPDATED: 'Updated test product description',
+  API_TEST_PRODUCT_CATEGORY: 'test-category',
+  API_TEST_PRODUCT_CATEGORY_UPDATED: 'updated-test-category',
+  API_TEST_PRODUCT_PRICE: 100.0,
+  API_TEST_PRODUCT_PRICE_UPDATED: 150.0,
+
+  // Orders Test Data
+  API_TEST_ORDER_ID: '1',
+  API_TEST_ORDER_STATUS: 'pending',
+  API_TEST_ORDER_STATUS_UPDATED: 'confirmed',
+  API_TEST_ORDER_TOTAL_AMOUNT: 100.0,
+  API_TEST_ORDER_TOTAL_AMOUNT_UPDATED: 150.0,
+  API_TEST_ORDER_NOTES: 'Test order',
+  API_TEST_ORDER_NOTES_UPDATED: 'Updated test order',
+
+  // Contacts Test Data
+  API_TEST_CONTACT_ID: '1',
+  API_TEST_CONTACT_NAME: 'Test Contact',
+  API_TEST_CONTACT_NAME_UPDATED: 'Updated Test Contact',
+  API_TEST_CONTACT_EMAIL: 'test@example.com',
+  API_TEST_CONTACT_EMAIL_UPDATED: 'updated@example.com',
+  API_TEST_CONTACT_PHONE: '+1234567890',
+  API_TEST_CONTACT_PHONE_UPDATED: '+0987654321',
+  API_TEST_CONTACT_TYPE: 'customer',
+  API_TEST_CONTACT_TYPE_UPDATED: 'supplier',
+
+  // Equipment Test Data
+  API_TEST_EQUIPMENT_ID: '1',
+  API_TEST_EQUIPMENT_NAME: 'Test Equipment',
+  API_TEST_EQUIPMENT_NAME_UPDATED: 'Updated Test Equipment',
+  API_TEST_EQUIPMENT_TYPE: 'machine',
+  API_TEST_EQUIPMENT_TYPE_UPDATED: 'tool',
+  API_TEST_EQUIPMENT_STATUS: 'active',
+  API_TEST_EQUIPMENT_STATUS_UPDATED: 'maintenance',
+
+  // Inventory Test Data
+  API_TEST_INVENTORY_ID: '1',
+  API_TEST_INVENTORY_NAME: 'Test Inventory',
+  API_TEST_INVENTORY_NAME_UPDATED: 'Updated Test Inventory',
+  API_TEST_INVENTORY_QUANTITY: 100,
+  API_TEST_INVENTORY_QUANTITY_UPDATED: 150,
+  API_TEST_INVENTORY_LOCATION: 'warehouse-a',
+  API_TEST_INVENTORY_LOCATION_UPDATED: 'warehouse-b',
+
+  // Parts Test Data
+  API_TEST_PART_ID: '1',
+  API_TEST_PART_NAME: 'Test Part',
+  API_TEST_PART_NAME_UPDATED: 'Updated Test Part',
+  API_TEST_PART_NUMBER: 'PART-001',
+  API_TEST_PART_NUMBER_UPDATED: 'PART-002',
+  API_TEST_PART_CATEGORY: 'mechanical',
+  API_TEST_PART_CATEGORY_UPDATED: 'electrical',
+
+  // Warehouse Test Data
+  API_TEST_WAREHOUSE_ID: '1',
+  API_TEST_WAREHOUSE_NAME: 'Test Warehouse',
+  API_TEST_WAREHOUSE_NAME_UPDATED: 'Updated Test Warehouse',
+  API_TEST_WAREHOUSE_LOCATION: 'Building A',
+  API_TEST_WAREHOUSE_LOCATION_UPDATED: 'Building B',
+  API_TEST_WAREHOUSE_CAPACITY: 1000,
+  API_TEST_WAREHOUSE_CAPACITY_UPDATED: 1500,
+
+  // Specifications Test Data
+  API_TEST_SPECIFICATION_ID: '1',
+  API_TEST_SPECIFICATION_NAME: 'Test Specification',
+  API_TEST_SPECIFICATION_NAME_UPDATED: 'Updated Test Specification',
+  API_TEST_SPECIFICATION_VERSION: '1.0',
+  API_TEST_SPECIFICATION_VERSION_UPDATED: '2.0',
+  API_TEST_SPECIFICATION_STATUS: 'draft',
+  API_TEST_SPECIFICATION_STATUS_UPDATED: 'approved',
+
+  // Shipments Test Data
+  API_TEST_SHIPMENT_ID: '1',
+  API_TEST_SHIPMENT_TRACKING_NUMBER: 'TRK-001',
+  API_TEST_SHIPMENT_TRACKING_NUMBER_UPDATED: 'TRK-002',
+  API_TEST_SHIPMENT_STATUS: 'pending',
+  API_TEST_SHIPMENT_STATUS_UPDATED: 'shipped',
+  API_TEST_SHIPMENT_DESTINATION: 'New York',
+  API_TEST_SHIPMENT_DESTINATION_UPDATED: 'Los Angeles',
+
+  // Manufacturing Test Data
+  API_TEST_MANUFACTURING_ORDER_ID: '1',
+  API_TEST_MANUFACTURING_ORDER_NAME: 'Test Manufacturing Order',
+  API_TEST_MANUFACTURING_ORDER_NAME_UPDATED: 'Updated Test Manufacturing Order',
+  API_TEST_MANUFACTURING_ORDER_STATUS: 'planned',
+  API_TEST_MANUFACTURING_ORDER_STATUS_UPDATED: 'in-progress',
+  API_TEST_MANUFACTURING_ORDER_QUANTITY: 50,
+  API_TEST_MANUFACTURING_ORDER_QUANTITY_UPDATED: 75,
+
+  // Quality Test Data
+  API_TEST_QUALITY_CHECK_ID: '1',
+  API_TEST_QUALITY_CHECK_NAME: 'Test Quality Check',
+  API_TEST_QUALITY_CHECK_NAME_UPDATED: 'Updated Test Quality Check',
+  API_TEST_QUALITY_CHECK_STATUS: 'pending',
+  API_TEST_QUALITY_CHECK_STATUS_UPDATED: 'passed',
+  API_TEST_QUALITY_CHECK_SCORE: 85,
+  API_TEST_QUALITY_CHECK_SCORE_UPDATED: 95,
+
+  // Maintenance Test Data
+  API_TEST_MAINTENANCE_SCHEDULE_ID: '1',
+  API_TEST_MAINTENANCE_SCHEDULE_NAME: 'Test Maintenance Schedule',
+  API_TEST_MAINTENANCE_SCHEDULE_NAME_UPDATED: 'Updated Test Maintenance Schedule',
+  API_TEST_MAINTENANCE_SCHEDULE_FREQUENCY: 'weekly',
+  API_TEST_MAINTENANCE_SCHEDULE_FREQUENCY_UPDATED: 'monthly',
+  API_TEST_MAINTENANCE_SCHEDULE_STATUS: 'active',
+  API_TEST_MAINTENANCE_SCHEDULE_STATUS_UPDATED: 'paused',
+
+  // Analytics Test Data
+  API_TEST_ANALYTICS_DATE_RANGE: '2024-01-01,2024-12-31',
+  API_TEST_ANALYTICS_METRICS: ['production', 'quality', 'efficiency'],
+  API_TEST_ANALYTICS_KPI_TYPE: 'performance',
+  API_TEST_ANALYTICS_KPI_TYPE_UPDATED: 'quality',
+
+  // Notifications Test Data
+  API_TEST_NOTIFICATION_ID: '1',
+  API_TEST_NOTIFICATION_TITLE: 'Test Notification',
+  API_TEST_NOTIFICATION_TITLE_UPDATED: 'Updated Test Notification',
+  API_TEST_NOTIFICATION_MESSAGE: 'This is a test notification',
+  API_TEST_NOTIFICATION_MESSAGE_UPDATED: 'This is an updated test notification',
+  API_TEST_NOTIFICATION_TYPE: 'info',
+  API_TEST_NOTIFICATION_TYPE_UPDATED: 'warning',
+
+  // Settings Test Data
+  API_TEST_SETTING_KEY: 'test_setting',
+  API_TEST_SETTING_KEY_UPDATED: 'updated_test_setting',
+  API_TEST_SETTING_VALUE: 'test_value',
+  API_TEST_SETTING_VALUE_UPDATED: 'updated_test_value',
+  API_TEST_SETTING_CATEGORY: 'general',
+  API_TEST_SETTING_CATEGORY_UPDATED: 'advanced',
+
+  // Logs Test Data
+  API_TEST_LOG_LEVEL: 'info',
+  API_TEST_LOG_LEVEL_UPDATED: 'debug',
+  API_TEST_LOG_MODULE: 'api',
+  API_TEST_LOG_MODULE_UPDATED: 'database',
+  API_TEST_LOG_MESSAGE: 'Test log message',
+  API_TEST_LOG_MESSAGE_UPDATED: 'Updated test log message',
+
+  // Files Test Data
+  API_TEST_FILE_NAME: 'test-file.txt',
+  API_TEST_FILE_NAME_UPDATED: 'updated-test-file.txt',
+  API_TEST_FILE_TYPE: 'text',
+  API_TEST_FILE_TYPE_UPDATED: 'document',
+  API_TEST_FILE_SIZE: 1024,
+  API_TEST_FILE_SIZE_UPDATED: 2048,
+
+  // Security Test Data
+  API_TEST_SECURITY_SETTING_KEY: 'password_policy',
+  API_TEST_SECURITY_SETTING_KEY_UPDATED: 'session_timeout',
+  API_TEST_SECURITY_SETTING_VALUE: 'strong',
+  API_TEST_SECURITY_SETTING_VALUE_UPDATED: '30_minutes',
+  API_TEST_SECURITY_ACTION: 'login',
+  API_TEST_SECURITY_ACTION_UPDATED: 'logout',
+
+  // Backup Test Data
+  API_TEST_BACKUP_ID: '1',
+  API_TEST_BACKUP_NAME: 'Test Backup',
+  API_TEST_BACKUP_NAME_UPDATED: 'Updated Test Backup',
+  API_TEST_BACKUP_TYPE: 'full',
+  API_TEST_BACKUP_TYPE_UPDATED: 'incremental',
+  API_TEST_BACKUP_STATUS: 'pending',
+  API_TEST_BACKUP_STATUS_UPDATED: 'completed',
+
+  // Monitoring Test Data
+  API_TEST_MONITORING_METRIC: 'cpu_usage',
+  API_TEST_MONITORING_METRIC_UPDATED: 'memory_usage',
+  API_TEST_MONITORING_THRESHOLD: 80,
+  API_TEST_MONITORING_THRESHOLD_UPDATED: 90,
+  API_TEST_MONITORING_ALERT_TYPE: 'warning',
+  API_TEST_MONITORING_ALERT_TYPE_UPDATED: 'critical',
+
+  // Reports Test Data
+  API_TEST_REPORT_ID: '1',
+  API_TEST_REPORT_NAME: 'Test Report',
+  API_TEST_REPORT_NAME_UPDATED: 'Updated Test Report',
+  API_TEST_REPORT_TYPE: 'summary',
+  API_TEST_REPORT_TYPE_UPDATED: 'detailed',
+  API_TEST_REPORT_FORMAT: 'pdf',
+  API_TEST_REPORT_FORMAT_UPDATED: 'excel',
+
+  // Integrations Test Data
+  API_TEST_INTEGRATION_ID: '1',
+  API_TEST_INTEGRATION_NAME: 'Test Integration',
+  API_TEST_INTEGRATION_NAME_UPDATED: 'Updated Test Integration',
+  API_TEST_INTEGRATION_TYPE: 'api',
+  API_TEST_INTEGRATION_TYPE_UPDATED: 'webhook',
+  API_TEST_INTEGRATION_STATUS: 'active',
+  API_TEST_INTEGRATION_STATUS_UPDATED: 'inactive',
+
+  // Audit Test Data
+  API_TEST_AUDIT_ACTION: 'create',
+  API_TEST_AUDIT_ACTION_UPDATED: 'update',
+  API_TEST_AUDIT_RESOURCE: 'user',
+  API_TEST_AUDIT_RESOURCE_UPDATED: 'product',
+  API_TEST_AUDIT_RESULT: 'success',
+  API_TEST_AUDIT_RESULT_UPDATED: 'failure',
+
+  // Calendar Test Data
+  API_TEST_CALENDAR_EVENT_ID: '1',
+  API_TEST_CALENDAR_EVENT_TITLE: 'Test Event',
+  API_TEST_CALENDAR_EVENT_TITLE_UPDATED: 'Updated Test Event',
+  API_TEST_CALENDAR_EVENT_START_DATE: '2024-01-01T10:00:00Z',
+  API_TEST_CALENDAR_EVENT_START_DATE_UPDATED: '2024-01-01T11:00:00Z',
+  API_TEST_CALENDAR_EVENT_END_DATE: '2024-01-01T11:00:00Z',
+  API_TEST_CALENDAR_EVENT_END_DATE_UPDATED: '2024-01-01T12:00:00Z',
+
+  // Tasks Test Data
+  API_TEST_TASK_ID: '1',
+  API_TEST_TASK_TITLE: 'Test Task',
+  API_TEST_TASK_TITLE_UPDATED: 'Updated Test Task',
+  API_TEST_TASK_DESCRIPTION: 'Test task description',
+  API_TEST_TASK_DESCRIPTION_UPDATED: 'Updated test task description',
+  API_TEST_TASK_PRIORITY: 'medium',
+  API_TEST_TASK_PRIORITY_UPDATED: 'high',
+  API_TEST_TASK_STATUS: 'todo',
+  API_TEST_TASK_STATUS_UPDATED: 'in-progress',
+
+  // Chat Test Data
+  API_TEST_CHAT_ROOM_ID: '1',
+  API_TEST_CHAT_ROOM_NAME: 'Test Chat Room',
+  API_TEST_CHAT_ROOM_NAME_UPDATED: 'Updated Test Chat Room',
+  API_TEST_CHAT_MESSAGE_ID: '1',
+  API_TEST_CHAT_MESSAGE_CONTENT: 'Test message',
+  API_TEST_CHAT_MESSAGE_CONTENT_UPDATED: 'Updated test message',
+
+  // Dashboard Test Data
+  API_TEST_DASHBOARD_WIDGET_ID: '1',
+  API_TEST_DASHBOARD_WIDGET_TYPE: 'chart',
+  API_TEST_DASHBOARD_WIDGET_TYPE_UPDATED: 'table',
+  API_TEST_DASHBOARD_WIDGET_TITLE: 'Test Widget',
+  API_TEST_DASHBOARD_WIDGET_TITLE_UPDATED: 'Updated Test Widget',
+
+  // Search Test Data
+  API_TEST_SEARCH_QUERY: 'test search',
+  API_TEST_SEARCH_QUERY_UPDATED: 'updated test search',
+  API_TEST_SEARCH_FILTERS: { category: 'test' },
+  API_TEST_SEARCH_FILTERS_UPDATED: { category: 'updated' },
+
+  // Import/Export Test Data
+  API_TEST_IMPORT_ID: '1',
+  API_TEST_EXPORT_ID: '1',
+  API_TEST_IMPORT_TYPE: 'csv',
+  API_TEST_EXPORT_TYPE: 'excel',
+  API_TEST_IMPORT_STATUS: 'pending',
+  API_TEST_EXPORT_STATUS: 'completed',
+
+  // Messaging Test Data
+  API_TEST_MESSAGE_ID: '1',
+  API_TEST_CONVERSATION_ID: '1',
+  API_TEST_MESSAGE_CONTENT: 'Test message content',
+  API_TEST_MESSAGE_CONTENT_UPDATED: 'Updated test message content',
+
+  // Templates Test Data
+  API_TEST_TEMPLATE_ID: '1',
+  API_TEST_TEMPLATE_NAME: 'Test Template',
+  API_TEST_TEMPLATE_NAME_UPDATED: 'Updated Test Template',
+  API_TEST_TEMPLATE_CATEGORY: 'email',
+  API_TEST_TEMPLATE_CATEGORY_UPDATED: 'document',
+
+  // Workflows Test Data
+  API_TEST_WORKFLOW_ID: '1',
+  API_TEST_WORKFLOW_NAME: 'Test Workflow',
+  API_TEST_WORKFLOW_NAME_UPDATED: 'Updated Test Workflow',
+  API_TEST_WORKFLOW_STATUS: 'draft',
+  API_TEST_WORKFLOW_STATUS_UPDATED: 'active',
+
+  // Scheduling Test Data
+  API_TEST_SCHEDULE_ID: '1',
+  API_TEST_SCHEDULE_NAME: 'Test Schedule',
+  API_TEST_SCHEDULE_NAME_UPDATED: 'Updated Test Schedule',
+  API_TEST_SCHEDULE_FREQUENCY: 'daily',
+  API_TEST_SCHEDULE_FREQUENCY_UPDATED: 'weekly',
+
+  // Versioning Test Data
+  API_TEST_VERSION_ID: '1',
+  API_TEST_VERSION_NUMBER: '1.0.0',
+  API_TEST_VERSION_NUMBER_UPDATED: '1.1.0',
+  API_TEST_VERSION_STATUS: 'draft',
+  API_TEST_VERSION_STATUS_UPDATED: 'published',
+
+  // Production Tasks Test Data
+  API_TEST_PRODUCTION_TASK_ID: '1',
+  API_TEST_PRODUCTION_TASK_NAME: 'Test Production Task',
+  API_TEST_PRODUCTION_TASK_NAME_UPDATED: 'Updated Test Production Task',
+  API_TEST_PRODUCTION_TASK_STATUS: 'planned',
+  API_TEST_PRODUCTION_TASK_STATUS_UPDATED: 'in-progress',
+
+  // Tools Test Data
+  API_TEST_TOOL_ID: '1',
+  API_TEST_TOOL_NAME: 'Test Tool',
+  API_TEST_TOOL_NAME_UPDATED: 'Updated Test Tool',
+  API_TEST_TOOL_TYPE: 'hand-tool',
+  API_TEST_TOOL_TYPE_UPDATED: 'power-tool',
+  API_TEST_TOOL_STATUS: 'available',
+  API_TEST_TOOL_STATUS_UPDATED: 'in-use',
+  API_TEST_CBED_TYPE: 'assembly',
+
+  // Edge Case Test Data for Defensive Testing
+  API_TEST_EDGE_CASES: {
+    SQL_INJECTION_USERNAME: "admin'; DROP TABLE users; --",
+    XSS_PAYLOAD: "<script>alert('XSS')</script>",
+    XSS_PAYLOAD_ADVANCED: "javascript:alert('XSS')",
+    EMPTY_STRING: '',
+    NULL_VALUE: null,
+    UNDEFINED_VALUE: undefined,
+    VERY_LONG_STRING: 'A'.repeat(10000),
+    SPECIAL_CHARACTERS: '!@#$%^&*()_+-=[]{}|;\':",./<>?',
+    UNICODE_CHARACTERS: '🚀🌟💫⭐️🎯🔥💎✨',
+    INVALID_NUMBER: 'not_a_number',
+    NEGATIVE_NUMBER: -1,
+    ZERO_NUMBER: 0,
+    VERY_LARGE_NUMBER: 999999999999,
+    FLOAT_NUMBER: 3.14159,
+    INVALID_ARRAY: 'not_an_array',
+    EMPTY_ARRAY: [] as string[],
+    LARGE_ARRAY: new Array(1000).fill('test'),
+    INVALID_OBJECT: 'not_an_object',
+    EMPTY_OBJECT: {} as Record<string, unknown>,
+    INVALID_TOKEN: 'invalid_token_12345',
+    EXPIRED_TOKEN: 'expired_token_12345',
+    MALFORMED_TOKEN: 'malformed.token',
+    PERFORMANCE_THRESHOLD_MS: 5000,
+    LARGE_PAGE_SIZE: 10000,
+    NEGATIVE_PAGE_NUMBER: -1,
+    ZERO_PAGE_SIZE: 0,
+    MAX_INTEGER: 2147483647,
+    MIN_INTEGER: -2147483648,
+    MAX_STRING_LENGTH: 1000,
+    MIN_STRING_LENGTH: 1,
+  },
+
+  // Tech Process Test Data
+  API_TEST_TECH_PROCESS_ID: '1',
+  API_TEST_TECH_PROCESS_ID_2: '2',
+  API_TEST_TECH_PROCESS_DESCRIPTION: 'процесс токарный',
+  API_TEST_TECH_PROCESS_DESCRIPTION_UPDATED: 'обновленный процесс токарный',
+  API_TEST_TECH_PROCESS_IZD_TYPE: 'cbed',
+  API_TEST_TECH_PROCESS_IZD_ID: '2',
+  API_TEST_TECH_PROCESS_IZD_ID_UPDATED: '3',
+  API_TEST_TECH_PROCESS_OPERATION_LIST: '[{"id":8857}]',
+  API_TEST_TECH_PROCESS_OPERATION_LIST_UPDATED: '[{"id":8858}]',
+
+  // Comprehensive Status Code Validation Patterns
+  STATUS_CODE_VALIDATION: {
+    SUCCESS_CODES: [200, 201, 202, 204],
+    AUTHENTICATION_ERROR_CODES: [401, 400, 422],
+    AUTHORIZATION_ERROR_CODES: [403, 401, 400],
+    VALIDATION_ERROR_CODES: [400, 422, 401],
+    NOT_FOUND_ERROR_CODES: [404, 400],
+    UNEXPECTED_SUCCESS_CODES: [201, 200],
+    UNEXPECTED_ERROR_CODES: [500, 502, 503, 504, 520, 521, 522, 523, 524],
+    SERVER_ERROR_CODES: [500, 502, 503, 504, 520, 521, 522, 523, 524],
+    CLIENT_ERROR_CODES: [400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 422, 423, 424, 426, 428, 429, 431, 451],
+  },
+};

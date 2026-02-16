@@ -1,0 +1,375 @@
+import { test, expect, request } from "@playwright/test";
+import { CBEDAPI } from "../../pages/API/APICBED";
+import { AuthAPI } from "../../pages/API/APIAuth";
+import { ENV } from "../../config";
+import { API_CONST } from "../../lib/Constants/APIConstants";
+import logger from "../../lib/utils/logger";
+import { allure } from "allure-playwright";
+
+export const runCBEDAPI = () => {
+    logger.info(`Starting CBED API defensive tests - looking for API problems`);
+
+    test("CBED API - Authentication Edge Cases & Error Detection", async ({ request, page }) => {
+        test.setTimeout(60000);
+        const authAPI = new AuthAPI(page);
+
+        await allure.step("Test 1: Invalid credentials should return 401", async () => {
+            logger.log("Testing invalid credentials...");
+
+            const invalidLoginResponse = await authAPI.login(
+                request,
+                "invalid_user",
+                "invalid_password",
+                API_CONST.API_TEST_TABEL
+            );
+
+            // API PROBLEM: If this doesn't return 401, there's a security issue
+            expect.soft(invalidLoginResponse.status).toBe(401);
+            logger.log("✅ Invalid credentials correctly rejected with 401");
+        });
+
+        await allure.step("Test 2: Empty credentials should return 400", async () => {
+            logger.log("Testing empty credentials...");
+
+            const emptyLoginResponse = await authAPI.login(
+                request,
+                "",
+                "",
+                API_CONST.API_TEST_TABEL
+            );
+
+            // API PROBLEM: If this doesn't return 400, validation is missing
+            expect.soft(emptyLoginResponse.status).toBe(400);
+            logger.log("✅ Empty credentials correctly rejected with 400");
+        });
+
+        await allure.step("Test 3: SQL injection attempt in username", async () => {
+            logger.log("Testing SQL injection protection...");
+
+            const sqlInjectionResponse = await authAPI.login(
+                request,
+                API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
+                "password",
+                API_CONST.API_TEST_TABEL
+            );
+
+            // API PROBLEM: If this returns 200, there's a SQL injection vulnerability
+            expect.soft(sqlInjectionResponse.status).toBe(401);
+            logger.log("✅ SQL injection attempt correctly blocked");
+        });
+    });
+
+    test("CBED API - Data Validation & Edge Cases", async ({ request, page }) => {
+        test.setTimeout(60000);
+        const cbedAPI = new CBEDAPI(page);
+        const authAPI = new AuthAPI(page);
+        let authToken: string;
+        let createdCBEDId: number;
+
+        await allure.step("Step 1: Authenticate with valid credentials", async () => {
+            logger.log("Authenticating with valid credentials...");
+
+            const loginResponse = await authAPI.login(
+                request,
+                API_CONST.API_TEST_USERNAME,
+                API_CONST.API_TEST_PASSWORD,
+                API_CONST.API_TEST_TABEL
+            );
+
+            // API PROBLEM: If auth fails, the API is broken
+            expect.soft(loginResponse.status).toBe(200);
+            expect.soft(loginResponse.data).toHaveProperty('token');
+            authToken = loginResponse.data.token;
+            logger.log("✅ Authentication successful");
+        });
+
+        await allure.step("Test 4: Create CBED with invalid data types", async () => {
+            logger.log("Testing data type validation...");
+
+            const invalidData = {
+                name: 12345, // Should be string
+                description: null, // Should be string
+                type: true, // Should be string
+                status: ["active"] // Should be string, not array
+            };
+
+            const invalidCreateResponse = await cbedAPI.createCBED(request, invalidData, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this returns 201, data validation is missing
+            expect.soft(invalidCreateResponse.status).toBe(400);
+            logger.log("✅ Invalid data types correctly rejected with 400");
+        });
+
+        await allure.step("Test 5: Create CBED with XSS attempt in name", async () => {
+            logger.log("Testing XSS protection...");
+
+            const xssData = {
+                name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
+                description: "Test description",
+                type: "test-type",
+                status: "active"
+            };
+
+            const xssResponse = await cbedAPI.createCBED(request, xssData, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this returns 201, XSS protection is missing
+            expect.soft(xssResponse.status).toBe(400);
+            logger.log("✅ XSS attempt correctly blocked");
+        });
+
+        await allure.step("Test 6: Create CBED with extremely long name", async () => {
+            logger.log("Testing input length validation...");
+
+            const longNameData = {
+                name: API_CONST.API_TEST_EDGE_CASES.VERY_LONG_STRING,
+                description: "Test description",
+                type: "test-type",
+                status: "active"
+            };
+
+            const longNameResponse = await cbedAPI.createCBED(request, longNameData, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this returns 201, length validation is missing
+            expect.soft(longNameResponse.status).toBe(400);
+            logger.log("✅ Extremely long name correctly rejected");
+        });
+
+        await allure.step("Test 7: Create CBED with valid data", async () => {
+            logger.log("Creating CBED with valid data...");
+
+            const cbedData = {
+                name: API_CONST.API_TEST_CBED_NAME,
+                description: API_CONST.API_TEST_CBED_DESCRIPTION,
+                type: "test-type",
+                status: "active"
+            };
+
+            const createResponse = await cbedAPI.createCBED(request, cbedData, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this fails, the API is broken
+            expect.soft(createResponse.status).toBe(201);
+            expect.soft(createResponse.data).toHaveProperty('id');
+            createdCBEDId = createResponse.data.id;
+            logger.log(`✅ CBED created successfully with ID: ${createdCBEDId}`);
+        });
+
+        await allure.step("Test 8: Get CBED with invalid ID", async () => {
+            logger.log("Testing invalid ID handling...");
+
+            const invalidIdResponse = await cbedAPI.getOneCBED(request, -1);
+
+            // API PROBLEM: If this returns 200, ID validation is missing
+            expect.soft(invalidIdResponse.status).toBe(404);
+            logger.log("✅ Invalid ID correctly rejected with 404");
+        });
+
+        await allure.step("Test 9: Get CBED with non-existent ID", async () => {
+            logger.log("Testing non-existent ID handling...");
+
+            const nonExistentResponse = await cbedAPI.getOneCBED(request, 999999);
+
+            // API PROBLEM: If this returns 200, the API is returning fake data
+            expect.soft(nonExistentResponse.status).toBe(404);
+            logger.log("✅ Non-existent ID correctly rejected with 404");
+        });
+
+        await allure.step("Test 10: Get CBED with valid ID", async () => {
+            logger.log("Getting CBED with valid ID...");
+
+            const getResponse = await cbedAPI.getOneCBED(request, createdCBEDId);
+
+            // API PROBLEM: If this fails, the API is broken
+            expect.soft(getResponse.status).toBe(200);
+            expect.soft(getResponse.data.id).toBe(createdCBEDId);
+            expect.soft(getResponse.data.name).toBe(API_CONST.API_TEST_CBED_NAME);
+            logger.log("✅ CBED retrieved successfully by ID");
+        });
+
+        await allure.step("Test 11: Update CBED with invalid data", async () => {
+            logger.log("Testing update with invalid data...");
+
+            const invalidUpdateData = {
+                id: createdCBEDId,
+                name: "", // Empty name should be rejected
+                description: API_CONST.API_TEST_CBED_DESCRIPTION_UPDATED,
+                type: "updated-test-type",
+                status: "active"
+            };
+
+            const invalidUpdateResponse = await cbedAPI.updateCBED(request, invalidUpdateData, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this returns 200, validation is missing
+            expect.soft(invalidUpdateResponse.status).toBe(400);
+            logger.log("✅ Invalid update data correctly rejected with 400");
+        });
+
+        await allure.step("Test 12: Update non-existent CBED", async () => {
+            logger.log("Testing update of non-existent CBED...");
+
+            const nonExistentUpdateData = {
+                id: 999999,
+                name: API_CONST.API_TEST_CBED_NAME_UPDATED,
+                description: API_CONST.API_TEST_CBED_DESCRIPTION_UPDATED,
+                type: "updated-test-type",
+                status: "active"
+            };
+
+            const nonExistentUpdateResponse = await cbedAPI.updateCBED(request, nonExistentUpdateData, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this returns 200, the API is creating fake updates
+            expect.soft(nonExistentUpdateResponse.status).toBe(404);
+            logger.log("✅ Update of non-existent CBED correctly rejected with 404");
+        });
+
+        await allure.step("Test 13: Update CBED with valid data", async () => {
+            logger.log("Updating CBED with valid data...");
+
+            const updateData = {
+                id: createdCBEDId,
+                name: API_CONST.API_TEST_CBED_NAME_UPDATED,
+                description: API_CONST.API_TEST_CBED_DESCRIPTION_UPDATED,
+                type: "updated-test-type",
+                status: "active"
+            };
+
+            const updateResponse = await cbedAPI.updateCBED(request, updateData, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this fails, the API is broken
+            expect.soft(updateResponse.status).toBe(200);
+            expect.soft(updateResponse.data.name).toBe(API_CONST.API_TEST_CBED_NAME_UPDATED);
+            logger.log("✅ CBED updated successfully");
+        });
+
+        await allure.step("Test 14: Verify CBED update", async () => {
+            logger.log("Verifying CBED update...");
+
+            const verifyResponse = await cbedAPI.getOneCBED(request, createdCBEDId);
+
+            // API PROBLEM: If this fails, the update didn't work
+            expect.soft(verifyResponse.status).toBe(200);
+            expect.soft(verifyResponse.data.name).toBe(API_CONST.API_TEST_CBED_NAME_UPDATED);
+            expect.soft(verifyResponse.data.description).toBe(API_CONST.API_TEST_CBED_DESCRIPTION_UPDATED);
+            logger.log("✅ CBED update verified successfully");
+        });
+
+        await allure.step("Test 15: Delete non-existent CBED", async () => {
+            logger.log("Testing deletion of non-existent CBED...");
+
+            const nonExistentDeleteResponse = await cbedAPI.banCBED(request, 999999, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this returns 204, the API is lying about deletion
+            expect.soft(nonExistentDeleteResponse.status).toBe(404);
+            logger.log("✅ Deletion of non-existent CBED correctly rejected with 404");
+        });
+
+        await allure.step("Test 16: Delete CBED with invalid user ID", async () => {
+            logger.log("Testing deletion with invalid user ID...");
+
+            const invalidUserDeleteResponse = await cbedAPI.banCBED(request, createdCBEDId, "invalid_user_id");
+
+            // API PROBLEM: If this returns 204, authorization is missing
+            expect.soft(invalidUserDeleteResponse.status).toBe(403);
+            logger.log("✅ Deletion with invalid user ID correctly rejected with 403");
+        });
+
+        await allure.step("Test 17: Delete CBED successfully", async () => {
+            logger.log("Deleting CBED...");
+
+            const deleteResponse = await cbedAPI.banCBED(request, createdCBEDId, API_CONST.API_TEST_USER_ID);
+
+            // API PROBLEM: If this fails, the API is broken
+            expect.soft(deleteResponse.status).toBe(204);
+            logger.log("✅ CBED deleted successfully");
+        });
+
+        await allure.step("Test 18: Verify CBED deletion", async () => {
+            logger.log("Verifying CBED deletion...");
+
+            const verifyDeleteResponse = await cbedAPI.getOneCBED(request, createdCBEDId);
+
+            // API PROBLEM: If this returns 200, the deletion didn't work
+            expect.soft(verifyDeleteResponse.status).toBe(404);
+            logger.log("✅ CBED deletion verified - CBED no longer exists");
+        });
+    });
+
+    test("CBED API - Performance & Edge Cases", async ({ request, page }) => {
+        test.setTimeout(60000);
+        const cbedAPI = new CBEDAPI(page);
+        const authAPI = new AuthAPI(page);
+        let authToken: string;
+
+        await allure.step("Test 19: Get all CBEDs without authentication", async () => {
+            logger.log("Testing unauthenticated access...");
+
+            const unauthenticatedResponse = await cbedAPI.getAllCBED(request, false);
+
+            // API PROBLEM: If this returns 200, there's a security issue
+            expect.soft(unauthenticatedResponse.status).toBe(401);
+            logger.log("✅ Unauthenticated access correctly rejected with 401");
+        });
+
+        await allure.step("Test 20: Authenticate and get all CBEDs", async () => {
+            logger.log("Authenticating and getting all CBEDs...");
+
+            const loginResponse = await authAPI.login(
+                request,
+                API_CONST.API_TEST_USERNAME,
+                API_CONST.API_TEST_PASSWORD,
+                API_CONST.API_TEST_TABEL
+            );
+
+            // API PROBLEM: If auth fails, the API is broken
+            expect.soft(loginResponse.status).toBe(200);
+            expect.soft(loginResponse.data).toHaveProperty('token');
+            authToken = loginResponse.data.token;
+            logger.log("✅ Authentication successful");
+
+            const getAllResponse = await cbedAPI.getAllCBED(request, true);
+
+            // API PROBLEM: If this fails, the API is broken
+            expect.soft(getAllResponse.status).toBe(200);
+            expect.soft(Array.isArray(getAllResponse.data)).toBe(true);
+            logger.log(`✅ Retrieved ${getAllResponse.data.length} CBEDs`);
+        });
+
+        await allure.step("Test 21: Test pagination with invalid parameters", async () => {
+            logger.log("Testing pagination with invalid parameters...");
+
+            // Test with negative page number
+            const negativePageResponse = await cbedAPI.getAllCBED(request, true, -1, 10);
+
+            // API PROBLEM: If this returns 200, pagination validation is missing
+            expect.soft(negativePageResponse.status).toBe(400);
+            logger.log("✅ Negative page number correctly rejected with 400");
+
+            // Test with zero page size
+            const zeroPageSizeResponse = await cbedAPI.getAllCBED(request, true, 1, 0);
+
+            // API PROBLEM: If this returns 200, page size validation is missing
+            expect.soft(zeroPageSizeResponse.status).toBe(400);
+            logger.log("✅ Zero page size correctly rejected with 400");
+
+            // Test with extremely large page size
+            const largePageSizeResponse = await cbedAPI.getAllCBED(request, true, 1, 10000);
+
+            // API PROBLEM: If this returns 200, there's no limit on page size
+            expect.soft(largePageSizeResponse.status).toBe(400);
+            logger.log("✅ Extremely large page size correctly rejected with 400");
+        });
+
+        await allure.step("Test 22: Test response time performance", async () => {
+            logger.log("Testing response time performance...");
+
+            const startTime = Date.now();
+            const performanceResponse = await cbedAPI.getAllCBED(request, true);
+            const endTime = Date.now();
+            const responseTime = endTime - startTime;
+
+            // API PROBLEM: If response time is too slow, there's a performance issue
+            expect.soft(performanceResponse.status).toBe(200);
+            expect.soft(responseTime).toBeLessThan(5000); // Should respond within 5 seconds
+            logger.log(`✅ Response time: ${responseTime}ms (acceptable)`);
+        });
+    });
+};
