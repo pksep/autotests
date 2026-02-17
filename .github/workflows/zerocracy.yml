@@ -34,3 +34,13 @@ jobs:
         with:
           folder: pages
           clean: false
+
+      - name: Update code on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }} 
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd ~/Desktop/zerocracy/autotests/autotests
+            git pull
