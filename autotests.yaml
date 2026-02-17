@@ -1,0 +1,318 @@
+---
+- added: 8
+  cycles: 1
+  deleted: 8
+  inserted: 8
+  seconds: 45.156567131
+  version: 0.60.0
+  what: judges-summary
+  when: 2026-02-17 09:20:39.247277005 Z
+- _id: 1
+  _job: 22092682427
+  _time: 2026-02-17 09:19:55.964720668 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  commit: 5256157c06e55e4c727afdce1c5b1a55e4e5643d
+  default_branch: main
+  details: 'A new Git push #30815012737 has arrived to pksep/autotests, made by @denis112345
+    (default branch is "main"), not associated with any pull request.'
+  event_id: 8520037491
+  event_type: PushEvent
+  is_human: 1
+  push_id: 30815012737
+  ref: refs/heads/main
+  repository: 935866864
+  to_master: 1
+  what: git-was-pushed
+  when: 2026-02-17 09:18:43.000000000 Z
+  where: github
+  who: 40199504
+- _id: 2
+  _job: 22092682427
+  _time: 2026-02-17 09:19:57.223765721 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U002
+  details: The pull request pksep/autotests#529 has been opened by @atomant1969.
+  event_id: 6269893103
+  event_type: PullRequestEvent
+  is_human: 1
+  issue: 529
+  repository: 935866864
+  what: pull-was-opened
+  when: 2026-02-03 10:11:46.000000000 Z
+  where: github
+  who: 89906484
+- _id: 3
+  _job: 22092682427
+  _time: 2026-02-17 09:19:57.488829893 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  commit: 1a5d9c57dc3420fef29a2a18a1a4fc00c42ce838
+  default_branch: main
+  details: 'A new Git push #30377618484 has arrived to pksep/autotests, made by @atomant1969
+    (default branch is "main"), not associated with any pull request.'
+  event_id: 8082743335
+  event_type: PushEvent
+  is_human: 1
+  push_id: 30377618484
+  ref: refs/heads/main
+  repository: 935866864
+  to_master: 1
+  what: git-was-pushed
+  when: 2026-02-03 10:07:35.000000000 Z
+  where: github
+  who: 89906484
+- _id: 4
+  _job: 22092682427
+  _time: 2026-02-17 09:19:58.243014417 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  earliest_issue_was_found: 1
+  events_were_scanned: 8520055531
+  latest_issue_was_found: 529
+  min_pull_was_found: 529
+  repository: 935866864
+  what: iterate
+  where: github
+- _id: 5
+  _job: 22092682427
+  _time: 2026-02-17 09:19:58.294221433 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  since: 2026-01-16 09:19:58.000000000 Z
+  total_builds_ran: 70
+  total_commits_pushed: 4
+  total_hoc_committed: 6037
+  total_issues_created: 1
+  total_pulls_submitted: 1
+  total_releases_published: 0
+  total_reviews_submitted: 0
+  what: quantity-of-deliverables
+  when: 2026-02-17 09:19:58.000000000 Z
+- _id: 6
+  _job: 22092682427
+  _time: 2026-02-17 09:20:11.110697604 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U002
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#529 has been "pull-was-merged".
+  failed_builds: 1
+  files: 1
+  hoc: 1750
+  is_human: 1
+  issue: 529
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2026-02-05 05:48:46.000000000 Z
+  where: github
+  who: 49451722
+- _id: 7
+  _job: 22092682427
+  _time: 2026-02-17 09:20:14.397843303 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  total_active_contributors: 3
+  total_commits: 564
+  total_contributors: 4
+  total_files: 111
+  total_forks: 0
+  total_issues: 0
+  total_pulls: 529
+  total_releases: 0
+  total_repositories: 1
+  total_stars: 0
+  what: dimensions-of-terrain
+  when: 2026-02-17 09:20:14.406863529 Z
+- _id: 8
+  _job: 22092682427
+  _time: 2026-02-17 09:20:16.129603048 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  details: 'We found out that the user #40199504 is known in GitHub as @denis112345.'
+  is_human: 1
+  name: denis112345
+  what: who-has-name
+  when: 2026-02-17 09:20:16.133152406 Z
+  where: github
+  who: 40199504
+- _id: 9
+  _job: 22092682427
+  _time: 2026-02-17 09:20:16.137893090 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  details: 'We found out that the user #89906484 is known in GitHub as @atomant1969.'
+  is_human: 1
+  name: atomant1969
+  what: who-has-name
+  when: 2026-02-17 09:20:16.141058819 Z
+  where: github
+  who: 89906484
+- _id: 10
+  _job: 22092682427
+  _time: 2026-02-17 09:20:16.146926157 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  details: 'We found out that the user #49451722 is known in GitHub as @sertimberrners-lee.'
+  is_human: 1
+  name: sertimberrners-lee
+  what: who-has-name
+  when: 2026-02-17 09:20:16.311684349 Z
+  where: github
+  who: 49451722
+- _id: 11
+  _job: 22092682427
+  _time: 2026-02-17 09:20:16.449933237 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  since: 2026-01-16 09:20:16.000000000 Z
+  some_backlog_size:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  some_build_duration:
+  - 37
+  - 27
+  - 36
+  - 24
+  - 34
+  - 26
+  - 42
+  - 22
+  - 43
+  - 26
+  - 36
+  - 28
+  - 59
+  - 26
+  - 40
+  - 22
+  - 48
+  - 27
+  - 37
+  - 26
+  - 91
+  - 25
+  - 33
+  - 28
+  - 38
+  - 27
+  - 74
+  - 29
+  - 41
+  - 32
+  - 33
+  - 24
+  - 32
+  - 30
+  - 44
+  - 25
+  - 36
+  - 26
+  - 34
+  - 25
+  - 41
+  - 27
+  - 34
+  - 23
+  - 40
+  - 27
+  - 0
+  - 0
+  - 11
+  - 13
+  - 16
+  - 13
+  - 15
+  - 9
+  - 11
+  - 10
+  - 14
+  - 0
+  - 40
+  - 27
+  some_build_success_rate:
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 1
+  some_merged_pulls: 1
+  some_pull_files_size: 1
+  some_pull_hoc_size: 1750
+  some_pull_lifetime: 157020.0
+  some_review_size: 0
+  some_reviewers_per_pull: 0
+  some_reviews_per_pull: 0
+  some_unmerged_pulls: 0
+  what: quality-of-service
+  when: 2026-02-17 09:20:16.000000000 Z
+- _id: 12
+  _job: 22092682427
+  _time: 2026-02-17 09:20:38.487403867 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U001
+  details: The issue pksep/autotests#1 is the earliest we found, opened by @lostnametv.
+  is_human: 1
+  issue: 1
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-02-25 10:42:13.000000000 Z
+  where: github
+  who: 150246089

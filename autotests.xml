@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fb version="0.19.6" size="5194">
+  <f>
+    <added t="I">8</added>
+    <cycles t="I">1</cycles>
+    <deleted t="I">8</deleted>
+    <inserted t="I">8</inserted>
+    <seconds t="F">45.156567131</seconds>
+    <version t="S">0.60.0</version>
+    <what t="S">judges-summary</what>
+    <when t="T">2026-02-17T09:20:39Z</when>
+  </f>
+  <f>
+    <_id t="I">1</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:19:55Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <commit t="S">5256157c06e55e4c727afdce1c5b1a55e4e5643d</commit>
+    <default_branch t="S">main</default_branch>
+    <details t="S">A new Git push #30815012737 has arrived to pksep/autotests, made by @denis112345 (default branch is "main"), not associated with any pull request.</details>
+    <event_id t="I">8520037491</event_id>
+    <event_type t="S">PushEvent</event_type>
+    <is_human t="I">1</is_human>
+    <push_id t="I">30815012737</push_id>
+    <ref t="S">refs/heads/main</ref>
+    <repository t="I">935866864</repository>
+    <to_master t="I">1</to_master>
+    <what t="S">git-was-pushed</what>
+    <when t="T">2026-02-17T09:18:43Z</when>
+    <where t="S">github</where>
+    <who t="I">40199504</who>
+  </f>
+  <f>
+    <_id t="I">2</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:19:57Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U002</branch>
+    <details t="S">The pull request pksep/autotests#529 has been opened by @atomant1969.</details>
+    <event_id t="I">6269893103</event_id>
+    <event_type t="S">PullRequestEvent</event_type>
+    <is_human t="I">1</is_human>
+    <issue t="I">529</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2026-02-03T10:11:46Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">3</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:19:57Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <commit t="S">1a5d9c57dc3420fef29a2a18a1a4fc00c42ce838</commit>
+    <default_branch t="S">main</default_branch>
+    <details t="S">A new Git push #30377618484 has arrived to pksep/autotests, made by @atomant1969 (default branch is "main"), not associated with any pull request.</details>
+    <event_id t="I">8082743335</event_id>
+    <event_type t="S">PushEvent</event_type>
+    <is_human t="I">1</is_human>
+    <push_id t="I">30377618484</push_id>
+    <ref t="S">refs/heads/main</ref>
+    <repository t="I">935866864</repository>
+    <to_master t="I">1</to_master>
+    <what t="S">git-was-pushed</what>
+    <when t="T">2026-02-03T10:07:35Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">4</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:19:58Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">8520055531</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
+  </f>
+  <f>
+    <_id t="I">5</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:19:58Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <since t="T">2026-01-16T09:19:58Z</since>
+    <total_builds_ran t="I">70</total_builds_ran>
+    <total_commits_pushed t="I">4</total_commits_pushed>
+    <total_hoc_committed t="I">6037</total_hoc_committed>
+    <total_issues_created t="I">1</total_issues_created>
+    <total_pulls_submitted t="I">1</total_pulls_submitted>
+    <total_releases_published t="I">0</total_releases_published>
+    <total_reviews_submitted t="I">0</total_reviews_submitted>
+    <what t="S">quantity-of-deliverables</what>
+    <when t="T">2026-02-17T09:19:58Z</when>
+  </f>
+  <f>
+    <_id t="I">6</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:20:11Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U002</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#529 has been "pull-was-merged".</details>
+    <failed_builds t="I">1</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">1750</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">529</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-merged</what>
+    <when t="T">2026-02-05T05:48:46Z</when>
+    <where t="S">github</where>
+    <who t="I">49451722</who>
+  </f>
+  <f>
+    <_id t="I">7</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:20:14Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <total_active_contributors t="I">3</total_active_contributors>
+    <total_commits t="I">564</total_commits>
+    <total_contributors t="I">4</total_contributors>
+    <total_files t="I">111</total_files>
+    <total_forks t="I">0</total_forks>
+    <total_issues t="I">0</total_issues>
+    <total_pulls t="I">529</total_pulls>
+    <total_releases t="I">0</total_releases>
+    <total_repositories t="I">1</total_repositories>
+    <total_stars t="I">0</total_stars>
+    <what t="S">dimensions-of-terrain</what>
+    <when t="T">2026-02-17T09:20:14Z</when>
+  </f>
+  <f>
+    <_id t="I">8</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:20:16Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <details t="S">We found out that the user #40199504 is known in GitHub as @denis112345.</details>
+    <is_human t="I">1</is_human>
+    <name t="S">denis112345</name>
+    <what t="S">who-has-name</what>
+    <when t="T">2026-02-17T09:20:16Z</when>
+    <where t="S">github</where>
+    <who t="I">40199504</who>
+  </f>
+  <f>
+    <_id t="I">9</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:20:16Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <details t="S">We found out that the user #89906484 is known in GitHub as @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <name t="S">atomant1969</name>
+    <what t="S">who-has-name</what>
+    <when t="T">2026-02-17T09:20:16Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">10</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:20:16Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <details t="S">We found out that the user #49451722 is known in GitHub as @sertimberrners-lee.</details>
+    <is_human t="I">1</is_human>
+    <name t="S">sertimberrners-lee</name>
+    <what t="S">who-has-name</what>
+    <when t="T">2026-02-17T09:20:16Z</when>
+    <where t="S">github</where>
+    <who t="I">49451722</who>
+  </f>
+  <f>
+    <_id t="I">11</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:20:16Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <since t="T">2026-01-16T09:20:16Z</since>
+    <some_backlog_size>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+    </some_backlog_size>
+    <some_build_duration>
+      <v t="I">37</v>
+      <v t="I">27</v>
+      <v t="I">36</v>
+      <v t="I">24</v>
+      <v t="I">34</v>
+      <v t="I">26</v>
+      <v t="I">42</v>
+      <v t="I">22</v>
+      <v t="I">43</v>
+      <v t="I">26</v>
+      <v t="I">36</v>
+      <v t="I">28</v>
+      <v t="I">59</v>
+      <v t="I">26</v>
+      <v t="I">40</v>
+      <v t="I">22</v>
+      <v t="I">48</v>
+      <v t="I">27</v>
+      <v t="I">37</v>
+      <v t="I">26</v>
+      <v t="I">91</v>
+      <v t="I">25</v>
+      <v t="I">33</v>
+      <v t="I">28</v>
+      <v t="I">38</v>
+      <v t="I">27</v>
+      <v t="I">74</v>
+      <v t="I">29</v>
+      <v t="I">41</v>
+      <v t="I">32</v>
+      <v t="I">33</v>
+      <v t="I">24</v>
+      <v t="I">32</v>
+      <v t="I">30</v>
+      <v t="I">44</v>
+      <v t="I">25</v>
+      <v t="I">36</v>
+      <v t="I">26</v>
+      <v t="I">34</v>
+      <v t="I">25</v>
+      <v t="I">41</v>
+      <v t="I">27</v>
+      <v t="I">34</v>
+      <v t="I">23</v>
+      <v t="I">40</v>
+      <v t="I">27</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">11</v>
+      <v t="I">13</v>
+      <v t="I">16</v>
+      <v t="I">13</v>
+      <v t="I">15</v>
+      <v t="I">9</v>
+      <v t="I">11</v>
+      <v t="I">10</v>
+      <v t="I">14</v>
+      <v t="I">0</v>
+      <v t="I">40</v>
+      <v t="I">27</v>
+    </some_build_duration>
+    <some_build_success_rate>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+    </some_build_success_rate>
+    <some_merged_pulls t="I">1</some_merged_pulls>
+    <some_pull_files_size t="I">1</some_pull_files_size>
+    <some_pull_hoc_size t="I">1750</some_pull_hoc_size>
+    <some_pull_lifetime t="F">157020.0</some_pull_lifetime>
+    <some_review_size t="I">0</some_review_size>
+    <some_reviewers_per_pull t="I">0</some_reviewers_per_pull>
+    <some_reviews_per_pull t="I">0</some_reviews_per_pull>
+    <some_unmerged_pulls t="I">0</some_unmerged_pulls>
+    <what t="S">quality-of-service</what>
+    <when t="T">2026-02-17T09:20:16Z</when>
+  </f>
+  <f>
+    <_id t="I">12</_id>
+    <_job t="I">22092682427</_job>
+    <_time t="T">2026-02-17T09:20:38Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U001</branch>
+    <details t="S">The issue pksep/autotests#1 is the earliest we found, opened by @lostnametv.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">1</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-02-25T10:42:13Z</when>
+    <where t="S">github</where>
+    <who t="I">150246089</who>
+  </f>
+</fb>
