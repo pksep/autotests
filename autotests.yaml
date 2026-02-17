@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 53.624600591
+  seconds: 57.553998336
   version: 0.60.0
   what: judges-summary
-  when: 2026-02-17 13:52:54.910457218 Z
+  when: 2026-02-17 15:35:50.990997329 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -2626,17 +2626,6 @@
   when: 2025-03-20 04:10:42.000000000 Z
   where: github
   who: 89906484
-- _id: 145
-  _job: 22101067151
-  _time: 2026-02-17 13:52:02.663011131 Z
-  _version: 0.19.6/0.60.0/0.17.11
-  earliest_issue_was_found: 1
-  events_were_scanned: 8524944250
-  latest_issue_was_found: 529
-  min_pull_was_found: 529
-  repository: 935866864
-  what: iterate
-  where: github
 - _id: 146
   _job: 22101067151
   _time: 2026-02-17 13:52:03.642850580 Z
@@ -2727,6 +2716,7 @@
   is_human: 1
   issue: 56
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -2991,6 +2981,7 @@
   is_human: 1
   issue: 67
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -3039,6 +3030,7 @@
   is_human: 1
   issue: 69
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -3264,5 +3256,645 @@
   repository: 935866864
   what: pull-was-opened
   when: 2025-05-07 10:49:28.000000000 Z
+  where: github
+  who: 89906484
+- _id: 180
+  _job: 22104715208
+  _time: 2026-02-17 15:34:55.043414005 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  earliest_issue_was_found: 1
+  events_were_scanned: 8528224587
+  latest_issue_was_found: 529
+  min_pull_was_found: 529
+  repository: 935866864
+  what: iterate
+  where: github
+- _id: 181
+  _job: 22104715208
+  _time: 2026-02-17 15:34:57.160496931 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U003
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#70 has been "pull-was-merged".
+  failed_builds: 1
+  files: 15
+  hoc: 5746
+  is_human: 1
+  issue: 70
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-03-26 06:04:28.000000000 Z
+  where: github
+  who: 150246089
+- _id: 182
+  _job: 22104715208
+  _time: 2026-02-17 15:35:04.463951962 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: u003-fin
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#71 has been "pull-was-merged".
+  failed_builds: 1
+  files: 4
+  hoc: 3969
+  is_human: 1
+  issue: 71
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-03-26 10:35:43.000000000 Z
+  where: github
+  who: 89906484
+- _id: 183
+  _job: 22104715208
+  _time: 2026-02-17 15:35:07.046465717 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U005
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#72 has been "pull-was-merged".
+  failed_builds: 1
+  files: 8
+  hoc: 7213
+  is_human: 1
+  issue: 72
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-09 11:38:18.000000000 Z
+  where: github
+  who: 89906484
+- _id: 184
+  _job: 22104715208
+  _time: 2026-02-17 15:35:09.510713047 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U005
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#73 has been "pull-was-merged".
+  failed_builds: 1
+  files: 4
+  hoc: 280
+  is_human: 1
+  issue: 73
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-10 04:51:07.000000000 Z
+  where: github
+  who: 89906484
+- _id: 185
+  _job: 22104715208
+  _time: 2026-02-17 15:35:11.712649662 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U005
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#74 has been "pull-was-merged".
+  failed_builds: 1
+  files: 10
+  hoc: 6742
+  is_human: 1
+  issue: 74
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-17 08:57:52.000000000 Z
+  where: github
+  who: 89906484
+- _id: 186
+  _job: 22104715208
+  _time: 2026-02-17 15:35:13.811126719 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U005
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#75 has been "pull-was-merged".
+  failed_builds: 1
+  files: 1
+  hoc: 28
+  is_human: 1
+  issue: 75
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-17 09:06:27.000000000 Z
+  where: github
+  who: 89906484
+- _id: 187
+  _job: 22104715208
+  _time: 2026-02-17 15:35:15.691921045 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: u003-new
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#76 has been "pull-was-merged".
+  failed_builds: 0
+  files: 11
+  hoc: 8606
+  is_human: 1
+  issue: 76
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-21 04:31:02.000000000 Z
+  where: github
+  who: 150246089
+- _id: 188
+  _job: 22104715208
+  _time: 2026-02-17 15:35:17.624790574 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U003-FixNewRedesign
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#77 has been "pull-was-merged".
+  failed_builds: 1
+  files: 1
+  hoc: 972
+  is_human: 1
+  issue: 77
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-21 05:03:03.000000000 Z
+  where: github
+  who: 150246089
+- _id: 189
+  _job: 22104715208
+  _time: 2026-02-17 15:35:19.690704300 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U001-Final
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#78 has been "pull-was-merged".
+  failed_builds: 1
+  files: 7
+  hoc: 2822
+  is_human: 1
+  issue: 78
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-25 03:59:50.000000000 Z
+  where: github
+  who: 150246089
+- _id: 190
+  _job: 22104715208
+  _time: 2026-02-17 15:35:21.752122642 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#79 has been "pull-was-merged".
+  failed_builds: 1
+  files: 5
+  hoc: 6983
+  is_human: 1
+  issue: 79
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-merged
+  when: 2025-04-29 10:24:22.000000000 Z
+  where: github
+  who: 89906484
+- _id: 191
+  _job: 22104715208
+  _time: 2026-02-17 15:35:23.779650913 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: P006
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#80 has been "pull-was-closed".
+  failed_builds: 0
+  files: 5
+  hoc: 1051
+  is_human: 1
+  issue: 80
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-04-29 10:31:47.000000000 Z
+  where: github
+  who: 89906484
+- _id: 192
+  _job: 22104715208
+  _time: 2026-02-17 15:35:25.353001643 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: CI-CD-Test-Main
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#81 has been "pull-was-closed".
+  failed_builds: 0
+  files: 7
+  hoc: 350
+  is_human: 1
+  issue: 81
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-04-29 10:32:51.000000000 Z
+  where: github
+  who: 89906484
+- _id: 193
+  _job: 22104715208
+  _time: 2026-02-17 15:35:26.841689900 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#82 has been "pull-was-closed".
+  failed_builds: 2
+  files: 1
+  hoc: 8
+  is_human: 1
+  issue: 82
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-04-29 11:37:46.000000000 Z
+  where: github
+  who: 89906484
+- _id: 194
+  _job: 22104715208
+  _time: 2026-02-17 15:35:29.784805575 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#83 has been "pull-was-closed".
+  failed_builds: 2
+  files: 2
+  hoc: 10
+  is_human: 1
+  issue: 83
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-04-29 11:46:37.000000000 Z
+  where: github
+  who: 89906484
+- _id: 195
+  _job: 22104715208
+  _time: 2026-02-17 15:35:32.854680210 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#84 has been "pull-was-closed".
+  failed_builds: 2
+  files: 2
+  hoc: 10
+  is_human: 1
+  issue: 84
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-05-05 07:48:54.000000000 Z
+  where: github
+  who: 89906484
+- _id: 196
+  _job: 22104715208
+  _time: 2026-02-17 15:35:34.450323894 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#85 has been "pull-was-closed".
+  failed_builds: 2
+  files: 17
+  hoc: 18394
+  is_human: 1
+  issue: 85
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-05-07 11:47:37.000000000 Z
+  where: github
+  who: 89906484
+- _id: 197
+  _job: 22104715208
+  _time: 2026-02-17 15:35:36.901129391 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U005
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#86 has been "pull-was-closed".
+  failed_builds: 0
+  files: 18
+  hoc: 14184
+  is_human: 1
+  issue: 86
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-05-07 11:03:08.000000000 Z
+  where: github
+  who: 89906484
+- _id: 198
+  _job: 22104715208
+  _time: 2026-02-17 15:35:38.730542163 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U005
+  details: The missing pull pksep/autotests#87 has been opened by @atomant1969.
+  is_human: 1
+  issue: 87
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-07 11:03:32.000000000 Z
+  where: github
+  who: 89906484
+- _id: 199
+  _job: 22104715208
+  _time: 2026-02-17 15:35:39.337254306 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#88 has been opened by @atomant1969.
+  is_human: 1
+  issue: 88
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-07 11:48:04.000000000 Z
+  where: github
+  who: 89906484
+- _id: 200
+  _job: 22104715208
+  _time: 2026-02-17 15:35:40.007987791 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#89 has been opened by @atomant1969.
+  is_human: 1
+  issue: 89
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-08 05:00:42.000000000 Z
+  where: github
+  who: 89906484
+- _id: 201
+  _job: 22104715208
+  _time: 2026-02-17 15:35:40.621504022 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#90 has been opened by @atomant1969.
+  is_human: 1
+  issue: 90
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-12 08:11:44.000000000 Z
+  where: github
+  who: 89906484
+- _id: 202
+  _job: 22104715208
+  _time: 2026-02-17 15:35:41.220841455 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#91 has been opened by @atomant1969.
+  is_human: 1
+  issue: 91
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-12 10:15:59.000000000 Z
+  where: github
+  who: 89906484
+- _id: 203
+  _job: 22104715208
+  _time: 2026-02-17 15:35:41.869465126 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#92 has been opened by @atomant1969.
+  is_human: 1
+  issue: 92
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-13 03:11:48.000000000 Z
+  where: github
+  who: 89906484
+- _id: 204
+  _job: 22104715208
+  _time: 2026-02-17 15:35:42.494026026 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#93 has been opened by @atomant1969.
+  is_human: 1
+  issue: 93
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-13 03:45:28.000000000 Z
+  where: github
+  who: 89906484
+- _id: 205
+  _job: 22104715208
+  _time: 2026-02-17 15:35:43.058037240 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#94 has been opened by @atomant1969.
+  is_human: 1
+  issue: 94
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-13 03:51:37.000000000 Z
+  where: github
+  who: 89906484
+- _id: 206
+  _job: 22104715208
+  _time: 2026-02-17 15:35:43.630983079 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#95 has been opened by @atomant1969.
+  is_human: 1
+  issue: 95
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 08:55:23.000000000 Z
+  where: github
+  who: 89906484
+- _id: 207
+  _job: 22104715208
+  _time: 2026-02-17 15:35:44.353376904 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#96 has been opened by @atomant1969.
+  is_human: 1
+  issue: 96
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 09:02:04.000000000 Z
+  where: github
+  who: 89906484
+- _id: 208
+  _job: 22104715208
+  _time: 2026-02-17 15:35:44.910966341 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#97 has been opened by @atomant1969.
+  is_human: 1
+  issue: 97
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 10:21:23.000000000 Z
+  where: github
+  who: 89906484
+- _id: 209
+  _job: 22104715208
+  _time: 2026-02-17 15:35:45.536952765 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#98 has been opened by @atomant1969.
+  is_human: 1
+  issue: 98
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 10:28:14.000000000 Z
+  where: github
+  who: 89906484
+- _id: 210
+  _job: 22104715208
+  _time: 2026-02-17 15:35:46.086420871 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#99 has been opened by @atomant1969.
+  is_human: 1
+  issue: 99
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 10:42:12.000000000 Z
+  where: github
+  who: 89906484
+- _id: 211
+  _job: 22104715208
+  _time: 2026-02-17 15:35:46.626162218 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#100 has been opened by @atomant1969.
+  is_human: 1
+  issue: 100
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 11:02:02.000000000 Z
+  where: github
+  who: 89906484
+- _id: 212
+  _job: 22104715208
+  _time: 2026-02-17 15:35:47.289842987 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#101 has been opened by @atomant1969.
+  is_human: 1
+  issue: 101
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 11:09:06.000000000 Z
+  where: github
+  who: 89906484
+- _id: 213
+  _job: 22104715208
+  _time: 2026-02-17 15:35:47.949898826 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#102 has been opened by @atomant1969.
+  is_human: 1
+  issue: 102
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 11:16:41.000000000 Z
+  where: github
+  who: 89906484
+- _id: 214
+  _job: 22104715208
+  _time: 2026-02-17 15:35:48.480486429 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: U004
+  details: The missing pull pksep/autotests#103 has been opened by @atomant1969.
+  is_human: 1
+  issue: 103
+  repository: 935866864
+  what: pull-was-opened
+  when: 2025-05-16 11:25:02.000000000 Z
   where: github
   who: 89906484
