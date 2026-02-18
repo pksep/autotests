@@ -241,6 +241,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 08a: Open the warehouse page', async () => {
         await revisionPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+        await page.waitForLoadState('networkidle');
       });
 
       await allure.step('Step 08b: Open the warehouse revisions page', async () => {
@@ -274,6 +275,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await allure.step(`Step 08d: Cleanup CBED residues - ${cbed.name}`, async () => {
           await revisionPage.clickButton('Сборки', SelectorsRevision.REVISION_SWITCH_ITEM1);
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await page.locator(tableMainCbed).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(cbed.name, tableMainCbed, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           
@@ -299,6 +301,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await allure.step(`Step 08e: Cleanup Detail residues - ${detail.name}`, async () => {
           await revisionPage.clickButton('Детали', SelectorsRevision.REVISION_SWITCH_ITEM2);
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await page.locator(tableMainDetal).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(detail.name, tableMainDetal, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           

@@ -342,6 +342,7 @@ export class ElementHelper {
     options?: { waitForEnabled?: boolean; enabledTimeout?: number },
   ) {
     const button = this.page.locator(locator, { hasText: textButton });
+    await button.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     await this.highlightElement(button, {
       backgroundColor: 'yellow',
       border: '2px solid red',
@@ -438,5 +439,20 @@ export class ElementHelper {
       logger.warn(`Input not found within wrapper "${searchInputSelector}", using wrapper as input`);
       return searchInputWrapper;
     }
+  }
+
+  /** Wait for selector to become visible. */
+  async waitForSelector(selector: string): Promise<void> {
+    logger.info(`Waiting for selector: ${selector}`);
+    await this.page.waitForSelector(selector, { state: 'visible' });
+    logger.info(`Selector is visible: ${selector}`);
+  }
+
+  /** Read tooltip text by hovering over element. */
+  async readTooltip(hoverSelector: string, tooltipSelector: string): Promise<string | null> {
+    await this.page.hover(hoverSelector);
+    await this.page.waitForSelector(tooltipSelector);
+    const tooltipText = await this.page.locator(tooltipSelector).textContent();
+    return tooltipText;
   }
 }

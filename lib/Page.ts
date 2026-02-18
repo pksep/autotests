@@ -14,7 +14,6 @@ import { ENV } from '../config'; // Import environment and selector configuratio
 import * as SelectorsModalWindowConsignmentNote from '../lib/Constants/SelectorsModalWindowConsignmentNote'; // Import Modal Window Consignment Note selectors
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction'; // Import Start Production selectors
 import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications'; // Import Notifications selectors
-import * as SelectorsSearchInputs from '../lib/Constants/SelectorsSearchInputs'; // Import Search Inputs selectors
 import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents'; // Import File Components selectors
 import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrderedFromSuppliers'; // Import Ordered From Suppliers selectors
 import { Input } from './Input'; // Import the Input helper class for handling input fields
@@ -75,32 +74,12 @@ export class PageObject extends AbstractPage {
     this.miscHelper = new MiscHelper(page); // Initialize the misc helper
   }
 
-  /**
-   * Scans and validates the structure of tables within a specified element, and identifies rows with duplicate data-testids and cells missing data-testids.
-   * @param page - The Playwright page instance.
-   * @param dataTestId - The data-testid of the container element.
-   * @returns A promise that resolves once the validation is complete.
-   * @throws An error if any validation check fails.
-   */
+  /** Scans and validates table structure within element (duplicate data-testids, missing cells). */
   async scanTablesWithinElement(page: Page, dataTestId: string): Promise<ValidationResult> {
     return this.tableHelper.scanTablesWithinElement(page, dataTestId);
   }
 
-  /**
-   * Finds an element with the specified partial data-testid and clicks on it.
-   * If not found, it tries to find an element with the same value as id and clicks on it.
-   * @param page - The Playwright page instance.
-   * @param partialDataTestId - The partial data-testid of the elements to search for.
-   * @param waitTime - The amount of time to wait after clicking, in milliseconds.
-   * @returns A promise that resolves once the element is clicked and the wait time has elapsed.
-   */
-  /**
-   * Finds and clicks an element by partial data-testid, with fallback strategies
-   * @param page - The Playwright page instance
-   * @param partialDataTestId - The partial data-testid or full selector
-   * @param waitTime - Time to wait after clicking (default: 10000)
-   * @param doubleClick - Whether to double-click instead of single-click
-   */
+  /** Finds and clicks element by partial data-testid. */
   async findAndClickElement(page: Page, partialDataTestId: string, waitTime: number = 10000, doubleClick?: boolean): Promise<void> {
     return this.elementHelper.findAndClickElement(page, partialDataTestId, waitTime, doubleClick);
   }
@@ -114,46 +93,22 @@ export class PageObject extends AbstractPage {
     return this.elementHelper.getText(selector);
   }
 
-  /**
-   * Retrieves and normalizes the text content of a specified selector.
-   * @param selector - The CSS selector for the element to retrieve text from.
-   * @returns The normalized text content of the element or null if the element doesn't exist.
-   */
+  /** Get normalized text content of selector. */
   async getTextNormalized(selector: string): Promise<string | null> {
     return this.elementHelper.getTextNormalized(selector);
   }
 
-  /**
-   * Retrieves the error message or any other message and returns the normalized text.
-   * @param selector - The CSS selector for the element containing the error message.
-   * @returns The normalized error message or null if no message is found.
-   */
+  /** Get normalized error message from selector. */
   async getErrorMessage(selector: string): Promise<string | null> {
     return this.elementHelper.getErrorMessage(selector);
   }
 
-  /**
-   * Scrolls an element into view and then scrolls down an additional 100px to ensure element is fully visible in smaller viewports
-   * @param element - The locator element to scroll into view
-   * @param pageInstance - The page instance to perform the scroll on
-   */
+  /** Scroll element into view with extra offset. */
   async scrollIntoViewWithExtra(element: Locator, pageInstance: Page): Promise<void> {
     return this.elementHelper.scrollIntoViewWithExtra(element, pageInstance);
   }
 
-  /**
-   * Waits for element, scrolls into view, highlights it, and optionally waits
-   * Combines common UI interaction patterns into a single method
-   * @param locator - The locator to interact with
-   * @param options - Optional configuration
-   * @param options.timeout - Timeout for wait operations (default: 10000)
-   * @param options.highlight - Whether to highlight the element (default: true)
-   * @param options.highlightColor - Highlight background color (default: 'yellow')
-   * @param options.highlightBorder - Highlight border style (default: '2px solid red')
-   * @param options.highlightTextColor - Highlight text color (default: 'blue')
-   * @param options.waitAfter - Milliseconds to wait after highlighting (default: 500)
-   * @param options.scrollExtra - Whether to use scrollIntoViewWithExtra (default: false)
-   */
+  /** Wait for element, scroll into view, highlight. */
   async waitAndHighlight(
     locator: Locator,
     options?: {
@@ -169,41 +124,22 @@ export class PageObject extends AbstractPage {
     return this.elementHelper.waitAndHighlight(locator, options);
   }
 
-  /**
-   * Creates a new tab, navigates to the specified URL, and returns both the page and a new PageObject instance
-   * @param url - The URL to navigate to in the new tab
-   * @param PageObjectClass - The PageObject class constructor to instantiate (e.g., CreateLoadingTaskPage)
-   * @returns An object containing the new page and page object instance
-   */
+  /** Create new tab, navigate to URL, return page and PageObject instance. */
   async createNewTabAndNavigate<T extends PageObject>(url: string, PageObjectClass: new (page: Page) => T): Promise<{ page: Page; pageObject: T }> {
     return this.navigationHelper.createNewTabAndNavigate(url, PageObjectClass);
   }
 
-  /**
-   * Opens the specified URL or the default base URL if none is provided.
-   * @param url - The URL to navigate to. Defaults to BASE_URL from ENV if not provided.
-   */
+  /** Open URL (default ENV.BASE_URL). */
   async goto(url: string = ENV.BASE_URL): Promise<void> {
     return this.navigationHelper.goto(url);
   }
 
-  /**
-   * Waits for the network to be idle (no network requests for at least 500ms).
-   * This is a common pattern used across many test cases to ensure page stability after actions.
-   * @param timeout - Optional timeout in milliseconds (default: 30000)
-   */
+  /** Wait for network idle. */
   async waitForNetworkIdle(timeout?: number): Promise<void> {
     return this.navigationHelper.waitForNetworkIdle(timeout);
   }
 
-  /**
-   * Navigates to a page, finds a table element, waits for network idle, and waits for the table body to load.
-   * This is a common pattern used across many test cases.
-   * @param url - The URL to navigate to
-   * @param tableSelector - The selector for the table element to find and click
-   * @param tableBodySelector - The selector for the table body to wait for
-   * @param options - Optional configuration for waiting table body (minRows, timeoutMs)
-   */
+  /** Navigate to page, find table, wait for table body. */
   async navigateToPageAndWaitForTable(
     url: string,
     tableSelector: string,
@@ -222,63 +158,17 @@ export class PageObject extends AbstractPage {
     );
   }
 
-  /**
-   * Searches a table and waits for the table body to load.
-   * This is a common pattern used across many test cases.
-   * @param searchTerm - The search term to enter
-   * @param tableSelector - The selector for the table to search in
-   * @param tableBodySelector - The selector for the table body to wait for
-   * @param options - Optional configuration:
-   *   - useRedesign: If true, uses searchTableRedesign instead of searchTable (default: false)
-   *   - searchInputDataTestId: Optional data-testid for the search input (for searchTable method)
-   *   - timeoutBeforeWait: Optional timeout in ms before waiting for table body
-   *   - minRows: Minimum number of rows to wait for
-   *   - timeoutMs: Timeout in ms for waiting table body
-   */
+  /** Search table and optionally wait for table body. */
   async searchAndWaitForTable(
     searchTerm: string,
     tableSelector: string,
     tableBodySelector: string,
-    options?: {
-      useRedesign?: boolean;
-      searchInputDataTestId?: string;
-      timeoutBeforeWait?: number;
-      minRows?: number;
-      timeoutMs?: number;
-    },
+    options?: { useRedesign?: boolean; searchInputDataTestId?: string; timeoutBeforeWait?: number; minRows?: number; timeoutMs?: number },
   ): Promise<void> {
-    if (options?.useRedesign) {
-      await this.tableHelper.searchTableRedesign(searchTerm, tableSelector);
-      await this.page.waitForLoadState('networkidle');
-    } else {
-      await this.tableHelper.searchTable(searchTerm, tableSelector, options?.searchInputDataTestId);
-      // searchTable already includes waitForLoadState('networkidle')
-    }
-
-    if (options?.timeoutBeforeWait) {
-      await this.page.waitForTimeout(options.timeoutBeforeWait);
-    }
-
-    // Only wait for table body if minRows is explicitly provided
-    if (options?.minRows !== undefined) {
-      await this.tableHelper.waitingTableBody(tableBodySelector, {
-        minRows: options.minRows,
-        timeoutMs: options?.timeoutMs,
-      });
-    }
+    return this.tableHelper.searchAndWaitForTable(searchTerm, tableSelector, tableBodySelector, options);
   }
 
-  /**
-   * Validates page headings (H3 titles) and buttons on a page.
-   * This is a common pattern used across many test cases.
-   * @param page - The Playwright page instance
-   * @param titles - Array of expected H3 titles (will be trimmed)
-   * @param buttons - Array of button configurations to validate
-   * @param className - CSS class name to search for H3 titles (default: 'container')
-   * @param options - Optional configuration:
-   *   - skipTitleValidation: If true, skips H3 title validation
-   *   - skipButtonValidation: If true, skips button validation
-   */
+  /** Validates page H3 titles and buttons. */
   async validatePageHeadersAndButtons(
     page: Page,
     titles: string[],
@@ -299,19 +189,7 @@ export class PageObject extends AbstractPage {
     return this.validationHelper.validatePageHeadersAndButtons(page, titles, buttons, containerSelector, options);
   }
 
-  /**
-   * Searches for a term in a table and verifies that the first row contains the search term.
-   * This is a common pattern used across many test cases.
-   * @param searchTerm - The term to search for
-   * @param tableSelector - Selector for the table element
-   * @param tableBodySelector - Selector for the table body element
-   * @param options - Optional configuration:
-   *   - useRedesign: If true, uses searchTableRedesign instead of searchTable
-   *   - searchInputDataTestId: Data test ID for the search input (when not using redesign)
-   *   - timeoutBeforeWait: Timeout in ms before waiting for table body
-   *   - minRows: Minimum number of rows expected in the table
-   *   - timeoutMs: Timeout in ms for waiting for table body
-   */
+  /** Search table and verify first row contains term. */
   async searchAndVerifyFirstRow(
     searchTerm: string,
     tableSelector: string,
@@ -327,21 +205,7 @@ export class PageObject extends AbstractPage {
     return this.validationHelper.searchAndVerifyFirstRow(this, searchTerm, tableSelector, tableBodySelector, options);
   }
 
-  /**
-   * Archives an item by selecting the first row and clicking archive/confirm buttons.
-   * This is a common pattern used across many test cases.
-   * @param page - The Playwright page instance
-   * @param searchTerm - The term to verify is in the first row (optional, for validation)
-   * @param tableSelector - Selector for the table element
-   * @param archiveButtonSelector - Selector or label for the archive button
-   * @param confirmButtonSelector - Selector or label for the confirm button
-   * @param options - Optional configuration:
-   *   - useCheckboxMark: If true, uses checkboxMarkNameInLineFromFirstRow instead of checkNameInLineFromFirstRow
-   *   - headerCellIndex: If provided, clicks on table header cell before archive button
-   *   - archiveButtonLabel: Label text for archive button (default: 'Архив')
-   *   - confirmButtonLabel: Label text for confirm button (default: 'Да')
-   *   - waitAfterConfirm: Timeout in ms after confirmation (default: 1000)
-   */
+  /** Archive item: first row, archive + confirm buttons. */
   async archiveItem(
     page: Page,
     searchTerm: string,
@@ -363,16 +227,7 @@ export class PageObject extends AbstractPage {
     return this.archiveHelper.archiveItem(this, page, searchTerm, tableSelector, archiveButtonSelector, confirmButtonSelector, options);
   }
 
-  /**
-   * Performs a simple archive operation: clicks the archive button and confirms.
-   * This is a common pattern used across many test cases.
-   * @param archiveButtonSelector - Selector for the archive button
-   * @param confirmButtonSelector - Selector for the confirmation button
-   * @param options - Optional configuration:
-   *   - archiveButtonLabel: Label for the archive button (default: 'Архив')
-   *   - confirmButtonLabel: Label for the confirm button (default: 'Да')
-   *   - waitAfterConfirm: Timeout in ms after confirmation (default: 1000)
-   */
+  /** Click archive button then confirm. */
   async archiveAndConfirm(
     archiveButtonSelector: string,
     confirmButtonSelector: string,
@@ -385,16 +240,7 @@ export class PageObject extends AbstractPage {
     return this.archiveHelper.archiveAndConfirm(this, archiveButtonSelector, confirmButtonSelector, options);
   }
 
-  /**
-   * Waits for network idle, optionally waits for a timeout, then checks that the first row contains the search term.
-   * This is a common pattern used across many test cases.
-   * @param page - The Playwright page instance
-   * @param searchTerm - The term to verify is in the first row
-   * @param tableSelector - Selector for the table element
-   * @param options - Optional configuration:
-   *   - timeoutMs: Timeout in ms after network idle (default: 0, no timeout)
-   *   - waitForNetworkIdle: If true, waits for networkidle (default: true)
-   */
+  /** Wait then verify first row contains search term. */
   async waitAndCheckFirstRow(
     page: Page,
     searchTerm: string,
@@ -409,10 +255,7 @@ export class PageObject extends AbstractPage {
     return this.validationHelper.waitAndCheckFirstRow(this, page, searchTerm, tableSelector, options);
   }
 
-  /**
-   * Pauses the test execution for a specified amount of time (in milliseconds).
-   * @param ms - The duration in milliseconds to pause the execution. Defaults to 1000ms.
-   */
+  /** Pause execution for ms (default 1000). */
   async waitForTimeout(ms: number = 1000): Promise<void> {
     if (ENV.DEBUG) {
       logger.info(`Page Class: Pausing for ${ms} milliseconds...`); // Log the pause action for debugging purposes
@@ -423,14 +266,7 @@ export class PageObject extends AbstractPage {
     }
   }
 
-  /**
-   * Fill in the login form.
-   * @param page - The Playwright page instance.
-   * @param tabel - The table value.
-   * @param login - The login username.
-   * @param password - The login password.
-   */
-
+  /** Fill login form. */
   async fillLoginForm(page: Page, tabel: string, login: string, password: string): Promise<void> {
     return this.loginHelper.fillLoginForm(page, tabel, login, password);
   }
@@ -439,459 +275,97 @@ export class PageObject extends AbstractPage {
     return this.loginHelper.newFillLoginForm(page, tabel, login, password);
   }
 
-  /**
-   * Hover over an element and read the tooltip text.
-   * @param hoverSelector - The selector for the element to hover over.
-   * @param tooltipSelector - The selector for the tooltip element.
-   * @returns The text content of the tooltip, or null if not found.
-   */
-
-  /**
-   * Reads tooltip text by hovering over an element and reading the tooltip.
-   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
-   * @param hoverSelector - The selector for the element to hover over.
-   * @param tooltipSelector - The selector for the tooltip element.
-   * @returns The tooltip text or null if not found.
-   */
-  // TODO: OBSOLETE - Remove after confirming no usage
+  /** Read tooltip text by hovering over element. */
   async readTooltip(hoverSelector: string, tooltipSelector: string): Promise<string | null> {
-    await this.page.hover(hoverSelector);
-    await this.page.waitForSelector(tooltipSelector);
-    const tooltipText = await this.page.locator(tooltipSelector).textContent();
-    return tooltipText;
+    return this.elementHelper.readTooltip(hoverSelector, tooltipSelector);
   }
 
-  /**
-   * Navigate to the element with the specified data-testid and log the details.
-   * @param dataTestId - The data-testid of the element to navigate to.
-   * @returns True if navigation is successful, or an error message if it fails.
-   */
-
-  /**
-   * Navigates by clicking an element with the specified data-testid
-   * @param dataTestId - The data-testid of the element to click
-   * @returns True if navigation succeeded, or an error message if it failed
-   */
+  /** Navigate by clicking element with data-testid. */
   async nav(dataTestId: string): Promise<true | string> {
     return this.navigationHelper.nav(dataTestId);
   }
 
-  /**
-   * Check if the current URL path matches the expected path.
-   * @param expectedPath - The expected URL path to compare.
-   * @returns True if the URL path matches, or an error message if it does not.
-   */
+  /** Check URL path matches expected. */
   async checkUrl(expectedPath: string): Promise<true | string> {
     return this.navigationHelper.checkUrl(expectedPath);
   }
 
-  /**
-   * Check if the current page title matches the expected title.
-   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
-   * @param expectedTitle - The expected page title to compare.
-   * @throws Error if the actual title does not match the expected title.
-   */
-  // TODO: OBSOLETE - Remove after confirming no usage
+  /** Check page title matches expected. */
   async checkTitle(expectedTitle: string): Promise<void> {
     return this.navigationHelper.checkTitle(expectedTitle);
   }
 
-  /**
-   * Check if the current page language matches the expected language.
-   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
-   * @param expectedLanguage - The expected language to compare.
-   * @throws Error if the actual language does not match the expected language or if the language element is not found.
-   */
-  // TODO: OBSOLETE - Remove after confirming no usage
+  /** Check page language matches expected. */
   async checkLanguage(expectedLanguage: string): Promise<void> {
     return this.navigationHelper.checkLanguage(expectedLanguage);
   }
 
-  /**
-   * Check if the current breadcrumb matches the expected breadcrumb.
-   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
-   * @param expectedBreadcrumb - The expected breadcrumb to compare.
-   * @throws Error if the actual breadcrumb does not match the expected breadcrumb.
-   */
-  // TODO: OBSOLETE - Remove after confirming no usage
+  /** Check breadcrumb matches expected. */
   async checkBreadCrumb(expectedBreadcrumb: string): Promise<void> {
     return this.navigationHelper.checkBreadCrumb(expectedBreadcrumb);
   }
 
-  /**
-   * Capture a screenshot of the current page and save it to the specified file.
-   * @param filename - The name of the file to save the screenshot.
-   * @returns A promise that resolves when the screenshot is captured and saved.
-   */
-
-  /**
-   * Captures a screenshot of the current page.
-   * @deprecated OBSOLETE - Only used in README.md examples, not in actual test code. Consider removing.
-   * @param filename - The filename to save the screenshot as.
-   */
-  // TODO: OBSOLETE - Remove after confirming no usage (only in README examples)
+  /** Capture a screenshot of the current page. */
   async captureScreenshot(filename: string): Promise<void> {
-    logger.info(`Capturing screenshot: ${filename}`);
-    await this.page.screenshot({ path: filename });
+    return this.navigationHelper.captureScreenshot(filename);
   }
 
-  /**
-   * Wait for the specified selector to become visible on the page.
-   * @deprecated OBSOLETE - This method is never used in the codebase. Consider removing.
-   * @param selector - The selector to wait for.
-   * @returns A promise that resolves when the selector is visible.
-   */
-  // TODO: OBSOLETE - Remove after confirming no usage
+  /** Wait for selector to become visible. */
   async waitForSelector(selector: string): Promise<void> {
-    logger.info(`Waiting for selector: ${selector}`);
-    await this.page.waitForSelector(selector, { state: 'visible' });
-    logger.info(`Selector is visible: ${selector}`);
+    return this.elementHelper.waitForSelector(selector);
   }
 
-  /**
-   * Function to check the number of columns in a table with a specific ID.
-   * @param page - The Playwright page object.
-   * @param tableId - The ID of the table to locate.
-   * @returns The column count as a number.
-   */
+  /** Check number of columns in table. */
   async checkTableColumns(page: Page, tableId: string, skip?: boolean): Promise<number> {
     return this.tableHelper.checkTableColumns(page, tableId, skip);
   }
 
-  /**
-   * Check if the table column headers match the expected headers.
-   * @param page - The Playwright page instance.
-   * @param tableId - The ID or data-testid of the table element.
-   * @param expectedHeaders - The expected headers to compare.
-   * @returns A promise that resolves to true if the headers match, or throws an error if not.
-   */
+  /** Check table column headers match expected. */
   async checkTableColumnHeaders(page: Page, tableId: string, expectedHeaders: any, skip?: boolean): Promise<boolean> {
     return this.tableHelper.checkTableColumnHeaders(page, tableId, expectedHeaders, skip);
   }
 
-  /**
-   * Find the table element using the specified selector, scroll it into view, and click on it.
-   * @param selector - The selector to locate the table element.
-   * @returns A promise that resolves when the element is found, scrolled into view, and clicked.
-   */
+  /** Find table by selector, scroll into view, click. */
   async findTable(selector: string): Promise<void> {
     return this.tableHelper.findTable(selector);
   }
 
-  /**
-   * Find the column index with the specified data-testid in a table and handle header rows merging if necessary.
-   * @param page - The Playwright page instance.
-   * @param tableId - The ID or data-testid of the table element.
-   * @param colId - The data-testid of the column to find.
-   * @returns The index of the column with the specified data-testid, or false if not found.
-   */
+  /** Find column index by data-testid in a table. */
   async findColumn(page: Page, tableId: string, colId: string): Promise<number> {
     return this.tableHelper.findColumn(page, tableId, colId);
   }
 
-  /**
-   * Check the ordering of table rows based on the urgency date and planned shipment date columns.
-   * @param page - The Playwright page instance.
-   * @param tableId - The ID or data-testid of the table element.
-   * @param urgencyColIndex - The index of the urgency date column.
-   * @param plannedShipmentColIndex - The index of the planned shipment date column.
-   * @returns An object containing the success status and an optional message if the ordering check fails.
-   */
-  // async checkTableRowOrdering(
-  //   page: Page,
-  //   tableId: string,
-  //   urgencyColIndex: number,
-  //   plannedShipmentColIndex: number
-  // ): Promise<{ success: boolean; message?: string }> {
-  //   // Get all rows in the table
-  //   logger.info(urgencyColIndex);
-
-  //   let table = await page.$(`#${tableId}`);
-  //   if (!table) {
-  //     table = await page.$(`[data-testid="${tableId}"]`);
-  //   }
-
-  //   if (!table) {
-  //     return {
-  //       success: false,
-  //       message: `Table with id "${tableId}" not found`,
-  //     };
-  //   }
-
-  //   // Get all rows in the table excluding the header rows
-  //   const rows = await table.$$("tbody tr");
-  //   const headerRows = await table.$$("tbody tr th");
-  //   rows.splice(0, headerRows.length); // Remove header rows
-
-  //   // Filter out rows that contain `th` elements
-  //   const filteredRows = rows.filter(async (row) => {
-  //     const thElements = await row.$$("th");
-  //     return thElements.length === 0;
-  //   });
-
-  //   // Debug: Log the count of rows found
-  //   logger.info(`Total rows found in the table: ${filteredRows.length}`);
-
-  //   // Extract data from rows
-  //   const rowData = await Promise.all(
-  //     filteredRows.map(async (row) => {
-  //       const cells = await row.$$("td");
-  //       const urgencyDate =
-  //         (await cells[urgencyColIndex]?.innerText()) ?? "";
-  //       const plannedShipmentDate =
-  //         (await cells[plannedShipmentColIndex]?.innerText()) ?? "";
-  //       return { urgencyDate, plannedShipmentDate };
-  //     })
-  //   );
-
-  //   // Function to parse date strings with various separators
-  //   const parseDate = (dateStr: string): Date => {
-  //     const parts = dateStr.split(/[.\-\/]/); // Split by dots, hyphens, or slashes
-  //     if (parts.length === 3) {
-  //       return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Convert to YYYY-MM-DD
-  //     }
-  //     return new Date(dateStr); // Fallback to default Date parsing
-  //   };
-
-  //   // Sort rows
-  //   const compareDates = (a: string, b: string) =>
-  //     parseDate(a).getTime() - parseDate(b).getTime();
-
-  //   // Verify row ordering for urgencyDate
-  //   let lastUrgencyDateIndex = -1;
-  //   for (let i = 0; i < rowData.length; i++) {
-  //     if (rowData[i].urgencyDate) {
-  //       if (
-  //         lastUrgencyDateIndex >= 0 &&
-  //         compareDates(
-  //           rowData[lastUrgencyDateIndex].urgencyDate,
-  //           rowData[i].urgencyDate
-  //         ) > 0
-  //       ) {
-  //         return {
-  //           success: false,
-  //           message: `Row ordering error in urgencyDate at index ${i}`,
-  //         };
-  //       }
-  //       lastUrgencyDateIndex = i;
-  //     } else {
-  //       break; // Exit the loop once we encounter a row with an empty urgencyDate
-  //     }
-  //   }
-  // }
-
-  /**
-   * Verify the success message contains the specified order number.
-   * @param orderNumber - The order number to check within the success message.
-   * @returns A promise that resolves when the message is verified.
-   */
-
+  /** Get success message (optional order number). */
   async getMessage(orderNumber?: string) {
     return this.notificationHelper.getMessage(orderNumber);
   }
 
-  /**
-   * Perform a search in the main table using the specified search term.
-   * @param nameSearch - The search term to fill in the search input.
-   * @param locator - The selector to locate the table element.
-   * @returns A promise that resolves when the search is performed.
-   */
+  /** Close success message. */
   async closeSuccessMessage() {
     return this.notificationHelper.closeSuccessMessage();
   }
 
-  /**
-   * Search in the main table
-   * @param nameSearch - the name entered in the table search to perform the search
-   * @param locator - the full locator of the table
-   */
+  /** Search in table. */
   async searchTable(nameSearch: string, locator: string, searchInputDataTestId?: string) {
-    logger.log('Search Table', nameSearch, locator, searchInputDataTestId);
-    const table = this.page.locator(locator);
-    await table.evaluate(el => {
-      el.style.backgroundColor = 'green';
-      el.style.border = '2px solid red';
-      el.style.color = 'blue';
-    });
-    const searchContainer = (
-      searchInputDataTestId ? table.locator(`[data-testid="${searchInputDataTestId}"]`) : table.locator(SelectorsSearchInputs.MAIN_SEARCH_COVER_INPUT)
-    ).nth(0);
-
-    // Wait for search container to be visible
-    await searchContainer.waitFor({ state: 'visible', timeout: 10000 });
-
-    // For dropdown inputs, click the container first to open it
-    try {
-      await searchContainer.click({ timeout: 2000 });
-      await this.page.waitForTimeout(300);
-    } catch (e) {
-      // Container might already be open, continue
-    }
-
-    // Find the input element inside the container (YSearch component)
-    // Try both: input inside container, or input with data-testid directly
-    let searchTable = searchContainer.locator('input').first();
-
-    // If input is not found/visible in container, try locating it directly
-    if (searchInputDataTestId) {
-      const directInput = table.locator(`input[data-testid="${searchInputDataTestId}"]`).first();
-      try {
-        await directInput.waitFor({ state: 'visible', timeout: 2000 });
-        searchTable = directInput;
-      } catch (e) {
-        // Fall back to container approach
-      }
-    }
-
-    // Wait for the input to be visible or attached
-    try {
-      await searchTable.waitFor({ state: 'visible', timeout: 5000 });
-    } catch (e) {
-      // If not visible, try attached state (element exists in DOM but might be hidden)
-      await searchTable.waitFor({ state: 'attached', timeout: 5000 });
-    }
-
-    // Clear and fill without clicking (which can be blocked by dialogs)
-    await searchTable.evaluate((el: HTMLInputElement) => (el.value = ''));
-    await this.page.waitForTimeout(200);
-    await searchTable.fill(nameSearch);
-    await this.page.waitForTimeout(300);
-
-    // Verify the value was set before pressing Enter
-    const currentValue = await searchTable.inputValue();
-    logger.log(`Search field value before Enter: "${currentValue}"`);
-
-    // Press Enter to trigger search
-    await searchTable.press('Enter');
-    await this.page.waitForLoadState('networkidle');
-
-    // Wait a bit more for the search to complete
-    await this.page.waitForTimeout(1000);
-
-    // Check the final value
-    const finalValue = await searchTable.inputValue();
-    logger.log(`Search field value after Enter: "${finalValue}"`);
-
-    // Don't assert the value matches exactly, as some search fields clear after search
-    // Just verify the search was performed
-    logger.log(`Search performed for: "${nameSearch}"`);
+    return this.tableHelper.searchTable(nameSearch, locator, searchInputDataTestId);
   }
 
-  /**
-   * Search in the main table
-   * @param nameSearch - the name entered in the table search to perform the search
-   * @param locator - the full locator of the table
-   */
+  /** Search in table (redesign UI). */
   async searchTableRedesign(nameSearch: string, locator: string) {
-    const table = this.page.locator(locator);
-    // const searchTable = table
-    //   .locator('[data-testid="DeficitIzdTable-Search-Dropdown-Input"]')
-    //   .nth(0);
-
-    const searchTable = table.locator('.search-yui-kit__input').nth(0);
-
-    // Clear and fill without clicking (which can be blocked by dialogs)
-    await searchTable.evaluate((el: HTMLInputElement) => (el.value = ''));
-    await this.page.waitForTimeout(200);
-    await searchTable.fill(nameSearch);
-    await this.page.waitForTimeout(1000); // Wait for fill to complete
-
-    const currentValue = await searchTable.inputValue();
-    await expectSoftWithScreenshot(
-      this.page,
-      () => {
-        expect.soft(currentValue).toBe(nameSearch);
-      },
-      `Verify search input equals "${nameSearch}"`,
-      undefined,
-    );
-    await searchTable.press('Enter');
-    await this.page.waitForTimeout(1000); // Wait 1 second after pressing Enter before verifying results
+    return this.tableHelper.searchTableRedesign(nameSearch, locator);
   }
 
-  /**
-   * Поиск в основой таблице
-   * @param nameSearch - имя которое вводим в поиск таблицы и осуществляем поиск but my clickign search icon
-   * @param locator - локатор селектора [data-testid=**]
-   */
+  /** Search table by icon click. */
   async searchTableByIcon(nameSearch: string, locator: string) {
-    const table = this.page.locator(locator);
-    const searchTable = table.locator(SelectorsSearchInputs.SEARCH_COVER_INPUT).nth(0);
-    await searchTable.fill(nameSearch);
-
-    const currentValue = await searchTable.inputValue();
-    await expectSoftWithScreenshot(
-      this.page,
-      () => {
-        expect.soft(currentValue).toBe(nameSearch);
-      },
-      `Verify search input equals "${nameSearch}"`,
-      undefined,
-    );
-    const searchIcon = table.locator('[data-testid="Search-Cover-Icon"]');
-    await searchIcon.click();
+    return this.tableHelper.searchTableByIcon(nameSearch, locator);
   }
 
-  /**
-   * Wait for the table body to become visible.
-   * @param locator - the full locator of the table
-   * @returns A promise that resolves when the table body is visible.
-   */
-  async waitingTableBody(locator: string, { minRows = 1, timeoutMs = 10000 }: { minRows?: number; timeoutMs?: number } = {}) {
-    const locatorTable = this.page.locator(locator);
-    await locatorTable.evaluate((element: HTMLElement) => {
-      element.style.border = '2px solid red';
-    });
-
-    if (minRows <= 0) {
-      // Just wait for the table to be attached/visible without requiring rows
-      await locatorTable.waitFor({ state: 'visible', timeout: timeoutMs });
-      return { success: true };
-    }
-
-    // Check if the locator is already a tbody selector (contains "Tbody" or "tbody")
-    const isTbodySelector = /Tbody|tbody/i.test(locator);
-    const rowSelector = isTbodySelector ? `${locator} tr` : `${locator} tbody tr`;
-
-    if (minRows === 1) {
-      // Preserve legacy behavior exactly
-      await this.page.waitForSelector(rowSelector, {
-        state: 'attached',
-        timeout: timeoutMs,
-      });
-    } else {
-      // Wait for at least minRows visible rows or timeout
-      await this.page.waitForFunction(
-        (args: { sel: string; expected: number; isTbody: boolean }) => {
-          const { sel, expected, isTbody } = args;
-          const root = document.querySelector(sel);
-          if (!root) return false;
-          const rowSelector = isTbody ? 'tr' : 'tbody tr';
-          const allRows = root.querySelectorAll(rowSelector);
-          let visible = 0;
-          for (let i = 0; i < allRows.length; i++) {
-            const row = allRows[i] as HTMLElement;
-            if (row && row.offsetParent !== null) visible++;
-            if (visible >= expected) return true;
-          }
-          return false;
-        },
-        { sel: locator, expected: minRows, isTbody: isTbodySelector },
-        { timeout: timeoutMs },
-      );
-    }
-
-    return { success: true };
+  /** Wait for table body visible. */
+  async waitingTableBody(locator: string, options?: { minRows?: number; timeoutMs?: number }) {
+    return this.tableHelper.waitingTableBody(locator, options ?? {});
   }
 
-  /**
-   * Check the ordering of table rows based on the urgency date and planned shipment date columns.
-   * @param page - The Playwright page instance.
-   * @param tableId - The ID or data-testid of the table element.
-   * @param urgencyColIndex - The index of the urgency date column.
-   * @param plannedShipmentColIndex - The index of the planned shipment date column.
-   * @returns An object containing the success status and an optional message if the ordering check fails.
-   */
+  /** Check table row ordering by urgency/planned shipment dates. */
   async checkDatesWithOrderList(
     page: Page,
     tableId: string,
@@ -919,19 +393,7 @@ export class PageObject extends AbstractPage {
     );
   }
 
-  /**
-   * Click a button with the specified text and locator.
-   * @param textButton - The text content of the button to click.
-   * @param locator - The selector to locate the button element.
-   * @returns A promise that resolves when the button is clicked.
-   */
-  /**
-   * Clicks a button by text and locator
-   * @param textButton - The button text to match
-   * @param locator - The locator for the button
-   * @param click - Whether to actually click (Click.Yes) or just verify (Click.No)
-   * @param options - Optional: waitForEnabled (wait for button to be enabled), enabledTimeout (ms)
-   */
+  /** Click button by text and locator. */
   async clickButton(
     textButton: string,
     locator: string,
@@ -941,19 +403,9 @@ export class PageObject extends AbstractPage {
     return this.elementHelper.clickButton(textButton, locator, click, options);
   }
 
-  /**
-   * Wait for the table body to become visible. if not thead
-   * @param locator - the full locator of the table
-   * @returns A promise that resolves when the table body is visible.
-   */
+  /** Wait for table body (no thead). */
   async waitingTableBodyNoThead(locator: string) {
-    const locatorTable = this.page.locator(locator);
-
-    // Wait for any table rows in tbody - generic approach without relying on classes or hardcoded data-testid patterns
-    await this.page.waitForSelector(`${locator} tbody tr`, {
-      state: 'attached',
-      timeout: 10000,
-    });
+    return this.tableHelper.waitingTableBodyNoThead(locator);
   }
 
   async checkHeader(header: string, url: string) {
@@ -1249,14 +701,7 @@ export class PageObject extends AbstractPage {
     return this.modalHelper.getAllH4TitlesInModalByTestId(page, modalTestId);
   }
 
-  /**
-   * Validates H4 titles in a modal by test ID
-   * @param page - Playwright Page object
-   * @param modalTestId - Modal test ID (can be full selector or just ID)
-   * @param expectedTitles - Array of expected title strings
-   * @param options - Optional configuration (testInfo for screenshots, allowPartialMatch for first title)
-   * @returns Promise<void>
-   */
+  /** Validate H4 titles in modal by test ID. */
   async validateModalH4Titles(
     page: Page,
     modalTestId: string,
@@ -1269,11 +714,7 @@ export class PageObject extends AbstractPage {
     return this.modalHelper.validateModalH4Titles(page, modalTestId, expectedTitles, options);
   }
 
-  /** Checks if a button is visible and active/inactive
-   * @param selector - selector for the button
-   * @param expectedState - expected state of the button ('active' or 'inactive')
-   * @returns Promise<boolean> - true if button state matches expected, false otherwise
-   */
+  /** Check button visible and active/inactive. */
   async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
     return this.validationHelper.checkButtonState(name, selector, expectedState);
   }
@@ -1281,10 +722,7 @@ export class PageObject extends AbstractPage {
     return this.notificationHelper.extractNotificationMessage(page);
   }
 
-  /**
-   * Gets the text content of the latest notification description.
-   * @returns The notification description text, or empty string if not visible
-   */
+  /** Get latest notification text. */
   async getLatestNotificationText(): Promise<string> {
     return this.notificationHelper.getLatestNotificationText();
   }
@@ -1323,60 +761,21 @@ export class PageObject extends AbstractPage {
     return this.modalHelper.modalCompany();
   }
 
-  /**
-   * Navigate to the element with the specified data-testid and log the details.
-   * @param url - The URL of the page to navigate to.
-   * @param dataTestId - The data-testid of the element to validate after navigation.
-   * @returns Promise<void> - Logs navigation status and validates the presence of the specified element.
-   */
-  /**
-   * Navigates to a page and validates the presence of an element
-   * @param url - The URL to navigate to
-   * @param dataTestId - The data-testid of the element to validate
-   */
+  /** Navigate to URL and validate element by data-testid. */
   async navigateToPage(url: string, dataTestId: string): Promise<void> {
     return this.navigationHelper.navigateToPage(url, dataTestId);
   }
-  /**
-   * Validate page titles by checking the H3 elements within a given section, and apply styling for debugging.
-   * @param testId - The data-testid attribute of the section containing the titles.
-   * @param expectedTitles - An array of expected titles to validate against.
-   * @returns Promise<void> - Validates the content and order of titles, applies styling, or throws an error if validation fails.
-   */
-  /**
-   * Verifies that test data arrays are available and not empty.
-   * Used in U002 test suite to ensure test data has been prepared before running tests.
-   * @param testDataArray - The array to verify (e.g., arrayDetail, arrayCbed, arrayIzd)
-   * @param arrayName - Display name for the array (e.g., "DETAIL", "CBED", "IZD")
-   * @param allArrays - Optional object containing all arrays for logging purposes
-   */
+  /** Verify test data array is not empty. */
   async verifyTestDataAvailable<T>(testDataArray: T[], arrayName: string, allArrays?: { detail?: T[]; cbed?: T[]; izd?: T[] }): Promise<void> {
     return this.miscHelper.verifyTestDataAvailable(testDataArray, arrayName, allArrays);
   }
 
-  /**
-   * Finds the row index of an order by its order number in a modal orders list.
-   * Used in U002 test suite to locate specific orders in the orders modal.
-   * @param orderRowsLocator - Locator for the order number rows
-   * @param targetOrderNumber - The order number to find
-   * @param errorMessage - Custom error message if order not found (optional)
-   * @returns The index of the row containing the order number
-   * @throws Error if the order number is not found
-   */
+  /** Find row index by order number in orders modal. */
   async findOrderRowIndexByOrderNumber(orderRowsLocator: Locator, targetOrderNumber: string, errorMessage?: string): Promise<number> {
     return this.orderHelper.findOrderRowIndexByOrderNumber(orderRowsLocator, targetOrderNumber, errorMessage);
   }
 
-  /**
-   * Finds the checkbox index of an order by its order number in an edit modal.
-   * Used in U002 test suite to locate and select checkboxes for specific orders.
-   * @param checkboxesLocator - Locator for the checkboxes
-   * @param orderNumberCellsLocator - Locator for the order number cells (corresponding to checkboxes)
-   * @param targetOrderNumber - The order number to find
-   * @param errorMessage - Custom error message if order not found (optional)
-   * @returns The index of the checkbox for the order number
-   * @throws Error if the order number is not found
-   */
+  /** Find checkbox index by order number in edit modal. */
   async findCheckboxIndexByOrderNumber(
     checkboxesLocator: Locator,
     orderNumberCellsLocator: Locator,
@@ -1386,14 +785,7 @@ export class PageObject extends AbstractPage {
     return this.orderHelper.findCheckboxIndexByOrderNumber(checkboxesLocator, orderNumberCellsLocator, targetOrderNumber, errorMessage);
   }
 
-  /**
-   * Opens a context menu by clicking on a popover cell and then clicks on the 'Заказы' menu item.
-   * Used in U002 test suite to open orders modal from warehouse tables.
-   * @param popoverSelector - Selector for the popover/context menu cell
-   * @param menuItemSelector - Selector for the 'Заказы' menu item
-   * @param waitForModalSelector - Optional selector for the modal to wait for after clicking menu item
-   * @param popoverPosition - Optional position selector ('first', 'last', or number for nth()) - default: 'first'
-   */
+  /** Open context menu and click Заказы. */
   async openContextMenuAndClickOrders(
     popoverSelector: string,
     menuItemSelector: string,
@@ -1403,19 +795,7 @@ export class PageObject extends AbstractPage {
     return this.orderHelper.openContextMenuAndClickOrders(this, popoverSelector, menuItemSelector, waitForModalSelector, popoverPosition);
   }
 
-  /**
-   * Verifies that the orders modal opens and contains the expected orders.
-   * Used in U002 test suite to verify orders are displayed correctly in the modal.
-   * @param modalSelector - Selector for the orders modal
-   * @param tableSelector - Selector for the orders table
-   * @param orderRowsSelector - Selector for order number rows (direct locator or within modal)
-   * @param quantityCellsSelector - Selector for quantity cells (direct locator or within order rows)
-   * @param expectedOrderNumbers - Array of expected order numbers to verify
-   * @param expectedQuantities - Array of expected quantities to verify
-   * @param itemTypeName - Optional name for logging (e.g., "DETAIL", "CBED", "IZD")
-   * @param useRowLocator - If true, quantity cells are located within order rows; if false, they use nth() index
-   * @param additionalWaitTimeout - Optional additional wait timeout (for IZD case)
-   */
+  /** Verify orders modal content. */
   async verifyOrdersModal(
     modalSelector: string,
     tableSelector: string,
@@ -1441,18 +821,7 @@ export class PageObject extends AbstractPage {
     );
   }
 
-  /**
-   * Gets a quantity cell, highlights it, and returns the quantity value.
-   * Used in U002 test suite to verify warehouse quantities.
-   * @param quantityCellSelector - Selector for the quantity cell (can be a simple selector or a complex one)
-   * @param expectedValue - Optional expected value to verify
-   * @param quantityType - Optional type description for logging (e.g., "Total ordered", "Remaining ordered")
-   * @param itemTypeName - Optional item type for logging (e.g., "DETAIL", "CBED", "IZD")
-   * @param useComplexSelector - If true, the selector is a complex pattern with prefix and suffix
-   * @param prefixSelector - Optional prefix selector for complex selectors (used with useComplexSelector)
-   * @param suffixSelector - Optional suffix selector for complex selectors (used with useComplexSelector)
-   * @returns The quantity value as a number
-   */
+  /** Get quantity cell value and optionally verify. */
   async getQuantityCellAndVerify(
     quantityCellSelector: string,
     expectedValue?: number,
@@ -1478,30 +847,12 @@ export class PageObject extends AbstractPage {
     );
   }
 
-  /**
-   * Clicks on an order in the orders modal to open the edit dialog.
-   * Used in U002 test suite to open edit dialogs for specific orders.
-   * @param orderRowsSelector - Selector for order rows
-   * @param orderNumber - The order number to click on
-   * @param errorMessage - Optional custom error message if order not found
-   * @param itemTypeName - Optional item type for logging (e.g., "DETAIL", "CBED", "IZD")
-   */
+  /** Click order row to open edit dialog. */
   async clickOrderToOpenEditDialog(orderRowsSelector: string, orderNumber: string, errorMessage?: string, itemTypeName?: string): Promise<void> {
     return this.orderHelper.clickOrderToOpenEditDialog(this, orderRowsSelector, orderNumber, errorMessage, itemTypeName);
   }
 
-  /**
-   * Selects a checkbox for a specific order and archives it.
-   * Used in U002 test suite to archive orders from the edit dialog.
-   * @param orderNumber - The order number to archive
-   * @param checkboxesSelector - Selector for checkboxes
-   * @param orderNumberCellsSelector - Selector for order number cells
-   * @param archiveButtonSelector - Selector for the archive button
-   * @param confirmButtonSelector - Selector for the confirm button
-   * @param editModalSelector - Selector for the edit modal (to wait for it)
-   * @param errorMessage - Optional custom error message if checkbox not found
-   * @param itemTypeName - Optional item type for logging (e.g., "DETAIL", "CBED", "IZD")
-   */
+  /** Select checkbox for order and archive. */
   async selectCheckboxAndArchiveOrder(
     orderNumber: string,
     checkboxesSelector: string,
@@ -1528,65 +879,29 @@ export class PageObject extends AbstractPage {
   async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
     return this.validationHelper.validatePageTitlesWithStyling(testId, expectedTitles);
   }
-  /**
-   * Validate that a table is displayed and has rows.
-   * @param tableTestId - The data-testid of the table to validate.
-   * @returns Promise<void> - Validates the presence and non-emptiness of the table.
-   */
+  /** Validate table is displayed with rows. */
   async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
     return this.validationHelper.validateTableIsDisplayedWithRows(tableTestId);
   }
 
-  /**
-   * Validate a button's visibility and state using its data-testid.
-   * Checks if the button is disabled either by attribute or CSS class.
-   * @param page - The Playwright page object.
-   * @param buttons - Array of button configurations including data-testid, label, and expected state.
-   * @param dialogSelector - Optional scoped selector for the dialog or container.
-   */
+  /** Validate buttons visibility and state. */
   async validateButtons(page: Page, buttons: Array<{ datatestid: string; label: string; state: string }>, dialogSelector?: string): Promise<void> {
     return this.validationHelper.validateButtons(page, buttons, dialogSelector);
   }
-  /**
-   * Validates that the checkbox in the "Главный:" row is not checked.
-   * @param {import('@playwright/test').Page} page - Playwright page object.
-   * @param {import('@playwright/test').Locator} section - Locator for the file section.
-   * @param {number} sectionIndex - Index of the section being checked.
-   * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
-   */
+  /** Validate checkbox in section. */
   async validateCheckbox(page: Page, section: Locator, sectionIndex: number) {
     return this.validationHelper.validateCheckbox(page, section, sectionIndex);
   }
-  /**
-   * Checks the checkbox in the "Главный:" row and applies styling.
-   * @param {import('@playwright/test').Page} page - Playwright page object.
-   * @param {import('@playwright/test').Locator} section - Locator for the file section.
-   * @param {number} sectionIndex - Index of the section being checked.
-   * @returns {Promise<boolean>} - Returns whether the checkbox is checked.
-   */
+  /** Check checkbox in section. */
   async checkCheckbox(page: Page, section: Locator, sectionIndex: number) {
     return this.validationHelper.checkCheckbox(page, section, sectionIndex);
   }
 
-  /**
-   * Validates that all uploaded file fields contain the correct filename without extension.
-   * @param {Page} page - Playwright page object.
-   * @param {Locator[]} fileSections - Array of file section locators.
-   * @param {string[]} uploadedFiles - Array of uploaded file names.
-   */
+  /** Validate uploaded file names in sections. */
   async validateFileNames(page: Page, fileSections: Locator[], uploadedFiles: string[]): Promise<void> {
     return this.validationHelper.validateFileNames(page, fileSections, uploadedFiles);
   }
-  /**
-   * Highlights an element with standard debugging styles.
-   * @param element - The Playwright locator to highlight
-   * @param customStyles - Optional custom styles to apply
-   */
-  /**
-   * Highlights an element with custom styles
-   * @param element - The locator to highlight
-   * @param customStyles - Optional custom highlight styles
-   */
+  /** Highlight element with optional custom styles. */
   async highlightElement(
     element: Locator,
     customStyles?: {
@@ -1602,22 +917,12 @@ export class PageObject extends AbstractPage {
     return this.elementHelper.highlightElement(element, customStyles);
   }
 
-  /**
-   * Locates an element by data-testid, highlights it, and waits for it to be visible.
-   * @param dataTestId - The data-testid to locate
-   * @param timeout - Optional timeout for waiting (default: 30000)
-   * @returns The located element
-   */
+  /** Locate by data-testid, highlight, wait visible. */
   async locateAndHighlightElement(dataTestId: string, timeout: number = 30000): Promise<Locator> {
     return this.elementHelper.locateAndHighlightElement(dataTestId, timeout);
   }
 
-  /**
-   * Vue-compatible search using pressSequentially
-   * @param searchInputSelector - Selector for the search input element
-   * @param searchTerm - Term to search for
-   * @param options - Optional configuration (delay, waitAfterSearch)
-   */
+  /** Vue-compatible search with pressSequentially. */
   async searchWithPressSequentially(
     searchInputSelector: string,
     searchTerm: string,
@@ -1626,40 +931,17 @@ export class PageObject extends AbstractPage {
     return this.tableHelper.searchWithPressSequentially(searchInputSelector, searchTerm, options);
   }
 
-  /**
-   * Helper function to extract ID from full selector
-   * @param selector - The selector string (may contain [data-testid="..."] or just the ID)
-   * @returns The extracted data-testid value or the original selector if no match
-   */
-
-  /**
-   * Fill input and wait for value to be set
-   * @param inputLocator - The input locator
-   * @param value - Value to fill
-   * @param timeout - Timeout for waiting (default: TIMEOUTS.MEDIUM)
-   */
+  /** Fill input and wait for value. */
   async fillInputAndWaitForValue(inputLocator: Locator, value: string, timeout: number = TIMEOUTS.MEDIUM): Promise<void> {
     return this.elementHelper.fillInputAndWaitForValue(inputLocator, value, timeout);
   }
 
-  /**
-   * Fill input with retries - attempts to fill input multiple times until value matches
-   * @param input - The input locator
-   * @param value - Value to fill
-   * @param maxAttempts - Maximum number of attempts (default: 3)
-   * @returns The final value in the input
-   */
+  /** Fill input with retries until value matches. */
   async fillInputWithRetries(input: Locator, value: string, maxAttempts = 3): Promise<string> {
     return this.elementHelper.fillInputWithRetries(input, value, maxAttempts);
   }
 
-  /**
-   * Helper function to find the actual search input element (handles wrapper vs direct input)
-   * @param page - Playwright Page object
-   * @param searchInputSelector - Selector for the search input wrapper
-   * @param timeout - Timeout for waiting (default: WAIT_TIMEOUTS.STANDARD)
-   * @returns The actual input locator to use
-   */
+  /** Find actual search input (wrapper or direct). */
   async findSearchInput(page: Page, searchInputSelector: string, timeout: number = WAIT_TIMEOUTS.STANDARD): Promise<Locator> {
     return this.elementHelper.findSearchInput(page, searchInputSelector, timeout);
   }

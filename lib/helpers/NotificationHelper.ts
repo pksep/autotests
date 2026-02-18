@@ -12,7 +12,11 @@
 
 import { Page, expect } from '@playwright/test';
 import * as SelectorsNotifications from '../Constants/SelectorsNotifications';
+import { WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import logger from '../utils/logger';
+
+/** Loader modal that can cover the notification area and intercept clicks (e.g. after "Launch into production"). */
+const MODAL_LOADER_PRODUCTION = '[data-testid="ModalStartProduction-Loader"]';
 
 export class NotificationHelper {
   constructor(private page: Page) {}
@@ -31,16 +35,17 @@ export class NotificationHelper {
   }
 
   /**
-   * Closes the success message notification
+   * Closes the success message notification.
+   * Waits for the production loader modal to disappear first so it does not intercept the click.
    */
   async closeSuccessMessage() {
     try {
-      // Находим и кликаем по кнопке закрытия
       const closeButton = this.page.locator('[data-testid="Notification-Notification-Icon"]').last();
-      await expect(closeButton).toBeVisible();
-      await closeButton.click();
+      await this.page.locator(MODAL_LOADER_PRODUCTION).waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+      await closeButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await closeButton.click({ timeout: WAIT_TIMEOUTS.SHORT });
     } catch (error) {
-      console.error('Ошибка при закрытии уведомления:', error);
+      logger.warn('Closing notification failed (loader may have intercepted or notification closed).', error);
     }
   }
 

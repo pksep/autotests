@@ -494,6 +494,7 @@ export class TableHelper {
   async searchTable(nameSearch: string, locator: string, searchInputDataTestId?: string) {
     logger.log('Search Table', nameSearch, locator, searchInputDataTestId);
     const table = this.page.locator(locator);
+    await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
     await table.evaluate(el => {
       el.style.backgroundColor = 'green';
       el.style.border = '2px solid red';
@@ -668,6 +669,38 @@ export class TableHelper {
     }
 
     return { success: true };
+  }
+
+  /**
+   * Search table then optionally wait for table body. Used by Page.searchAndWaitForTable.
+   */
+  async searchAndWaitForTable(
+    searchTerm: string,
+    tableSelector: string,
+    tableBodySelector: string,
+    options?: {
+      useRedesign?: boolean;
+      searchInputDataTestId?: string;
+      timeoutBeforeWait?: number;
+      minRows?: number;
+      timeoutMs?: number;
+    },
+  ): Promise<void> {
+    if (options?.useRedesign) {
+      await this.searchTableRedesign(searchTerm, tableSelector);
+      await this.page.waitForLoadState('networkidle');
+    } else {
+      await this.searchTable(searchTerm, tableSelector, options?.searchInputDataTestId);
+    }
+    if (options?.timeoutBeforeWait) {
+      await this.page.waitForTimeout(options.timeoutBeforeWait);
+    }
+    if (options?.minRows !== undefined) {
+      await this.waitingTableBody(tableBodySelector, {
+        minRows: options.minRows,
+        timeoutMs: options?.timeoutMs,
+      });
+    }
   }
 
   /**

@@ -254,4 +254,10 @@ export class NavigationHelper {
     await newPage.waitForTimeout(1000);
     return { page: newPage, pageObject };
   }
+
+  /** Capture a screenshot of the current page. */
+  async captureScreenshot(filename: string): Promise<void> {
+    logger.info(`Capturing screenshot: ${filename}`);
+    await this.page.screenshot({ path: filename });
+  }
 }

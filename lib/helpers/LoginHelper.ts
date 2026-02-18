@@ -9,6 +9,7 @@
  */
 
 import { Page } from '@playwright/test';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import logger from '../utils/logger';
 
 export class LoginHelper {
@@ -78,20 +79,32 @@ export class LoginHelper {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     try {
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load', { timeout: WAIT_TIMEOUTS.LONG });
       await page.waitForTimeout(500);
 
-      // Step 1: Fill "Табельный номер" field
-      await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-Input"]', { state: 'visible', timeout: 10000 });
+      // Step 1: Fill "Табельный номер" field (combobox has disable-open until tabels are loaded)
+      const tabelInput = page.locator('[data-testid="LoginForm-TabelNumber-Combobox-Input"]');
+      await tabelInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       logger.log('Табельный номер field is visible.');
-      await page.click('[data-testid="LoginForm-TabelNumber-Combobox-Input"]'); // Open dropdown
-
-      await page.waitForSelector('[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"]', { state: 'visible' });
+      // Wait for options to be loaded so the dropdown can open (disable-open when tabels.length === 0)
+      await page
+        .locator(`[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"] >> text="${tabel}"`)
+        .waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await page.waitForTimeout(TIMEOUTS.SHORT);
+      await tabelInput.click();
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      const optionsList = page.locator('[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"]');
+      if (!(await optionsList.isVisible())) {
+        await tabelInput.focus();
+        await page.keyboard.press('ArrowDown');
+        await page.waitForTimeout(TIMEOUTS.SHORT);
+      }
+      await optionsList.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await page.click(`[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"] >> text="${tabel}"`);
       logger.log(`Табельный номер set to: ${tabel}`);
 
       // Step 2: Fill "Логин" field
-      await page.waitForSelector('[data-testid="LoginForm-Login-Combobox-Input"]', { state: 'visible', timeout: 10000 });
+      await page.waitForSelector('[data-testid="LoginForm-Login-Combobox-Input"]', { state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       logger.log('Логин field is visible.');
       await page.fill('[data-testid="LoginForm-Login-Combobox-Input"]', login);
       logger.log(`Логин set to: ${login}`);
@@ -101,7 +114,7 @@ export class LoginHelper {
 
       // Step 3: Fill "Пароль" field
       logger.log('Waiting for password field...');
-      await page.waitForSelector('[data-testid="Password-Inputs-Input-Input"]', { state: 'visible', timeout: 10000 });
+      await page.waitForSelector('[data-testid="Password-Inputs-Input-Input"]', { state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       logger.log('Password field is visible.');
       await page.fill('[data-testid="Password-Inputs-Input-Input"]', password);
       logger.log('Password filled successfully.');
