@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="243864">
+<fb version="0.19.6" size="254476">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">60.003631533</seconds>
+    <seconds t="F">68.784178263</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-02-18T10:28:17Z</when>
+    <when t="T">2026-02-18T11:27:19Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -14016,19 +14016,6 @@
     <who t="I">89906484</who>
   </f>
   <f>
-    <_id t="I">702</_id>
-    <_job t="I">22134058102</_job>
-    <_time t="T">2026-02-18T09:29:39Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">8554693984</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">703</_id>
     <_job t="I">22134058102</_job>
     <_time t="T">2026-02-18T09:29:41Z</_time>
@@ -15437,6 +15424,716 @@
     <repository t="I">935866864</repository>
     <what t="S">pull-was-opened</what>
     <when t="T">2025-05-28T11:10:21Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">772</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:13Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">8558094182</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
+  </f>
+  <f>
+    <_id t="I">773</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:14Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#359 has been "pull-was-closed".</details>
+    <failed_builds t="I">39</failed_builds>
+    <files t="I">2</files>
+    <hoc t="I">5973</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">359</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">1</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-27T14:03:01Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">774</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:39Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#360 has been "pull-was-closed".</details>
+    <failed_builds t="I">39</failed_builds>
+    <files t="I">2</files>
+    <hoc t="I">5973</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">360</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">1</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-27T14:06:41Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">775</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:40Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#361 has been "pull-was-closed".</details>
+    <failed_builds t="I">39</failed_builds>
+    <files t="I">2</files>
+    <hoc t="I">5973</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">361</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">1</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-27T14:15:23Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">776</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:42Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#362 has been "pull-was-closed".</details>
+    <failed_builds t="I">39</failed_builds>
+    <files t="I">2</files>
+    <hoc t="I">5973</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">362</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">1</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-27T14:29:13Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">777</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:43Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#363 has been "pull-was-closed".</details>
+    <failed_builds t="I">39</failed_builds>
+    <files t="I">2</files>
+    <hoc t="I">5973</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">363</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">1</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T04:06:04Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">778</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:44Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#364 has been "pull-was-closed".</details>
+    <failed_builds t="I">39</failed_builds>
+    <files t="I">12</files>
+    <hoc t="I">12876</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">364</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">1</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T04:28:17Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">779</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:46Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#365 has been "pull-was-closed".</details>
+    <failed_builds t="I">1</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">365</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T04:43:21Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">780</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:48Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#366 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">366</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T05:28:57Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">781</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:54Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#367 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">367</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T06:03:55Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">782</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:55Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#368 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">368</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T07:10:17Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">783</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:56Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">canary</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#369 has been "pull-was-merged".</details>
+    <failed_builds t="I">1</failed_builds>
+    <files t="I">12</files>
+    <hoc t="I">12914</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">369</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-merged</what>
+    <when t="T">2025-05-28T07:12:12Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">784</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:58Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#370 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">370</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T09:45:44Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">785</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:26:59Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#371 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">371</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T10:18:40Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">786</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:00Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#372 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">372</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T10:26:02Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">787</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:01Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#373 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">373</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T10:34:23Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">788</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:02Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#374 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">374</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T11:10:00Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">789</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:03Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <comments t="I">0</comments>
+    <comments_appreciated t="I">0</comments_appreciated>
+    <comments_by_author t="I">0</comments_by_author>
+    <comments_by_reviewers t="I">0</comments_by_reviewers>
+    <comments_resolved t="I">0</comments_resolved>
+    <comments_to_code t="I">0</comments_to_code>
+    <details t="S">Apparently, pksep/autotests#375 has been "pull-was-closed".</details>
+    <failed_builds t="I">11</failed_builds>
+    <files t="I">1</files>
+    <hoc t="I">2</hoc>
+    <is_human t="I">1</is_human>
+    <issue t="I">375</issue>
+    <repository t="I">935866864</repository>
+    <succeeded_builds t="I">0</succeeded_builds>
+    <suggestions t="I">0</suggestions>
+    <what t="S">pull-was-closed</what>
+    <when t="T">2025-05-28T11:32:49Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">790</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:05Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#376 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">376</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-28T11:38:39Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">791</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:06Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#377 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">377</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-28T11:53:18Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">792</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:07Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#378 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">378</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-28T17:19:44Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">793</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:08Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#379 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">379</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T03:46:06Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">794</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:09Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#380 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">380</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T04:08:11Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">795</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:09Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#381 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">381</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T04:21:39Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">796</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:10Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#382 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">382</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T04:30:23Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">797</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:11Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">canary</branch>
+    <details t="S">The missing pull pksep/autotests#383 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">383</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T09:50:54Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">798</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:11Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#384 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">384</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T10:44:02Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">799</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:12Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#385 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">385</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T11:26:13Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">800</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:13Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#386 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">386</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T11:34:33Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">801</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:13Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#387 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">387</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T11:53:27Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">802</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:14Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#388 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">388</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T12:03:13Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">803</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:15Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#389 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">389</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T12:12:16Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">804</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:15Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#390 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">390</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T12:15:27Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">805</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:16Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#391 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">391</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T13:19:44Z</when>
+    <where t="S">github</where>
+    <who t="I">89906484</who>
+  </f>
+  <f>
+    <_id t="I">806</_id>
+    <_job t="I">22137800706</_job>
+    <_time t="T">2026-02-18T11:27:17Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <branch t="S">U004</branch>
+    <details t="S">The missing pull pksep/autotests#392 has been opened by @atomant1969.</details>
+    <is_human t="I">1</is_human>
+    <issue t="I">392</issue>
+    <repository t="I">935866864</repository>
+    <what t="S">pull-was-opened</what>
+    <when t="T">2025-05-29T14:04:43Z</when>
     <where t="S">github</where>
     <who t="I">89906484</who>
   </f>
