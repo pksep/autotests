@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 69.071900669
+  seconds: 41.279836333
   version: 0.60.0
   what: judges-summary
-  when: 2026-02-18 21:22:17.588333611 Z
+  when: 2026-02-18 22:03:38.699650479 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -19255,6 +19255,7 @@
   is_human: 1
   issue: 503
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 1
   suggestions: 0
   what: pull-was-merged
@@ -19279,6 +19280,7 @@
   is_human: 1
   issue: 504
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -19303,6 +19305,7 @@
   is_human: 1
   issue: 505
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -19327,6 +19330,7 @@
   is_human: 1
   issue: 506
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -19399,6 +19403,7 @@
   is_human: 1
   issue: 509
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -19447,6 +19452,7 @@
   is_human: 1
   issue: 511
   repository: 935866864
+  review_comments: 0
   succeeded_builds: 0
   suggestions: 0
   what: pull-was-merged
@@ -19672,5 +19678,413 @@
   repository: 935866864
   what: pull-was-opened
   when: 2025-08-20 09:07:41.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1088
+  _job: 22159409489
+  _time: 2026-02-18 22:02:59.938735657 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: main
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#512 has been "pull-was-closed".
+  failed_builds: 3
+  files: 1
+  hoc: 4871
+  is_human: 1
+  issue: 512
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-23 10:55:16.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1089
+  _job: 22159409489
+  _time: 2026-02-18 22:03:09.491411256 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: main
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#513 has been "pull-was-closed".
+  failed_builds: 3
+  files: 1
+  hoc: 4871
+  is_human: 1
+  issue: 513
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-23 11:01:49.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1090
+  _job: 22159409489
+  _time: 2026-02-18 22:03:10.818747048 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: main
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#514 has been "pull-was-closed".
+  failed_builds: 0
+  files: 1
+  hoc: 4873
+  is_human: 1
+  issue: 514
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-23 11:11:03.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1091
+  _job: 22159409489
+  _time: 2026-02-18 22:03:12.632788239 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: main
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#515 has been "pull-was-closed".
+  failed_builds: 0
+  files: 1
+  hoc: 4873
+  is_human: 1
+  issue: 515
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-23 11:12:52.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1092
+  _job: 22159409489
+  _time: 2026-02-18 22:03:13.711198158 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#516 has been "pull-was-closed".
+  failed_builds: 6
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 516
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-29 09:01:01.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1093
+  _job: 22159409489
+  _time: 2026-02-18 22:03:18.876528320 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#517 has been "pull-was-closed".
+  failed_builds: 6
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 517
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-29 10:25:16.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1094
+  _job: 22159409489
+  _time: 2026-02-18 22:03:19.973616606 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#518 has been "pull-was-closed".
+  failed_builds: 6
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 518
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-29 12:08:26.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1095
+  _job: 22159409489
+  _time: 2026-02-18 22:03:21.108794679 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#519 has been "pull-was-closed".
+  failed_builds: 6
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 519
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-30 02:27:16.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1096
+  _job: 22159409489
+  _time: 2026-02-18 22:03:22.140238294 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#520 has been "pull-was-closed".
+  failed_builds: 6
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 520
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-07-30 02:34:02.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1097
+  _job: 22159409489
+  _time: 2026-02-18 22:03:23.276699873 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#521 has been "pull-was-closed".
+  failed_builds: 6
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 521
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-08-20 05:36:13.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1098
+  _job: 22159409489
+  _time: 2026-02-18 22:03:24.488199015 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test2
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#522 has been "pull-was-closed".
+  failed_builds: 7
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 522
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-08-20 05:44:45.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1099
+  _job: 22159409489
+  _time: 2026-02-18 22:03:29.648966152 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#523 has been "pull-was-closed".
+  failed_builds: 7
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 523
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-08-20 05:58:10.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1100
+  _job: 22159409489
+  _time: 2026-02-18 22:03:30.741813301 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#524 has been "pull-was-closed".
+  failed_builds: 7
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 524
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-08-20 06:21:08.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1101
+  _job: 22159409489
+  _time: 2026-02-18 22:03:31.834330928 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#525 has been "pull-was-closed".
+  failed_builds: 7
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 525
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-08-20 06:23:46.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1102
+  _job: 22159409489
+  _time: 2026-02-18 22:03:33.210517331 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#526 has been "pull-was-closed".
+  failed_builds: 7
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 526
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-08-20 07:58:12.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1103
+  _job: 22159409489
+  _time: 2026-02-18 22:03:34.335510248 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#527 has been "pull-was-closed".
+  failed_builds: 7
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 527
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-08-20 09:07:21.000000000 Z
+  where: github
+  who: 89906484
+- _id: 1104
+  _job: 22159409489
+  _time: 2026-02-18 22:03:35.457379906 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  branch: canary_test
+  comments: 0
+  comments_appreciated: 0
+  comments_by_author: 0
+  comments_by_reviewers: 0
+  comments_resolved: 0
+  comments_to_code: 0
+  details: Apparently, pksep/autotests#528 has been "pull-was-closed".
+  failed_builds: 7
+  files: 1
+  hoc: 2
+  is_human: 1
+  issue: 528
+  repository: 935866864
+  succeeded_builds: 0
+  suggestions: 0
+  what: pull-was-closed
+  when: 2025-10-13 10:37:30.000000000 Z
   where: github
   who: 89906484
