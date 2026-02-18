@@ -366,10 +366,13 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
 
       await allure.step('Step 04: Enter the name of the part', async () => {
         await page.waitForTimeout(TIMEOUTS.STANDARD);
-        const nameParts = page.locator(PartsDBSelectors.INPUT_DETAIL_NAME);
-
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const addDetalContainer = page.locator(PartsDBSelectors.ADD_DETAIL_PAGE);
+        await addDetalContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        const nameParts = addDetalContainer.locator(PartsDBSelectors.INPUT_DETAIL_NAME).first();
+        await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await nameParts.click();
         await nameParts.fill(detail.name);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await expectSoftWithScreenshot(
           page,
           async () => {
@@ -381,8 +384,10 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 05: Enter the designation of the part', async () => {
-        const nameParts = page.locator(PartsDBSelectors.INPUT_DETAIL_DESIGNATION);
-
+        const addDetalContainer = page.locator(PartsDBSelectors.ADD_DETAIL_PAGE);
+        const nameParts = addDetalContainer.locator(PartsDBSelectors.INPUT_DETAIL_DESIGNATION).first();
+        await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await nameParts.click();
         await nameParts.fill(detail.designation);
         await expectSoftWithScreenshot(
           page,
@@ -499,8 +504,11 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 04: Enter the name of the part', async () => {
         await partsDatabsePage.waitForNetworkIdle();
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const nameParts = page.locator(PartsDBSelectors.INPUT_NAME_IZD);
-
+        const creator = page.locator(PartsDBSelectors.EDIT_PAGE_MAIN_ID);
+        await creator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        const nameParts = creator.locator(PartsDBSelectors.INPUT_NAME_IZD).first();
+        await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await nameParts.click();
         await nameParts.fill(cbed.name);
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await expectSoftWithScreenshot(
@@ -564,7 +572,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
     await allure.step('Step 04: Enter the name of the part', async () => {
       await partsDatabsePage.waitForNetworkIdle();
       const nameParts = page.locator(PartsDBSelectors.INPUT_NAME_IZD).first();
-
+      await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await nameParts.fill(nameProductNew);
       await expectSoftWithScreenshot(

@@ -274,15 +274,23 @@ export class MiscHelper {
     }
 
     const yourQuantity = await modalWindow.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_OWN_QUANTITY_INPUT);
-    const assemblyTableLocator = '[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTable"]';
-    await this.page
-      .locator(`${assemblyTableLocator} tbody tr`)
-      .first()
-      .locator('td')
-      .nth(4)
-      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
-    // Calls RowCellHelper through PageObject
-    const needQuantity = await pageObject.getValueOrClickFromFirstRow(assemblyTableLocator, 4);
+    // Expand "Сборки" accordion first so the assembly table content is visible
+    const assemblyAccordion = modalWindow.locator('[data-testid="AccordionNoNative-Title"]').nth(0);
+    await assemblyAccordion.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    const accordionText = await assemblyAccordion.textContent();
+    if (accordionText?.trim().toLowerCase().includes('сборки')) {
+      await assemblyAccordion.click();
+      await this.page.waitForTimeout(TIMEOUTS.LONG);
+    }
+    const assemblyTable = modalWindow.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_ASSEMBLY_TABLE);
+    await assemblyTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+    const firstRow = assemblyTable.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_ASSEMBLY_TABLE_ROW).first();
+    await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+    await firstRow.scrollIntoViewIfNeeded();
+    const needQuantityCell = firstRow.locator(SelectorsModalWindowConsignmentNote.WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL);
+    await needQuantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+    const needQuantity = (await needQuantityCell.innerText()).trim();
+    logger.info(`Waybill assembly table required quantity (first row): ${needQuantity}`);
     // expect(yourQuantity).toHaveValue(needQuantity);
     if (enterQuantity) {
       await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -292,9 +300,7 @@ export class MiscHelper {
     }
 
     if (checkbox === true) {
-      // Find the checkbox cell using the new data-testid pattern
-      // Pattern: ModalAddWaybill-ShipmentDetailsTable-Row{number}-SelectCell
-      const checkboxCell = this.page.locator('[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-SelectCell"]').first();
+      const checkboxCell = modalWindow.locator(SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ROW_SELECT_CELL_PATTERN).first();
 
       // Wait for the checkbox cell to be visible
       await checkboxCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });

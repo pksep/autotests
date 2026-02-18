@@ -8,6 +8,11 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      # Override suite or base URL without changing code. Omit to use config.ts defaults.
+      # TEST_SUITE: U002
+      # BASE_URL: http://dev.pksep.ru/
+      # API_BASE_URL: http://dev.pksep.ru/
     steps:
     - uses: actions/checkout@v5
     - uses: actions/setup-node@v5

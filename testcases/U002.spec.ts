@@ -380,8 +380,8 @@ export const runU002 = (isSingleTest: boolean, iterations: number) => {
       const table = page.locator(SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE);
       await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-      // Wait for loading with a shorter timeout
-      await metalworkingWarehouse.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
+      // Wait for loading (use LONG timeout; page may have background requests)
+      await metalworkingWarehouse.waitForNetworkIdle(WAIT_TIMEOUTS.PAGE_RELOAD);
 
       // Wait for the table body to load
       await metalworkingWarehouse.waitingTableBody(SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE, { minRows: 0 });

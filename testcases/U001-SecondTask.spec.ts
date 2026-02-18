@@ -894,9 +894,21 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await stockReceipt.clickButton('Создать', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE);
         });
 
-        await allure.step('Step 11: Check the number of parts in the warehouse after posting', async () => {
-          // Check the number of parts in the warehouse after posting
-          remainingStockAfter = await stock.checkingTheQuantityInStock(detail.name, TableSelection.detail);
+        await allure.step('Step 11: Wait for stock to update after posting', async () => {
+          const expectedStock = Number(remainingStockBefore) + Number(incomingQuantity);
+          logger.log(`Waiting for stock to update from ${remainingStockBefore} to ${expectedStock}...`);
+
+          await expect
+            .poll(
+              async () => {
+                remainingStockAfter = await stock.checkingTheQuantityInStock(detail.name, TableSelection.detail);
+                return Number(remainingStockAfter);
+              },
+              { timeout: 60000, intervals: [3000] },
+            )
+            .toBe(expectedStock);
+
+          logger.log(`Stock updated successfully: ${remainingStockAfter} (expected: ${expectedStock})`);
         });
 
         await allure.step('Step 12: Compare the quantity in cells', async () => {

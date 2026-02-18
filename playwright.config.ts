@@ -6,9 +6,11 @@ import logger from './lib/utils/logger';
 export default defineConfig({
   testDir: process.env.TEST_DIR || ENV.TEST_DIR, //path.join(__dirname, "."), set in config.ts
   timeout: 30000,
+  globalTimeout: 30 * 60 * 1000, // 30 minutes for full suite (e.g. U001)
+  workers: 1, // Sequential only: suites like U001 create then use then delete data; parallel workers would conflict
   retries: 0,
   use: {
-    baseURL: process.env.BASE_URL || ENV.BASE_URL, //set this in your config.ts
+    baseURL: process.env.BASE_URL || ENV.BASE_URL, //setgit a this in your config.ts
     headless: ENV.HEADLESS, //set this in your config.ts
     viewport: { width: 1920, height: 830 },
     actionTimeout: 10000,

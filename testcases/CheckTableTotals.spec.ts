@@ -130,7 +130,9 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
 
                         } while (scrollAttempts < maxScrollAttempts && stableCountIterations < 3);
 
-                        console.log(`${cardTitle} ${expectedCount} counted ${currentRowCount}`);
+                        if (ENV.DEBUG) {
+                            logger.log(`${cardTitle} ${expectedCount} counted ${currentRowCount}`);
+                        }
 
                         const result = currentRowCount === expectedCount ? 'PASSED' : 'FAILED';
                         const colorCode = result === 'PASSED' ? '\x1b[32m' : '\x1b[31m'; // Green for PASSED, Red for FAILED
@@ -295,7 +297,9 @@ export const runCheckTableTotals = (isSingleTest: boolean, iterations: number) =
                         logger.log(`Spec rows found: ${rowCount}`);
                         logger.log(`Calculated count: ${currentRowCount}`);
                         logger.log(`Expected count: ${expectedCount}`);
-                        console.log(`${cardTitle} ${expectedCount} counted ${currentRowCount}`);
+                        if (ENV.DEBUG) {
+                            logger.log(`${cardTitle} ${expectedCount} counted ${currentRowCount}`);
+                        }
 
                         // Use the expected count directly since we're now excluding the problematic rows
                         const expectedTableCount = expectedCount;

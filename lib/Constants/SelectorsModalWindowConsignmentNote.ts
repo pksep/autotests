@@ -25,6 +25,11 @@ export const WAYBILL_DETAILS_OWN_QUANTITY_INPUT_ID = 'ModalAddWaybill-WaybillDet
 export const CONTROL_BUTTONS_ACTUALIZE_BUTTON = '[data-testid="ModalAddWaybill-ControlButtons-ActualizeButton"]';
 export const CONTROL_BUTTONS_ACTUALIZE_BUTTON_ID = 'ModalAddWaybill-ControlButtons-ActualizeButton';
 
+// Waybill assembly table (5 cols: Обозначение, Наименование, Дата плановой отгрузки, Необходимое кол-во, Скомплектовано)
+export const WAYBILL_DETAILS_ASSEMBLY_TABLE = 'table[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTable"]';
+export const WAYBILL_DETAILS_ASSEMBLY_TABLE_TBODY = '[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTable-Tbody"]';
+export const WAYBILL_DETAILS_ASSEMBLY_TABLE_ROW = '[data-testid="ModalAddWaybill-WaybillDetails-AssemblyTableRow"]';
+
 // ERP-969 specific selectors
 export const WAYBILL_DETAILS_HEADING = '[data-testid="ModalAddWaybill-WaybillDetails-Heading"]';
 export const WAYBILL_DETAILS_REQUIRED_QUANTITY_CELL = '[data-testid="ModalAddWaybill-WaybillDetails-RequiredQuantityCell"]';

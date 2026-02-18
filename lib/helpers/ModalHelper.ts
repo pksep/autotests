@@ -22,10 +22,11 @@ export class ModalHelper {
   /**
    * Checks if a modal window is closed (hidden)
    * @param locator - The selector for the modal window
+   * @param timeout - Optional timeout in ms to wait for hidden (default: WAIT_TIMEOUTS.PAGE_RELOAD)
    */
-  async checkCloseModalWindow(locator: string) {
-    const modalWindow = await this.page.locator(locator);
-    await expect(modalWindow).toBeHidden();
+  async checkCloseModalWindow(locator: string, timeout: number = WAIT_TIMEOUTS.PAGE_RELOAD) {
+    const modalWindow = this.page.locator(locator);
+    await expect(modalWindow).toBeHidden({ timeout });
   }
 
   /**
