@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="346316">
+<fb version="0.19.6" size="346314">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">4.258636821</seconds>
+    <seconds t="F">8.592575141</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-02-19T18:33:15Z</when>
+    <when t="T">2026-02-19T19:29:07Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -22189,19 +22189,6 @@
     <when t="T">2026-02-19T13:55:51Z</when>
   </f>
   <f>
-    <_id t="I">1111</_id>
-    <_job t="I">22192856582</_job>
-    <_time t="T">2026-02-19T17:35:52Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">8606369373</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">1112</_id>
     <_job t="I">62198</_job>
     <_time t="T">2026-02-19T17:36:22Z</_time>
@@ -22210,5 +22197,18 @@
     <text t="S">The average monthly turnover (1.0 developers) is increasing (R=0.51).</text>
     <what t="S">assessment</what>
     <when t="T">2026-02-19T17:36:22Z</when>
+  </f>
+  <f>
+    <_id t="I">1113</_id>
+    <_job t="I">22196762545</_job>
+    <_time t="T">2026-02-19T19:29:01Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">8610095099</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
