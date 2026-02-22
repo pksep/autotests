@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="347037">
+<fb version="0.19.6" size="347033">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">10.732371031</seconds>
+    <seconds t="F">4.34315047</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-02-22T13:31:10Z</when>
+    <when t="T">2026-02-22T14:04:01Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
