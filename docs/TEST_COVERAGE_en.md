@@ -28,7 +28,7 @@ The ERP system contains several "Auxiliary Databases" that are prioritized for u
 
 | Module | Purpose | Proposed Action |
 | :--- | :--- | :--- |
-| **File Base** (/filebase) | Central repository for Technical Specs (PDF, SLDDRW, DXF). | High Priority. Requires a test that uploads a file, verifies it appears in the global table, and successfully links it to a Product in the Product Database. |
+| **File Base** (/filebase) | Central repository for Technical Specs (PDF, SLDDRW, DXF). | High Priority. We need to test and confirm file attachments to Materials, Details, Assemblies, and Products, and ensure they properly sync with the global File Base. |
 | **Tools and Equipment Base** (/basetools) | Tracking manufacturing tools, molds, and measuring devices (e.g., Calipers, Chucks). | Medium Priority. Needs a basic CRUD test script mimicking `U005` to ensure UI components work. |
 | **Machinery Base** (/baseequipment) | Managing heavy machinery and production line assets. | Low/Medium Priority. Needs standard creation/editing tests. |
 | **Inventory Base** (/inventary) | Tracking facility inventory (lifts, external vehicles). | Low Priority. Needs standard CRUD coverage. |
@@ -50,6 +50,6 @@ The `/settings` dashboard serves as the master configuration portal for the enti
 
 To close the most critical gaps, we recommend writing test scripts in the following order:
 
-1.  **File Base Integration (`U008-Files.spec.ts`)**: The ability to host and link Engineering PDFs to part data is a core value-add of an ERP. This flow is untested.
+1.  **File Attachment Persistence (`U008-Files.spec.ts`)**: While `U005` handles the initial file upload UI, we must verify that those attachments persist post-save across Materials, Details, Assemblies, and Products. We also need to confirm they are registered correctly in the global `/filebase`.
 2.  **Work Results Calculation (`U009-WorkResults.spec.ts`)**: Because Work Results deals closely with payroll/employee efficiency metrics, bugs here have real financial impact. We need strict mathematical assertions on this table.
 3.  **CRM / Auxiliary Bases (`U010-AuxiliaryBases.spec.ts`)**: Bundle the creation/deletion of Tools, Equipment, and Companies into a single, efficient test suite to quickly pad out the remaining coverage.
