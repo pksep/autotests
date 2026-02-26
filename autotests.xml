@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">9.668020248</seconds>
+    <seconds t="F">4.108479289</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-02-26T11:27:41Z</when>
+    <when t="T">2026-02-26T12:06:41Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -22299,14 +22299,6 @@
     <when t="T">2026-02-25T20:05:33Z</when>
   </f>
   <f>
-    <_id t="I">1169</_id>
-    <_job t="I">63116</_job>
-    <_time t="T">2026-02-26T03:22:28Z</_time>
-    <_version t="S">0.19.8/0.60.0/0.17.11!0.17.13</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-02-26T03:22:28Z</when>
-  </f>
-  <f>
     <_id t="I">1170</_id>
     <_job t="I">22440042158</_job>
     <_time t="T">2026-02-26T11:27:35Z</_time>
@@ -22318,5 +22310,13 @@
     <repository t="I">935866864</repository>
     <what t="S">iterate</what>
     <where t="S">github</where>
+  </f>
+  <f>
+    <_id t="I">1171</_id>
+    <_job t="I">63158</_job>
+    <_time t="T">2026-02-26T11:28:24Z</_time>
+    <_version t="S">0.19.8/0.60.0/0.17.11!0.17.13</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-02-26T11:28:24Z</when>
   </f>
 </fb>
