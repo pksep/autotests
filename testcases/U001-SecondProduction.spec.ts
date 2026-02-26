@@ -1,7 +1,7 @@
 /**
  * @file U001-SecondProduction.spec.ts
  * @purpose Test Suite 8: Second Production Launch (Test Cases 28-30)
- * 
+ *
  * This suite handles:
  * - Test Case 28: Launch Into Production Product (Second Task)
  * - Test Case 29: Launch Into Production Cbed (Second Task)
@@ -47,7 +47,7 @@ let quantitySumLaunchOnProduction = U001Constants.quantitySumLaunchOnProduction;
 export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Second Production Launch (Test Cases 28-30)`);
 
-  test('Test Case 28 - Launch Into Production Product', async ({ page }) => {
+  test('Case 28 - Launch Into Production Product', async ({ page }) => {
     // doc test case 23
     logger.log('Test Case 28 - Launch Into Production Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -232,9 +232,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect
-            .soft(Number(quantityProductLaunchOnProductionAfter))
-            .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+          expect.soft(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
         },
         'Verify production ordered quantity increased correctly',
         test.info(),
@@ -242,7 +240,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
     });
   });
 
-  test('Test Case 29 - Launch Into Production Cbed', async ({ page }) => {
+  test('Case 29 - Launch Into Production Cbed', async ({ page }) => {
     // doc test case 24
     logger.log('Test Case 29 - Launch Into Production Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -271,14 +269,9 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(
-            cbed.name,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
-            {
-              useRedesign: true,
-            },
-          );
+          await shortageAssemblies.searchAndWaitForTable(cbed.name, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE, {
+            useRedesign: true,
+          });
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -457,9 +450,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect
-                .soft(Number(quantityProductLaunchOnProductionAfter))
-                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+              expect.soft(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
             },
             'Verify ordered quantity increased correctly',
             test.info(),
@@ -469,7 +460,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
     }
   });
 
-  test('Test Case 30 - Launch Into Production Parts', async ({ page }) => {
+  test('Case 30 - Launch Into Production Parts', async ({ page }) => {
     // doc test case 25
     logger.log('Test Case 30 - Launch Into Production Parts');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -669,9 +660,7 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect
-                .soft(Number(quantityProductLaunchOnProductionAfter))
-                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+              expect.soft(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
             },
             'Verify production ordered quantity increased correctly',
             test.info(),

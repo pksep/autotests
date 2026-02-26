@@ -83,7 +83,7 @@ export class CreateRevisionPage extends PageObject {
       searchInputDataTestId?: string;
       waitAfterConfirm?: number;
       switchToTabSelector?: string;
-    }
+    },
   ): Promise<void> {
     // Check that the first row contains the search term
     await this.checkNameInLineFromFirstRow(searchTerm, tableSelector);
@@ -141,7 +141,7 @@ export class CreateRevisionPage extends PageObject {
       confirmButtonSelector?: string;
       refreshAndSearchAfter?: boolean;
       waitAfterConfirm?: number;
-    }
+    },
   ): Promise<boolean> {
     try {
       const searchInputTestId = options?.searchInputDataTestId || 'TableRevisionPagination-SearchInput-Dropdown-Input';

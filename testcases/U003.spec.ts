@@ -79,7 +79,7 @@ const tableMainUploading = SelectorsShipmentTasks.TABLE_SHIPMENT_TABLE;
 export const runU003 = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Starting test: U003 - Shipment Tasks Management`);
 
-  test('Test Case 0 - Cleanup: Delete all test items', async ({ page }) => {
+  test('Case 0 - Cleanup: Delete all test items', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.LONG); // 10 minutes for cleanup
     logger.log('Test Case 0 - Cleanup: Delete all test items');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -118,7 +118,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     logger.log(`✅ Cleanup completed successfully`);
   });
 
-  test('Test Case 1 - Создать тестовое изделие', async ({ page }) => {
+  test('Case 1 - Создать тестовое изделие', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     logger.log('Test Case 1 - Create test product');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
@@ -136,7 +136,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await createButton.isVisible()).toBe(true);
+          await expect.soft(createButton).toBeVisible();
         },
         'Verify Create button is visible',
         test.info(),
@@ -170,7 +170,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await dialog.isVisible()).toBe(true);
+            await expect.soft(dialog).toBeVisible();
           },
           'Verify dialog is visible',
           test.info(),
@@ -182,7 +182,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await productButton.isVisible()).toBe(true);
+            await expect.soft(productButton).toBeVisible();
           },
           'Verify Изделие button is visible',
           test.info(),
@@ -200,7 +200,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect.soft(await h3Title.isVisible()).toBe(true);
+              await expect.soft(h3Title).toBeVisible();
             },
             'Verify creation page header is visible',
             test.info(),
@@ -211,7 +211,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect.soft(await saveButton.isVisible()).toBe(true);
+              await expect.soft(saveButton).toBeVisible();
             },
             'Verify Save button is visible (fallback)',
             test.info(),
@@ -228,7 +228,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await articleInput.isVisible()).toBe(true);
+            await expect.soft(articleInput).toBeVisible();
           },
           'Verify article input is visible',
           test.info(),
@@ -263,7 +263,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await nameInput.isVisible()).toBe(true);
+            await expect.soft(nameInput).toBeVisible();
           },
           'Verify name input is visible',
           test.info(),
@@ -298,7 +298,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await designationInput.isVisible()).toBe(true);
+            await expect.soft(designationInput).toBeVisible();
           },
           'Verify designation input is visible',
           test.info(),
@@ -333,7 +333,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await saveButton.isVisible()).toBe(true);
+            await expect.soft(saveButton).toBeVisible();
           },
           'Verify Save button is visible',
           test.info(),
@@ -364,7 +364,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await cancelButton.isVisible()).toBe(true);
+            await expect.soft(cancelButton).toBeVisible();
           },
           'Verify Cancel button is visible',
           test.info(),
@@ -406,7 +406,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     logger.log(`  global.testProductName = ${global.testProductName}`);
   });
 
-  test('Test Case 2 - Создать Задачу на отгрузку', async ({ page }) => {
+  test('Case 2 - Создать Задачу на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     logger.log('Test Case 2 - Create shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -657,7 +657,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 3 - Проверить создание Задачи на отгрузку', async ({ page }) => {
+  test('Case 3 - Проверить создание Задачи на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.EXTENDED);
     logger.log('Test Case 3 - Verify shipment task creation (edit verification)');
 
@@ -761,12 +761,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // The title format is: "Редактирование заказа № 25-4546 /0 от 18.11.2025"
       // We need to check both the full order number (with /0, /1, /2 etc) and the base (without suffix)
       // Check if base order number matches, or if full order number is in title, or if base is in normalized title
-      const orderNumberInTitle =
-        baseTitleOrder === baseOrderValue ||
-        normalizedTitle.includes(baseOrderValue) ||
-        titleText.includes(orderNumberValue) ||
-        titleText.includes(normalizedOrderValue) ||
-        normalizedTitle.includes(normalizedOrderValue);
+      const orderNumberInTitle = baseTitleOrder === baseOrderValue || normalizedTitle.includes(baseOrderValue) || titleText.includes(orderNumberValue) || titleText.includes(normalizedOrderValue) || normalizedTitle.includes(normalizedOrderValue);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -790,7 +785,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await positionsTable.isVisible()).toBe(true);
+          await expect.soft(positionsTable).toBeVisible();
         },
         'Verify positions table is visible',
         test.info(),
@@ -1008,12 +1003,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Check if dates match (could be in different formats)
       const dateMatch =
-        cellUrgencyDate.includes(displayUrgencyDate) ||
-        displayUrgencyDate.includes(cellUrgencyDate) ||
-        cellUrgencyDate.includes(urgencyDate) ||
-        cellUrgencyDate.includes(urgencyDateNewFormat) ||
-        displayUrgencyDate.includes(urgencyDate) ||
-        displayUrgencyDate.includes(urgencyDateNewFormat);
+        cellUrgencyDate.includes(displayUrgencyDate) || displayUrgencyDate.includes(cellUrgencyDate) || cellUrgencyDate.includes(urgencyDate) || cellUrgencyDate.includes(urgencyDateNewFormat) || displayUrgencyDate.includes(urgencyDate) || displayUrgencyDate.includes(urgencyDateNewFormat);
 
       logger.log(`Test Case 3: dateMatch = ${dateMatch}`);
 
@@ -1258,8 +1248,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            const searchValue = await searchInput.inputValue();
-            expect.soft(searchValue).toBe(fullOrderNumberValue);
+            const searchValue = searchInput;
+            await expect.soft(searchValue).toHaveValue(fullOrderNumberValue);
           },
           `Verify search input value equals "${fullOrderNumberValue}"`,
           test.info(),
@@ -1290,10 +1280,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // Tab 2: Open new tab, search for order, click on order number cell, then click edit button
       await allure.step('Tab 2: Open new tab, search, select order, and open edit mode', async () => {
         // Create a new page context for Tab 2
-        const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-          SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-          CreateLoadingTaskPage,
-        );
+        const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
 
         // Wait for the page and table to load
         const issueShipmentPageElement2 = tab2.locator(SelectorsLoadingTasksPage.issueShipmentPage);
@@ -1312,8 +1299,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           tab2,
           async () => {
-            const searchValue2 = await searchInput2.inputValue();
-            expect.soft(searchValue2).toBe(fullOrderNumberValue);
+            const searchValue2 = searchInput2;
+            await expect.soft(searchValue2).toHaveValue(fullOrderNumberValue);
           },
           `Verify search input 2 value equals "${fullOrderNumberValue}"`,
           test.info(),
@@ -1824,10 +1811,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Create a new tab for the deficit page to preserve Tab 1
       // Navigate to Дефицит продукции page in the new tab
-      const { page: deficitPage, pageObject: deficitLoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.WAREHOUSE.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: deficitPage, pageObject: deficitLoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.WAREHOUSE.URL, CreateLoadingTaskPage);
 
       // Step 26.1: Open Дефицит продукции
       const deficitProductionButton = deficitPage.locator(SelectorsShortagePages.SELECTOR_DEFICIT_PRODUCTION);
@@ -2253,9 +2237,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         logger.log(`Test Case 3 Step 28 Method 1: Normalized cell: "${normalizedCellOrder}"`);
         logger.log(`Test Case 3 Step 28 Method 1: Normalized expected: "${normalizedExpected}"`);
         logger.log(`Test Case 3 Step 28 Method 1: Check 1 (cell includes expected): ${normalizedCellOrder.includes(normalizedExpected)}`);
-        logger.log(
-          `Test Case 3 Step 28 Method 1: Check 2 (expected includes cell base): ${normalizedExpected.includes(normalizedCellOrder.split(' от ')[0])}`,
-        );
+        logger.log(`Test Case 3 Step 28 Method 1: Check 2 (expected includes cell base): ${normalizedExpected.includes(normalizedCellOrder.split(' от ')[0])}`);
         logger.log(`Test Case 3 Step 28 Method 1: Cell base (split by ' от '): "${normalizedCellOrder.split(' от ')[0]}"`);
         await expectSoftWithScreenshot(
           page,
@@ -2303,8 +2285,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            const searchValueArticle = await searchInput.inputValue();
-            expect.soft(searchValueArticle).toBe(articleNumberValue);
+            const searchValueArticle = searchInput;
+            await expect.soft(searchValueArticle).toHaveValue(articleNumberValue);
           },
           `Verify search input value equals article number "${articleNumberValue}"`,
           test.info(),
@@ -2322,9 +2304,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         }
 
         // Check order number
-        const orderNumberCell = matchingRow
-          .locator(`${SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN}, ${SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN}`)
-          .first();
+        const orderNumberCell = matchingRow.locator(`${SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN}, ${SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN}`).first();
         await loadingTaskPage.waitAndHighlight(orderNumberCell);
         const cellOrderNumber = (await orderNumberCell.textContent())?.trim() || '';
         await expectSoftWithScreenshot(
@@ -2372,8 +2352,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            const searchValueProduct = await searchInput.inputValue();
-            expect.soft(searchValueProduct).toBe(productNameValue);
+            const searchValueProduct = searchInput;
+            await expect.soft(searchValueProduct).toHaveValue(productNameValue);
           },
           `Verify search input value equals product name "${productNameValue}"`,
           test.info(),
@@ -2437,10 +2417,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Reuse context from Step 28.1
-      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
 
       try {
         // Wait for the page and table to load
@@ -2485,8 +2462,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           tab2,
           async () => {
-            const searchValueFull = await searchInput.inputValue();
-            expect.soft(searchValueFull).toBe(fullOrderNumberValue);
+            const searchValueFull = searchInput;
+            await expect.soft(searchValueFull).toHaveValue(fullOrderNumberValue);
           },
           `Verify search input value equals "${fullOrderNumberValue}"`,
           test.info(),
@@ -2794,8 +2771,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         tab2ForCompare,
         async () => {
-          const quantityValue = await quantityInputTab2.inputValue();
-          expect.soft(quantityValue).toBe('10');
+          const quantityValue = quantityInputTab2;
+          await expect.soft(quantityValue).toHaveValue('10');
         },
         `Verify quantity input value equals "10"`,
         test.info(),
@@ -2829,8 +2806,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         tab1,
         async () => {
-          const searchValueTab1 = await searchInputTab1.inputValue();
-          expect.soft(searchValueTab1).toBe(searchValue);
+          const searchValueTab1 = searchInputTab1;
+          await expect.soft(searchValueTab1).toHaveValue(searchValue);
         },
         `Verify search input tab 1 value equals "${searchValue}"`,
         test.info(),
@@ -2880,7 +2857,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
   // }
   // ============================================
 
-  test('Test Case 4 - Добавить два изделия к задаче на отгрузку', async ({ page }) => {
+  test('Case 4 - Добавить два изделия к задаче на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM_SHORT);
     logger.log('Test Case 4 - Add two products to shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -3391,8 +3368,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            const searchValueBase3 = await searchInput.inputValue();
-            expect.soft(searchValueBase3).toBe(baseOrderNumberValue3);
+            const searchValueBase3 = searchInput;
+            await expect.soft(searchValueBase3).toHaveValue(baseOrderNumberValue3);
           },
           `Verify search input value equals "${baseOrderNumberValue3}"`,
           test.info(),
@@ -3420,7 +3397,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 5 - Добавление количества экземпляров в заказе', async ({ page }) => {
+  test('Case 5 - Добавление количества экземпляров в заказе', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG); // 5 minutes - increased due to multiple tab operations and comparisons
     logger.log('Test Case 5 - Increase quantity of instances in order');
 
@@ -3688,12 +3665,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       for (const expected of expectedRows) {
         // Verify basic row data using page class method
-        const rowVerified = await loadingTaskPage.verifyPositionsTableRow(
-          expected.rowIndex,
-          expected.orderSuffix,
-          expected.productName,
-          expected.articleNumber,
-        );
+        const rowVerified = await loadingTaskPage.verifyPositionsTableRow(expected.rowIndex, expected.orderSuffix, expected.productName, expected.articleNumber);
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -3746,9 +3718,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           () => {
             //            expect.soft(normalizedDateByUrgencyCell).toBe(normalizedDateByUrgencyDisplay);
           },
-          `Row ${expected.rowIndex + 1}: Verify DateByUrgency matches: cell="${dateByUrgencyCellValue}" (${normalizedDateByUrgencyCell}) vs display from tab ${
-            expected.orderSuffix
-          }="${dateByUrgencyDisplayValue}" (${normalizedDateByUrgencyDisplay})`,
+          `Row ${expected.rowIndex + 1}: Verify DateByUrgency matches: cell="${dateByUrgencyCellValue}" (${normalizedDateByUrgencyCell}) vs display from tab ${expected.orderSuffix}="${dateByUrgencyDisplayValue}" (${normalizedDateByUrgencyDisplay})`,
           test.info(),
         );
 
@@ -3775,9 +3745,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           () => {
             //expect.soft(normalizedDateShipmentsCell).toBe(normalizedDateShipmentsDisplay); //erp
           },
-          `Row ${expected.rowIndex + 1}: Verify DateShipments matches: cell="${dateShipmentsCellValue}" (${normalizedDateShipmentsCell}) vs display from tab ${
-            expected.orderSuffix
-          }="${dateShipmentsDisplayValue}" (${normalizedDateShipmentsDisplay})`,
+          `Row ${expected.rowIndex + 1}: Verify DateShipments matches: cell="${dateShipmentsCellValue}" (${normalizedDateShipmentsCell}) vs display from tab ${expected.orderSuffix}="${dateShipmentsDisplayValue}" (${normalizedDateShipmentsDisplay})`,
           test.info(),
         );
 
@@ -3892,14 +3860,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Additional verification: ensure rows are not mixed up
       // Extract all values and verify they're in the correct rows
-      const row1Order =
-        (await bodyRows.nth(0).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
+      const row1Order = (await bodyRows.nth(0).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
       const row1Product = (await bodyRows.nth(0).locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first().textContent())?.trim() || '';
-      const row2Order =
-        (await bodyRows.nth(1).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
+      const row2Order = (await bodyRows.nth(1).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
       const row2Product = (await bodyRows.nth(1).locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first().textContent())?.trim() || '';
-      const row3Order =
-        (await bodyRows.nth(2).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
+      const row3Order = (await bodyRows.nth(2).locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
       const row3Product = (await bodyRows.nth(2).locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first().textContent())?.trim() || '';
 
       logger.log('=== Final Verification Values ===');
@@ -4019,21 +3984,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // normalizeDate is already imported from utilities
 
       // Create Tab 1: Orders page, search for order with /0
-      const { page: tab1, pageObject: tab1LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: tab1, pageObject: tab1LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
 
-      await tab1LoadingTaskPage.searchAndWaitForTable(
-        baseOrderNumberValue,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        {
-          useRedesign: true,
-          timeoutBeforeWait: TIMEOUTS.STANDARD,
-          minRows: 1,
-        },
-      );
+      await tab1LoadingTaskPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
+        useRedesign: true,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
+        minRows: 1,
+      });
 
       const tableBodyTab1 = tab1.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab1 = tableBodyTab1.locator('tr').first();
@@ -4041,21 +3998,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       logger.log('Tab 1: Order /0 found in list');
 
       // Create Tab 2: Orders page, search for order with /0, select and edit
-      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
 
-      await tab2LoadingTaskPage.searchAndWaitForTable(
-        baseOrderNumberValue,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        {
-          useRedesign: true,
-          timeoutBeforeWait: TIMEOUTS.STANDARD,
-          minRows: 1,
-        },
-      );
+      await tab2LoadingTaskPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
+        useRedesign: true,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
+        minRows: 1,
+      });
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
@@ -4570,22 +4519,14 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       );
 
       // Tab 2: Open new tab, search for order with /0, and edit it
-      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
 
       // We're on the main orders page (not warehouse), so use SHIPMENTS_SEARCH_INPUT
-      await tab2LoadingTaskPage.searchAndWaitForTable(
-        baseOrderNumberValue,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        {
-          searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-          timeoutBeforeWait: TIMEOUTS.STANDARD,
-          minRows: 1,
-        },
-      );
+      await tab2LoadingTaskPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
+        minRows: 1,
+      });
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
@@ -4994,8 +4935,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          const orderFilterValue = await orderFilterSearchInput.inputValue();
-          expect.soft(orderFilterValue).toBe(orderNumberWith0);
+          const orderFilterValue = orderFilterSearchInput;
+          await expect.soft(orderFilterValue).toHaveValue(orderNumberWith0);
         },
         `Verify order filter search input value equals "${orderNumberWith0}"`,
         test.info(),
@@ -5033,21 +4974,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Create Tab 2: Go to orders page, search for order, select it, click edit
       const context = page.context();
-      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
 
-      await tab2LoadingTaskPage.searchAndWaitForTable(
-        baseOrderNumberValue,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        {
-          useRedesign: true,
-          timeoutBeforeWait: TIMEOUTS.STANDARD,
-          minRows: 1,
-        },
-      );
+      await tab2LoadingTaskPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, {
+        useRedesign: true,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
+        minRows: 1,
+      });
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
@@ -5194,8 +5127,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          const searchValueArticle2 = await searchInput.inputValue();
-          expect.soft(searchValueArticle2).toBe(articleNumberValue);
+          const searchValueArticle2 = searchInput;
+          await expect.soft(searchValueArticle2).toHaveValue(articleNumberValue);
         },
         `Verify search input value equals article number "${articleNumberValue}"`,
         test.info(),
@@ -5259,21 +5192,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Open Tab 2 and go to orders page, search for order with /0, edit it
       const context = page.context();
-      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: tab2, pageObject: tab2LoadingTaskPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
 
-      await tab2LoadingTaskPage.searchAndWaitForTable(
-        baseOrderNumberValue,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-        SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY,
-        {
-          searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
-          timeoutBeforeWait: TIMEOUTS.STANDARD,
-          minRows: 1,
-        },
-      );
+      await tab2LoadingTaskPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
+        searchInputDataTestId: SelectorsLoadingTasksPage.SHIPMENTS_SEARCH_INPUT,
+        timeoutBeforeWait: TIMEOUTS.STANDARD,
+        minRows: 1,
+      });
 
       const tableBodyTab2 = tab2.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
       const firstRowTab2 = tableBodyTab2.locator('tr').first();
@@ -5503,8 +5428,8 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         tab2,
         async () => {
-          const quantityValueNew = await quantityInputTab2.inputValue();
-          expect.soft(quantityValueNew).toBe(newQuantityValue.toString());
+          const quantityValueNew = quantityInputTab2;
+          await expect.soft(quantityValueNew).toHaveValue(newQuantityValue.toString());
         },
         `Verify quantity input value equals "${newQuantityValue}"`,
         test.info(),
@@ -5799,31 +5724,13 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
         const orderNumberCell = firstRow.locator(SelectorsShipmentTasks.ROW_ORDER_NUMBER_PATTERN).first();
-        await loadingTaskPage.validateCellValue(
-          orderNumberCell,
-          orderNumberWith0Only,
-          `Warehouse order number should contain ${orderNumberWith0Only}`,
-          page,
-          test.info(),
-        );
+        await loadingTaskPage.validateCellValue(orderNumberCell, orderNumberWith0Only, `Warehouse order number should contain ${orderNumberWith0Only}`, page, test.info());
 
         const articleCell = firstRow.locator(SelectorsShipmentTasks.ROW_ARTICLE_PATTERN).first();
-        await loadingTaskPage.validateCellValueExact(
-          articleCell,
-          articleNumberValue,
-          `Warehouse article should match ${articleNumberValue}`,
-          page,
-          test.info(),
-        );
+        await loadingTaskPage.validateCellValueExact(articleCell, articleNumberValue, `Warehouse article should match ${articleNumberValue}`, page, test.info());
 
         const productNameCell = firstRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_NAME_PATTERN).first();
-        await loadingTaskPage.validateCellValue(
-          productNameCell,
-          productNameValue,
-          `Warehouse product name should include ${productNameValue}`,
-          page,
-          test.info(),
-        );
+        await loadingTaskPage.validateCellValue(productNameCell, productNameValue, `Warehouse product name should include ${productNameValue}`, page, test.info());
       };
 
       const runWarehouseSearch = async (searchValue: string, description: string) => {
@@ -5955,10 +5862,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const warehouseProductName = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.PRODUCT_WRAPPER).first(), 'product name');
       const warehouseQuantity = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_KOL_PATTERN).first(), 'quantity');
       const warehouseDateOrder = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_ORDER_PATTERN).first(), 'DateOrder');
-      const warehouseDateShipmentsProduct = await readWarehouseCell(
-        warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN).first(),
-        'DateShipments (product)',
-      );
+      const warehouseDateShipmentsProduct = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (product)');
       let warehouseTimeValue = '';
       try {
         const warehouseTimeCells = warehouseRow.locator(SelectorsShipmentTasks.ROW_PRODUCT_DATE_SHIPMENTS_PATTERN);
@@ -5973,33 +5877,21 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       } catch (error) {
         console.warn('Unable to read warehouse time cell:', error);
       }
-      const warehouseDateByUrgency = normalizeDate(
-        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency'),
-      );
-      const warehouseDateShipPlan = normalizeDate(
-        await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)'),
-      );
+      const warehouseDateByUrgency = normalizeDate(await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency'));
+      const warehouseDateShipPlan = normalizeDate(await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)'));
       const warehouseBuyer = await readWarehouseCell(warehouseRow.locator(SelectorsShipmentTasks.ROW_TBODY_BUYERS_PATTERN).first(), 'Buyer');
 
       const context = page.context();
-      const { page: ordersTab, pageObject: ordersTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.SHIPPING_TASKS.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: ordersTab, pageObject: ordersTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.SHIPPING_TASKS.URL, CreateLoadingTaskPage);
       try {
         await ordersTabLoadingPage.waitForNetworkIdle();
         await ordersTab.waitForTimeout(TIMEOUTS.LONG);
 
-        await ordersTabLoadingPage.searchAndWaitForTable(
-          baseOrderNumberValue,
-          SelectorsLoadingTasksPage.SHIPMENTS_TABLE,
-          SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY,
-          {
-            useRedesign: true,
-            timeoutBeforeWait: TIMEOUTS.STANDARD,
-            minRows: 1,
-          },
-        );
+        await ordersTabLoadingPage.searchAndWaitForTable(baseOrderNumberValue, SelectorsLoadingTasksPage.SHIPMENTS_TABLE, SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY, {
+          useRedesign: true,
+          timeoutBeforeWait: TIMEOUTS.STANDARD,
+          minRows: 1,
+        });
 
         // Wait for the table to update with search results by verifying the first row contains the searched order number
         const shipmentsTableBodyOrders = ordersTab.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
@@ -6028,10 +5920,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const dateOrderCellOrders = firstRowOrders.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN).first();
         await dateOrderCellOrders.click();
 
-        const editButtonOrders = ordersTab
-          .locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER)
-          .filter({ hasText: 'Редактировать' })
-          .first();
+        const editButtonOrders = ordersTab.locator(SelectorsLoadingTasksPage.ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER).filter({ hasText: 'Редактировать' }).first();
         await editButtonOrders.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await ordersTabLoadingPage.waitAndHighlight(editButtonOrders);
         await editButtonOrders.click();
@@ -6077,8 +5966,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
           return value;
         };
 
-        const ordersRowOrderNumber =
-          (await matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
+        const ordersRowOrderNumber = (await matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_NUMBER_ORDER_PATTERN).first().textContent())?.trim() || '';
 
         const normalizedWarehouseOrder = warehouseOrderNumber.replace(/^№\s*/, '').trim();
         const normalizedOrdersRowOrder = ordersRowOrderNumber.replace(/^№\s*/, '').trim();
@@ -6104,37 +5992,18 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
         const ordersArticle = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_ARTICLE_PATTERN).first(), 'article');
         const ordersProductName = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_PRODUCT_WRAPPER).first(), 'product name');
-        const ordersQuantityCell = await readOrdersCell(
-          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first(),
-          'quantity (cell)',
-        );
+        const ordersQuantityCell = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN).first(), 'quantity (cell)');
         const ordersQuantityInputLocator = ordersTab.locator(SelectorsLoadingTasksPage.quantityInput).first();
         await ordersQuantityInputLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await ordersTabLoadingPage.waitAndHighlight(ordersQuantityInputLocator);
         const ordersQuantityInput = (await ordersQuantityInputLocator.inputValue())?.trim() || '';
 
-        const ordersDateOrder = await readOrdersCell(
-          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first(),
-          'DateOrder',
-        );
-        const ordersDateShipmentsProduct = await readOrdersCell(
-          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first(),
-          'DateShipments (product)',
-        );
-        const ordersDateByUrgency = normalizeDate(
-          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency'),
-        );
-        const ordersDateShipPlan = normalizeDate(
-          await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)'),
-        );
-        const ordersBuyerCell = await readOrdersCell(
-          matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first(),
-          'Buyer (row)',
-        );
-        const ordersBuyerSelected = await readOrdersCell(
-          ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_BUYER_SELECTED_COMPANY).first(),
-          'Buyer (selected company)',
-        );
+        const ordersDateOrder = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN).first(), 'DateOrder');
+        const ordersDateShipmentsProduct = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (product)');
+        const ordersDateByUrgency = normalizeDate(await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first(), 'DateByUrgency'));
+        const ordersDateShipPlan = normalizeDate(await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first(), 'DateShipments (plan)'));
+        const ordersBuyerCell = await readOrdersCell(matchingRow.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN).first(), 'Buyer (row)');
+        const ordersBuyerSelected = await readOrdersCell(ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_BUYER_SELECTED_COMPANY).first(), 'Buyer (selected company)');
 
         const compareValue = async (description: string, expected: string, actual: string, screenshotPage: Page) => {
           await expectSoftWithScreenshot(
@@ -6163,21 +6032,11 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         await compareValue('Buyer (selected company)', warehouseBuyer, ordersBuyerSelected, ordersTab);
 
         // Compare DateByUrgency display value
-        const dateByUrgencyDisplayTab2 = await readOrdersCell(
-          ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first(),
-          'DateByUrgency display',
-          ordersTabLoadingPage,
-        );
+        const dateByUrgencyDisplayTab2 = await readOrdersCell(ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first(), 'DateByUrgency display', ordersTabLoadingPage);
         await compareValue('DateByUrgency display', warehouseDateByUrgency, normalizeDate(dateByUrgencyDisplayTab2), ordersTab);
 
         // Compare DateShippingPlan display value
-        const dateShipPlanDisplayValue = normalizeDate(
-          await readOrdersCell(
-            ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first(),
-            'DateShippingPlan display',
-            ordersTabLoadingPage,
-          ),
-        );
+        const dateShipPlanDisplayValue = normalizeDate(await readOrdersCell(ordersTab.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first(), 'DateShippingPlan display', ordersTabLoadingPage));
         await compareValue('DateShippingPlan display', warehouseDateShipPlan, dateShipPlanDisplayValue, ordersTab);
 
         // Compare time value with parts database
@@ -6232,7 +6091,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 6 - Увеличение количества экземпляров в заказе', async ({ page }) => {
+  test('Case 6 - Увеличение количества экземпляров в заказе', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     logger.log('Test Case 6 - Increase quantity of instances in order');
 
@@ -6348,7 +6207,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+          await expect.soft(pageContainer).toBeVisible();
         },
         'Verify Issue Shipment page is visible for Test Case 6',
         test.info(),
@@ -6572,9 +6431,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
 
       // Verify it matches the /0 row's quantity
       if (mainInputValue !== initialQuantity) {
-        throw new Error(
-          `Test Case 6: Main quantity input (${mainInputValue}) does not match /0 row quantity (${initialQuantity}). The input is for a different product.`,
-        );
+        throw new Error(`Test Case 6: Main quantity input (${mainInputValue}) does not match /0 row quantity (${initialQuantity}). The input is for a different product.`);
       }
 
       // Verify the product name in the /0 table row corresponds to TEST_PRODUCT_1
@@ -6584,9 +6441,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       logger.log(`Test Case 6: Product name in /0 table row: ${rowProductName}, expected: ${firstProductNameValue}`);
 
       if (!rowProductName.includes(firstProductNameValue)) {
-        throw new Error(
-          `Test Case 6: Product name in /0 row (${rowProductName}) does not match TEST_PRODUCT_1 (${firstProductNameValue}). We are editing the wrong product.`,
-        );
+        throw new Error(`Test Case 6: Product name in /0 row (${rowProductName}) does not match TEST_PRODUCT_1 (${firstProductNameValue}). We are editing the wrong product.`);
       }
     });
 
@@ -6694,7 +6549,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+          await expect.soft(pageContainer).toBeVisible();
         },
         'Verify returned to main orders page',
         test.info(),
@@ -6933,10 +6788,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       }
 
       // Create a new tab
-      const { page: warehouseTab, pageObject: warehouseTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.WAREHOUSE.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: warehouseTab, pageObject: warehouseTabLoadingPage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.WAREHOUSE.URL, CreateLoadingTaskPage);
 
       try {
         await warehouseTab.waitForTimeout(TIMEOUTS.STANDARD);
@@ -7063,7 +6915,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 7 - Verify order quantity in edit page', async ({ page }) => {
+  test('Case 7 - Verify order quantity in edit page', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     logger.log('Test Case 7 - Verify order quantity in edit page');
 
@@ -7100,7 +6952,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+          await expect.soft(pageContainer).toBeVisible();
         },
         'Verify Issue Shipment page is visible for Test Case 7',
         test.info(),
@@ -7737,7 +7589,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 8 - Decrease order quantity and verify deficit changes', async ({ page }) => {
+  test('Case 8 - Decrease order quantity and verify deficit changes', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     logger.log('Test Case 8 - Decrease order quantity and verify deficit changes');
 
@@ -7873,7 +7725,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+          await expect.soft(pageContainer).toBeVisible();
         },
         'Verify Issue Shipment page is visible for Test Case 8',
         test.info(),
@@ -8645,9 +8497,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       const newDeficitNum = parseInt(newDeficitValue, 10) || 0;
       // Deficit should increase by the amount we decreased quantity (if we decreased at all)
       const expectedNewDeficit = initialDeficitNum + actualDecreaseBy;
-      logger.log(
-        `Test Case 8: New deficit value: ${newDeficitValue}, expected: ${expectedNewDeficit}, initial was: ${initialDeficit}, actual decrease: ${actualDecreaseBy}`,
-      );
+      logger.log(`Test Case 8: New deficit value: ${newDeficitValue}, expected: ${expectedNewDeficit}, initial was: ${initialDeficit}, actual decrease: ${actualDecreaseBy}`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8666,9 +8516,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       // If we didn't decrease (actualDecreaseBy === 0), required value should remain the same as initial
       // Otherwise, it should match newQuantity
       const expectedRequiredValue = actualDecreaseBy === 0 ? initialRequired : newQuantity;
-      logger.log(
-        `Test Case 8: New required value: ${newRequiredValue}, expected: ${expectedRequiredValue} (initial was: ${initialRequired}, actual decrease: ${actualDecreaseBy})`,
-      );
+      logger.log(`Test Case 8: New required value: ${newRequiredValue}, expected: ${expectedRequiredValue} (initial was: ${initialRequired}, actual decrease: ${actualDecreaseBy})`);
 
       await expectSoftWithScreenshot(
         page,
@@ -8945,12 +8793,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect
-            .soft(
-              normalizedOrderNumberFromTitle.includes(normalizedOrderNumberFromRow) ||
-                normalizedOrderNumberFromRow.includes(normalizedOrderNumberFromTitle.split(' от ')[0]),
-            )
-            .toBe(true);
+          expect.soft(normalizedOrderNumberFromTitle.includes(normalizedOrderNumberFromRow) || normalizedOrderNumberFromRow.includes(normalizedOrderNumberFromTitle.split(' от ')[0])).toBe(true);
         },
         `Verify order number in title matches row: title=${normalizedOrderNumberFromTitle}, row=${normalizedOrderNumberFromRow}`,
         test.info(),
@@ -8996,7 +8839,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 9 - Verify quantity is 1 after setting it in edit page', async ({ page }) => {
+  test('Case 9 - Verify quantity is 1 after setting it in edit page', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     logger.log('Test Case 9 - Verify quantity is 1 after setting it in edit page');
 
@@ -9030,7 +8873,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+          await expect.soft(pageContainer).toBeVisible();
         },
         'Verify Issue Shipment page is visible for Test Case 9',
         test.info(),
@@ -9058,10 +8901,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
         const orderNumberCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_ORDER_NUMBER_PATTERN).first();
         const productNameCell = row.locator(SelectorsLoadingTasksPage.SHIPMENTS_PRODUCT_NAME_PATTERN).first();
 
-        if (
-          (await orderNumberCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false)) &&
-          (await productNameCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false))
-        ) {
+        if ((await orderNumberCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false)) && (await productNameCell.isVisible({ timeout: TIMEOUTS.STANDARD }).catch(() => false))) {
           const orderNumberText = (await orderNumberCell.textContent())?.trim() || '';
           const productNameInRow = (await productNameCell.textContent())?.trim() || '';
 
@@ -9611,10 +9451,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
 
     await allure.step('Step 9: Open new tab, go to warehouse orders page, search for product, and verify quantity is 1', async () => {
-      const { page: newPage, pageObject: warehousePage } = await loadingTaskPage.createNewTabAndNavigate(
-        SELECTORS.MAINMENU.WAREHOUSE.URL,
-        CreateLoadingTaskPage,
-      );
+      const { page: newPage, pageObject: warehousePage } = await loadingTaskPage.createNewTabAndNavigate(SELECTORS.MAINMENU.WAREHOUSE.URL, CreateLoadingTaskPage);
 
       try {
         await newPage.waitForTimeout(TIMEOUTS.STANDARD);
@@ -9719,7 +9556,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 10 - Set warehouse revision values to 0', async ({ page }) => {
+  test('Case 10 - Set warehouse revision values to 0', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     logger.log('Test Case 10 - Set warehouse revision values to 0');
     const revisionPage = new CreateRevisionPage(page);
@@ -9756,7 +9593,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     logger.log(`✅ All test products (${testProducts.length}) have been set to 0 in warehouse revisions`);
   });
 
-  test('Test Case 11 - Удаление задачи на отгрузку', async ({ page }) => {
+  test('Case 11 - Удаление задачи на отгрузку', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     logger.log('Test Case 11 - Delete shipment task');
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -9774,7 +9611,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await pageContainer.isVisible()).toBe(true);
+          await expect.soft(pageContainer).toBeVisible();
         },
         'Verify Issue Shipment page is visible for Test Case 11',
         test.info(),
@@ -9798,7 +9635,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 12 - Delete all test products', async ({ page }) => {
+  test('Case 12 - Delete all test products', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM); // 5 minutes
     logger.log('Test Case 13 - Delete all test products');
     const partsDatabasePage = new CreatePartsDatabasePage(page);
@@ -9821,7 +9658,7 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     logger.log(`✅ All test products with prefix "${searchPrefix}" have been archived`);
   });
 
-  test('Test Case 13 - Verify all items are deleted', async ({ page }) => {
+  test('Case 13 - Verify all items are deleted', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     logger.log('Test Case 12 - Verify all items are deleted');
     const loadingTaskPage = new CreateLoadingTaskPage(page);

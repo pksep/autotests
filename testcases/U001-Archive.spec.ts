@@ -1,7 +1,7 @@
 /**
  * @file U001-Archive.spec.ts
  * @purpose Test Suite 10: Archive Operations (Test Cases 33-35)
- * 
+ *
  * This suite handles:
  * - Test Case 33: Archive Metalworking Warehouse Task All
  * - Test Case 34: Archive Assembly Warehouse Task All
@@ -21,15 +21,12 @@ import { Click } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
-import {
-  designation,
-  nameProduct,
-} from './U001-Constants';
+import { designation, nameProduct } from './U001-Constants';
 
 export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Archive Operations (Test Cases 33-35)`);
 
-  test('Test Case 33 - Archive Metalworking Warehouse Task All', async ({
+  test('Case 33 - Archive Metalworking Warehouse Task All', async ({
     // doc test case 28
     page,
   }) => {
@@ -91,17 +88,10 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         }
 
         // Archive the item
-        await metalworkingWarehouse.archiveItem(
-          page,
-          designation,
-          warehouseTable,
-          MetalWorkingWarhouseSelectors.BUTTON_ARCHIVE,
-          PartsDBSelectors.BUTTON_CONFIRM,
-          {
-            useCheckboxMark: true,
-            headerCellIndex: 15,
-          },
-        );
+        await metalworkingWarehouse.archiveItem(page, designation, warehouseTable, MetalWorkingWarhouseSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM, {
+          useCheckboxMark: true,
+          headerCellIndex: 15,
+        });
 
         // Check if there are still items left
         const remainingRows = page.locator(`${warehouseTable} tbody tr`);
@@ -121,7 +111,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
     });
   });
 
-  test('Test Case 34 - Archive Assembly Warehouse Task All', async ({
+  test('Case 34 - Archive Assembly Warehouse Task All', async ({
     // doc test case 29
     page,
   }) => {
@@ -145,21 +135,14 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
     });
 
     await allure.step('Step 04-06: Archive item', async () => {
-      await assemblyWarehouse.archiveItem(
-        page,
-        designation,
-        warehouseTable,
-        SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY,
-        SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON,
-        {
-          useCheckboxMark: true,
-          headerCellIndex: 16,
-        },
-      );
+      await assemblyWarehouse.archiveItem(page, designation, warehouseTable, SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY, SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON, {
+        useCheckboxMark: true,
+        headerCellIndex: 16,
+      });
     });
   });
 
-  test('Test Case 35 - Moving Task For Shipment To The Archive', async ({
+  test('Case 35 - Moving Task For Shipment To The Archive', async ({
     // doc test case 30
     page,
   }) => {
@@ -217,19 +200,12 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         await loadingTaskPage.getValueOrClickFromFirstRow(LoadingTasksSelectors.SHIPMENTS_TABLE, 2, Click.Yes, Click.No);
 
         // Archive the item with verification
-        await loadingTaskPage.archiveItem(
-          page,
-          nameProduct,
-          LoadingTasksSelectors.SHIPMENTS_TABLE,
-          LoadingTasksSelectors.buttonArchive,
-          PartsDBSelectors.BUTTON_CONFIRM,
-          {
-            verifyArchived: true,
-            verifyTableSelector: LoadingTasksSelectors.SHIPMENTS_TABLE,
-            tableBodySelector: LoadingTasksSelectors.SHIPMENTS_TABLE_BODY,
-            searchInputDataTestId: LoadingTasksSelectors.SHIPMENTS_SEARCH_INPUT,
-          },
-        );
+        await loadingTaskPage.archiveItem(page, nameProduct, LoadingTasksSelectors.SHIPMENTS_TABLE, LoadingTasksSelectors.buttonArchive, PartsDBSelectors.BUTTON_CONFIRM, {
+          verifyArchived: true,
+          verifyTableSelector: LoadingTasksSelectors.SHIPMENTS_TABLE,
+          tableBodySelector: LoadingTasksSelectors.SHIPMENTS_TABLE_BODY,
+          searchInputDataTestId: LoadingTasksSelectors.SHIPMENTS_SEARCH_INPUT,
+        });
 
         // Check if there are still items left
         const remainingRows = page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`);
@@ -248,5 +224,4 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
       }
     });
   });
-
 };

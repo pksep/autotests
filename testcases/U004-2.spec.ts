@@ -10,20 +10,20 @@ import testData1 from '../testdata/U004-PC01.json'; // Import your test data
 import { expectSoftWithScreenshot } from '../lib/Page';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
-let tableData_original: { groupName: string; items: string[][] }[] = [];
-let tableData_original_15: { groupName: string; items: string[][] }[] = []; //for test case 15, so that it doesnt rely on test case 1
+const tableData_original: { groupName: string; items: string[][] }[] = [];
+const tableData_original_15: { groupName: string; items: string[][] }[] = []; //for test case 15, so that it doesnt rely on test case 1
 let tableData_full: { groupName: string; items: string[][] }[] = [];
 let tableData_temp: { groupName: string; items: string[][] }[] = [];
-let tableData1: { groupName: string; items: string[][] }[] = [];
-let tableData2: { groupName: string; items: string[][] }[] = [];
-let tableData3: { groupName: string; items: string[][] }[] = [];
-let tableData4: { groupName: string; items: string[][] }[] = [];
-let table_before_changequantity: { groupName: string; items: string[][] }[] = [];
-let value_before_changequantity: number = 0;
+const tableData1: { groupName: string; items: string[][] }[] = [];
+const tableData2: { groupName: string; items: string[][] }[] = [];
+const tableData3: { groupName: string; items: string[][] }[] = [];
+const tableData4: { groupName: string; items: string[][] }[] = [];
+const table_before_changequantity: { groupName: string; items: string[][] }[] = [];
+const value_before_changequantity: number = 0;
 let detailvalue_original_before_changequantity: number = 5;
-let table1Locator: Locator | null = null;
-let table2Locator: Locator | null = null;
-let table3Locator: Locator | null = null;
+const table1Locator: Locator | null = null;
+const table2Locator: Locator | null = null;
+const table3Locator: Locator | null = null;
 
 export const runU004_2 = () => {
   logger.info(`Starting test U004`);
@@ -32,16 +32,16 @@ export const runU004_2 = () => {
     test.setTimeout(900000);
     const shortagePage = new CreatePartsDatabasePage(page);
     const leftTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
-    let firstCellValue = '';
-    let secondCellValue = '';
-    let thirdCellValue = '';
+    const firstCellValue = '';
+    const secondCellValue = '';
+    const thirdCellValue = '';
     await allure.step('Step 001: Добавить СБ к товару (Add СБ to the product and save)', async () => {
       await allure.step('Step 01: Открываем страницу базы деталей (Open the parts database page)', async () => {
         await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
+            await expect.soft(page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID)).toBeVisible();
           },
           'Step 01 complete (СБ)',
         );
@@ -63,19 +63,16 @@ export const runU004_2 = () => {
           'Step 02 complete (СБ)',
         );
       });
-      await allure.step(
-        'Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)',
-        async () => {
-          await page.waitForLoadState('networkidle');
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
-            },
-            'Main products search visible (step 03)',
-          );
-        },
-      );
+      await allure.step('Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)', async () => {
+        await page.waitForLoadState('networkidle');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
+          },
+          'Main products search visible (step 03)',
+        );
+      });
       await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
         // Locate the search field within the left table and fill it
         await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
@@ -91,7 +88,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(TestDataU004.TEST_PRODUCT);
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(TestDataU004.TEST_PRODUCT);
           },
           'Step 04 search value set (СБ)',
         );
@@ -130,7 +127,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await firstRow.isVisible()).toBe(true);
+            await expect.soft(firstRow).toBeVisible();
           },
           'Step 06 row selected (СБ)',
         );
@@ -169,17 +166,7 @@ export const runU004_2 = () => {
         ];
 
         for (const item of itemsToAdd) {
-          await shortagePage.addItemToSpecification(
-            page,
-            item.smallDialogButtonId,
-            item.dialogTestId,
-            item.searchTableTestId,
-            item.searchValue,
-            item.bottomTableTestId,
-            item.addToBottomButtonTestId,
-            item.addToMainButtonTestId,
-            item.type,
-          );
+          await shortagePage.addItemToSpecification(page, item.smallDialogButtonId, item.dialogTestId, item.searchTableTestId, item.searchValue, item.bottomTableTestId, item.addToBottomButtonTestId, item.addToMainButtonTestId, item.type);
         }
         const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         await expectSoftWithScreenshot(
@@ -198,7 +185,7 @@ export const runU004_2 = () => {
       await allure.step('Step 09: Нажимаем на кнопку "Сохранить". (Press the save button)', async () => {
         // Wait for loading
         await page.waitForLoadState('networkidle');
-        const button = await page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
+        const button = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
         await shortagePage.waitAndHighlight(button);
         // Ensure any open modal is closed before saving
         try {
@@ -234,7 +221,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
+            await expect.soft(page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID)).toBeVisible();
           },
           'Step 01 complete (Д)',
         );
@@ -256,19 +243,16 @@ export const runU004_2 = () => {
           'Step 02 complete (Д)',
         );
       });
-      await allure.step(
-        'Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)',
-        async () => {
-          await page.waitForLoadState('networkidle');
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
-            },
-            'Main products search visible (step 03 - Д)',
-          );
-        },
-      );
+      await allure.step('Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)', async () => {
+        await page.waitForLoadState('networkidle');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
+          },
+          'Main products search visible (step 03 - Д)',
+        );
+      });
       await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
         // Locate the search field within the left table and fill it
         await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
@@ -323,7 +307,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await firstRow.isVisible()).toBe(true);
+            await expect.soft(firstRow).toBeVisible();
           },
           'Step 06 row selected (Д)',
         );
@@ -360,17 +344,7 @@ export const runU004_2 = () => {
         ];
 
         for (const item of itemsToAdd) {
-          await shortagePage.addItemToSpecification(
-            page,
-            item.smallDialogButtonId,
-            item.dialogTestId,
-            item.searchTableTestId,
-            item.searchValue,
-            item.bottomTableTestId,
-            item.addToBottomButtonTestId,
-            item.addToMainButtonTestId,
-            item.type,
-          );
+          await shortagePage.addItemToSpecification(page, item.smallDialogButtonId, item.dialogTestId, item.searchTableTestId, item.searchValue, item.bottomTableTestId, item.addToBottomButtonTestId, item.addToMainButtonTestId, item.type);
         }
         await page.waitForTimeout(TIMEOUTS.INPUT_SET);
         tableData_temp = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
@@ -425,7 +399,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
+            await expect.soft(page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID)).toBeVisible();
           },
           'Step 01 complete (ПД)',
         );
@@ -441,19 +415,16 @@ export const runU004_2 = () => {
           'Main products table has rows (Step 02 ПД)',
         );
       });
-      await allure.step(
-        'Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)',
-        async () => {
-          await page.waitForLoadState('networkidle');
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
-            },
-            'Main products search visible (step 03 - ПД)',
-          );
-        },
-      );
+      await allure.step('Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)', async () => {
+        await page.waitForLoadState('networkidle');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
+          },
+          'Main products search visible (step 03 - ПД)',
+        );
+      });
       await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
         // Locate the search field within the left table and fill it
         await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
@@ -508,7 +479,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await firstRow.isVisible()).toBe(true);
+            await expect.soft(firstRow).toBeVisible();
           },
           'Step 06 row selected (ПД)',
         );
@@ -546,17 +517,7 @@ export const runU004_2 = () => {
         ];
 
         for (const item of itemsToAdd) {
-          await shortagePage.addItemToSpecification(
-            page,
-            item.smallDialogButtonId,
-            item.dialogTestId,
-            item.searchTableTestId,
-            item.searchValue,
-            item.bottomTableTestId,
-            item.addToBottomButtonTestId,
-            item.addToMainButtonTestId,
-            item.type,
-          );
+          await shortagePage.addItemToSpecification(page, item.smallDialogButtonId, item.dialogTestId, item.searchTableTestId, item.searchValue, item.bottomTableTestId, item.addToBottomButtonTestId, item.addToMainButtonTestId, item.type);
         }
         await page.waitForTimeout(TIMEOUTS.STANDARD);
         const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
@@ -610,7 +571,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
+            await expect.soft(page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID)).toBeVisible();
           },
           'Step 01 complete (РМ)',
         );
@@ -632,19 +593,16 @@ export const runU004_2 = () => {
           'Step 02 complete (РМ)',
         );
       });
-      await allure.step(
-        'Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)',
-        async () => {
-          await page.waitForLoadState('networkidle');
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
-            },
-            'Main products search visible (step 03 - РМ)',
-          );
-        },
-      );
+      await allure.step('Step 03: Проверяем, что поиск в первой таблицы "Изделий" отображается (Ensure search functionality in the first table \'Products\' is available)', async () => {
+        await page.waitForLoadState('networkidle');
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toBeVisible();
+          },
+          'Main products search visible (step 03 - РМ)',
+        );
+      });
       await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
         // Locate the search field within the left table and fill it
         await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
@@ -699,7 +657,7 @@ export const runU004_2 = () => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await firstRow.isVisible()).toBe(true);
+            await expect.soft(firstRow).toBeVisible();
           },
           'Step 06 row selected (РМ)',
         );
@@ -737,17 +695,7 @@ export const runU004_2 = () => {
         ];
 
         for (const item of itemsToAdd) {
-          await shortagePage.addItemToSpecification(
-            page,
-            item.smallDialogButtonId,
-            item.dialogTestId,
-            item.searchTableTestId,
-            item.searchValue,
-            item.bottomTableTestId,
-            item.addToBottomButtonTestId,
-            item.addToMainButtonTestId,
-            item.type,
-          );
+          await shortagePage.addItemToSpecification(page, item.smallDialogButtonId, item.dialogTestId, item.searchTableTestId, item.searchValue, item.bottomTableTestId, item.addToBottomButtonTestId, item.addToMainButtonTestId, item.type);
         }
         const specTable = await shortagePage.parseStructuredTable(page, SelectorsPartsDataBase.EDIT_PAGE_SPECIFICATIONS_TABLE);
         await expectSoftWithScreenshot(
@@ -806,52 +754,44 @@ export const runU004_2 = () => {
         'Step 005 complete (store main table)',
       );
     });
-    await allure.step(
-      'Step 006: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)',
-      async () => {
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(TIMEOUTS.STANDARD);
-        const nestedArray = tableData_full.map(group => group.items).flat();
+    await allure.step('Step 006: Убедитесь, что все добавленные элементы находятся в основной таблице. (Confirm that all the added items are in the main table)', async () => {
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      const nestedArray = tableData_full.map(group => group.items).flat();
 
-        // Debug: Log all items in the nested array to see what's actually there
-        logger.info(`DEBUG: All items in nestedArray: ${JSON.stringify(nestedArray)}`);
-        logger.info(`DEBUG: Searching for СБ: "${TestDataU004.TESTCASE_2_PRODUCT_СБ}"`);
-        logger.info(`DEBUG: Searching for Д: "${TestDataU004.TESTCASE_2_PRODUCT_Д}"`);
-        logger.info(`DEBUG: Searching for ПД: "${TestDataU004.TESTCASE_2_PRODUCT_ПД}"`);
-        logger.info(`DEBUG: Searching for РМ: "${TestDataU004.TESTCASE_2_PRODUCT_РМ}"`);
+      // Debug: Log all items in the nested array to see what's actually there
+      logger.info(`DEBUG: All items in nestedArray: ${JSON.stringify(nestedArray)}`);
+      logger.info(`DEBUG: Searching for СБ: "${TestDataU004.TESTCASE_2_PRODUCT_СБ}"`);
+      logger.info(`DEBUG: Searching for Д: "${TestDataU004.TESTCASE_2_PRODUCT_Д}"`);
+      logger.info(`DEBUG: Searching for ПД: "${TestDataU004.TESTCASE_2_PRODUCT_ПД}"`);
+      logger.info(`DEBUG: Searching for РМ: "${TestDataU004.TESTCASE_2_PRODUCT_РМ}"`);
 
-        const result1 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_СБ); // Output: true
-        const result2 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_Д); // Output: true
-        const result3 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_ПД); // Output: true
-        const result4 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_РМ); // Output: true
-        logger.info(result1);
-        logger.info(result2);
-        logger.info(result3);
-        logger.info(result4);
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            expect.soft(result1 && result2 && result3 && result4).toBeTruthy();
-            expect.soft(result1).toBe(true);
-            expect.soft(result2).toBe(true);
-            expect.soft(result3).toBe(true);
-            expect.soft(result4).toBe(true);
-          },
-          'Step 006 complete (verify all added items)',
-        );
-      },
-    );
+      const result1 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_СБ); // Output: true
+      const result2 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_Д); // Output: true
+      const result3 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_ПД); // Output: true
+      const result4 = await shortagePage.isStringInNestedArray(nestedArray, TestDataU004.TESTCASE_2_PRODUCT_РМ); // Output: true
+      logger.info(result1);
+      logger.info(result2);
+      logger.info(result3);
+      logger.info(result4);
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(result1 && result2 && result3 && result4).toBeTruthy();
+          expect.soft(result1).toBe(true);
+          expect.soft(result2).toBe(true);
+          expect.soft(result3).toBe(true);
+          expect.soft(result4).toBe(true);
+        },
+        'Step 006 complete (verify all added items)',
+      );
+    });
   });
+
   test('TestCase 04 - Очистка после теста. (Cleanup after test)', async ({ page }) => {
     test.setTimeout(240000);
     const shortagePage = new CreatePartsDatabasePage(page);
-    const {
-      productName: T15_PRODUCT_NAME,
-      assemblies: T15_ASSEMBLIES,
-      details: T15_DETAILS,
-      standardParts: T15_STANDARD_PARTS,
-      consumables: T15_CONSUMABLES,
-    } = PRODUCT_SPECS.T15;
+    const { productName: T15_PRODUCT_NAME, assemblies: T15_ASSEMBLIES, details: T15_DETAILS, standardParts: T15_STANDARD_PARTS, consumables: T15_CONSUMABLES } = PRODUCT_SPECS.T15;
 
     await allure.step('Setup: Clean up Т15 product specifications', async () => {
       logger.log('Step: Clean up Т15 product specifications');
@@ -865,7 +805,7 @@ export const runU004_2 = () => {
         page,
         async () => {
           await shortagePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
-          expect.soft(await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).isVisible()).toBe(true);
+          await expect.soft(page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID)).toBeVisible();
         },
         'Cleanup done (TestCase 04)',
       );

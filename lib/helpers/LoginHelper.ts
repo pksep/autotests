@@ -2,13 +2,13 @@
  * @file LoginHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for login operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Filling login forms
  * - Handling different login form versions
  */
 
-import { Page } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import logger from '../utils/logger';
 
@@ -86,21 +86,27 @@ export class LoginHelper {
       const tabelInput = page.locator('[data-testid="LoginForm-TabelNumber-Combobox-Input"]');
       await tabelInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       logger.log('Табельный номер field is visible.');
-      // Wait for options to be loaded so the dropdown can open (disable-open when tabels.length === 0)
-      await page
-        .locator(`[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"] >> text="${tabel}"`)
-        .waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
-      await page.waitForTimeout(TIMEOUTS.SHORT);
-      await tabelInput.click();
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      
       const optionsList = page.locator('[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"]');
-      if (!(await optionsList.isVisible())) {
-        await tabelInput.focus();
-        await page.keyboard.press('ArrowDown');
+      const targetOption = optionsList.locator(`text="${tabel}"`).first();
+
+      // Repeatedly try to open the combobox until the option appears
+      // This handles slow data loading and the "disable-open" attribute
+      await expect(async () => {
+        await tabelInput.click();
         await page.waitForTimeout(TIMEOUTS.SHORT);
-      }
-      await optionsList.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await page.click(`[data-testid="LoginForm-TabelNumber-Combobox-OptionsList"] >> text="${tabel}"`);
+        
+        if (!(await optionsList.isVisible())) {
+          await tabelInput.focus();
+          await page.keyboard.press('ArrowDown');
+          await page.waitForTimeout(TIMEOUTS.SHORT);
+        }
+        
+        await expect(targetOption).toBeAttached({ timeout: 1000 });
+        await expect(targetOption).toBeVisible({ timeout: 1000 });
+      }).toPass({ timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+
+      await targetOption.click();
       logger.log(`Табельный номер set to: ${tabel}`);
 
       // Step 2: Fill "Логин" field

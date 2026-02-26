@@ -14,6 +14,7 @@ export const TIMEOUTS = {
   MEDIUM: 500, // Standard wait / pause for validation
   STANDARD: 1000, // Common wait / page render
   INPUT_SET: 1500, // Input value setting
+  VISUAL_FOLLOW: 1500, // Pause after action so user can follow (1.5s)
   LONG: 2000, // Longer operations
   EXTENDED: 3000, // Extended waits for async processing
   VERY_LONG: 5000, // Very long waits for complex operations

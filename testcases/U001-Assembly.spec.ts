@@ -1,7 +1,7 @@
 /**
  * @file U001-Assembly.spec.ts
  * @purpose Test Suite 4: Assembly Operations (Test Cases 11-14)
- * 
+ *
  * This suite handles:
  * - Test Case 11: Marking Parts
  * - Test Case 11b: Marking Parts Metalworking
@@ -31,17 +31,7 @@ import testData1 from '../testdata/U001-PC1.json';
 import testData2 from '../testdata/U002-PC1.json';
 import logger from '../lib/utils/logger';
 import * as U001Constants from './U001-Constants';
-const {
-  urgencyDate,
-  quantityProductLaunchOnProduction,
-  descendantsCbedArray,
-  descendantsDetailArray,
-  incomingQuantity,
-  deficitTableDetail,
-  buttonLaunchIntoProductionDetail,
-  modalWindowLaunchIntoProductionDetail,
-  buttonLaunchIntoProductionModalWindow,
-} = U001Constants;
+const { urgencyDate, quantityProductLaunchOnProduction, descendantsCbedArray, descendantsDetailArray, incomingQuantity, deficitTableDetail, buttonLaunchIntoProductionDetail, modalWindowLaunchIntoProductionDetail, buttonLaunchIntoProductionModalWindow } = U001Constants;
 // Mutable variables that need to be reassigned
 let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 let quantityProductLaunchOnProductionBefore = U001Constants.quantityProductLaunchOnProductionBefore;
@@ -51,7 +41,7 @@ let quantitySumLaunchOnProduction = U001Constants.quantitySumLaunchOnProduction;
 export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Assembly Operations (Test Cases 11-14)`);
 
-  test('Test Case 11 - Marking Parts', async ({ page }) => {
+  test('Case 11 - Marking Parts', async ({ page }) => {
     logger.log('Test Case 11 - Marking Parts');
     test.setTimeout(TEST_TIMEOUTS.LONG);
     const shortageParts = new CreatShortagePartsPage(page);
@@ -60,11 +50,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     await allure.step('Step 01-02: Open the warehouse page and shortage parts page', async () => {
       // Find and go to the page using the locator Parts Shortage
       const selector = SelectorsShortagePages.SELECTOR_DEFICIT_DETAL;
-      await shortageParts.navigateToPageAndWaitForTable(
-        SELECTORS.MAINMENU.WAREHOUSE.URL,
-        SelectorsShortagePages.SELECTOR_DEFICIT_DETAL,
-        SelectorsShortagePages.TABLE_DEFICIT_IZD,
-      );
+      await shortageParts.navigateToPageAndWaitForTable(SELECTORS.MAINMENU.WAREHOUSE.URL, SelectorsShortagePages.SELECTOR_DEFICIT_DETAL, SelectorsShortagePages.TABLE_DEFICIT_IZD);
     });
 
     if (descendantsDetailArray.length === 0) {
@@ -288,9 +274,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect
-                .soft(Number(quantityProductLaunchOnProductionAfter))
-                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+              expect.soft(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
             },
             'Verify production ordered quantity increased correctly',
             test.info(),
@@ -304,7 +288,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
   // These values are normally set in Test Case 10
   //quantitySumLaunchOnProduction = 4; // Normally: quantityProductLaunchOnProductionBefore (2) + quantityProductLaunchOnProduction (2)
 
-  test('Test Case 11b - Marking Parts Metalworking', async ({ page }) => {
+  test('Case 11b - Marking Parts Metalworking', async ({ page }) => {
     logger.log('Test Case 11b - Marking Parts Metalworking');
     test.setTimeout(TEST_TIMEOUTS.LONG);
     const metalworkingWarehouse = new CreateMetalworkingWarehousePage(page);
@@ -349,15 +333,10 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
 
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           // Using table search we look for the value of the variable and verify it's in the first row
-          await metalworkingWarehouse.searchAndVerifyFirstRow(
-            part.name,
-            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
-            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
-            {
-              useRedesign: true,
-              timeoutBeforeWait: 500,
-            },
-          );
+          await metalworkingWarehouse.searchAndVerifyFirstRow(part.name, MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE, MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE, {
+            useRedesign: true,
+            timeoutBeforeWait: 500,
+          });
         });
 
         await allure.step('Step 07: Checking the urgency date of an order', async () => {
@@ -574,7 +553,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
   // descendantsCbedArray.length = 0; // Clear array first
   // descendantsCbedArray.push({ name: '0Т4.11', designation: '-', quantity: 1 }, { name: '0Т4.12', designation: '-', quantity: 1 });
 
-  test('Test Case 12 - Complete Set Of Cbed', async ({ page }) => {
+  test('Case 12 - Complete Set Of Cbed', async ({ page }) => {
     logger.log('Test Case 12 - Complete Set Of Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const completingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(page);
@@ -613,15 +592,10 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
           // Using table search we look for the value of the variable and verify it's in the first row
-          await completingAssembliesToPlan.searchAndVerifyFirstRow(
-            cbed.name,
-            SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
-            SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
-            {
-              searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
-              timeoutBeforeWait: 1000,
-            },
-          );
+          await completingAssembliesToPlan.searchAndVerifyFirstRow(cbed.name, SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE, SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE, {
+            searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
+            timeoutBeforeWait: 1000,
+          });
         });
 
         await allure.step('Step 07: Checking the urgency date of an order', async () => {
@@ -711,11 +685,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
         });
 
         await allure.step('Step 12: Enter your quantity', async () => {
-          await completingAssembliesToPlan.checkOrderQuantity(
-            SelectorsModalWindowConsignmentNote.QUANTITY_INPUT,
-            quantityProductLaunchOnProduction,
-            incomingQuantity,
-          );
+          await completingAssembliesToPlan.checkOrderQuantity(SelectorsModalWindowConsignmentNote.QUANTITY_INPUT, quantityProductLaunchOnProduction, incomingQuantity);
           // Wait for the page to stabilize
           await page.waitForLoadState('networkidle');
         });
@@ -734,7 +704,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     }
   });
 
-  test('Test Case 13 - Disassembly of the set', async ({ page }) => {
+  test('Case 13 - Disassembly of the set', async ({ page }) => {
     // doc test case 8
     logger.log('Test Case 13 - Disassembly of the set');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -946,10 +916,13 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
         logger.info(`Total failed requests: ${failedRequests.length}`);
 
         // Group by resource type
-        const byType = failedRequests.reduce((acc, req) => {
-          acc[req.resourceType] = (acc[req.resourceType] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
+        const byType = failedRequests.reduce(
+          (acc, req) => {
+            acc[req.resourceType] = (acc[req.resourceType] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
 
         logger.info(`Failed by type: ${JSON.stringify(byType, null, 2)}`);
 
@@ -966,7 +939,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     }
   });
 
-  test('Test Case 14 - Complete Set Of Cbed After Desassembly', async ({
+  test('Case 14 - Complete Set Of Cbed After Desassembly', async ({
     //doc test case 9
     page,
   }) => {
@@ -994,15 +967,10 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(TIMEOUTS.STANDARD);
           // Using table search we look for the value of the variable and verify it's in the first row
-          await completingAssembliesToPlan.searchAndVerifyFirstRow(
-            cbed.name,
-            SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
-            SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
-            {
-              searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
-              timeoutBeforeWait: 1000,
-            },
-          );
+          await completingAssembliesToPlan.searchAndVerifyFirstRow(cbed.name, SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE, SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE, {
+            searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
+            timeoutBeforeWait: 1000,
+          });
         });
 
         await allure.step('Step 05: Checking the urgency date of an order', async () => {
@@ -1083,11 +1051,7 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
 
         await allure.step('Step 08: Enter your quantity', async () => {
           // Check the modal window for the delivery note and check the checkbox
-          await completingAssembliesToPlan.checkOrderQuantity(
-            SelectorsModalWindowConsignmentNote.QUANTITY_INPUT,
-            quantityProductLaunchOnProduction,
-            incomingQuantity,
-          );
+          await completingAssembliesToPlan.checkOrderQuantity(SelectorsModalWindowConsignmentNote.QUANTITY_INPUT, quantityProductLaunchOnProduction, incomingQuantity);
           // Wait for loading
           await page.waitForLoadState('networkidle');
         });
@@ -1105,5 +1069,4 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
       }
     }
   });
-
 };

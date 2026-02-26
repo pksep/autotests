@@ -2,7 +2,7 @@
  * @file ElementHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for element interaction operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Finding and clicking elements
  * - Getting text content
@@ -138,10 +138,7 @@ export class ElementHelper {
         } catch (idError) {
           // All methods failed
           logger.error(`No element found with selector="${partialDataTestId}", getByTestId, or id="${idValue}"`);
-          throw new Error(
-            `findAndClickElement failed: Could not find element with selector="${partialDataTestId}", getByTestId, or id="${idValue}". ` +
-              `The element may not be visible, may have a different selector, or the page may not have loaded completely.`,
-          );
+          throw new Error(`findAndClickElement failed: Could not find element with selector="${partialDataTestId}", getByTestId, or id="${idValue}". ` + `The element may not be visible, may have a different selector, or the page may not have loaded completely.`);
         }
       } else {
         // For partial data-testid, try ID fallback
@@ -171,10 +168,7 @@ export class ElementHelper {
           // Neither data-testid nor id worked - throw error
           logger.error(`No element found with data-testid^="${partialDataTestId}" or id="${partialDataTestId}"`);
 
-          throw new Error(
-            `findAndClickElement failed: Could not find element with data-testid^="${partialDataTestId}" or id="${partialDataTestId}". ` +
-              `The element may not be visible, may have a different selector, or the page may not have loaded completely.`,
-          );
+          throw new Error(`findAndClickElement failed: Could not find element with data-testid^="${partialDataTestId}" or id="${partialDataTestId}". ` + `The element may not be visible, may have a different selector, or the page may not have loaded completely.`);
         }
       }
     }
@@ -335,12 +329,7 @@ export class ElementHelper {
    * @param click - Whether to actually click (Click.Yes) or just verify (Click.No)
    * @param options - Optional: waitForEnabled (wait for button to be enabled before clicking), enabledTimeout (ms)
    */
-  async clickButton(
-    textButton: string,
-    locator: string,
-    click: Click = Click.Yes,
-    options?: { waitForEnabled?: boolean; enabledTimeout?: number },
-  ) {
+  async clickButton(textButton: string, locator: string, click: Click = Click.Yes, options?: { waitForEnabled?: boolean; enabledTimeout?: number }) {
     const button = this.page.locator(locator, { hasText: textButton });
     await button.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     await this.highlightElement(button, {

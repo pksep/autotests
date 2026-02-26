@@ -18,15 +18,11 @@ export const WAREHOUSE_PAGE_STOCK_ORDER_METALWORKING_BUTTON = SELECTOR_METAL_WOR
 export const BUTTON_MOVE_TO_ARCHIVE_NEW = '[data-testid="MetalloworkingSclad-Content-WithFilters-Buttons-ArchiveButton"]';
 
 export const METALWORKING_SCLAD_TABLE_ROW0_POPOVER = '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0-Popover"]';
-export const METALWORKING_SCLAD_TABLE_ROW0_POPOVER_ITEM0 =
-  '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0-Popover-Wrapper-Popover-Item0"]';
+export const METALWORKING_SCLAD_TABLE_ROW0_POPOVER_ITEM0 = '[data-testid="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0-Popover-Wrapper-Popover-Item0"]';
 
 // Pattern prefixes for row selectors
 export const METALWORKING_SCLAD_TABLE_ROW0_PREFIX = 'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row0';
 export const METALWORKING_SCLAD_TABLE_ROW_PREFIX = 'MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row';
-export const METALWORKING_SCLAD_TABLE_ROW_DATE_BY_URGENCY_PATTERN =
-  '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-DateByUrgency"]';
-export const METALWORKING_SCLAD_TABLE_ROW_ORDERED_PATTERN =
-  '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Ordered"]';
-export const METALWORKING_SCLAD_TABLE_ROW_OPERATIONS_PATTERN =
-  '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Operations"]';
+export const METALWORKING_SCLAD_TABLE_ROW_DATE_BY_URGENCY_PATTERN = '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-DateByUrgency"]';
+export const METALWORKING_SCLAD_TABLE_ROW_ORDERED_PATTERN = '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Ordered"]';
+export const METALWORKING_SCLAD_TABLE_ROW_OPERATIONS_PATTERN = '[data-testid^="MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row"][data-testid$="-Operations"]';

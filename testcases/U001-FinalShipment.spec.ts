@@ -1,7 +1,7 @@
 /**
  * @file U001-FinalShipment.spec.ts
  * @purpose Test Suite 9: Final Shipment Operations (Test Cases 31-32)
- * 
+ *
  * This suite handles:
  * - Test Case 31: Uploading Second Shipment Task
  * - Test Case 32: Checking new date by urgency
@@ -21,26 +21,14 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import * as U001Constants from './U001-Constants';
-const {
-  orderNumber,
-  nameProduct,
-  urgencyDate,
-  urgencyDateSecond,
-  descendantsCbedArray,
-  descendantsDetailArray,
-  tableMainUploading,
-  buttonUploading,
-  buttonLaunchIntoProductionCbed,
-  deficitTable,
-  deficitTableDetail,
-} = U001Constants;
+const { orderNumber, nameProduct, urgencyDate, urgencyDateSecond, descendantsCbedArray, descendantsDetailArray, tableMainUploading, buttonUploading, buttonLaunchIntoProductionCbed, deficitTable, deficitTableDetail } = U001Constants;
 // Mutable variable that needs to be reassigned
 let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
 export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Final Shipment Operations (Test Cases 31-32)`);
 
-  test('Test Case 31 - Uploading Second Shipment Task', async ({ page }) => {
+  test('Case 31 - Uploading Second Shipment Task', async ({ page }) => {
     // doc test case 26
     logger.log('Test Case 31 - Uploading Second Shipment Task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -139,7 +127,7 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
     });
   });
 
-  test('Test Case 32 - Checking new date by urgency', async ({ page }) => {
+  test('Case 32 - Checking new date by urgency', async ({ page }) => {
     // doc test case 27
     logger.log('Test Case 32 - Checking new date by urgency');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -232,14 +220,9 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
           await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(
-            cbed.name,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
-            {
-              useRedesign: true,
-            },
-          );
+          await shortageAssemblies.searchAndWaitForTable(cbed.name, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE, {
+            useRedesign: true,
+          });
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -383,5 +366,4 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
       }
     }
   });
-
 };

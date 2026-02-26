@@ -1,7 +1,7 @@
 /**
  * @file U001-Receiving.spec.ts
  * @purpose Test Suite 5: Receiving Operations (Test Cases 15-18)
- * 
+ *
  * This suite handles:
  * - Test Case 15: Receiving Part And Check Stock
  * - Test Case 16: Receiving Cbed And Check Stock
@@ -26,14 +26,7 @@ import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
-const {
-  descendantsCbedArray,
-  descendantsDetailArray,
-  quantityProductLaunchOnProduction,
-  incomingQuantity,
-  nameProduct,
-  urgencyDate,
-} = U001Constants;
+const { descendantsCbedArray, descendantsDetailArray, quantityProductLaunchOnProduction, incomingQuantity, nameProduct, urgencyDate } = U001Constants;
 // Mutable variables that need to be reassigned
 let remainingStockBefore = U001Constants.remainingStockBefore;
 let remainingStockAfter = U001Constants.remainingStockAfter;
@@ -42,7 +35,7 @@ let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Receiving Operations (Test Cases 15-18)`);
 
-  test('Test Case 15 - Receiving Part And Check Stock', async ({ page }) => {
+  test('Case 15 - Receiving Part And Check Stock', async ({ page }) => {
     // doc test case 10
     logger.log('Test Case 15 - Receiving Part And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
@@ -75,9 +68,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
           // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
           // The findTable method will wait for the element to be visible
-          await stockReceipt.findTable(
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION,
-          );
+          await stockReceipt.findTable(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION);
 
           // Wait a moment for any initial loading to complete
           await page.waitForTimeout(TIMEOUTS.STANDARD);
@@ -127,12 +118,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           await page.waitForLoadState('networkidle');
 
           // Using table search we look for the value of the variable
-          await stockReceipt.searchAndWaitForTable(
-            detail.name,
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
-            { useRedesign: true },
-          );
+          await stockReceipt.searchAndWaitForTable(detail.name, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE, { useRedesign: true });
         });
 
         await allure.step('Step 11: Enter the quantity in the cells', async () => {
@@ -413,17 +399,13 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           );
 
           // Output to the console
-          logger.log(
-            `Количество ${detail.name} на складе до оприходования: ${remainingStockBefore}, ` +
-              `оприходовали в количестве: ${incomingQuantity}, ` +
-              `и после оприходования: ${remainingStockAfter}.`,
-          );
+          logger.log(`Количество ${detail.name} на складе до оприходования: ${remainingStockBefore}, ` + `оприходовали в количестве: ${incomingQuantity}, ` + `и после оприходования: ${remainingStockAfter}.`);
         });
       }
     }
   });
 
-  test('Test Case 16 - Receiving Cbed And Check Stock', async ({
+  test('Case 16 - Receiving Cbed And Check Stock', async ({
     // doc test case 11
     page,
   }) => {
@@ -454,9 +436,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         await allure.step('Step 03: Open the stock receipt page', async () => {
           logger.log('Step 03: Open the stock receipt page');
           // Find and go to the page using the locator Arrival at the warehouse from the supplier and production
-          await stockReceipt.findTable(
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION,
-          );
+          await stockReceipt.findTable(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION);
 
           // Waiting for loading
           await page.waitForLoadState('networkidle');
@@ -483,11 +463,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         await allure.step('Step 06: Search product', async () => {
           logger.log('Step 06: Search product');
           // Using table search we look for the value of the variable
-          await stockReceipt.searchTable(
-            cbed.name,
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT,
-          );
+          await stockReceipt.searchTable(cbed.name, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT);
 
           // Waiting for loading
           await page.waitForLoadState('networkidle');
@@ -674,11 +650,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
           );
 
           // Output to the console
-          logger.log(
-            `Количество ${cbed.name} на складе до оприходования: ${remainingStockBefore}, ` +
-              `оприходовали в количестве: ${incomingQuantity}, ` +
-              `и после оприходования: ${remainingStockAfter}.`,
-          );
+          logger.log(`Количество ${cbed.name} на складе до оприходования: ${remainingStockBefore}, ` + `оприходовали в количестве: ${incomingQuantity}, ` + `и после оприходования: ${remainingStockAfter}.`);
         });
         // await page.goto(ENV.BASE_URL);
         // await page.waitForTimeout(TIMEOUTS.LONG);
@@ -686,7 +658,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
     }
   });
 
-  test('Test Case 17 - Complete Set Of Product', async ({ page }) => {
+  test('Case 17 - Complete Set Of Product', async ({ page }) => {
     // doc test case 12
     logger.log('Test Case 17 - Complete Set Of Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -839,7 +811,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
     });
   });
 
-  test('Test Case 18 - Receiving Product And Check Stock', async ({ page }) => {
+  test('Case 18 - Receiving Product And Check Stock', async ({ page }) => {
     // doc test case 13
     logger.log('Test Case 18 - Receiving Product And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -888,11 +860,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
     await allure.step('Step 06: Search product', async () => {
       // Using table search we look for the value of the variable
-      await stockReceipt.searchTable(
-        nameProduct,
-        SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
-        SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT,
-      );
+      await stockReceipt.searchTable(nameProduct, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT);
 
       // Waiting for loading
       await page.waitForLoadState('networkidle');
@@ -903,9 +871,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
     await allure.step('Step 07: Find the checkbox column and click', async () => {
       // Click the header checkbox using direct data-testid
-      const headerCheckbox = page.getByTestId(
-        'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-HeadRow-Checkbox-Wrapper-Checkbox',
-      );
+      const headerCheckbox = page.getByTestId('ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-HeadRow-Checkbox-Wrapper-Checkbox');
 
       // Wait for the checkbox to be visible
       await headerCheckbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
@@ -1074,13 +1040,7 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
       );
 
       // Output to the console
-      logger.log(
-        `Количество ${nameProduct} на складе до оприходования: ${remainingStockBefore}, ` +
-          `оприходовали в количестве: ${incomingQuantity}, ` +
-          `и после оприходования: ${remainingStockAfter}.`,
-      );
+      logger.log(`Количество ${nameProduct} на складе до оприходования: ${remainingStockBefore}, ` + `оприходовали в количестве: ${incomingQuantity}, ` + `и после оприходования: ${remainingStockAfter}.`);
     });
   });
-
-
 };

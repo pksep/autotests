@@ -6,6 +6,7 @@ import { ENV, SELECTORS } from '../config';
 import logger from '../lib/utils/logger';
 import { title } from 'process';
 import { toNamespacedPath } from 'path';
+// @ts-ignore
 import testData from '../testdata/PU18-Names.json'; // Import your test data
 import { allure } from 'allure-playwright';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
@@ -20,13 +21,7 @@ export type { Item, TestProductSpecification };
 
 const MAIN_TABLE_TEST_ID = SelectorsPartsDataBase.MAIN_TABLE_TEST_ID;
 
-const TABLE_TEST_IDS = [
-  'Specification-ModalCbed-AccordionCbed-Table',
-  'Specification-ModalCbed-AccordionDetalContent-Table',
-  'Specification-ModalCbed-AccordionBuyersMaterial-Table',
-  'Specification-ModalCbed-ModalComplect-MateriaDetalTable',
-  'Specification-ModalCbed-Accordion-MaterialRashod-Table',
-];
+const TABLE_TEST_IDS = ['Specification-ModalCbed-AccordionCbed-Table', 'Specification-ModalCbed-AccordionDetalContent-Table', 'Specification-ModalCbed-AccordionBuyersMaterial-Table', 'Specification-ModalCbed-ModalComplect-MateriaDetalTable', 'Specification-ModalCbed-Accordion-MaterialRashod-Table'];
 
 // Страница: Сборка
 export class CreatePartsDatabasePage extends PageObject {
@@ -131,28 +126,8 @@ export class CreatePartsDatabasePage extends PageObject {
     return this.partsDatabaseHelper.parseStructuredTable(page, tableTestId);
   }
 
-  async addItemToSpecification(
-    page: Page,
-    smallDialogButtonId: string,
-    dialogTestId: string,
-    searchTableTestId: string,
-    searchValue: string,
-    bottomTableTestId: string,
-    addToBottomButtonTestId: string,
-    addToMainButtonTestId: string,
-    itemType?: string,
-  ): Promise<void> {
-    return this.partsDatabaseHelper.addItemToSpecification(
-      page,
-      smallDialogButtonId,
-      dialogTestId,
-      searchTableTestId,
-      searchValue,
-      bottomTableTestId,
-      addToBottomButtonTestId,
-      addToMainButtonTestId,
-      itemType,
-    );
+  async addItemToSpecification(page: Page, smallDialogButtonId: string, dialogTestId: string, searchTableTestId: string, searchValue: string, bottomTableTestId: string, addToBottomButtonTestId: string, addToMainButtonTestId: string, itemType?: string): Promise<void> {
+    return this.partsDatabaseHelper.addItemToSpecification(page, smallDialogButtonId, dialogTestId, searchTableTestId, searchValue, bottomTableTestId, addToBottomButtonTestId, addToMainButtonTestId, itemType);
   }
 
   async addMultipleItemsToSpecification(
@@ -166,51 +141,18 @@ export class CreatePartsDatabasePage extends PageObject {
     items: Array<{ name: string; quantity?: number }>,
     itemType?: string,
   ): Promise<void> {
-    return this.partsDatabaseHelper.addMultipleItemsToSpecification(
-      page,
-      smallDialogButtonId,
-      dialogTestId,
-      searchTableTestId,
-      bottomTableTestId,
-      addToBottomButtonTestId,
-      addToMainButtonTestId,
-      items,
-      itemType,
-    );
+    return this.partsDatabaseHelper.addMultipleItemsToSpecification(page, smallDialogButtonId, dialogTestId, searchTableTestId, bottomTableTestId, addToBottomButtonTestId, addToMainButtonTestId, items, itemType);
   }
 
   /**
    * Resets a product's specification to match the provided configuration.
    */
   async resetProductSpecificationsByConfig(productSearch: string, config: TestProductSpecification): Promise<void> {
-    await this.partsDatabaseHelper.resetProductSpecificationsByConfig(
-      this.page,
-      () => this.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID),
-      productSearch,
-      config,
-    );
+    await this.partsDatabaseHelper.resetProductSpecificationsByConfig(this.page, () => this.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID), productSearch, config);
   }
 
-  async removeItemFromSpecification(
-    page: Page,
-    smallDialogButtonId: string,
-    dialogTestId: string,
-    bottomTableTestId: string,
-    removeButtonColumnIndex: number,
-    searchValue: string,
-    returnButtonTestId: string,
-    itemType?: string,
-  ): Promise<void> {
-    return this.partsDatabaseHelper.removeItemFromSpecification(
-      page,
-      smallDialogButtonId,
-      dialogTestId,
-      bottomTableTestId,
-      removeButtonColumnIndex,
-      searchValue,
-      returnButtonTestId,
-      itemType,
-    );
+  async removeItemFromSpecification(page: Page, smallDialogButtonId: string, dialogTestId: string, bottomTableTestId: string, removeButtonColumnIndex: number, searchValue: string, returnButtonTestId: string, itemType?: string): Promise<void> {
+    return this.partsDatabaseHelper.removeItemFromSpecification(page, smallDialogButtonId, dialogTestId, bottomTableTestId, removeButtonColumnIndex, searchValue, returnButtonTestId, itemType);
   }
 
   // async parseStructuredTable(page: Page, tableTestId: string): Promise<{ groupName: string; items: string[][] }[]> {
@@ -336,22 +278,8 @@ export class CreatePartsDatabasePage extends PageObject {
     return this.partsDatabaseHelper.uploadFiles(fileInputSelector, filePaths);
   }
 
-  async validateFileSectionFields(
-    fileSectionLocator: Locator,
-    textareaTestId: string,
-    checkboxTestId: string,
-    versionInputTestId: string,
-    fileNameInputTestId: string,
-    testValue: string,
-  ): Promise<void> {
-    return this.partsDatabaseHelper.validateFileSectionFields(
-      fileSectionLocator,
-      textareaTestId,
-      checkboxTestId,
-      versionInputTestId,
-      fileNameInputTestId,
-      testValue,
-    );
+  async validateFileSectionFields(fileSectionLocator: Locator, textareaTestId: string, checkboxTestId: string, versionInputTestId: string, fileNameInputTestId: string, testValue: string): Promise<void> {
+    return this.partsDatabaseHelper.validateFileSectionFields(fileSectionLocator, textareaTestId, checkboxTestId, versionInputTestId, fileNameInputTestId, testValue);
   }
 
   async verifyTableRows(tableLocator: Locator, rowSelector: string, expectedCount: number, highlightRows: boolean = true): Promise<void> {
@@ -396,24 +324,8 @@ export class CreatePartsDatabasePage extends PageObject {
    * @param confirmModalTestId - The data-testid of the confirm modal (optional, defaults to standard confirm modal)
    * @param confirmButtonTestId - The data-testid of the confirm button (optional, defaults to standard confirm button)
    */
-  async cleanupTestDetail(
-    page: Page,
-    detailName: string,
-    tableTestId: string,
-    searchInputTestId?: string,
-    archiveButtonTestId?: string,
-    confirmModalTestId?: string,
-    confirmButtonTestId?: string,
-  ): Promise<void> {
-    return this.partsDatabaseHelper.cleanupTestDetail(
-      page,
-      detailName,
-      tableTestId,
-      searchInputTestId,
-      archiveButtonTestId,
-      confirmModalTestId,
-      confirmButtonTestId,
-    );
+  async cleanupTestDetail(page: Page, detailName: string, tableTestId: string, searchInputTestId?: string, archiveButtonTestId?: string, confirmModalTestId?: string, confirmButtonTestId?: string): Promise<void> {
+    return this.partsDatabaseHelper.cleanupTestDetail(page, detailName, tableTestId, searchInputTestId, archiveButtonTestId, confirmModalTestId, confirmButtonTestId);
   }
 
   /**
@@ -429,16 +341,7 @@ export class CreatePartsDatabasePage extends PageObject {
     confirmButtonSelector: string = SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
   ): Promise<void> {
     await allure.step(`Clean up ${itemTypeName} items`, async () => {
-      await this.partsDatabaseHelper.cleanupTestItemsByPrefix(
-        this.page,
-        itemTypeName,
-        searchPrefix,
-        searchInputSelector,
-        tableSelector,
-        searchInputPosition,
-        archiveButtonSelector,
-        confirmButtonSelector,
-      );
+      await this.partsDatabaseHelper.cleanupTestItemsByPrefix(this.page, itemTypeName, searchPrefix, searchInputSelector, tableSelector, searchInputPosition, archiveButtonSelector, confirmButtonSelector);
     });
   }
 
@@ -513,12 +416,7 @@ export class CreatePartsDatabasePage extends PageObject {
    * Archives all test products matching the given search prefix.
    */
   async archiveAllTestProductsByPrefix(searchPrefix: string, options?: { maxIterations?: number }): Promise<number> {
-    return this.partsDatabaseHelper.archiveAllTestProductsByPrefix(
-      this.page,
-      () => this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL).then(() => this.waitForNetworkIdle()),
-      searchPrefix,
-      options,
-    );
+    return this.partsDatabaseHelper.archiveAllTestProductsByPrefix(this.page, () => this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL).then(() => this.waitForNetworkIdle()), searchPrefix, options);
   }
 
   /**
@@ -531,12 +429,7 @@ export class CreatePartsDatabasePage extends PageObject {
     await this.page.waitForTimeout(TIMEOUTS.STANDARD);
 
     // Use cleanupTestItemsByPrefix to archive equipment
-    await this.cleanupTestItemsByPrefix(
-      'EQUIPMENT',
-      searchPrefix,
-      `${SelectorsEquipment.BASE_EQUIPMENT_TABLE} ${SelectorsEquipment.BASE_EQUIPMENT_SEARCH_INPUT}`,
-      SelectorsEquipment.BASE_EQUIPMENT_TABLE,
-    );
+    await this.cleanupTestItemsByPrefix('EQUIPMENT', searchPrefix, `${SelectorsEquipment.BASE_EQUIPMENT_TABLE} ${SelectorsEquipment.BASE_EQUIPMENT_SEARCH_INPUT}`, SelectorsEquipment.BASE_EQUIPMENT_TABLE);
   }
 
   /**
@@ -548,8 +441,7 @@ export class CreatePartsDatabasePage extends PageObject {
    */
   async createEquipment(equipmentName: string, operationType: string = 'Токарный-ЧПУ', testInfo: TestInfo): Promise<boolean> {
     await allure.step(`Create equipment "${equipmentName}"`, async () => {
-      const navigate = () =>
-        this.goto(`${ENV.BASE_URL}baseequipments`).then(() => this.waitForNetworkIdle());
+      const navigate = () => this.goto(`${ENV.BASE_URL}baseequipments`).then(() => this.waitForNetworkIdle());
       await this.partsDatabaseHelper.createEquipment(navigate, equipmentName, operationType, testInfo);
     });
     return true;
@@ -568,12 +460,7 @@ export class CreatePartsDatabasePage extends PageObject {
    */
   async verifyAllTestProductsDeleted(searchPrefix: string, testInfo?: TestInfo): Promise<number> {
     const navigate = () => this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL).then(() => this.waitForNetworkIdle());
-    const remainingCount = await this.partsDatabaseHelper.getRemainingTestProductsCount(
-      this.page,
-      navigate,
-      searchPrefix,
-      (term, tableSel, bodySel, opts) => this.searchAndWaitForTable(term, tableSel, bodySel, opts),
-    );
+    const remainingCount = await this.partsDatabaseHelper.getRemainingTestProductsCount(this.page, navigate, searchPrefix, (term, tableSel, bodySel, opts) => this.searchAndWaitForTable(term, tableSel, bodySel, opts));
 
     const createButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
     await createButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
@@ -607,8 +494,7 @@ export class CreatePartsDatabasePage extends PageObject {
    */
   async createDetail(detailName: string, testInfo: TestInfo): Promise<boolean> {
     await allure.step(`Create detail "${detailName}"`, async () => {
-      const navigate = () =>
-        this.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL).then(() => this.waitForNetworkIdle());
+      const navigate = () => this.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL).then(() => this.waitForNetworkIdle());
       await this.partsDatabaseHelper.createDetailFlow(navigate, detailName);
 
       const editPageTitle = this.page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
@@ -621,14 +507,93 @@ export class CreatePartsDatabasePage extends PageObject {
         testInfo,
       );
 
-      await this.partsDatabaseHelper.clickButtonByDataTestId(
-        SelectorsPartsDataBase.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL_ID,
-      );
+      await this.partsDatabaseHelper.clickButtonByDataTestId(SelectorsPartsDataBase.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL_ID);
       await this.page.waitForTimeout(TIMEOUTS.STANDARD);
       await this.waitForNetworkIdle();
     });
 
     return true;
+  }
+
+  /**
+   * Create a new detail from the Parts Database main page (click Create → Detail, fill name, save). Leaves user on edit page.
+   * Use when starting from PARTS_DATABASE.URL to mirror the UI flow.
+   */
+  async createDetailFromPartsDatabaseMain(detailName: string): Promise<void> {
+    const navigate = async (): Promise<void> => {
+      await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+      await this.waitForNetworkIdle();
+      await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+      await this.clickButton('Создать', SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
+      await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+      const detailBtn = this.page.locator(SelectorsPartsDataBase.BUTTON_DETAIL).first();
+      await this.waitAndHighlight(detailBtn);
+      await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+      await detailBtn.click();
+      await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+    };
+    await this.partsDatabaseHelper.createDetailFlow(navigate, detailName);
+  }
+
+  /**
+   * On edit detail page: set the name (information) attribute only. Does not save.
+   */
+  async setDetailName(value: string): Promise<void> {
+    const nameInput = this.page.locator(SelectorsPartsDataBase.EDIT_DETAL_INFORMATION_INPUT_FILL).first();
+    await nameInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await this.waitAndHighlight(this.page.locator(SelectorsPartsDataBase.EDIT_DETAL_INFORMATION_INPUT).first());
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+    await nameInput.fill(value);
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+  }
+
+  /**
+   * On edit detail page: set the designation (identifier) attribute only. Does not save.
+   */
+  async setDetailDesignation(value: string): Promise<void> {
+    const desigInput = this.page.locator(SelectorsPartsDataBase.EDIT_DETAL_DESIGNATION_INPUT).first();
+    await this.waitAndHighlight(desigInput);
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+    await desigInput.fill(value);
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+  }
+
+  /**
+   * On edit detail page: set the description (textarea) attribute only. Does not save.
+   */
+  async setDetailDescription(value: string): Promise<void> {
+    const descInput = this.page.locator(SelectorsPartsDataBase.EDIT_DETAL_DESCRIPTION_TEXTAREA).first();
+    await this.waitAndHighlight(descInput);
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+    await descInput.fill(value);
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+  }
+
+  /**
+   * On edit detail page: click Save and wait for network idle. Use after setting attributes.
+   */
+  async saveDetailEdit(): Promise<void> {
+    await this.waitAndHighlight(this.page.locator(SelectorsPartsDataBase.EDIT_SAVE_BUTTON));
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+    await this.clickButton('Сохранить', SelectorsPartsDataBase.EDIT_SAVE_BUTTON);
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(TIMEOUTS.VISUAL_FOLLOW);
+  }
+
+  /**
+   * On edit detail page: set name and save. Convenience for single-attribute edit.
+   */
+  async editDetailName(newName: string): Promise<void> {
+    await this.setDetailName(newName);
+    await this.saveDetailEdit();
+  }
+
+  /**
+   * On edit detail page: set designation and save. Convenience for single-attribute edit.
+   */
+  async editDetailDesignation(newDesignation: string): Promise<void> {
+    await this.setDetailDesignation(newDesignation);
+    await this.saveDetailEdit();
   }
 
   /**
@@ -647,14 +612,8 @@ export class CreatePartsDatabasePage extends PageObject {
     testInfo?: TestInfo,
   ): Promise<boolean> {
     await allure.step(`Create assembly "${assemblyName}"`, async () => {
-      const navigate = () =>
-        this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL).then(() => this.page.waitForLoadState('networkidle'));
-      await this.partsDatabaseHelper.createAssemblyFlow(
-        navigate,
-        assemblyName,
-        specificationItems,
-        testInfo,
-      );
+      const navigate = () => this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL).then(() => this.page.waitForLoadState('networkidle'));
+      await this.partsDatabaseHelper.createAssemblyFlow(navigate, assemblyName, specificationItems, testInfo);
     });
     return true;
   }
@@ -847,13 +806,7 @@ export class CreatePartsDatabasePage extends PageObject {
    * @param inCreatorMode - If true, object is still in creator modal (before saving). If false, object needs to be opened for editing.
    * @returns Promise<boolean> - true if all operations were added successfully
    */
-  async addTechProcesses(
-    objectName: string,
-    objectType: 'detail' | 'assembly' | 'product',
-    operationTypes: string[],
-    testInfo?: TestInfo,
-    inCreatorMode: boolean = false,
-  ): Promise<boolean> {
+  async addTechProcesses(objectName: string, objectType: 'detail' | 'assembly' | 'product', operationTypes: string[], testInfo?: TestInfo, inCreatorMode: boolean = false): Promise<boolean> {
     if (operationTypes.length === 0) {
       logger.log(`No tech processes to add for ${objectType} "${objectName}"`);
       return true;
@@ -879,25 +832,20 @@ export class CreatePartsDatabasePage extends PageObject {
         // Use searchAndWaitForTable to search and wait for results
         // Extract plain data-testid value from selector (remove [data-testid="..."] wrapper)
         const searchInputTestId = SelectorsPartsDataBase.TABLE_SEARCH_INPUT.replace(/^\[data-testid="([^"]+)"\]$/, '$1');
-        await this.searchAndWaitForTable(
-          objectName,
-          tableSelector,
-          tableSelector,
-          {
-            searchInputDataTestId: searchInputTestId,
-          },
-        );
+        await this.searchAndWaitForTable(objectName, tableSelector, tableSelector, {
+          searchInputDataTestId: searchInputTestId,
+        });
 
         // Wait a bit for the search to fully complete
         await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
         await this.waitForNetworkIdle();
-        
+
         // Close dropdown that intercepts clicks - press Escape multiple times to ensure it closes
         await this.page.keyboard.press('Escape');
         await this.page.waitForTimeout(TIMEOUTS.SHORT);
         await this.page.keyboard.press('Escape');
         await this.page.waitForTimeout(TIMEOUTS.SHORT);
-        
+
         // Click outside the search area to close any dropdowns
         await this.page.click('body', { position: { x: 1, y: 1 } });
         await this.page.waitForTimeout(TIMEOUTS.SHORT);
@@ -907,23 +855,23 @@ export class CreatePartsDatabasePage extends PageObject {
         await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await this.waitAndHighlight(firstRow);
         await firstRow.click(); // Normal click so the handler runs and enables the button
-        
+
         // Wait for row to be selected and edit button to be enabled
         const editButton = this.page.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
         await editButton.waitFor({ state: 'attached', timeout: 30000 });
-        
+
         // Wait for button to be enabled (same pattern as U003.spec.ts line 1088-1095)
         await this.page.waitForFunction(
-          (buttonSelector) => {
+          buttonSelector => {
             const button = document.querySelector(buttonSelector) as HTMLButtonElement;
             return button && !button.disabled;
           },
           SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT,
           { timeout: 30000 },
         );
-        
+
         await editButton.click();
-        
+
         // Wait for edit page to load
         await this.waitForNetworkIdle();
         await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -954,12 +902,12 @@ export class CreatePartsDatabasePage extends PageObject {
       // Click on "Технологический процесс" button
       await this.waitForNetworkIdle();
       await this.page.waitForTimeout(TIMEOUTS.LONG);
-      
+
       // Wait for the edit page to be fully loaded - check for either button pattern
       // Try both selectors to see which one is available
       let techProcessButton = this.page.locator(techProcessButtonSelector);
-      let buttonCount = await techProcessButton.count();
-      
+      const buttonCount = await techProcessButton.count();
+
       // If the selected button isn't found, try the alternative
       if (buttonCount === 0 && !inCreatorMode && objectType !== 'detail') {
         const alternativeButton = this.page.locator(SelectorsPartsDataBase.BUTTON_OPERATION);
@@ -969,12 +917,12 @@ export class CreatePartsDatabasePage extends PageObject {
           techProcessButton = this.page.locator(techProcessButtonSelector);
         }
       }
-      
+
       // Wait for the tech process button to be visible and enabled
       await techProcessButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await this.waitAndHighlight(techProcessButton);
       await techProcessButton.click();
-      
+
       await this.page.waitForSelector(SelectorsPartsDataBase.MODAL_CONTENT, { timeout: WAIT_TIMEOUTS.STANDARD });
 
       // Add each operation
@@ -982,33 +930,33 @@ export class CreatePartsDatabasePage extends PageObject {
         const operationType = operationTypes[i];
         await allure.step(`Add operation "${operationType}" (${i + 1}/${operationTypes.length})`, async () => {
           logger.log(`🔄 Starting to add operation ${i + 1}/${operationTypes.length}: "${operationType}"`);
-          
+
           // If this is not the first operation, the modal might have closed after saving
           // Check if modal is still open, if not, click the tech process button again
           if (i > 0) {
             logger.log(`📋 Checking if modal is still open for operation ${i + 1}...`);
             await this.waitForNetworkIdle();
             await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-            
+
             // Check if tech process modal is still open
             const modalContent = this.page.locator(SelectorsPartsDataBase.MODAL_CONTENT);
             const isModalOpen = await modalContent.isVisible().catch(() => false);
-            
+
             logger.log(`📋 Modal is ${isModalOpen ? 'open' : 'closed'} for operation ${i + 1}`);
-            
+
             if (!isModalOpen) {
               logger.log(`🔄 Modal closed, reopening for operation ${i + 1}...`);
               // Modal closed, reopen it
               // Wait for the page to be ready first
               await this.waitForNetworkIdle();
               await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-              
+
               // Wait for the tech process button to be visible and enabled
               const techProcessButton = this.page.locator(techProcessButtonSelector);
               await techProcessButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
               await this.waitAndHighlight(techProcessButton);
               await techProcessButton.click();
-              
+
               // Wait for modal to open
               await this.page.waitForSelector(SelectorsPartsDataBase.MODAL_CONTENT, { timeout: WAIT_TIMEOUTS.STANDARD });
               await this.waitForNetworkIdle();
@@ -1028,7 +976,7 @@ export class CreatePartsDatabasePage extends PageObject {
               addOperationButtonSelector = creatorAddOperation;
             }
           }
-          
+
           // Wait for the button to be visible and enabled before clicking
           const addButton = this.page.locator(addOperationButtonSelector);
           await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
@@ -1114,7 +1062,7 @@ export class CreatePartsDatabasePage extends PageObject {
           const mainSaveButton = this.page.locator(saveOperationButtonSelector);
           await mainSaveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await this.waitAndHighlight(mainSaveButton);
-          
+
           logger.log(`💾 Clicking save button for operation "${operationType}" (${i + 1}/${operationTypes.length})`);
           await mainSaveButton.click({ force: true });
           await this.page.waitForTimeout(TIMEOUTS.LONG);

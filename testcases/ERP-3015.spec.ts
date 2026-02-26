@@ -16,13 +16,13 @@ import { ENV } from '../config';
 import logger from '../lib/utils/logger';
 
 // Global variables for sharing data between steps
-let orderNumber: string | null = null;
-let orderedQuantity: number = 0;
-let targetRow: any = null;
-let specificationQuantity: number = 0;
-let waybillCollections: number = 0;
-let currentBuildQuantity: number = 0;
-let createdOrders: Array<{ orderNumber: string; itemName: string; itemType: 'product' | 'assembly' }> = []; // Store orders with their items for cleanup
+const orderNumber: string | null = null;
+const orderedQuantity: number = 0;
+const targetRow: any = null;
+const specificationQuantity: number = 0;
+const waybillCollections: number = 0;
+const currentBuildQuantity: number = 0;
+const createdOrders: Array<{ orderNumber: string; itemName: string; itemType: 'product' | 'assembly' }> = []; // Store orders with their items for cleanup
 
 // Get today's date in DD.MM.YYYY format
 const today = new Date().toLocaleDateString('ru-RU', {
@@ -69,11 +69,9 @@ type EquipmentItem = {
 const products: ProductItem[] = [
   {
     name: `${PRODUCT_PREFIX}_001`,
-    techProcesses: [ 'Покраска', 'Покраска'],
+    techProcesses: ['Покраска', 'Покраска'],
   },
-  { name: `${PRODUCT_PREFIX}_002`,
-    techProcesses: [ 'Сборка конструкции (ПРОФИ)'],  
- },
+  { name: `${PRODUCT_PREFIX}_002`, techProcesses: ['Сборка конструкции (ПРОФИ)'] },
 ];
 
 // Test product with: 1 material, 1 assembly (with 1 material and 2 details), and 2 details
@@ -105,22 +103,14 @@ const products: ProductItem[] = [
 
 // Assemblies can optionally have materials and details
 const assemblies: AssemblyItem[] = [
-  { name: `${ASSEMBLY_PREFIX}_001`,
-  techProcesses: [ 'Сборка гидравлики и пневматики (ПРОФИ)'], 
-  },
-  { name: `${ASSEMBLY_PREFIX}_002` ,
-  techProcesses: [ 'ИСПЫТАНИЕ','ИСПЫТАНИЕ'], 
-  },
+  { name: `${ASSEMBLY_PREFIX}_001`, techProcesses: ['Сборка гидравлики и пневматики (ПРОФИ)'] },
+  { name: `${ASSEMBLY_PREFIX}_002`, techProcesses: ['ИСПЫТАНИЕ', 'ИСПЫТАНИЕ'] },
 ];
 
 // Details array
 const details: DetailItem[] = [
-  { name: `${DETAIL_PREFIX}_001`,
-  techProcesses: [ 'Зачистная (для разнорабочих)','Токарный-универсал'], 
-  },
-  { name: `${DETAIL_PREFIX}_002`,
-  techProcesses: [ 'Зачистная (для разнорабочих)','Фрезерный-универсал','Фрезерный-универсал'], 
-  },
+  { name: `${DETAIL_PREFIX}_001`, techProcesses: ['Зачистная (для разнорабочих)', 'Токарный-универсал'] },
+  { name: `${DETAIL_PREFIX}_002`, techProcesses: ['Зачистная (для разнорабочих)', 'Фрезерный-универсал', 'Фрезерный-универсал'] },
 ];
 
 const testUsers = [
@@ -185,7 +175,7 @@ export const runERP_3015 = () => {
     await allure.step('Cleanup - Archive all created test items', async () => {
       // Cleanup in reverse order: Orders -> Product -> Assemblies -> Details -> Materials
       // Use prefix-based search to find and delete all items with the prefix (e.g., "ERPTEST_PRODUCT" finds all _001, _002, etc.)
-      
+
       // 0. Archive all orders for test items (search by prefix instead of relying on stored array)
       await expectSoftWithScreenshot(
         page,
@@ -201,7 +191,7 @@ export const runERP_3015 = () => {
         `Archive all orders for test items with prefixes: ${PRODUCT_PREFIX}, ${ASSEMBLY_PREFIX}`,
         test.info(),
       );
-      
+
       // 1. Archive all products with prefix (изделие)
       await expectSoftWithScreenshot(
         page,
@@ -218,12 +208,7 @@ export const runERP_3015 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await detailsPage.cleanupTestItemsByPrefix(
-            'ASSEMBLY',
-            ASSEMBLY_PREFIX,
-            `${SelectorsPartsDataBase.CBED_TABLE} ${SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT}`,
-            SelectorsPartsDataBase.CBED_TABLE,
-          );
+          await detailsPage.cleanupTestItemsByPrefix('ASSEMBLY', ASSEMBLY_PREFIX, `${SelectorsPartsDataBase.CBED_TABLE} ${SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT}`, SelectorsPartsDataBase.CBED_TABLE);
           // Verify cleanup completed successfully - page should still be accessible
           expect.soft(page.url()).toBeTruthy();
           expect.soft(await page.title()).toBeTruthy();
@@ -237,12 +222,7 @@ export const runERP_3015 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await detailsPage.cleanupTestItemsByPrefix(
-            'DETAIL',
-            DETAIL_PREFIX,
-            `${SelectorsPartsDataBase.DETAIL_TABLE} ${SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT}`,
-            SelectorsPartsDataBase.DETAIL_TABLE,
-          );
+          await detailsPage.cleanupTestItemsByPrefix('DETAIL', DETAIL_PREFIX, `${SelectorsPartsDataBase.DETAIL_TABLE} ${SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT}`, SelectorsPartsDataBase.DETAIL_TABLE);
           // Verify cleanup completed successfully - page should still be accessible
           expect.soft(page.url()).toBeTruthy();
           expect.soft(await page.title()).toBeTruthy();
@@ -557,11 +537,7 @@ export const runERP_3015 = () => {
     await allure.step('Step 4: Create test equipment', async () => {
       // Create each equipment
       for (const equipment of equipments) {
-        const equipmentCreated = await detailsPage.createEquipment(
-          equipment.name,
-          equipment.operationType || 'Токарный-ЧПУ',
-          test.info(),
-        );
+        const equipmentCreated = await detailsPage.createEquipment(equipment.name, equipment.operationType || 'Токарный-ЧПУ', test.info());
 
         await expectSoftWithScreenshot(
           page,
@@ -613,8 +589,8 @@ export const runERP_3015 = () => {
           const switchElement = page.locator(SelectorsProductionPage.PRODUCTION_SWITCH);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(switchElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            async () => {
+              await expect.soft(switchElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
             },
             'Verify switch element is visible',
             test.info(),
@@ -623,16 +599,16 @@ export const runERP_3015 = () => {
           const сборкаItem = switchElement.locator(SelectorsProductionPage.PRODUCTION_SWITCH_ITEM_SBORKA).filter({ hasText: 'Сборка' });
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(сборкаItem).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            async () => {
+              await expect.soft(сборкаItem).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
             },
             'Verify Сборка item is visible in switch',
             test.info(),
           );
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(сборкаItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+            async () => {
+              await expect.soft(сборкаItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
             },
             'Verify Сборка item is enabled before clicking',
             test.info(),
@@ -640,7 +616,7 @@ export const runERP_3015 = () => {
           await сборкаItem.click();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           await page.waitForLoadState('networkidle');
-          
+
           // Wait a bit more for table to render
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
         });
@@ -650,20 +626,20 @@ export const runERP_3015 = () => {
           const table = page.locator(SelectorsProductionPage.PRODUCTION_TABLE);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            async () => {
+              await expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
             },
             'Verify production table is visible',
             test.info(),
           );
-          
+
           // Highlight the table to verify we found it
-          await table.evaluate((el) => {
+          await table.evaluate(el => {
             (el as HTMLElement).style.border = '5px solid red';
             (el as HTMLElement).style.backgroundColor = 'yellow';
           });
           await page.waitForTimeout(TIMEOUTS.SHORT); // Keep highlight visible for a moment
-          
+
           // Wait for table to be fully loaded and stable before analyzing
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(TIMEOUTS.MEDIUM); // Brief wait for table to be fully rendered
@@ -688,19 +664,19 @@ export const runERP_3015 = () => {
               }
             }
           }
-          
+
           if (mainRows.length === 0) {
             const totalRowCount = await allRows.count();
             const tableSelector = SelectorsProductionPage.PRODUCTION_TABLE;
             throw new Error(
               `No main rows found in production table. ` +
-              `Total rows checked: ${totalRowCount}. ` +
-              `All rows appear to be sub-rows with "-Operation" or "-NonOperation" in their data-testid. ` +
-              `Table selector: ${tableSelector}. ` +
-              `This occurred while validating table cell values on the production page.`,
+                `Total rows checked: ${totalRowCount}. ` +
+                `All rows appear to be sub-rows with "-Operation" or "-NonOperation" in their data-testid. ` +
+                `Table selector: ${tableSelector}. ` +
+                `This occurred while validating table cell values on the production page.`,
             );
           }
-          
+
           // Process each of the first N main rows
           let processedCount = 0;
           // Array to store validation results for table output
@@ -710,10 +686,10 @@ export const runERP_3015 = () => {
             uniqueEntityIdsValidation: { status: 'PASS' | 'FAIL' | 'SKIP'; actual: number; expected: number };
             leftRightValueValidation: { status: 'PASS' | 'FAIL' | 'SKIP'; leftValue: number; rightValue: number };
           }> = [];
-          
+
           for (let rowIndex = 0; rowIndex < mainRows.length && processedCount < ROWS_TO_VALIDATE; rowIndex++) {
             const currentRow = mainRows[rowIndex];
-            
+
             // Verify this is still a main row (not a sub-row with -Operation or -NonOperation) before processing
             try {
               await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
@@ -726,7 +702,7 @@ export const runERP_3015 = () => {
               logger.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
               continue; // Skip to next row in the loop
             }
-            
+
             let employeeName: string | null = null;
             let leftValue: number = 0;
             // Initialize result object for this row
@@ -742,40 +718,40 @@ export const runERP_3015 = () => {
               leftRightValueValidation: { status: 'SKIP', leftValue: 0, rightValue: 0 },
             };
             let rightValue: number = 0;
-            
+
             await allure.step(`Validate row ${rowIndex + 1} of ${mainRows.length} (processing ${processedCount + 1} of ${ROWS_TO_VALIDATE})`, async () => {
               // Wait for row to be attached (row is visible but Playwright may report it as hidden)
               await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-              
+
               // Scroll the table container into view first, then the row
               const table = page.locator(SelectorsProductionPage.PRODUCTION_TABLE);
               await table.scrollIntoViewIfNeeded();
               await page.waitForTimeout(TIMEOUTS.SHORT);
-              
+
               // Force scroll the row into view (use evaluate to ensure it actually scrolls)
               await currentRow.evaluate((el: HTMLElement) => {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
               });
               await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait longer after scrolling to ensure row is fully rendered
-              
+
               // Verify the row is actually visible after scrolling
               try {
                 await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
               } catch (e) {
                 logger.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
               }
-              
+
               // Re-verify this is still a main row after scrolling (DOM might have changed)
               const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
               if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation') || rowTestIdAfterScroll.includes('-NonOperation')) {
                 logger.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
                 return; // Skip the rest of the steps for this row
               }
-              
+
               // Re-query the row by its data-testid to get a fresh locator after scrolling
               const freshRow = table.locator(SelectorsProductionPage.getProductionTableRowByTestId(rowTestIdAfterScroll));
               await freshRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
-              
+
               // Highlight the current row to verify we found it
               await detailsPage.highlightElement(freshRow, {
                 border: '5px solid blue',
@@ -809,120 +785,120 @@ export const runERP_3015 = () => {
                 border: '3px solid orange',
                 backgroundColor: 'lightyellow',
               });
-          await page.waitForTimeout(TIMEOUTS.SHORT);
+              await page.waitForTimeout(TIMEOUTS.SHORT);
 
               // Third cell: Name (employee name) - data-testid is on the td element itself
               const nameCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_NAME_CELL_SUFFIX}"]`).first();
-          await nameCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+              await nameCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               await detailsPage.highlightElement(nameCell, {
                 border: '3px solid green',
                 backgroundColor: 'lightgreen',
               });
-          await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-          
-          employeeName = await nameCell.textContent();
-          rowResult.employeeName = employeeName || '';
-          
-          await expectSoftWithScreenshot(
-            page,
-            () => {
-              expect.soft(employeeName).toBeTruthy();
-              expect.soft(employeeName!.trim().length).toBeGreaterThan(0);
-            },
-            `Verify employee name extracted: ${employeeName}`,
-            test.info(),
-          );
+              await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+
+              employeeName = await nameCell.textContent();
+              rowResult.employeeName = employeeName || '';
+
+              await expectSoftWithScreenshot(
+                page,
+                () => {
+                  expect.soft(employeeName).toBeTruthy();
+                  expect.soft(employeeName!.trim().length).toBeGreaterThan(0);
+                },
+                `Verify employee name extracted: ${employeeName}`,
+                test.info(),
+              );
 
               // Fourth cell: CountPosition - format: "10 / 10" - data-testid is on the td element itself
               const countCell = freshRow.locator(`td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`).first();
-          await countCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+              await countCell.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
               await detailsPage.highlightElement(countCell, {
                 border: '3px solid purple',
                 backgroundColor: 'lavender',
               });
-          await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-          
-          const countText = await countCell.textContent();
-          
-          await expectSoftWithScreenshot(
-            page,
-            () => {
-              expect.soft(countText).toBeTruthy();
-              expect.soft(countText!.trim().length).toBeGreaterThan(0);
-            },
-            `Verify count position extracted: ${countText}`,
-            test.info(),
-          );
+              await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
-          // Parse left and right values from "10 / 10" format
-          const countMatch = countText!.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
-          if (!countMatch) {
-            const cellSelector = `td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`;
-            const rowTestIdForError = await freshRow.getAttribute('data-testid');
-            throw new Error(
-              `Invalid count format in table cell. ` +
-              `Actual value: "${countText}". ` +
-              `Expected format: "number / number" (e.g., "10 / 10"). ` +
-              `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
-              `Cell selector: ${cellSelector}. ` +
-              `Employee: ${employeeName || 'N/A'}. ` +
-              `This occurred while parsing the count position cell value in row ${rowIndex + 1}.`,
-            );
-          }
-          leftValue = parseInt(countMatch[1], 10);
-          rightValue = parseInt(countMatch[2], 10);
+              const countText = await countCell.textContent();
 
-          await expectSoftWithScreenshot(
-            page,
-            () => {
-              expect.soft(leftValue).toBeGreaterThanOrEqual(0);
-              expect.soft(rightValue).toBeGreaterThanOrEqual(0);
-            },
-            `Verify parsed values - left: ${leftValue}, right: ${rightValue}`,
-            test.info(),
-          );
+              await expectSoftWithScreenshot(
+                page,
+                () => {
+                  expect.soft(countText).toBeTruthy();
+                  expect.soft(countText!.trim().length).toBeGreaterThan(0);
+                },
+                `Verify count position extracted: ${countText}`,
+                test.info(),
+              );
 
-          // Skip this row if both values are 0
-          if (leftValue === 0 && rightValue === 0) {
-            logger.log(`Skipping row ${rowIndex + 1} - both leftValue and rightValue are 0`);
-            return; // Skip to next row
-          }
+              // Parse left and right values from "10 / 10" format
+              const countMatch = countText!.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+              if (!countMatch) {
+                const cellSelector = `td[data-testid^="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_COUNT_POSITION_CELL_SUFFIX}"]`;
+                const rowTestIdForError = await freshRow.getAttribute('data-testid');
+                throw new Error(
+                  `Invalid count format in table cell. ` +
+                    `Actual value: "${countText}". ` +
+                    `Expected format: "number / number" (e.g., "10 / 10"). ` +
+                    `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
+                    `Cell selector: ${cellSelector}. ` +
+                    `Employee: ${employeeName || 'N/A'}. ` +
+                    `This occurred while parsing the count position cell value in row ${rowIndex + 1}.`,
+                );
+              }
+              leftValue = parseInt(countMatch[1], 10);
+              rightValue = parseInt(countMatch[2], 10);
+
+              await expectSoftWithScreenshot(
+                page,
+                () => {
+                  expect.soft(leftValue).toBeGreaterThanOrEqual(0);
+                  expect.soft(rightValue).toBeGreaterThanOrEqual(0);
+                },
+                `Verify parsed values - left: ${leftValue}, right: ${rightValue}`,
+                test.info(),
+              );
+
+              // Skip this row if both values are 0
+              if (leftValue === 0 && rightValue === 0) {
+                logger.log(`Skipping row ${rowIndex + 1} - both leftValue and rightValue are 0`);
+                return; // Skip to next row
+              }
 
               // Sub-step 5: Click 3 dots menu in first cell
               // Get the row number from the fresh row's data-testid to scope the menu item search
               const rowTestId = await freshRow.getAttribute('data-testid');
-          const rowNumberMatch = rowTestId?.match(/Row(\d+)$/);
-          const rowNumber = rowNumberMatch ? rowNumberMatch[1] : null;
-          
+              const rowNumberMatch = rowTestId?.match(/Row(\d+)$/);
+              const rowNumber = rowNumberMatch ? rowNumberMatch[1] : null;
+
               await allure.step('Click 3 dots menu in first cell', async () => {
                 // Use the popoverCell we already found and highlighted
                 const threeDotsButton = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_POPOVER_SHOW_BUTTON_SUFFIX}"]`);
-                
+
                 // Scroll the button into view to ensure it's visible
                 await threeDotsButton.scrollIntoViewIfNeeded();
                 await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Wait a bit after scrolling
-                
+
                 await expectSoftWithScreenshot(
                   page,
-                  () => {
-                    expect.soft(threeDotsButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                  async () => {
+                    await expect.soft(threeDotsButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
                   },
                   'Verify 3 dots menu button is visible',
                   test.info(),
                 );
-                
+
                 await expectSoftWithScreenshot(
                   page,
-                  () => {
-                    expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                  async () => {
+                    await expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
                   },
                   'Verify 3 dots menu button is enabled before clicking',
                   test.info(),
                 );
-                
+
                 await threeDotsButton.click();
                 await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Wait for popover to open
-                
+
                 // Wait for the popover menu to be visible
                 if (rowNumber) {
                   const popoverMenuContainer = page.locator(SelectorsProductionPage.getProductionTableRowPopoverOptionsList(rowNumber)).first();
@@ -947,10 +923,10 @@ export const runERP_3015 = () => {
                   const popoverMenu = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_POPOVER_OPTIONS_LIST_SUFFIX}"]`);
                   menuItem = popoverMenu.locator(`[data-testid$="${SelectorsProductionPage.PRODUCTION_TABLE_ROW_POPOVER_ITEM1_SUFFIX}"]`).filter({ hasText: 'ПЗ по пользователю' });
                 }
-                
+
                 // Wait for menu item to be attached first, then try to make it visible
                 await menuItem.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-                
+
                 // Try to scroll the menu item into view, but handle errors gracefully
                 try {
                   await menuItem.scrollIntoViewIfNeeded();
@@ -958,7 +934,7 @@ export const runERP_3015 = () => {
                 } catch (scrollError) {
                   // If scrolling fails, that's okay - we'll try to click anyway
                 }
-                
+
                 // Try to wait for visibility and enabled state
                 let useForceClick = false;
                 try {
@@ -977,28 +953,28 @@ export const runERP_3015 = () => {
                   logger.log('Menu item is attached but not visible, will use force click');
                   useForceClick = true;
                 }
-                
+
                 await expectSoftWithScreenshot(
                   page,
-                  () => {
-                    expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                  async () => {
+                    await expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
                   },
                   'Verify menu item "ПЗ по пользователю" is attached',
                   test.info(),
                 );
-                
+
                 // Verify menu item is enabled before clicking (only when not using force click)
                 if (!useForceClick) {
                   await expectSoftWithScreenshot(
                     page,
-                    () => {
-                      expect.soft(menuItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                    async () => {
+                      await expect.soft(menuItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
                     },
                     'Verify menu item "ПЗ по пользователю" is enabled before clicking',
                     test.info(),
                   );
                 }
-                
+
                 // Scroll the popover container into view first, then the menu item
                 if (rowNumber) {
                   const popoverMenuContainer = page.locator(SelectorsProductionPage.getProductionTableRowPopoverOptionsList(rowNumber)).first();
@@ -1009,7 +985,7 @@ export const runERP_3015 = () => {
                     // Could not scroll popover container into view
                   }
                 }
-                
+
                 // Scroll the menu item into view right before clicking
                 try {
                   await menuItem.scrollIntoViewIfNeeded();
@@ -1017,23 +993,23 @@ export const runERP_3015 = () => {
                 } catch (scrollError) {
                   // Could not scroll menu item into view before click, will try to click anyway
                 }
-                
+
                 // Highlight the menu item before clicking
                 await detailsPage.highlightElement(menuItem, {
                   border: '5px solid yellow',
                   backgroundColor: 'lightyellow',
                 });
                 await page.waitForTimeout(TIMEOUTS.LONG); // 2 second pause before clicking
-                
+
                 // Set up network listener BEFORE clicking to ensure we catch the API response
                 let apiResponse: any = null;
                 let responseResolve: ((value: void) => void) | null = null;
-                
+
                 // Create a Promise that resolves when the API response is captured
-                const responseCapturedPromise = new Promise<void>((resolve) => {
+                const responseCapturedPromise = new Promise<void>(resolve => {
                   responseResolve = resolve;
                 });
-                
+
                 const responseHandler = async (response: any) => {
                   const url = response.url();
                   if (url.includes('/api/production-task/by-user')) {
@@ -1066,128 +1042,103 @@ export const runERP_3015 = () => {
                     }
                   }
                 };
-                
+
                 // Set up listener on context to catch responses from any page
                 context.on('response', responseHandler);
-                
+
                 // Wait for new page to be created before clicking
                 // Use a longer timeout for waiting for the new page
-                const [newPage] = await Promise.all([
-                  context.waitForEvent('page', { timeout: WAIT_TIMEOUTS.PAGE_RELOAD }),
-                  useForceClick 
-                    ? menuItem.click({ force: true, timeout: WAIT_TIMEOUTS.STANDARD })
-                    : menuItem.click({ timeout: WAIT_TIMEOUTS.STANDARD }),
-                ]);
-                
+                const [newPage] = await Promise.all([context.waitForEvent('page', { timeout: WAIT_TIMEOUTS.PAGE_RELOAD }), useForceClick ? menuItem.click({ force: true, timeout: WAIT_TIMEOUTS.STANDARD }) : menuItem.click({ timeout: WAIT_TIMEOUTS.STANDARD })]);
+
                 // Also set up listener on the new page specifically
                 newPage.on('response', responseHandler);
-            
-            // Wait for the new page to fully open and load
-            await newPage.waitForLoadState('domcontentloaded');
-            await newPage.waitForLoadState('load');
-            await newPage.waitForLoadState('networkidle');
-            await newPage.waitForTimeout(TIMEOUTS.MEDIUM);
-            
-            // Sub-step 7: Highlight employee name on new page
-            await allure.step('Highlight employee name on new page', async () => {
-              // Create page object for the new page
-              const newPageDetailsPage = new CreatePartsDatabasePage(newPage);
-              
-              // Try to find the element by class
-              const employeeElement = newPage.locator(SelectorsProductionPage.TASK_BY_USER_EMPLOYEE_CLASS);
-              const elementCount = await employeeElement.count();
-              
-              if (elementCount > 0) {
-                // Element exists, wait for it and highlight it
-                await employeeElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                
-                // Highlight the employee name element
-                await newPageDetailsPage.highlightElement(employeeElement, {
-                  border: '5px solid green',
-                  backgroundColor: 'lightgreen',
-                });
-                await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
-              } else {
-                // Element doesn't exist - try to find by text content instead
-                const employeeNameText = employeeName!.trim();
-                const textElement = newPage.getByText(employeeNameText, { exact: false }).first();
-                const textElementCount = await textElement.count();
-                
-                if (textElementCount > 0) {
-                  // Found by text, highlight it
-                  await textElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                  await newPageDetailsPage.highlightElement(textElement, {
-                    border: '5px solid green',
-                    backgroundColor: 'lightgreen',
-                  });
-                  await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
-                }
-              }
-            });
 
-            // Sub-step 8: Wait for API response to be captured
-            await allure.step('Wait for API response to be captured', async () => {
-              // Wait for the response to be captured using Promise.race with timeout
-              // This avoids retry loops by using Playwright's built-in waiting mechanisms
-              const timeoutPromise = new Promise<void>((resolve) => {
-                setTimeout(() => {
-                  resolve(); // Resolve after timeout (response may have been missed, will be checked in assertion)
-                }, RETRY_COUNTS.API_RESPONSE_WAIT * TIMEOUTS.MEDIUM);
-              });
-              
-              // Race between response capture and timeout
-              await Promise.race([responseCapturedPromise, timeoutPromise]);
-              
-              // Remove listeners if still attached
-              context.off('response', responseHandler);
-              newPage.off('response', responseHandler);
-              
-              await expectSoftWithScreenshot(
-                newPage,
-                () => {
-                  expect.soft(apiResponse).toBeTruthy();
-                  if (apiResponse) {
-                    expect.soft([200, 201]).toContain(apiResponse.status); // Accept both 200 (OK) and 201 (Created)
-                    expect.soft(apiResponse.data).toBeTruthy();
-                  }
-                },
-                `Verify API response captured: ${apiResponse ? `Status: ${apiResponse.status}, URL: ${apiResponse.url}` : 'Failed - no response captured'} - Employee: ${employeeName || 'N/A'}`,
-                test.info(),
-              );
-              
-              // Extract entities and their IDs from the captured response
-              if (apiResponse && apiResponse.data) {
-                // Extract entities and their IDs
-                let itemCount = 0;
-                const entityIds: number[] = [];
-                const entities: any[] = [];
-                
-                if (Array.isArray(apiResponse.data)) {
-                  itemCount = apiResponse.data.length;
-                  
-                  // Extract all entities and their IDs
-                  for (let i = 0; i < itemCount; i++) {
-                    const item = apiResponse.data[i];
-                    if (item && item.entity) {
-                      entities.push(item.entity);
-                      if (item.entity.id !== undefined && item.entity.id !== null) {
-                        entityIds.push(item.entity.id);
-                      }
+                // Wait for the new page to fully open and load
+                await newPage.waitForLoadState('domcontentloaded');
+                await newPage.waitForLoadState('load');
+                await newPage.waitForLoadState('networkidle');
+                await newPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+                // Sub-step 7: Highlight employee name on new page
+                await allure.step('Highlight employee name on new page', async () => {
+                  // Create page object for the new page
+                  const newPageDetailsPage = new CreatePartsDatabasePage(newPage);
+
+                  // Try to find the element by class
+                  const employeeElement = newPage.locator(SelectorsProductionPage.TASK_BY_USER_EMPLOYEE_CLASS);
+                  const elementCount = await employeeElement.count();
+
+                  if (elementCount > 0) {
+                    // Element exists, wait for it and highlight it
+                    await employeeElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+
+                    // Highlight the employee name element
+                    await newPageDetailsPage.highlightElement(employeeElement, {
+                      border: '5px solid green',
+                      backgroundColor: 'lightgreen',
+                    });
+                    await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
+                  } else {
+                    // Element doesn't exist - try to find by text content instead
+                    const employeeNameText = employeeName!.trim();
+                    const textElement = newPage.getByText(employeeNameText, { exact: false }).first();
+                    const textElementCount = await textElement.count();
+
+                    if (textElementCount > 0) {
+                      // Found by text, highlight it
+                      await textElement.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+                      await newPageDetailsPage.highlightElement(textElement, {
+                        border: '5px solid green',
+                        backgroundColor: 'lightgreen',
+                      });
+                      await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
                     }
                   }
-                } else if (apiResponse.data && typeof apiResponse.data === 'object') {
-                  // Check if data has an array property
-                  const keys = Object.keys(apiResponse.data);
-                  
-                  // Try to find array properties
-                  for (const key of keys) {
-                    if (Array.isArray(apiResponse.data[key])) {
-                      const array = apiResponse.data[key];
-                      itemCount = array.length;
-                      
-                      // Extract entities from this array
+                });
+
+                // Sub-step 8: Wait for API response to be captured
+                await allure.step('Wait for API response to be captured', async () => {
+                  // Wait for the response to be captured using Promise.race with timeout
+                  // This avoids retry loops by using Playwright's built-in waiting mechanisms
+                  const timeoutPromise = new Promise<void>(resolve => {
+                    setTimeout(() => {
+                      resolve(); // Resolve after timeout (response may have been missed, will be checked in assertion)
+                    }, RETRY_COUNTS.API_RESPONSE_WAIT * TIMEOUTS.MEDIUM);
+                  });
+
+                  // Race between response capture and timeout
+                  await Promise.race([responseCapturedPromise, timeoutPromise]);
+
+                  // Remove listeners if still attached
+                  context.off('response', responseHandler);
+                  newPage.off('response', responseHandler);
+
+                  await expectSoftWithScreenshot(
+                    newPage,
+                    () => {
+                      expect.soft(apiResponse).toBeTruthy();
+                      if (apiResponse) {
+                        expect.soft([200, 201]).toContain(apiResponse.status); // Accept both 200 (OK) and 201 (Created)
+                        expect.soft(apiResponse.data).toBeTruthy();
+                      }
+                    },
+                    `Verify API response captured: ${apiResponse ? `Status: ${apiResponse.status}, URL: ${apiResponse.url}` : 'Failed - no response captured'} - Employee: ${employeeName || 'N/A'}`,
+                    test.info(),
+                  );
+
+                  // Extract entities and their IDs from the captured response
+                  if (apiResponse && apiResponse.data) {
+                    // Extract entities and their IDs
+                    let itemCount = 0;
+                    const entityIds: number[] = [];
+                    const entities: any[] = [];
+
+                    if (Array.isArray(apiResponse.data)) {
+                      itemCount = apiResponse.data.length;
+
+                      // Extract all entities and their IDs
                       for (let i = 0; i < itemCount; i++) {
-                        const item = array[i];
+                        const item = apiResponse.data[i];
                         if (item && item.entity) {
                           entities.push(item.entity);
                           if (item.entity.id !== undefined && item.entity.id !== null) {
@@ -1195,79 +1146,99 @@ export const runERP_3015 = () => {
                           }
                         }
                       }
-                      break;
+                    } else if (apiResponse.data && typeof apiResponse.data === 'object') {
+                      // Check if data has an array property
+                      const keys = Object.keys(apiResponse.data);
+
+                      // Try to find array properties
+                      for (const key of keys) {
+                        if (Array.isArray(apiResponse.data[key])) {
+                          const array = apiResponse.data[key];
+                          itemCount = array.length;
+
+                          // Extract entities from this array
+                          for (let i = 0; i < itemCount; i++) {
+                            const item = array[i];
+                            if (item && item.entity) {
+                              entities.push(item.entity);
+                              if (item.entity.id !== undefined && item.entity.id !== null) {
+                                entityIds.push(item.entity.id);
+                              }
+                            }
+                          }
+                          break;
+                        }
+                      }
                     }
+
+                    // Verify and log the count
+                    await expectSoftWithScreenshot(
+                      newPage,
+                      () => {
+                        expect.soft(itemCount).toBeGreaterThan(0);
+                        expect.soft(entities.length).toBeGreaterThan(0);
+                        expect.soft(entityIds.length).toBe(entities.length);
+                      },
+                      `Verify response contains entities: ${entities.length} entities found with ${entityIds.length} IDs - Employee: ${employeeName || 'N/A'}`,
+                      test.info(),
+                    );
+
+                    // Remove duplicate IDs
+                    const uniqueEntityIds = [...new Set(entityIds)];
+
+                    // Compare unique count with rightValue from the main table for the current row
+                    const uniqueEntityIdsMatch = uniqueEntityIds.length === rightValue;
+                    rowResult.uniqueEntityIdsValidation = {
+                      status: uniqueEntityIdsMatch ? 'PASS' : 'FAIL',
+                      actual: uniqueEntityIds.length,
+                      expected: rightValue,
+                    };
+                    await expectSoftWithScreenshot(
+                      newPage,
+                      () => {
+                        expect.soft(uniqueEntityIds.length).toBe(rightValue);
+                      },
+                      `Verify unique entity IDs count (${uniqueEntityIds.length}) matches rightValue (${rightValue}) from main table row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'}`,
+                      test.info(),
+                    );
+
+                    // Verify that both left and right numbers are the same
+                    const leftRightMatch = rightValue === leftValue;
+                    rowResult.leftRightValueValidation = {
+                      status: leftRightMatch ? 'PASS' : 'FAIL',
+                      leftValue: leftValue,
+                      rightValue: rightValue,
+                    };
+                    await expectSoftWithScreenshot(
+                      newPage,
+                      () => {
+                        expect.soft(rightValue).toBe(leftValue);
+                      },
+                      `Verify rightValue (${rightValue}) matches leftValue (${leftValue}) from main table row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'}`,
+                      test.info(),
+                    );
                   }
-                }
-                
-                // Verify and log the count
-                await expectSoftWithScreenshot(
-                  newPage,
-                  () => {
-                    expect.soft(itemCount).toBeGreaterThan(0);
-                    expect.soft(entities.length).toBeGreaterThan(0);
-                    expect.soft(entityIds.length).toBe(entities.length);
-                  },
-                  `Verify response contains entities: ${entities.length} entities found with ${entityIds.length} IDs - Employee: ${employeeName || 'N/A'}`,
-                  test.info(),
-                );
-                
-                // Remove duplicate IDs
-                const uniqueEntityIds = [...new Set(entityIds)];
-                
-                // Compare unique count with rightValue from the main table for the current row
-                const uniqueEntityIdsMatch = uniqueEntityIds.length === rightValue;
-                rowResult.uniqueEntityIdsValidation = {
-                  status: uniqueEntityIdsMatch ? 'PASS' : 'FAIL',
-                  actual: uniqueEntityIds.length,
-                  expected: rightValue,
-                };
-                await expectSoftWithScreenshot(
-                  newPage,
-                  () => {
-                    expect.soft(uniqueEntityIds.length).toBe(rightValue);
-                  },
-                  `Verify unique entity IDs count (${uniqueEntityIds.length}) matches rightValue (${rightValue}) from main table row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'}`,
-                  test.info(),
-                );
-                
-                // Verify that both left and right numbers are the same
-                const leftRightMatch = rightValue === leftValue;
-                rowResult.leftRightValueValidation = {
-                  status: leftRightMatch ? 'PASS' : 'FAIL',
-                  leftValue: leftValue,
-                  rightValue: rightValue,
-                };
-                await expectSoftWithScreenshot(
-                  newPage,
-                  () => {
-                    expect.soft(rightValue).toBe(leftValue);
-                  },
-                  `Verify rightValue (${rightValue}) matches leftValue (${leftValue}) from main table row ${rowIndex + 1} - Employee: ${employeeName || 'N/A'}`,
-                  test.info(),
-                );
-              }
-              
-              // Wait for page to be fully stable before closing
-              await newPage.waitForLoadState('networkidle');
-              await newPage.waitForTimeout(TIMEOUTS.SHORT);
-            });
-            
-            // Close the new page and switch back to the original page
-            // Only close after all processing and console output is complete
-            await newPage.close();
-            await page.bringToFront();
-            await page.waitForTimeout(TIMEOUTS.SHORT); // Wait a bit for the page to be ready
-            }); // End of "Click menu item: ПЗ по пользователю" step
-            
-            // Add row result to validation results array
-            validationResults.push(rowResult);
-            
-            // Increment processed count only after successfully processing the row
-            processedCount++;
+
+                  // Wait for page to be fully stable before closing
+                  await newPage.waitForLoadState('networkidle');
+                  await newPage.waitForTimeout(TIMEOUTS.SHORT);
+                });
+
+                // Close the new page and switch back to the original page
+                // Only close after all processing and console output is complete
+                await newPage.close();
+                await page.bringToFront();
+                await page.waitForTimeout(TIMEOUTS.SHORT); // Wait a bit for the page to be ready
+              }); // End of "Click menu item: ПЗ по пользователю" step
+
+              // Add row result to validation results array
+              validationResults.push(rowResult);
+
+              // Increment processed count only after successfully processing the row
+              processedCount++;
             }); // End of "Validate row X" step
           } // End of loop through rows
-          
+
           // Print validation results table
           logger.log('\n' + '='.repeat(120));
           logger.log('VALIDATION RESULTS TABLE'.padStart(70));
@@ -1277,17 +1248,19 @@ export const runERP_3015 = () => {
           for (const result of validationResults) {
             const rowNum = result.rowNumber.toString().padEnd(4);
             const employee = (result.employeeName.length > 48 ? result.employeeName.substring(0, 45) + '...' : result.employeeName).padEnd(50);
-            const uniqueStatus = result.uniqueEntityIdsValidation.status === 'SKIP'
-              ? 'SKIP'
-              : result.uniqueEntityIdsValidation.status === 'PASS'
-              ? `PASS (${result.uniqueEntityIdsValidation.actual}/${result.uniqueEntityIdsValidation.expected})`
-              : `FAIL (${result.uniqueEntityIdsValidation.actual}/${result.uniqueEntityIdsValidation.expected})`;
+            const uniqueStatus =
+              result.uniqueEntityIdsValidation.status === 'SKIP'
+                ? 'SKIP'
+                : result.uniqueEntityIdsValidation.status === 'PASS'
+                  ? `PASS (${result.uniqueEntityIdsValidation.actual}/${result.uniqueEntityIdsValidation.expected})`
+                  : `FAIL (${result.uniqueEntityIdsValidation.actual}/${result.uniqueEntityIdsValidation.expected})`;
             const unique = uniqueStatus.padEnd(30);
-            const leftRightStatus = result.leftRightValueValidation.status === 'SKIP'
-              ? 'SKIP'
-              : result.leftRightValueValidation.status === 'PASS'
-              ? `PASS (${result.leftRightValueValidation.leftValue}/${result.leftRightValueValidation.rightValue})`
-              : `FAIL (${result.leftRightValueValidation.leftValue}/${result.leftRightValueValidation.rightValue})`;
+            const leftRightStatus =
+              result.leftRightValueValidation.status === 'SKIP'
+                ? 'SKIP'
+                : result.leftRightValueValidation.status === 'PASS'
+                  ? `PASS (${result.leftRightValueValidation.leftValue}/${result.leftRightValueValidation.rightValue})`
+                  : `FAIL (${result.leftRightValueValidation.leftValue}/${result.leftRightValueValidation.rightValue})`;
             const leftRight = leftRightStatus.padEnd(30);
             logger.log(`${rowNum}| ${employee}| ${unique}| ${leftRight}`);
           }
@@ -1335,18 +1308,18 @@ export const runERP_3015 = () => {
         // Sub-step 1.2: Ensure User accordion (top) is closed
         await allure.step('Ensure User accordion (top) is closed', async () => {
           const userAccordionButton = page.locator(SelectorsProductionPage.USER_ACCORDION_BUTTON);
-          
+
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(userAccordionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+            async () => {
+              await expect.soft(userAccordionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
             },
             'Verify User accordion button is visible',
             test.info(),
           );
 
           // Verify it's a div element
-          const tagName = await userAccordionButton.evaluate((el) => el.tagName.toLowerCase());
+          const tagName = await userAccordionButton.evaluate(el => el.tagName.toLowerCase());
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -1357,24 +1330,24 @@ export const runERP_3015 = () => {
           );
 
           // Check if the accordion is open by checking for the class
-          const classList = await userAccordionButton.evaluate((el) => Array.from(el.classList));
+          const classList = await userAccordionButton.evaluate(el => Array.from(el.classList));
           const isOpen = classList.includes('accordion-button_open');
-          
+
           if (isOpen) {
             // Accordion is open, click to close it
             await expectSoftWithScreenshot(
               page,
-              () => {
-                expect.soft(userAccordionButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+              async () => {
+                await expect.soft(userAccordionButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
               },
               'Verify User accordion button is enabled before clicking',
               test.info(),
             );
             await userAccordionButton.click();
             await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait 1 second after clicking
-            
+
             // Verify the accordion is now closed
-            const classListAfterClick = await userAccordionButton.evaluate((el) => Array.from(el.classList));
+            const classListAfterClick = await userAccordionButton.evaluate(el => Array.from(el.classList));
             await expectSoftWithScreenshot(
               page,
               () => {
@@ -1400,18 +1373,18 @@ export const runERP_3015 = () => {
         await allure.step('Ensure Equipment accordion (second) is open', async () => {
           // Get the accordion button element (must be a div)
           const accordionButton = page.locator(SelectorsProductionPage.EQUIPMENT_ACCORDION_BUTTON);
-          
+
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(accordionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+            async () => {
+              await expect.soft(accordionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
             },
             'Verify accordion button is visible',
             test.info(),
           );
 
           // Verify it's a div element
-          const tagName = await accordionButton.evaluate((el) => el.tagName.toLowerCase());
+          const tagName = await accordionButton.evaluate(el => el.tagName.toLowerCase());
           await expectSoftWithScreenshot(
             page,
             () => {
@@ -1422,24 +1395,24 @@ export const runERP_3015 = () => {
           );
 
           // Check if the accordion is already open by checking for the class
-          const classList = await accordionButton.evaluate((el) => Array.from(el.classList));
+          const classList = await accordionButton.evaluate(el => Array.from(el.classList));
           const isOpen = classList.includes('accordion-button_open');
-          
+
           if (!isOpen) {
             // Accordion is closed, click to open it
             await expectSoftWithScreenshot(
               page,
-              () => {
-                expect.soft(accordionButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+              async () => {
+                await expect.soft(accordionButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
               },
               'Verify accordion button is enabled before clicking',
               test.info(),
             );
             await accordionButton.click();
             await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait 1 second after clicking
-            
+
             // Verify the accordion is now open
-            const classListAfterClick = await accordionButton.evaluate((el) => Array.from(el.classList));
+            const classListAfterClick = await accordionButton.evaluate(el => Array.from(el.classList));
             await expectSoftWithScreenshot(
               page,
               () => {
@@ -1465,13 +1438,13 @@ export const runERP_3015 = () => {
         await allure.step('Find and click switch element for next table', async () => {
           // Try to find the switch element - it might not exist for Equipment table
           const switchElement = page.locator(SelectorsProductionPage.EQUIPMENT_SWITCH);
-          const switchExists = await switchElement.count() > 0;
-          
+          const switchExists = (await switchElement.count()) > 0;
+
           if (switchExists) {
             await expectSoftWithScreenshot(
               page,
-              () => {
-                expect.soft(switchElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+              async () => {
+                await expect.soft(switchElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
               },
               'Verify switch element is visible',
               test.info(),
@@ -1480,16 +1453,16 @@ export const runERP_3015 = () => {
             const nextTableItem = switchElement.locator(SelectorsProductionPage.EQUIPMENT_SWITCH_ITEM_METALWORKING).filter({ hasText: 'Металлообработка' });
             await expectSoftWithScreenshot(
               page,
-              () => {
-                expect.soft(nextTableItem).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+              async () => {
+                await expect.soft(nextTableItem).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
               },
               'Verify next table item is visible in switch',
               test.info(),
             );
             await expectSoftWithScreenshot(
               page,
-              () => {
-                expect.soft(nextTableItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+              async () => {
+                await expect.soft(nextTableItem).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
               },
               'Verify next table item is enabled before clicking',
               test.info(),
@@ -1497,7 +1470,7 @@ export const runERP_3015 = () => {
             await nextTableItem.click();
             await page.waitForTimeout(TIMEOUTS.MEDIUM);
             await page.waitForLoadState('networkidle');
-            
+
             // Wait a bit more for table to render
             await page.waitForTimeout(TIMEOUTS.MEDIUM);
           } else {
@@ -1511,29 +1484,29 @@ export const runERP_3015 = () => {
         // Sub-step 3: Find the table and wait for rows to be visible
         await allure.step('Find production table and wait for rows', async () => {
           const table = page.locator(SelectorsProductionPage.EQUIPMENT_TABLE);
-          
+
           // First check if table is attached to DOM
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(table).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+            async () => {
+              await expect.soft(table).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
             },
             'Verify production table is attached to DOM',
             test.info(),
           );
-          
+
           // Wait for table to become visible (it might be hidden initially)
           await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          
+
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+            async () => {
+              await expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
             },
             'Verify production table is visible',
             test.info(),
           );
-          
+
           // Wait for table to be fully loaded and stable before analyzing
           await page.waitForLoadState('networkidle');
           // Additional wait to ensure all popover components are initialized and ready
@@ -1543,128 +1516,128 @@ export const runERP_3015 = () => {
         // Sub-step 4: Validate first N main rows
         await allure.step(`Validate first ${ROWS_TO_VALIDATE} main rows`, async () => {
           const table = page.locator(SelectorsProductionPage.EQUIPMENT_TABLE);
-                // Get all rows and filter to main rows only (exclude sub-rows with -Operation or -NonOperation in data-testid)
-                // Equipment table structure: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-                const allRows = table.locator('tbody tr');
-                const rowCount = await allRows.count();
-                const mainRows: any[] = [];
-                // Collect more main rows than we need, in case some are skipped
-                for (let i = 0; i < rowCount; i++) {
-                  const row = allRows.nth(i);
-                  const testId = await row.getAttribute('data-testid');
-                  if (testId && !testId.includes('-Operation') && !testId.includes('-NonOperation')) {
-                    mainRows.push(row);
-                    // Collect at least MAX_ROWS_TO_COLLECT main rows to account for skipped rows (0 values, -Operation, or -NonOperation)
-                    if (mainRows.length >= ROW_COLLECTION.MAX_ROWS_TO_COLLECT) {
-                      break;
-                    }
-                  }
-                }
-                
-                if (mainRows.length === 0) {
-                  const totalRowCount = await allRows.count();
-                  const tableTestIdForError = await table.getAttribute('data-testid');
-                  throw new Error(
-                    `No main rows found in equipment production table. ` +
-                    `Total rows checked: ${totalRowCount}. ` +
-                    `All rows appear to be sub-rows with "-Operation" or "-NonOperation" in their data-testid. ` +
-                    `Table data-testid: ${tableTestIdForError || 'N/A'}. ` +
-                    `This occurred while validating table cell values on the production page.`,
-                  );
-                }
-                
-                // Process each of the first N main rows
-                let processedCount = 0;
-                // Array to store validation results for table output
-                const validationResults: Array<{
-                  rowNumber: number;
-                  equipmentName: string;
-                  cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
-                  cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
-                }> = [];
-                
-                for (let rowIndex = 0; rowIndex < mainRows.length && processedCount < ROWS_TO_VALIDATE; rowIndex++) {
-                  const currentRow = mainRows[rowIndex];
-                  
-                  // Verify this is still a main row (not a sub-row with -Operation or -NonOperation) before processing
-                  // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-                  try {
-                    await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
-                    const rowTestIdCheck = await currentRow.getAttribute('data-testid');
-                    if (!rowTestIdCheck || rowTestIdCheck.includes('-Operation') || rowTestIdCheck.includes('-NonOperation')) {
-                      logger.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
-                      continue; // Skip to next row in the loop
-                    }
-                  } catch (e) {
-                    logger.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
-                    continue; // Skip to next row in the loop
-                  }
-                  
-                  let equipmentName: string | null = null;
-                  let leftValue: number = 0;
-                  let countEntityValue: number = 0;
-                  // Store cell references for highlighting on validation failure
-                  let countCell: Locator | null = null;
-                  let countEntityCell: Locator | null = null;
-                  // Initialize result object for this row
-                  const rowResult: {
-                    rowNumber: number;
-                    equipmentName: string;
-                    cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
-                    cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
-                  } = {
-                    rowNumber: rowIndex + 1,
-                    equipmentName: '',
-                    cell3CountPosition: { status: 'SKIP', validRows: 0, expected: 0, totalRows: 0 },
-                    cell4CountEntity: { status: 'SKIP', sum: 0, expected: 0, totalRows: 0 },
-                  };
-                  
-                  await allure.step(`Validate row ${rowIndex + 1} of ${mainRows.length} (processing ${processedCount + 1} of ${ROWS_TO_VALIDATE})`, async () => {
-                    // Wait for row to be attached (row is visible but Playwright may report it as hidden)
-                    await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                    
-                    // Scroll the table container into view first, then the row
-                    await table.scrollIntoViewIfNeeded();
-                    await page.waitForTimeout(TIMEOUTS.SHORT);
-                    
-                    // Force scroll the row into view (use evaluate to ensure it actually scrolls)
-                    await currentRow.evaluate((el: HTMLElement) => {
-                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    });
-                    await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait longer after scrolling to ensure row is fully rendered
-                    
-                    // Verify the row is actually visible after scrolling
-                    try {
-                      await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-                    } catch (e) {
-                      logger.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
-                    }
-                    
-                    // Re-verify this is still a main row after scrolling (DOM might have changed)
-                    // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-                    const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
-                    if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation') || rowTestIdAfterScroll.includes('-NonOperation')) {
-                      logger.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
-                      return; // Skip the rest of the steps for this row
-                    }
-                    
-                    // Re-query the row by its data-testid to get a fresh locator after scrolling
-                    const freshRow = table.locator(SelectorsProductionPage.getEquipmentTableRowByTestId(rowTestIdAfterScroll));
-                    await freshRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
-                    
-                    // Highlight the current row with red border as we start processing it
-                    await productionPage.highlightElement(freshRow, {
-                      border: '3px solid red',
-                    });
-                    await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+          // Get all rows and filter to main rows only (exclude sub-rows with -Operation or -NonOperation in data-testid)
+          // Equipment table structure: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+          const allRows = table.locator('tbody tr');
+          const rowCount = await allRows.count();
+          const mainRows: any[] = [];
+          // Collect more main rows than we need, in case some are skipped
+          for (let i = 0; i < rowCount; i++) {
+            const row = allRows.nth(i);
+            const testId = await row.getAttribute('data-testid');
+            if (testId && !testId.includes('-Operation') && !testId.includes('-NonOperation')) {
+              mainRows.push(row);
+              // Collect at least MAX_ROWS_TO_COLLECT main rows to account for skipped rows (0 values, -Operation, or -NonOperation)
+              if (mainRows.length >= ROW_COLLECTION.MAX_ROWS_TO_COLLECT) {
+                break;
+              }
+            }
+          }
 
-                    // Re-verify this is still a main row before accessing cells (DOM might have changed after highlighting)
-                    // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
-                    const rowTestIdBeforeCells = await freshRow.getAttribute('data-testid');
-                    if (!rowTestIdBeforeCells || rowTestIdBeforeCells.includes('-Operation') || rowTestIdBeforeCells.includes('-NonOperation')) {
-                      logger.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
-                      return; // Skip the rest of the steps for this row
-                    }
+          if (mainRows.length === 0) {
+            const totalRowCount = await allRows.count();
+            const tableTestIdForError = await table.getAttribute('data-testid');
+            throw new Error(
+              `No main rows found in equipment production table. ` +
+                `Total rows checked: ${totalRowCount}. ` +
+                `All rows appear to be sub-rows with "-Operation" or "-NonOperation" in their data-testid. ` +
+                `Table data-testid: ${tableTestIdForError || 'N/A'}. ` +
+                `This occurred while validating table cell values on the production page.`,
+            );
+          }
+
+          // Process each of the first N main rows
+          let processedCount = 0;
+          // Array to store validation results for table output
+          const validationResults: Array<{
+            rowNumber: number;
+            equipmentName: string;
+            cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
+            cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
+          }> = [];
+
+          for (let rowIndex = 0; rowIndex < mainRows.length && processedCount < ROWS_TO_VALIDATE; rowIndex++) {
+            const currentRow = mainRows[rowIndex];
+
+            // Verify this is still a main row (not a sub-row with -Operation or -NonOperation) before processing
+            // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+            try {
+              await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.VERY_SHORT });
+              const rowTestIdCheck = await currentRow.getAttribute('data-testid');
+              if (!rowTestIdCheck || rowTestIdCheck.includes('-Operation') || rowTestIdCheck.includes('-NonOperation')) {
+                logger.log(`Skipping row ${rowIndex + 1} - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdCheck}`);
+                continue; // Skip to next row in the loop
+              }
+            } catch (e) {
+              logger.log(`Skipping row ${rowIndex + 1} - row is not attached or accessible`);
+              continue; // Skip to next row in the loop
+            }
+
+            let equipmentName: string | null = null;
+            let leftValue: number = 0;
+            let countEntityValue: number = 0;
+            // Store cell references for highlighting on validation failure
+            let countCell: Locator | null = null;
+            let countEntityCell: Locator | null = null;
+            // Initialize result object for this row
+            const rowResult: {
+              rowNumber: number;
+              equipmentName: string;
+              cell3CountPosition: { status: 'PASS' | 'FAIL' | 'SKIP'; validRows: number; expected: number; totalRows: number };
+              cell4CountEntity: { status: 'PASS' | 'FAIL' | 'SKIP'; sum: number; expected: number; totalRows: number };
+            } = {
+              rowNumber: rowIndex + 1,
+              equipmentName: '',
+              cell3CountPosition: { status: 'SKIP', validRows: 0, expected: 0, totalRows: 0 },
+              cell4CountEntity: { status: 'SKIP', sum: 0, expected: 0, totalRows: 0 },
+            };
+
+            await allure.step(`Validate row ${rowIndex + 1} of ${mainRows.length} (processing ${processedCount + 1} of ${ROWS_TO_VALIDATE})`, async () => {
+              // Wait for row to be attached (row is visible but Playwright may report it as hidden)
+              await currentRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+
+              // Scroll the table container into view first, then the row
+              await table.scrollIntoViewIfNeeded();
+              await page.waitForTimeout(TIMEOUTS.SHORT);
+
+              // Force scroll the row into view (use evaluate to ensure it actually scrolls)
+              await currentRow.evaluate((el: HTMLElement) => {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              });
+              await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait longer after scrolling to ensure row is fully rendered
+
+              // Verify the row is actually visible after scrolling
+              try {
+                await currentRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+              } catch (e) {
+                logger.log(`Row ${rowIndex + 1} is not visible after scrolling, will try to continue anyway`);
+              }
+
+              // Re-verify this is still a main row after scrolling (DOM might have changed)
+              // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+              const rowTestIdAfterScroll = await currentRow.getAttribute('data-testid');
+              if (!rowTestIdAfterScroll || rowTestIdAfterScroll.includes('-Operation') || rowTestIdAfterScroll.includes('-NonOperation')) {
+                logger.log(`Skipping row ${rowIndex + 1} after scroll - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdAfterScroll}`);
+                return; // Skip the rest of the steps for this row
+              }
+
+              // Re-query the row by its data-testid to get a fresh locator after scrolling
+              const freshRow = table.locator(SelectorsProductionPage.getEquipmentTableRowByTestId(rowTestIdAfterScroll));
+              await freshRow.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
+
+              // Highlight the current row with red border as we start processing it
+              await productionPage.highlightElement(freshRow, {
+                border: '3px solid red',
+              });
+              await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
+
+              // Re-verify this is still a main row before accessing cells (DOM might have changed after highlighting)
+              // Equipment table: main rows end with Row##, sub-rows end with Row##-Operation0 or Row##-NonOperation
+              const rowTestIdBeforeCells = await freshRow.getAttribute('data-testid');
+              if (!rowTestIdBeforeCells || rowTestIdBeforeCells.includes('-Operation') || rowTestIdBeforeCells.includes('-NonOperation')) {
+                logger.log(`Skipping row ${rowIndex + 1} before accessing cells - contains "-Operation" or "-NonOperation" in data-testid or missing data-testid: ${rowTestIdBeforeCells}`);
+                return; // Skip the rest of the steps for this row
+              }
 
               // First cell: Popover (3 dots menu) - data-testid is on the td element itself
               let popoverCell: Locator;
@@ -1689,10 +1662,10 @@ export const runERP_3015 = () => {
                   border: '3px solid red',
                 });
                 await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-                
+
                 equipmentName = await nameCell.textContent();
                 rowResult.equipmentName = equipmentName || '';
-                
+
                 await expectSoftWithScreenshot(
                   page,
                   () => {
@@ -1713,9 +1686,9 @@ export const runERP_3015 = () => {
                   border: '3px solid red',
                 });
                 await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-                
+
                 const countText = await countCell.textContent();
-                
+
                 await expectSoftWithScreenshot(
                   page,
                   () => {
@@ -1733,12 +1706,12 @@ export const runERP_3015 = () => {
                   const rowTestIdForError = await freshRow.getAttribute('data-testid');
                   throw new Error(
                     `Invalid count format in equipment table cell. ` +
-                    `Actual value: "${countText}". ` +
-                    `Expected format: single number (e.g., "1"). ` +
-                    `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
-                    `Cell selector: ${cellSelector}. ` +
-                    `Equipment: ${equipmentName || 'N/A'}. ` +
-                    `This occurred while parsing the count position cell value in row ${rowIndex + 1}.`,
+                      `Actual value: "${countText}". ` +
+                      `Expected format: single number (e.g., "1"). ` +
+                      `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
+                      `Cell selector: ${cellSelector}. ` +
+                      `Equipment: ${equipmentName || 'N/A'}. ` +
+                      `This occurred while parsing the count position cell value in row ${rowIndex + 1}.`,
                   );
                 }
                 leftValue = parseInt(countMatch[1], 10);
@@ -1763,39 +1736,39 @@ export const runERP_3015 = () => {
                 const rowTestId = await freshRow.getAttribute('data-testid');
                 const rowNumberMatch = rowTestId?.match(/Row(\d+)$/);
                 const rowNumber = rowNumberMatch ? rowNumberMatch[1] : null;
-                
+
                 await allure.step('Click 3 dots menu in first cell', async () => {
                   // Use the popoverCell we already found and highlighted
                   // Inside it, there's a div with data-testid ending in -Popover-Popover-PopoverShow
                   // HTML structure: td[-Popover] > div[-Popover-Wrapper] > div[-Popover-Popover] > div[-Popover-Popover-Popover] > div[-Popover-Popover-PopoverShow]
                   const threeDotsButton = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_SHOW_BUTTON_SUFFIX}"]`);
-                  
+
                   // Wait for the button to be attached and ready (popover component needs to be initialized)
                   await threeDotsButton.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
                   await page.waitForTimeout(TIMEOUTS.SHORT); // Wait for popover component to be fully initialized
-                  
+
                   // Scroll the button into view to ensure it's visible
                   await threeDotsButton.scrollIntoViewIfNeeded();
                   await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Wait a bit after scrolling
-                  
+
                   await expectSoftWithScreenshot(
                     page,
-                    () => {
-                      expect.soft(threeDotsButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                    async () => {
+                      await expect.soft(threeDotsButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
                     },
                     'Verify 3 dots menu button is visible',
                     test.info(),
                   );
-                  
+
                   await expectSoftWithScreenshot(
                     page,
-                    () => {
-                      expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                    async () => {
+                      await expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
                     },
                     'Verify 3 dots menu button is enabled before clicking',
                     test.info(),
                   );
-                  
+
                   // Try clicking using JavaScript to ensure the click event fires
                   await threeDotsButton.evaluate((el: HTMLElement) => {
                     // Try both click() and dispatchEvent to ensure it works
@@ -1803,14 +1776,14 @@ export const runERP_3015 = () => {
                     el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
                   });
                   await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for popover to open
-                  
+
                   // Wait for the popover menu to be attached and try to make it visible
                   if (rowNumber) {
                     const popoverMenuContainer = page.locator(SelectorsProductionPage.getEquipmentTableRowPopoverOptionsList(rowNumber)).first();
                     // Wait for it to be attached to the DOM
                     await popoverMenuContainer.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
                     await page.waitForTimeout(TIMEOUTS.MEDIUM); // Additional wait for menu to be ready and positioned
-                    
+
                     // Try to bring the menu to the front using JavaScript (fix z-index issue)
                     try {
                       await popoverMenuContainer.evaluate((el: HTMLElement) => {
@@ -1834,14 +1807,14 @@ export const runERP_3015 = () => {
                     } catch (e) {
                       // If we can't modify the style, that's okay - we'll use JavaScript click anyway
                     }
-                    
+
                     // Try to verify menu is visible after style changes
                     try {
                       await popoverMenuContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
                       await expectSoftWithScreenshot(
                         page,
-                        () => {
-                          expect.soft(popoverMenuContainer).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                        async () => {
+                          await expect.soft(popoverMenuContainer).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
                         },
                         'Verify popover menu container is visible after style adjustments',
                         test.info(),
@@ -1850,8 +1823,8 @@ export const runERP_3015 = () => {
                       // Menu still not visible, but we verified it's attached
                       await expectSoftWithScreenshot(
                         page,
-                        () => {
-                          expect.soft(popoverMenuContainer).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                        async () => {
+                          await expect.soft(popoverMenuContainer).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
                         },
                         'Verify popover menu container is attached (may still be behind table)',
                         test.info(),
@@ -1891,10 +1864,10 @@ export const runERP_3015 = () => {
                     const popoverMenu = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_OPTIONS_LIST_SUFFIX}"]`);
                     menuItem = popoverMenu.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_ITEM1_SUFFIX}"]`).filter({ hasText: 'ПЗ по оборудованию' });
                   }
-                  
+
                   // Wait for menu item to be attached first
                   await menuItem.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                  
+
                   // Verify the menu item text is correct before clicking (even if menu is behind table)
                   const menuItemText = await menuItem.textContent();
                   await expectSoftWithScreenshot(
@@ -1905,7 +1878,7 @@ export const runERP_3015 = () => {
                     `Verify menu item text is correct before clicking: "${menuItemText}"`,
                     test.info(),
                   );
-                  
+
                   // Try a different approach: move the menu to body to ensure it's on top
                   if (rowNumber) {
                     const popoverMenuContainer = page.locator(SelectorsProductionPage.getEquipmentTableRowPopoverOptionsList(rowNumber)).first();
@@ -1914,13 +1887,13 @@ export const runERP_3015 = () => {
                       await popoverMenuContainer.evaluate((el: HTMLElement) => {
                         const rect = (el as HTMLElement).getBoundingClientRect();
                         const menuElement = el as HTMLElement;
-                        
+
                         // Store original parent
                         const originalParent = menuElement.parentElement;
-                        
+
                         // Move to body
                         document.body.appendChild(menuElement);
-                        
+
                         // Position absolutely at the same screen coordinates
                         menuElement.style.position = 'fixed';
                         menuElement.style.zIndex = '999999';
@@ -1949,23 +1922,23 @@ export const runERP_3015 = () => {
                       }
                     }
                   }
-                  
+
                   // Verify menu item is attached
                   await expectSoftWithScreenshot(
                     page,
-                    () => {
-                      expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                    async () => {
+                      await expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
                     },
                     'Verify menu item "ПЗ по оборудованию" is attached',
                     test.info(),
                   );
-                  
+
                   // Set up listener for new page BEFORE clicking
                   const newPagePromise = context.waitForEvent('page', { timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
-                  
+
                   // Pause before clicking the menu item that opens the new tab
                   await page.waitForTimeout(TIMEOUTS.MEDIUM); // 500ms pause before clicking
-                  
+
                   // Try to get the bounding box for a more realistic mouse click
                   let useMouseClick = false;
                   try {
@@ -1982,7 +1955,7 @@ export const runERP_3015 = () => {
                   } catch (e) {
                     // If bounding box fails, fall back to JavaScript click
                   }
-                  
+
                   // If mouse click didn't work, try JavaScript click with proper event dispatch
                   if (!useMouseClick) {
                     await menuItem.evaluate((el: HTMLElement) => {
@@ -2005,7 +1978,7 @@ export const runERP_3015 = () => {
                         view: window,
                         button: 0,
                       });
-                      
+
                       (el as HTMLElement).dispatchEvent(mouseDownEvent);
                       (el as HTMLElement).dispatchEvent(mouseUpEvent);
                       (el as HTMLElement).dispatchEvent(clickEvent);
@@ -2013,21 +1986,21 @@ export const runERP_3015 = () => {
                       (el as HTMLElement).click();
                     });
                   }
-                  
+
                   // Wait for the new page to open
                   const newPage = await newPagePromise;
-                  
+
                   // Wait for the new page to fully load
                   await newPage.waitForLoadState('domcontentloaded');
                   await newPage.waitForLoadState('load');
                   await newPage.waitForLoadState('networkidle');
                   await newPage.waitForTimeout(TIMEOUTS.SHORT);
-                  
+
                   // Validate the stored values on the new tab
                   await allure.step('Validate stored values on new tab', async () => {
                     // Create page object for the new page to use highlighting methods
                     const newPageDetailsPage = new CreatePartsDatabasePage(newPage);
-                    
+
                     // Verify the new tab loaded successfully
                     const newPageUrl = newPage.url();
                     await expectSoftWithScreenshot(
@@ -2038,25 +2011,25 @@ export const runERP_3015 = () => {
                       `Verify new tab loaded - URL: ${newPageUrl}`,
                       test.info(),
                     );
-                    
+
                     // Validate equipment name appears in title element with class 'task-by-equipment__equipment'
                     const titleElement = newPage.locator('.task-by-equipment__equipment');
                     await expectSoftWithScreenshot(
                       newPage,
-                      () => {
-                        expect.soft(titleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                      async () => {
+                        await expect.soft(titleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
                       },
                       'Verify title element is visible',
                       test.info(),
                     );
-                    
+
                     // Highlight the title element
                     await newPageDetailsPage.highlightElement(titleElement, {
                       border: '5px solid green',
                       backgroundColor: 'lightgreen',
                     });
                     await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
-                    
+
                     const titleText = await titleElement.textContent();
                     await expectSoftWithScreenshot(
                       newPage,
@@ -2066,14 +2039,14 @@ export const runERP_3015 = () => {
                       `Verify title element contains equipment name - Title: "${titleText}", Expected: "${equipmentName}"`,
                       test.info(),
                     );
-                    
+
                     // Wait a bit more for the page to fully render, especially the tables
                     await newPage.waitForLoadState('networkidle');
                     await newPage.waitForTimeout(TIMEOUTS.STANDARD);
-                    
+
                     // Find all TaskByEquipment tables on the new page
                     const allTablesPattern = newPage.locator(SelectorsProductionPage.TASK_BY_EQUIPMENT_TABLE_PATTERN);
-                    
+
                     // Wait for tables to appear with retries
                     let tableCount = 0;
                     let retries = 3;
@@ -2086,7 +2059,7 @@ export const runERP_3015 = () => {
                         retries--;
                       }
                     }
-                    
+
                     await expectSoftWithScreenshot(
                       newPage,
                       () => {
@@ -2095,49 +2068,49 @@ export const runERP_3015 = () => {
                       `Verify at least one TaskByEquipment table is found on new page (found ${tableCount} table(s))`,
                       test.info(),
                     );
-                    
+
                     logger.log(`Found ${tableCount} TaskByEquipment table(s) on new page to process`);
-                    
+
                     // Process each table and sum up valid rows from all tables
                     let totalValidRowCount = 0;
                     let totalRowCount = 0;
-                    
+
                     for (let tableIndex = 0; tableIndex < tableCount; tableIndex++) {
                       await allure.step(`Process table ${tableIndex + 1} of ${tableCount} on new page`, async () => {
                         const table = allTablesPattern.nth(tableIndex);
-                        
+
                         // Get table data-testid for logging
                         const tableTestId = await table.getAttribute('data-testid');
                         logger.log(`Processing table ${tableIndex + 1} on new page: ${tableTestId}`);
-                        
+
                         // Wait for table to be attached and visible
                         await expectSoftWithScreenshot(
                           newPage,
-                          () => {
-                            expect.soft(table).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                          async () => {
+                            await expect.soft(table).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
                           },
                           `Verify table ${tableIndex + 1} is attached to DOM on new page`,
                           test.info(),
                         );
-                        
+
                         await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-                        
+
                         await expectSoftWithScreenshot(
                           newPage,
-                          () => {
-                            expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                          async () => {
+                            await expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
                           },
                           `Verify table ${tableIndex + 1} is visible on new page`,
                           test.info(),
                         );
-                        
+
                         // Highlight the table
                         await newPageDetailsPage.highlightElement(table, {
                           border: '5px solid blue',
                           backgroundColor: 'lightblue',
                         });
                         await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // Keep highlight visible
-                        
+
                         const allTableRows = table.locator('tbody tr');
                         // Wait for at least one row to be attached (table might be loading)
                         try {
@@ -2148,44 +2121,44 @@ export const runERP_3015 = () => {
                         await newPage.waitForTimeout(TIMEOUTS.SHORT); // Additional wait for rows to render
                         const currentTableRowCount = await allTableRows.count();
                         totalRowCount += currentTableRowCount;
-                        
+
                         // Go through each row and exclude rows that have 0 in the 11th cell (index 10) or have class 'executive-table__row_mark'
                         for (let i = 0; i < currentTableRowCount; i++) {
                           const row = allTableRows.nth(i);
-                          
+
                           // Check if row has the class 'executive-table__row_mark' - exclude it if it does
-                          const rowClassList = await row.evaluate((el) => Array.from(el.classList));
+                          const rowClassList = await row.evaluate(el => Array.from(el.classList));
                           const hasMarkClass = rowClassList.includes('executive-table__row_mark');
-                          
+
                           if (hasMarkClass) {
                             // Skip this row - it has the mark class
                             continue;
                           }
-                          
+
                           // Highlight the current row being analyzed
                           await newPageDetailsPage.highlightElement(row, {
                             border: '3px solid orange',
                             backgroundColor: 'yellow',
                           });
                           await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
-                          
+
                           const cells = row.locator('td');
                           const cellCount = await cells.count();
-                          
+
                           if (cellCount >= 11) {
                             // Get the 11th cell (index 10)
                             const eleventhCell = cells.nth(10);
-                            
+
                             // Highlight the 11th cell
                             await newPageDetailsPage.highlightElement(eleventhCell, {
                               border: '3px solid purple',
                               backgroundColor: 'lavender',
                             });
                             await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
-                            
+
                             const cellText = await eleventhCell.textContent();
                             const cellValue = parseInt(cellText?.trim() || '0', 10);
-                            
+
                             // Only count rows where 11th cell is not 0
                             if (cellValue !== 0) {
                               totalValidRowCount++;
@@ -2198,11 +2171,11 @@ export const runERP_3015 = () => {
                             await newPage.waitForTimeout(TIMEOUTS.SHORT);
                           }
                         }
-                        
+
                         logger.log(`Table ${tableIndex + 1}: Found ${currentTableRowCount} total rows, ${totalValidRowCount} valid rows so far`);
                       });
                     }
-                    
+
                     // Verify the total valid row count from all tables matches the count position from main table
                     await expectSoftWithScreenshot(
                       newPage,
@@ -2212,7 +2185,7 @@ export const runERP_3015 = () => {
                       `Verify total valid row count from all tables matches count position - Valid Rows: ${totalValidRowCount}, Total Rows: ${totalRowCount}, Expected: ${leftValue}, Equipment: "${equipmentName}"`,
                       test.info(),
                     );
-                    
+
                     // Store test results for table output
                     const testResult = totalValidRowCount === leftValue ? 'PASS' : 'FAIL';
                     rowResult.cell3CountPosition = {
@@ -2221,16 +2194,16 @@ export const runERP_3015 = () => {
                       expected: leftValue,
                       totalRows: totalRowCount,
                     };
-                    
+
                     // Pause after count comparison is finished
                     await newPage.waitForTimeout(TIMEOUTS.MEDIUM); // 500ms pause
                   });
-                  
+
                   // Close the new page and switch back to the original page
                   await newPage.close();
                   await page.bringToFront();
                   await page.waitForTimeout(TIMEOUTS.SHORT); // Wait a bit for the page to be ready
-                  
+
                   // Highlight CountPosition cell with red background if validation failed
                   if (rowResult.cell3CountPosition.status === 'FAIL') {
                     // Re-query the cell to ensure it's still valid after returning from new page
@@ -2257,9 +2230,9 @@ export const runERP_3015 = () => {
                   border: '3px solid red',
                 });
                 await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-                
+
                 const countEntityText = await countEntityCell.textContent();
-                
+
                 await expectSoftWithScreenshot(
                   page,
                   () => {
@@ -2277,12 +2250,12 @@ export const runERP_3015 = () => {
                   const rowTestIdForError = await freshRow.getAttribute('data-testid');
                   throw new Error(
                     `Invalid count entity format in equipment table cell. ` +
-                    `Actual value: "${countEntityText}". ` +
-                    `Expected format: single number (e.g., "1"). ` +
-                    `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
-                    `Cell selector: ${cellSelector}. ` +
-                    `Equipment: ${equipmentName || 'N/A'}. ` +
-                    `This occurred while parsing the count entity cell value in row ${rowIndex + 1}.`,
+                      `Actual value: "${countEntityText}". ` +
+                      `Expected format: single number (e.g., "1"). ` +
+                      `Row data-testid: ${rowTestIdForError || 'N/A'}. ` +
+                      `Cell selector: ${cellSelector}. ` +
+                      `Equipment: ${equipmentName || 'N/A'}. ` +
+                      `This occurred while parsing the count entity cell value in row ${rowIndex + 1}.`,
                   );
                 }
                 countEntityValue = parseInt(countEntityMatch[1], 10);
@@ -2307,37 +2280,37 @@ export const runERP_3015 = () => {
                 const rowTestId = await freshRow.getAttribute('data-testid');
                 const rowNumberMatch = rowTestId?.match(/Row(\d+)$/);
                 const rowNumber = rowNumberMatch ? rowNumberMatch[1] : null;
-                
+
                 await allure.step('Click 3 dots menu in first cell', async () => {
                   // Use the popoverCell we already found and highlighted
                   const threeDotsButton = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_SHOW_BUTTON_SUFFIX}"]`);
-                  
+
                   // Wait for the button to be attached and ready (popover component needs to be initialized)
                   await threeDotsButton.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
                   await page.waitForTimeout(TIMEOUTS.SHORT); // Wait for popover component to be fully initialized
-                  
+
                   // Scroll the button into view to ensure it's visible
                   await threeDotsButton.scrollIntoViewIfNeeded();
                   await page.waitForTimeout(TIMEOUTS.VERY_SHORT); // Wait a bit after scrolling
-                  
+
                   await expectSoftWithScreenshot(
                     page,
-                    () => {
-                      expect.soft(threeDotsButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                    async () => {
+                      await expect.soft(threeDotsButton).toBeVisible({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
                     },
                     'Verify 3 dots menu button is visible',
                     test.info(),
                   );
-                  
+
                   await expectSoftWithScreenshot(
                     page,
-                    () => {
-                      expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
+                    async () => {
+                      await expect.soft(threeDotsButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.VERY_SHORT });
                     },
                     'Verify 3 dots menu button is enabled before clicking',
                     test.info(),
                   );
-                  
+
                   // Try clicking using JavaScript to ensure the click event fires
                   await threeDotsButton.evaluate((el: HTMLElement) => {
                     // Try both click() and dispatchEvent to ensure it works
@@ -2345,14 +2318,14 @@ export const runERP_3015 = () => {
                     el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
                   });
                   await page.waitForTimeout(TIMEOUTS.MEDIUM); // Wait for popover to open
-                  
+
                   // Wait for the popover menu to be attached and try to make it visible
                   if (rowNumber) {
                     const popoverMenuContainer = page.locator(SelectorsProductionPage.getEquipmentTableRowPopoverOptionsList(rowNumber)).first();
                     // Wait for it to be attached to the DOM
                     await popoverMenuContainer.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
                     await page.waitForTimeout(TIMEOUTS.MEDIUM); // Additional wait for menu to be ready and positioned
-                    
+
                     // Try to bring the menu to the front using JavaScript (fix z-index issue)
                     try {
                       await popoverMenuContainer.evaluate((el: HTMLElement) => {
@@ -2376,14 +2349,14 @@ export const runERP_3015 = () => {
                     } catch (e) {
                       // If we can't modify the style, that's okay - we'll use JavaScript click anyway
                     }
-                    
+
                     // Try to verify menu is visible after style changes
                     try {
                       await popoverMenuContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
                       await expectSoftWithScreenshot(
                         page,
-                        () => {
-                          expect.soft(popoverMenuContainer).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                        async () => {
+                          await expect.soft(popoverMenuContainer).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
                         },
                         'Verify popover menu container is visible after style adjustments',
                         test.info(),
@@ -2392,8 +2365,8 @@ export const runERP_3015 = () => {
                       // Menu still not visible, but we verified it's attached
                       await expectSoftWithScreenshot(
                         page,
-                        () => {
-                          expect.soft(popoverMenuContainer).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                        async () => {
+                          await expect.soft(popoverMenuContainer).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
                         },
                         'Verify popover menu container is attached (may still be behind table)',
                         test.info(),
@@ -2428,10 +2401,10 @@ export const runERP_3015 = () => {
                     const popoverMenu = popoverCell.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_OPTIONS_LIST_SUFFIX}"]`);
                     menuItem = popoverMenu.locator(`[data-testid$="${SelectorsProductionPage.EQUIPMENT_TABLE_ROW_POPOVER_ITEM1_SUFFIX}"]`).filter({ hasText: 'ПЗ по оборудованию' });
                   }
-                  
+
                   // Wait for menu item to be attached first
                   await menuItem.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
-                  
+
                   // Verify the menu item text is correct before clicking
                   const menuItemText = await menuItem.textContent();
                   await expectSoftWithScreenshot(
@@ -2442,7 +2415,7 @@ export const runERP_3015 = () => {
                     `Verify menu item text is correct before clicking: "${menuItemText}"`,
                     test.info(),
                   );
-                  
+
                   // Try a different approach: move the menu to body to ensure it's on top
                   if (rowNumber) {
                     const popoverMenuContainer = page.locator(SelectorsProductionPage.getEquipmentTableRowPopoverOptionsList(rowNumber)).first();
@@ -2451,13 +2424,13 @@ export const runERP_3015 = () => {
                       await popoverMenuContainer.evaluate((el: HTMLElement) => {
                         const rect = (el as HTMLElement).getBoundingClientRect();
                         const menuElement = el as HTMLElement;
-                        
+
                         // Store original parent
                         const originalParent = menuElement.parentElement;
-                        
+
                         // Move to body
                         document.body.appendChild(menuElement);
-                        
+
                         // Position absolutely at the same screen coordinates
                         menuElement.style.position = 'fixed';
                         menuElement.style.zIndex = '999999';
@@ -2486,23 +2459,23 @@ export const runERP_3015 = () => {
                       }
                     }
                   }
-                  
+
                   // Verify menu item is attached
                   await expectSoftWithScreenshot(
                     page,
-                    () => {
-                      expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
+                    async () => {
+                      await expect.soft(menuItem).toBeAttached({ timeout: WAIT_TIMEOUTS.STANDARD });
                     },
                     'Verify menu item "ПЗ по оборудованию" is attached',
                     test.info(),
                   );
-                  
+
                   // Set up listener for new page BEFORE clicking
                   const newPagePromise = context.waitForEvent('page', { timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
-                  
+
                   // Pause before clicking the menu item that opens the new tab
                   await page.waitForTimeout(TIMEOUTS.MEDIUM); // 500ms pause before clicking
-                  
+
                   // Try to get the bounding box for a more realistic mouse click
                   let useMouseClick = false;
                   try {
@@ -2519,7 +2492,7 @@ export const runERP_3015 = () => {
                   } catch (e) {
                     // If bounding box fails, fall back to JavaScript click
                   }
-                  
+
                   // If mouse click didn't work, try JavaScript click with proper event dispatch
                   if (!useMouseClick) {
                     await menuItem.evaluate((el: HTMLElement) => {
@@ -2542,7 +2515,7 @@ export const runERP_3015 = () => {
                         view: window,
                         button: 0,
                       });
-                      
+
                       (el as HTMLElement).dispatchEvent(mouseDownEvent);
                       (el as HTMLElement).dispatchEvent(mouseUpEvent);
                       (el as HTMLElement).dispatchEvent(clickEvent);
@@ -2550,21 +2523,21 @@ export const runERP_3015 = () => {
                       (el as HTMLElement).click();
                     });
                   }
-                  
+
                   // Wait for the new page to open
                   const newPage = await newPagePromise;
-                  
+
                   // Wait for the new page to fully load
                   await newPage.waitForLoadState('domcontentloaded');
                   await newPage.waitForLoadState('load');
                   await newPage.waitForLoadState('networkidle');
                   await newPage.waitForTimeout(TIMEOUTS.SHORT);
-                  
+
                   // Validate the stored values on the new tab
                   await allure.step('Validate stored values on new tab', async () => {
                     // Create page object for the new page to use highlighting methods
                     const newPageDetailsPage = new CreatePartsDatabasePage(newPage);
-                    
+
                     // Verify the new tab loaded successfully
                     const newPageUrl = newPage.url();
                     await expectSoftWithScreenshot(
@@ -2575,28 +2548,28 @@ export const runERP_3015 = () => {
                       `Verify new tab loaded - URL: ${newPageUrl}`,
                       test.info(),
                     );
-                    
+
                     // Validate equipment name appears in title element with class 'task-by-equipment__equipment'
                     const titleElement = newPage.locator('.task-by-equipment__equipment');
                     await expectSoftWithScreenshot(
                       newPage,
-                      () => {
-                        expect.soft(titleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                      async () => {
+                        await expect.soft(titleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
                       },
                       'Verify title element is visible',
                       test.info(),
                     );
-                    
+
                     // Brief pause to ensure element is stable before highlighting
                     await newPage.waitForTimeout(TIMEOUTS.SHORT);
-                    
+
                     // Highlight the title element
                     await newPageDetailsPage.highlightElement(titleElement, {
                       border: '5px solid green',
                       backgroundColor: 'lightgreen',
                     });
                     await newPage.waitForTimeout(TIMEOUTS.SHORT); // Keep highlight visible
-                    
+
                     const titleText = await titleElement.textContent();
                     await expectSoftWithScreenshot(
                       newPage,
@@ -2606,34 +2579,34 @@ export const runERP_3015 = () => {
                       `Verify title element contains equipment name - Title: "${titleText}", Expected: "${equipmentName}"`,
                       test.info(),
                     );
-                    
+
                     // Wait a bit more for the page to fully render, especially the table
                     await newPage.waitForLoadState('networkidle');
                     await newPage.waitForTimeout(TIMEOUTS.SHORT);
-                    
+
                     // Find table with class 'Table' and sum values in 11th column
                     // Try multiple selectors: table.Table, .Table, or just Table
                     let table = newPage.locator('table.Table');
                     let tableCount = await table.count();
-                    
+
                     if (tableCount === 0) {
                       // Try just .Table (any element with class Table)
                       table = newPage.locator('.Table');
                       tableCount = await table.count();
                     }
-                    
+
                     if (tableCount === 0) {
                       // Try with case-insensitive or partial match
                       table = newPage.locator('[class*="Table"]');
                       tableCount = await table.count();
                     }
-                    
+
                     if (tableCount === 0) {
                       // Try finding any table element
                       table = newPage.locator('table');
                       tableCount = await table.count();
                     }
-                    
+
                     // Wait for table to be attached and visible
                     if (tableCount > 0) {
                       table = table.first(); // Use the first table found
@@ -2655,31 +2628,31 @@ export const runERP_3015 = () => {
                         }
                       }
                     }
-                    
+
                     await expectSoftWithScreenshot(
                       newPage,
-                      () => {
+                      async () => {
                         expect.soft(tableCount).toBeGreaterThan(0);
                         if (tableCount > 0) {
-                          expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                          await expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
                         }
                       },
                       `Verify table with class Table is visible (found ${tableCount} table(s))`,
                       test.info(),
                     );
-                    
+
                     // Only proceed if we found a table
                     if (tableCount === 0) {
                       throw new Error(`Table with class "Table" not found on the new tab page. URL: ${newPageUrl}`);
                     }
-                    
+
                     // Highlight the table
                     await newPageDetailsPage.highlightElement(table, {
                       border: '5px solid blue',
                       backgroundColor: 'lightblue',
                     });
                     await newPage.waitForTimeout(TIMEOUTS.SHORT); // Keep highlight visible
-                    
+
                     const allTableRows = table.locator('tbody tr');
                     // Wait for at least one row to be attached (table might be loading)
                     try {
@@ -2689,51 +2662,51 @@ export const runERP_3015 = () => {
                     }
                     await newPage.waitForTimeout(TIMEOUTS.SHORT); // Additional wait for rows to render
                     const totalRowCount = await allTableRows.count();
-                    
+
                     // Go through each row and sum values in the 11th cell, excluding rows with class 'executive-table__row_mark' or 0 in 11th cell
                     let sumOfEleventhColumn = 0;
                     for (let i = 0; i < totalRowCount; i++) {
                       const row = allTableRows.nth(i);
-                      
+
                       // Check if row has the class 'executive-table__row_mark' - exclude it if it does
-                      const rowClassList = await row.evaluate((el) => Array.from(el.classList));
+                      const rowClassList = await row.evaluate(el => Array.from(el.classList));
                       const hasMarkClass = rowClassList.includes('executive-table__row_mark');
-                      
+
                       if (hasMarkClass) {
                         // Skip this row - it has the mark class
                         continue;
                       }
-                      
+
                       // Highlight the current row being analyzed
                       await newPageDetailsPage.highlightElement(row, {
                         border: '3px solid orange',
                         backgroundColor: 'yellow',
                       });
                       await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
-                      
+
                       const cells = row.locator('td');
                       const cellCount = await cells.count();
-                      
+
                       if (cellCount >= 11) {
                         // Get the 11th cell (index 10)
                         const eleventhCell = cells.nth(10);
-                        
+
                         // Highlight the 11th cell
                         await newPageDetailsPage.highlightElement(eleventhCell, {
                           border: '3px solid purple',
                           backgroundColor: 'lavender',
                         });
                         await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT); // Brief pause to see highlight
-                        
+
                         const cellText = await eleventhCell.textContent();
                         const cellValue = parseInt(cellText?.trim() || '0', 10);
-                        
+
                         // Sum all values in 11th column (including 0 values, but excluding marked rows)
                         sumOfEleventhColumn += cellValue;
                         await newPage.waitForTimeout(TIMEOUTS.VERY_SHORT);
                       }
                     }
-                    
+
                     // Verify the sum matches the count entity value from main table
                     await expectSoftWithScreenshot(
                       newPage,
@@ -2743,7 +2716,7 @@ export const runERP_3015 = () => {
                       `Verify sum of 11th column values matches count entity - Sum: ${sumOfEleventhColumn}, Expected: ${countEntityValue}, Equipment: "${equipmentName}"`,
                       test.info(),
                     );
-                    
+
                     // Store test results for table output
                     const testResult = sumOfEleventhColumn === countEntityValue ? 'PASS' : 'FAIL';
                     rowResult.cell4CountEntity = {
@@ -2752,16 +2725,16 @@ export const runERP_3015 = () => {
                       expected: countEntityValue,
                       totalRows: totalRowCount,
                     };
-                    
+
                     // Pause after sum comparison is finished
                     await newPage.waitForTimeout(TIMEOUTS.SHORT); // 500ms pause
                   });
-                  
+
                   // Close the new page and switch back to the original page
                   await newPage.close();
                   await page.bringToFront();
                   await page.waitForTimeout(TIMEOUTS.SHORT); // Wait a bit for the page to be ready
-                  
+
                   // Highlight CountEntity cell with red background if validation failed
                   if (rowResult.cell4CountEntity.status === 'FAIL') {
                     // Re-query the cell to ensure it's still valid after returning from new page
@@ -2778,51 +2751,43 @@ export const runERP_3015 = () => {
                   }
                 });
               });
-              
-                  }); // End of "Validate row X" step
-                  
-                  // Add row result to validation results array
-                  validationResults.push(rowResult);
-                  
-                  // Increment processed count only after successfully processing the row
-                  processedCount++;
-                } // End of loop through rows
-                
-                // Print validation results table
-                logger.log('\n' + '='.repeat(120));
-                logger.log('VALIDATION RESULTS TABLE'.padStart(70));
-                logger.log('='.repeat(120));
-                logger.log('Row'.padEnd(5) + '| ' + 'Equipment Name'.padEnd(50) + '| ' + 'Cell 3 (CountPosition)'.padEnd(30) + '| ' + 'Cell 4 (CountEntity)');
-                logger.log('-'.repeat(120));
-                for (const result of validationResults) {
-                  const rowNum = result.rowNumber.toString().padEnd(4);
-                  const equipment = (result.equipmentName.length > 48 ? result.equipmentName.substring(0, 45) + '...' : result.equipmentName).padEnd(50);
-                  const cell3Status = result.cell3CountPosition.status === 'SKIP' 
-                    ? 'SKIP' 
-                    : result.cell3CountPosition.status === 'PASS'
-                    ? `PASS (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})`
-                    : `FAIL (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})`;
-                  const cell3 = cell3Status.padEnd(30);
-                  const cell4Status = result.cell4CountEntity.status === 'SKIP'
-                    ? 'SKIP'
-                    : result.cell4CountEntity.status === 'PASS'
-                    ? `PASS (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`
-                    : `FAIL (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`;
-                  const cell4 = cell4Status.padEnd(30);
-                  logger.log(`${rowNum}| ${equipment}| ${cell3}| ${cell4}`);
-                }
-                logger.log('-'.repeat(120));
-                logger.log(`Total Rows Processed: ${validationResults.length}`);
-                const cell3Passed = validationResults.filter(r => r.cell3CountPosition.status === 'PASS').length;
-                const cell3Failed = validationResults.filter(r => r.cell3CountPosition.status === 'FAIL').length;
-                const cell3Skipped = validationResults.filter(r => r.cell3CountPosition.status === 'SKIP').length;
-                const cell4Passed = validationResults.filter(r => r.cell4CountEntity.status === 'PASS').length;
-                const cell4Failed = validationResults.filter(r => r.cell4CountEntity.status === 'FAIL').length;
-                const cell4Skipped = validationResults.filter(r => r.cell4CountEntity.status === 'SKIP').length;
-                logger.log(`Cell 3 (CountPosition): ${cell3Passed} PASS, ${cell3Failed} FAIL, ${cell3Skipped} SKIP`);
-                logger.log(`Cell 4 (CountEntity): ${cell4Passed} PASS, ${cell4Failed} FAIL, ${cell4Skipped} SKIP`);
-                logger.log('='.repeat(120) + '\n');
-              }); // End of "Validate first N main rows" step
+            }); // End of "Validate row X" step
+
+            // Add row result to validation results array
+            validationResults.push(rowResult);
+
+            // Increment processed count only after successfully processing the row
+            processedCount++;
+          } // End of loop through rows
+
+          // Print validation results table
+          logger.log('\n' + '='.repeat(120));
+          logger.log('VALIDATION RESULTS TABLE'.padStart(70));
+          logger.log('='.repeat(120));
+          logger.log('Row'.padEnd(5) + '| ' + 'Equipment Name'.padEnd(50) + '| ' + 'Cell 3 (CountPosition)'.padEnd(30) + '| ' + 'Cell 4 (CountEntity)');
+          logger.log('-'.repeat(120));
+          for (const result of validationResults) {
+            const rowNum = result.rowNumber.toString().padEnd(4);
+            const equipment = (result.equipmentName.length > 48 ? result.equipmentName.substring(0, 45) + '...' : result.equipmentName).padEnd(50);
+            const cell3Status =
+              result.cell3CountPosition.status === 'SKIP' ? 'SKIP' : result.cell3CountPosition.status === 'PASS' ? `PASS (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})` : `FAIL (${result.cell3CountPosition.validRows}/${result.cell3CountPosition.expected})`;
+            const cell3 = cell3Status.padEnd(30);
+            const cell4Status = result.cell4CountEntity.status === 'SKIP' ? 'SKIP' : result.cell4CountEntity.status === 'PASS' ? `PASS (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})` : `FAIL (${result.cell4CountEntity.sum}/${result.cell4CountEntity.expected})`;
+            const cell4 = cell4Status.padEnd(30);
+            logger.log(`${rowNum}| ${equipment}| ${cell3}| ${cell4}`);
+          }
+          logger.log('-'.repeat(120));
+          logger.log(`Total Rows Processed: ${validationResults.length}`);
+          const cell3Passed = validationResults.filter(r => r.cell3CountPosition.status === 'PASS').length;
+          const cell3Failed = validationResults.filter(r => r.cell3CountPosition.status === 'FAIL').length;
+          const cell3Skipped = validationResults.filter(r => r.cell3CountPosition.status === 'SKIP').length;
+          const cell4Passed = validationResults.filter(r => r.cell4CountEntity.status === 'PASS').length;
+          const cell4Failed = validationResults.filter(r => r.cell4CountEntity.status === 'FAIL').length;
+          const cell4Skipped = validationResults.filter(r => r.cell4CountEntity.status === 'SKIP').length;
+          logger.log(`Cell 3 (CountPosition): ${cell3Passed} PASS, ${cell3Failed} FAIL, ${cell3Skipped} SKIP`);
+          logger.log(`Cell 4 (CountEntity): ${cell4Passed} PASS, ${cell4Failed} FAIL, ${cell4Skipped} SKIP`);
+          logger.log('='.repeat(120) + '\n');
+        }); // End of "Validate first N main rows" step
       });
 
       // Next cell validation: CountEntity
@@ -2844,7 +2809,7 @@ export const runERP_3015 = () => {
     await allure.step('Cleanup - Archive all created test items', async () => {
       // Cleanup in reverse order: Orders -> Product -> Assemblies -> Details -> Materials
       // Use prefix-based search to find and delete all items with the prefix (e.g., "ERPTEST_PRODUCT" finds all _001, _002, etc.)
-      
+
       // 0. Archive all orders for test items (search by prefix instead of relying on stored array)
       await expectSoftWithScreenshot(
         page,
@@ -2860,7 +2825,7 @@ export const runERP_3015 = () => {
         `Archive all orders for test items with prefixes: ${PRODUCT_PREFIX}, ${ASSEMBLY_PREFIX}`,
         test.info(),
       );
-      
+
       // 1. Archive all products with prefix (изделие)
       await expectSoftWithScreenshot(
         page,
@@ -2877,12 +2842,7 @@ export const runERP_3015 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await detailsPage.cleanupTestItemsByPrefix(
-            'ASSEMBLY',
-            ASSEMBLY_PREFIX,
-            `${SelectorsPartsDataBase.CBED_TABLE} ${SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT}`,
-            SelectorsPartsDataBase.CBED_TABLE,
-          );
+          await detailsPage.cleanupTestItemsByPrefix('ASSEMBLY', ASSEMBLY_PREFIX, `${SelectorsPartsDataBase.CBED_TABLE} ${SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT}`, SelectorsPartsDataBase.CBED_TABLE);
           // Verify cleanup completed successfully - page should still be accessible
           expect.soft(page.url()).toBeTruthy();
           expect.soft(await page.title()).toBeTruthy();
@@ -2896,12 +2856,7 @@ export const runERP_3015 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await detailsPage.cleanupTestItemsByPrefix(
-            'DETAIL',
-            DETAIL_PREFIX,
-            `${SelectorsPartsDataBase.DETAIL_TABLE} ${SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT}`,
-            SelectorsPartsDataBase.DETAIL_TABLE,
-          );
+          await detailsPage.cleanupTestItemsByPrefix('DETAIL', DETAIL_PREFIX, `${SelectorsPartsDataBase.DETAIL_TABLE} ${SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT}`, SelectorsPartsDataBase.DETAIL_TABLE);
           // Verify cleanup completed successfully - page should still be accessible
           expect.soft(page.url()).toBeTruthy();
           expect.soft(await page.title()).toBeTruthy();

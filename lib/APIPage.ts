@@ -26,12 +26,12 @@ export class APIPageObject extends AbstractPage {
   async postWithJsonHeaders(request: APIRequestContext, url: string, data: any, additionalHeaders: any = {}) {
     const headers = {
       'Content-Type': 'application/json',
-      ...additionalHeaders
+      ...additionalHeaders,
     };
 
     return await request.post(url, {
       headers: headers,
-      data: data
+      data: data,
     });
   }
 
@@ -46,12 +46,12 @@ export class APIPageObject extends AbstractPage {
   async putWithJsonHeaders(request: APIRequestContext, url: string, data: any, additionalHeaders: any = {}) {
     const headers = {
       'Content-Type': 'application/json',
-      ...additionalHeaders
+      ...additionalHeaders,
     };
 
     return await request.put(url, {
       headers: headers,
-      data: data
+      data: data,
     });
   }
 
@@ -59,13 +59,13 @@ export class APIPageObject extends AbstractPage {
     logger.log(ENV.BASE_URL + '/api/auth/login');
     const response = await request.post(ENV.BASE_URL + 'api/auth/login', {
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       data: {
         username: username,
         password: password,
-        tabel: tabel
-      }
+        tabel: tabel,
+      },
     });
 
     if (response.ok()) {

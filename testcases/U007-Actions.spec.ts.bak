@@ -1,0 +1,154 @@
+import { test, expect } from '@playwright/test';
+import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
+import { ENV, SELECTORS } from '../config';
+import logger from '../lib/utils/logger';
+import { allure } from 'allure-playwright';
+import * as PartsDBSelectors from '../lib/Constants/SelectorsPartsDataBase';
+import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+
+export const runU007_01_Actions = () => {
+  test('Case 01 - Verify Create, Edit, and Archive logs for Detail', async ({ page, context }) => {
+    logger.log('Test Case 01 - Verify Create, Edit, and Archive logs for Detail in /actions');
+    test.setTimeout(TEST_TIMEOUTS.LONG);
+
+    // Using page as the primary interactions page for creating details
+    const productsPage = page;
+    const partsDatabasePage = new CreatePartsDatabasePage(productsPage);
+
+    // Opening Actions in a new tab to mimic user workflow
+    const actionsPage = await context.newPage();
+
+    const timestamp = Date.now().toString().slice(-6);
+    const detailName = `AuditDetail_${timestamp}`;
+    const detailDesig = `AuditDesig_${timestamp}`;
+    const detailNote = `AuditNote_${timestamp}`;
+
+    await allure.step('Step 1: Open /actions page and set up tab', async () => {
+      await actionsPage.goto(`${ENV.BASE_URL}actions`);
+      await actionsPage.waitForLoadState('networkidle');
+      // We will rely on the "top row" technique and search by item name to find exact logs naturally
+    });
+
+    await allure.step('Step 2: Create a new Detail in the Products tab', async () => {
+      await productsPage.bringToFront();
+      await partsDatabasePage.navigation.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+      await partsDatabasePage.navigation.waitForNetworkIdle();
+      
+      await partsDatabasePage.element.clickButton('Создать', PartsDBSelectors.BUTTON_CREATE_NEW_PART);
+      await partsDatabasePage.element.clickButton('Деталь', PartsDBSelectors.BUTTON_DETAIL);
+
+      // Fill Name and Designation
+      const nameInput = productsPage.locator(PartsDBSelectors.INPUT_DETAIL_NAME).first();
+      await nameInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await nameInput.fill(detailName);
+
+      const desigInput = productsPage.locator(PartsDBSelectors.INPUT_DETAIL_DESIGNATION).first();
+      await desigInput.fill(detailDesig);
+
+      // Save
+      await partsDatabasePage.element.clickButton('Сохранить', PartsDBSelectors.ADD_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
+      await productsPage.waitForLoadState('networkidle');
+      await productsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 3: Verify Creation in Actions tab', async () => {
+      await actionsPage.bringToFront();
+      await actionsPage.reload();
+      await actionsPage.waitForLoadState('networkidle');
+      await actionsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      const actionRow = actionsPage.locator(`table tbody tr`, { hasText: detailName }).first();
+      await actionRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      
+      const rowText = await actionRow.innerText();
+      logger.info(`Create Log: ${rowText}`);
+      
+      expect(rowText).toContain('Создание');
+      expect(rowText).toContain('Деталь');
+    });
+
+    await allure.step('Step 4: Edit Name and verify log', async () => {
+      await productsPage.bringToFront();
+      
+      // We should be on the Edit page after save
+      const nameInputEdit = productsPage.locator(PartsDBSelectors.DETAIL_NAME_INPUT_EDIT).first();
+      await nameInputEdit.waitFor({ state: 'visible' });
+      await nameInputEdit.fill(`${detailName}_edited`);
+      
+      await partsDatabasePage.element.clickButton('Сохранить', PartsDBSelectors.EDIT_SAVE_BUTTON);
+      await productsPage.waitForLoadState('networkidle');
+      await productsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      await actionsPage.bringToFront();
+      await actionsPage.reload();
+      await actionsPage.waitForLoadState('networkidle');
+      await actionsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      const actionRow = actionsPage.locator(`table tbody tr`, { hasText: `${detailName}_edited` }).first();
+      await actionRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      
+      const rowText = await actionRow.innerText();
+      logger.info(`Edit Name Log: ${rowText}`);
+      
+      expect(rowText).toContain('Обновление'); 
+    });
+
+    await allure.step('Step 5: Edit Designation and verify log', async () => {
+      await productsPage.bringToFront();
+      
+      const desigInputEdit = productsPage.locator('[data-testid="EditDetal-Designation-Input-Input"]').first();
+      await desigInputEdit.fill(`${detailDesig}_edited`);
+      
+      await partsDatabasePage.element.clickButton('Сохранить', PartsDBSelectors.EDIT_SAVE_BUTTON);
+      await productsPage.waitForLoadState('networkidle');
+      await productsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      await actionsPage.bringToFront();
+      await actionsPage.reload();
+      await actionsPage.waitForLoadState('networkidle');
+      await actionsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      const actionRow = actionsPage.locator(`table tbody tr`, { hasText: `${detailName}_edited` }).first();
+      await actionRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      
+      const rowText = await actionRow.innerText();
+      logger.info(`Edit Designation Log: ${rowText}`);
+      
+      expect(rowText).toContain('Обновление');
+    });
+
+    await allure.step('Step 6: Archive Detail and verify log', async () => {
+      await productsPage.bringToFront();
+      await partsDatabasePage.navigation.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+      await partsDatabasePage.navigation.waitForNetworkIdle();
+
+      // Search and Archive
+      const searchInput = productsPage.locator(PartsDBSelectors.TABLE_SEARCH_INPUT).last();
+      await searchInput.fill(`${detailName}_edited`);
+      await searchInput.press('Enter');
+      await productsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      const firstRow = productsPage.locator(`${PartsDBSelectors.MAIN_PAGE_Д_TABLE} tbody tr`).first();
+      await firstRow.click();
+      await productsPage.waitForTimeout(TIMEOUTS.SHORT);
+
+      await partsDatabasePage.element.clickButton('Архивировать', PartsDBSelectors.BUTTON_ARCHIVE);
+      await productsPage.locator('button[data-testid="ModalConfirm-Content-Buttons-Yes"]').click();
+      await productsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      await actionsPage.bringToFront();
+      await actionsPage.reload();
+      await actionsPage.waitForLoadState('networkidle');
+      await actionsPage.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      const actionRow = actionsPage.locator(`table tbody tr`, { hasText: `${detailName}_edited` }).first();
+      await actionRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      
+      const rowText = await actionRow.innerText();
+      logger.info(`Archive Log: ${rowText}`);
+      
+      expect(rowText).toContain('Перемещение в архив');
+    });
+
+  });
+};

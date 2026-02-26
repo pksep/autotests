@@ -132,12 +132,7 @@ export async function populateTestData(page: Page, skipNavigation = false) {
  * @param description - Optional description for the assertion (used in screenshot filename)
  * @param testInfo - Optional TestInfo object for attaching screenshots to test report
  */
-export async function expectSoftWithScreenshot(
-  page: Page,
-  assertionFn: () => void | Promise<void>,
-  description?: string,
-  testInfo?: TestInfo,
-): Promise<void> {
+export async function expectSoftWithScreenshot(page: Page, assertionFn: () => void | Promise<void>, description?: string, testInfo?: TestInfo): Promise<void> {
   const getSoftErrorCount = (): number => {
     // Access Playwright's internal soft assertion error count
     // This is a workaround since Playwright doesn't expose this directly
@@ -163,9 +158,7 @@ export async function expectSoftWithScreenshot(
   if (hasError) {
     try {
       const timestamp = Date.now();
-      const safeDescription = description
-        ? description.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50)
-        : 'soft_assert';
+      const safeDescription = description ? description.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50) : 'soft_assert';
       const screenshotPath = `test-results/soft-assert-${safeDescription}-${timestamp}.png`;
 
       await page.screenshot({ path: screenshotPath, fullPage: true });
@@ -177,9 +170,7 @@ export async function expectSoftWithScreenshot(
         });
       }
 
-      const attachmentNote = testInfo
-        ? ' (attached to test report - will appear in HTML report on failure)'
-        : '';
+      const attachmentNote = testInfo ? ' (attached to test report - will appear in HTML report on failure)' : '';
       logger.log(`📸 Screenshot captured for soft assertion: ${description}`);
       logger.log(`   Screenshot path: ${screenshotPath}${attachmentNote}`);
 

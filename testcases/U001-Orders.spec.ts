@@ -1,7 +1,7 @@
 /**
  * @file U001-Orders.spec.ts
  * @purpose Test Suite 2: Order Management (Test Cases 05-07)
- * 
+ *
  * This suite handles:
  * - Test Case 05: Deleting customer orders
  * - Test Case 06: Loading Task (CRITICAL - Sets orderNumber, descendantsCbedArray, descendantsDetailArray)
@@ -19,23 +19,14 @@ import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
-const {
-  nameProductNew,
-  nameProduct,
-  nameBuyer,
-  quantityProductLaunchOnProduction,
-  urgencyDateNewFormat,
-  descendantsCbedArray,
-  descendantsDetailArray,
-  orderNumber,
-} = U001Constants;
+const { nameProductNew, nameProduct, nameBuyer, quantityProductLaunchOnProduction, urgencyDateNewFormat, descendantsCbedArray, descendantsDetailArray, orderNumber } = U001Constants;
 // Mutable variable that needs to be reassigned
 let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
 export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Order Management (Test Cases 05-07)`);
 
-  test('Test Case 05 - Deleting customer orders', async ({ page }) => {
+  test('Case 05 - Deleting customer orders', async ({ page }) => {
     logger.log('Test Case 05 - Deleting customer orders');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -58,7 +49,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
     // Цикл: пока в первой строке таблицы есть нужный продукт, архивируем
     while (true) {
       // Получаем первую строку таблицы
-      const firstRow = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).first();
+      const firstRow = page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).first();
       const rowCount = await page.locator(`${LoadingTasksSelectors.SHIPMENTS_TABLE_BODY} tr`).count();
       if (rowCount === 0) {
         logger.log(`No orders found for product "${nameProductNew}". Exiting...`);
@@ -107,7 +98,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
     }
   });
 
-  test('Test Case 06 - Loading Task', async ({ page }) => {
+  test('Case 06 - Loading Task', async ({ page }) => {
     logger.log('Test Case 06 - Loading Task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);
@@ -169,7 +160,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
     });
 
     await allure.step('Step 11: Search product on modal window', async () => {
-      const modalWindow = await page.locator('.modal-yui-kit__modal-content');
+      const modalWindow = page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
       await expectSoftWithScreenshot(
         page,
@@ -186,7 +177,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await searchTable.inputValue()).toBe(nameProduct);
+          await expect.soft(searchTable).toHaveValue(nameProduct);
         },
         `Verify search table input value equals "${nameProduct}"`,
         test.info(),
@@ -223,7 +214,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
     await allure.step('Step 16: Check modal window Company', async () => {
       // await loadingTaskPage.searchTable(nameBuyer, '.table-yui-kit__border.table-yui-kit-with-scroll')
 
-      const modalWindow = await page.locator('.modal-yui-kit__modal-content');
+      const modalWindow = page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
       await expectSoftWithScreenshot(
         page,
@@ -240,7 +231,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await searchTable.inputValue()).toBe(nameBuyer);
+          await expect.soft(searchTable).toHaveValue(nameBuyer);
         },
         `Verify search table input value equals "${nameBuyer}"`,
         test.info(),
@@ -326,16 +317,16 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       logger.log('Before preservingDescendants:');
       logger.log('descendantsCbedArray length:', descendantsCbedArray.length);
       logger.log('descendantsDetailArray length:', descendantsDetailArray.length);
-      
+
       await loadingTaskPage.preservingDescendants(descendantsCbedArray, descendantsDetailArray);
-      
+
       // Verify that arrays were populated
       logger.log('After preservingDescendants:');
       logger.log('descendantsCbedArray:', descendantsCbedArray);
       logger.log('descendantsDetailArray:', descendantsDetailArray);
       logger.log('descendantsCbedArray length:', descendantsCbedArray.length);
       logger.log('descendantsDetailArray length:', descendantsDetailArray.length);
-      
+
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -344,7 +335,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
         `Verify specification data was extracted: ${descendantsCbedArray.length} CBED, ${descendantsDetailArray.length} DETAIL`,
         test.info(),
       );
-      
+
       if (descendantsDetailArray.length === 0) {
         throw new Error('CRITICAL: descendantsDetailArray is empty after preservingDescendants! The specification table may be empty or not loaded correctly.');
       }
@@ -375,7 +366,7 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
     });
   });
 
-  test('Test Case 07 - Checking the urgency date and quantity in a shipment task', async ({ page }) => {
+  test('Case 07 - Checking the urgency date and quantity in a shipment task', async ({ page }) => {
     logger.log('Test Case 07 - Checking the urgency date and quantity in a shipment task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const loadingTaskPage = new CreateLoadingTaskPage(page);

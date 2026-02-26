@@ -2,7 +2,7 @@
  * @file ArchiveHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for archive and delete operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Archiving items
  * - Archive confirmation
@@ -225,14 +225,9 @@ export class ArchiveHelper {
         .catch(() => {
           logger.log('Warning: No checkboxes found in edit modal');
         });
-      
+
       // Calls OrderHelper through PageObject
-      const checkboxIndex = await pageObject.findCheckboxIndexByOrderNumber(
-        checkboxes,
-        orderNumberCells,
-        orderNumber,
-        errorMessage || `Could not find checkbox for ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber}`,
-      );
+      const checkboxIndex = await pageObject.findCheckboxIndexByOrderNumber(checkboxes, orderNumberCells, orderNumber, errorMessage || `Could not find checkbox for ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber}`);
 
       // Click the checkbox
       const checkbox = checkboxes.nth(checkboxIndex);

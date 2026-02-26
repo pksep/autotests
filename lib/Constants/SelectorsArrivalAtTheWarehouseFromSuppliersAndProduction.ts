@@ -26,22 +26,15 @@ export const MODAL_KITS_LIST = '[data-testid="ComingToSclad-ModalComing-ModalAdd
 export const MODAL_KITS_LIST_TABLE = '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table"]';
 
 // Table row patterns
-export const TABLE_ROW_PARISH_PATTERN =
-  '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]';
-export const TABLE_ROW_CHECKBOX_PATTERN =
-  '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]';
-export const KITS_LIST_ROW_QUANTITY_INPUT_PATTERN =
-  '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
+export const TABLE_ROW_PARISH_PATTERN = '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdParish"]';
+export const TABLE_ROW_CHECKBOX_PATTERN = '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdCheckbox"]';
+export const KITS_LIST_ROW_QUANTITY_INPUT_PATTERN = '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
 export const TABLE_ROW_PREFIX = 'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row';
-export const TABLE_ROW_TD_INPUT_PATTERN =
-  '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput"]';
-export const TABLE_ROW_TD_INPUT_INPUT_INPUT_PATTERN =
-  'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput-Input-Input"]';
+export const TABLE_ROW_TD_INPUT_PATTERN = '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput"]';
+export const TABLE_ROW_TD_INPUT_INPUT_INPUT_PATTERN = 'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput-Input-Input"]';
 export const KITS_LIST_TABLE_ROW_PREFIX = 'ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row';
-export const KITS_LIST_TABLE_ROW_CHECKBOX_PATTERN =
-  '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-Checkbox-Wrapper-Checkbox"]';
-export const KITS_LIST_TABLE_ROW_QUANTITY_INPUT_PATTERN_STRING =
-  'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
+export const KITS_LIST_TABLE_ROW_CHECKBOX_PATTERN = '[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-Checkbox-Wrapper-Checkbox"]';
+export const KITS_LIST_TABLE_ROW_QUANTITY_INPUT_PATTERN_STRING = 'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-KitsList-Main-Table-Row"][data-testid$="-TdCount-Label-Input-Input"]';
 
 // Other tables
 export const TABLE_MODAL_COMING_SCROLL = '[data-testid="ModalComingTable-TableScroll"]';

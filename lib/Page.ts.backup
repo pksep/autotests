@@ -1,0 +1,977 @@
+/**
+ * @file Page.ts
+ * @date 2025-01-20
+ * @purpose To handle common actions and utilities across all pages, including interacting with input fields, buttons, and handling errors.
+ *
+ * @alterations
+ * - 2025-01-20: Initial version of the PageObject class to handle reusable page interactions.
+ * - 2025-01-20: Added logging, text normalization, and error message handling methods.
+ */
+
+import { Page, expect, Locator, ElementHandle, TestInfo } from '@playwright/test'; // Import Playwright's Page class
+import { AbstractPage } from './AbstractPage'; // Import the base AbstractPage class
+import { ENV } from '../config'; // Import environment and selector configurations
+import * as SelectorsModalWindowConsignmentNote from '../lib/Constants/SelectorsModalWindowConsignmentNote'; // Import Modal Window Consignment Note selectors
+import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction'; // Import Start Production selectors
+import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications'; // Import Notifications selectors
+import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents'; // Import File Components selectors
+import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrderedFromSuppliers'; // Import Ordered From Suppliers selectors
+import { Input } from './Input'; // Import the Input helper class for handling input fields
+import { Button } from './Button'; // Import the Button helper class for handling button clicks
+import logger from './utils/logger'; // Import logger utility for logging messages
+import { allure } from 'allure-playwright';
+import { TIMEOUTS, WAIT_TIMEOUTS } from './Constants/TimeoutConstants'; // Import timeout constants
+import { expectSoftWithScreenshot, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities'; // Import utility functions
+import { ElementHelper } from './helpers/ElementHelper'; // Import ElementHelper for element interaction operations
+import { NavigationHelper } from './helpers/NavigationHelper'; // Import NavigationHelper for navigation operations
+import { ModalHelper } from './helpers/ModalHelper'; // Import ModalHelper for modal operations
+import { ValidationHelper } from './helpers/ValidationHelper'; // Import ValidationHelper for validation operations
+import { ArchiveHelper } from './helpers/ArchiveHelper'; // Import ArchiveHelper for archive operations
+import { OrderHelper } from './helpers/OrderHelper'; // Import OrderHelper for order operations
+import { RowCellHelper } from './helpers/RowCellHelper'; // Import RowCellHelper for row/cell operations
+import { NotificationHelper } from './helpers/NotificationHelper'; // Import NotificationHelper for notification operations
+import { LoginHelper } from './helpers/LoginHelper'; // Import LoginHelper for login operations
+import { MiscHelper } from './helpers/MiscHelper'; // Import MiscHelper for miscellaneous operations
+import { TableHelper, type ValidationResult } from './helpers/TableHelper'; // Import TableHelper for table operations
+
+// Re-export helper classes for type visibility in tests
+export { Input } from './Input';
+export { Button } from './Button';
+export { ElementHelper } from './helpers/ElementHelper';
+export { NavigationHelper } from './helpers/NavigationHelper';
+export { ModalHelper } from './helpers/ModalHelper';
+export { ValidationHelper } from './helpers/ValidationHelper';
+export { ArchiveHelper } from './helpers/ArchiveHelper';
+export { OrderHelper } from './helpers/OrderHelper';
+export { RowCellHelper } from './helpers/RowCellHelper';
+export { NotificationHelper } from './helpers/NotificationHelper';
+export { LoginHelper } from './helpers/LoginHelper';
+export { MiscHelper } from './helpers/MiscHelper';
+export { TableHelper };
+// Re-export utilities for backward compatibility
+export { expectSoftWithScreenshot, populateTestData, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities';
+// Re-export ValidationResult from TableHelper
+export type { ValidationResult } from './helpers/TableHelper';
+
+/**
+ * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
+ * Inherits from the AbstractPage class for basic page handling functionality.
+ */
+export class PageObject extends AbstractPage {
+  public readonly button: Button;
+  public readonly input: Input;
+  public readonly element: ElementHelper;
+  public readonly navigation: NavigationHelper;
+  public readonly table: TableHelper;
+  public readonly modal: ModalHelper;
+  public readonly validation: ValidationHelper;
+  public readonly archive: ArchiveHelper;
+  public readonly order: OrderHelper;
+  public readonly rowCell: RowCellHelper;
+  public readonly notification: NotificationHelper;
+  public readonly login: LoginHelper;
+  public readonly misc: MiscHelper;
+
+  constructor(page: Page) {
+    super(page); // Initialize the base AbstractPage with the page object
+    this.button = new Button(page);
+    this.input = new Input(page);
+    this.element = new ElementHelper(page);
+    this.navigation = new NavigationHelper(page);
+    this.table = new TableHelper(page);
+    this.modal = new ModalHelper(page);
+    this.validation = new ValidationHelper(page);
+    this.archive = new ArchiveHelper(page);
+    this.order = new OrderHelper(page);
+    this.rowCell = new RowCellHelper(page);
+    this.notification = new NotificationHelper(page);
+    this.login = new LoginHelper(page);
+    this.misc = new MiscHelper(page);
+  }
+
+  /** Scans and validates table structure within element (duplicate data-testids, missing cells). */
+  async scanTablesWithinElement(page: Page, dataTestId: string): Promise<ValidationResult> {
+    return this.table.scanTablesWithinElement(page, dataTestId);
+  }
+
+  /** Finds and clicks element by partial data-testid. */
+  async findAndClickElement(page: Page, partialDataTestId: string, waitTime: number = 10000, doubleClick?: boolean): Promise<void> {
+    return this.element.findAndClickElement(page, partialDataTestId, waitTime, doubleClick);
+  }
+
+  /**
+   * Gets the text content of a specified selector.
+   * @param selector - The CSS selector for the element to retrieve text from.
+   * @returns The text content of the element or null if the element doesn't exist.
+   */
+  async getText(selector: string): Promise<string | null> {
+    return this.element.getText(selector);
+  }
+
+  /** Get normalized text content of selector. */
+  async getTextNormalized(selector: string): Promise<string | null> {
+    return this.element.getTextNormalized(selector);
+  }
+
+  /** Get normalized error message from selector. */
+  async getErrorMessage(selector: string): Promise<string | null> {
+    return this.element.getErrorMessage(selector);
+  }
+
+  /** Scroll element into view with extra offset. */
+  async scrollIntoViewWithExtra(element: Locator, pageInstance: Page): Promise<void> {
+    return this.element.scrollIntoViewWithExtra(element, pageInstance);
+  }
+
+  /** Wait for element, scroll into view, highlight. */
+  async waitAndHighlight(
+    locator: Locator,
+    options?: {
+      timeout?: number;
+      highlight?: boolean;
+      highlightColor?: string;
+      highlightBorder?: string;
+      highlightTextColor?: string;
+      waitAfter?: number;
+      scrollExtra?: boolean;
+    },
+  ): Promise<void> {
+    return this.element.waitAndHighlight(locator, options);
+  }
+
+  /** Create new tab, navigate to URL, return page and PageObject instance. */
+  async createNewTabAndNavigate<T extends PageObject>(url: string, PageObjectClass: new (page: Page) => T): Promise<{ page: Page; pageObject: T }> {
+    return this.navigation.createNewTabAndNavigate(url, PageObjectClass);
+  }
+
+  /** Open URL (default ENV.BASE_URL). */
+  async goto(url: string = ENV.BASE_URL): Promise<void> {
+    return this.navigation.goto(url);
+  }
+
+  /** Wait for network idle. */
+  async waitForNetworkIdle(timeout?: number): Promise<void> {
+    return this.navigation.waitForNetworkIdle(timeout);
+  }
+
+  /** Navigate to page, find table, wait for table body. */
+  async navigateToPageAndWaitForTable(
+    url: string,
+    tableSelector: string,
+    tableBodySelector: string,
+    options?: { minRows?: number; timeoutMs?: number },
+  ): Promise<void> {
+    return this.navigation.navigateToPageAndWaitForTable(
+      url,
+      tableSelector,
+      tableBodySelector,
+      options,
+      this.table.findTable.bind(this.table),
+      async (selector: string, opts?: { minRows?: number; timeoutMs?: number }) => {
+        await this.table.waitingTableBody(selector, opts);
+      },
+    );
+  }
+
+  /** Search table and optionally wait for table body. */
+  async searchAndWaitForTable(
+    searchTerm: string,
+    tableSelector: string,
+    tableBodySelector: string,
+    options?: { useRedesign?: boolean; searchInputDataTestId?: string; timeoutBeforeWait?: number; minRows?: number; timeoutMs?: number },
+  ): Promise<void> {
+    return this.table.searchAndWaitForTable(searchTerm, tableSelector, tableBodySelector, options);
+  }
+
+  /** Validates page H3 titles and buttons. */
+  async validatePageHeadersAndButtons(
+    page: Page,
+    titles: string[],
+    buttons: Array<{
+      class?: string;
+      datatestid?: string;
+      label: string;
+      state?: string | boolean;
+    }>,
+    containerSelector: string,
+    options?: {
+      skipTitleValidation?: boolean;
+      skipButtonValidation?: boolean;
+      useModalMethod?: boolean;
+      testInfo?: TestInfo;
+    },
+  ): Promise<void> {
+    return this.validation.validatePageHeadersAndButtons(page, titles, buttons, containerSelector, options);
+  }
+
+  /** Search table and verify first row contains term. */
+  async searchAndVerifyFirstRow(
+    searchTerm: string,
+    tableSelector: string,
+    tableBodySelector: string,
+    options?: {
+      useRedesign?: boolean;
+      searchInputDataTestId?: string;
+      timeoutBeforeWait?: number;
+      minRows?: number;
+      timeoutMs?: number;
+    },
+  ): Promise<void> {
+    return this.validation.searchAndVerifyFirstRow(this, searchTerm, tableSelector, tableBodySelector, options);
+  }
+
+  /** Archive item: first row, archive + confirm buttons. */
+  async archiveItem(
+    page: Page,
+    searchTerm: string,
+    tableSelector: string,
+    archiveButtonSelector: string,
+    confirmButtonSelector: string,
+    options?: {
+      useCheckboxMark?: boolean;
+      headerCellIndex?: number;
+      archiveButtonLabel?: string;
+      confirmButtonLabel?: string;
+      waitAfterConfirm?: number;
+      verifyArchived?: boolean;
+      verifyTableSelector?: string;
+      tableBodySelector?: string;
+      searchInputDataTestId?: string;
+    },
+  ): Promise<void> {
+    return this.archive.archiveItem(this, page, searchTerm, tableSelector, archiveButtonSelector, confirmButtonSelector, options);
+  }
+
+  /** Click archive button then confirm. */
+  async archiveAndConfirm(
+    archiveButtonSelector: string,
+    confirmButtonSelector: string,
+    options?: {
+      archiveButtonLabel?: string;
+      confirmButtonLabel?: string;
+      waitAfterConfirm?: number;
+    },
+  ): Promise<void> {
+    return this.archive.archiveAndConfirm(this, archiveButtonSelector, confirmButtonSelector, options);
+  }
+
+  /** Wait then verify first row contains search term. */
+  async waitAndCheckFirstRow(
+    page: Page,
+    searchTerm: string,
+    tableSelector: string,
+    options?: {
+      timeoutMs?: number;
+      waitForNetworkIdle?: boolean;
+      testInfo?: TestInfo;
+      description?: string;
+    },
+  ): Promise<void> {
+    return this.validation.waitAndCheckFirstRow(this, page, searchTerm, tableSelector, options);
+  }
+
+  /** Pause execution for ms (default 1000). */
+  async waitForTimeout(ms: number = 1000): Promise<void> {
+    if (ENV.DEBUG) {
+      logger.info(`Page Class: Pausing for ${ms} milliseconds...`); // Log the pause action for debugging purposes
+    }
+    await this.page.waitForTimeout(ms); // Wait for the specified timeout duration
+    if (ENV.DEBUG) {
+      logger.info('Page Class: Pause complete'); // Log after the pause is complete
+    }
+  }
+
+  /** Fill login form. */
+  async fillLoginForm(page: Page, tabel: string, login: string, password: string): Promise<void> {
+    return this.login.fillLoginForm(page, tabel, login, password);
+  }
+
+  async newFillLoginForm(page: Page, tabel: string, login: string, password: string): Promise<void> {
+    return this.login.newFillLoginForm(page, tabel, login, password);
+  }
+
+  /** Read tooltip text by hovering over element. */
+  async readTooltip(hoverSelector: string, tooltipSelector: string): Promise<string | null> {
+    return this.element.readTooltip(hoverSelector, tooltipSelector);
+  }
+
+  /** Navigate by clicking element with data-testid. */
+  async nav(dataTestId: string): Promise<true | string> {
+    return this.navigation.nav(dataTestId);
+  }
+
+  /** Check URL path matches expected. */
+  async checkUrl(expectedPath: string): Promise<true | string> {
+    return this.navigation.checkUrl(expectedPath);
+  }
+
+  /** Check page title matches expected. */
+  async checkTitle(expectedTitle: string): Promise<void> {
+    return this.navigation.checkTitle(expectedTitle);
+  }
+
+  /** Check page language matches expected. */
+  async checkLanguage(expectedLanguage: string): Promise<void> {
+    return this.navigation.checkLanguage(expectedLanguage);
+  }
+
+  /** Check breadcrumb matches expected. */
+  async checkBreadCrumb(expectedBreadcrumb: string): Promise<void> {
+    return this.navigation.checkBreadCrumb(expectedBreadcrumb);
+  }
+
+  /** Capture a screenshot of the current page. */
+  async captureScreenshot(filename: string): Promise<void> {
+    return this.navigation.captureScreenshot(filename);
+  }
+
+  /** Wait for selector to become visible. */
+  async waitForSelector(selector: string): Promise<void> {
+    return this.element.waitForSelector(selector);
+  }
+
+  /** Check number of columns in table. */
+  async checkTableColumns(page: Page, tableId: string, skip?: boolean): Promise<number> {
+    return this.table.checkTableColumns(page, tableId, skip);
+  }
+
+  /** Check table column headers match expected. */
+  async checkTableColumnHeaders(page: Page, tableId: string, expectedHeaders: any, skip?: boolean): Promise<boolean> {
+    return this.table.checkTableColumnHeaders(page, tableId, expectedHeaders, skip);
+  }
+
+  /** Find table by selector, scroll into view, click. */
+  async findTable(selector: string): Promise<void> {
+    return this.table.findTable(selector);
+  }
+
+  /** Find column index by data-testid in a table. */
+  async findColumn(page: Page, tableId: string, colId: string): Promise<number> {
+    return this.table.findColumn(page, tableId, colId);
+  }
+
+  /** Get success message (optional order number). */
+  async getMessage(orderNumber?: string) {
+    return this.notification.getMessage(orderNumber);
+  }
+
+  /** Close success message. */
+  async closeSuccessMessage() {
+    return this.notification.closeSuccessMessage();
+  }
+
+  /** Search in table. */
+  async searchTable(nameSearch: string, locator: string, searchInputDataTestId?: string) {
+    return this.table.searchTable(nameSearch, locator, searchInputDataTestId);
+  }
+
+  /** Search in table (redesign UI). */
+  async searchTableRedesign(nameSearch: string, locator: string) {
+    return this.table.searchTableRedesign(nameSearch, locator);
+  }
+
+  /** Search table by icon click. */
+  async searchTableByIcon(nameSearch: string, locator: string) {
+    return this.table.searchTableByIcon(nameSearch, locator);
+  }
+
+  /** Wait for table body visible. */
+  async waitingTableBody(locator: string, options?: { minRows?: number; timeoutMs?: number }) {
+    return this.table.waitingTableBody(locator, options ?? {});
+  }
+
+  /** Check table row ordering by urgency/planned shipment dates. */
+  async checkDatesWithOrderList(
+    page: Page,
+    tableId: string,
+    nameColIdIndex: number,
+    urgencyColIndex: number,
+    plannedShipmentColIndex: number,
+    ordersIconColIndex: number,
+    modalSelector: string,
+    modalTableSelector: string,
+    urgencyModalColId: string,
+    plannedShipmentModalColId: string,
+  ): Promise<{ success: boolean; message?: string }> {
+    return this.order.checkDatesWithOrderList(
+      this,
+      page,
+      tableId,
+      nameColIdIndex,
+      urgencyColIndex,
+      plannedShipmentColIndex,
+      ordersIconColIndex,
+      modalSelector,
+      modalTableSelector,
+      urgencyModalColId,
+      plannedShipmentModalColId,
+    );
+  }
+
+  /** Click button by text and locator. */
+  async clickButton(
+    textButton: string,
+    locator: string,
+    click: Click = Click.Yes,
+    options?: { waitForEnabled?: boolean; enabledTimeout?: number },
+  ) {
+    return this.element.clickButton(textButton, locator, click, options);
+  }
+
+  /** Wait for table body (no thead). */
+  async waitingTableBodyNoThead(locator: string) {
+    return this.table.waitingTableBodyNoThead(locator);
+  }
+
+  async checkHeader(header: string, url: string) {
+    return this.validation.checkHeader(header, url);
+  }
+
+  async ordersListVerifyModalDates(
+    page: Page,
+    modalSelectorId: string,
+    modalTableSelectorId: string,
+    urgencyModalColValForCompare: string,
+    plannedShipmentModalColValForCompare: string,
+    urgencyDateId: string,
+    plannedShipmentDateId: string,
+  ): Promise<{ success: boolean; message?: string }> {
+    return this.order.ordersListVerifyModalDates(
+      this,
+      page,
+      modalSelectorId,
+      modalTableSelectorId,
+      urgencyModalColValForCompare,
+      plannedShipmentModalColValForCompare,
+      urgencyDateId,
+      plannedShipmentDateId,
+    );
+  }
+
+  /** Checks the current date in the locator
+   * @param locator - the full locator of the table
+   */
+  async checkCurrentDate(locator: string) {
+    return this.misc.checkCurrentDate(locator);
+  }
+
+  // Check the "Start Production" modal window
+  async checkModalWindowLaunchIntoProduction(locator: string) {
+    return this.misc.checkModalWindowLaunchIntoProduction(locator);
+  }
+
+  /** Checks and enters the quantity in the "Start Production" modal window
+   * @param quantity - checks that the input has this value
+   * @param quantityOrder - if this parameter is specified, enters this value in the input field
+   */
+  async checkOrderQuantityNew(quantity: string, quantityOrder?: string) {
+    return this.order.checkOrderQuantityNew(quantity, quantityOrder);
+  }
+  /** Checks and enters the quantity in the order modal window
+   * @param locator - selector for the quantity input field
+   * @param quantity - expected value in the input (checked only if quantityOrder is not provided)
+   * @param quantityOrder - if specified, enters this value in the input field
+   */
+  async checkOrderQuantity(locator: string, quantity: string, quantityOrder?: string) {
+    return this.order.checkOrderQuantity(locator, quantity, quantityOrder);
+  }
+
+  // Save the order number from the "Start Production" modal window
+  async checkOrderNumber() {
+    return this.order.checkOrderNumber();
+  }
+
+  /** Retrieves the value from the cell in the first row of the table and can click on the cell
+   * @param locator - the full locator of the table
+   * @param cellIndex - the index of the cell from which to extract the value
+   * @param click - whether to click on the cell
+   */
+  /** Retrieves the value from the cell in the first row of the table and can click on the cell
+   * @param locator - the full locator of the table
+   * @param cellIndex - the index of the cell from which to extract the value
+   * @param click - whether to click on the cell
+   */
+  async getValueOrClickFromFirstRow(locator: string, cellIndex: number, click: Click = Click.No, dblclick: Click = Click.No) {
+    return this.rowCell.getValueOrClickFromFirstRow(locator, cellIndex, click, dblclick);
+  }
+
+  /** Retrieves the value from the cell in the first row of the table and can click on the cell
+   * @param locator - the full locator of the table
+   * @param cellIndex - the index of the cell from which to extract the value
+   * @param click - whether to click on the cell
+   */
+  async getValueOrClickFromFirstRowNoThead(locator: string, cellIndex: number, click: Click = Click.No, dblclick: Click = Click.No) {
+    return this.rowCell.getValueOrClickFromFirstRowNoThead(locator, cellIndex, click, dblclick);
+  }
+
+  /** Retrieves the value from the cell in the first row of the table and can click on the cell
+   * @param locator - the locator of the table [data-testid=**]
+   * @param cellIndex - the index of the cell from which to extract the value (0-based)
+   * @param click - whether to click on the cell
+   */
+  async clickIconOperation(locator: string, cellIndex: number, click: Click = Click.No) {
+    return this.rowCell.clickIconOperation(locator, cellIndex, click);
+  }
+
+  /** Retrieves the value from the cell in the first row of the table and can click on the cell
+   * @param locator - the locator of the table [data-testid=**]
+   * @param cellIndex - the index of the cell from which to extract the value (0-based)
+   * @param click - whether to click on the cell
+   */
+  async clickIconOperationNew(locator: string, cellIndex: number, click: Click = Click.No) {
+    return this.rowCell.clickIconOperationNew(locator, cellIndex, click);
+  }
+
+  /** Checks if the first row contains the specified name and marks the checkbox in the second cell
+   * @param name - the value to search for
+   * @param locator - the full locator of the table
+   */
+  async checkboxMarkNameInLineFromFirstRow(name: string, locator: string) {
+    return this.rowCell.checkboxMarkNameInLineFromFirstRow(name, locator);
+  }
+
+  /**
+   * Check that the first row contains the searched name
+   * @param name - the searched value
+   * @param locator - the full locator of the table
+   */
+  async checkNameInLineFromFirstRow(
+    name: string,
+    locator: string,
+    options?: {
+      testInfo?: TestInfo;
+      description?: string;
+    },
+  ) {
+    return this.rowCell.checkNameInLineFromFirstRow(name, locator, options);
+  }
+
+  /**
+   * Click on the table header cell
+   * @param locator - the full locator of the table
+   * @param cellIndex - the index of the header cell to click on
+   */
+  async clickOnTheTableHeaderCell(cellIndex: number, locator: string) {
+    return this.rowCell.clickOnTheTableHeaderCell(cellIndex, locator);
+  }
+
+  /**
+   * Retrieve descendants from the entity specification
+   * Iterate through the entity specification table and save to separate arrays
+   * @param descendantsCbedArray - the array where we plan to save the assemblies
+   * @param descendantsDetailArray - the array where we plan to save the details
+   */
+  async preservingDescendants(descendantsCbedArray: ISpetificationData[], descendantsDetailArray: ISpetificationData[]) {
+    return this.misc.preservingDescendants(this, descendantsCbedArray, descendantsDetailArray);
+  }
+
+  /**
+   * Check the modal window for completion status
+   * @param nameOperation - Pass the name of the operation for verification
+   * @param nameProduct - Pass the name of the entity for verification
+   * @param designationProduct - Pass the designation of the entity for verification
+   */
+  async completionMarkModalWindow(nameOperation: string, nameProduct: string, designationProduct: string) {
+    return this.misc.completionMarkModalWindow(nameOperation, nameProduct, designationProduct);
+  }
+
+  // Checking the modal window to send to archive
+  async checkModalWindowForTransferringToArchive(locator: string) {
+    return this.misc.checkModalWindowForTransferringToArchive(locator);
+  }
+
+  // Check the modal window "Completed Sets"
+  async completesSetsModalWindow() {
+    return this.misc.completesSetsModalWindow(this);
+  }
+
+  /**
+   * Check the modal window "Invoice for Completion" depending on the entity.
+   * Enter the quantity for accounting and check the checkbox for the first order in the list.
+   * @param typeInvoice - Type of entity: Product/Assembly.
+   * @param checkbox - Check the checkbox for the first order in the table.
+   * @param enterQuantity - Enter the quantity in the "Your Quantity" cell.
+   */
+  async assemblyInvoiceModalWindow(typeInvoice: TypeInvoice, checkbox: boolean, enterQuantity?: string) {
+    return this.misc.assemblyInvoiceModalWindow(this, typeInvoice, checkbox, enterQuantity);
+  }
+
+  /** Waiting close modal window
+   *    @param locator - Locator of the input.
+   */
+  async checkCloseModalWindow(locator: string) {
+    return this.modal.checkCloseModalWindow(locator);
+  }
+
+  async filterRowsWithoutTh(rows: ElementHandle[]): Promise<ElementHandle[]> {
+    return this.misc.filterRowsWithoutTh(rows);
+  }
+
+  /**
+   * Show the left table if it is not visible
+   * @param tableId of the table to search for
+   * @param buttonId of the button that we will click on
+   */
+  async showLeftTable(tableId: string, buttonId: string) {
+    return this.misc.showLeftTable(tableId, buttonId);
+  }
+
+  /**
+   * Get the ids of all the columns data-testid passed in and return an array of Ids
+   * @param tableId of the table to search for
+   * @param page curent Page
+   * @param searchFields the array of data-testids to search for
+   * @returns array of integers
+   */
+  /**
+   * Get searchable column IDs for a table
+   * @param page - The Playwright page instance
+   * @param tableId - The ID or data-testid of the table
+   * @param searchFields - Array of search field data-testids
+   * @returns Array of column indices
+   */
+  async getSearchableColumnIds(page: Page, tableId: string, searchFields: string[]): Promise<number[]> {
+    return this.table.getSearchableColumnIds(page, tableId, searchFields);
+  }
+
+  /**
+   * Checks the search history functionality and verifies that search history items
+   * can be clicked to populate the search field and trigger the search.
+   *
+   * @param page - The Playwright page object.
+   * @param tableId - The ID of the table to perform the search on.
+   * @param searchFieldId - The ID of the search input field.
+   * @param searchTerms - Array of search terms to verify in the search history.
+   */
+  async checkSearchHistory(page: Page, tableId: string, searchFieldId: string, searchTerms: string[]): Promise<void> {
+    return this.table.checkSearchHistory(page, tableId, searchFieldId, searchTerms);
+  }
+
+  /**
+   * Performs negative tests on the search functionality to ensure it handles
+   * invalid inputs gracefully.
+   *
+   * @param page - The Playwright page object.
+   * @param tableId - The ID of the table to perform the search on.
+   * @param searchFieldId - The ID of the search input field.
+   */
+  async performNegativeSearchTests(page: Page, tableId: string, searchFieldId: string): Promise<void> {
+    return this.table.performNegativeSearchTests(page, tableId, searchFieldId);
+  }
+
+  /**
+   * Find and fill a cell in a table
+   * @param page - The Playwright page instance
+   * @param tableSelector - The selector for the table
+   * @param variableName - The variable name to search for in cells
+   * @param targetCellIndex - The index of the target cell to fill
+   * @param value - Optional value to fill (if not provided, returns current value)
+   * @returns The current value if value not provided, or void if value was filled
+   */
+  async findAndFillCell(page: Page, tableSelector: string, variableName: string, targetCellIndex: number, value?: string): Promise<string | void> {
+    return this.table.findAndFillCell(page, tableSelector, variableName, targetCellIndex, value);
+  }
+
+  /**
+   * Retrieve all rows as Locators from a table.
+   * @param table - The Playwright Locator for the table element.
+   * @returns A promise that resolves to an array of row Locators.
+   */
+  async getAllDataRows(table: Locator): Promise<Locator[]> {
+    return this.table.getAllDataRows(table);
+  }
+
+  /**
+   * Get all H3 tag values within a specific element by class name.
+   * Excludes H3 tags inside <dialog> or <dialogs> tags.
+   *
+   * @param {string} className - The class name of the container to scan.
+   * @returns {string[]} - Array of H3 text content.
+   */
+  async getAllH3TitlesInClass(page: Page, selector: string): Promise<string[]> {
+    return this.modal.getAllH3TitlesInClass(page, selector);
+  }
+
+  async getAllH3TitlesInTestId(page: Page, testId: string): Promise<string[]> {
+    return this.modal.getAllH3TitlesInTestId(page, testId);
+  }
+
+  async isButtonVisible(
+    page: Page,
+    buttonSelector: string,
+    label: string,
+    Benabled: boolean = true, // Default is true
+    dialogContext: string = '', // Optional: Specify dialog context for scoping
+    waitForEnabled: boolean = false, // Optional: If true, wait for button to become enabled (default: false for backward compatibility)
+    waitTimeout: number = 10000, // Optional: Maximum time to wait for button to become enabled (default: 10 seconds)
+  ): Promise<boolean> {
+    return this.validation.isButtonVisible(page, buttonSelector, label, Benabled, dialogContext, waitForEnabled, waitTimeout);
+  }
+
+  async getAllH4TitlesInModalClass(page: Page, modalClassName: string): Promise<string[]> {
+    return this.modal.getAllH4TitlesInModalClass(page, modalClassName);
+  }
+
+  async getAllH4TitlesInModalByTestId(page: Page, modalTestId: string): Promise<string[]> {
+    return this.modal.getAllH4TitlesInModalByTestId(page, modalTestId);
+  }
+
+  /** Validate H4 titles in modal by test ID. */
+  async validateModalH4Titles(
+    page: Page,
+    modalTestId: string,
+    expectedTitles: string[],
+    options?: {
+      testInfo?: TestInfo;
+      allowPartialMatch?: boolean; // If true, first title uses contains() instead of exact match
+    },
+  ): Promise<void> {
+    return this.modal.validateModalH4Titles(page, modalTestId, expectedTitles, options);
+  }
+
+  /** Check button visible and active/inactive. */
+  async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
+    return this.validation.checkButtonState(name, selector, expectedState);
+  }
+  async extractNotificationMessage(page: Page): Promise<{ title: string; message: string } | null> {
+    return this.notification.extractNotificationMessage(page);
+  }
+
+  /** Get latest notification text. */
+  async getLatestNotificationText(): Promise<string> {
+    return this.notification.getLatestNotificationText();
+  }
+
+  async isButtonVisibleTestId(
+    page: Page,
+    testId: string,
+    label: string,
+    Benabled: boolean = true, // Default is true
+    dialogContextTestId: string = '', // Optional: Specify dialog context testId for scoping
+  ): Promise<boolean> {
+    return this.validation.isButtonVisibleTestId(page, testId, label, Benabled, dialogContextTestId);
+  }
+
+  async getAllH3TitlesInModalClass(page: Page, className: string): Promise<string[]> {
+    return this.modal.getAllH3TitlesInModalClass(page, className);
+  }
+
+  async getAllH3TitlesInModalTestId(page: Page, testId: string): Promise<string[]> {
+    return this.modal.getAllH3TitlesInModalTestId(page, testId);
+  }
+
+  async getAllH3AndH4TitlesInModalTestId(page: Page, testId: string): Promise<string[]> {
+    return this.modal.getAllH3AndH4TitlesInModalTestId(page, testId);
+  }
+
+  async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
+    return this.modal.getButtonsFromDialog(page, dialogClass, buttonSelector);
+  }
+
+  async getAllH3TitlesInModalClassNew(page: Page, className: string): Promise<string[]> {
+    return this.modal.getAllH3TitlesInModalClassNew(page, className);
+  }
+
+  async modalCompany() {
+    return this.modal.modalCompany();
+  }
+
+  /** Navigate to URL and validate element by data-testid. */
+  async navigateToPage(url: string, dataTestId: string): Promise<void> {
+    return this.navigation.navigateToPage(url, dataTestId);
+  }
+  /** Verify test data array is not empty. */
+  async verifyTestDataAvailable<T>(testDataArray: T[], arrayName: string, allArrays?: { detail?: T[]; cbed?: T[]; izd?: T[] }): Promise<void> {
+    return this.misc.verifyTestDataAvailable(testDataArray, arrayName, allArrays);
+  }
+
+  /** Find row index by order number in orders modal. */
+  async findOrderRowIndexByOrderNumber(orderRowsLocator: Locator, targetOrderNumber: string, errorMessage?: string): Promise<number> {
+    return this.order.findOrderRowIndexByOrderNumber(orderRowsLocator, targetOrderNumber, errorMessage);
+  }
+
+  /** Find checkbox index by order number in edit modal. */
+  async findCheckboxIndexByOrderNumber(
+    checkboxesLocator: Locator,
+    orderNumberCellsLocator: Locator,
+    targetOrderNumber: string,
+    errorMessage?: string,
+  ): Promise<number> {
+    return this.order.findCheckboxIndexByOrderNumber(checkboxesLocator, orderNumberCellsLocator, targetOrderNumber, errorMessage);
+  }
+
+  /** Open context menu and click Заказы. */
+  async openContextMenuAndClickOrders(
+    popoverSelector: string,
+    menuItemSelector: string,
+    waitForModalSelector?: string,
+    popoverPosition: 'first' | 'last' | number = 'first',
+  ): Promise<void> {
+    return this.order.openContextMenuAndClickOrders(this, popoverSelector, menuItemSelector, waitForModalSelector, popoverPosition);
+  }
+
+  /** Verify orders modal content. */
+  async verifyOrdersModal(
+    modalSelector: string,
+    tableSelector: string,
+    orderRowsSelector: string,
+    quantityCellsSelector: string,
+    expectedOrderNumbers: string[],
+    expectedQuantities: string[],
+    itemTypeName?: string,
+    useRowLocator: boolean = false,
+    additionalWaitTimeout?: number,
+  ): Promise<void> {
+    return this.order.verifyOrdersModal(
+      this,
+      modalSelector,
+      tableSelector,
+      orderRowsSelector,
+      quantityCellsSelector,
+      expectedOrderNumbers,
+      expectedQuantities,
+      itemTypeName,
+      useRowLocator,
+      additionalWaitTimeout,
+    );
+  }
+
+  /** Get quantity cell value and optionally verify. */
+  async getQuantityCellAndVerify(
+    quantityCellSelector: string,
+    expectedValue?: number,
+    quantityType: string = 'quantity',
+    itemTypeName?: string,
+    useComplexSelector: boolean = false,
+    prefixId?: string,
+    suffixId?: string,
+    timeoutMs: number = WAIT_TIMEOUTS.STANDARD,
+    tableSelector?: string,
+  ): Promise<number> {
+    return this.order.getQuantityCellAndVerify(
+      this,
+      quantityCellSelector,
+      expectedValue,
+      quantityType,
+      itemTypeName,
+      useComplexSelector,
+      prefixId,
+      suffixId,
+      timeoutMs,
+      tableSelector,
+    );
+  }
+
+  /** Click order row to open edit dialog. */
+  async clickOrderToOpenEditDialog(orderRowsSelector: string, orderNumber: string, errorMessage?: string, itemTypeName?: string): Promise<void> {
+    return this.order.clickOrderToOpenEditDialog(this, orderRowsSelector, orderNumber, errorMessage, itemTypeName);
+  }
+
+  /** Select checkbox for order and archive. */
+  async selectCheckboxAndArchiveOrder(
+    orderNumber: string,
+    checkboxesSelector: string,
+    orderNumberCellsSelector: string,
+    archiveButtonSelector: string,
+    confirmButtonSelector: string,
+    editModalSelector: string,
+    errorMessage?: string,
+    itemTypeName?: string,
+  ): Promise<void> {
+    return this.archive.selectCheckboxAndArchiveOrder(
+      this,
+      orderNumber,
+      checkboxesSelector,
+      orderNumberCellsSelector,
+      archiveButtonSelector,
+      confirmButtonSelector,
+      editModalSelector,
+      errorMessage,
+      itemTypeName,
+    );
+  }
+
+  async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
+    return this.validation.validatePageTitlesWithStyling(testId, expectedTitles);
+  }
+  /** Validate table is displayed with rows. */
+  async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
+    return this.validation.validateTableIsDisplayedWithRows(tableTestId);
+  }
+
+  /** Validate buttons visibility and state. */
+  async validateButtons(page: Page, buttons: Array<{ datatestid: string; label: string; state: string }>, dialogSelector?: string): Promise<void> {
+    return this.validation.validateButtons(page, buttons, dialogSelector);
+  }
+  /** Validate checkbox in section. */
+  async validateCheckbox(page: Page, section: Locator, sectionIndex: number) {
+    return this.validation.validateCheckbox(page, section, sectionIndex);
+  }
+  /** Check checkbox in section. */
+  async checkCheckbox(page: Page, section: Locator, sectionIndex: number) {
+    return this.validation.checkCheckbox(page, section, sectionIndex);
+  }
+
+  /** Validate uploaded file names in sections. */
+  async validateFileNames(page: Page, fileSections: Locator[], uploadedFiles: string[]): Promise<void> {
+    return this.validation.validateFileNames(page, fileSections, uploadedFiles);
+  }
+  /** Highlight element with optional custom styles. */
+  async highlightElement(
+    element: Locator,
+    customStyles?: {
+      backgroundColor?: string;
+      border?: string;
+      color?: string;
+      outline?: string;
+      boxShadow?: string;
+      zIndex?: string;
+      transition?: string;
+    },
+  ): Promise<void> {
+    return this.element.highlightElement(element, customStyles);
+  }
+
+  /** Locate by data-testid, highlight, wait visible. */
+  async locateAndHighlightElement(dataTestId: string, timeout: number = 30000): Promise<Locator> {
+    return this.element.locateAndHighlightElement(dataTestId, timeout);
+  }
+
+  /** Vue-compatible search with pressSequentially. */
+  async searchWithPressSequentially(
+    searchInputSelector: string,
+    searchTerm: string,
+    options?: { delay?: number; waitAfterSearch?: number; timeout?: number },
+  ): Promise<void> {
+    return this.table.searchWithPressSequentially(searchInputSelector, searchTerm, options);
+  }
+
+  /** Fill input and wait for value. */
+  async fillInputAndWaitForValue(inputLocator: Locator, value: string, timeout: number = TIMEOUTS.MEDIUM): Promise<void> {
+    return this.element.fillInputAndWaitForValue(inputLocator, value, timeout);
+  }
+
+  /** Fill input with retries until value matches. */
+  async fillInputWithRetries(input: Locator, value: string, maxAttempts = 3): Promise<string> {
+    return this.element.fillInputWithRetries(input, value, maxAttempts);
+  }
+
+  /** Find actual search input (wrapper or direct). */
+  async findSearchInput(page: Page, searchInputSelector: string, timeout: number = WAIT_TIMEOUTS.STANDARD): Promise<Locator> {
+    return this.element.findSearchInput(page, searchInputSelector, timeout);
+  }
+}
+
+// ValidationResult is now exported from TableHelper
+
+
+
+export enum Click {
+  Yes = 1,
+  No = 0,
+}
+
+export enum TypeInvoice {
+  cbed = 'Сборка',
+  product = 'Изделие',
+}

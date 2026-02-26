@@ -21,6 +21,20 @@ export const HIGHLIGHT_SUCCESS = {
   color: 'white',
 };
 
+/** Baseline row on actions table (captured before our actions) */
+export const HIGHLIGHT_BASELINE = {
+  backgroundColor: 'rebeccapurple',
+  border: '2px solid purple',
+  color: 'white',
+};
+
+/** New rows on actions table (added by our last action; scanning) */
+export const HIGHLIGHT_NEW_ROW = {
+  backgroundColor: 'yellow',
+  border: '2px solid orange',
+  color: 'black',
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // USAGE EXAMPLES:
 // ─────────────────────────────────────────────────────────────────────────────

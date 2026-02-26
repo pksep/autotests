@@ -2,7 +2,7 @@
  * @file NotificationHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for notification and message operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Getting notification messages
  * - Closing success messages
@@ -41,7 +41,10 @@ export class NotificationHelper {
   async closeSuccessMessage() {
     try {
       const closeButton = this.page.locator('[data-testid="Notification-Notification-Icon"]').last();
-      await this.page.locator(MODAL_LOADER_PRODUCTION).waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+      await this.page
+        .locator(MODAL_LOADER_PRODUCTION)
+        .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD })
+        .catch(() => {});
       await closeButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       await closeButton.click({ timeout: WAIT_TIMEOUTS.SHORT });
     } catch (error) {

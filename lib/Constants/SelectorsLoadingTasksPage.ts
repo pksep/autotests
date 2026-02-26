@@ -86,14 +86,10 @@ export const CALENDAR_DATA_PICKER_DISPLAY = '[data-testid="Calendar-DataPicker-C
 export const ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER = '[data-testid="IssueShipment-ActionsButtons-EditOrder"]';
 
 // IssueShipment modal shipment selectors
-export const ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT =
-  '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]';
-export const ISSUE_SHIPMENT_MODAL_SHIPMENT_ONE_SHIPMENTS_DATE =
-  '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-OneShipments-Date"]';
-export const ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_SHIPMENTS_DATE =
-  '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateShipments-Date"]';
-export const ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_BY_URGENCY_WRAPPER =
-  '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateByUrgency-Wrapper"]';
+export const ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]';
+export const ISSUE_SHIPMENT_MODAL_SHIPMENT_ONE_SHIPMENTS_DATE = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-OneShipments-Date"]';
+export const ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_SHIPMENTS_DATE = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateShipments-Date"]';
+export const ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_BY_URGENCY_WRAPPER = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateByUrgency-Wrapper"]';
 export const ISSUE_SHIPMENT_MODAL_SHIPMENT_PRODUCT_NAME = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-Product-Name"]';
 export const ISSUE_SHIPMENT_MODAL_SHIPMENT_COMPANY_NAME = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-Company-Name"]';
 export const SHIPMENT_TABLE = '[data-testid="Shipment-Table"]';

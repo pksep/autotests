@@ -31,7 +31,7 @@ type ElementSpec = {
 function getButtonsForValidation(element: ElementSpec): Array<{ class?: string; datatestid?: string; label: string; state?: string | boolean }> {
   const buttons = (element?.buttons || []).map(b => ({
     ...b,
-    state: typeof b.state === 'string' ? b.state === 'true' : b.state ?? true,
+    state: typeof b.state === 'string' ? b.state === 'true' : (b.state ?? true),
   }));
   const filters = (element?.filters || []).map(f => ({
     class: f.class,
@@ -222,17 +222,11 @@ export const runV001 = (_isSingleTest?: boolean, _iterations?: number) => {
           const titles = (element.titles || []).map(t => t.trim());
           const buttons = getButtonsForValidation(element);
 
-          await po.validatePageHeadersAndButtons(
-            page,
-            titles,
-            buttons,
-            step.containerSelector,
-            {
-              skipTitleValidation: step.skipTitleValidation || titles.length === 0,
-              skipButtonValidation: step.skipButtonValidation || buttons.length === 0,
-              useModalMethod: step.useModalMethod,
-            },
-          );
+          await po.validatePageHeadersAndButtons(page, titles, buttons, step.containerSelector, {
+            skipTitleValidation: step.skipTitleValidation || titles.length === 0,
+            skipButtonValidation: step.skipButtonValidation || buttons.length === 0,
+            useModalMethod: step.useModalMethod,
+          });
 
           if (step.closeModalSelector) {
             await page.locator(step.closeModalSelector).click();

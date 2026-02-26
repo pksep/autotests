@@ -23,8 +23,7 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     // Map stock receipt types to their data-testid values
     const stockReceiptTestIds: Record<StockReceipt, string> = {
       [StockReceipt.suppler]: 'ComingToSclad-ModalComing-Main-Provider',
-      [StockReceipt.metalworking]:
-        'ComingToSclad-ModalComing-Main-Metalloworking',
+      [StockReceipt.metalworking]: 'ComingToSclad-ModalComing-Main-Metalloworking',
       [StockReceipt.cbed]: 'ComingToSclad-ModalComing-Main-Assembly',
     };
 
@@ -41,17 +40,13 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     await stockReceiptButton.click();
 
     // Wait for the receipt modal dialog to appear after clicking
-    await this.page
-      .locator('[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]')
-      .waitFor({ state: 'visible', timeout: 10000 });
+    await this.page.locator('[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]').waitFor({ state: 'visible', timeout: 10000 });
     await this.page.waitForLoadState('networkidle');
     await this.page.waitForTimeout(500);
 
     // Check the selected supplier type by reading the block title in the modal
     // The title contains: "Потенциальные от {Type}" - we extract the last word
-    const blockTitleElement = this.page.locator(
-      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-BlockTitle"]'
-    );
+    const blockTitleElement = this.page.locator('[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-BlockTitle"]');
 
     await blockTitleElement.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -75,52 +70,29 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     logger.log(`Извлеченный тип поступления: ${extractedType}`);
 
     // Map "Поставщики" -> "Поставщик" for comparison
-    const normalizedExtractedType =
-      extractedType === 'Поставщики' ? 'Поставщик' : extractedType;
+    const normalizedExtractedType = extractedType === 'Поставщики' ? 'Поставщик' : extractedType;
 
     // Verify the displayed type matches what we selected
     expect(normalizedExtractedType).toBe(stockReceipt);
 
     // Validate buttons in the modal
-    await this.clickButton(
-      'Добавить',
-      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]',
-      Click.No
-    );
+    await this.clickButton('Добавить', '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Button-Add"]', Click.No);
 
-    await this.clickButton(
-      'Добавить из базы',
-      '[data-testid="AttachFileComponent-AddFileButton"]',
-      Click.No
-    );
+    await this.clickButton('Добавить из базы', '[data-testid="AttachFileComponent-AddFileButton"]', Click.No);
 
-    await this.clickButton(
-      'Отменить',
-      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Cancel"]',
-      Click.No
-    );
+    await this.clickButton('Отменить', '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Cancel"]', Click.No);
 
-    await this.clickButton(
-      'Создать',
-      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]',
-      Click.No
-    );
+    await this.clickButton('Создать', '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Buttons-Create"]', Click.No);
   }
 
   async inputQuantityInCell(quantity: string) {
     // Ensure the dialog is visible
-    const dialog = this.page.locator(
-      '[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]'
-    );
+    const dialog = this.page.locator('[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]');
     await dialog.waitFor({ state: 'visible', timeout: 10000 });
 
     // Find the input in the first row of the table
     // Pattern: ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row{id}-TdInput-Input-Input
-    const quantityInput = this.page
-      .locator(
-        'input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput-Input-Input"]'
-      )
-      .first();
+    const quantityInput = this.page.locator('input[data-testid^="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Row"][data-testid$="-TdInput-Input-Input"]').first();
 
     await quantityInput.waitFor({ state: 'visible', timeout: 10000 });
     await quantityInput.scrollIntoViewIfNeeded();

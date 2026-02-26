@@ -55,10 +55,8 @@ export const DETAILS_TABLE_ROW_FREE_QUANTITY_CELL = '[data-testid^="ModalAddWayb
 export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_PREFIX = 'ModalAddWaybill-ShipmentDetailsTable-StockOrderRow';
 export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL_SUFFIX = '-OrderNumberCell';
 export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL_SUFFIX = '-RemainingQuantityCell';
-export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL =
-  '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-OrderNumberCell"]';
-export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL =
-  '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]';
+export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_ORDER_NUMBER_CELL = '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-OrderNumberCell"]';
+export const SHIPMENT_DETAILS_TABLE_STOCK_ORDER_ROW_REMAINING_QUANTITY_CELL = '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]';
 export const SHIPMENT_DETAILS_TABLE_ROW_ORDER_NUMBER_CELL = '[data-testid^="ModalAddWaybill-ShipmentDetailsTable-Row"][data-testid$="-OrderNumberCell"]';
 export const OSTATK_PCBD_MODAL_DETAL_PREFIX = 'OstatkPCBD-ModalDetal';
 export const OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX = '-InformationName-Name';

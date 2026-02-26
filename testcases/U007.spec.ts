@@ -1,4 +1,2 @@
 //placeholder so that we don't have to rewrite the testSuiteConfig all the time
-export const runU007 = () => {
-
-}
+export const runU007 = () => {};

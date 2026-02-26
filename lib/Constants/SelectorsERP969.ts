@@ -23,14 +23,11 @@ export const TABLE_COMPLECT_NAME_CELL_PATTERN = "[data-testid^='CompletCbed-Cont
 
 export const TABLE_COMPLECT_DESIGNATION_CELL_PATTERN = "[data-testid^='CompletCbed-Content-Table-Table-TableRow'][data-testid$='-Designation']";
 
-export const SHIPMENT_DETAILS_REMAINING_QUANTITY_CELL =
-  "[data-testid^='ModalAddWaybill-ShipmentDetailsTable-StockOrderRow'][data-testid$='-RemainingQuantityCell']";
+export const SHIPMENT_DETAILS_REMAINING_QUANTITY_CELL = "[data-testid^='ModalAddWaybill-ShipmentDetailsTable-StockOrderRow'][data-testid$='-RemainingQuantityCell']";
 
-export const WAYBILL_SHIPMENT_ORDER_NUMBER_CELL_PATTERN =
-  "[data-testid^='ModalAddWaybill-ShipmentDetailsTable-StockOrderRow'][data-testid$='-OrderNumberCell']";
+export const WAYBILL_SHIPMENT_ORDER_NUMBER_CELL_PATTERN = "[data-testid^='ModalAddWaybill-ShipmentDetailsTable-StockOrderRow'][data-testid$='-OrderNumberCell']";
 
-export const WAYBILL_SHIPMENT_REMAINING_QUANTITY_CELL_PATTERN =
-  "[data-testid^='ModalAddWaybill-ShipmentDetailsTable-StockOrderRow'][data-testid$='-RemainingQuantityCell']";
+export const WAYBILL_SHIPMENT_REMAINING_QUANTITY_CELL_PATTERN = "[data-testid^='ModalAddWaybill-ShipmentDetailsTable-StockOrderRow'][data-testid$='-RemainingQuantityCell']";
 
 export const WAYBILL_DETAILS_TABLE_NAME_CELL_PATTERN = "[data-testid^='ModalAddWaybill-DetailsTable-Row'][data-testid$='-NameCell']";
 

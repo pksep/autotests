@@ -2,7 +2,7 @@
  * @file MiscHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for miscellaneous utility operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Date checking
  * - Modal window verification
@@ -363,11 +363,7 @@ export class MiscHelper {
    * @param arrayName - Name of the array for error messages
    * @param allArrays - Optional object containing detail, cbed, and izd arrays
    */
-  async verifyTestDataAvailable<T>(
-    testDataArray: T[],
-    arrayName: string,
-    allArrays?: { detail?: T[]; cbed?: T[]; izd?: T[] },
-  ): Promise<void> {
+  async verifyTestDataAvailable<T>(testDataArray: T[], arrayName: string, allArrays?: { detail?: T[]; cbed?: T[]; izd?: T[] }): Promise<void> {
     const { allure } = await import('allure-playwright');
     await allure.step('Verify test data is available', async () => {
       if (allArrays) {

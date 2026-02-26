@@ -21,11 +21,11 @@ import logger from '../lib/utils/logger';
 
 // Additional test data variables for the new steps
 let orderNumber: string | null = null; // Declare outside to share between steps
-let orderedQuantity2: number = 666; // Declare outside to share between steps
+const orderedQuantity2: number = 666; // Declare outside to share between steps
 let targetRow: any = null; // Declare outside to share between steps
-let specificationQuantity: number = 1; // Global variable for specification quantity from step 10
-let waybillCollections: number = 0; // Global variable to track waybill collections
-let currentBuildQuantity: number = 1; // Global variable for current build quantity (how many items we're building now)
+const specificationQuantity: number = 1; // Global variable for specification quantity from step 10
+const waybillCollections: number = 0; // Global variable to track waybill collections
+const currentBuildQuantity: number = 1; // Global variable for current build quantity (how many items we're building now)
 
 export const runERP_969_2 = () => {
   test('ERP-969-2 - Create 2 details and СБ assembly containing both details', async ({ page }) => {
@@ -76,8 +76,8 @@ export const runERP_969_2 = () => {
       const editPageTitle = page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(editPageTitle).toBeVisible();
+        async () => {
+          await expect.soft(editPageTitle).toBeVisible();
         },
         'Verify edit page title is visible',
         test.info(),
@@ -95,8 +95,8 @@ export const runERP_969_2 = () => {
       const detailSearchInput = detalTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(detailSearchInput).toBeVisible();
+        async () => {
+          await expect.soft(detailSearchInput).toBeVisible();
         },
         'Verify detail search input is visible',
         test.info(),
@@ -156,8 +156,8 @@ export const runERP_969_2 = () => {
       const editPageTitle = page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(editPageTitle).toBeVisible();
+        async () => {
+          await expect.soft(editPageTitle).toBeVisible();
         },
         'Verify edit page title is visible',
         test.info(),
@@ -175,8 +175,8 @@ export const runERP_969_2 = () => {
       const detailSearchInput = detalTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(detailSearchInput).toBeVisible();
+        async () => {
+          await expect.soft(detailSearchInput).toBeVisible();
         },
         'Verify detail search input is visible',
         test.info(),
@@ -234,8 +234,8 @@ export const runERP_969_2 = () => {
       const assemblyInput = page.locator(SelectorsPartsDataBase.INPUT_NAME_IZD);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(assemblyInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(assemblyInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify assembly input is visible',
         test.info(),
@@ -254,8 +254,8 @@ export const runERP_969_2 = () => {
       const specsTable = page.locator(SelectorsPartsDataBase.EDITOR_TABLE_SPECIFICATION_CBED);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(specsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(specsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify specs table is visible',
         test.info(),
@@ -335,8 +335,8 @@ export const runERP_969_2 = () => {
       const assemblySearchInput = cbedTable.locator(SelectorsPartsDataBase.BASE_DETAIL_CB_TABLE_SEARCH);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(assemblySearchInput).toBeVisible();
+        async () => {
+          await expect.soft(assemblySearchInput).toBeVisible();
         },
         'Verify assembly search input is visible',
         test.info(),
@@ -388,8 +388,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(assemblySearchInput);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(assemblySearchInput).toBeVisible();
+        async () => {
+          await expect.soft(assemblySearchInput).toBeVisible();
         },
         'Verify assembly search input is visible',
         test.info(),
@@ -462,8 +462,8 @@ export const runERP_969_2 = () => {
       const editButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_EDIT_BUTTON);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(editButton).toBeVisible();
+        async () => {
+          await expect.soft(editButton).toBeVisible();
         },
         'Verify edit button is visible',
         test.info(),
@@ -476,8 +476,8 @@ export const runERP_969_2 = () => {
       const specsTable = page.locator(SelectorsPartsDataBase.EDITOR_TABLE_SPECIFICATION_CBED);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(specsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(specsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify specs table is visible',
         test.info(),
@@ -527,8 +527,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(revisionButton);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(revisionButton).toBeVisible();
+        async () => {
+          await expect.soft(revisionButton).toBeVisible();
         },
         'Verify revision button is visible',
         test.info(),
@@ -541,8 +541,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(detailsTab);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(detailsTab).toBeVisible();
+        async () => {
+          await expect.soft(detailsTab).toBeVisible();
         },
         'Verify details tab is visible',
         test.info(),
@@ -556,8 +556,8 @@ export const runERP_969_2 = () => {
       const searchInput = revisionTable.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_SEARCH_INPUT);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(searchInput).toBeVisible();
+        async () => {
+          await expect.soft(searchInput).toBeVisible();
         },
         'Verify search input is visible',
         test.info(),
@@ -604,8 +604,8 @@ export const runERP_969_2 = () => {
           const fourthCell = foundRow.locator('td').nth(3);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(fourthCell).toBeVisible();
+            async () => {
+              await expect.soft(fourthCell).toBeVisible();
             },
             'Verify fourth cell is visible',
             test.info(),
@@ -615,8 +615,8 @@ export const runERP_969_2 = () => {
           const editField = fourthCell.locator(SelectorsRevision.INPUT_NUMBER_INPUT);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(editField).toBeVisible();
+            async () => {
+              await expect.soft(editField).toBeVisible();
             },
             'Verify edit field is visible',
             test.info(),
@@ -631,8 +631,8 @@ export const runERP_969_2 = () => {
           const confirmDialog = revisionPage.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(confirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(confirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify confirm dialog is visible',
             test.info(),
@@ -642,8 +642,8 @@ export const runERP_969_2 = () => {
           const confirmButton = confirmDialog.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(confirmButton).toBeVisible();
+            async () => {
+              await expect.soft(confirmButton).toBeVisible();
             },
             'Verify confirm button is visible',
             test.info(),
@@ -699,8 +699,8 @@ export const runERP_969_2 = () => {
           const fourthCell2 = foundRow2.locator('td').nth(3);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(fourthCell2).toBeVisible();
+            async () => {
+              await expect.soft(fourthCell2).toBeVisible();
             },
             'Verify fourth cell 2 is visible',
             test.info(),
@@ -710,8 +710,8 @@ export const runERP_969_2 = () => {
           const editField2 = fourthCell2.locator(SelectorsRevision.INPUT_NUMBER_INPUT);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(editField2).toBeVisible();
+            async () => {
+              await expect.soft(editField2).toBeVisible();
             },
             'Verify edit field 2 is visible',
             test.info(),
@@ -726,8 +726,8 @@ export const runERP_969_2 = () => {
           const confirmDialog2 = revisionPage.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(confirmDialog2).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(confirmDialog2).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify confirm dialog 2 is visible',
             test.info(),
@@ -737,8 +737,8 @@ export const runERP_969_2 = () => {
           const confirmButton2 = confirmDialog2.locator(SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(confirmButton2).toBeVisible();
+            async () => {
+              await expect.soft(confirmButton2).toBeVisible();
             },
             'Verify confirm button 2 is visible',
             test.info(),
@@ -780,8 +780,8 @@ export const runERP_969_2 = () => {
       const supplierModal = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_SUPPLIER_ORDER_CREATION_MODAL_CONTENT);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(supplierModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(supplierModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify supplier modal is visible',
         test.info(),
@@ -797,8 +797,8 @@ export const runERP_969_2 = () => {
       const dialog = warehousePage.locator(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_DIALOG);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(dialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(dialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify dialog is visible',
         test.info(),
@@ -811,8 +811,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(modalTitle, HIGHLIGHT_ERROR);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(modalTitle).toContainText('Создание заказа на сборку', { timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(modalTitle).toContainText('Создание заказа на сборку', { timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify modal title contains expected text',
         test.info(),
@@ -837,8 +837,8 @@ export const runERP_969_2 = () => {
       const productionTable = warehousePage.locator(SelectorsOrderedFromSuppliers.TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE).first();
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(productionTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(productionTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify production table is visible',
         test.info(),
@@ -849,8 +849,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(searchInput);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify search input is visible',
         test.info(),
@@ -889,8 +889,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(bottomTable);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(bottomTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(bottomTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify bottom table is visible',
         test.info(),
@@ -911,8 +911,8 @@ export const runERP_969_2 = () => {
       // Wait for the element to be visible before highlighting
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(quantityInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        async () => {
+          await expect.soft(quantityInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         },
         'Verify quantity input is visible',
         test.info(),
@@ -927,8 +927,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(startProductionButton);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(startProductionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(startProductionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify start production button is visible',
         test.info(),
@@ -938,8 +938,8 @@ export const runERP_969_2 = () => {
 
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(startProductionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(startProductionButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify start production button is visible',
         test.info(),
@@ -965,8 +965,8 @@ export const runERP_969_2 = () => {
       const orderTable = warehousePage.locator(`table${SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_TABLE}`);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(orderTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(orderTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify order table is visible',
         test.info(),
@@ -976,8 +976,8 @@ export const runERP_969_2 = () => {
       const searchInput = orderTable.locator(SelectorsOrderedFromSuppliers.ORDER_SUPPLIERS_TABLE_SEARCH_INPUT);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify search input is visible',
         test.info(),
@@ -1058,8 +1058,8 @@ export const runERP_969_2 = () => {
       const dateCell = targetRow.locator('td').nth(3); // 4th column (index 3)
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(dateCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(dateCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify date cell is visible',
         test.info(),
@@ -1078,8 +1078,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(orderModal, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(orderModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(orderModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify order modal is visible',
         test.info(),
@@ -1091,8 +1091,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(modalTitle, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(modalTitle).toContainText('Заказ', { timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(modalTitle).toContainText('Заказ', { timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify modal title contains Заказ',
         test.info(),
@@ -1104,8 +1104,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(modalDateElement, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(modalDateElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(modalDateElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify modal date element is visible',
         test.info(),
@@ -1127,8 +1127,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(modalOrderNumberElement, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(modalOrderNumberElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(modalOrderNumberElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify modal order number element is visible',
         test.info(),
@@ -1150,8 +1150,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(table, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify table is visible',
         test.info(),
@@ -1163,8 +1163,8 @@ export const runERP_969_2 = () => {
       await detailsPage.highlightElement(firstDataRow, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(firstDataRow).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(firstDataRow).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify first data row is visible',
         test.info(),
@@ -1263,8 +1263,8 @@ export const runERP_969_2 = () => {
       const kittingTable = warehousePage.locator(`table${SelectorsAssemblyKitting.TABLE_COMPLECT_TABLE}`);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(kittingTable).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        async () => {
+          await expect.soft(kittingTable).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         },
         'Verify kitting table is visible',
         test.info(),
@@ -1312,8 +1312,8 @@ export const runERP_969_2 = () => {
       // Wait for count to be 1 (the search should filter to one result)
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(resultRows).toHaveCount(1, { timeout: WAIT_TIMEOUTS.LONG });
+        async () => {
+          await expect.soft(resultRows).toHaveCount(1, { timeout: WAIT_TIMEOUTS.LONG });
         },
         'Verify result rows have count 1',
         test.info(),
@@ -1343,8 +1343,8 @@ export const runERP_969_2 = () => {
       const waybillModal = warehousePage.locator(SelectorsERP969.WAYBILL_MODAL_OPEN_PATTERN);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify waybill modal is visible',
         test.info(),
@@ -1459,8 +1459,8 @@ export const runERP_969_2 = () => {
       );
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(orderNumberCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(orderNumberCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify order number cell is visible',
         test.info(),
@@ -1483,8 +1483,8 @@ export const runERP_969_2 = () => {
       );
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(remainingQuantityCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(remainingQuantityCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify remaining quantity cell is visible',
         test.info(),
@@ -1510,8 +1510,8 @@ export const runERP_969_2 = () => {
       });
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(completeSetButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(completeSetButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify complete set button is visible',
         test.info(),
@@ -1520,8 +1520,8 @@ export const runERP_969_2 = () => {
       // Verify the button is active/enabled
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(completeSetButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(completeSetButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify complete set button is enabled',
         test.info(),
@@ -1546,8 +1546,8 @@ export const runERP_969_2 = () => {
       });
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(kittingTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(kittingTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify kitting table is visible',
         test.info(),
@@ -1557,8 +1557,8 @@ export const runERP_969_2 = () => {
       const searchInput = kittingTable.locator(`input${SelectorsAssemblyKitting.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT}`);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        async () => {
+          await expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         },
         'Verify search input is visible',
         test.info(),
@@ -1638,8 +1638,8 @@ export const runERP_969_2 = () => {
       const waybillModal = warehousePage.locator(SelectorsERP969.WAYBILL_MODAL_OPEN_PATTERN);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        async () => {
+          await expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         },
         'Verify waybill modal is visible',
         test.info(),
@@ -1656,8 +1656,8 @@ export const runERP_969_2 = () => {
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         await expectSoftWithScreenshot(
           page,
-          () => {
-            expect.soft(modalTitle).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          async () => {
+            await expect.soft(modalTitle).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
           },
           'Verify modal title is visible',
           test.info(),
@@ -1818,11 +1818,7 @@ export const runERP_969_2 = () => {
 
       // Sub-step 18.6: Confirm progress wrapper contains completion percentage
       await allure.step('Sub-step 18.6: Confirm progress wrapper contains completion percentage', async () => {
-        const progressWrapper = waybillModal
-          .locator(
-            `[data-testid^="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`,
-          )
-          .first();
+        const progressWrapper = waybillModal.locator(`[data-testid^="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`).first();
         await detailsPage.highlightElement(progressWrapper, {
           backgroundColor: 'yellow',
           border: '2px solid red',
@@ -1831,8 +1827,8 @@ export const runERP_969_2 = () => {
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         await expectSoftWithScreenshot(
           page,
-          () => {
-            expect.soft(progressWrapper).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          async () => {
+            await expect.soft(progressWrapper).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
           },
           'Verify progress wrapper is visible',
           test.info(),
@@ -1876,13 +1872,13 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(orderNumberCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-        },
-        'Verify order number cell is visible',
-        test.info(),
-      );
+          page,
+          async () => {
+            await expect.soft(orderNumberCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify order number cell is visible',
+          test.info(),
+        );
         const orderNumberCellText = await orderNumberCell.textContent();
         logger.log(`Order number cell: "${orderNumberCellText}"`);
         await expectSoftWithScreenshot(
@@ -1903,9 +1899,7 @@ export const runERP_969_2 = () => {
 
       // Sub-step 18.8: Confirm remaining quantity cell contains our original order quantity
       await allure.step('Sub-step 18.8: Confirm remaining quantity cell contains our original order quantity', async () => {
-        const remainingQuantityCell = waybillModal.locator(
-          `[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]`,
-        );
+        const remainingQuantityCell = waybillModal.locator(`[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]`);
         await detailsPage.highlightElement(remainingQuantityCell, {
           backgroundColor: 'yellow',
           border: '2px solid red',
@@ -1913,13 +1907,13 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(remainingQuantityCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-        },
-        'Verify remaining quantity cell is visible',
-        test.info(),
-      );
+          page,
+          async () => {
+            await expect.soft(remainingQuantityCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify remaining quantity cell is visible',
+          test.info(),
+        );
         const remainingQuantity = await remainingQuantityCell.textContent();
         logger.log(`Remaining quantity: "${remainingQuantity}"`);
         await expectSoftWithScreenshot(
@@ -1975,8 +1969,8 @@ export const runERP_969_2 = () => {
         });
         await expectSoftWithScreenshot(
           page,
-          () => {
-            expect.soft(detailsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          async () => {
+            await expect.soft(detailsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
           },
           'Verify details table is visible',
           test.info(),
@@ -2001,9 +1995,7 @@ export const runERP_969_2 = () => {
           });
           await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
           // Get the detail name for this row
-          const nameCell = row.locator(
-            `[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`,
-          );
+          const nameCell = row.locator(`[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
 
           // Check if the name cell exists and is visible
           const nameCellExists = await nameCell.count();
@@ -2021,8 +2013,8 @@ export const runERP_969_2 = () => {
           // Wait for the name cell to be visible
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(nameCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(nameCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify name cell is visible',
             test.info(),
@@ -2043,9 +2035,7 @@ export const runERP_969_2 = () => {
           if (detailName?.trim() === TEST_DATA.DETAIL_1_NAME || detailName?.trim() === TEST_DATA.DETAIL_2_NAME) {
             // Validate quantity cell (should be 9 - what we put in stock)
             // The quantity cell is in the same row, so scope to the row first
-            const quantityCell = row.locator(
-              `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`,
-            );
+            const quantityCell = row.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
             await detailsPage.highlightElement(quantityCell, {
               backgroundColor: 'yellow',
               border: '2px solid red',
@@ -2064,9 +2054,7 @@ export const runERP_969_2 = () => {
             );
 
             // Validate in kits cell (should be 0 initially, but could be more from previous builds)
-            const inKitsCell = row.locator(
-              `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`,
-            );
+            const inKitsCell = row.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
             await detailsPage.highlightElement(inKitsCell, {
               backgroundColor: 'yellow',
               border: '2px solid red',
@@ -2087,9 +2075,7 @@ export const runERP_969_2 = () => {
             );
 
             // Validate free quantity cell (quantity - in kits)
-            const freeQuantityCell = row.locator(
-              `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`,
-            );
+            const freeQuantityCell = row.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
             await detailsPage.highlightElement(freeQuantityCell, {
               backgroundColor: 'yellow',
               border: '2px solid red',
@@ -2120,9 +2106,7 @@ export const runERP_969_2 = () => {
             );
 
             // Validate sclad need cell (total demand for this part)
-            const scladNeedCell = row.locator(
-              `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`,
-            );
+            const scladNeedCell = row.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
             await detailsPage.highlightElement(scladNeedCell, {
               backgroundColor: 'yellow',
               border: '2px solid red',
@@ -2146,9 +2130,7 @@ export const runERP_969_2 = () => {
             );
 
             // Validate need cell (our order quantity minus in kits)
-            const needCell = row.locator(
-              `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`,
-            );
+            const needCell = row.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
             await detailsPage.highlightElement(needCell, {
               backgroundColor: 'yellow',
               border: '2px solid red',
@@ -2199,8 +2181,8 @@ export const runERP_969_2 = () => {
       const waybillModal = warehousePage.locator(SelectorsERP969.WAYBILL_MODAL_OPEN_PATTERN);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify waybill modal is visible',
         test.info(),
@@ -2210,8 +2192,8 @@ export const runERP_969_2 = () => {
       const detailsTable = waybillModal.locator(`table${SelectorsModalWaybill.DETAILS_TABLE_TABLE}`);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(detailsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(detailsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify details table is visible',
         test.info(),
@@ -2227,9 +2209,7 @@ export const runERP_969_2 = () => {
         const row = detailRows.nth(i);
 
         // Get the detail name for this row
-        const nameCell = row.locator(
-          `[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`,
-        );
+        const nameCell = row.locator(`[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
 
         // Check if the name cell exists
         const nameCellExists = await nameCell.count();
@@ -2241,8 +2221,8 @@ export const runERP_969_2 = () => {
         // Wait for the name cell to be visible
         await expectSoftWithScreenshot(
           page,
-          () => {
-            expect.soft(nameCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          async () => {
+            await expect.soft(nameCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
           },
           'Verify name cell is visible',
           test.info(),
@@ -2277,8 +2257,8 @@ export const runERP_969_2 = () => {
           const modalDialog = warehousePage.locator(`dialog[data-testid^="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_PREFIX}"]`);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(modalDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(modalDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify modal dialog is visible',
             test.info(),
@@ -2286,13 +2266,11 @@ export const runERP_969_2 = () => {
 
           // Find and validate the modal title matches the detail name
           // The pattern is OstatkPCBD-ModalDetal{number}-InformationName-Name
-          const modalTitleElement = modalDialog.locator(
-            `[data-testid^="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX}"]`,
-          );
+          const modalTitleElement = modalDialog.locator(`[data-testid^="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_INFORMATION_NAME_NAME_SUFFIX}"]`);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(modalTitleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(modalTitleElement).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify modal title element is visible',
             test.info(),
@@ -2312,13 +2290,11 @@ export const runERP_969_2 = () => {
           );
 
           // Find and click the show full information button
-          const showFullInfoButton = modalDialog.locator(
-            `[data-testid^="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX}"]`,
-          );
+          const showFullInfoButton = modalDialog.locator(`[data-testid^="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_PREFIX}"][data-testid$="${SelectorsModalWaybill.OSTATK_PCBD_MODAL_DETAL_BUTTONS_SHOW_FULL_INFORMATION_BUTTON_SUFFIX}"]`);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(showFullInfoButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(showFullInfoButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify show full info button is visible',
             test.info(),
@@ -2337,8 +2313,8 @@ export const runERP_969_2 = () => {
           const newPageH3 = newTab.locator('h3').first();
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(newPageH3).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(newPageH3).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify new page h3 is visible',
             test.info(),
@@ -2354,8 +2330,8 @@ export const runERP_969_2 = () => {
           const nameField = newTab.locator(SelectorsModalWaybill.EDIT_DETAL_INFORMATION_INPUT);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(nameField).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(nameField).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify name field is visible',
             test.info(),
@@ -2384,8 +2360,8 @@ export const runERP_969_2 = () => {
           const archiveButton = newTab.locator(SelectorsModalWaybill.EDIT_DETAL_ARCHIVE_BUTTON);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(archiveButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(archiveButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify archive button is visible',
             test.info(),
@@ -2409,8 +2385,8 @@ export const runERP_969_2 = () => {
           const archiveConfirmDialog = newTab.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(archiveConfirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(archiveConfirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify archive confirm dialog is visible',
             test.info(),
@@ -2428,8 +2404,8 @@ export const runERP_969_2 = () => {
           const yesButton = archiveConfirmDialog.locator(SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON);
           await expectSoftWithScreenshot(
             page,
-            () => {
-              expect.soft(yesButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+            async () => {
+              await expect.soft(yesButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
             },
             'Verify yes button is visible',
             test.info(),
@@ -2474,8 +2450,8 @@ export const runERP_969_2 = () => {
       const waybillModal = warehousePage.locator(SelectorsERP969.WAYBILL_MODAL_OPEN_PATTERN);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify waybill modal is visible',
         test.info(),
@@ -2485,8 +2461,8 @@ export const runERP_969_2 = () => {
       const actualizeButton = waybillModal.locator(SelectorsModalWaybill.CONTROL_BUTTONS_ACTUALIZE_BUTTON);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(actualizeButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(actualizeButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify actualize button is visible',
         test.info(),
@@ -2515,8 +2491,8 @@ export const runERP_969_2 = () => {
       const waybillModal = warehousePage.locator(SelectorsERP969.WAYBILL_MODAL_OPEN_PATTERN);
       await expectSoftWithScreenshot(
         page,
-        () => {
-          expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        async () => {
+          await expect.soft(waybillModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
         'Verify waybill modal is visible',
         test.info(),
@@ -2602,11 +2578,7 @@ export const runERP_969_2 = () => {
 
       // Sub-step 21.4: Validate progress wrapper shows 0%
       await allure.step('Sub-step 21.4: Validate progress wrapper shows 0%', async () => {
-        const progressWrapper = waybillModal
-          .locator(
-            `[data-testid^="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`,
-          )
-          .first();
+        const progressWrapper = waybillModal.locator(`[data-testid^="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_PREFIX}"][data-testid$="${SelectorsModalWaybill.TABLE_COMPLECT_MODAL_ADD_WAYBILL_CIRCLE_PROGRESS_WRAPPER_SUFFIX}"]`).first();
         await detailsPage.highlightElement(progressWrapper, {
           backgroundColor: 'yellow',
           border: '2px solid red',
@@ -2615,8 +2587,8 @@ export const runERP_969_2 = () => {
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         await expectSoftWithScreenshot(
           page,
-          () => {
-            expect.soft(progressWrapper).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          async () => {
+            await expect.soft(progressWrapper).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
           },
           'Verify progress wrapper is visible',
           test.info(),
@@ -2640,9 +2612,7 @@ export const runERP_969_2 = () => {
 
       // Sub-step 21.5: Validate remaining quantity cell is original order quantity
       await allure.step('Sub-step 21.5: Validate remaining quantity cell is original order quantity', async () => {
-        const remainingQuantityCell = waybillModal.locator(
-          `[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]`,
-        );
+        const remainingQuantityCell = waybillModal.locator(`[data-testid^="ModalAddWaybill-ShipmentDetailsTable-StockOrderRow"][data-testid$="-RemainingQuantityCell"]`);
         await detailsPage.highlightElement(remainingQuantityCell, {
           backgroundColor: 'yellow',
           border: '2px solid red',
@@ -2650,13 +2620,13 @@ export const runERP_969_2 = () => {
         });
         await warehousePage.waitForTimeout(TIMEOUTS.STANDARD);
         await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(remainingQuantityCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-        },
-        'Verify remaining quantity cell is visible',
-        test.info(),
-      );
+          page,
+          async () => {
+            await expect.soft(remainingQuantityCell).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          },
+          'Verify remaining quantity cell is visible',
+          test.info(),
+        );
         const remainingQuantity = await remainingQuantityCell.textContent();
         logger.log(`Remaining quantity after reload: "${remainingQuantity}"`);
         await expectSoftWithScreenshot(
@@ -2705,8 +2675,8 @@ export const runERP_969_2 = () => {
         const detailsTable = waybillModal.locator(`table${SelectorsModalWaybill.DETAILS_TABLE_TABLE}`);
         await expectSoftWithScreenshot(
           page,
-          () => {
-            expect.soft(detailsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          async () => {
+            await expect.soft(detailsTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
           },
           'Verify details table is visible',
           test.info(),
@@ -2721,16 +2691,12 @@ export const runERP_969_2 = () => {
           const firstRow = detailRows.first();
 
           // Get the detail name from the first row
-          const nameCell = firstRow.locator(
-            `[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`,
-          );
+          const nameCell = firstRow.locator(`[data-testid^="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_PREFIX}"][data-testid$="${SelectorsModalWaybill.MODAL_ADD_WAYBILL_DETAILS_TABLE_ROW_NAME_CELL_SUFFIX}"]`);
           const detailName = await nameCell.textContent();
           logger.log(`Validating detail: "${detailName}"`);
 
           // Validate need cell contains original order quantity
-          const needCell = firstRow.locator(
-            `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`,
-          );
+          const needCell = firstRow.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_NEED_CELL_SUFFIX}"]`);
           await detailsPage.highlightElement(needCell, {
             backgroundColor: 'yellow',
             border: '2px solid red',
@@ -2754,9 +2720,7 @@ export const runERP_969_2 = () => {
           });
 
           // Validate deficit cell (quantity needed minus available)
-          const deficitCell = firstRow.locator(
-            `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_DEFICIT_CELL_SUFFIX}"]`,
-          );
+          const deficitCell = firstRow.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_DEFICIT_CELL_SUFFIX}"]`);
           await detailsPage.highlightElement(deficitCell, {
             backgroundColor: 'yellow',
             border: '2px solid red',
@@ -2786,9 +2750,7 @@ export const runERP_969_2 = () => {
           });
 
           // Validate free quantity cell and click to verify
-          const freeQuantityCell = firstRow.locator(
-            `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`,
-          );
+          const freeQuantityCell = firstRow.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_FREE_QUANTITY_CELL_SUFFIX}"]`);
           await detailsPage.highlightElement(freeQuantityCell, {
             backgroundColor: 'yellow',
             border: '2px solid red',
@@ -2821,9 +2783,7 @@ export const runERP_969_2 = () => {
           });
 
           // Validate quantity cell and click to verify
-          const quantityCell = firstRow.locator(
-            `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`,
-          );
+          const quantityCell = firstRow.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_QUANTITY_CELL_SUFFIX}"]`);
           await detailsPage.highlightElement(quantityCell, {
             backgroundColor: 'yellow',
             border: '2px solid red',
@@ -2852,9 +2812,7 @@ export const runERP_969_2 = () => {
           });
 
           // Validate in kits cell is 0 and click to verify
-          const inKitsCell = firstRow.locator(
-            `[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`,
-          );
+          const inKitsCell = firstRow.locator(`[data-testid^="${SelectorsModalWaybill.DETAILS_TABLE_ROW_PREFIX}"][data-testid$="${SelectorsModalWaybill.DETAILS_TABLE_ROW_IN_KITS_CELL_SUFFIX}"]`);
           await detailsPage.highlightElement(inKitsCell, {
             backgroundColor: 'yellow',
             border: '2px solid red',

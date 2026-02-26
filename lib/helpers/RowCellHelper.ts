@@ -2,7 +2,7 @@
  * @file RowCellHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for row and cell operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Getting values from table rows
  * - Clicking cells in rows
@@ -295,11 +295,7 @@ export class RowCellHelper {
     // Проверяем, что значение найдено
     if (!foundValue) {
       // Provide more detailed error information
-      const errorMessage =
-        `Value "${name.trim()}" not found in table. ` +
-        `Table has ${rowCount} row(s). ` +
-        `First row content: "${firstRowText?.trim() || 'empty'}". ` +
-        `All cell texts: [${cellTexts.map(text => `"${text.trim()}"`).join(', ')}]`;
+      const errorMessage = `Value "${name.trim()}" not found in table. ` + `Table has ${rowCount} row(s). ` + `First row content: "${firstRowText?.trim() || 'empty'}". ` + `All cell texts: [${cellTexts.map(text => `"${text.trim()}"`).join(', ')}]`;
       console.error(errorMessage);
 
       await expectSoftWithScreenshot(

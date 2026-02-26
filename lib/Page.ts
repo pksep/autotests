@@ -140,31 +140,14 @@ export class PageObject extends AbstractPage {
   }
 
   /** Navigate to page, find table, wait for table body. */
-  async navigateToPageAndWaitForTable(
-    url: string,
-    tableSelector: string,
-    tableBodySelector: string,
-    options?: { minRows?: number; timeoutMs?: number },
-  ): Promise<void> {
-    return this.navigationHelper.navigateToPageAndWaitForTable(
-      url,
-      tableSelector,
-      tableBodySelector,
-      options,
-      this.tableHelper.findTable.bind(this.tableHelper),
-      async (selector: string, opts?: { minRows?: number; timeoutMs?: number }) => {
-        await this.tableHelper.waitingTableBody(selector, opts);
-      },
-    );
+  async navigateToPageAndWaitForTable(url: string, tableSelector: string, tableBodySelector: string, options?: { minRows?: number; timeoutMs?: number }): Promise<void> {
+    return this.navigationHelper.navigateToPageAndWaitForTable(url, tableSelector, tableBodySelector, options, this.tableHelper.findTable.bind(this.tableHelper), async (selector: string, opts?: { minRows?: number; timeoutMs?: number }) => {
+      await this.tableHelper.waitingTableBody(selector, opts);
+    });
   }
 
   /** Search table and optionally wait for table body. */
-  async searchAndWaitForTable(
-    searchTerm: string,
-    tableSelector: string,
-    tableBodySelector: string,
-    options?: { useRedesign?: boolean; searchInputDataTestId?: string; timeoutBeforeWait?: number; minRows?: number; timeoutMs?: number },
-  ): Promise<void> {
+  async searchAndWaitForTable(searchTerm: string, tableSelector: string, tableBodySelector: string, options?: { useRedesign?: boolean; searchInputDataTestId?: string; timeoutBeforeWait?: number; minRows?: number; timeoutMs?: number }): Promise<void> {
     return this.tableHelper.searchAndWaitForTable(searchTerm, tableSelector, tableBodySelector, options);
   }
 
@@ -182,6 +165,7 @@ export class PageObject extends AbstractPage {
     options?: {
       skipTitleValidation?: boolean;
       skipButtonValidation?: boolean;
+      skipNetworkIdle?: boolean;
       useModalMethod?: boolean;
       testInfo?: TestInfo;
     },
@@ -378,28 +362,11 @@ export class PageObject extends AbstractPage {
     urgencyModalColId: string,
     plannedShipmentModalColId: string,
   ): Promise<{ success: boolean; message?: string }> {
-    return this.orderHelper.checkDatesWithOrderList(
-      this,
-      page,
-      tableId,
-      nameColIdIndex,
-      urgencyColIndex,
-      plannedShipmentColIndex,
-      ordersIconColIndex,
-      modalSelector,
-      modalTableSelector,
-      urgencyModalColId,
-      plannedShipmentModalColId,
-    );
+    return this.orderHelper.checkDatesWithOrderList(this, page, tableId, nameColIdIndex, urgencyColIndex, plannedShipmentColIndex, ordersIconColIndex, modalSelector, modalTableSelector, urgencyModalColId, plannedShipmentModalColId);
   }
 
   /** Click button by text and locator. */
-  async clickButton(
-    textButton: string,
-    locator: string,
-    click: Click = Click.Yes,
-    options?: { waitForEnabled?: boolean; enabledTimeout?: number },
-  ) {
+  async clickButton(textButton: string, locator: string, click: Click = Click.Yes, options?: { waitForEnabled?: boolean; enabledTimeout?: number }) {
     return this.elementHelper.clickButton(textButton, locator, click, options);
   }
 
@@ -412,25 +379,8 @@ export class PageObject extends AbstractPage {
     return this.validationHelper.checkHeader(header, url);
   }
 
-  async ordersListVerifyModalDates(
-    page: Page,
-    modalSelectorId: string,
-    modalTableSelectorId: string,
-    urgencyModalColValForCompare: string,
-    plannedShipmentModalColValForCompare: string,
-    urgencyDateId: string,
-    plannedShipmentDateId: string,
-  ): Promise<{ success: boolean; message?: string }> {
-    return this.orderHelper.ordersListVerifyModalDates(
-      this,
-      page,
-      modalSelectorId,
-      modalTableSelectorId,
-      urgencyModalColValForCompare,
-      plannedShipmentModalColValForCompare,
-      urgencyDateId,
-      plannedShipmentDateId,
-    );
+  async ordersListVerifyModalDates(page: Page, modalSelectorId: string, modalTableSelectorId: string, urgencyModalColValForCompare: string, plannedShipmentModalColValForCompare: string, urgencyDateId: string, plannedShipmentDateId: string): Promise<{ success: boolean; message?: string }> {
+    return this.orderHelper.ordersListVerifyModalDates(this, page, modalSelectorId, modalTableSelectorId, urgencyModalColValForCompare, plannedShipmentModalColValForCompare, urgencyDateId, plannedShipmentDateId);
   }
 
   /** Checks the current date in the locator
@@ -776,49 +726,18 @@ export class PageObject extends AbstractPage {
   }
 
   /** Find checkbox index by order number in edit modal. */
-  async findCheckboxIndexByOrderNumber(
-    checkboxesLocator: Locator,
-    orderNumberCellsLocator: Locator,
-    targetOrderNumber: string,
-    errorMessage?: string,
-  ): Promise<number> {
+  async findCheckboxIndexByOrderNumber(checkboxesLocator: Locator, orderNumberCellsLocator: Locator, targetOrderNumber: string, errorMessage?: string): Promise<number> {
     return this.orderHelper.findCheckboxIndexByOrderNumber(checkboxesLocator, orderNumberCellsLocator, targetOrderNumber, errorMessage);
   }
 
   /** Open context menu and click Заказы. */
-  async openContextMenuAndClickOrders(
-    popoverSelector: string,
-    menuItemSelector: string,
-    waitForModalSelector?: string,
-    popoverPosition: 'first' | 'last' | number = 'first',
-  ): Promise<void> {
+  async openContextMenuAndClickOrders(popoverSelector: string, menuItemSelector: string, waitForModalSelector?: string, popoverPosition: 'first' | 'last' | number = 'first'): Promise<void> {
     return this.orderHelper.openContextMenuAndClickOrders(this, popoverSelector, menuItemSelector, waitForModalSelector, popoverPosition);
   }
 
   /** Verify orders modal content. */
-  async verifyOrdersModal(
-    modalSelector: string,
-    tableSelector: string,
-    orderRowsSelector: string,
-    quantityCellsSelector: string,
-    expectedOrderNumbers: string[],
-    expectedQuantities: string[],
-    itemTypeName?: string,
-    useRowLocator: boolean = false,
-    additionalWaitTimeout?: number,
-  ): Promise<void> {
-    return this.orderHelper.verifyOrdersModal(
-      this,
-      modalSelector,
-      tableSelector,
-      orderRowsSelector,
-      quantityCellsSelector,
-      expectedOrderNumbers,
-      expectedQuantities,
-      itemTypeName,
-      useRowLocator,
-      additionalWaitTimeout,
-    );
+  async verifyOrdersModal(modalSelector: string, tableSelector: string, orderRowsSelector: string, quantityCellsSelector: string, expectedOrderNumbers: string[], expectedQuantities: string[], itemTypeName?: string, useRowLocator: boolean = false, additionalWaitTimeout?: number): Promise<void> {
+    return this.orderHelper.verifyOrdersModal(this, modalSelector, tableSelector, orderRowsSelector, quantityCellsSelector, expectedOrderNumbers, expectedQuantities, itemTypeName, useRowLocator, additionalWaitTimeout);
   }
 
   /** Get quantity cell value and optionally verify. */
@@ -833,18 +752,7 @@ export class PageObject extends AbstractPage {
     timeoutMs: number = WAIT_TIMEOUTS.STANDARD,
     tableSelector?: string,
   ): Promise<number> {
-    return this.orderHelper.getQuantityCellAndVerify(
-      this,
-      quantityCellSelector,
-      expectedValue,
-      quantityType,
-      itemTypeName,
-      useComplexSelector,
-      prefixId,
-      suffixId,
-      timeoutMs,
-      tableSelector,
-    );
+    return this.orderHelper.getQuantityCellAndVerify(this, quantityCellSelector, expectedValue, quantityType, itemTypeName, useComplexSelector, prefixId, suffixId, timeoutMs, tableSelector);
   }
 
   /** Click order row to open edit dialog. */
@@ -853,27 +761,8 @@ export class PageObject extends AbstractPage {
   }
 
   /** Select checkbox for order and archive. */
-  async selectCheckboxAndArchiveOrder(
-    orderNumber: string,
-    checkboxesSelector: string,
-    orderNumberCellsSelector: string,
-    archiveButtonSelector: string,
-    confirmButtonSelector: string,
-    editModalSelector: string,
-    errorMessage?: string,
-    itemTypeName?: string,
-  ): Promise<void> {
-    return this.archiveHelper.selectCheckboxAndArchiveOrder(
-      this,
-      orderNumber,
-      checkboxesSelector,
-      orderNumberCellsSelector,
-      archiveButtonSelector,
-      confirmButtonSelector,
-      editModalSelector,
-      errorMessage,
-      itemTypeName,
-    );
+  async selectCheckboxAndArchiveOrder(orderNumber: string, checkboxesSelector: string, orderNumberCellsSelector: string, archiveButtonSelector: string, confirmButtonSelector: string, editModalSelector: string, errorMessage?: string, itemTypeName?: string): Promise<void> {
+    return this.archiveHelper.selectCheckboxAndArchiveOrder(this, orderNumber, checkboxesSelector, orderNumberCellsSelector, archiveButtonSelector, confirmButtonSelector, editModalSelector, errorMessage, itemTypeName);
   }
 
   async validatePageTitlesWithStyling(testId: string, expectedTitles: string[]): Promise<void> {
@@ -923,11 +812,7 @@ export class PageObject extends AbstractPage {
   }
 
   /** Vue-compatible search with pressSequentially. */
-  async searchWithPressSequentially(
-    searchInputSelector: string,
-    searchTerm: string,
-    options?: { delay?: number; waitAfterSearch?: number; timeout?: number },
-  ): Promise<void> {
+  async searchWithPressSequentially(searchInputSelector: string, searchTerm: string, options?: { delay?: number; waitAfterSearch?: number; timeout?: number }): Promise<void> {
     return this.tableHelper.searchWithPressSequentially(searchInputSelector, searchTerm, options);
   }
 
@@ -948,8 +833,6 @@ export class PageObject extends AbstractPage {
 }
 
 // ValidationResult is now exported from TableHelper
-
-
 
 export enum Click {
   Yes = 1,

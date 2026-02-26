@@ -104,13 +104,11 @@ export class PartsDatabaseTableHelper {
         const id = (await row.locator('td:nth-child(1)').textContent()) ?? '';
         const partNumber = (await row.locator('td:nth-child(2)').textContent()) ?? '';
         const name = (await row.locator('td:nth-child(3)').textContent()) ?? '';
-        let quantity = parseInt((await row.locator('td:nth-child(5)').textContent()) ?? '0', 10);
+        const quantity = parseInt((await row.locator('td:nth-child(5)').textContent()) ?? '0', 10);
 
         logger.info(`Item details: id=${id}, partNumber=${partNumber}, name=${name}, quantity=${quantity}, data-testid=${rowTestId}`);
         if (quantity < 1) {
-          logger.error(
-            `Skipped row ${i}: Invalid Quantity value: Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`,
-          );
+          logger.error(`Skipped row ${i}: Invalid Quantity value: Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
           continue;
         }
 
@@ -149,9 +147,7 @@ export class PartsDatabaseTableHelper {
             addToAll(item);
           }
         } else {
-          logger.error(
-            `Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`,
-          );
+          logger.error(`Skipped row ${i}: Missing required data (id, name, or quantity) Details: \nRow Id: ${rowTestId}\nId:  ${id}\nPart Number: ${partNumber}\nName:  ${name}\nQuantity: ${quantity}`);
         }
       } else if (!isDataRow) {
         logger.warn(`Skipped row ${i}: Not a data row`);
@@ -183,13 +179,7 @@ export class PartsDatabaseTableHelper {
     return groups;
   }
 
-  async processGroupRows(
-    rows: Item[],
-    groupType: string,
-    page: Page,
-    parentQuantity: number,
-    globalTableData: GlobalTableData,
-  ): Promise<void> {
+  async processGroupRows(rows: Item[], groupType: string, page: Page, parentQuantity: number, globalTableData: GlobalTableData): Promise<void> {
     for (const item of rows) {
       logger.info(`Processing ${groupType} item:`, item);
       const rowLocator = page.locator(`[data-testid="${item.dataTestId}"]`).last();
@@ -294,9 +284,7 @@ export class PartsDatabaseTableHelper {
                 } as Item);
               }
             } else {
-              const existingMDItem = globalTableData.МД.find(
-                existingItem => existingItem.material.trim().toLowerCase() === item.material.trim().toLowerCase(),
-              );
+              const existingMDItem = globalTableData.МД.find(existingItem => existingItem.material.trim().toLowerCase() === item.material.trim().toLowerCase());
               if (existingMDItem) {
                 existingMDItem.quantity += item.quantity;
                 logger.info(`Updated quantity for material "${existingMDItem.material}" in МД group.`);
@@ -391,12 +379,7 @@ export class PartsDatabaseTableHelper {
     }
   }
 
-  async processSBGroupRows(
-    rows: Item[],
-    page: Page,
-    parentQuantity: number,
-    globalTableData: GlobalTableData,
-  ): Promise<void> {
+  async processSBGroupRows(rows: Item[], page: Page, parentQuantity: number, globalTableData: GlobalTableData): Promise<void> {
     for (const item of rows) {
       logger.info(`Processing СБ item:`, item);
       const rowLocator = page.locator(`[data-testid="${item.dataTestId}"]`).last();
@@ -508,7 +491,7 @@ export class PartsDatabaseTableHelper {
     const CONSUMABLES_TABLE_ID = 'ModalComplect-ConsumableMaterialsTable';
     const CONSUMABLES_TABLE_NAME_ID = 'ModalComplect-ConsumableMaterialsTableHead-Name';
 
-    let hasDuplicates = false;
+    const hasDuplicates = false;
 
     // Highlight and click the product row
     await row.evaluate(element => {
@@ -786,15 +769,11 @@ export class PartsDatabaseTableHelper {
           const tableItem = tableData[tableItemPartNumber];
 
           // Find a matching item in the array
-          const matchingArrayItem = arrayData.find(
-            item => item.partNumber === tableItemPartNumber && item.name === tableItem.partName && item.quantity === tableItem.quantity,
-          );
+          const matchingArrayItem = arrayData.find(item => item.partNumber === tableItemPartNumber && item.name === tableItem.partName && item.quantity === tableItem.quantity);
 
           if (!matchingArrayItem) {
             // Log mismatch details
-            console.error(
-              `Mismatch found: Part Number '${tableItemPartNumber}', Name '${tableItem.partName}', and Quantity '${tableItem.quantity}' exist in the table but not in the array.`,
-            );
+            console.error(`Mismatch found: Part Number '${tableItemPartNumber}', Name '${tableItem.partName}', and Quantity '${tableItem.quantity}' exist in the table but not in the array.`);
           }
         }
 
@@ -806,9 +785,7 @@ export class PartsDatabaseTableHelper {
           if (!matchingTableItem || matchingTableItem.quantity !== arrayItem.quantity) {
             logger.info(`%c❌ Completed compareItemsCB function for group ${globalKey}`, 'color: red; font-weight: bold;');
             // Log mismatch details
-            console.error(
-              `Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`,
-            );
+            console.error(`Mismatch found: Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`);
             console.error(tableData[arrayItem.partNumber]);
             console.error(arrayItem);
           }
@@ -934,10 +911,7 @@ export class PartsDatabaseTableHelper {
           const matchingArrayItem = arrayData.find(
             item =>
               //item.parentPartNumber === tableItem.parentPartNumber &&
-              item.partNumber === tableItemPartNumber &&
-              item.name === tableItem.partName &&
-              item.material === tableItem.partMaterial &&
-              item.quantity === tableItem.quantity,
+              item.partNumber === tableItemPartNumber && item.name === tableItem.partName && item.material === tableItem.partMaterial && item.quantity === tableItem.quantity,
           );
 
           if (!matchingArrayItem) {
@@ -951,9 +925,7 @@ export class PartsDatabaseTableHelper {
               );
             } else {
               console.error(
-                `Mismatch found:\n` +
-                  `Table Entry => Parent: '${tableItem.parentPartNumber}', Part Number: '${tableItemPartNumber}', Name: '${tableItem.partName}', Material: '${tableItem.partMaterial}', Quantity: '${tableItem.quantity}'\n` +
-                  `No matching partNumber found in the array.`,
+                `Mismatch found:\n` + `Table Entry => Parent: '${tableItem.parentPartNumber}', Part Number: '${tableItemPartNumber}', Name: '${tableItem.partName}', Material: '${tableItem.partMaterial}', Quantity: '${tableItem.quantity}'\n` + `No matching partNumber found in the array.`,
               );
             }
           }
@@ -962,17 +934,9 @@ export class PartsDatabaseTableHelper {
         // Compare array data with table data
         for (const arrayItem of arrayData) {
           const matchingTableItem = tableData[arrayItem.partNumber];
-          if (
-            !matchingTableItem ||
-            matchingTableItem.parentPartNumber !== arrayItem.parentPartNumber ||
-            matchingTableItem.partName !== arrayItem.name ||
-            matchingTableItem.partMaterial !== arrayItem.material ||
-            matchingTableItem.quantity !== arrayItem.quantity
-          ) {
+          if (!matchingTableItem || matchingTableItem.parentPartNumber !== arrayItem.parentPartNumber || matchingTableItem.partName !== arrayItem.name || matchingTableItem.partMaterial !== arrayItem.material || matchingTableItem.quantity !== arrayItem.quantity) {
             logger.info(`%c❌ Completed compareItemsD function for group ${globalKey}`, 'color: red; font-weight: bold;');
-            console.error(
-              `Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`,
-            );
+            console.error(`Mismatch found: Parent '${arrayItem.parentPartNumber}', Part Number '${arrayItem.partNumber}', Name '${arrayItem.name}', Material '${arrayItem.material}', and Quantity '${arrayItem.quantity}' exist in the array but not in the table.`);
           }
         }
       } else {
@@ -1218,5 +1182,4 @@ export class PartsDatabaseTableHelper {
     //     await compareTotals(modalLocator, CONSUMABLES_TOTAL_LINE, 'РМ');
     // });
   }
-
 }

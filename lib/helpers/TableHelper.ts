@@ -2,7 +2,7 @@
  * @file TableHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for table operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Table scanning and validation
  * - Table column operations
@@ -214,7 +214,7 @@ export class TableHelper {
       allRows.shift(); // removes the first element from the array
     }
     // Initialize the column count and headerTexts
-    let headerTexts: string[] = [];
+    const headerTexts: string[] = [];
 
     // Loop through each row containing th tags
     for (const row of allRows) {
@@ -500,9 +500,7 @@ export class TableHelper {
       el.style.border = '2px solid red';
       el.style.color = 'blue';
     });
-    const searchContainer = (
-      searchInputDataTestId ? table.locator(`[data-testid="${searchInputDataTestId}"]`) : table.locator(SelectorsSearchInputs.MAIN_SEARCH_COVER_INPUT)
-    ).nth(0);
+    const searchContainer = (searchInputDataTestId ? table.locator(`[data-testid="${searchInputDataTestId}"]`) : table.locator(SelectorsSearchInputs.MAIN_SEARCH_COVER_INPUT)).nth(0);
 
     // Wait for search container to be visible
     await searchContainer.waitFor({ state: 'visible', timeout: 10000 });
@@ -978,11 +976,7 @@ export class TableHelper {
    * @param searchTerm - Term to search for
    * @param options - Optional configuration (delay, waitAfterSearch)
    */
-  async searchWithPressSequentially(
-    searchInputSelector: string,
-    searchTerm: string,
-    options?: { delay?: number; waitAfterSearch?: number; timeout?: number },
-  ): Promise<void> {
+  async searchWithPressSequentially(searchInputSelector: string, searchTerm: string, options?: { delay?: number; waitAfterSearch?: number; timeout?: number }): Promise<void> {
     const delay = options?.delay ?? 50;
     const waitAfterSearch = options?.waitAfterSearch ?? 2000;
     const timeout = options?.timeout ?? 10000;

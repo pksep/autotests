@@ -31,13 +31,7 @@ export default defineConfig({
     javaScriptEnabled: true,
     // Add realistic delays
     launchOptions: {
-      args: [
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor',
-        '--disable-blink-features=AutomationControlled',
-        '--disable-dev-shm-usage',
-        '--no-sandbox',
-      ],
+      args: ['--disable-web-security', '--disable-features=VizDisplayCompositor', '--disable-blink-features=AutomationControlled', '--disable-dev-shm-usage', '--no-sandbox'],
     },
     // Filter out Vue warnings
     contextOptions: {

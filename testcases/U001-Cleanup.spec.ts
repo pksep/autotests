@@ -1,7 +1,7 @@
 /**
  * @file U001-Cleanup.spec.ts
  * @purpose Test Suite 11: Cleanup Operations (Test Cases 36-37)
- * 
+ *
  * This suite handles:
  * - Test Case 36: Cleaning up warehouse residues
  * - Test Case 37: Delete Product after test
@@ -18,20 +18,12 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
-import {
-  nameProduct,
-  nameProductNew,
-  descendantsCbedArray,
-  descendantsDetailArray,
-  arrayDetail,
-  arrayCbed,
-  designation,
-} from './U001-Constants';
+import { nameProduct, nameProductNew, descendantsCbedArray, descendantsDetailArray, arrayDetail, arrayCbed, designation } from './U001-Constants';
 
 export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Cleanup Operations (Test Cases 36-37)`);
 
-  test('Test Case 36 - Cleaning up warehouse residues', async ({ page }) => {
+  test('Case 36 - Cleaning up warehouse residues', async ({ page }) => {
     logger.log('Test Case 36 - Cleaning up warehouse residues');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const revisionPage = new CreateRevisionPage(page);
@@ -81,7 +73,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
     // Cleanup CBEDs: Use descendantsCbedArray if available, otherwise use arrayCbed
     const cbedArrayToClean = descendantsCbedArray.length > 0 ? descendantsCbedArray : arrayCbed;
     logger.log(`Cleaning up ${cbedArrayToClean.length} CBEDs (from ${descendantsCbedArray.length > 0 ? 'descendantsCbedArray' : 'arrayCbed'})`);
-    
+
     if (cbedArrayToClean.length === 0) {
       console.warn('WARNING: Both descendantsCbedArray and arrayCbed are empty. Skipping CBED cleanup.');
     } else {
@@ -113,7 +105,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
     // Cleanup Details: Use descendantsDetailArray if available, otherwise use arrayDetail
     const detailArrayToClean = descendantsDetailArray.length > 0 ? descendantsDetailArray : arrayDetail;
     logger.log(`Cleaning up ${detailArrayToClean.length} Details (from ${descendantsDetailArray.length > 0 ? 'descendantsDetailArray' : 'arrayDetail'})`);
-    
+
     if (detailArrayToClean.length === 0) {
       console.warn('WARNING: Both descendantsDetailArray and arrayDetail are empty. Skipping Detail cleanup.');
     } else {
@@ -132,23 +124,17 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
 
         await allure.step('Step 18-21: Change balance and confirm archive', async () => {
           // Same pattern as product at start: refresh and search after confirm; switch to Детали tab after reload
-          await revisionPage.changeBalanceAndConfirmArchive(
-            detail.name,
-            tableMainDetal,
-            '0',
-            SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE,
-            {
-              refreshAndSearchAfter: true,
-              switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM2,
-              waitAfterConfirm: 500,
-            },
-          );
+          await revisionPage.changeBalanceAndConfirmArchive(detail.name, tableMainDetal, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
+            refreshAndSearchAfter: true,
+            switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM2,
+            waitAfterConfirm: 500,
+          });
         });
       }
     }
   });
 
-  test.skip('Test Case 37 - Delete Product after test', async ({ page }) => {
+  test.skip('Case 37 - Delete Product after test', async ({ page }) => {
     logger.log('Test Case 37 - Delete Product after test');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
@@ -186,7 +172,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await searchDetail.inputValue()).toBe(detail.name);
+            await expect.soft(searchDetail).toHaveValue(detail.name);
           },
           `Verify search detail input value equals "${detail.name}"`,
           test.info(),
@@ -262,7 +248,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await searchCbed.inputValue()).toBe(cbed.name);
+            await expect.soft(searchCbed).toHaveValue(cbed.name);
           },
           `Verify search cbed input value equals "${cbed.name}"`,
           test.info(),
@@ -345,7 +331,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await searchProduct.inputValue()).toBe(nameProductNew);
+          await expect.soft(searchProduct).toHaveValue(nameProductNew);
         },
         `Verify search product input value equals "${nameProductNew}"`,
         test.info(),
@@ -504,5 +490,4 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
       );
     });
   });
-
 };

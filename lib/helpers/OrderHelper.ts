@@ -2,7 +2,7 @@
  * @file OrderHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for order-specific operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Order date verification
  * - Order quantity checks
@@ -86,9 +86,9 @@ export class OrderHelper {
       }
       const row = filteredRows[i];
       const cells = await row.$$('td');
-      let nameForErrorReport = await cells[nameColIdIndex].innerText();
-      let urgencyDateForCompare = await cells[urgencyColIndex].innerText();
-      let plannedShipmentDateForCompare = await cells[plannedShipmentColIndex].innerText();
+      const nameForErrorReport = await cells[nameColIdIndex].innerText();
+      const urgencyDateForCompare = await cells[urgencyColIndex].innerText();
+      const plannedShipmentDateForCompare = await cells[plannedShipmentColIndex].innerText();
 
       logger.info(`Urgency Date: ${urgencyDateForCompare}`);
       logger.info(`Planned Shipment Date: ${plannedShipmentDateForCompare}`);
@@ -103,16 +103,7 @@ export class OrderHelper {
 
         await icon.click();
         logger.info(`Clicked on the icon in row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`);
-        const result = await this.ordersListVerifyModalDates(
-          pageObject,
-          page,
-          modalSelector,
-          modalTableSelector,
-          urgencyDateForCompare,
-          plannedShipmentDateForCompare,
-          urgencyModalColId,
-          plannedShipmentModalColId,
-        );
+        const result = await this.ordersListVerifyModalDates(pageObject, page, modalSelector, modalTableSelector, urgencyDateForCompare, plannedShipmentDateForCompare, urgencyModalColId, plannedShipmentModalColId);
 
         page.mouse.dblclick(1, 1);
         if (!result.success) {
@@ -121,9 +112,7 @@ export class OrderHelper {
           logger.error(`Test failed for order ${nameForErrorReport}. Dates do not match.`);
         }
       } else {
-        logger.warn(
-          `No icon found in the ordersIconColIndex column for row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`,
-        );
+        logger.warn(`No icon found in the ordersIconColIndex column for row with urgency date ${urgencyDateForCompare} and planned shipment date ${plannedShipmentDateForCompare}`);
       }
     }
 
@@ -201,7 +190,7 @@ export class OrderHelper {
     const filteredRows = await this.filterRowsWithoutTh(rows);
     let urgencyModalDate = '';
     let plannedShipmentModalDate = '';
-    let counter = 0;
+    const counter = 0;
 
     for (const row of filteredRows) {
       const hasNotDeficitClass = await row.evaluate(node => {
@@ -330,12 +319,7 @@ export class OrderHelper {
    * @returns The index of the checkbox for the order number
    * @throws Error if the order number is not found
    */
-  async findCheckboxIndexByOrderNumber(
-    checkboxesLocator: Locator,
-    orderNumberCellsLocator: Locator,
-    targetOrderNumber: string,
-    errorMessage?: string,
-  ): Promise<number> {
+  async findCheckboxIndexByOrderNumber(checkboxesLocator: Locator, orderNumberCellsLocator: Locator, targetOrderNumber: string, errorMessage?: string): Promise<number> {
     // Wait for elements to be visible
     await checkboxesLocator
       .first()
@@ -471,95 +455,92 @@ export class OrderHelper {
     additionalWaitTimeout?: number,
   ): Promise<void> {
     const { allure } = await import('allure-playwright');
-    await allure.step(
-      itemTypeName ? `Verify orders modal opens and shows both ${itemTypeName} orders` : 'Verify orders modal opens and shows both orders',
-      async () => {
-        // Wait for the orders modal to appear
-        const ordersModal = this.page.locator(`${modalSelector}[open]`);
-        await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
+    await allure.step(itemTypeName ? `Verify orders modal opens and shows both ${itemTypeName} orders` : 'Verify orders modal opens and shows both orders', async () => {
+      // Wait for the orders modal to appear
+      const ordersModal = this.page.locator(`${modalSelector}[open]`);
+      await ordersModal.waitFor({ state: 'visible', timeout: 10000 });
 
-        // Highlight modal for IZD case
-        if (itemTypeName === 'IZD') {
-          await pageObject.highlightElement(ordersModal, {
-            backgroundColor: 'yellow',
-            border: '2px solid red',
-            color: 'blue',
-          });
-        }
+      // Highlight modal for IZD case
+      if (itemTypeName === 'IZD') {
+        await pageObject.highlightElement(ordersModal, {
+          backgroundColor: 'yellow',
+          border: '2px solid red',
+          color: 'blue',
+        });
+      }
 
-        // Check the orders table
-        const ordersTable = this.page.locator(tableSelector);
-        await ordersTable.waitFor({ state: 'visible', timeout: 5000 });
+      // Check the orders table
+      const ordersTable = this.page.locator(tableSelector);
+      await ordersTable.waitFor({ state: 'visible', timeout: 5000 });
 
-        // Get all order rows
-        const orderRows = useRowLocator ? ordersModal.locator(orderRowsSelector) : this.page.locator(orderRowsSelector);
-        const orderCount = await orderRows.count();
-        const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
-        logger.log(`Found ${orderCount} ${logPrefix}orders in the modal`);
+      // Get all order rows
+      const orderRows = useRowLocator ? ordersModal.locator(orderRowsSelector) : this.page.locator(orderRowsSelector);
+      const orderCount = await orderRows.count();
+      const logPrefix = itemTypeName ? `${itemTypeName} ` : '';
+      logger.log(`Found ${orderCount} ${logPrefix}orders in the modal`);
 
-        // Additional wait for IZD case
-        if (additionalWaitTimeout) {
-          await this.page.waitForTimeout(additionalWaitTimeout);
-        }
+      // Additional wait for IZD case
+      if (additionalWaitTimeout) {
+        await this.page.waitForTimeout(additionalWaitTimeout);
+      }
 
-        // Verify we have at least the expected number of orders
-        expect(orderCount).toBeGreaterThanOrEqual(expectedOrderNumbers.length);
+      // Verify we have at least the expected number of orders
+      expect(orderCount).toBeGreaterThanOrEqual(expectedOrderNumbers.length);
 
-        // Get order numbers and quantities
-        const orderNumbers: string[] = [];
-        const quantities: string[] = [];
+      // Get order numbers and quantities
+      const orderNumbers: string[] = [];
+      const quantities: string[] = [];
 
-        for (let i = 0; i < orderCount; i++) {
-          let orderNumberCell;
-          let quantityCell;
+      for (let i = 0; i < orderCount; i++) {
+        let orderNumberCell;
+        let quantityCell;
 
-          if (useRowLocator) {
-            // IZD case: order number and quantity are within the row
-            orderNumberCell = orderRows.nth(i).locator(SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER);
-            quantityCell = orderRows.nth(i).locator(quantityCellsSelector);
+        if (useRowLocator) {
+          // IZD case: order number and quantity are within the row
+          orderNumberCell = orderRows.nth(i).locator(SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_NUMBER);
+          quantityCell = orderRows.nth(i).locator(quantityCellsSelector);
 
-            // Highlight cells for IZD case (different colors)
-            if (itemTypeName === 'IZD') {
-              await pageObject.highlightElement(orderNumberCell, {
-                backgroundColor: 'red',
-                border: '2px solid yellow',
-                color: 'blue',
-              });
-              await pageObject.highlightElement(quantityCell, {
-                backgroundColor: 'red',
-                border: '2px solid yellow',
-                color: 'blue',
-              });
-            }
-          } else {
-            // DETAIL/CBED case: order number from rows, quantity from separate locator with nth()
-            orderNumberCell = orderRows.nth(i);
-            quantityCell = this.page.locator(quantityCellsSelector).nth(i);
-          }
-
-          const orderNumber = (await orderNumberCell.innerText()).trim();
-          orderNumbers.push(orderNumber);
-
-          const quantity = (await quantityCell.innerText()).trim();
-          quantities.push(quantity);
-
+          // Highlight cells for IZD case (different colors)
           if (itemTypeName === 'IZD') {
-            logger.log(`${itemTypeName} Order ${i + 1}: Number="${orderNumber}", Quantity="${quantity}"`);
+            await pageObject.highlightElement(orderNumberCell, {
+              backgroundColor: 'red',
+              border: '2px solid yellow',
+              color: 'blue',
+            });
+            await pageObject.highlightElement(quantityCell, {
+              backgroundColor: 'red',
+              border: '2px solid yellow',
+              color: 'blue',
+            });
           }
+        } else {
+          // DETAIL/CBED case: order number from rows, quantity from separate locator with nth()
+          orderNumberCell = orderRows.nth(i);
+          quantityCell = this.page.locator(quantityCellsSelector).nth(i);
         }
 
-        logger.log(`${logPrefix}Order numbers: ${orderNumbers}`);
-        logger.log(`${logPrefix}Quantities: ${quantities}`);
+        const orderNumber = (await orderNumberCell.innerText()).trim();
+        orderNumbers.push(orderNumber);
 
-        // Verify our orders are present
-        for (const expectedOrderNumber of expectedOrderNumbers) {
-          expect(orderNumbers).toContain(expectedOrderNumber);
+        const quantity = (await quantityCell.innerText()).trim();
+        quantities.push(quantity);
+
+        if (itemTypeName === 'IZD') {
+          logger.log(`${itemTypeName} Order ${i + 1}: Number="${orderNumber}", Quantity="${quantity}"`);
         }
-        for (const expectedQuantity of expectedQuantities) {
-          expect(quantities).toContain(expectedQuantity);
-        }
-      },
-    );
+      }
+
+      logger.log(`${logPrefix}Order numbers: ${orderNumbers}`);
+      logger.log(`${logPrefix}Quantities: ${quantities}`);
+
+      // Verify our orders are present
+      for (const expectedOrderNumber of expectedOrderNumbers) {
+        expect(orderNumbers).toContain(expectedOrderNumber);
+      }
+      for (const expectedQuantity of expectedQuantities) {
+        expect(quantities).toContain(expectedQuantity);
+      }
+    });
   }
 
   /**
@@ -589,10 +570,7 @@ export class OrderHelper {
     tableSelector?: string,
   ): Promise<number> {
     const { allure } = await import('allure-playwright');
-    const stepName =
-      expectedValue === 55
-        ? `Verify total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55`
-        : `Verify ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5`;
+    const stepName = expectedValue === 55 ? `Verify total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55` : `Verify ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5`;
 
     let stepResult = 0;
     await allure.step(stepName, async () => {
@@ -600,12 +578,7 @@ export class OrderHelper {
       let quantityCell: Locator;
       if (useComplexSelector && suffixId && tableSelector) {
         // Scope to table's first visible row (robust after search/filter when row indices may change)
-        quantityCell = this.page
-          .locator(tableSelector)
-          .locator('tbody tr')
-          .first()
-          .locator(`[data-testid$="${suffixId}"]`)
-          .first();
+        quantityCell = this.page.locator(tableSelector).locator('tbody tr').first().locator(`[data-testid$="${suffixId}"]`).first();
       } else if (useComplexSelector && prefixId && suffixId) {
         // Build complex selector with prefix and suffix
         quantityCell = this.page.locator(`[data-testid^="${prefixId}"][data-testid$="${suffixId}"]`).first();
@@ -642,10 +615,7 @@ export class OrderHelper {
       // Verify expected value if provided
       if (expectedValue !== undefined) {
         expect(quantity).toBe(expectedValue);
-        const successMessage =
-          expectedValue === 55
-            ? `✅ Verified total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55 (50 + 5)`
-            : `✅ Verified ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5 - now showing ${quantity} instead of 55`;
+        const successMessage = expectedValue === 55 ? `✅ Verified total ${itemTypeName ? itemTypeName + ' ' : ''}quantity is 55 (50 + 5)` : `✅ Verified ${itemTypeName ? itemTypeName + ' ' : ''}quantity decreased by 5 - now showing ${quantity} instead of 55`;
         logger.log(successMessage);
       }
 
@@ -675,11 +645,7 @@ export class OrderHelper {
     await allure.step('Click on second order to open edit dialog', async () => {
       // Find the row with the order and click on it
       const orderRows = this.page.locator(orderRowsSelector);
-      const orderRowIndex = await this.findOrderRowIndexByOrderNumber(
-        orderRows,
-        orderNumber,
-        errorMessage || `Could not find ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber} in the orders list`,
-      );
+      const orderRowIndex = await this.findOrderRowIndexByOrderNumber(orderRows, orderNumber, errorMessage || `Could not find ${itemTypeName ? itemTypeName + ' ' : ''}order ${orderNumber} in the orders list`);
 
       // Click on the order number cell to open edit dialog
       const orderCell = orderRows.nth(orderRowIndex);

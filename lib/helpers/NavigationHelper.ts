@@ -2,7 +2,7 @@
  * @file NavigationHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for navigation and page management operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Page navigation (goto, nav, navigateToPage)
  * - URL and page validation (checkUrl, checkTitle, checkLanguage, checkBreadCrumb)

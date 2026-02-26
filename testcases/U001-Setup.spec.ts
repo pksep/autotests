@@ -1,7 +1,7 @@
 /**
  * @file U001-Setup.spec.ts
  * @purpose Test Suite 1: Setup & Creation (Test Cases 01-04)
- * 
+ *
  * This suite handles:
  * - Test Case 01: Delete Product before create
  * - Test Case 02: Create Parts
@@ -25,7 +25,7 @@ import logger from '../lib/utils/logger';
 export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Setup & Creation (Test Cases 01-04)`);
 
-  test('Test Case 01- Delete Product before create', async ({ page }) => {
+  test('Case 01- Delete Product before create', async ({ page }) => {
     logger.log('Test Case 01 - Delete Product before create');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
@@ -230,7 +230,6 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
-
     // Cleanup warehouse residues before creating new items
     await allure.step('Step 08: Cleanup warehouse residues', async () => {
       logger.log('Cleaning up warehouse residues before creating new items');
@@ -253,16 +252,16 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 08c: Cleanup product residues', async () => {
         await revisionPage.searchTable(nameProductNew, tableMain, 'TableRevisionPagination-SearchInput-Dropdown-Input');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        
+
         // Check if there are any rows in the table
         const rows = page.locator(`${tableMain} tbody tr`);
         const rowCount = await rows.count();
-        
+
         if (rowCount === 0) {
           logger.log(`No warehouse residues found for product: ${nameProductNew}. Skipping cleanup.`);
           return;
         }
-        
+
         await revisionPage.waitingTableBodyNoThead(tableMain);
         await revisionPage.changeBalanceAndConfirmArchive(nameProductNew, tableMain, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
           refreshAndSearchAfter: true,
@@ -278,16 +277,16 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await page.locator(tableMainCbed).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(cbed.name, tableMainCbed, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          
+
           // Check if there are any rows in the table
           const rows = page.locator(`${tableMainCbed} tbody tr`);
           const rowCount = await rows.count();
-          
+
           if (rowCount === 0) {
             logger.log(`No warehouse residues found for CBED: ${cbed.name}. Skipping cleanup.`);
             return;
           }
-          
+
           await revisionPage.waitingTableBodyNoThead(tableMainCbed);
           await revisionPage.changeBalanceAndConfirmArchive(cbed.name, tableMainCbed, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
@@ -304,16 +303,16 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await page.locator(tableMainDetal).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(detail.name, tableMainDetal, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          
+
           // Check if there are any rows in the table
           const rows = page.locator(`${tableMainDetal} tbody tr`);
           const rowCount = await rows.count();
-          
+
           if (rowCount === 0) {
             logger.log(`No warehouse residues found for Detail: ${detail.name}. Skipping cleanup.`);
             return;
           }
-          
+
           await revisionPage.waitingTableBodyNoThead(tableMainDetal);
           await revisionPage.changeBalanceAndConfirmArchive(detail.name, tableMainDetal, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
@@ -324,7 +323,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
     });
   });
 
-  test('Test Case 02 - Create Parts', async ({ page }) => {
+  test('Case 02 - Create Parts', async ({ page }) => {
     logger.log('Test Case 02 - Create Parts');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
@@ -340,26 +339,26 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         // Wait for network idle and ensure page is ready
         await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        
+
         // Check if the Create button exists on the current page
         let createButton = page.locator(PartsDBSelectors.BUTTON_CREATE_NEW_PART).filter({ hasText: 'Создать' });
         const createButtonCount = await createButton.count();
-        
+
         if (createButtonCount === 0) {
           // Button not found - might need to navigate back to parts database page
           logger.log('⚠️ Create button not found, navigating back to parts database page');
           await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
           await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          
+
           // Re-check the button after navigation
           createButton = page.locator(PartsDBSelectors.BUTTON_CREATE_NEW_PART).filter({ hasText: 'Создать' });
         }
-        
+
         // Wait for the button to be visible with a longer timeout
         await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
         await createButton.scrollIntoViewIfNeeded();
-        
+
         await partsDatabsePage.clickButton('Создать', PartsDBSelectors.BUTTON_CREATE_NEW_PART);
       });
 
@@ -379,7 +378,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await nameParts.inputValue()).toBe(detail.name);
+            await expect.soft(nameParts).toHaveValue(detail.name);
           },
           `Verify detail name input value equals "${detail.name}"`,
           test.info(),
@@ -395,7 +394,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await nameParts.inputValue()).toBe(detail.designation);
+            await expect.soft(nameParts).toHaveValue(detail.designation);
           },
           `Verify detail designation input value equals "${detail.designation}"`,
           test.info(),
@@ -429,7 +428,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await searchTypeOperation.inputValue()).toBe(typeOperation);
+            await expect.soft(searchTypeOperation).toHaveValue(typeOperation);
           },
           `Verify search type operation input value equals "${typeOperation}"`,
           test.info(),
@@ -462,9 +461,9 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 14: Click on the Create by copyinp', async () => {
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await partsDatabsePage.waitForNetworkIdle(WAIT_TIMEOUTS.STANDARD);
-        
+
         const cancelButton = page.locator(PartsDBSelectors.EDIT_DETAL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL).filter({ hasText: 'Отменить' });
-        
+
         // Check if the cancel button exists and is visible
         const cancelButtonCount = await cancelButton.count();
         if (cancelButtonCount === 0) {
@@ -480,7 +479,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
     }
   });
 
-  test('Test Case 03 - Create Cbed', async ({ page }) => {
+  test('Case 03 - Create Cbed', async ({ page }) => {
     logger.log('Test Case 03 - Create Cbed');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
@@ -517,7 +516,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await nameParts.inputValue()).toBe(cbed.name);
+            await expect.soft(nameParts).toHaveValue(cbed.name);
           },
           `Verify cbed name input value equals "${cbed.name}"`,
           test.info(),
@@ -531,7 +530,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await nameParts.inputValue()).toBe(cbed.designation);
+            await expect.soft(nameParts).toHaveValue(cbed.designation);
           },
           `Verify cbed designation input value equals "${cbed.designation}"`,
           test.info(),
@@ -550,7 +549,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
     }
   });
 
-  test('Test Case 04 - Create Product', async ({ page }) => {
+  test('Case 04 - Create Product', async ({ page }) => {
     logger.log('Test Case 04 - Create Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
@@ -610,7 +609,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await modalWindowSearchCbed.inputValue()).toBe(cbed.name);
+            await expect.soft(modalWindowSearchCbed).toHaveValue(cbed.name);
           },
           `Verify modal window search cbed input value equals "${cbed.name}"`,
           test.info(),
@@ -661,7 +660,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await expectSoftWithScreenshot(
           page,
           async () => {
-            expect.soft(await modalWindowSearchCbed.inputValue()).toBe(detail.name);
+            await expect.soft(modalWindowSearchCbed).toHaveValue(detail.name);
           },
           `Verify modal window search cbed input value equals "${detail.name}"`,
           test.info(),

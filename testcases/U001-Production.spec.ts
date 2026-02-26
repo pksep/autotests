@@ -1,7 +1,7 @@
 /**
  * @file U001-Production.spec.ts
  * @purpose Test Suite 3: Production Launch (Test Cases 08-10)
- * 
+ *
  * This suite handles:
  * - Test Case 08: Launch Into Production Product
  * - Test Case 09: Launch Into Production Cbed
@@ -45,7 +45,7 @@ let quantityProductLaunchOnProductionAfter = U001Constants.quantityProductLaunch
 export const runU001_03_Production = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Production Launch (Test Cases 08-10)`);
 
-  test('Test Case 08 - Launch Into Production Product', async ({ page }) => {
+  test('Case 08 - Launch Into Production Product', async ({ page }) => {
     logger.log('Test Case 08 - Launch Into Production Product');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortageProduct = new CreateShortageProductPage(page);
@@ -233,9 +233,7 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect
-            .soft(Number(quantityProductLaunchOnProductionAfter))
-            .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+          expect.soft(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
         },
         'Verify production ordered quantity increased correctly',
         test.info(),
@@ -243,7 +241,7 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     });
   });
 
-  test('Test Case 09 - Launch Into Production Cbed', async ({ page }) => {
+  test('Case 09 - Launch Into Production Cbed', async ({ page }) => {
     logger.log('Test Case 09 - Launch Into Production Cbed');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortageAssemblies = new CreatShortageAssembliesPage(page);
@@ -282,16 +280,11 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(
-            cbed.name,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE_TBODY,
-            {
-              useRedesign: true,
-              timeoutBeforeWait: 1000,
-              searchInputDataTestId: SelectorsShortagePages.TABLE_SEARCH_INPUT,
-            },
-          );
+          await shortageAssemblies.searchAndWaitForTable(cbed.name, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE_TBODY, {
+            useRedesign: true,
+            timeoutBeforeWait: 1000,
+            searchInputDataTestId: SelectorsShortagePages.TABLE_SEARCH_INPUT,
+          });
           await page.waitForLoadState('domcontentloaded');
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
@@ -471,7 +464,7 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     }
   });
 
-  test('Test Case 10 - Launch Into Production Parts', async ({ page }) => {
+  test('Case 10 - Launch Into Production Parts', async ({ page }) => {
     logger.log('Test Case 10 - Launch Into Production Parts');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortageParts = new CreatShortagePartsPage(page);
@@ -525,12 +518,12 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
             timeoutBeforeWait: 1000,
             minRows: 1, // Require at least 1 row after search
           });
-          
+
           // Verify that search found results
           const rows = page.locator(`${deficitTableDetail} tbody tr`);
           const rowCount = await rows.count();
           logger.log(`After search for "${part.name}": found ${rowCount} rows`);
-          
+
           if (rowCount === 0) {
             console.error(`ERROR: Search for "${part.name}" returned 0 rows!`);
             console.error('This part should appear in the deficit table after Test Cases 08-09 (Launch Product and CBED into production).');
@@ -702,9 +695,7 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect
-                .soft(Number(quantityProductLaunchOnProductionAfter))
-                .toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
+              expect.soft(Number(quantityProductLaunchOnProductionAfter)).toBe(Number(quantityProductLaunchOnProductionBefore) + Number(quantityProductLaunchOnProduction));
             },
             'Verify ordered quantity increased correctly',
             test.info(),

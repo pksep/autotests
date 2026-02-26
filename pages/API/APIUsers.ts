@@ -4,392 +4,397 @@ import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
 
 export class UsersAPI extends APIPageObject {
-    constructor(page: Page) {
-        super(page);
+  constructor(page: Page) {
+    super(page);
+  }
+
+  async createUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
+    logger.info(`Creating user with data:`, userData);
+
+    const headers = {
+      'user-id': userId,
+      compress: 'no-compress',
+      ...(authToken && { authorization: authToken }),
+    };
+
+    logger.log(`🔍 Creating user with headers:`, headers);
+    logger.log(`🔍 Auth token: ${authToken ? authToken.substring(0, 50) + '...' : 'none'}`);
+
+    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users', userData, headers);
+
+    const responseData = await response.json();
+
+    logger.log(`🔍 Create user response status: ${response.status()}`);
+    logger.log(`🔍 Create user response data:`, responseData);
+
+    if (response.ok()) {
+      logger.info(`User created successfully`);
+    } else {
+      logger.error(`Failed to create user, status: ${response.status()}`);
     }
 
-    async createUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
-        logger.info(`Creating user with data:`, userData);
+    return { status: response.status(), data: responseData };
+  }
 
-        const headers = {
-            'user-id': userId,
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        };
+  async updateUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
+    logger.info(`Updating user with data:`, userData);
 
-        logger.log(`🔍 Creating user with headers:`, headers);
-        logger.log(`🔍 Auth token: ${authToken ? authToken.substring(0, 50) + '...' : 'none'}`);
+    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/update', userData, {
+      'user-id': userId,
+      compress: 'no-compress',
+      ...(authToken && { authorization: authToken }),
+    });
 
-        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users', userData, headers);
+    const responseData = await response.json();
 
-        const responseData = await response.json();
-
-        logger.log(`🔍 Create user response status: ${response.status()}`);
-        logger.log(`🔍 Create user response data:`, responseData);
-
-        if (response.ok()) {
-            logger.info(`User created successfully`);
-        } else {
-            logger.error(`Failed to create user, status: ${response.status()}`);
-        }
-
-        return { status: response.status(), data: responseData };
+    if (response.ok()) {
+      logger.info(`User updated successfully`);
+    } else {
+      logger.error(`Failed to update user, status: ${response.status()}`);
     }
 
-    async updateUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
-        logger.info(`Updating user with data:`, userData);
+    return { status: response.status(), data: responseData };
+  }
 
-        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/update', userData, {
-            'user-id': userId,
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        });
+  async checkTabelUnique(request: APIRequestContext, tabelData: any) {
+    logger.info(`Checking tabel uniqueness:`, tabelData);
 
-        const responseData = await response.json();
+    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/tabel/unique', tabelData, {
+      compress: 'no-compress',
+    });
 
-        if (response.ok()) {
-            logger.info(`User updated successfully`);
-        } else {
-            logger.error(`Failed to update user, status: ${response.status()}`);
-        }
+    if (response.ok()) {
+      const responseData = await response.json();
+      logger.info(`Tabel uniqueness check completed`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to check tabel uniqueness, status: ${response.status()}`);
+      throw new Error(`Failed to check tabel uniqueness with status: ${response.status()}`);
+    }
+  }
 
-        return { status: response.status(), data: responseData };
+  async getAllUsers(request: APIRequestContext, light: boolean, includeRole: boolean) {
+    logger.info(`Getting all users - light: ${light}, includeRole: ${includeRole}`);
+
+    const response = await request.get(ENV.API_BASE_URL + `api/users/list/${light}/${includeRole}`, {
+      headers: {
+        compress: 'no-compress',
+      },
+    });
+
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async checkTabelUnique(request: APIRequestContext, tabelData: any) {
-        logger.info(`Checking tabel uniqueness:`, tabelData);
+    if (response.ok()) {
+      logger.info(`Successfully retrieved all users`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to get all users, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/tabel/unique', tabelData, {
-            'compress': 'no-compress'
-        });
+  async getAllUsersList(request: APIRequestContext) {
+    logger.info(`Getting all users list (minimal data)`);
 
-        if (response.ok()) {
-            const responseData = await response.json();
-            logger.info(`Tabel uniqueness check completed`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to check tabel uniqueness, status: ${response.status()}`);
-            throw new Error(`Failed to check tabel uniqueness with status: ${response.status()}`);
-        }
+    const response = await request.get(ENV.API_BASE_URL + 'api/users/list', {
+      headers: {
+        compress: 'no-compress',
+      },
+    });
+
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      // If JSON parsing fails, get the raw text
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async getAllUsers(request: APIRequestContext, light: boolean, includeRole: boolean) {
-        logger.info(`Getting all users - light: ${light}, includeRole: ${includeRole}`);
+    if (response.ok()) {
+      logger.info(`Successfully retrieved all users list`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to get all users list, status: ${response.status()}`);
+      throw new Error(`Failed to get all users list with status: ${response.status()}`);
+    }
+  }
 
-        const response = await request.get(ENV.API_BASE_URL + `api/users/list/${light}/${includeRole}`, {
-            headers: {
-                'compress': 'no-compress'
-            }
-        });
+  async getAllUsersWithPagination(request: APIRequestContext, paginationData: any) {
+    logger.info(`Getting all users with pagination:`, paginationData);
 
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
+    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/pagination/all', paginationData, {
+      compress: 'no-compress',
+    });
 
-        if (response.ok()) {
-            logger.info(`Successfully retrieved all users`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get all users, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    if (response.ok()) {
+      const responseData = await response.json();
+      logger.info(`Successfully retrieved users with pagination`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to get users with pagination, status: ${response.status()}`);
+      throw new Error(`Failed to get users with pagination with status: ${response.status()}`);
+    }
+  }
+
+  async getArchivedUsers(request: APIRequestContext, archiveData: any) {
+    logger.info(`Getting archived users:`, archiveData);
+
+    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/archive', archiveData, {
+      compress: 'no-compress',
+    });
+
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async getAllUsersList(request: APIRequestContext) {
-        logger.info(`Getting all users list (minimal data)`);
+    if (response.ok()) {
+      logger.info(`Successfully retrieved archived users`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to get archived users, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const response = await request.get(ENV.API_BASE_URL + 'api/users/list', {
-            headers: {
-                'compress': 'no-compress'
-            }
-        });
+  async issueRole(request: APIRequestContext, roleData: any, authToken?: string) {
+    logger.info(`Issuing role:`, roleData);
 
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            // If JSON parsing fails, get the raw text
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
+    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/role', roleData, {
+      compress: 'no-compress',
+      ...(authToken && { authorization: authToken }),
+    });
 
-        if (response.ok()) {
-            logger.info(`Successfully retrieved all users list`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get all users list, status: ${response.status()}`);
-            throw new Error(`Failed to get all users list with status: ${response.status()}`);
-        }
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async getAllUsersWithPagination(request: APIRequestContext, paginationData: any) {
-        logger.info(`Getting all users with pagination:`, paginationData);
+    if (response.ok()) {
+      logger.info(`Role issued successfully`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to issue role, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/pagination/all', paginationData, {
-            'compress': 'no-compress'
-        });
+  async getUsersByRoleId(request: APIRequestContext, roleId: string, authToken?: string) {
+    logger.info(`Getting users by role ID: ${roleId}`);
 
-        if (response.ok()) {
-            const responseData = await response.json();
-            logger.info(`Successfully retrieved users with pagination`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get users with pagination, status: ${response.status()}`);
-            throw new Error(`Failed to get users with pagination with status: ${response.status()}`);
-        }
+    const headers = {
+      compress: 'no-compress',
+      ...(authToken && { authorization: authToken }),
+    };
+
+    const response = await request.get(ENV.API_BASE_URL + `api/users/role/${roleId}`, {
+      headers: headers,
+    });
+
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async getArchivedUsers(request: APIRequestContext, archiveData: any) {
-        logger.info(`Getting archived users:`, archiveData);
+    if (response.ok()) {
+      logger.info(`Successfully retrieved users by role ID`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to get users by role ID, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/archive', archiveData, {
-            'compress': 'no-compress'
-        });
+  async changeUserRole(request: APIRequestContext, newRoleId: string, oldRoleId: string, authToken?: string) {
+    logger.info(`Changing user role from ${oldRoleId} to ${newRoleId}`);
 
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
+    const response = await this.postWithJsonHeaders(
+      request,
+      ENV.API_BASE_URL + `api/users/role/${newRoleId}/${oldRoleId}`,
+      {},
+      {
+        compress: 'no-compress',
+        ...(authToken && { authorization: authToken }),
+      },
+    );
 
-        if (response.ok()) {
-            logger.info(`Successfully retrieved archived users`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get archived users, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async issueRole(request: APIRequestContext, roleData: any, authToken?: string) {
-        logger.info(`Issuing role:`, roleData);
+    if (response.ok()) {
+      logger.info(`User role changed successfully`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to change user role, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/role', roleData, {
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        });
+  async banUser(request: APIRequestContext, banData: any, authToken?: string) {
+    logger.info(`Banning user:`, banData);
 
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
+    const response = await request.delete(ENV.API_BASE_URL + 'api/users/ban', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...(authToken && { authorization: authToken }),
+      },
+      data: banData,
+    });
 
-        if (response.ok()) {
-            logger.info(`Role issued successfully`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to issue role, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async getUsersByRoleId(request: APIRequestContext, roleId: string, authToken?: string) {
-        logger.info(`Getting users by role ID: ${roleId}`);
+    if (response.ok()) {
+      logger.info(`User banned successfully`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to ban user, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const headers = {
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        };
+  async deleteUserById(request: APIRequestContext, userId: string, authToken?: string) {
+    logger.info(`Deleting user by ID: ${userId}`);
 
-        const response = await request.get(ENV.API_BASE_URL + `api/users/role/${roleId}`, {
-            headers: headers
-        });
-
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
-
-        if (response.ok()) {
-            logger.info(`Successfully retrieved users by role ID`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get users by role ID, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    const headers: Record<string, string> = {
+      compress: 'no-compress',
+    };
+    if (authToken) {
+      headers['authorization'] = authToken;
     }
 
-    async changeUserRole(request: APIRequestContext, newRoleId: string, oldRoleId: string, authToken?: string) {
-        logger.info(`Changing user role from ${oldRoleId} to ${newRoleId}`);
+    const response = await request.delete(ENV.API_BASE_URL + `api/users/${userId}`, {
+      headers,
+    });
 
-        const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + `api/users/role/${newRoleId}/${oldRoleId}`, {}, {
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        });
-
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
-
-        if (response.ok()) {
-            logger.info(`User role changed successfully`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to change user role, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    let responseData: any;
+    try {
+      const responseText = await response.text();
+      responseData = responseText ? JSON.parse(responseText) : { message: 'User deleted successfully' };
+    } catch {
+      responseData = { message: 'User deleted successfully' };
     }
 
-    async banUser(request: APIRequestContext, banData: any, authToken?: string) {
-        logger.info(`Banning user:`, banData);
+    if (response.ok()) {
+      logger.info(`User deleted successfully`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to delete user, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const response = await request.delete(ENV.API_BASE_URL + 'api/users/ban', {
-            headers: {
-                'Content-Type': 'application/json',
-                'compress': 'no-compress',
-                ...(authToken && { 'authorization': authToken })
-            },
-            data: banData
-        });
+  async getUserById(request: APIRequestContext, userId: string, authToken?: string) {
+    logger.info(`Getting user by ID: ${userId}`);
 
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
+    const headers = {
+      compress: 'no-compress',
+      ...(authToken && { authorization: authToken }),
+    };
 
-        if (response.ok()) {
-            logger.info(`User banned successfully`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to ban user, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    const response = await request.get(ENV.API_BASE_URL + `api/users/${userId}`, {
+      headers: headers,
+    });
+
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async deleteUserById(request: APIRequestContext, userId: string, authToken?: string) {
-        logger.info(`Deleting user by ID: ${userId}`);
+    if (response.ok()) {
+      logger.info(`Successfully retrieved user by ID`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to get user by ID, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const headers: Record<string, string> = {
-            'compress': 'no-compress'
-        };
-        if (authToken) {
-            headers['authorization'] = authToken;
-        }
+  async detachFile(request: APIRequestContext, userToUpdateId: string, fileId: string, authToken?: string) {
+    logger.info(`Detaching file ${fileId} from user ${userToUpdateId}`);
 
-        const response = await request.delete(ENV.API_BASE_URL + `api/users/${userId}`, {
-            headers
-        });
+    const headers = {
+      compress: 'no-compress',
+      ...(authToken && { authorization: authToken }),
+    };
 
-        let responseData: any;
-        try {
-            const responseText = await response.text();
-            responseData = responseText ? JSON.parse(responseText) : { message: 'User deleted successfully' };
-        } catch {
-            responseData = { message: 'User deleted successfully' };
-        }
+    const response = await request.delete(ENV.API_BASE_URL + `api/users/files/${userToUpdateId}/${fileId}`, {
+      headers: headers,
+    });
 
-        if (response.ok()) {
-            logger.info(`User deleted successfully`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to delete user, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async getUserById(request: APIRequestContext, userId: string, authToken?: string) {
-        logger.info(`Getting user by ID: ${userId}`);
+    if (response.ok()) {
+      logger.info(`File detached successfully`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to detach file, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
+    }
+  }
 
-        const headers = {
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        };
+  async attachFile(request: APIRequestContext, typeOperationId: string, authToken?: string) {
+    logger.info(`Attaching file for type operation: ${typeOperationId}`);
 
-        const response = await request.get(ENV.API_BASE_URL + `api/users/${userId}`, {
-            headers: headers
-        });
+    const headers = {
+      compress: 'no-compress',
+      ...(authToken && { authorization: authToken }),
+    };
 
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
+    const response = await request.get(ENV.API_BASE_URL + `api/users/by-type-operation/${typeOperationId}`, {
+      headers: headers,
+    });
 
-        if (response.ok()) {
-            logger.info(`Successfully retrieved user by ID`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get user by ID, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = await response.text();
+      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
     }
 
-    async detachFile(request: APIRequestContext, userToUpdateId: string, fileId: string, authToken?: string) {
-        logger.info(`Detaching file ${fileId} from user ${userToUpdateId}`);
-
-        const headers = {
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        };
-
-        const response = await request.delete(ENV.API_BASE_URL + `api/users/files/${userToUpdateId}/${fileId}`, {
-            headers: headers
-        });
-
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
-
-        if (response.ok()) {
-            logger.info(`File detached successfully`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to detach file, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
+    if (response.ok()) {
+      logger.info(`File attachment info retrieved successfully`);
+      return { status: response.status(), data: responseData };
+    } else {
+      logger.error(`Failed to get file attachment info, status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
     }
-
-    async attachFile(request: APIRequestContext, typeOperationId: string, authToken?: string) {
-        logger.info(`Attaching file for type operation: ${typeOperationId}`);
-
-        const headers = {
-            'compress': 'no-compress',
-            ...(authToken && { 'authorization': authToken })
-        };
-
-        const response = await request.get(ENV.API_BASE_URL + `api/users/by-type-operation/${typeOperationId}`, {
-            headers: headers
-        });
-
-        let responseData;
-        try {
-            responseData = await response.json();
-        } catch (e) {
-            responseData = await response.text();
-            logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-        }
-
-        if (response.ok()) {
-            logger.info(`File attachment info retrieved successfully`);
-            return { status: response.status(), data: responseData };
-        } else {
-            logger.error(`Failed to get file attachment info, status: ${response.status()}`);
-            return { status: response.status(), data: responseData };
-        }
-    }
+  }
 }

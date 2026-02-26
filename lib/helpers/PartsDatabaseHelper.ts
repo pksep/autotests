@@ -163,10 +163,7 @@ export class PartsDatabaseHelper {
           const actualUnit = (await row.locator('td').nth(1).textContent())?.trim();
           const actualValue = (await row.locator('td').nth(2).textContent())?.trim();
           if (actualName !== expectedRow['Наименование'] || actualUnit !== expectedRow['ЕИ'] || actualValue !== expectedRow['Значение']) {
-            console.error(
-              `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
-                `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`,
-            );
+            console.error(`Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` + `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`);
             return false;
           }
         }
@@ -188,10 +185,7 @@ export class PartsDatabaseHelper {
           }
           const isButtonVisible = await row.locator('td').nth(3).locator('button').isVisible();
           if (actualName !== expectedRow['Наименование'] || actualUnit !== expectedRow['ЕИ'] || actualValue !== expectedRow['Значение']) {
-            console.error(
-              `Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` +
-                `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`,
-            );
+            console.error(`Mismatch in row ${i + 1} for "${tableTitle}":\nExpected: ${JSON.stringify(expectedRow)}\n` + `Found: { Наименование: "${actualName}", ЕИ: "${actualUnit}", Значение: "${actualValue}" }`);
             return false;
           }
           if (!isButtonVisible) {
@@ -317,9 +311,7 @@ export class PartsDatabaseHelper {
   }
 
   async searchAndSelectMaterial(sliderDataTestId: string, materialName: string): Promise<void> {
-    const normalizedSliderSelector = sliderDataTestId.trim().startsWith('[data-testid=')
-      ? sliderDataTestId
-      : `[data-testid="${sliderDataTestId}"]`;
+    const normalizedSliderSelector = sliderDataTestId.trim().startsWith('[data-testid=') ? sliderDataTestId : `[data-testid="${sliderDataTestId}"]`;
     const switchItem = this.page.locator(normalizedSliderSelector);
     await switchItem.click();
     await this.page.waitForTimeout(500);
@@ -372,13 +364,7 @@ export class PartsDatabaseHelper {
     await this.navigationHelper.waitForNetworkIdle();
   }
 
-  async parseRecursiveStructuredTable(
-    page: Page,
-    tableTestId: string,
-    parentId: string,
-    multiplier: number,
-    parsedData: { [key: string]: any[] },
-  ): Promise<void> {
+  async parseRecursiveStructuredTable(page: Page, tableTestId: string, parentId: string, multiplier: number, parsedData: { [key: string]: any[] }): Promise<void> {
     const table = page.locator(`[data-testid^="${tableTestId}"]`).last();
     await table.locator('tr').first().waitFor({ state: 'visible' });
     const rows = await table.locator('tbody > tr').elementHandles();
@@ -477,7 +463,7 @@ export class PartsDatabaseHelper {
                   await materialElement.evaluate(el => el.scrollIntoView());
                   await materialElement.waitFor({ state: 'visible' });
                   await page.waitForTimeout(2000);
-                  let materialText = await materialElement.textContent();
+                  const materialText = await materialElement.textContent();
                   let materialGroup = '';
                   if (materialText) {
                     materialGroup = await this.findMaterialType(page, materialText);
@@ -742,14 +728,7 @@ export class PartsDatabaseHelper {
     }
   }
 
-  async validateFileSectionFields(
-    fileSectionLocator: Locator,
-    textareaTestId: string,
-    checkboxTestId: string,
-    versionInputTestId: string,
-    fileNameInputTestId: string,
-    testValue: string,
-  ): Promise<void> {
+  async validateFileSectionFields(fileSectionLocator: Locator, textareaTestId: string, checkboxTestId: string, versionInputTestId: string, fileNameInputTestId: string, testValue: string): Promise<void> {
     const textarea = fileSectionLocator.locator(`textarea[data-testid="${textareaTestId}"]`);
     await textarea.fill(testValue);
     expect(await textarea.inputValue()).toBe(testValue);
@@ -975,6 +954,11 @@ export class PartsDatabaseHelper {
         const currentPageType = await this.getCurrentPageType();
         if (currentPageType === 'unknown') {
           logger.warn(`Attempt ${i + 1}: Unable to determine page type`);
+          if (clicksPerformed >= 1) {
+            logger.info('Page type unknown after successful click(s) - save likely succeeded and page transitioned');
+            pageTransitioned = true;
+            break;
+          }
           consecutiveFailures++;
           if (consecutiveFailures >= maxConsecutiveFailures) {
             errors.push('Too many consecutive failures, stopping');
@@ -991,10 +975,18 @@ export class PartsDatabaseHelper {
         let isVisible = false;
         let isEnabled = false;
         try {
+          // Short timeout: after a successful save the button is gone (page transitioned); fail fast
+          await saveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
           isVisible = await saveButton.isVisible();
           isEnabled = await saveButton.isEnabled();
         } catch (buttonError) {
-          logger.warn(`Attempt ${i + 1}: Error checking button state: ${buttonError instanceof Error ? buttonError.message : String(buttonError)}`);
+          const msg = buttonError instanceof Error ? buttonError.message : String(buttonError);
+          logger.warn(`Attempt ${i + 1}: Error checking button state: ${msg}`);
+          if (clicksPerformed >= 1 && (msg.includes(this.SAVE_BUTTON) || msg.includes('Timeout'))) {
+            logger.info('Save button no longer available after successful click - page likely transitioned');
+            pageTransitioned = true;
+            break;
+          }
           consecutiveFailures++;
           if (consecutiveFailures >= maxConsecutiveFailures) {
             errors.push('Too many consecutive button state errors, stopping');
@@ -1017,7 +1009,8 @@ export class PartsDatabaseHelper {
         } catch {
           // ignore
         }
-        await saveButton.click();
+        // Short timeout: quick-click test; if save succeeded the button won't be available
+        await saveButton.click({ timeout: WAIT_TIMEOUTS.SHORT });
         clicksPerformed++;
         consecutiveFailures = 0;
         logger.info(`Attempt ${i + 1}: Save button clicked (page type: ${currentPageType})`);
@@ -1026,6 +1019,12 @@ export class PartsDatabaseHelper {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error(`Error on attempt ${i + 1}: ${errorMessage}`);
+        // If we already clicked at least once and Save button is no longer found, save likely succeeded and page navigated
+        if (clicksPerformed >= 1 && (errorMessage.includes(this.SAVE_BUTTON) || errorMessage.includes('Timeout'))) {
+          logger.info('Save button no longer found after successful click - page likely transitioned');
+          pageTransitioned = true;
+          break;
+        }
         errors.push(`Attempt ${i + 1}: ${errorMessage}`);
         consecutiveFailures++;
         if (consecutiveFailures >= maxConsecutiveFailures) {
@@ -1211,16 +1210,7 @@ export class PartsDatabaseHelper {
   /**
    * Open group dialog, clear all existing items from bottom table, then add provided items and commit to main table.
    */
-  async reconcileGroupClearAndSet(
-    page: Page,
-    smallDialogButtonId: string,
-    dialogTestId: string,
-    searchTableTestId: string,
-    bottomTableTestId: string,
-    addToBottomButtonTestId: string,
-    addToMainButtonTestId: string,
-    items: Array<{ name: string; quantity?: number }>,
-  ): Promise<void> {
+  async reconcileGroupClearAndSet(page: Page, smallDialogButtonId: string, dialogTestId: string, searchTableTestId: string, bottomTableTestId: string, addToBottomButtonTestId: string, addToMainButtonTestId: string, items: Array<{ name: string; quantity?: number }>): Promise<void> {
     try {
       await page.waitForLoadState('networkidle', { timeout: 10000 });
     } catch {}
@@ -1279,7 +1269,10 @@ export class PartsDatabaseHelper {
           logger.warn(`No results for "${searchValue}" in ${dialogTestId}`);
           continue;
         }
-        await results.first().click().catch(() => {});
+        await results
+          .first()
+          .click()
+          .catch(() => {});
         await page.waitForTimeout(200).catch(() => {});
 
         const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
@@ -1307,9 +1300,7 @@ export class PartsDatabaseHelper {
         }
       }
 
-      const addToMainButtonSelector = addToMainButtonTestId.includes('data-testid')
-        ? addToMainButtonTestId
-        : `[data-testid="${addToMainButtonTestId}"]`;
+      const addToMainButtonSelector = addToMainButtonTestId.includes('data-testid') ? addToMainButtonTestId : `[data-testid="${addToMainButtonTestId}"]`;
       const addToMainButton = modal.locator(addToMainButtonSelector);
       await addToMainButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
       const enabled = await addToMainButton.isEnabled();
@@ -1330,12 +1321,7 @@ export class PartsDatabaseHelper {
   /**
    * Resets a product's specification to match the provided configuration.
    */
-  async resetProductSpecificationsByConfig(
-    page: Page,
-    navigateToPartsDb: () => Promise<void>,
-    productSearch: string,
-    config: TestProductSpecification,
-  ): Promise<void> {
+  async resetProductSpecificationsByConfig(page: Page, navigateToPartsDb: () => Promise<void>, productSearch: string, config: TestProductSpecification): Promise<void> {
     await navigateToPartsDb();
     const leftTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
     const searchInput = leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT);
@@ -1406,25 +1392,13 @@ export class PartsDatabaseHelper {
   /**
    * Clean up test detail by searching and archiving all exact matches.
    */
-  async cleanupTestDetail(
-    page: Page,
-    detailName: string,
-    tableTestId: string,
-    searchInputTestId?: string,
-    archiveButtonTestId?: string,
-    confirmModalTestId?: string,
-    confirmButtonTestId?: string,
-  ): Promise<void> {
-    const detailTableSelector =
-      tableTestId.includes('[data-testid') || tableTestId.includes('[') ? tableTestId : `[data-testid="${tableTestId}"]`;
+  async cleanupTestDetail(page: Page, detailName: string, tableTestId: string, searchInputTestId?: string, archiveButtonTestId?: string, confirmModalTestId?: string, confirmButtonTestId?: string): Promise<void> {
+    const detailTableSelector = tableTestId.includes('[data-testid') || tableTestId.includes('[') ? tableTestId : `[data-testid="${tableTestId}"]`;
     const detailTable = page.locator(detailTableSelector);
 
     const defaultSearchInput = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
     const searchInputTestIdValue = searchInputTestId || defaultSearchInput;
-    const searchInputSelector =
-      searchInputTestIdValue.includes('[data-testid') || searchInputTestIdValue.includes('[')
-        ? searchInputTestIdValue
-        : `[data-testid="${searchInputTestIdValue}"]`;
+    const searchInputSelector = searchInputTestIdValue.includes('[data-testid') || searchInputTestIdValue.includes('[') ? searchInputTestIdValue : `[data-testid="${searchInputTestIdValue}"]`;
     const searchInput = detailTable.locator(searchInputSelector);
 
     await searchInput.fill('');
@@ -1466,9 +1440,7 @@ export class PartsDatabaseHelper {
       const archiveModal = page.locator(`dialog[data-testid="${confirmModalSelector}"]`);
       await expect(archiveModal).toBeVisible();
 
-      const confirmButtonSelector = confirmButtonTestId
-        ? `[data-testid="${confirmButtonTestId}"]`
-        : SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON;
+      const confirmButtonSelector = confirmButtonTestId ? `[data-testid="${confirmButtonTestId}"]` : SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON;
       const yesButton = archiveModal.locator(confirmButtonSelector);
       await expect(yesButton).toBeVisible();
       await yesButton.click();
@@ -1650,12 +1622,7 @@ export class PartsDatabaseHelper {
   /**
    * Archives all test products matching the given search prefix.
    */
-  async archiveAllTestProductsByPrefix(
-    page: Page,
-    navigateToPartsDb: () => Promise<void>,
-    searchPrefix: string,
-    options?: { maxIterations?: number },
-  ): Promise<number> {
+  async archiveAllTestProductsByPrefix(page: Page, navigateToPartsDb: () => Promise<void>, searchPrefix: string, options?: { maxIterations?: number }): Promise<number> {
     const maxIterations = options?.maxIterations ?? 100;
     let iteration = 0;
     let archivedCount = 0;
@@ -1746,9 +1713,7 @@ export class PartsDatabaseHelper {
 
       await archiveButton.click();
 
-      const confirmButton = page
-        .locator(SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON)
-        .filter({ hasText: 'Да' });
+      const confirmButton = page.locator(SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON).filter({ hasText: 'Да' });
       await confirmButton.waitFor({ state: 'visible', timeout: 10000 });
       await confirmButton.click();
 
@@ -1782,12 +1747,7 @@ export class PartsDatabaseHelper {
   /**
    * Creates an equipment item (navigate, add, fill name, select type/subtype/operation, save).
    */
-  async createEquipment(
-    navigateToBaseEquipments: () => Promise<void>,
-    equipmentName: string,
-    operationType: string,
-    testInfo: TestInfo,
-  ): Promise<boolean> {
+  async createEquipment(navigateToBaseEquipments: () => Promise<void>, equipmentName: string, operationType: string, testInfo: TestInfo): Promise<boolean> {
     await navigateToBaseEquipments();
 
     const addButton = this.page.locator(SelectorsEquipment.BASE_EQUIPMENT_ADD_BUTTON);
@@ -1824,10 +1784,7 @@ export class PartsDatabaseHelper {
       testInfo,
     );
 
-    const firstTypeRow = typeTable
-      .locator('tbody')
-      .locator(SelectorsEquipment.getEquipmentTypeTableRowSelector())
-      .first();
+    const firstTypeRow = typeTable.locator('tbody').locator(SelectorsEquipment.getEquipmentTypeTableRowSelector()).first();
     await expectSoftWithScreenshot(
       this.page,
       () => {
@@ -1849,10 +1806,7 @@ export class PartsDatabaseHelper {
       testInfo,
     );
 
-    const firstSubtypeRow = subtypeTable
-      .locator('tbody')
-      .locator(SelectorsEquipment.getEquipmentSubtypeTableRowSelector())
-      .first();
+    const firstSubtypeRow = subtypeTable.locator('tbody').locator(SelectorsEquipment.getEquipmentSubtypeTableRowSelector()).first();
     await expectSoftWithScreenshot(
       this.page,
       () => {
@@ -1864,9 +1818,7 @@ export class PartsDatabaseHelper {
     await firstSubtypeRow.click();
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-    const operationFilterTitle = this.page.locator(
-      SelectorsEquipment.CREATOR_EQUIPMENT_OPERATION_SELECT_FILTER_TITLE,
-    );
+    const operationFilterTitle = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_OPERATION_SELECT_FILTER_TITLE);
     await expectSoftWithScreenshot(
       this.page,
       () => {
@@ -1878,9 +1830,7 @@ export class PartsDatabaseHelper {
     await operationFilterTitle.click();
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-    const optionsList = this.page.locator(
-      SelectorsEquipment.CREATOR_EQUIPMENT_OPERATION_SELECT_FILTER_OPTIONS_LIST,
-    );
+    const optionsList = this.page.locator(SelectorsEquipment.CREATOR_EQUIPMENT_OPERATION_SELECT_FILTER_OPTIONS_LIST);
     await expectSoftWithScreenshot(
       this.page,
       () => {
@@ -1959,16 +1909,10 @@ export class PartsDatabaseHelper {
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
     await this.navigationHelper.waitForNetworkIdle();
 
-    const materialModal = await this.verifyModalVisible(
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG,
-      WAIT_TIMEOUTS.SHORT,
-    );
+    const materialModal = await this.verifyModalVisible(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG, WAIT_TIMEOUTS.SHORT);
 
     try {
-      await this.searchAndSelectMaterial(
-        SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1,
-        materialName,
-      );
+      await this.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, materialName);
     } catch (error) {
       const errorMessage = `Material "${materialName}" not found in database. Materials must be created in the Materials Database (${SELECTORS.MAINMENU.MATERIALS.URL}) before they can be added to specifications.`;
       logger.error(errorMessage);
@@ -2010,10 +1954,12 @@ export class PartsDatabaseHelper {
   async createAssemblyFlow(
     navigateToPartsDb: () => Promise<void>,
     assemblyName: string,
-    specificationItems: {
-      materials?: Array<{ name: string; quantity?: number }>;
-      details?: Array<{ name: string; quantity?: number }>;
-    } | undefined,
+    specificationItems:
+      | {
+          materials?: Array<{ name: string; quantity?: number }>;
+          details?: Array<{ name: string; quantity?: number }>;
+        }
+      | undefined,
     testInfo: TestInfo | undefined,
   ): Promise<boolean> {
     await navigateToPartsDb();
@@ -2021,9 +1967,7 @@ export class PartsDatabaseHelper {
     await this.clickButtonByDataTestId(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_CREATE_ID, false);
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-    const assemblyTypeButton = this.page
-      .locator(SelectorsPartsDataBase.BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS)
-      .first();
+    const assemblyTypeButton = this.page.locator(SelectorsPartsDataBase.BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS).first();
     await this.elementHelper.highlightElement(assemblyTypeButton);
     await assemblyTypeButton.click();
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -2079,9 +2023,7 @@ export class PartsDatabaseHelper {
     await this.clickButtonByDataTestId(SelectorsPartsDataBase.SPECIFICATION_BUTTONS_ADDING_SPECIFICATION_ID, false);
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-    const assemblyIcon = this.page
-      .locator(SelectorsPartsDataBase.SPECIFICATION_DIALOG_CARD_BASE_OF_ASSEMBLY_UNITS_0)
-      .first();
+    const assemblyIcon = this.page.locator(SelectorsPartsDataBase.SPECIFICATION_DIALOG_CARD_BASE_OF_ASSEMBLY_UNITS_0).first();
     await this.elementHelper.highlightElement(assemblyIcon);
     await assemblyIcon.click();
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -2139,12 +2081,8 @@ export class PartsDatabaseHelper {
         const rowText = await resultRows.nth(i).textContent();
         allRowTexts.push(rowText?.trim() || '');
       }
-      logger.error(
-        `Assembly "${assemblyName}" not found in dialog results. Available rows: ${JSON.stringify(allRowTexts)}`,
-      );
-      throw new Error(
-        `Assembly "${assemblyName}" not found in dialog results. Found ${rowCount} row(s) but none matched.`,
-      );
+      logger.error(`Assembly "${assemblyName}" not found in dialog results. Available rows: ${JSON.stringify(allRowTexts)}`);
+      throw new Error(`Assembly "${assemblyName}" not found in dialog results. Found ${rowCount} row(s) but none matched.`);
     }
 
     const selectButton = assemblyModal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON);
@@ -2190,12 +2128,7 @@ export class PartsDatabaseHelper {
   /**
    * Returns the count of remaining test products matching the search prefix (after navigating to parts DB).
    */
-  async getRemainingTestProductsCount(
-    page: Page,
-    navigateToPartsDb: () => Promise<void>,
-    searchPrefix: string,
-    searchAndWaitForTable: (searchTerm: string, tableSelector: string, tableBodySelector: string, options?: object) => Promise<void>,
-  ): Promise<number> {
+  async getRemainingTestProductsCount(page: Page, navigateToPartsDb: () => Promise<void>, searchPrefix: string, searchAndWaitForTable: (searchTerm: string, tableSelector: string, tableBodySelector: string, options?: object) => Promise<void>): Promise<number> {
     await navigateToPartsDb();
     await this.navigationHelper.waitForNetworkIdle();
 
@@ -2216,17 +2149,7 @@ export class PartsDatabaseHelper {
     return await rows.count().catch(() => 0);
   }
 
-  async addItemToSpecification(
-    page: Page,
-    smallDialogButtonId: string,
-    dialogTestId: string,
-    searchTableTestId: string,
-    searchValue: string,
-    bottomTableTestId: string,
-    addToBottomButtonTestId: string,
-    addToMainButtonTestId: string,
-    itemType?: string,
-  ): Promise<void> {
+  async addItemToSpecification(page: Page, smallDialogButtonId: string, dialogTestId: string, searchTableTestId: string, searchValue: string, bottomTableTestId: string, addToBottomButtonTestId: string, addToMainButtonTestId: string, itemType?: string): Promise<void> {
     const columnIndex = itemType === 'РМ' || itemType === 'ПД' ? 0 : 1;
     try {
       await page.waitForLoadState('networkidle', { timeout: 10000 });
@@ -2353,9 +2276,7 @@ export class PartsDatabaseHelper {
       } catch (error) {
         logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
       }
-      const addToBottomButtonSelector = addToBottomButtonTestId.includes('data-testid')
-        ? addToBottomButtonTestId
-        : `[data-testid="${addToBottomButtonTestId}"]`;
+      const addToBottomButtonSelector = addToBottomButtonTestId.includes('data-testid') ? addToBottomButtonTestId : `[data-testid="${addToBottomButtonTestId}"]`;
       const addToBottomButton = modal.locator(addToBottomButtonSelector);
       try {
         await addToBottomButton.click();
@@ -2487,7 +2408,10 @@ export class PartsDatabaseHelper {
         logger.warn(`No results for "${searchValue}" in ${dialogTestId}`);
         continue;
       }
-      await results.first().click().catch(() => {});
+      await results
+        .first()
+        .click()
+        .catch(() => {});
       await page.waitForTimeout(200).catch(() => {});
       const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
       await addToBottomButton.click().catch(() => {});
@@ -2524,16 +2448,7 @@ export class PartsDatabaseHelper {
     await modal.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
   }
 
-  async removeItemFromSpecification(
-    page: Page,
-    smallDialogButtonId: string,
-    dialogTestId: string,
-    bottomTableTestId: string,
-    removeButtonColumnIndex: number,
-    searchValue: string,
-    returnButtonTestId: string,
-    itemType?: string,
-  ): Promise<void> {
+  async removeItemFromSpecification(page: Page, smallDialogButtonId: string, dialogTestId: string, bottomTableTestId: string, removeButtonColumnIndex: number, searchValue: string, returnButtonTestId: string, itemType?: string): Promise<void> {
     const columnIndex = 1;
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);

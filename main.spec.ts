@@ -4,6 +4,14 @@ import { test } from '@playwright/test'; // Import Playwright's test module
 import { runSetup } from './setup'; // This ensures test.beforeEach() runs globally
 import logger from './lib/utils/logger';
 
+// Suppress allure-js-commons NoopTestRuntime warning (appears when using allure.step() with dynamic test registration)
+const ALLURE_NOOP_MESSAGE = 'no test runtime is found. Please check test framework configuration';
+const _consoleLog = console.log;
+console.log = (...args: unknown[]) => {
+  if (args[0] === ALLURE_NOOP_MESSAGE) return;
+  _consoleLog.apply(console, args);
+};
+
 // Define the type for the keys of testSuites
 type TestSuiteKeys = keyof typeof testSuites;
 

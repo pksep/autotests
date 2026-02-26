@@ -1,7 +1,7 @@
 /**
  * @file U001-Shipment.spec.ts
  * @purpose Test Suite 6: Shipment Operations (Test Cases 19-20)
- * 
+ *
  * This suite handles:
  * - Test Case 19: Uploading Shipment Task
  * - Test Case 20: Checking Shipment Task
@@ -17,19 +17,12 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
-import {
-  orderNumber,
-  nameProduct,
-  quantityProductLaunchOnProduction,
-  incomingQuantity,
-  tableMainUploading,
-  buttonUploading,
-} from './U001-Constants';
+import { orderNumber, nameProduct, quantityProductLaunchOnProduction, incomingQuantity, tableMainUploading, buttonUploading } from './U001-Constants';
 
 export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Shipment Operations (Test Cases 19-20)`);
 
-  test('Test Case 19 - Uploading Shipment Task', async ({ page }) => {
+  test('Case 19 - Uploading Shipment Task', async ({ page }) => {
     // doc test case 14
     logger.log('Test Case 19 - Uploading Shipment Task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -106,7 +99,7 @@ export const runU001_06_Shipment = (isSingleTest: boolean, iterations: number) =
     });
   });
 
-  test('Test Case 20 - Checking the number of shipped entities', async ({
+  test('Case 20 - Checking the number of shipped entities', async ({
     // doc test case 15
     page,
   }) => {

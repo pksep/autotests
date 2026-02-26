@@ -1,7 +1,7 @@
 /**
  * @file U001-Constants.ts
  * @purpose Shared constants and variables for U001 test suites
- * 
+ *
  * This file contains all shared constants, variables, and arrays used across U001 test suites.
  * These are shared state that test cases depend on.
  */
@@ -14,15 +14,15 @@ import * as PartsDBSelectors from '../lib/Constants/SelectorsPartsDataBase';
 import logger from '../lib/utils/logger';
 
 // Shared state variables (will be set by test cases)
-export let incomingQuantity = '1';
+export const incomingQuantity = '1';
 export let remainingStockBefore: string;
 export let remainingStockAfter: string;
-export let quantityProductLaunchOnProduction = '2';
+export const quantityProductLaunchOnProduction = '2';
 export let quantityProductLaunchOnProductionBefore: string;
 export let quantityProductLaunchOnProductionAfter: string;
-export let quantitySumLaunchOnProduction: Number;
+export let quantitySumLaunchOnProduction: number;
 export let urgencyDateOnTable: string;
-export let orderNumber: { orderNumber: string; orderDate: string } = { orderNumber: '', orderDate: '' };
+export const orderNumber: { orderNumber: string; orderDate: string } = { orderNumber: '', orderDate: '' };
 
 // Constants
 export const urgencyDate = '23.01.2025';

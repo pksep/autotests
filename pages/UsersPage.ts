@@ -32,10 +32,7 @@ export class CreateUsersPage extends PageObject {
 
   private isTableNumberConflictMessage(message: string): boolean {
     const m = message.toLowerCase();
-    return (
-      m.includes('табел') &&
-      (m.includes('занят') || m.includes('использ') || m.includes('существует'))
-    );
+    return m.includes('табел') && (m.includes('занят') || m.includes('использ') || m.includes('существует'));
   }
 
   async createTestUser(params: CreateUserParams, testInfo: TestInfo): Promise<CreateUserResult> {
@@ -210,14 +207,14 @@ export class CreateUsersPage extends PageObject {
         // Since there are two dropdowns with the same pattern, we'll find all and check which one contains department options
         const allOpenDropdowns = this.page.locator(`${SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_OPTIONS_LIST}[open="true"]`);
         const dropdownCount = await allOpenDropdowns.count();
-        
+
         let deptOptionsList: Locator | null = null;
         // Try to find the dropdown that contains the department option we're looking for
         for (let i = 0; i < dropdownCount; i++) {
           const dropdown = allOpenDropdowns.nth(i);
           const allOptionsInDropdown = dropdown.locator('li');
           const optionCountInDropdown = await allOptionsInDropdown.count();
-          
+
           // Check if this dropdown contains our target department
           for (let j = 0; j < optionCountInDropdown; j++) {
             const option = allOptionsInDropdown.nth(j);
@@ -229,16 +226,16 @@ export class CreateUsersPage extends PageObject {
           }
           if (deptOptionsList) break;
         }
-        
+
         // If we didn't find it, use the last one (department is typically second)
         if (!deptOptionsList && dropdownCount > 0) {
           deptOptionsList = allOpenDropdowns.last();
         }
-        
+
         if (!deptOptionsList) {
           throw new Error('No open department dropdown found');
         }
-        
+
         await expectSoftWithScreenshot(
           this.page,
           () => {
@@ -267,16 +264,16 @@ export class CreateUsersPage extends PageObject {
         // Check all open dropdowns and find the department one
         const allOpenDropdownsAfterTitle = this.page.locator(`${SelectorsUsersPage.USERS_FORM_DEPARTMENT_DROPDOWN_OPTIONS_LIST}[open="true"]`);
         const dropdownCountAfterTitle = await allOpenDropdownsAfterTitle.count();
-        
+
         let deptOptionsListAfterTitle: Locator | null = null;
         if (dropdownCountAfterTitle === 1) {
           deptOptionsListAfterTitle = allOpenDropdownsAfterTitle.first();
         } else if (dropdownCountAfterTitle > 1) {
           deptOptionsListAfterTitle = allOpenDropdownsAfterTitle.last(); // Department is typically the second/last one
         }
-        
+
         const isStillOpen = deptOptionsListAfterTitle ? await deptOptionsListAfterTitle.isVisible().catch(() => false) : false;
-        
+
         if (!isStillOpen) {
           // Dropdown closed, reopen it
           await deptDropdown.click();
@@ -309,7 +306,7 @@ export class CreateUsersPage extends PageObject {
         // Get all li elements in the dropdown
         const allOptions = deptOptionsListAfterTitle.locator('li');
         const optionCount = await allOptions.count();
-        
+
         let deptOption: Locator | null = null;
         const availableOptions: string[] = [];
         for (let i = 0; i < optionCount; i++) {
@@ -323,11 +320,11 @@ export class CreateUsersPage extends PageObject {
             break;
           }
         }
-        
+
         if (!deptOption) {
           throw new Error(`Department option "${params.department}" not found in dropdown. Available options: ${availableOptions.join(', ')}`);
         }
-        
+
         await expectSoftWithScreenshot(
           this.page,
           () => {
@@ -387,11 +384,11 @@ export class CreateUsersPage extends PageObject {
 
         // Wait for notification to appear after clicking save
         await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-        
+
         // Wait for and read the notification
         const notificationDesc = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
         let notificationText = '';
-        
+
         // Poll for notification with retries (notifications can take time to appear)
         for (let i = 0; i < 5; i++) {
           try {
@@ -417,25 +414,25 @@ export class CreateUsersPage extends PageObject {
 
         // Check if notification indicates table number conflict
         const isConflict = notificationText && this.isTableNumberConflictMessage(notificationText);
-        
+
         if (isConflict) {
           // Table number is already in use - decrement and try again in next iteration
           logger.log(`⚠️ Table number ${currentTableNumber} conflict detected. Notification: "${notificationText}". Decrementing to ${currentTableNumber - 1} and retrying...`);
           currentTableNumber -= 1;
           continue; // Continue to next iteration to try with decremented table number
         }
-        
+
         // Wait a bit more to see if form closes (success) or stays open (failure)
         await this.page.waitForTimeout(TIMEOUTS.STANDARD);
-        
+
         // Check if save button is still visible (form didn't close = save likely failed)
         const saveButtonStillVisible = await saveButton.isVisible().catch(() => false);
-        
+
         // If save button is still visible, the form didn't close - likely a conflict or error
         // Wait a bit more and re-check notification
         if (saveButtonStillVisible) {
           await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-          
+
           // Re-check notification - it might have appeared late
           try {
             const recheckNotification = await notificationDesc.isVisible({ timeout: WAIT_TIMEOUTS.SHORT }).catch(() => false);
@@ -444,7 +441,7 @@ export class CreateUsersPage extends PageObject {
               await this.highlightElement(notificationDesc);
               const recheckText = (await notificationDesc.textContent({ timeout: WAIT_TIMEOUTS.SHORT }))?.trim() || '';
               logger.log(`Form still open, rechecking notification: "${recheckText}"`);
-              
+
               if (recheckText && this.isTableNumberConflictMessage(recheckText)) {
                 logger.log(`⚠️ Table number ${currentTableNumber} conflict detected on recheck. Decrementing to ${currentTableNumber - 1} and retrying...`);
                 currentTableNumber -= 1;
@@ -455,7 +452,7 @@ export class CreateUsersPage extends PageObject {
             // Notification not available, continue with form visibility check
             logger.log(`Recheck notification not available: ${e}`);
           }
-          
+
           // If form is still open and no conflict notification, log warning but continue
           // (might be a different error, but we'll try with decremented number anyway)
           logger.log(`⚠️ Form still open after save attempt with table number ${currentTableNumber}. Assuming conflict and decrementing to ${currentTableNumber - 1}...`);
@@ -552,12 +549,8 @@ export class CreateUsersPage extends PageObject {
       );
 
       // Perform search using the helper method for better reliability
-      await this.searchWithPressSequentially(
-        SelectorsUsersPage.USERS_LIST_SEARCH_INPUT,
-        searchPrefix,
-        { delay: 50, waitAfterSearch: TIMEOUTS.STANDARD, timeout: WAIT_TIMEOUTS.STANDARD },
-      );
-      
+      await this.searchWithPressSequentially(SelectorsUsersPage.USERS_LIST_SEARCH_INPUT, searchPrefix, { delay: 50, waitAfterSearch: TIMEOUTS.STANDARD, timeout: WAIT_TIMEOUTS.STANDARD });
+
       // Verify search input has the correct value after search
       const searchValue = await searchInput.inputValue();
       await expectSoftWithScreenshot(
@@ -568,7 +561,7 @@ export class CreateUsersPage extends PageObject {
         `Verify search input contains prefix "${searchPrefix}" after search`,
         testInfo,
       );
-      
+
       // Wait for table to update after search - wait for network and give extra time for filtering
       await this.page.waitForTimeout(TIMEOUTS.STANDARD);
       await this.waitForNetworkIdle();
@@ -578,7 +571,7 @@ export class CreateUsersPage extends PageObject {
       const rows = table.locator('tbody tr');
       const rowCount = await rows.count();
       logger.log(`Found ${rowCount} rows in table after searching for prefix "${searchPrefix}" (was ${initialRowCount} before search)`);
-      
+
       // Safety check: if search didn't filter and we have many rows, verify they all match
       if (rowCount > 0 && rowCount === initialRowCount && initialRowCount > 10) {
         logger.log(`⚠️ WARNING: Search may not be filtering - row count unchanged (${rowCount} rows). Will verify each row matches prefix before deleting.`);
@@ -586,11 +579,7 @@ export class CreateUsersPage extends PageObject {
 
       // Safety check: if rowCount is very large, the search might not be working
       if (rowCount > 50) {
-        throw new Error(
-          `Search returned ${rowCount} rows, which seems too many. ` +
-          `Search prefix "${searchPrefix}" may not be filtering correctly. ` +
-          `Aborting to prevent deleting all users.`
-        );
+        throw new Error(`Search returned ${rowCount} rows, which seems too many. ` + `Search prefix "${searchPrefix}" may not be filtering correctly. ` + `Aborting to prevent deleting all users.`);
       }
 
       let deletedCount = 0;
@@ -599,17 +588,17 @@ export class CreateUsersPage extends PageObject {
       // Delete users from bottom up, but verify each row matches the prefix
       for (let i = rowCount - 1; i >= 0; i--) {
         const row = rows.nth(i);
-        
+
         // Wait for row to be visible and scroll into view
         await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
         await row.scrollIntoViewIfNeeded();
         await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-        
+
         // Get the row text to verify it matches the search prefix
         const rowText = await row.textContent();
         const rowTextLower = rowText?.toLowerCase() || '';
         const searchPrefixLower = searchPrefix.toLowerCase();
-        
+
         // Verify the row contains the search prefix (check username in row text)
         // This is critical: we only delete rows that actually match the search prefix
         if (!rowTextLower.includes(searchPrefixLower)) {
@@ -617,10 +606,10 @@ export class CreateUsersPage extends PageObject {
           skippedCount++;
           continue; // Skip this row - it doesn't match the search prefix
         }
-        
+
         // Log that we found a matching row
         logger.log(`✅ Row ${i} matches prefix "${searchPrefix}". Row text preview: "${rowText?.substring(0, 80).trim()}..."`);
-        
+
         // Verify row matches before deleting (double-check)
         await expectSoftWithScreenshot(
           this.page,
@@ -630,15 +619,15 @@ export class CreateUsersPage extends PageObject {
           `Verify row ${i} matches search prefix "${searchPrefix}" before deleting`,
           testInfo,
         );
-        
+
         // Close any open dropdowns before clicking the row
         await this.page.keyboard.press('Escape');
         await this.page.waitForTimeout(TIMEOUTS.SHORT);
-        
+
         // Click the row to select it
         await row.click();
         await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-        
+
         // Wait for the Archive button to be enabled
         const archiveButton = this.page.locator(SelectorsUsersPage.USERS_LIST_ARCHIVE_BUTTON).filter({ hasText: 'Архив' }).first();
         await archiveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
@@ -650,26 +639,26 @@ export class CreateUsersPage extends PageObject {
           'Verify archive button is enabled',
           testInfo,
         );
-        
+
         // Click the Archive button
         await archiveButton.click();
         await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-        
+
         // Wait for and click the confirm button
         const confirmModal = this.page.locator(SelectorsUsersPage.USERS_ARCHIVE_CONFIRM_MODAL).first();
         await confirmModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-        
+
         const confirmButton = this.page.locator(SelectorsUsersPage.USERS_ARCHIVE_CONFIRM_BUTTON).first();
         await confirmButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
         await confirmButton.click();
         await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
         await this.waitForNetworkIdle();
-        
+
         deletedCount++;
       }
 
       logger.log(`Deleted ${deletedCount} users with prefix "${searchPrefix}" (skipped ${skippedCount} rows that didn't match)`);
-      
+
       // Verify we actually deleted users if any were found
       // If no users were found (rowCount === 0), that's fine - cleanup may have already happened
       if (rowCount > 0) {
@@ -687,4 +676,3 @@ export class CreateUsersPage extends PageObject {
     });
   }
 }
-

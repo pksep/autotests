@@ -1,7 +1,7 @@
 /**
  * @file U001-SecondTask.spec.ts
  * @purpose Test Suite 7: Second Task Operations (Test Cases 21-27)
- * 
+ *
  * This suite handles:
  * - Test Case 21: Loading The Second Task
  * - Test Case 22: Launch Into Production Product (Second Task)
@@ -69,7 +69,7 @@ let remainingStockAfter = U001Constants.remainingStockAfter;
 export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Second Task Operations (Test Cases 21-27)`);
 
-  test('Test Case 21 - Loading The Second Task', async ({ page }) => {
+  test('Case 21 - Loading The Second Task', async ({ page }) => {
     // doc test case 16
     logger.log('Test Case 21 - Loading The Second Task');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -99,7 +99,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
     });
 
     await allure.step('Step 04: Search product on modal window', async () => {
-      const modalWindow = await page.locator('.modal-yui-kit__modal-content');
+      const modalWindow = page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
       await expectSoftWithScreenshot(
         page,
@@ -116,7 +116,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await searchTable.inputValue()).toBe(nameProduct);
+          await expect.soft(searchTable).toHaveValue(nameProduct);
         },
         `Verify search table input value equals "${nameProduct}"`,
         test.info(),
@@ -151,7 +151,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
     });
 
     await allure.step('Step 09: Check modal window Company', async () => {
-      const modalWindow = await page.locator('.modal-yui-kit__modal-content');
+      const modalWindow = page.locator('.modal-yui-kit__modal-content');
       // Using table search we look for the value of the variable
       await expectSoftWithScreenshot(
         page,
@@ -168,7 +168,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(await searchTable.inputValue()).toBe(nameBuyer);
+          await expect.soft(searchTable).toHaveValue(nameBuyer);
         },
         `Verify search table input value equals "${nameBuyer}"`,
         test.info(),
@@ -265,7 +265,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
     },
   ];
 
-  test('Test Case 22 - Marking Parts', async ({ page }) => {
+  test('Case 22 - Marking Parts', async ({ page }) => {
     // doc test case 17
     logger.log('Test Case 22 - Marking Parts');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -313,7 +313,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect.soft(await searchTable.inputValue()).toBe(part.name);
+              await expect.soft(searchTable).toHaveValue(part.name);
             },
             `Verify search table input value equals "${part.name}"`,
             test.info(),
@@ -509,7 +509,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
     }
   });
 
-  test('Test Case 23 - Checking new date by urgency', async ({ page }) => {
+  test('Case 23 - Checking new date by urgency', async ({ page }) => {
     // doc test case 18
     logger.log('Test Case 23 - Checking new date by urgency');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -594,14 +594,9 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
 
           // Using table search we look for the value of the variable
-          await shortageAssemblies.searchAndWaitForTable(
-            cbed.name,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
-            SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE,
-            {
-              useRedesign: true,
-            },
-          );
+          await shortageAssemblies.searchAndWaitForTable(cbed.name, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE, SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE, {
+            useRedesign: true,
+          });
 
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
@@ -762,7 +757,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
     }
   });
 
-  test('Test Case 24 - Receiving Part And Check Stock', async ({ page }) => {
+  test('Case 24 - Receiving Part And Check Stock', async ({ page }) => {
     // doc test case 19
     logger.log('Test Case 24 - Receiving Part And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
@@ -816,11 +811,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
         await allure.step('Step 06: Search product', async () => {
           // Using table search we look for the value of the variable
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          await stockReceipt.searchTable(
-            detail.name,
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
-            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT,
-          );
+          await stockReceipt.searchTable(detail.name, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT);
           // Waiting for loading
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
           await page.waitForLoadState('networkidle');
@@ -836,9 +827,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
         await allure.step('Step 08: Find the checkbox column and click', async () => {
           // Click the header checkbox using direct data-testid
-          const headerCheckbox = page.getByTestId(
-            'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-HeadRow-Checkbox-Wrapper-Checkbox',
-          );
+          const headerCheckbox = page.getByTestId('ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-HeadRow-Checkbox-Wrapper-Checkbox');
 
           // Wait for the checkbox to be visible
           await headerCheckbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
@@ -923,17 +912,13 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           );
 
           // Output to the console
-          logger.log(
-            `Количество ${detail.name} на складе до оприходования: ${remainingStockBefore}, ` +
-              `оприходовали в количестве: ${incomingQuantity}, ` +
-              `и после оприходования: ${remainingStockAfter}.`,
-          );
+          logger.log(`Количество ${detail.name} на складе до оприходования: ${remainingStockBefore}, ` + `оприходовали в количестве: ${incomingQuantity}, ` + `и после оприходования: ${remainingStockAfter}.`);
         });
       }
     }
   });
 
-  test('Test Case 25 - Receiving Cbed And Check Stock', async ({ page }) => {
+  test('Case 25 - Receiving Cbed And Check Stock', async ({ page }) => {
     // doc test case 20
     logger.log('Test Case 25 - Receiving Cbed And Check Stock');
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
@@ -986,11 +971,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
 
         await allure.step('Step 06: Search product', async () => {
           // Using table search we look for the value of the variable
-          await stockReceipt.searchTable(
-            cbed.name,
-            tableComplectsSets,
-            'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input',
-          );
+          await stockReceipt.searchTable(cbed.name, tableComplectsSets, 'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input');
 
           // Waiting for loading
           await page.waitForLoadState('networkidle');
@@ -1034,11 +1015,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
               await newPage.waitForLoadState('networkidle');
 
               // Search for the CBED
-              await newCompletingAssembliesToPlan.searchTable(
-                cbed.name,
-                SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
-                SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
-              );
+              await newCompletingAssembliesToPlan.searchTable(cbed.name, SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE, SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID);
               await newPage.waitForTimeout(TIMEOUTS.STANDARD);
               await newPage.waitForLoadState('networkidle');
 
@@ -1115,11 +1092,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
               await stockReceipt.waitingTableBodyNoThead(tableComplectsSets);
 
               // Re-search to refresh the table data
-              await stockReceipt.searchTable(
-                cbed.name,
-                tableComplectsSets,
-                'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input',
-              );
+              await stockReceipt.searchTable(cbed.name, tableComplectsSets, 'ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-Table-Search-Dropdown-Input');
               await page.waitForLoadState('networkidle');
               await stockReceipt.waitingTableBodyNoThead(tableComplectsSets);
 

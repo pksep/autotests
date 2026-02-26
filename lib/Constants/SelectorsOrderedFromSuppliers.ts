@@ -11,19 +11,15 @@ export const SELECT_TYPE_OBJECT_OPERATION_DETAILS = '[data-testid="OrderSupplier
 
 export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY = 'dialog[data-testid$="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"] open';
 
-export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_TBODY =
-  '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Tbody"]';
+export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_TBODY = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Tbody"]';
 
-export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW0 =
-  '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row0"]';
+export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW0 = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row0"]';
 
-export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW1 =
-  '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row1"]';
+export const ORDER_FROM_SUPPLIERS_MODAL_STOCK_ORDER_SUPPLY_TABLE1_ROW1 = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row1"]';
 
 export const MODAL_ADD_ORDER_PRODUCTION_DIALOG_BUTTON = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-Button"]';
 
-export const MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE =
-  '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2"]';
+export const MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2"]';
 
 export const MODAL_SHIPMENTS_TO_IZED_RIGHT_MENU_MODAL = '[data-testid="ModalShipmentsToIzed-RightMenu-Modal"]';
 export const MODAL_SHIPMENTS_TO_IZED_TABLE_SCLAD = '[data-testid="ModalShipmentsToIzed-Table-Sclad"]';
@@ -39,10 +35,8 @@ export const TABLE_ROW_CHECKBOX_SUFFIX = '[data-testid$="-TdCheckbox"]';
 export const TABLE_ROW_CHECKBOX_WRAPPER_SUFFIX = '[data-testid$="-TdCheckbox-Wrapper-Checkbox"]';
 
 // Pattern selectors for ModalShipmentsToIzed selectors
-export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_CHECKBOX_PREFIX =
-  '[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-Checkbox-"]';
-export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_TABLE_DATA_NUMBER_PREFIX =
-  '[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-TableData-Number-"]';
+export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_CHECKBOX_PREFIX = '[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-Checkbox-"]';
+export const MODAL_SHIPMENTS_TO_IZED_MODAL_WORKER_TABLE_DATA_NUMBER_PREFIX = '[data-testid^="ModalShipmentsToIzed-ModalWorker-Content-BlockTable-Table-TableStockOrderItems-TableData-Number-"]';
 export const MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_STOCK_ORDER_PREFIX = '[data-testid^="ModalShipmentsToIzed-TbodySclad-StockOrder"]';
 export const MODAL_SHIPMENTS_TO_IZED_TBODY_SCLAD_COUNT_SHIPMENTS_PREFIX = '[data-testid^="ModalShipmentsToIzed-TbodySclad-CountShipments"]';
 
@@ -72,18 +66,13 @@ export const SCLAD_ORDERING_SUPPLIERS = '[data-testid="Sclad-orderingSuppliers"]
 export const MODAL_ADD_ORDER_PRODUCTION_DIALOG = 'dialog[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"][open]';
 export const MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply"]';
 export const MODAL_TITLE = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Title"]';
-export const TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE =
-  'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1"]';
-export const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT =
-  '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input"]';
-export const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT_DATA_TESTID =
-  'OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input';
-export const TABLE_MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE =
-  'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2"]';
+export const TABLE_MODAL_ADD_ORDER_PRODUCTION_TABLE = 'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1"]';
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input"]';
+export const MODAL_ADD_ORDER_PRODUCTION_TABLE_SEARCH_INPUT_DATA_TESTID = 'OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Search-Dropdown-Input';
+export const TABLE_MODAL_ADD_ORDER_PRODUCTION_BOTTOM_TABLE = 'table[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2"]';
 export const ORDER_MODAL = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker"]';
 export const ORDER_MODAL_DIALOG = 'dialog[data-testid^="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker"]';
-export const ORDER_MODAL_TABLE =
-  '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table"]';
+export const ORDER_MODAL_TABLE = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-BlockTable-Table-TableStockOrderItems-Table"]';
 export const ORDER_MODAL_TOP_ORDER_NUMBER = '[data-testid="OrderSuppliers-Main-Content-TableWrapper-Table-Modal-Worker-Content-Headers-LabelOrder-Span"]';
 
 // Additional selectors
@@ -100,14 +89,11 @@ export const MODAL_WORKER_MAIN_TITLE = '[data-testid="OrderSuppliers-Main-Conten
 
 // Quantity input selectors for ChoosedTable2
 export const QUANTITY_INPUT_SUFFIX = '[data-testid$="-TdQuantity-InputNumber-Input"]';
-export const QUANTITY_INPUT_FULL =
-  '[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row"][data-testid$="-TdQuantity-InputNumber-Input"]';
+export const QUANTITY_INPUT_FULL = '[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Row"][data-testid$="-TdQuantity-InputNumber-Input"]';
 
 // Pattern selectors for Table1 rows (checkbox and ordered on production)
-export const TABLE1_ROW_CHECKBOX_PATTERN =
-  '[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row"][data-testid$="-TdCheckbox-Wrapper-Checkbox"]';
-export const TABLE1_ROW_ORDERED_ON_PRODUCTION_PATTERN =
-  '[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row"][data-testid$="-TdOrderedOnProduction"]';
+export const TABLE1_ROW_CHECKBOX_PATTERN = '[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row"][data-testid$="-TdCheckbox-Wrapper-Checkbox"]';
+export const TABLE1_ROW_ORDERED_ON_PRODUCTION_PATTERN = '[data-testid^="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1-Row"][data-testid$="-TdOrderedOnProduction"]';
 
 // Modal dialog selectors
 export const MODAL_CHOOSED_TABLE2_CBED = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-ChoosedTable2-Modal-Cbed"]';

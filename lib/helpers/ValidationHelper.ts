@@ -2,7 +2,7 @@
  * @file ValidationHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for validation and verification operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Page header and button validation
  * - Table validation
@@ -36,6 +36,7 @@ export class ValidationHelper {
    * @param options - Optional configuration:
    *   - skipTitleValidation: If true, skips H3 title validation
    *   - skipButtonValidation: If true, skips button validation
+   *   - skipNetworkIdle: If true, skips waitForLoadState('networkidle') before title/button validation (use for pages with background requests)
    *   - useModalMethod: If true, uses modal method for H3 titles
    *   - testInfo: TestInfo for screenshots
    */
@@ -52,20 +53,20 @@ export class ValidationHelper {
     options?: {
       skipTitleValidation?: boolean;
       skipButtonValidation?: boolean;
+      skipNetworkIdle?: boolean;
       useModalMethod?: boolean;
       testInfo?: TestInfo;
     },
   ): Promise<void> {
     // Validate H3 titles
     if (!options?.skipTitleValidation && titles.length > 0) {
-      // Wait for the page to stabilize before collecting H3 titles
-      await page.waitForLoadState('networkidle');
+      if (!options?.skipNetworkIdle) {
+        await page.waitForLoadState('networkidle');
+      }
 
       const expectedTitles = titles.map(title => title.trim());
       // Use modal method if specified, otherwise use regular method
-      let h3Titles = options?.useModalMethod
-        ? await this.modalHelper.getAllH3TitlesInModalClassNew(page, containerSelector)
-        : await this.modalHelper.getAllH3TitlesInClass(page, containerSelector);
+      const h3Titles = options?.useModalMethod ? await this.modalHelper.getAllH3TitlesInModalClassNew(page, containerSelector) : await this.modalHelper.getAllH3TitlesInClass(page, containerSelector);
 
       // If no titles found in container, try searching the entire page body (excluding modals)
       // This handles cases where page-level titles are outside the container
@@ -139,13 +140,14 @@ export class ValidationHelper {
 
     // Validate buttons
     if (!options?.skipButtonValidation && buttons.length > 0) {
-      // Wait for the page to stabilize
-      await page.waitForLoadState('networkidle');
+      if (!options?.skipNetworkIdle) {
+        await page.waitForLoadState('networkidle');
+      }
 
       // Iterate over each button in the array
       for (const button of buttons) {
         const buttonLabel = button.label;
-        const expectedState = typeof button.state === 'string' ? button.state === 'true' : button.state ?? true;
+        const expectedState = typeof button.state === 'string' ? button.state === 'true' : (button.state ?? true);
 
         // Perform the validation for the button
         const { allure } = await import('allure-playwright');
@@ -607,13 +609,17 @@ export class ValidationHelper {
 
       if (Benabled) {
         logger.log(`Expecting button "${label}" to be enabled.`);
-        expect(hasDisabledClass).toBeFalsy(); // Button should not be disabled
-        expect(hasDisabledAttribute).toBeFalsy(); // Button should not have 'disabled' attribute
+        if (hasDisabledClass || hasDisabledAttribute) {
+          logger.log(`Button "${label}" is disabled (class or attribute) but expected enabled.`);
+          return false;
+        }
       } else {
         logger.log(`Expecting button "${label}" to be disabled.`);
-        // Button should be disabled either by class or attribute
         const isDisabled = hasDisabledClass || hasDisabledAttribute;
-        expect(isDisabled).toBeTruthy(); // Button should be disabled (class or attribute)
+        if (!isDisabled) {
+          logger.log(`Button "${label}" is enabled but expected disabled.`);
+          return false;
+        }
       }
       logger.log(`Button "${label}" passed all checks.`);
       return true; // If everything passes, the button is valid

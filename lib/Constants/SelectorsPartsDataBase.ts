@@ -83,8 +83,6 @@ export const SCROLL_WRAPPER_SLOT = '[data-testid="scroll-wrapper__slot"]';
 
 export const POPOVER_ITEM0 = '[data-testid="Popover-Item0"]';
 
-
-
 export const TABLE_PROCESS_CBED = '[data-testid="BasePaginationTable-Wrapper-cbed"]';
 
 export const MODAL_ADD_OPERATION = '[data-testid="EditDetal-ModalTechProcess-ModalAddOperation-Modal"]';
@@ -120,6 +118,8 @@ export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 = '[data-testid="Specificat
 export const MAIN_PAGE_SMALL_DIALOG_ПД = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials2"]';
 export const MAIN_PAGE_SMALL_DIALOG_РМ = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials3"]';
 export const TABLE_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
+/** Raw data-testid for table search input (e.g. for searchAndWaitForTable searchInputDataTestId). */
+export const TABLE_SEARCH_INPUT_TESTID = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
 export const TABLE_FIRST_ROW_SELECTOR = 'tbody tr:first-child';
 export const TABLE_FIRST_CELL_SELECTOR = 'tbody tr:first-child td:nth-child(1)';
 export const TABLE_SECOND_CELL_SELECTOR = 'tbody tr:first-child td:nth-child(2)';
@@ -161,8 +161,7 @@ export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="Modal
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="ModalBaseMaterial-Select-Button"]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
-export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT =
-  '[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT = '[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]';
 export const MODAL_BASE_MATERIAL_DESIGNATION_INPUT = '[data-testid="ModalBaseMaterial-Designation-Input-Input"]';
 
 // U005 specific constants (added for Rule 1 compliance)
@@ -183,8 +182,13 @@ export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_SEARCH_INPUT_DROPDOWN_INP
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE = '[data-testid="ModalBaseMaterial-TableList-Table-SubType"]';
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_SEARCH_INPUT_DROPDOWN_INPUT = '[data-testid="ModalBaseMaterial-TableList-Table-SubType-SearchInput-Dropdown-Input"]';
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM = '[data-testid="ModalBaseMaterial-TableList-Table-Item"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_THEAD = '[data-testid="ModalBaseMaterial-TableList-Table-Type-Thead"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_TBODY = '[data-testid="ModalBaseMaterial-TableList-Table-Type-Tbody"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_THEAD = '[data-testid="ModalBaseMaterial-TableList-Table-SubType-Thead"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_TBODY = '[data-testid="ModalBaseMaterial-TableList-Table-SubType-Tbody"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_THEAD = '[data-testid="ModalBaseMaterial-TableList-Table-Item-Thead"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_TBODY = '[data-testid="ModalBaseMaterial-TableList-Table-Item-Tbody"]';
 export const MODAL_BASE_MATERIAL_ADD_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
-
 
 //U006 compliance
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2 = 'input[data-testid^="AddDetal-CharacteristicBlanks-Tbody-InputNumber"]';
@@ -223,6 +227,12 @@ export const ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_CANCE
 
 // Document table constants for U005
 export const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE = '[data-testid="AddDetal-FileComponent-DocumentTable-Table"]';
+/** Matches document table on both Add and Edit detail pages (AddDetal / EditDetal). */
+export const DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE = '[data-testid$="Detal-FileComponent-DocumentTable-Table"]';
+/** Matches file component section on both Add and Edit detail pages. */
+export const DETAIL_FILE_COMPONENT = '[data-testid$="Detal-FileComponent"]';
+/** Matches the file name column cell in document table on both Add and Edit detail pages (use with filter by file name text). */
+export const DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_NAME = '[data-testid*="Detal-FileComponent-DocumentTable-Tbody-Name"]';
 export const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT = '[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint"]';
 export const ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_DELETE_DOC = '[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc"]';
 
@@ -244,6 +254,10 @@ export const NOTIFICATION_NOTIFICATION_DESCRIPTION = '[data-testid="Notification
 export const CHARACTERISTIC_BLANKS_MATERIAL_BUTTON = '[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Set"]';
 export const MATERIAL_ADD_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
 export const EDIT_SAVE_BUTTON = '[data-testid="EditDetal-ButtonSaveAndCancel-ButtonsCenter-Save"]';
+export const EDIT_DETAL_ATTENTION_CHECKBOX = '[data-testid="EditDetal-Attention-Checkbox"]';
+export const EDIT_DETAL_DISCONTINUED_CHECKBOX = '[data-testid="EditDetal-discontinued-Checkbox"]';
+export const EDIT_DETAL_SELECT_FILTER_RESPONSIBLE = '[data-testid="EditDetal-SelectFilter-Responsible"]';
+export const EDIT_DETAL_DESCRIPTION_TEXTAREA = '[data-testid="EditDetal-Description-Textarea"]';
 export const ADD_DETAL_TITLE = '[data-testid="AddDetal-Title"]';
 export const SPECIAL_CHAR_NAME = 'Test@#$%^&*()_+-={}[]|\\:";\'<>?,./`~';
 export const DETAIL_NAME_INPUT = '[data-testid="AddDetal-Information-Input-Input"]';
@@ -266,7 +280,14 @@ export const EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR = `${EDIT_DETAIL_C
 export const EDIT_CHARACTERISTIC_BLANKS_INPUT_PATTERN = 'EditDetal-CharacteristicBlanks';
 export const EDIT_CHARACTERISTIC_BLANKS_CONTAINER = 'EditDetal-CharacteristicBlanks';
 export const EDIT_CHARACTERISTIC_BLANKS_CONTAINER_SELECTOR = '[data-testid="EditDetal-CharacteristicBlanks"]';
-export const DETAIL_NAME_INPUT_EDIT = '[data-testid="EditDetal-Information-Input-Input"]';
+/** Edit Detail page: name (information) field container - use EDIT_DETAL_INFORMATION_INPUT_FILL to type */
+export const EDIT_DETAL_INFORMATION_INPUT = '[data-testid="EditDetal-Information-Input"]';
+/** Edit Detail page: the actual input for name (inside the container) - use for .fill() / rename */
+export const EDIT_DETAL_INFORMATION_INPUT_FILL = '[data-testid="EditDetal-Information-Input"] input';
+/** Edit Detail page: designation field */
+export const EDIT_DETAL_DESIGNATION_INPUT = '[data-testid="EditDetal-Designation-Input-Input"]';
+/** @deprecated Use EDIT_DETAL_INFORMATION_INPUT */
+export const DETAIL_NAME_INPUT_EDIT = EDIT_DETAL_INFORMATION_INPUT;
 export const MATERIAL_SWITCH_ITEM1 = 'ModalBaseMaterial-TableList-Switch-Item1';
 export const SWITCH_MATERIAL_ITEM_2 = '[data-testid="ModalBaseMaterial-TableList-Switch-Item2"]';
 export const TEST_MATERIAL_NAME = 'Круг Сталь 09Г2С Ø100мм';
@@ -348,6 +369,96 @@ export const SPECIFICATION_BUTTONS_ADDING_SPECIFICATION = '[data-testid="Specifi
 // SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 is already defined at line 117
 export const SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON = '[data-testid="Specification-ModalBaseDetal-Select-Button"]';
 export const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON = '[data-testid="Specification-ModalBaseDetal-Add-Button"]';
+
+// U005 cursorrules compliance: tbody row and document table selectors (no hardcoded data-testid in specs)
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_TYPE_TBODY_FIRST_ROW = '[data-testid^="ModalBaseMaterial-TableList-Table-Type-Tbody"] tr:first-child';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_TBODY_FIRST_ROW = '[data-testid^="ModalBaseMaterial-TableList-Table-SubType-Tbody"] tr:first-child';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_TABLE_TBODY_ROWS = '[data-testid^="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Table-Tbody"] tr';
+/** Document table body row (Add and Edit detail). */
+export const DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_TABLEROW = '[data-testid*="Detal-FileComponent-DocumentTable-Tbody-TableRow"]';
+/** Document table checkbox (Add and Edit detail). */
+export const DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_CHECKBOX = '[data-testid*="Detal-FileComponent-DocumentTable-Checkbox"]';
+/** Document table thead search row input. */
+export const DOCUMENT_TABLE_THEAD_SEARCH_INPUT = 'thead tr:nth-child(2) input[data-testid$="Search-Dropdown-Input"]';
+
+// U005 Create page / modals: selector arrays (same order as U005-PC01.json) so specs use constants not JSON datatestid
+export const MODAL_BASE_MATERIAL_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
+export const MODAL_CONFIRM_CONTENT_BUTTONS_NO = '[data-testid="ModalConfirm-Content-Buttons-No"]';
+export const MODAL_CONFIRM_CONTENT_BUTTONS_YES = '[data-testid="ModalConfirm-Content-Buttons-Yes"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_CANCEL =
+  '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-CancelButton"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_ADD =
+  '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD =
+  '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM1 =
+  '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item1"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM2 =
+  '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item2"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM3 =
+  '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item3"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_0 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-0"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_1 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-1"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_2 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-2"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_3 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-3"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_4 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-4"]';
+export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_5 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Dropdown-Options-5"]';
+
+export const ADD_DETAIL_CHARACTERISTIC_ADD_BUTTON = '[data-testid="AddDetal-Characteristic-AddButton"]';
+export const BASE_PRODUCTS_BUTTON_CREATE_COPY = '[data-testid="BaseProducts-Button-CreateCopy"]';
+
+/** Create page buttons in U005-PC01 order (labels/states from JSON, selectors from here). */
+export const CREATE_PAGE_BUTTON_SELECTORS = [
+  ADD_DETAIL_BUTTONS_TECH_PROCESS,
+  ADD_DETAIL_BUTTONS_COST_PRICE,
+  ADD_DETAIL_BUTTONS_ACCESSORY,
+  ADD_DETAIL_BUTTONS_CHANGE_HISTORY,
+  SPECIFICATION_BUTTONS_ADDING_SPECIFICATION,
+  ADD_DETAIL_CHARACTERISTIC_ADD_BUTTON,
+  ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON,
+  BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_CANCEL,
+  BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE,
+] as const;
+/** Modal Add Material buttons in U005-PC01 order. */
+export const MODAL_ADD_MATERIAL_BUTTON_SELECTORS = [MODAL_BASE_MATERIAL_CANCEL_BUTTON, MODAL_BASE_MATERIAL_ADD_BUTTON] as const;
+/** Modal Archive (confirm) buttons in U005-PC01 order. */
+export const MODAL_ARCHIVE_BUTTON_SELECTORS = [MODAL_CONFIRM_CONTENT_BUTTONS_NO, MODAL_CONFIRM_CONTENT_BUTTONS_YES] as const;
+/** Modal Add From Base buttons in U005-PC01 order. */
+export const MODAL_ADD_FROM_BASE_BUTTON_SELECTORS = [
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_CANCEL,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_ADD,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD,
+] as const; // long names
+/** Modal Add From Base switcher items in U005-PC01 order (Все, Архив, Без связи, Без типа). */
+export const MODAL_ADD_FROM_BASE_SWITCHER_SELECTORS = [
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM0,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM1,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM2,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_SWITCH_ITEM3,
+] as const;
+/** Modal Add From Base filter dropdown options in U005-PC01 order. */
+export const MODAL_ADD_FROM_BASE_FILTER_SELECTORS = [
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_0,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_1,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_2,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_3,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_4,
+  ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_DROPDOWN_OPTIONS_5,
+] as const;
+
+/** Modal Add Documents (drag-and-drop) buttons in U005-PC01 order. */
+export const MODAL_ADD_DOCUMENTS_BUTTON_SELECTORS = [
+  ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_CANCEL,
+  ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD,
+] as const;
+
+// U004 MainPage filters: data-testids from U004-PC01 (for U005-01)
+export const MAIN_PAGE_FILTER_SORT_BY_ATTENTION = '[data-testid="BaseProducts-Filter-Component-SortByAttention"]';
+export const MAIN_PAGE_FILTER_SORT_BY_DATE = '[data-testid="BaseProducts-Filter-Component-SortByDate"]';
+export const MAIN_PAGE_FILTER_SORT_BY_OWN = '[data-testid="BaseProducts-Filter-Component-SortByOwn"]';
+export const MAIN_PAGE_FILTER_SELECTORS = [MAIN_PAGE_FILTER_SORT_BY_ATTENTION, MAIN_PAGE_FILTER_SORT_BY_DATE, MAIN_PAGE_FILTER_SORT_BY_OWN] as const;
+/** U004 MainPage buttonsBefore in order (Редактировать, Создать, Создать копированием, Архив). */
+export const MAIN_PAGE_BUTTONS_BEFORE_SELECTORS = [MAIN_PAGE_EDIT_BUTTON, BUTTON_CREATE_NEW_PART, BASE_PRODUCTS_BUTTON_CREATE_COPY, BUTTON_ARCHIVE] as const;
 
 // Generic debugging selectors
 export const DEBUG_ALL_MODALS_SELECTOR = '[role="dialog"], .modal, [data-testid*="Modal"]';

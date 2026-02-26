@@ -637,9 +637,7 @@ export class CreateLoadingTaskPage extends PageObject {
       logger.info(`Completed archive iteration ${iteration - 1}. Re-running search to refresh the table...`);
 
       if (iteration > maxIterations) {
-        throw new Error(
-          `Превышено максимальное количество итераций архивирования (${maxIterations}). Остались строки с "${productName}" после ${iteration} итераций.`,
-        );
+        throw new Error(`Превышено максимальное количество итераций архивирования (${maxIterations}). Остались строки с "${productName}" после ${iteration} итераций.`);
       }
     }
 
@@ -1725,10 +1723,7 @@ export class CreateLoadingTaskPage extends PageObject {
    */
   async clickAddNewProductToOrderButton(): Promise<boolean> {
     try {
-      const addNewProductButton = this.page
-        .locator('button[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsRight-AddNewIzd"]')
-        .filter({ hasText: 'Добавить новое изделие к заказу' })
-        .first();
+      const addNewProductButton = this.page.locator('button[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsRight-AddNewIzd"]').filter({ hasText: 'Добавить новое изделие к заказу' }).first();
       await addNewProductButton.waitFor({ state: 'visible', timeout: 10000 });
 
       // Scroll to bottom of page to avoid any overlaying elements at the top
@@ -1884,12 +1879,7 @@ export class CreateLoadingTaskPage extends PageObject {
    * @param expectedProductName - Expected product name in the result
    * @returns true if all verifications pass, false otherwise
    */
-  async searchAndVerifyRowMatches(
-    searchTerm: string,
-    expectedOrderNumber: string,
-    expectedArticleNumber: string,
-    expectedProductName: string,
-  ): Promise<boolean> {
+  async searchAndVerifyRowMatches(searchTerm: string, expectedOrderNumber: string, expectedArticleNumber: string, expectedProductName: string): Promise<boolean> {
     try {
       // Get search input
       const searchInputWrapper = this.page.locator(LoadingTasksSelectors.SHIPMENTS_SEARCH_INPUT_SELECTOR).first();
@@ -2160,13 +2150,7 @@ export class CreateLoadingTaskPage extends PageObject {
    * @param normalizeFn - Optional normalization function to apply to both values before comparison
    * @returns Object with tab1Value, tab2Value, and match boolean
    */
-  async compareCellValueBetweenTabs(
-    tab1: Page,
-    tab2: Page,
-    tab1Selector: string,
-    tab2Selector: string,
-    normalizeFn?: (val: string) => string,
-  ): Promise<{ tab1Value: string; tab2Value: string; match: boolean }> {
+  async compareCellValueBetweenTabs(tab1: Page, tab2: Page, tab1Selector: string, tab2Selector: string, normalizeFn?: (val: string) => string): Promise<{ tab1Value: string; tab2Value: string; match: boolean }> {
     try {
       // Get value from tab1
       await tab1.bringToFront();
@@ -2203,13 +2187,7 @@ export class CreateLoadingTaskPage extends PageObject {
    * @param testInfo - TestInfo for screenshot capture
    * @returns The text content of the cell
    */
-  async validateCellValue(
-    cellLocator: Locator,
-    expectedValue: string | ((text: string) => boolean),
-    description: string,
-    page: Page,
-    testInfo: TestInfo,
-  ): Promise<string> {
+  async validateCellValue(cellLocator: Locator, expectedValue: string | ((text: string) => boolean), description: string, page: Page, testInfo: TestInfo): Promise<string> {
     await this.waitAndHighlight(cellLocator);
     const text = (await cellLocator.textContent())?.trim() || '';
 

@@ -2,7 +2,7 @@
  * @file ModalHelper.ts
  * @date 2025-01-20
  * @purpose Helper class for modal and dialog operations extracted from Page.ts
- * 
+ *
  * This helper handles:
  * - Modal visibility and closing
  * - Modal title extraction (H3, H4)
@@ -43,9 +43,7 @@ export class ModalHelper {
     // Also accepts combinations like [data-testid^="..."][data-testid$="..."]
     const isDataTestIdSelector = selector.startsWith('[data-testid=') || selector.startsWith('[data-testid^=') || selector.startsWith('[data-testid$=');
     if (!isDataTestIdSelector) {
-      throw new Error(
-        `getAllH3TitlesInClass only accepts data-testid selectors. Received: ${selector}. Use format: [data-testid="your-test-id"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]`,
-      );
+      throw new Error(`getAllH3TitlesInClass only accepts data-testid selectors. Received: ${selector}. Use format: [data-testid="your-test-id"] or pattern selectors like [data-testid^="..."] or [data-testid$="..."]`);
     }
     const container = page.locator(selector);
 
