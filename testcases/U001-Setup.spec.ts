@@ -411,7 +411,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 08: Click on the Add Operation', async () => {
-        await page.waitForSelector(PartsDBSelectors.MODAL_CONTENT);
+        await page.locator(PartsDBSelectors.BUTTON_ADD_OPERATION).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
         await partsDatabsePage.clickButton('Добавить операцию', PartsDBSelectors.BUTTON_ADD_OPERATION);
       });
 

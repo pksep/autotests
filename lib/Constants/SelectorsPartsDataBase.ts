@@ -112,11 +112,15 @@ export const MAIN_PAGE_СБ_TABLE = '[data-testid="BasePaginationTable-Table-cbe
 export const MAIN_PAGE_Д_TABLE = '[data-testid="BasePaginationTable-Table-detal"]';
 export const MAIN_PAGE_MAIN_DIV = '[data-testid="BaseProducts-Container-MainContainer"]';
 export const MAIN_PAGE_SMALL_DIALOG_СБ = 'div[data-testid="Specification-Dialog-CardbaseOfAssemblyUnits0"]';
+export const MAIN_PAGE_SMALL_DIALOG_СБ_TESTID = 'Specification-Dialog-CardbaseOfAssemblyUnits0';
 export const MAIN_PAGE_SMALL_DIALOG_Д = 'div[data-testid="Specification-Dialog-CardbaseDetail1"]';
+export const MAIN_PAGE_SMALL_DIALOG_Д_TESTID = 'Specification-Dialog-CardbaseDetail1';
 export const SPECIFICATION_DIALOG_CARD_BASE_OF_ASSEMBLY_UNITS_0 = '[data-testid="Specification-Dialog-CardbaseOfAssemblyUnits0"]';
 export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1 = '[data-testid="Specification-Dialog-CardbaseDetail1"]';
 export const MAIN_PAGE_SMALL_DIALOG_ПД = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials2"]';
+export const MAIN_PAGE_SMALL_DIALOG_ПД_TESTID = 'Specification-Dialog-CardtheDatabaseOfMaterials2';
 export const MAIN_PAGE_SMALL_DIALOG_РМ = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials3"]';
+export const MAIN_PAGE_SMALL_DIALOG_РМ_TESTID = 'Specification-Dialog-CardtheDatabaseOfMaterials3';
 export const TABLE_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
 /** Raw data-testid for table search input (e.g. for searchAndWaitForTable searchInputDataTestId). */
 export const TABLE_SEARCH_INPUT_TESTID = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
@@ -141,14 +145,20 @@ export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid=
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="Specification-ModalBaseCbed-Add-Button"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Specification-ModalBaseCbed-Cancel-Button"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE = '[data-testid="Specification-ModalCbed-AccordionCbed-Table"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID = 'Specification-ModalCbed-AccordionCbed-Table';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_TESTID = 'Specification-ModalBaseCbed-Table';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID = 'Specification-ModalBaseCbed-Select-Button';
 
 // U004 dialogs (Д)
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG = 'Specification-ModalBaseDetal';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="Specification-ModalBaseDetal"]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="Specification-ModalBaseDetal"][open]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE = '[data-testid="BasePaginationTable-Table-detal"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE_TESTID = 'BasePaginationTable-Table-detal';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="Specification-ModalBaseDetal-Table"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE_TESTID = 'Specification-ModalBaseDetal-Table';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="Specification-ModalBaseDetal-Select-Button"]';
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID = 'Specification-ModalBaseDetal-Select-Button';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="Specification-ModalBaseDetal-Add-Button"]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Specification-ModalBaseDetal-Cancel-Button"]';
 
@@ -157,12 +167,32 @@ export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG = 'ModalBaseMaterial';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="ModalBaseMaterial"]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="ModalBaseMaterial"][open]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = '[data-testid="ModalBaseMaterial-TableList-Table-Item"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE_TESTID = 'ModalBaseMaterial-TableList-Table-Item';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="ModalBaseMaterial-Table"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE_TESTID = 'ModalBaseMaterial-Table';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="ModalBaseMaterial-Select-Button"]';
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID = 'ModalBaseMaterial-Select-Button';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT = '[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]';
 export const MODAL_BASE_MATERIAL_DESIGNATION_INPUT = '[data-testid="ModalBaseMaterial-Designation-Input-Input"]';
+
+/** Cancel/close button locator inside any open dialog (data-testid patterns + Russian labels). Use when scoping with dialog locator. */
+export const MODAL_CANCEL_BUTTON_LOCATOR =
+  '[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")';
+
+/**
+ * Returns selector for an element by data-testid value.
+ * If the value is already a full selector (contains "data-testid"), returns it as-is; otherwise returns [data-testid="value"].
+ */
+export function buildDataTestIdSelector(dataTestId: string): string {
+  return dataTestId.includes('data-testid') ? dataTestId : `[data-testid="${dataTestId}"]`;
+}
+
+/** Returns selector for a div by data-testid value (e.g. card elements). */
+export function buildCardSelectorByDataTestId(dataTestId: string): string {
+  return `div[data-testid="${dataTestId}"]`;
+}
 
 // U005 specific constants (added for Rule 1 compliance)
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS = '[data-testid="AddDetal-CharacteristicBlanks"]';
@@ -340,14 +370,15 @@ export const EDIT_CHR_TABLE = '[data-testid="EditDetal-CharacteristicBlanks-Tbod
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_BAN_DIALOG = '[data-testid="ModalConfirm"]';
 
 // U004 dialogs (РМ) — share ModalBaseMaterial
-
-// U004 dialogs (РМ) — share ModalBaseMaterial
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG = 'ModalBaseMaterial';
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="ModalBaseMaterial"]';
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="ModalBaseMaterial"][open]';
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE = '[data-testid="ModalBaseMaterial-TableList-Table-Item"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE_TESTID = 'ModalBaseMaterial-TableList-Table-Item';
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="ModalBaseMaterial-Table"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE_TESTID = 'ModalBaseMaterial-Table';
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="ModalBaseMaterial-Select-Button"]';
+export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID = 'ModalBaseMaterial-Select-Button';
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
 export const EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
 

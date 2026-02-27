@@ -87,7 +87,7 @@ export const runU002_03_DataSetup = (_isSingleTest: boolean, _iterations: number
       });
 
       await allure.step('Step 08: Click on the Add Operation', async () => {
-        await page.waitForSelector(SelectorsPartsDataBase.MODAL_CONTENT);
+        await page.locator(SelectorsPartsDataBase.BUTTON_ADD_OPERATION).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
         await partsDatabsePage.clickButton('Добавить операцию', SelectorsPartsDataBase.BUTTON_ADD_OPERATION);
       });
 
