@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">4.292730026</seconds>
+    <seconds t="F">8.422789992</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-02-28T21:51:47Z</when>
+    <when t="T">2026-02-28T22:55:19Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -22297,16 +22297,6 @@
     <when t="T">2026-02-26T16:37:53Z</when>
   </f>
   <f>
-    <_id t="I">1176</_id>
-    <_job t="I">63196</_job>
-    <_time t="T">2026-02-26T20:07:36Z</_time>
-    <_version t="S">0.19.8/0.60.0/0.17.11!0.17.13</_version>
-    <analyzers t="I">18</analyzers>
-    <text t="S">The average monthly turnover (1.0 developers) is increasing (R=0.51).</text>
-    <what t="S">assessment</what>
-    <when t="T">2026-02-26T20:07:36Z</when>
-  </f>
-  <f>
     <_id t="I">1180</_id>
     <_job t="I">63250</_job>
     <_time t="T">2026-02-27T10:22:34Z</_time>
@@ -22377,12 +22367,22 @@
     <when t="T">2026-02-28T17:52:50Z</when>
   </f>
   <f>
-    <_id t="I">1194</_id>
-    <_job t="I">22528824338</_job>
-    <_time t="T">2026-02-28T20:55:19Z</_time>
+    <_id t="I">1195</_id>
+    <_job t="I">63399</_job>
+    <_time t="T">2026-02-28T21:52:07Z</_time>
+    <_version t="S">0.19.8/0.60.0/0.17.11!0.17.13</_version>
+    <analyzers t="I">18</analyzers>
+    <text t="S">The average monthly turnover (1.0 developers) is increasing (R=0.51).</text>
+    <what t="S">assessment</what>
+    <when t="T">2026-02-28T21:52:07Z</when>
+  </f>
+  <f>
+    <_id t="I">1196</_id>
+    <_job t="I">22530802819</_job>
+    <_time t="T">2026-02-28T22:55:13Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">8905229743</events_were_scanned>
+    <events_were_scanned t="I">8907065349</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
