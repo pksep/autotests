@@ -346,7 +346,7 @@ export class PartsDatabaseHelper {
     const switchItem = this.page.locator(normalizedSliderSelector);
     await switchItem.click();
     await this.page.waitForTimeout(TIMEOUTS.SHORT);
-    const searchInput = this.page.locator('[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]');
+    const searchInput = this.page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT);
     await searchInput.fill(materialName);
     await searchInput.press('Enter');
     await searchInput.evaluate(el => {
@@ -355,45 +355,45 @@ export class PartsDatabaseHelper {
       node.style.border = '2px solid red';
       node.style.color = 'blue';
     });
-    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-    const materialTable = this.page.locator('[data-testid="MaterialTableList-Table-Item"]');
-    await materialTable.evaluate(el => {
+    // Wait for search to complete and results to display (modal table visible and at least one data row)
+    const materialTable = this.page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
+    await materialTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+    const table = materialTable.first();
+    const resultRows = table.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_TBODY_TABLEROW);
+    await resultRows.first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await table.evaluate(el => {
       const node = el as { style: { backgroundColor: string; border: string; color: string } };
       node.style.backgroundColor = 'yellow';
       node.style.border = '2px solid red';
       node.style.color = 'blue';
     });
-    const rowsCount = await materialTable.locator('tbody tr').count();
+    const rowsCount = await resultRows.count();
     let materialFound = false;
     if (rowsCount === 1) {
-      const row = materialTable.locator('tbody tr').first();
+      const row = resultRows.first();
       await this.elementHelper.highlightElement(row);
       await row.click();
-      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
       materialFound = true;
     } else if (rowsCount > 1) {
-      const resultRows = materialTable.locator('tbody tr');
-      for (let i = 0; i < rowsCount; i++) {
-        const row = resultRows.nth(i);
-        const rowText = await row.textContent();
-        if (rowText?.trim() === materialName) {
-          await this.elementHelper.highlightElement(row);
-          await row.click();
-          await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-          materialFound = true;
-          break;
-        }
-      }
+      const rowWithMaterial = resultRows.filter({ hasText: materialName }).first();
+      await rowWithMaterial.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await this.elementHelper.highlightElement(rowWithMaterial);
+      await rowWithMaterial.click();
+      materialFound = true;
     }
-    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
     expect(materialFound).toBe(true);
-    const addButton = this.page.locator('[data-testid="ModalBaseMaterial-Add-Button"]');
-    await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+    // Short wait so modal state updates and Add button becomes enabled after row selection
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+    // Scope Add button to the open material dialog; use exact ModalBaseMaterial-Add-Button so we click the correct button
+    const openDialog = this.page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
+    const addButton = openDialog.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON);
+    await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await expect(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+    await addButton.scrollIntoViewIfNeeded();
     await this.elementHelper.highlightElement(addButton);
     await addButton.click();
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-    const modal = this.page.locator('[data-testid="ModalBaseMaterial"]');
-    await modal.waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.STANDARD });
+    await openDialog.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD });
     await this.navigationHelper.waitForNetworkIdle();
   }
 
@@ -709,11 +709,46 @@ export class PartsDatabaseHelper {
     await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
   }
 
+  /**
+   * Waits for the notification toast (success or error) and returns its text.
+   * Use in specs with expectSoftWithScreenshot to assert expected message.
+   */
+  async getNotificationMessage(): Promise<string | null> {
+    await this.page.waitForLoadState('domcontentloaded');
+    const notification = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
+    try {
+      await notification.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    } catch {
+      return null;
+    }
+    const text = await notification.textContent();
+    return text?.trim() ?? null;
+  }
+
+  /**
+   * Waits for a notification that contains the given text (e.g. validation error).
+   * Use after an action that should show a specific message, so we don't capture an older notification.
+   */
+  async waitForNotificationContaining(expectedSubstring: string): Promise<string | null> {
+    await this.page.waitForLoadState('domcontentloaded');
+    const notification = this.page
+      .locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION)
+      .filter({ hasText: expectedSubstring })
+      .last();
+    try {
+      await notification.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    } catch {
+      return null;
+    }
+    const text = await notification.textContent();
+    return text?.trim() ?? null;
+  }
+
   async verifyDetailSuccessMessage(expectedText: string): Promise<void> {
     try {
       await this.page.waitForLoadState('domcontentloaded');
       await this.page.waitForTimeout(TIMEOUTS.STANDARD);
-      const successDialog = this.page.locator('[data-testid="Notification-Notification-Description"]').last();
+      const successDialog = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
       const isVisible = await successDialog.isVisible().catch(() => false);
       if (!isVisible) {
         logger.warn('Success notification not visible - this might be normal after rapid clicking');

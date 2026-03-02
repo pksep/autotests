@@ -590,16 +590,18 @@ export const runU006EdgeCasesAndBulk = () => {
         test.info(),
       );
 
-      const materialSpan = tableContainer.locator('td').nth(2).locator('span');
+      const characteristicBlanksTable = tableContainer.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY);
+      const materialCell = characteristicBlanksTable.getByText(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON, { exact: false });
+      await materialCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await expect.soft(materialSpan).toBeVisible();
+          await expect.soft(materialCell).toBeVisible();
         },
-        'Verify material span is visible',
+        'Verify material is visible in table',
         test.info(),
       );
-      const retrievedMaterial = await materialSpan.innerText();
+      const retrievedMaterial = await materialCell.innerText();
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -701,16 +703,18 @@ export const runU006EdgeCasesAndBulk = () => {
       logger.info('Материал выбран и добавлен');
 
       // Проверить, что UI отражает заполненные значения
-      const materialSpan = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS).locator('td').nth(2).locator('span');
+      const characteristicBlanksTable = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS).locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY);
+      const materialCell = characteristicBlanksTable.getByText(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON, { exact: false });
+      await materialCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await expect.soft(materialSpan).toBeVisible();
+          await expect.soft(materialCell).toBeVisible();
         },
-        'Verify material span is visible',
+        'Verify material is visible in table',
         test.info(),
       );
-      const materialText = await materialSpan.innerText();
+      const materialText = await materialCell.innerText();
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -1174,6 +1178,7 @@ export const runU006EdgeCasesAndBulk = () => {
 
       // Проверить, что материал отображается в списке
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
+      const characteristicBlanksTable = tableContainer.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY);
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -1182,16 +1187,17 @@ export const runU006EdgeCasesAndBulk = () => {
         'Verify table container is visible',
         test.info(),
       );
-      const materialSpan = tableContainer.locator('td').nth(2).locator('span');
+      const materialCell = characteristicBlanksTable.getByText(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON, { exact: false });
+      await materialCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await expect.soft(materialSpan).toBeVisible();
+          await expect.soft(materialCell).toBeVisible();
         },
-        'Verify material span is visible',
+        'Verify material is visible in table',
         test.info(),
       );
-      const materialText = await materialSpan.innerText();
+      const materialText = await materialCell.innerText();
       await expectSoftWithScreenshot(
         page,
         () => {

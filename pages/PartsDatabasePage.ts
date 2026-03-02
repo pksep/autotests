@@ -4,16 +4,13 @@ import { PageObject, expectSoftWithScreenshot } from '../lib/Page';
 import { CreateMaterialsDatabasePage } from '../pages/MaterialsDatabasePage';
 import { ENV, SELECTORS } from '../config';
 import logger from '../lib/utils/logger';
-import { title } from 'process';
-import { toNamespacedPath } from 'path';
-// @ts-ignore
-import testData from '../testdata/PU18-Names.json'; // Import your test data
+
 import { allure } from 'allure-playwright';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import * as SelectorsEquipment from '../lib/Constants/SelectorsEquipment';
 import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
-import type { Item, TestProductSpecification, GlobalTableData } from '../lib/helpers/PartsDatabaseTypes';
+import type { Item, TestProductSpecification } from '../lib/helpers/PartsDatabaseTypes';
 import { PartsDatabaseTableHelper } from '../lib/helpers/PartsDatabaseTableHelper';
 import { PartsDatabaseHelper } from '../lib/helpers/PartsDatabaseHelper';
 
@@ -252,6 +249,14 @@ export class CreatePartsDatabasePage extends PageObject {
 
   async searchAndSelectMaterial(sliderDataTestId: string, materialName: string): Promise<void> {
     return this.partsDatabaseHelper.searchAndSelectMaterial(sliderDataTestId, materialName);
+  }
+
+  async getNotificationMessage(): Promise<string | null> {
+    return this.partsDatabaseHelper.getNotificationMessage();
+  }
+
+  async waitForNotificationContaining(expectedSubstring: string): Promise<string | null> {
+    return this.partsDatabaseHelper.waitForNotificationContaining(expectedSubstring);
   }
 
   async extractAllTableData(page: Page, dialogTestId: string): Promise<any> {

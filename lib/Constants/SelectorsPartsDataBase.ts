@@ -165,7 +165,8 @@ export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Specif
 // U004 dialogs (ПД)
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG = 'ModalBaseMaterial';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="ModalBaseMaterial"]';
-export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="ModalBaseMaterial"][open]';
+/** Matches material modal on both edit page (ModalBaseMaterial) and create page (AddDetal-CharacteristicBlanks-ModalBaseMaterial). */
+export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN = 'dialog[data-testid*="ModalBaseMaterial"][open]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE = '[data-testid="ModalBaseMaterial-TableList-Table-Item"]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE_TESTID = 'ModalBaseMaterial-TableList-Table-Item';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="ModalBaseMaterial-Table"]';
@@ -173,13 +174,14 @@ export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE_TESTID = 'ModalBaseMat
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="ModalBaseMaterial-Select-Button"]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID = 'ModalBaseMaterial-Select-Button';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
+/** Add button inside open material dialog; use when scoped to EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN (works on create and edit pages). */
+export const MODAL_BASE_MATERIAL_ADD_BUTTON_IN_OPEN_DIALOG = '[data-testid$="Add-Button"]';
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT = '[data-testid="ModalBaseMaterial-TableList-Table-Item-SearchInput-Dropdown-Input"]';
 export const MODAL_BASE_MATERIAL_DESIGNATION_INPUT = '[data-testid="ModalBaseMaterial-Designation-Input-Input"]';
 
 /** Cancel/close button locator inside any open dialog (data-testid patterns + Russian labels). Use when scoping with dialog locator. */
-export const MODAL_CANCEL_BUTTON_LOCATOR =
-  '[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")';
+export const MODAL_CANCEL_BUTTON_LOCATOR = '[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть")';
 
 /**
  * Returns selector for an element by data-testid value.
@@ -199,6 +201,8 @@ export const ADD_DETAIL_CHARACTERISTIC_BLANKS = '[data-testid="AddDetal-Characte
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY = '[data-testid="AddDetal-CharacteristicBlanks-Tbody"]';
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_SET = '[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Set"]';
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_RESET = '[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Reset"]';
+/** Cell in first row of Characteristic Blanks table that shows selected material name (or "Задать" button when empty) */
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY_SELECTED_MATERIAL_NAME = '[data-testid="AddDetal-CharacteristicBlanks-Tbody-SelectedMaterialName"]';
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE = '[data-testid="AddDetal-CharacteristicBlanks-Title"]';
 export const ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON = '[data-testid="AddDetal-FileComponent-AddFileButton"]';
 export const ADD_DETAIL_FILE_COMPONENT = '[data-testid="AddDetal-FileComponent"]';
@@ -218,6 +222,7 @@ export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_THEAD = '[data-testid
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_SUB_TYPE_TBODY = '[data-testid="ModalBaseMaterial-TableList-Table-SubType-Tbody"]';
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_THEAD = '[data-testid="ModalBaseMaterial-TableList-Table-Item-Thead"]';
 export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_TBODY = '[data-testid="ModalBaseMaterial-TableList-Table-Item-Tbody"]';
+export const MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_TBODY_TABLEROW = '[data-testid="ModalBaseMaterial-TableList-Table-Item-Tbody-TableRow"]';
 export const MODAL_BASE_MATERIAL_ADD_BUTTON = '[data-testid="ModalBaseMaterial-Add-Button"]';
 
 //U006 compliance
@@ -320,11 +325,16 @@ export const EDIT_DETAL_DESIGNATION_INPUT = '[data-testid="EditDetal-Designation
 export const DETAIL_NAME_INPUT_EDIT = EDIT_DETAL_INFORMATION_INPUT;
 export const MATERIAL_SWITCH_ITEM1 = 'ModalBaseMaterial-TableList-Switch-Item1';
 export const SWITCH_MATERIAL_ITEM_2 = '[data-testid="ModalBaseMaterial-TableList-Switch-Item2"]';
+/** Material name to select from second tab (Item2 = Покупные детали) in U006 test 08. Must be a material that exists in Покупные детали, NOT in Материалы для деталей (e.g. "Сталь 45" is Материалы для деталей). Set to a name from your DB that appears under the second slider tab. */
+export const TEST_MATERIAL_SECOND_CATEGORY = 'Круг Сталь 09Г2С Ø100мм';
 export const TEST_MATERIAL_NAME = 'Круг Сталь 09Г2С Ø100мм';
 export const TEST_MATERIAL_HEXAGON = 'Шестигранник Сталь 40х S22';
 export const TEST_MATERIAL_NAME_2 = 'Войлок акустический 10мм';
 export const U006_SPECIAL_CHAR_NAME = 'Деталь@#!$%^&*()_+';
 export const TEST_MATERIAL_NAME_2_ATTRIBUTE_COUNT = 3;
+
+/** Expected validation error when saving detail with missing required material attributes (U006 test 03, 04). */
+export const VALIDATION_ERROR_ALL_CHARACTERISTICS_REQUIRED = 'Все характеристики детали должны быть заполнены';
 export const FILE_DRAG_DROP_FILE = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-File"]';
 export const FILE_DRAG_DROP_MODAL = 'dialog[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal"]';
 export const DOCUMENT_TABLE_DELETE_BUTTON = '[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc"]';
