@@ -8,6 +8,8 @@
 import { test } from '@playwright/test';
 import testData from '../testdata/U001-PC1.json';
 import testDataU002 from '../testdata/U002-PC1.json';
+import testDataU004 from '../testdata/U004-PC01.json';
+import testDataU005 from '../testdata/U005-PC01.json';
 import { PageObject } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
@@ -19,6 +21,7 @@ import * as SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction from '../li
 import * as MetalWorkingWarhouseSelectors from '../lib/Constants/SelectorsMetalWorkingWarhouse';
 import * as SelectorsAssemblyKittingOnThePlan from '../lib/Constants/SelectorsAssemblyKittingOnThePlan';
 import * as SelectorsCompleteSets from '../lib/Constants/SelectorsCompleteSets';
+import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import logger from '../lib/utils/logger';
 
 type ElementSpec = {
@@ -45,7 +48,7 @@ function getButtonsForValidation(element: ElementSpec): Array<{ class?: string; 
 /** Validation step definition: how to open the page/section and which JSON + container to use. */
 interface ValidationStep {
   stepName: string;
-  jsonKey: keyof typeof testData.elements | keyof typeof testDataU002.elements;
+  jsonKey: string;
   containerSelector: string;
   url?: string;
   sectionSelector?: string;
@@ -55,6 +58,8 @@ interface ValidationStep {
   waitTableNoThead?: boolean;
   useModalMethod?: boolean;
   openAction?: { clickSelector: string; waitAfter?: number };
+  /** Optional second click after first openAction (e.g. click Create then click Деталь). */
+  openAction2?: { clickSelector: string; waitAfter?: number };
   closeModalSelector?: string;
   skipTitleValidation?: boolean;
   skipButtonValidation?: boolean;
@@ -146,13 +151,63 @@ const V001_STEPS: ValidationStep[] = [
     tableBodySelector: SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE,
     waitTableNoThead: true,
   },
+  // --- U005: Parts database and Create detail flow (from U004-PC01, U005-PC01) ---
+  {
+    stepName: 'Parts database (Main page)',
+    jsonKey: 'MainPage',
+    containerSelector: SelectorsPartsDataBase.MAIN_PAGE_MAIN_DIV,
+    url: SELECTORS.MAINMENU.PARTS_DATABASE.URL,
+    tableBodySelector: SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE,
+  },
+  {
+    stepName: 'Create popup (Изделие / СБ / Деталь)',
+    jsonKey: 'modalAddButtonsPopup',
+    containerSelector: '.modal-yui-kit__modal-content',
+    openAction: { clickSelector: SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART, waitAfter: TIMEOUTS.STANDARD },
+    skipTitleValidation: true,
+  },
+  {
+    stepName: 'Create detail page (AddDetal)',
+    jsonKey: 'CreatePage',
+    containerSelector: SelectorsPartsDataBase.ADD_DETAIL_PAGE,
+    openAction: { clickSelector: SelectorsPartsDataBase.BUTTON_DETAIL_DIV, waitAfter: TIMEOUTS.STANDARD },
+  },
+  {
+    stepName: 'Modal: Добавление материала',
+    jsonKey: 'modalAddMaterial',
+    containerSelector: 'dialog[data-testid^="ModalBaseMaterial"]',
+    useModalMethod: true,
+    openAction: {
+      clickSelector: `${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS} ${SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_SELECTED_MATERIAL_NAME_SET}`,
+      waitAfter: TIMEOUTS.STANDARD,
+    },
+    closeModalSelector: SelectorsPartsDataBase.MODAL_BASE_MATERIAL_CANCEL_BUTTON,
+  },
+  {
+    stepName: 'Modal: Добавить из базы',
+    jsonKey: 'modalAddFromBase',
+    containerSelector: '[data-testid="AddDetal-FileComponent-ModalBaseFiles"]',
+    useModalMethod: true,
+    openAction: {
+      clickSelector: SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON,
+      waitAfter: TIMEOUTS.STANDARD,
+    },
+    closeModalSelector: '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-CancelButton"]',
+  },
 ];
 
-/** U001 has most elements; U002 has MetalworkingWarhouse. */
+/** U001, U002, U004, U005 element specs. */
 const elementsU001 = testData.elements as Record<string, ElementSpec>;
 const elementsU002 = testDataU002.elements as Record<string, ElementSpec>;
+const elementsU004 = testDataU004.elements as Record<string, ElementSpec>;
+const elementsU005 = testDataU005.elements as Record<string, ElementSpec>;
+
 function getElement(jsonKey: string): ElementSpec | undefined {
-  return elementsU001[jsonKey] ?? elementsU002[jsonKey];
+  if (jsonKey === 'modalAddButtonsPopup') {
+    const arr = (elementsU005 as Record<string, unknown>).modalAddButtonsPopup as ElementSpec['buttons'];
+    return arr ? { buttons: arr } : undefined;
+  }
+  return elementsU001[jsonKey] ?? elementsU002[jsonKey] ?? elementsU004[jsonKey] ?? elementsU005[jsonKey];
 }
 
 export const runV001 = (_isSingleTest?: boolean, _iterations?: number) => {
@@ -205,11 +260,15 @@ export const runV001 = (_isSingleTest?: boolean, _iterations?: number) => {
 
           // Open modal or another view (e.g. Create order, Choice product modal)
           if (step.openAction) {
-            await page.locator(step.openAction.clickSelector).click();
+            await page.locator(step.openAction.clickSelector).first().click();
             await page.waitForTimeout(step.openAction.waitAfter ?? TIMEOUTS.STANDARD);
           }
+          if (step.openAction2) {
+            await page.locator(step.openAction2.clickSelector).first().click();
+            await page.waitForTimeout(step.openAction2.waitAfter ?? TIMEOUTS.STANDARD);
+          }
 
-          const element = getElement(step.jsonKey as string);
+          const element = getElement(step.jsonKey);
           if (!element) {
             console.warn(`V001: No JSON element for key "${step.jsonKey}", skipping validation.`);
             if (step.closeModalSelector) {

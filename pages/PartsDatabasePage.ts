@@ -385,6 +385,11 @@ export class CreatePartsDatabasePage extends PageObject {
     return this.partsDatabaseHelper.performRapidSaveClicks(maxClicks, options);
   }
 
+  /** Rapid Save clicks with a random highlight color before each click so each click is visible. */
+  async performRapidSaveClicksWithHighlight(maxClicks: number = 5): Promise<{ clicksPerformed: number }> {
+    return this.partsDatabaseHelper.performRapidSaveClicksWithHighlight(maxClicks);
+  }
+
   async calculateFreeQuantity(detailName: string): Promise<number> {
     return this.partsDatabaseHelper.calculateFreeQuantity(detailName);
   }

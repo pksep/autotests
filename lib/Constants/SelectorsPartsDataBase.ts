@@ -28,6 +28,8 @@ export const SPECIFICATION_DIALOG_CARD_BASE_DETAIL_1_ID = 'Specification-Dialog-
 export const SPECIFICATION_MODAL_BASE_DETAL_SELECT_BUTTON_ID = 'Specification-ModalBaseDetal-Select-Button'; // Note: no hyphen after 'Modal'
 export const SPECIFICATION_MODAL_BASE_DETAL_ADD_BUTTON_ID = 'Specification-ModalBaseDetal-Add-Button'; // Note: no hyphen after 'Modal'
 export const CREATOR_LOADER = '[data-testid="Creator-Loader"]';
+/** Add-detail form loader overlay; wait for hidden before clicking Save to avoid "intercepts pointer events". */
+export const ADD_DETAL_LOADER = '[data-testid="AddDetal-Loader"]';
 
 // BaseProducts edit button
 export const BASE_PRODUCTS_BUTTON_EDIT = '[data-testid="BaseProducts-Button-Edit"]';
@@ -124,6 +126,8 @@ export const MAIN_PAGE_SMALL_DIALOG_РМ_TESTID = 'Specification-Dialog-CardtheD
 export const TABLE_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
 /** Raw data-testid for table search input (e.g. for searchAndWaitForTable searchInputDataTestId). */
 export const TABLE_SEARCH_INPUT_TESTID = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
+/** Search history dropdown title (can intercept row click; close with Escape before clicking first row). */
+export const TABLE_SEARCH_HISTORY_DROPDOWN_TITLE = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-History-ShowResult-Title"]';
 export const TABLE_FIRST_ROW_SELECTOR = 'tbody tr:first-child';
 export const TABLE_FIRST_CELL_SELECTOR = 'tbody tr:first-child td:nth-child(1)';
 export const TABLE_SECOND_CELL_SELECTOR = 'tbody tr:first-child td:nth-child(2)';

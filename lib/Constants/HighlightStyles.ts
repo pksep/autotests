@@ -35,6 +35,16 @@ export const HIGHLIGHT_NEW_ROW = {
   color: 'black',
 };
 
+/** Distinct colors for "click feedback" (e.g. rapid Save clicks); pick one at random per click. */
+export const HIGHLIGHT_CLICK_COLORS = [
+  { backgroundColor: 'yellow', border: '3px solid orange', color: 'black' },
+  { backgroundColor: 'cyan', border: '3px solid blue', color: 'black' },
+  { backgroundColor: 'lime', border: '3px solid green', color: 'black' },
+  { backgroundColor: 'magenta', border: '3px solid purple', color: 'white' },
+  { backgroundColor: 'orange', border: '3px solid red', color: 'black' },
+  { backgroundColor: 'deepskyblue', border: '3px solid navy', color: 'white' },
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // USAGE EXAMPLES:
 // ─────────────────────────────────────────────────────────────────────────────

@@ -19,123 +19,92 @@ export const runU005_02 = () => {
     const shortagePage = new CreatePartsDatabasePage(page);
     await allure.step('Step 01: Перейдите на страницу создания детали. (Navigate to the create part page)', async () => {
       shortagePage.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL);
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+      await page.waitForLoadState('load');
+      await page
+        .locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE)
+        .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD })
+        .catch(() => {});
     });
     await allure.step('Step 02: В поле ввода инпута "Наименование" вводим значение переменной. (In the input field "Name" we enter the value of the variable)', async () => {
       await page.waitForLoadState('load');
       const field = page.locator(SelectorsPartsDataBase.ADD_DETAL_INFORMATION_INPUT_INPUT);
+      await field.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
       await shortagePage.highlightElement(field, HIGHLIGHT_PENDING);
+      await field.click();
       await field.fill('');
-      await field.press('Enter');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await field.fill(TEST_DETAIL_NAME);
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await field.press('Tab');
+      await expect(field).toHaveValue(TEST_DETAIL_NAME, { timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(page, () => expect.soft(field).toHaveValue(TEST_DETAIL_NAME), 'Name field has TEST_DETAIL_NAME', test.info());
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
     await allure.step('Step 03: откройте диалоговое окно Добавление материала и подтвердите заголовки. (open Добавление материала dialog and verify titles)', async () => {
-      // Wait for the page to stabilize
       await page.waitForLoadState('load');
-      // Locate the table container by searching for the h3 with the specific title.
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
+      await tableContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(page, () => expect.soft(tableContainer).toBeVisible(), 'Table container is visible', test.info());
       const tableTitle = tableContainer.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_TITLE);
       await expectSoftWithScreenshot(page, () => expect.soft(tableTitle).toBeVisible(), 'Table title is visible', test.info());
 
-      // Optionally, highlight the title for debugging
       await shortagePage.highlightElement(tableTitle, HIGHLIGHT_PENDING);
 
-      await tableContainer.waitFor({ state: 'visible' });
       const firstDataRow = tableContainer.locator('table tbody tr').first();
       const targetButton = firstDataRow.locator('td').nth(2).locator('button');
+      await targetButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       await shortagePage.highlightElement(targetButton, HIGHLIGHT_PENDING);
       await targetButton.click();
+      await page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     });
     await allure.step('Step 04: Verify that search works for table 3 (Verify that search works for each column)', async () => {
       await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       const rightTable = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
+      await rightTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(rightTable, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(page, () => expect.soft(page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM)).toBeVisible(), 'Modal base material table item is visible', test.info());
-      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill('');
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
-      // Locate the search field within the left table and fill it
-      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).fill(TEST_NAME);
-
+      const searchInput = rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT);
+      await searchInput.fill('');
+      await searchInput.fill(TEST_NAME);
+      await expectSoftWithScreenshot(page, () => expect.soft(searchInput).toBeVisible(), 'Right table search input is visible', test.info());
+      await searchInput.press('Enter');
       await page.waitForLoadState('load');
-      // Optionally, validate that the search input is visible
-      await expectSoftWithScreenshot(page, () => expect.soft(rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT)).toBeVisible(), 'Right table search input is visible', test.info());
-
-      await rightTable.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).press('Enter');
-      await page.waitForLoadState('load');
-      // Find the first row in the table
       const firstRow = rightTable.locator('tbody tr:first-child');
+      await expect(firstRow).toContainText(TEST_NAME, { timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
-      const rowTextNameFinal = await firstRow.textContent();
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(rowTextNameFinal).toContain(TEST_NAME);
-        },
-        `Verify first row contains "${TEST_NAME}"`,
-        test.info(),
-      );
-      // Wait for the row to be visible and click on it
+      await expectSoftWithScreenshot(page, () => expect.soft(firstRow).toContainText(TEST_NAME), `Verify first row contains "${TEST_NAME}"`, test.info());
       await firstRow.waitFor({ state: 'visible' });
-      firstRow.click();
+      await firstRow.click();
       await shortagePage.highlightElement(firstRow, HIGHLIGHT_SUCCESS);
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      const addButton = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON);
+      await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await expect(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
     });
     await allure.step('Step 05: Add the found Item (Add the found Item)', async () => {
       await page.waitForLoadState('load');
-
       const addButton = page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON);
+      await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await expect(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(addButton, HIGHLIGHT_SUCCESS);
-      addButton.click();
-      await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      // Brief wait so selection is registered before Add click (backup pattern)
+      // eslint-disable-next-line playwright/no-wait-for-timeout -- required so Add applies selected row
+      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+      await addButton.click();
+      await page
+        .locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH)
+        .waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.STANDARD })
+        .catch(() => {});
+      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
+      const firstRow = tableContainer.locator('table tbody tr').first();
+      await expect(firstRow).toContainText(TEST_NAME, { timeout: WAIT_TIMEOUTS.LONG });
     });
     await allure.step('Step 06: Verify that the item is now shown in the main page table (Verify that the item is now shown in the main page table)', async () => {
-      // Wait for the page to stabilize
       await page.waitForLoadState('load');
-      // Locate the table container by searching for the h3 with the specific title.
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await tableContainer.waitFor({ state: 'visible' });
+      await tableContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       const firstDataRow = tableContainer.locator('table tbody tr').first();
-      const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
-
-      await shortagePage.highlightElement(targetSpan, HIGHLIGHT_PENDING);
-      const spanText1 = await targetSpan.innerText();
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(spanText1).toBe(TEST_NAME);
-        },
-        `Verify target span text is "${TEST_NAME}"`,
-        test.info(),
-      );
-    });
-    await allure.step('Step 07: Verify that the item is now shown in the main page table (Verify that the item is now shown in the main page table)', async () => {
-      // Wait for the page to stabilize
-      await page.waitForLoadState('load');
-      // Locate the table container by searching for the h3 with the specific title.
-      const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
-      await tableContainer.waitFor({ state: 'visible' });
-      const firstDataRow = tableContainer.locator('table tbody tr').first();
-      const targetSpan = firstDataRow.locator('td').nth(2).locator('span');
-
-      await shortagePage.highlightElement(targetSpan, HIGHLIGHT_PENDING);
-      const spanText1 = await targetSpan.innerText();
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(spanText1).toBe(TEST_NAME);
-        },
-        `Verify target span text is "${TEST_NAME}"`,
-        test.info(),
-      );
+      await expect(firstDataRow).toContainText(TEST_NAME, { timeout: WAIT_TIMEOUTS.STANDARD });
+      const targetCell = firstDataRow.locator('td').nth(2);
+      await shortagePage.highlightElement(targetCell, HIGHLIGHT_PENDING);
+      await expectSoftWithScreenshot(page, () => expect.soft(firstDataRow).toContainText(TEST_NAME), `Verify target row contains "${TEST_NAME}"`, test.info());
     });
     await allure.step('Step 08: Вводим значение переменной в обязательное поле в строке "Длина (Д)" в таблице "Характеристики заготовки"', async () => {
       // Wait for the page to stabilize
@@ -171,8 +140,6 @@ export const runU005_02 = () => {
         `Verify current value is "${desiredValue}"`,
         test.info(),
       );
-
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 09: Upload files using drag-and-drop functionality', async () => {
@@ -188,8 +155,6 @@ export const runU005_02 = () => {
       //     'testdata/1.3.1.1 Клапан М6х10.jpg__+__92d7aeee-893c-4140-8611-9019ea4d63ff.jpg', // Replace with your actual file paths
       //     'testdata/1.3.1.1 Клапан М6х10.PNG__+__c3a2fced-9b03-461b-a596-ef3808d8a475.png',
       // ]);
-      // Verify the files were successfully uploaded
-      await page.waitForTimeout(TIMEOUTS.STANDARD); // Wait before execution
       const uploadedFiles = await fileInput.evaluate((element: unknown) => {
         return (element as InputLike).files?.length || 0;
       });
@@ -212,15 +177,13 @@ export const runU005_02 = () => {
 
     await allure.step('Step 10: Проверяем, что в модальном окне отображаются заголовки(check the headers in the dialog)', async () => {
       const shortagePage = new CreatePartsDatabasePage(page);
-      // Wait for loading
+      const modal = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL);
+      await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await page.waitForLoadState('load');
       const titles = testData1.elements.CreatePage.modalAddDocuments.titles.map(title => title.trim());
 
-      // Retrieve all H3 titles from the specified class
       const h3Titles = await shortagePage.getAllH3TitlesInModalTestId(page, 'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal');
       const normalizedH3Titles = h3Titles.map(title => title.trim());
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-      // Wait for the page to stabilize
-      await page.waitForLoadState('load');
 
       // Log for debugging
       logger.info('Expected Titles:', titles);
@@ -253,8 +216,6 @@ export const runU005_02 = () => {
       logger.info('Expected Titles:', titlesh4);
       logger.info('Received Titles:', normalizedH4Titles);
 
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-
       // Validate length
       await expectSoftWithScreenshot(
         page,
@@ -274,7 +235,6 @@ export const runU005_02 = () => {
         'Verify H4 titles content and order match expected',
         test.info(),
       );
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
     await allure.step('Step 11: Ensure the textarea is present and writable in each file uploaded section', async () => {
       await page.waitForLoadState('load');
@@ -333,17 +293,15 @@ export const runU005_02 = () => {
           test.info(),
         );
       }
-
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 12: Check buttons in dialog (Check buttons in dialog)', async () => {
       await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+      const modal = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL);
+      await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
 
       const buttons = testData1.elements.CreatePage.modalAddDocuments.buttons;
 
-      // Iterate over each button in the array
       const modalAddDocumentsSelectors = SelectorsPartsDataBase.MODAL_ADD_DOCUMENTS_BUTTON_SELECTORS;
       for (let i = 0; i < buttons.length; i++) {
         const button = buttons[i];
@@ -351,9 +309,9 @@ export const runU005_02 = () => {
         const expectedState = button.state === 'true';
         const buttonSelector = modalAddDocumentsSelectors[i];
         await allure.step(`Validate button with label: "${buttonLabel}"`, async () => {
-          await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
           logger.log(`Checking button: ${buttonLabel} - Expected State: ${expectedState}`);
           const buttonLocator = page.locator(buttonSelector);
+          await buttonLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
 
           // Check if the button is visible and enabled
           const isButtonVisible = await buttonLocator.isVisible();
@@ -400,8 +358,6 @@ export const runU005_02 = () => {
         'Verify checkboxes are unchecked',
         test.info(),
       );
-
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
     await allure.step('Step 14: Чек чекбокс в строке "Главный:" (Check the checkbox in the "Главный:" row)', async () => {
@@ -425,8 +381,6 @@ export const runU005_02 = () => {
         'Verify checkboxes are checked',
         test.info(),
       );
-
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
     await allure.step('Step 15: Проверяем, that in the file field is the name of the file uploaded without its file extension', async () => {
       await page.waitForLoadState('load');
@@ -445,16 +399,13 @@ export const runU005_02 = () => {
       await shortagePage.validateFileNames(page, fileSections, filenamesWithoutExtension);
 
       logger.log('All file fields validated successfully.');
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
     });
 
     await allure.step('Step 16: Click the Загрузить все файлы button and confirm modal closure', async () => {
       logger.log('Starting file upload process...');
 
-      // Wait for the page to stabilize
       await page.waitForLoadState('load');
 
-      // Upload button is inside the drag-and-drop modal (ModalAddFile), not the "Добавить из базы" dialog.
       const uploadButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD);
       const modalLocator = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_MODAL);
       logger.log('Upload button and drag-and-drop modal located.');
@@ -463,29 +414,59 @@ export const runU005_02 = () => {
       await uploadButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       logger.log('Drag-and-drop modal and upload button are visible.');
 
-      await shortagePage.highlightElement(uploadButton, HIGHLIGHT_PENDING);
-      await uploadButton.click();
-      logger.log('Upload button clicked.');
-      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+      const maxRetries = 50;
+      let retryCounter = 0;
 
-      if ((await modalLocator.count()) > 0) {
+      while (retryCounter <= maxRetries) {
+        const modalCount = await modalLocator.count();
+        if (modalCount === 0) {
+          logger.log('Modal is no longer present. Upload succeeded.');
+          break;
+        }
+
+        logger.log(`Attempt ${retryCounter + 1}: Clicking upload button.`);
+        await shortagePage.highlightElement(uploadButton, HIGHLIGHT_PENDING);
+        await uploadButton.click();
+        logger.log('Upload button clicked.');
+
+        // Wait for notification to appear after click (duplicate or success) - same as U006
+        // eslint-disable-next-line playwright/no-wait-for-timeout -- required so toast is visible before extractNotificationMessage
+        await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+
+        if ((await modalLocator.count()) === 0) {
+          logger.log('Modal closed after click. Upload succeeded.');
+          break;
+        }
+
         let notification: { message?: string } | null = null;
         try {
           notification = await shortagePage.extractNotificationMessage(page);
         } catch {
           logger.log('No notification found after upload attempt.');
         }
-        if (notification?.message === 'Файл с таким именем уже существует') {
-          logger.log('Duplicate filename detected. Updating all filenames once, then re-uploading.');
+
+        if (!notification) {
+          logger.log('No notification detected. Will retry (click upload again).');
+        } else if (notification.message === 'Файл с таким именем уже существует') {
+          logger.log('Duplicate filename detected. Updating all filenames, then will click upload again.');
+          retryCounter++;
+
           const fileNameInputs = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_INPUT_FILE_NAME_INPUT);
           const sectionsCount = await fileNameInputs.count();
+          logger.log(`Found ${sectionsCount} file sections to update filenames.`);
+
           for (let i = 0; i < sectionsCount; i++) {
-            if ((await modalLocator.count()) === 0) break;
+            if ((await modalLocator.count()) === 0) {
+              logger.log('Modal closed during filename updates. Exiting loop.');
+              break;
+            }
             const fileInput = fileNameInputs.nth(i);
             if (!(await fileInput.isVisible())) continue;
+
             const currentValue = await fileInput.inputValue();
             await fileInput.fill('');
             await fileInput.press('Enter');
+            // eslint-disable-next-line playwright/no-wait-for-timeout -- allow input to settle before filling new value (U006 pattern)
             await page.waitForTimeout(TIMEOUTS.MEDIUM);
             const updatedValue = `${currentValue}_${Math.random().toString(36).substring(2, 6)}`;
             await fileInput.fill(updatedValue);
@@ -494,17 +475,20 @@ export const runU005_02 = () => {
               el.dispatchEvent(new Event('input', { bubbles: true }));
               el.dispatchEvent(new Event('change', { bubbles: true }));
             });
+            logger.log(`Filename updated for section ${i + 1} to "${updatedValue}".`);
           }
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          // Re-locate upload button after DOM may have updated; wait for it to be enabled before second click
-          const uploadButtonAgain = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_BUTTON_UPLOAD);
-          await uploadButtonAgain.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await expect(uploadButtonAgain).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
-          await shortagePage.highlightElement(uploadButtonAgain, HIGHLIGHT_PENDING);
-          await uploadButtonAgain.click();
-          logger.log('Upload button clicked (second time after filename update).');
-          await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+        } else if (notification) {
+          logger.log(`Unexpected notification: ${notification.message}`);
+          break;
         }
+
+        logger.log('Waiting before next attempt (click upload again)...');
+        // eslint-disable-next-line playwright/no-wait-for-timeout -- brief pause before next upload click (U006 pattern)
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      }
+
+      if (retryCounter >= maxRetries) {
+        throw new Error(`Failed to upload files after ${maxRetries} retries (duplicate filename updates).`);
       }
 
       await modalLocator.waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
@@ -514,17 +498,13 @@ export const runU005_02 = () => {
     await allure.step('Step 17: Verify uploaded file names with wildcard matching and extension validation', async () => {
       logger.log('Starting file verification process...');
       await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.EXTENDED);
 
-      // Document table is only rendered when documents.length > 0 (AttachFileComponent.vue).
-      // Wait for it to appear after upload; if it never appears, upload did not add files to the page.
       const documentTable = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE);
       await documentTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD }).catch(() => {
         throw new Error('Document table did not appear after Step 16. Upload may have failed or the app may not have added files to the page.');
       });
       logger.log('Document table is visible.');
 
-      // Wait for at least one uploaded file row to appear (handles slow UI update after modal close)
       const firstFileName = baseFileNamesToVerify[0].name;
       const documentTableSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
       const firstFileRow = documentTableSection
@@ -536,7 +516,6 @@ export const runU005_02 = () => {
 
       const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
       await shortagePage.highlightElement(parentSection, HIGHLIGHT_PENDING);
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
       const tableRows = parentSection.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE + ' tbody tr');
       const allRowTexts = await tableRows.evaluateAll(rows => rows.map(row => row.textContent));
@@ -559,10 +538,10 @@ export const runU005_02 = () => {
           test.info(),
         );
 
+        let extensionMatch = false;
         if (rowCount > 0) {
           await shortagePage.highlightElement(matchingRows.first(), HIGHLIGHT_PENDING);
           logger.log(`Found ${rowCount} rows matching base name "${name}".`);
-          let extensionMatch = false;
 
           for (let i = 0; i < rowCount; i++) {
             const rowText = await matchingRows.nth(i).textContent();
@@ -574,16 +553,15 @@ export const runU005_02 = () => {
               break;
             }
           }
-
-          await expectSoftWithScreenshot(
-            page,
-            () => {
-              expect.soft(extensionMatch, `File "${name}" row should contain extension "${extension}". Check table row content.`).toBe(true);
-            },
-            `Verify file "${name}" has extension "${extension}"`,
-            test.info(),
-          );
         }
+        await expectSoftWithScreenshot(
+          page,
+          () => {
+            expect.soft(extensionMatch, `File "${name}" row should contain extension "${extension}". Check table row content.`).toBe(true);
+          },
+          `Verify file "${name}" has extension "${extension}"`,
+          test.info(),
+        );
       }
 
       logger.log('File verification process completed successfully.');
@@ -596,29 +574,24 @@ export const runU005_02 = () => {
       const modalCount = await dragDropModal.count();
       if (modalCount > 0) {
         logger.log('Drag and drop modal is open, closing it...');
-        // Try to close the modal by clicking outside or pressing Escape
         await page.keyboard.press('Escape').catch(() => {});
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        // If still open, try clicking at (1,1)
+        await dragDropModal.waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
         if ((await dragDropModal.count()) > 0) {
           await page.mouse.click(1, 1);
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await dragDropModal.waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
         }
-        // Wait for modal to be detached
-        await dragDropModal.waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
       }
 
       const button = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_ADD_FILE_BUTTON, { hasText: 'Добавить из базы' });
+      await button.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(button, HIGHLIGHT_SUCCESS);
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
       await button.click();
+      await page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_DIALOG).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     });
     await allure.step('Step 19: Verify that search works for the files table (Verify that search works for each column)', async () => {
       await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-
-      // Wait for the dialog to be open and visible
       const dialog = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_DIALOG);
+      await dialog.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(dialog, HIGHLIGHT_PENDING);
       await expectSoftWithScreenshot(page, () => expect.soft(dialog).toBeVisible(), 'Add from base dialog is visible', test.info());
       const tableContainer = dialog.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_TABLE_TABLE_SUFFIX_SELECTOR);
@@ -631,21 +604,18 @@ export const runU005_02 = () => {
       await shortagePage.highlightElement(searchField, HIGHLIGHT_PENDING);
       const leftTable = tableContainer;
       await expectSoftWithScreenshot(page, () => expect.soft(searchField).toBeVisible(), 'Search field is visible', test.info());
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      await searchField.focus(); // Focus on the input field
-      await searchField.fill(''); // Clear any existing content
+      await searchField.focus();
+      await searchField.fill('');
       await searchField.press('Enter');
-      await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+      await searchField.fill(TEST_FILE);
 
-      // Programmatically set the value using JavaScript
+      // Programmatically set the value using JavaScript (in case fill did not trigger search)
       await searchField.evaluate((element: unknown, value: string) => {
         const input = element as InputLike;
         input.value = value;
         input.dispatchEvent(new Event('input', { bubbles: true }));
       }, TEST_FILE);
 
-      // Verify that the field contains the correct value
       const fieldValue = await searchField.inputValue();
       logger.log('Verified input value:', fieldValue);
       await expectSoftWithScreenshot(
@@ -656,19 +626,14 @@ export const runU005_02 = () => {
         `Verify field value is "${TEST_FILE}"`,
         test.info(),
       );
-      const firstRow1 = leftTable.locator('tbody tr:first-child');
-      logger.log('First Row:', await firstRow1.textContent());
-      // Trigger the search by pressing 'Enter'
       await searchField.press('Enter');
       await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.INPUT_SET);
-      // Locate and highlight the first row in the table
       const firstRow = leftTable.locator('tbody tr:first-child');
-      logger.log('First Row 2:', await firstRow.textContent());
+      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await expect(firstRow).toContainText(TEST_FILE, { timeout: WAIT_TIMEOUTS.SHORT });
+      logger.log('First Row:', await firstRow.textContent());
       await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
 
-      // Wait for the first row to be visible and validate its content
-      await firstRow.waitFor({ state: 'visible' });
       const rowText = await firstRow.textContent();
       logger.log('First row text:', rowText);
       await expectSoftWithScreenshot(
@@ -697,8 +662,8 @@ export const runU005_02 = () => {
       const shortagePage = new CreatePartsDatabasePage(page);
       await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
       const addButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON, { hasText: 'Добавить' });
+      await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       await shortagePage.highlightElement(addButton, HIGHLIGHT_PENDING);
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       const isButtonReady = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON, 'Добавить', false, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES);
 
       await expectSoftWithScreenshot(
@@ -709,9 +674,9 @@ export const runU005_02 = () => {
         'Verify button is ready',
         test.info(),
       );
-      firstRow.click();
+      await firstRow.click();
       await shortagePage.highlightElement(firstRow, HIGHLIGHT_SUCCESS);
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       const isButtonReady2 = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON, 'Добавить', true, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES);
       await expectSoftWithScreenshot(
         page,
@@ -721,16 +686,14 @@ export const runU005_02 = () => {
         'Verify second button is ready',
         test.info(),
       );
-      addButton.click();
+      await addButton.click();
       await shortagePage.highlightElement(addButton, HIGHLIGHT_SUCCESS);
     });
     await allure.step('Step 21: Confirm the file is listed in the bottom table', async () => {
       await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
-
       const bottomTableLocator = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_TABLE);
+      await bottomTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(bottomTableLocator, HIGHLIGHT_SUCCESS);
-      // Locate all rows in the table body
       const rowsLocator = bottomTableLocator.locator('tbody tr');
       const rowCount = await rowsLocator.count();
       await expectSoftWithScreenshot(
@@ -775,24 +738,22 @@ export const runU005_02 = () => {
         'Verify row was found',
         test.info(),
       );
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
     await allure.step('Step 22: Click bottom Add button', async () => {
       await page.waitForLoadState('load');
-
       const addButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_BUTTONS_ADD_BUTTON, { hasText: 'Добавить' }).last();
-
+      await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(addButton, HIGHLIGHT_SUCCESS);
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      addButton.click();
+      await addButton.click();
+      await page
+        .locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_DIALOG)
+        .waitFor({ state: 'detached', timeout: WAIT_TIMEOUTS.STANDARD })
+        .catch(() => {});
     });
     await allure.step('Step 23: Highlight the row containing the selected file name', async () => {
       await page.waitForLoadState('load');
-
-      // Locate the parent section for the specific table
-      //const parentSection = page.locator('section.attach-file-component');
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
       const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
+      await parentSection.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       logger.log('Located parent section for the file table.');
 
       // Locate all visible table rows within the scoped section
@@ -826,7 +787,6 @@ export const runU005_02 = () => {
       if (!fileFound) {
         throw new Error(`Selected file name "${selectedFileName}" was not found in the table.`);
       }
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       logger.log('File search and highlight process completed successfully.');
     });
     await allure.step('Step 24: Удалите первый файл из списка медиафайлов.(Remove the first file from the list of attached media files.)', async () => {
@@ -859,9 +819,7 @@ export const runU005_02 = () => {
       await shortagePage.highlightElement(checkboxInput, HIGHLIGHT_SUCCESS);
       await checkboxInput.waitFor({ state: 'visible' });
 
-      // Check the checkbox
       await checkboxInput.check();
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       printButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_BUTTONS_BUTTON_PRINT, { hasText: 'Печать' });
       await shortagePage.highlightElement(printButton, HIGHLIGHT_SUCCESS);
       isPrintButtonReady = await shortagePage.isButtonVisibleTestId(page, 'AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint', 'Печать', true);
@@ -888,54 +846,52 @@ export const runU005_02 = () => {
         test.info(),
       );
 
-      //delete row
-      deleteButton.click();
+      await deleteButton.click();
       await shortagePage.highlightElement(deleteButton, HIGHLIGHT_SUCCESS);
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await page.waitForLoadState('load');
     });
 
     await allure.step('Step 25: Save the detail', async () => {
       const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE, { hasText: 'Сохранить' });
+      await saveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await shortagePage.highlightElement(saveButton, HIGHLIGHT_PENDING);
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       await saveButton.click();
-      await page.waitForTimeout(TIMEOUTS.VERY_LONG);
+      await Promise.race([page.waitForURL(/\/detail\/\d+/).catch(() => {}), page.waitForLoadState('load')]);
+      await page.waitForLoadState('load');
     });
 
     await allure.step('Step 26: Refresh page, reopen the detail, and verify file from database is still present and highlighted', async () => {
       await page.reload();
       await page.waitForLoadState('load');
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
 
-      // Use suffix selector so we match both AddDetal (create) and EditDetal (after reopen) pages
       const documentTable = page.locator(SelectorsPartsDataBase.DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE);
       const tableVisible = await documentTable.isVisible().catch(() => false);
       if (!tableVisible) {
         logger.log('Document table not on current page (likely redirected to list after save). Navigating to parts database and opening the detail.');
         await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
         await page.waitForLoadState('load');
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await shortagePage.searchAndWaitForTable(TEST_DETAIL_NAME, SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE, SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE, {
           searchInputDataTestId: SelectorsPartsDataBase.TABLE_SEARCH_INPUT_TESTID,
         });
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
         await page.waitForLoadState('load');
         await page.keyboard.press('Escape');
-        await page.waitForTimeout(TIMEOUTS.SHORT);
         await page.keyboard.press('Escape');
-        await page.waitForTimeout(TIMEOUTS.SHORT);
+        const historyDropdown = page.locator(SelectorsPartsDataBase.TABLE_SEARCH_HISTORY_DROPDOWN_TITLE);
+        if (await historyDropdown.isVisible().catch(() => false)) {
+          await page.keyboard.press('Escape');
+          await historyDropdown.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
+        }
         const tableSelector = SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE;
         const firstRow = page.locator(`${tableSelector} tbody tr`).first();
         await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await firstRow.scrollIntoViewIfNeeded();
         await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
         await firstRow.click();
-        await page.waitForTimeout(TIMEOUTS.SHORT);
         const editButton = page.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
         await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
         await shortagePage.highlightElement(editButton, HIGHLIGHT_PENDING);
         await editButton.click();
         await page.waitForLoadState('load');
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
 
       await documentTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
@@ -945,7 +901,6 @@ export const runU005_02 = () => {
       await nameCellWithFile.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
       const fileRow = nameCellWithFile.locator('..');
       await shortagePage.highlightElement(fileRow, HIGHLIGHT_SUCCESS);
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
       const isFileRowVisible = await fileRow.isVisible();
       await expectSoftWithScreenshot(

@@ -1424,7 +1424,7 @@ export const runU006CreateAndValidation = () => {
     });
 
     await allure.step('Step 4: Дождаться появления материала в форме (атрибуты не заполняем)', async () => {
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       const section = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expectSoftWithScreenshot(
         page,
@@ -1671,7 +1671,7 @@ export const runU006CreateAndValidation = () => {
     });
 
     await allure.step('Step 4: Дождаться появления материала в форме', async () => {
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       const section = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expectSoftWithScreenshot(
         page,
@@ -1817,7 +1817,7 @@ export const runU006CreateAndValidation = () => {
     });
 
     await allure.step('Step 4: Дождаться появления материала в форме', async () => {
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       const section = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expectSoftWithScreenshot(
         page,
@@ -2142,7 +2142,7 @@ export const runU006CreateAndValidation = () => {
     });
 
     await allure.step('Step 3: Дождаться появления материала в форме и проверить атрибуты', async () => {
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       const section = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expectSoftWithScreenshot(
         page,
@@ -2197,8 +2197,14 @@ export const runU006CreateAndValidation = () => {
       );
       await confirmYes.click();
       await page.waitForLoadState('load');
-      await page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC).waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => null);
-      await page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN).waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => null);
+      await page
+        .locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC)
+        .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD })
+        .catch(() => null);
+      await page
+        .locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)
+        .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD })
+        .catch(() => null);
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
       logger.info('Материал сброшен');
     });
@@ -2243,12 +2249,18 @@ export const runU006CreateAndValidation = () => {
           logger.info('Материал из второй категории выбран');
         } catch {
           await page.keyboard.press('Escape');
-          await page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN).waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => null);
+          await page
+            .locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)
+            .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD })
+            .catch(() => null);
           logger.info('Материал из второй категории не найден, закрываем модальное окно');
         }
       } else {
         await page.keyboard.press('Escape');
-        await page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN).waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => null);
+        await page
+          .locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN)
+          .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD })
+          .catch(() => null);
         logger.info('Вторая категория недоступна, пропускаем');
       }
       const dialogStillOpen = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
@@ -2271,8 +2283,14 @@ export const runU006CreateAndValidation = () => {
         'Verify Characteristic Blanks section is visible',
         test.info(),
       );
-      const hasFirst = await section.getByText(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON, { exact: false }).isVisible().catch(() => false);
-      const hasSecond = await section.getByText(secondCategoryMaterial, { exact: false }).isVisible().catch(() => false);
+      const hasFirst = await section
+        .getByText(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON, { exact: false })
+        .isVisible()
+        .catch(() => false);
+      const hasSecond = await section
+        .getByText(secondCategoryMaterial, { exact: false })
+        .isVisible()
+        .catch(() => false);
       const rows = section.locator('tr');
       const fieldCount = await rows.count();
       if (hasFirst || hasSecond) {

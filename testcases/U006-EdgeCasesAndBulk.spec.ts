@@ -345,11 +345,9 @@ export const runU006EdgeCasesAndBulk = () => {
       );
       logger.info('Форма создания детали открыта');
 
-      // Заполнить наименование
       await detailsPage.fillAndVerifyField(SelectorsPartsDataBase.DETAIL_NAME_INPUT, SelectorsPartsDataBase.TEST_DETAIL_NAME);
       logger.info(`Наименование детали заполнено: ${SelectorsPartsDataBase.TEST_DETAIL_NAME}`);
 
-      // Выбрать материал
       const materialButton = page.locator(SelectorsPartsDataBase.CHARACTERISTIC_BLANKS_MATERIAL_BUTTON);
       await expectSoftWithScreenshot(
         page,
@@ -372,10 +370,8 @@ export const runU006EdgeCasesAndBulk = () => {
         test.info(),
       );
 
-      // searchAndSelectMaterial now handles: search, select, click Add button, and close dialog
       await detailsPage.searchAndSelectMaterial(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_SWITCH_ITEM1, SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
 
-      // Verify the dialog is closed (searchAndSelectMaterial should have closed it)
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -386,7 +382,6 @@ export const runU006EdgeCasesAndBulk = () => {
       );
       logger.info('Материал выбран и добавлен');
 
-      // Заполнить атрибуты
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
       await expectSoftWithScreenshot(
         page,
@@ -427,143 +422,45 @@ export const runU006EdgeCasesAndBulk = () => {
       logger.info('Все обязательные поля и атрибуты заполнены правильно');
     });
 
-    await allure.step("Шаг 2: Нажать кнопку 'Сохранить' 10 раз быстро", async () => {
-      // Wait for save button to be ready before starting rapid clicks (avoids timeout on first attempt)
-      const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-      await saveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
-      // Use the page object method for rapid save clicks
-      const result = await detailsPage.performRapidSaveClicks(10, {
-        maxConsecutiveFailures: 3,
-        stabilizationDelay: 200,
-        progressCheckDelay: 300,
-      });
+    await allure.step("Шаг 2: Быстро нажать кнопку 'Сохранить' несколько раз (цвет кнопки меняется при каждом нажатии), затем дождаться перехода", async () => {
+      const { clicksPerformed } = await detailsPage.performRapidSaveClicksWithHighlight(5);
 
-      // Log results
-      logger.info(`Всего выполнено нажатий: ${result.clicksPerformed} из 10`);
-      logger.info(`Страница перешла в режим редактирования: ${result.pageTransitioned}`);
-      logger.info(`Финальный тип страницы: ${result.finalPageType}`);
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(clicksPerformed).toBeGreaterThan(0);
+        },
+        'Verify at least one Save click was performed',
+        test.info(),
+      );
+      logger.info(`Выполнено быстрых нажатий: ${clicksPerformed}`);
 
-      if (result.errors.length > 0) {
-        logger.warn(`Ошибки при выполнении: ${result.errors.join(', ')}`);
-      }
+      const loader = page.locator(SelectorsPartsDataBase.ADD_DETAL_LOADER);
+      await loader.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
+      await loader.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.LONG });
 
-      // More flexible validation - don't fail if page didn't transition but clicks were performed
-      if (result.clicksPerformed > 0) {
-        logger.info(`Успешно выполнено ${result.clicksPerformed} нажатий`);
+      const editPage = page.locator(SelectorsPartsDataBase.EDIT_DETAIL_PAGE);
+      await editPage.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+      await page.waitForLoadState('load');
 
-        // If page didn't transition but we performed clicks, that's still valid
-        if (!result.pageTransitioned) {
-          logger.warn('Страница не перешла в режим редактирования, но нажатия были выполнены');
-          // Don't fail the test, just log the warning
-        } else {
-          logger.info('Страница успешно перешла в режим редактирования');
-        }
-      } else {
-        // Only fail if no clicks were performed at all
-        await expectSoftWithScreenshot(
-          page,
-          () => {
-            expect.soft(result.clicksPerformed).toBeGreaterThan(0);
-          },
-          'Verify clicks were performed',
-          test.info(),
-        );
-      }
-
-      // Be more flexible about final page state since page might still be in transition
-      if (result.finalPageType === 'unknown') {
-        logger.warn('Final page type is unknown - page might still be in transition');
-        // Wait a bit more and check again
-        await page.waitForTimeout(TIMEOUTS.LONG);
-        const retryPageType = await detailsPage.getCurrentPageType();
-        logger.info(`Retry page type check: ${retryPageType}`);
-
-        // Don't fail if page type is still unknown, just log it
-        if (retryPageType === 'edit') {
-          logger.info('Successfully detected edit page on retry');
-        } else {
-          logger.warn(`Page type still unknown after retry: ${retryPageType}`);
-        }
-      } else if (result.finalPageType === 'edit') {
-        logger.info('Успешно перешли на страницу редактирования');
-      } else {
-        logger.warn(`Unexpected final page type: ${result.finalPageType}`);
-        // Don't fail the test, just log the warning
-      }
+      const pageType = await detailsPage.getCurrentPageType();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(pageType).toBe('edit');
+        },
+        'Verify page transitioned to edit',
+        test.info(),
+      );
+      logger.info('Страница перешла в режим редактирования');
     });
 
-    await allure.step('Шаг 3: Проверить состояние базы данных и UI', async () => {
-      // Wait for page to be stable first
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(TIMEOUTS.LONG); // Increased wait time
-
-      // Verify we're on the edit page using page object method
-      const finalPageType = await detailsPage.getCurrentPageType();
-
-      // Be more flexible about the final page state
-      if (finalPageType === 'unknown') {
-        logger.warn('Final page type is unknown - page might still be in transition');
-        // Wait a bit more and check again
-        await page.waitForTimeout(TIMEOUTS.EXTENDED);
-        const retryPageType = await detailsPage.getCurrentPageType();
-        logger.info(`Retry page type check: ${retryPageType}`);
-
-        if (retryPageType === 'edit') {
-          logger.info('Successfully detected edit page on retry');
-        } else {
-          logger.warn(`Page type still unknown after retry: ${retryPageType}`);
-          logger.warn('Continuing with test despite unknown page type - will attempt to verify data anyway');
-
-          // Debug: Let's see what's actually on the page
-          logger.info('Debugging page content to understand current state');
-
-          // Check what titles are present
-          const addTitle = page.locator(SelectorsPartsDataBase.ADD_DETAL_TITLE);
-          const editTitle = page.locator(SelectorsPartsDataBase.EDIT_DETAL_TITLE);
-          const addContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_PAGE);
-          const editContainer = page.locator(SelectorsPartsDataBase.EDIT_DETAIL_PAGE);
-
-          const addTitleCount = await addTitle.count();
-          const editTitleCount = await editTitle.count();
-          const addContainerCount = await addContainer.count();
-          const editContainerCount = await editContainer.count();
-
-          logger.info(`Debug counts - AddTitle: ${addTitleCount}, EditTitle: ${editTitleCount}, AddContainer: ${addContainerCount}, EditContainer: ${editContainerCount}`);
-
-          // Check for any h3 elements
-          const h3Elements = page.locator('h3');
-          const h3Count = await h3Elements.count();
-          logger.info(`Found ${h3Count} h3 elements on page`);
-
-          for (let i = 0; i < h3Count; i++) {
-            const h3Text = await h3Elements.nth(i).textContent();
-            logger.info(`H3 ${i}: "${h3Text}"`);
-          }
-
-          // Check for any save buttons
-          const saveButton = page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
-          const editSaveButton = page.locator(`SelectorsPartsDataBase.EDIT_SAVE_BUTTON`);
-          const saveButtonCount = await saveButton.count();
-          const editSaveButtonCount = await editSaveButton.count();
-
-          logger.info(`Debug button counts - SaveButton: ${saveButtonCount}, EditSaveButton: ${editSaveButtonCount}`);
-
-          // Log page URL and title
-          logger.info(`Current URL: ${page.url()}`);
-          logger.info(`Page title: ${await page.title()}`);
-        }
-      } else if (finalPageType === 'edit') {
-        logger.info('Деталь открыта в режиме редактирования для проверки данных');
-      } else {
-        logger.warn(`Unexpected page type: ${finalPageType}, but continuing with test`);
-      }
-
-      // Проверить наименование (use FILL selector for the actual input element)
+    await allure.step('Шаг 3: Проверить сохранённые данные на странице редактирования', async () => {
       const detailNameInput = page.locator(SelectorsPartsDataBase.EDIT_DETAL_INFORMATION_INPUT_FILL);
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await expect.soft(detailNameInput).toBeVisible();
+          await expect.soft(detailNameInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         },
         'Verify detail name input is visible',
         test.info(),
@@ -579,7 +476,6 @@ export const runU006EdgeCasesAndBulk = () => {
       );
       logger.info(`Наименование детали совпадает: ${retrievedName}`);
 
-      // Проверить материал
       const tableContainer = page.locator(SelectorsPartsDataBase.EDIT_CHARACTERISTIC_BLANKS_CONTAINER_SELECTOR);
       await expectSoftWithScreenshot(
         page,
@@ -590,13 +486,12 @@ export const runU006EdgeCasesAndBulk = () => {
         test.info(),
       );
 
-      const characteristicBlanksTable = tableContainer.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS_TBODY);
+      const characteristicBlanksTable = tableContainer.locator(SelectorsPartsDataBase.EDIT_CHR_TABLE);
       const materialCell = characteristicBlanksTable.getByText(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON, { exact: false });
-      await materialCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await expect.soft(materialCell).toBeVisible();
+          await expect.soft(materialCell).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
         },
         'Verify material is visible in table',
         test.info(),
@@ -605,14 +500,13 @@ export const runU006EdgeCasesAndBulk = () => {
       await expectSoftWithScreenshot(
         page,
         () => {
-          expect.soft(retrievedMaterial).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
+          expect.soft(retrievedMaterial.trim()).toBe(SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON);
         },
         `Verify retrieved material is ${SelectorsPartsDataBase.TEST_MATERIAL_HEXAGON}`,
         test.info(),
       );
       logger.info(`Материал совпадает: ${retrievedMaterial}`);
 
-      // Проверить атрибуты
       const targetRow = tableContainer.locator('tr').filter({
         has: page.locator('td:has-text("Длина (Д)")'),
       });
@@ -637,7 +531,6 @@ export const runU006EdgeCasesAndBulk = () => {
         test.info(),
       );
       logger.info(`Значение атрибута совпадает: ${retrievedValue}`);
-
       logger.info('Все значения совпадают с тем, что было сохранено из формы');
     });
   });

@@ -15,6 +15,7 @@ import * as SelectorsPartsDataBase from '../Constants/SelectorsPartsDataBase';
 import * as SelectorsArchiveModal from '../Constants/SelectorsArchiveModal';
 import * as SelectorsEquipment from '../Constants/SelectorsEquipment';
 import * as SelectorsNotifications from '../Constants/SelectorsNotifications';
+import { HIGHLIGHT_CLICK_COLORS } from '../Constants/HighlightStyles';
 import { expectSoftWithScreenshot } from '../utils/utilities';
 import { SELECTORS } from '../../config';
 
@@ -1081,6 +1082,11 @@ export class PartsDatabaseHelper {
           await this.page.waitForTimeout(progressCheckDelay);
           continue;
         }
+        // Wait for AddDetal loader to be hidden so it doesn't intercept the click
+        const addDetalLoader = this.page.locator(SelectorsPartsDataBase.ADD_DETAL_LOADER);
+        await addDetalLoader.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {
+          // Loader may not be present; ignore
+        });
         try {
           await this.elementHelper.highlightElement(saveButton);
         } catch {
@@ -1121,6 +1127,42 @@ export class PartsDatabaseHelper {
     const finalPageType = await this.getCurrentPageType();
     logger.info(`Final page state: ${finalPageType}`);
     return { clicksPerformed, pageTransitioned, finalPageType, errors };
+  }
+
+  /**
+   * Click Save multiple times quickly, applying a random highlight color before each click
+   * so each click is visible. Stops when the button disappears (edit page) or click fails.
+   * Caller should then wait for loader hidden and edit page visible.
+   */
+  async performRapidSaveClicksWithHighlight(maxClicks: number = 5): Promise<{ clicksPerformed: number }> {
+    let clicksPerformed = 0;
+    const loader = this.page.locator(SelectorsPartsDataBase.ADD_DETAL_LOADER);
+    await loader.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+
+    const saveButtonLocator = this.page.locator(SelectorsPartsDataBase.BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE);
+    const editPageLocator = this.page.locator(SelectorsPartsDataBase.EDIT_DETAIL_PAGE);
+
+    for (let i = 0; i < maxClicks; i++) {
+      const editVisible = await editPageLocator.isVisible().catch(() => false);
+      if (editVisible) break;
+
+      const visible = await saveButtonLocator.isVisible().catch(() => false);
+      if (!visible) break;
+
+      const style = HIGHLIGHT_CLICK_COLORS[Math.floor(Math.random() * HIGHLIGHT_CLICK_COLORS.length)];
+      await this.elementHelper.highlightElement(saveButtonLocator, style);
+
+      try {
+        await saveButtonLocator.click({ timeout: WAIT_TIMEOUTS.SHORT });
+        clicksPerformed++;
+      } catch {
+        break;
+      }
+      await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+    }
+
+    logger.info(`Rapid Save clicks with highlight: ${clicksPerformed} performed`);
+    return { clicksPerformed };
   }
 
   async calculateFreeQuantity(detailName: string): Promise<number> {
