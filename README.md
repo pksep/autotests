@@ -31,7 +31,7 @@ Tests are **not** started by opening individual `testcases/*.spec.ts` files. All
 
 ## 2. Requirements and environment
 
-- **Node.js** — Version from `.nvmrc` (e.g. 20.x). CI uses this file.
+- **Node.js** — Version from `.nvmrc` (e.g. 22.x). CI uses this file.
 - **Package manager** — `pnpm` (see `packageManager` in `package.json`). Run `pnpm install` then `pnpm exec playwright install --with-deps` for browsers.
 - **Application under test** — For UI suites, `BASE_URL` must point to a running SEP ERP client. For API suites, `API_BASE_URL` must be reachable. No Docker is required; run the app and API as needed.
 

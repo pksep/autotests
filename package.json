@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Factory Manufacturing Management System",
   "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "pretest": "echo 'No pretest script'",
     "test": "npx playwright test",
