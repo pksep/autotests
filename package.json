@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.50.1",
+    "dotenv": "^16.4.5",
     "@types/node": "^14.14.31",
     "allure-commandline": "^2.32.2",
     "allure-js-commons": "^3.1.0",
