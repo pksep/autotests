@@ -1,11 +1,6 @@
 .DS_Store
+.env
 node_modules
-/config.ts
-config.ts
-testSuiteConfig.ts
-/testSuiteConfig.ts
-playwright.config.ts
-/playwright.config.ts
 
 # Log files
 npm-debug.log*
@@ -39,4 +34,4 @@ pnpm-debug.log*
 mcp.json
 *.png
 QAReport.md
-docs/
+#docs/
