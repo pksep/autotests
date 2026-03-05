@@ -702,17 +702,15 @@ export class TableHelper {
   }
 
   /**
-   * Wait for the table body to become visible. if not thead
+   * Wait for the table body to become visible (at least one row). Uses PAGE_RELOAD timeout so staging/slow envs have time after reload/tab switch.
    * @param locator - the full locator of the table
-   * @returns A promise that resolves when the table body is visible.
+   * @returns A promise that resolves when the table body has at least one row.
    */
   async waitingTableBodyNoThead(locator: string) {
-    const locatorTable = this.page.locator(locator);
-
     // Wait for any table rows in tbody - generic approach without relying on classes or hardcoded data-testid patterns
     await this.page.waitForSelector(`${locator} tbody tr`, {
       state: 'attached',
-      timeout: 10000,
+      timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
     });
   }
 
