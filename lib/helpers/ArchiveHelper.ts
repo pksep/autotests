@@ -9,9 +9,10 @@
  * - Checkbox selection and archiving
  */
 
-import { Page } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 import { ElementHelper } from './ElementHelper';
 import { TableHelper } from './TableHelper';
+import { WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 import logger from '../utils/logger';
 
 export class ArchiveHelper {
@@ -144,22 +145,11 @@ export class ArchiveHelper {
     const archiveLabel = options?.archiveButtonLabel || 'Архив';
     const archiveButton = this.page.locator(archiveButtonSelector, { hasText: archiveLabel });
 
-    // Wait for button to be visible and enabled
-    await archiveButton.waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for button to be visible (same as before)
+    await archiveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-    // Wait for button to be enabled with retry
-    let isEnabled = false;
-    for (let retry = 0; retry < 10; retry++) {
-      isEnabled = await archiveButton.isEnabled();
-      if (isEnabled) {
-        break;
-      }
-      await this.page.waitForTimeout(500);
-    }
-
-    if (!isEnabled) {
-      throw new Error(`Archive button "${archiveLabel}" is not enabled after waiting.`);
-    }
+    // Wait for button to be enabled; use PAGE_RELOAD so slower envs (e.g. Linux server) have time
+    await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
 
     // Highlight and click archive button (calls ElementHelper)
     await pageObject.highlightElement(archiveButton, {
