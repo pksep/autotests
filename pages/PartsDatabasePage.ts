@@ -148,6 +148,13 @@ export class CreatePartsDatabasePage extends PageObject {
     await this.partsDatabaseHelper.resetProductSpecificationsByConfig(this.page, () => this.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID), productSearch, config);
   }
 
+  /**
+   * If the "kits will be deactivated" confirmation modal is visible (when editing a product with assembled kits), dismiss it by clicking Yes.
+   */
+  async dismissKitsDeactivationConfirmModalIfPresent(): Promise<void> {
+    return this.partsDatabaseHelper.dismissKitsDeactivationConfirmModalIfPresent(this.page);
+  }
+
   async removeItemFromSpecification(page: Page, smallDialogButtonId: string, dialogTestId: string, bottomTableTestId: string, removeButtonColumnIndex: number, searchValue: string, returnButtonTestId: string, itemType?: string): Promise<void> {
     return this.partsDatabaseHelper.removeItemFromSpecification(page, smallDialogButtonId, dialogTestId, bottomTableTestId, removeButtonColumnIndex, searchValue, returnButtonTestId, itemType);
   }

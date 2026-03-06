@@ -165,6 +165,10 @@ export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="S
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID = 'Specification-ModalBaseDetal-Select-Button';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="Specification-ModalBaseDetal-Add-Button"]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Specification-ModalBaseDetal-Cancel-Button"]';
+/** In Specification-ModalBaseDetal the Деталь (top) table lives in this wrapper; use it to scope the search input (same testid as in product/cbed sections). */
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_TABLE_WRAPPER = '[data-testid="BasePaginationTable-Wrapper-detal"]';
+/** Search input inside the Деталь table (scope by EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_TABLE_WRAPPER - dialog has 3 tables with same input testid). */
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
 
 // U004 dialogs (ПД)
 export const EDIT_PAGE_ADD_ПД_RIGHT_DIALOG = 'ModalBaseMaterial';

@@ -769,8 +769,8 @@ export class PageObject extends AbstractPage {
     return this.validationHelper.validatePageTitlesWithStyling(testId, expectedTitles);
   }
   /** Validate table is displayed with rows. */
-  async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
-    return this.validationHelper.validateTableIsDisplayedWithRows(tableTestId);
+  async validateTableIsDisplayedWithRows(tableTestId: string, rowWaitTimeout?: number): Promise<void> {
+    return this.validationHelper.validateTableIsDisplayedWithRows(tableTestId, rowWaitTimeout);
   }
 
   /** Validate buttons visibility and state. */

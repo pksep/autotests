@@ -221,9 +221,11 @@ export class ValidationHelper {
   /**
    * Validate that a table is displayed and has rows.
    * @param tableTestId - The data-testid of the table to validate.
+   * @param rowWaitTimeout - Optional timeout (ms) for waiting for at least one row; defaults to WAIT_TIMEOUTS.STANDARD.
    * @returns Promise<void> - Validates the presence and non-emptiness of the table.
    */
-  async validateTableIsDisplayedWithRows(tableTestId: string): Promise<void> {
+  async validateTableIsDisplayedWithRows(tableTestId: string, rowWaitTimeout?: number): Promise<void> {
+    const rowTimeout = rowWaitTimeout ?? WAIT_TIMEOUTS.STANDARD;
     // Normalize selector: accept raw testId or full selector
     let selector = tableTestId;
     const match = tableTestId.match(/data-testid\s*=\s*["']([^"']+)["']/);
@@ -239,7 +241,7 @@ export class ValidationHelper {
 
     // Wait for at least one row to appear in the table
     const tableLocator = this.page.locator(`${selector} tbody tr`);
-    await tableLocator.first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await tableLocator.first().waitFor({ state: 'visible', timeout: rowTimeout });
 
     // Get the row count
     const rowCount = await tableLocator.count();

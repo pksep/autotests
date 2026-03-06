@@ -405,8 +405,8 @@ export class OrderHelper {
       // Wait for the menu to appear
       await this.page.waitForTimeout(500);
 
-      // Click on the 'Заказы' menu item
-      const menuItem = this.page.locator(menuItemSelector);
+      // Click on the 'Заказы' menu item (use .first() when multiple popovers share same data-testid to avoid strict mode)
+      const menuItem = this.page.locator(menuItemSelector).first();
       await menuItem.waitFor({ state: 'visible', timeout: 5000 });
 
       // Highlight the menu item before clicking

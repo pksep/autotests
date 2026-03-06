@@ -1316,6 +1316,26 @@ export class PartsDatabaseHelper {
     }
   }
 
+  /**
+   * Dismisses the "наборы будут деактивированы" confirmation modal if it is visible.
+   * That modal appears when changing the specification of entities that have assembled kits (скомплектованные наборы).
+   * If present, clicks Yes to confirm so the test can continue.
+   */
+  async dismissKitsDeactivationConfirmModalIfPresent(page: Page): Promise<void> {
+    const modal = page.locator(SelectorsPartsDataBase.MODAL_CONFIRM_GENERIC);
+    try {
+      await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+    } catch {
+      return;
+    }
+    if (await modal.isVisible()) {
+      logger.log('Dismissing "kits will be deactivated" confirmation modal');
+      const yesButton = modal.locator(SelectorsPartsDataBase.BUTTON_CONFIRM);
+      await yesButton.click().catch(() => {});
+      await modal.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+    }
+  }
+
   private static getCancelButtonSelectorForDialog(dialogTestId: string): string {
     // СБ and Д have distinct dialog ids; ПД and РМ share ModalBaseMaterial
     const map: Record<string, string> = {
@@ -2283,29 +2303,43 @@ export class PartsDatabaseHelper {
     return await rows.count().catch(() => 0);
   }
 
-  async addItemToSpecification(page: Page, smallDialogButtonId: string, dialogTestId: string, searchTableTestId: string, searchValue: string, bottomTableTestId: string, addToBottomButtonTestId: string, addToMainButtonTestId: string, itemType?: string): Promise<void> {
+  async addItemToSpecification(
+    page: Page,
+    smallDialogButtonId: string,
+    dialogTestId: string,
+    searchTableTestId: string,
+    searchValue: string,
+    bottomTableTestId: string,
+    addToBottomButtonTestId: string,
+    addToMainButtonTestId: string,
+    itemType?: string,
+    options?: { skipAddButtonClick?: boolean },
+  ): Promise<void> {
     const columnIndex = itemType === 'РМ' || itemType === 'ПД' ? 0 : 1;
-    try {
-      await page.waitForLoadState('networkidle', { timeout: WAIT_TIMEOUTS.STANDARD });
-    } catch (error) {
-      logger.warn(`Network idle timeout: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    try {
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
-    } catch (error) {
-      logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
-    try {
-      await addButton.click();
-    } catch (error) {
-      logger.warn(`Failed to click add button: ${error instanceof Error ? error.message : String(error)}`);
-      return;
-    }
-    try {
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-    } catch (error) {
-      logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
+    const skipAddClick = options?.skipAddButtonClick === true;
+    if (!skipAddClick) {
+      try {
+        await page.waitForLoadState('networkidle', { timeout: WAIT_TIMEOUTS.STANDARD });
+      } catch (error) {
+        logger.warn(`Network idle timeout: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      try {
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+      } catch (error) {
+        logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      const addButton = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_BUTTON);
+      try {
+        await addButton.click();
+      } catch (error) {
+        logger.warn(`Failed to click add button: ${error instanceof Error ? error.message : String(error)}`);
+        return;
+      }
+      try {
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      } catch (error) {
+        logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
     const smallDialogMatch = smallDialogButtonId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
     const smallDialogSelector = smallDialogMatch && smallDialogMatch[1] ? smallDialogButtonId : `div[data-testid="${smallDialogButtonId}"]`;
@@ -2360,24 +2394,46 @@ export class PartsDatabaseHelper {
         el.style.backgroundColor = 'yellow';
       });
       await page.waitForTimeout(TIMEOUTS.STANDARD);
-      const searchInput = itemTableLocator.locator('input.search-yui-kit__input');
+      let searchInput: Locator;
+      if (itemType === 'РМ') {
+        searchInput = itemTableLocator.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT).first();
+      } else {
+        searchInput = itemTableLocator.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).first();
+      }
+      if ((await searchInput.count()) === 0) {
+        searchInput = itemTableLocator.locator('input.search-yui-kit__input').first();
+      }
+      await searchInput.click();
+      await searchInput.clear();
       await searchInput.fill(searchValue);
       logger.info(`Searching for: ${searchValue}`);
       await searchInput.press('Enter');
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(TIMEOUTS.EXTENDED);
       try {
-        await page.waitForLoadState('networkidle', { timeout: WAIT_TIMEOUTS.STANDARD });
+        await itemTableLocator.locator('tbody').waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
       } catch (err) {
-        logger.warn(`Network idle timeout: ${err instanceof Error ? err.message : String(err)}`);
+        logger.warn(`Table tbody did not appear: ${err instanceof Error ? err.message : String(err)}`);
+      }
+      try {
+        await itemTableLocator.locator('tbody tr').first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+      } catch (err) {
+        logger.warn(`Search results table did not show rows: ${err instanceof Error ? err.message : String(err)}`);
       }
       const rowWithSearchValue = itemTableLocator.locator('tbody tr').filter({ hasText: searchValue }).first();
       try {
-        await rowWithSearchValue.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+        await rowWithSearchValue.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
       } catch (err) {
         logger.warn(`Row containing "${searchValue}" did not appear: ${err instanceof Error ? err.message : String(err)}`);
         const searchRowCount = await itemTableLocator.locator('tbody tr').count();
         logger.info(`Search results count: ${searchRowCount}`);
         if (searchRowCount === 0) {
           logger.warn(`No search results found for: ${searchValue}.`);
+        }
+        const errorNotification = page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
+        if (await errorNotification.isVisible().catch(() => false)) {
+          const notificationText = await errorNotification.textContent().catch(() => null);
+          logger.warn(`Visible notification (possible server error): ${notificationText?.trim() ?? '(empty)'}`);
         }
         return;
       }

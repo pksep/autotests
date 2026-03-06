@@ -14,6 +14,7 @@ import { Page } from '@playwright/test';
 import { ENV } from '../../config';
 import { PageObject } from '../Page';
 import logger from '../utils/logger';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../Constants/TimeoutConstants';
 
 export class NavigationHelper {
   constructor(private page: Page) {}
@@ -69,27 +70,27 @@ export class NavigationHelper {
    * @param url - The URL to navigate to
    * @param dataTestId - The data-testid of the element to validate
    */
-  async navigateToPage(url: string, dataTestId: string): Promise<void> {
-    logger.log(`Navigating to ${url}`);
+  async navigateToPage(url: string, dataTestId: string, elementWaitTimeout?: number): Promise<void> {
+    const targetUrl = url.startsWith('http') ? url : new URL(url, ENV.BASE_URL).href;
+    logger.log(`Navigating to ${targetUrl}`);
     logger.log(`PageTitleId to ${dataTestId}`);
 
     try {
-      await this.page.goto(url);
+      await this.page.goto(targetUrl, { waitUntil: 'load' });
     } catch (navigationError) {
-      // Handle navigation interruption
       if (navigationError instanceof Error && navigationError.message.includes('interrupted')) {
-        logger.log(`Navigation to ${url} was interrupted, waiting for page to stabilize...`);
+        logger.log(`Navigation to ${targetUrl} was interrupted, waiting for page to stabilize...`);
         await this.page.waitForLoadState('domcontentloaded');
-        await this.page.waitForTimeout(2000);
+        await this.page.waitForTimeout(TIMEOUTS.LONG);
       } else {
         throw navigationError;
       }
     }
 
-    await this.page.waitForTimeout(500);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('load');
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-    // Validate the presence of an element using data-testid (accept either raw id or full selector)
+    const timeout = elementWaitTimeout ?? WAIT_TIMEOUTS.PAGE_RELOAD;
     let selector = dataTestId;
     const match = dataTestId.match(/data-testid\s*=\s*["']([^"']+)["']/);
     if (match && match[1]) {
@@ -98,7 +99,7 @@ export class NavigationHelper {
       selector = `[data-testid="${dataTestId}"]`;
     }
     const locator = this.page.locator(selector);
-    await locator.waitFor({ state: 'visible', timeout: 20000 });
+    await locator.waitFor({ state: 'visible', timeout });
     const isVisible = await locator.isVisible();
     if (!isVisible) {
       throw new Error(`Element with data-testid "${dataTestId}" is not visible after navigation`);
