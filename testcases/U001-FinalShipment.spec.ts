@@ -35,6 +35,7 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
     const warehouseTaskForShipment = new CreateWarehouseTaskForShipmentPage(page);
 
     let numberColumn: number;
+    let searchTerm: string;
 
     await allure.step('Step 01: Open the warehouse page', async () => {
       // Go to the Warehouse page
@@ -63,8 +64,6 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
       // Check that the first row of the table contains the variable name
       // For the second shipment task, we should verify the order number if available
       // If orderNumber is not set (running in isolation), extract it from the table or use nameProduct as fallback
-      let searchTerm: string;
-
       if (orderNumber && orderNumber.orderNumber) {
         // Use the order number from the first shipment task if available
         searchTerm = orderNumber.orderNumber;
@@ -88,29 +87,31 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
       await warehouseTaskForShipment.checkNameInLineFromFirstRow(searchTerm, tableMainUploading);
     });
 
-    await allure.step('Step 05: Find the checkbox column and click', async () => {
-      // Click the first row cell using direct data-testid pattern
-      const firstRowCell = page.locator(SelectorsShipmentTasks.ROW_NUMBER_PATTERN).first();
+    await allure.step('Step 05: Find the row with the order and click its number cell', async () => {
+      // Click the row that contains searchTerm (e.g. order "26-4471"), not always the first row.
+      // When there are two shipment tasks, the second is in row 1; selecting the wrong row leaves "Отгрузить" disabled.
+      const rowWithOrder = page.locator(`${tableMainUploading} tbody tr`).filter({ hasText: searchTerm }).first();
+      await rowWithOrder.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const cellToClick = rowWithOrder.locator(SelectorsShipmentTasks.ROW_NUMBER_PATTERN).first();
+      await cellToClick.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await cellToClick.scrollIntoViewIfNeeded();
 
-      // Wait for the cell to be visible
-      await firstRowCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await firstRowCell.scrollIntoViewIfNeeded();
-
-      // Highlight the cell for debugging
-      await firstRowCell.evaluate((el: HTMLElement) => {
+      await cellToClick.evaluate((el: HTMLElement) => {
         el.style.backgroundColor = 'yellow';
         el.style.border = '2px solid red';
       });
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-      // Click the cell
-      await firstRowCell.click();
-      logger.log('First row cell clicked');
+      await cellToClick.click();
+      logger.log(`Row containing "${searchTerm}" clicked`);
     });
 
     await allure.step('Step 06: Click on the ship button', async () => {
-      // Click on the button
-      await warehouseTaskForShipment.clickButton('Отгрузить', buttonUploading);
+      // Wait for button to be enabled after row selection, then click
+      await warehouseTaskForShipment.clickButton('Отгрузить', buttonUploading, undefined, {
+        waitForEnabled: true,
+        enabledTimeout: WAIT_TIMEOUTS.STANDARD,
+      });
     });
 
     await allure.step('Step 07: Check the Shipping modal window', async () => {
