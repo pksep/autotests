@@ -4,6 +4,9 @@
  * Used by: U005-01.spec.ts, U005-02.spec.ts.
  */
 
+/** Prefix for test details created by U005; used by Test Case 0 (cleanup) to archive them before runs. */
+export const U005_CLEANUP_PREFIX = 'U005_test2';
+
 export const TEST_DETAIL_NAME = 'U005_test2_DETAILName';
 export const TEST_CATEGORY = '3D печать';
 export const TEST_MATERIAL = '09Г2С (Сталь)';

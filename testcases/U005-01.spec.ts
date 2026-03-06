@@ -6,15 +6,220 @@ import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
 import testData1 from '../testdata/U005-PC01.json';
 import testData2 from '../testdata/U004-PC01.json';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
-import { WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
+import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import { HIGHLIGHT_PENDING, HIGHLIGHT_SUCCESS, HIGHLIGHT_ERROR } from '../lib/Constants/HighlightStyles';
 import { expectSoftWithScreenshot } from '../lib/Page';
-import { TEST_CATEGORY, TEST_MATERIAL, TEST_NAME, TEST_FILE } from './U005-Constants';
+import { TEST_CATEGORY, TEST_MATERIAL, TEST_NAME, TEST_FILE, U005_CLEANUP_PREFIX } from './U005-Constants';
 
 /** Minimal type for input element in evaluate callbacks (avoids global HTMLInputElement). */
 type InputLike = { value?: string; dispatchEvent(e: Event): void };
 
 export const runU005_01 = () => {
+  test('TestCase 0 - Cleanup', async ({ page }) => {
+    test.setTimeout(TEST_TIMEOUTS.SHORT);
+    const partsDatabasePage = new CreatePartsDatabasePage(page);
+    const searchProduct = page.locator(SelectorsPartsDataBase.SEARCH_PRODUCT_ATTRIBUT).first();
+    const searchCbed = page.locator(SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT).nth(1);
+    const searchDetail = page.locator(SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT).last();
+
+    await allure.step('Step 01: Open the parts database page', async () => {
+      await partsDatabasePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
+      await partsDatabasePage.waitForNetworkIdle();
+    });
+
+    await allure.step('Step 01a: Clear all search input fields', async () => {
+      await searchDetail.evaluate((el: InputLike) => {
+        el.value = '';
+      });
+      await searchDetail.press('Enter');
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await searchCbed.evaluate((el: InputLike) => {
+        el.value = '';
+      });
+      await searchCbed.press('Enter');
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await searchProduct.evaluate((el: InputLike) => {
+        el.value = '';
+      });
+      await searchProduct.press('Enter');
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 01b: Refresh the page', async () => {
+      await page.reload();
+      await partsDatabasePage.waitForNetworkIdle();
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 02: Process Details table - search and delete all items by prefix from bottom up, then refresh and search again', async () => {
+      let hasMoreItems = true;
+      const maxIterations = 100;
+      let iterationCount = 0;
+
+      while (hasMoreItems && iterationCount < maxIterations) {
+        iterationCount++;
+        await searchDetail.fill(U005_CLEANUP_PREFIX);
+        await searchDetail.press('Enter');
+        await partsDatabasePage.waitForNetworkIdle();
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+        const rows = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE_DIV} tbody tr`);
+        const rowCount = await rows.count();
+        if (rowCount === 0) {
+          hasMoreItems = false;
+          break;
+        }
+
+        for (let i = rowCount - 1; i >= 0; i--) {
+          const row = rows.nth(i);
+          const nameCell = row.locator('td').nth(1);
+          const cellText = await nameCell.textContent();
+          if (cellText?.trim().startsWith(U005_CLEANUP_PREFIX)) {
+            await row.click();
+            await partsDatabasePage.archiveAndConfirm(
+              SelectorsPartsDataBase.BUTTON_ARCHIVE,
+              SelectorsPartsDataBase.BUTTON_CONFIRM,
+            );
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          }
+        }
+
+        const remainingRows = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE_DIV} tbody tr`);
+        const remainingCount = await remainingRows.count();
+        if (remainingCount === 0) {
+          hasMoreItems = false;
+        } else {
+          await page.reload();
+          await partsDatabasePage.waitForNetworkIdle();
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        }
+      }
+
+      await searchDetail.evaluate((el: InputLike) => {
+        el.value = '';
+      });
+      await searchDetail.press('Enter');
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 02b: Refresh the page after Details cleanup', async () => {
+      await page.reload();
+      await partsDatabasePage.waitForNetworkIdle();
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 03: Process Assemblies (CBED) table - search and delete all items by prefix from bottom up, then refresh and search again', async () => {
+      let hasMoreItems = true;
+      const maxIterations = 100;
+      let iterationCount = 0;
+
+      while (hasMoreItems && iterationCount < maxIterations) {
+        iterationCount++;
+        await searchCbed.fill(U005_CLEANUP_PREFIX);
+        await searchCbed.press('Enter');
+        await partsDatabasePage.waitForNetworkIdle();
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+        const rows = page.locator(`${SelectorsPartsDataBase.CBED_TABLE_DIV} tbody tr`);
+        const rowCount = await rows.count();
+        if (rowCount === 0) {
+          hasMoreItems = false;
+          break;
+        }
+
+        for (let i = rowCount - 1; i >= 0; i--) {
+          const row = rows.nth(i);
+          const nameCell = row.locator('td').nth(1);
+          const cellText = await nameCell.textContent();
+          if (cellText?.trim().startsWith(U005_CLEANUP_PREFIX)) {
+            await row.click();
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+            await partsDatabasePage.archiveAndConfirm(
+              SelectorsPartsDataBase.BUTTON_ARCHIVE,
+              SelectorsPartsDataBase.BUTTON_CONFIRM,
+            );
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          }
+        }
+
+        const remainingRows = page.locator(`${SelectorsPartsDataBase.CBED_TABLE_DIV} tbody tr`);
+        const remainingCount = await remainingRows.count();
+        if (remainingCount === 0) {
+          hasMoreItems = false;
+        } else {
+          await page.reload();
+          await partsDatabasePage.waitForNetworkIdle();
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        }
+      }
+
+      await searchCbed.evaluate((el: InputLike) => {
+        el.value = '';
+      });
+      await searchCbed.press('Enter');
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 03b: Refresh the page after Assemblies cleanup', async () => {
+      await page.reload();
+      await partsDatabasePage.waitForNetworkIdle();
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 04: Process Products table - search and delete all items by prefix from bottom up, then refresh and search again', async () => {
+      let hasMoreItems = true;
+      const maxIterations = 100;
+      let iterationCount = 0;
+
+      while (hasMoreItems && iterationCount < maxIterations) {
+        iterationCount++;
+        await searchProduct.fill(U005_CLEANUP_PREFIX);
+        await searchProduct.press('Enter');
+        await partsDatabasePage.waitForNetworkIdle();
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+        const rows = page.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`);
+        const rowCount = await rows.count();
+        if (rowCount === 0) {
+          hasMoreItems = false;
+          break;
+        }
+
+        for (let i = rowCount - 1; i >= 0; i--) {
+          const row = rows.nth(i);
+          const nameCell = row.locator('td').nth(2);
+          const cellText = await nameCell.textContent();
+          if (cellText?.trim().startsWith(U005_CLEANUP_PREFIX)) {
+            await row.click();
+            await partsDatabasePage.archiveAndConfirm(
+              SelectorsPartsDataBase.BUTTON_ARCHIVE,
+              SelectorsPartsDataBase.BUTTON_CONFIRM,
+            );
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          }
+        }
+
+        const remainingRows = page.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`);
+        const remainingCount = await remainingRows.count();
+        if (remainingCount === 0) {
+          hasMoreItems = false;
+        } else {
+          await page.reload();
+          await partsDatabasePage.waitForNetworkIdle();
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        }
+      }
+
+      await searchProduct.evaluate((el: InputLike) => {
+        el.value = '';
+      });
+      await searchProduct.press('Enter');
+      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    logger.info(`Cleanup done: removed items with prefix "${U005_CLEANUP_PREFIX}" from Details, Assemblies, and Products tables`);
+  });
+
   test('TestCase 01 - создат дитайл - Проверка страница', async ({ page }) => {
     test.setTimeout(TEST_TIMEOUTS.SHORT);
     const shortagePage = new CreatePartsDatabasePage(page);
