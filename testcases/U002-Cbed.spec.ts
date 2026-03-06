@@ -99,6 +99,7 @@ export const runU002_05_Cbed = (_isSingleTest: boolean, _iterations: number) => 
         logger.info(`✅ Second CBED order created - Order number: ${secondOrderNumber}, Quantity: 5`);
       });
 
+      // If this step fails with e.g. 105 instead of 55, archive may not be updating totals: Case 15 (or previous run) should leave 0; leftover orders suggest archive or total calculation is broken.
       await allure.step('Step 3: Go to Assembly Warehouse and verify total quantity is 55', async () => {
         await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         await page.locator(SelectorsAssemblyWarehouse.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON).click();
