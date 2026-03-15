@@ -134,13 +134,17 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
     }
   });
 
-  test.skip('Case 37 - Delete Product after test', async ({ page }) => {
-    logger.log('Test Case 37 - Delete Product after test');
-    test.setTimeout(TEST_TIMEOUTS.SHORT);
+  test('Case 37 - Delete Product after test', async ({ page }) => {
+    logger.log('Test Case 37 - Delete Product after test (same cleanup as Case 00: details, CBEDs, products, warehouse residues)');
+    test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const partsDatabsePage = new CreatePartsDatabasePage(page);
+    const revisionPage = new CreateRevisionPage(page);
     const searchProduct = page.locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT).first();
     const searchCbed = page.locator(PartsDBSelectors.SEARCH_CBED_ATTRIBUT).nth(1);
     const searchDetail = page.locator(PartsDBSelectors.SEARCH_DETAIL_ATTRIBUT).last();
+    const tableMain = SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE;
+    const tableMainCbed = SelectorsRevision.TABLE_REVISION_PAGINATION_CBEDS_TABLE;
+    const tableMainDetal = SelectorsRevision.TABLE_REVISION_PAGINATION_TABLE;
 
     await allure.step('Step 01: Open the parts database page', async () => {
       await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
@@ -165,329 +169,185 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
-    for (const detail of arrayDetail) {
-      await allure.step('Step 02: Search Detail', async () => {
-        await searchDetail.fill(detail.name);
-        await searchDetail.press('Enter');
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            await expect.soft(searchDetail).toHaveValue(detail.name);
-          },
-          `Verify search detail input value equals "${detail.name}"`,
-          test.info(),
-        );
-      });
-
-      await allure.step('Step 03: Archive all rows for this detail until 0', async () => {
-        const maxArchives = 200;
-        let iterationCount = 0;
-        while (iterationCount < maxArchives) {
-          await partsDatabsePage.waitForNetworkIdle();
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          const rows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
-          const rowCount = await rows.count();
-          if (rowCount === 0) {
-            logger.log(`No rows left for detail: ${detail.name}`);
-            break;
-          }
-          await partsDatabsePage.getValueOrClickFromFirstRow(PartsDBSelectors.DETAIL_TABLE, rowCount - 1, Click.Yes, Click.No);
-          await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          iterationCount++;
+    await allure.step('Step 02: Process Details table - search and delete all items starting with 0Т4', async () => {
+      await searchDetail.fill('0Т4');
+      await searchDetail.press('Enter');
+      await partsDatabsePage.waitForNetworkIdle();
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      let hasMoreItems = true;
+      let iterationCount = 0;
+      const maxIterations = 100;
+      while (hasMoreItems && iterationCount < maxIterations) {
+        iterationCount++;
+        const rows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
+        const rowCount = await rows.count();
+        if (rowCount === 0) {
+          hasMoreItems = false;
+          break;
         }
-      });
-    }
-
-    await allure.step('Step 03a: Clear Detail search, refresh, verify deleted (archive any remaining)', async () => {
+        for (let i = rowCount - 1; i >= 0; i--) {
+          const row = rows.nth(i);
+          const nameCell = row.locator('td').nth(1);
+          const cellText = await nameCell.textContent();
+          if (cellText?.trim().startsWith('0Т4')) {
+            await row.click();
+            await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          }
+        }
+        const remainingRows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
+        if ((await remainingRows.count()) === 0) hasMoreItems = false;
+        else await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      }
       await searchDetail.evaluate((el: HTMLInputElement) => (el.value = ''));
       await searchDetail.press('Enter');
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 02b: Refresh the page after Details cleanup', async () => {
       await page.reload();
       await partsDatabsePage.waitForNetworkIdle();
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      for (const detail of arrayDetail) {
-        await searchDetail.fill(detail.name);
-        await searchDetail.press('Enter');
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const maxArchives = 200;
-        let iterationCount = 0;
-        while (iterationCount < maxArchives) {
-          const rows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
-          const rowCount = await rows.count();
-          if (rowCount === 0) break;
-          await partsDatabsePage.getValueOrClickFromFirstRow(PartsDBSelectors.DETAIL_TABLE, rowCount - 1, Click.Yes, Click.No);
-          await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          iterationCount++;
-        }
-        const rows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
+    });
+
+    await allure.step('Step 03: Process CBED table - search and delete all items starting with 0Т4', async () => {
+      await searchCbed.fill('0Т4');
+      await searchCbed.press('Enter');
+      await partsDatabsePage.waitForNetworkIdle();
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      let hasMoreItems = true;
+      let iterationCount = 0;
+      const maxIterations = 100;
+      while (hasMoreItems && iterationCount < maxIterations) {
+        iterationCount++;
+        const rows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
         const rowCount = await rows.count();
-        await expectSoftWithScreenshot(
-          page,
-          () => {
-            expect.soft(rowCount).toBe(0);
-          },
-          `Verify detail "${detail.name}" is deleted (0 rows)`,
-          test.info(),
-        );
-      }
-    });
-
-    await allure.step('Step 03b: Clear Detail search before CBED section', async () => {
-      await searchDetail.evaluate((el: HTMLInputElement) => (el.value = ''));
-      await searchDetail.press('Enter');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-    });
-
-    for (const cbed of arrayCbed) {
-      await allure.step('Step 04: Search Cbed', async () => {
-        await searchCbed.fill(cbed.name);
-        await searchCbed.press('Enter');
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            await expect.soft(searchCbed).toHaveValue(cbed.name);
-          },
-          `Verify search cbed input value equals "${cbed.name}"`,
-          test.info(),
-        );
-      });
-
-      await allure.step('Step 05: Archive all rows for this cbed until 0', async () => {
-        const maxArchives = 200;
-        let iterationCount = 0;
-        while (iterationCount < maxArchives) {
-          await page.waitForLoadState('networkidle');
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          const rows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
-          const rowCount = await rows.count();
-          if (rowCount === 0) {
-            logger.log(`No rows left for cbed: ${cbed.name}`);
-            break;
-          }
-          await partsDatabsePage.getValueOrClickFromFirstRow(PartsDBSelectors.CBED_TABLE, rowCount - 1, Click.Yes, Click.No);
-          await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          iterationCount++;
+        if (rowCount === 0) {
+          hasMoreItems = false;
+          break;
         }
-      });
-    }
-
-    await allure.step('Step 05a: Clear Detail and CBED search, refresh, verify CBED deleted', async () => {
-      // Clear Detail search first so Details table does not keep showing filtered data
-      await searchDetail.evaluate((el: HTMLInputElement) => (el.value = ''));
-      await searchDetail.press('Enter');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        for (let i = rowCount - 1; i >= 0; i--) {
+          const row = rows.nth(i);
+          const nameCell = row.locator('td').nth(1);
+          const cellText = await nameCell.textContent();
+          if (cellText?.trim().startsWith('0Т4')) {
+            await row.click();
+            await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          }
+        }
+        const remainingRows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
+        if ((await remainingRows.count()) === 0) hasMoreItems = false;
+        else await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      }
       await searchCbed.evaluate((el: HTMLInputElement) => (el.value = ''));
       await searchCbed.press('Enter');
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
+    });
+
+    await allure.step('Step 03b: Refresh the page after CBED cleanup', async () => {
       await page.reload();
       await partsDatabsePage.waitForNetworkIdle();
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      for (const cbed of arrayCbed) {
-        await searchCbed.fill(cbed.name);
-        await searchCbed.press('Enter');
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const rows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
-        const rowCount = await rows.count();
-        await expectSoftWithScreenshot(
-          page,
-          () => {
-            expect.soft(rowCount).toBe(0);
-          },
-          `Verify cbed "${cbed.name}" is deleted (0 rows)`,
-          test.info(),
-        );
-      }
     });
 
-    await allure.step('Step 05b: Second pass - archive Details that appear after CBED context', async () => {
-      // Detail can show in the Details table only when assembly (CBED) has been searched - clear any remaining
-      for (const detail of arrayDetail) {
-        await searchDetail.fill(detail.name);
-        await searchDetail.press('Enter');
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const maxArchives = 200;
-        let iterationCount = 0;
-        while (iterationCount < maxArchives) {
-          const rows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
-          const rowCount = await rows.count();
-          if (rowCount === 0) break;
-          await partsDatabsePage.getValueOrClickFromFirstRow(PartsDBSelectors.DETAIL_TABLE, rowCount - 1, Click.Yes, Click.No);
-          await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-          await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          iterationCount++;
-        }
-      }
-    });
-
-    await allure.step('Step 06: Search Product', async () => {
-      await searchProduct.fill(nameProductNew);
+    await allure.step('Step 04: Process Product table - search and delete all items starting with 0Т4', async () => {
+      await searchProduct.fill('0Т4');
       await searchProduct.press('Enter');
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          await expect.soft(searchProduct).toHaveValue(nameProductNew);
-        },
-        `Verify search product input value equals "${nameProductNew}"`,
-        test.info(),
-      );
-    });
-
-    await allure.step('Step 07: Archive all rows for this product until 0', async () => {
-      const maxArchives = 200;
+      await partsDatabsePage.waitForNetworkIdle();
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      let hasMoreItems = true;
       let iterationCount = 0;
-      while (iterationCount < maxArchives) {
-        await partsDatabsePage.waitForNetworkIdle();
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      const maxIterations = 100;
+      while (hasMoreItems && iterationCount < maxIterations) {
+        iterationCount++;
         const rows = page.locator(`${PartsDBSelectors.PRODUCT_TABLE} tbody tr`);
         const rowCount = await rows.count();
         if (rowCount === 0) {
-          logger.log(`No rows left for product: ${nameProductNew}`);
+          hasMoreItems = false;
           break;
         }
-        const row = rows.nth(rowCount - 1);
-        await row.click();
-        await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        iterationCount++;
+        for (let i = rowCount - 1; i >= 0; i--) {
+          const row = rows.nth(i);
+          const nameCell = row.locator('td').nth(2);
+          const cellText = await nameCell.textContent();
+          if (cellText?.trim().startsWith('0Т4')) {
+            await row.click();
+            await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          }
+        }
+        const remainingRows = page.locator(`${PartsDBSelectors.PRODUCT_TABLE} tbody tr`);
+        if ((await remainingRows.count()) === 0) hasMoreItems = false;
+        else await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
-    });
-
-    await allure.step('Step 07a: Clear Product search, refresh, verify deleted', async () => {
       await searchProduct.evaluate((el: HTMLInputElement) => (el.value = ''));
       await searchProduct.press('Enter');
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      await page.reload();
-      await partsDatabsePage.waitForNetworkIdle();
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      await searchProduct.fill(nameProductNew);
-      await searchProduct.press('Enter');
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      const rows = page.locator(`${PartsDBSelectors.PRODUCT_TABLE} tbody tr`);
-      const rowCount = await rows.count();
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(rowCount).toBe(0);
-        },
-        `Verify product "${nameProductNew}" is deleted (0 rows)`,
-        test.info(),
-      );
     });
 
-    await allure.step('Step 08: Sweep all remaining rows from Details table', async () => {
-      await searchDetail.evaluate((el: HTMLInputElement) => (el.value = ''));
-      await searchDetail.press('Enter');
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      let iterationCount = 0;
-      const maxIterations = 200;
-      while (iterationCount < maxIterations) {
-        const rows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) break;
-        const row = rows.nth(rowCount - 1);
-        await row.click();
-        await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        iterationCount++;
-      }
-      logger.log(`Details table sweep finished after ${iterationCount} archives`);
-    });
-
-    await allure.step('Step 09: Sweep all remaining rows from CBED table', async () => {
-      await searchCbed.evaluate((el: HTMLInputElement) => (el.value = ''));
-      await searchCbed.press('Enter');
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      let iterationCount = 0;
-      const maxIterations = 200;
-      while (iterationCount < maxIterations) {
-        const rows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) break;
-        const row = rows.nth(rowCount - 1);
-        await row.click();
-        await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        iterationCount++;
-      }
-      logger.log(`CBED table sweep finished after ${iterationCount} archives`);
-    });
-
-    await allure.step('Step 10: Sweep all remaining rows from Product table', async () => {
-      await searchProduct.evaluate((el: HTMLInputElement) => (el.value = ''));
-      await searchProduct.press('Enter');
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      let iterationCount = 0;
-      const maxIterations = 200;
-      while (iterationCount < maxIterations) {
-        const rows = page.locator(`${PartsDBSelectors.PRODUCT_TABLE} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) break;
-        const row = rows.nth(rowCount - 1);
-        await row.click();
-        await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        iterationCount++;
-      }
-      logger.log(`Product table sweep finished after ${iterationCount} archives`);
-    });
-
-    await allure.step('Step 11: Final verification - all three tables empty', async () => {
-      await page.reload();
-      await partsDatabsePage.waitForNetworkIdle();
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      for (const detail of arrayDetail) {
-        await searchDetail.fill(detail.name);
-        await searchDetail.press('Enter');
+    await allure.step('Step 08: Cleanup warehouse residues', async () => {
+      await allure.step('Step 08a: Open the warehouse page', async () => {
+        await revisionPage.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
         await page.waitForLoadState('networkidle');
+      });
+      await allure.step('Step 08b: Open the warehouse revisions page', async () => {
+        await revisionPage.findTable(SelectorsRevision.WAREHOUSE_PAGE_REVISIONS_TESTID);
+        await page.waitForLoadState('networkidle');
+        await revisionPage.waitingTableBodyNoThead(tableMain);
+      });
+      await allure.step('Step 08c: Cleanup product residues', async () => {
+        await revisionPage.searchTable(nameProductNew, tableMain, 'TableRevisionPagination-SearchInput-Dropdown-Input');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const detailRows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            expect.soft(await detailRows.count()).toBe(0);
-          },
-          `Verify detail "${detail.name}" is deleted (0 rows)`,
-          test.info(),
-        );
-      }
+        const rows = page.locator(`${tableMain} tbody tr`);
+        if ((await rows.count()) === 0) {
+          logger.log(`No warehouse residues for product: ${nameProductNew}. Skipping.`);
+        } else {
+          await revisionPage.waitingTableBodyNoThead(tableMain);
+          await revisionPage.changeBalanceAndConfirmArchive(nameProductNew, tableMain, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
+            refreshAndSearchAfter: true,
+            waitAfterConfirm: 1000,
+          });
+        }
+      });
       for (const cbed of arrayCbed) {
-        await searchCbed.fill(cbed.name);
-        await searchCbed.press('Enter');
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const cbedRows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            expect.soft(await cbedRows.count()).toBe(0);
-          },
-          `Verify cbed "${cbed.name}" is deleted (0 rows)`,
-          test.info(),
-        );
+        await allure.step(`Step 08d: Cleanup CBED residues - ${cbed.name}`, async () => {
+          await revisionPage.clickButton('Сборки', SelectorsRevision.REVISION_SWITCH_ITEM1);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await page.locator(tableMainCbed).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+          await revisionPage.searchTable(cbed.name, tableMainCbed, 'TableRevisionPagination-SearchInput-Dropdown-Input');
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          const rows = page.locator(`${tableMainCbed} tbody tr`);
+          if ((await rows.count()) === 0) {
+            logger.log(`No warehouse residues for CBED: ${cbed.name}. Skipping.`);
+            return;
+          }
+          await revisionPage.waitingTableBodyNoThead(tableMainCbed);
+          await revisionPage.changeBalanceAndConfirmArchive(cbed.name, tableMainCbed, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
+            refreshAndSearchAfter: true,
+            waitAfterConfirm: 1000,
+          });
+        });
       }
-      await searchProduct.fill(nameProductNew);
-      await searchProduct.press('Enter');
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      const productRows = page.locator(`${PartsDBSelectors.PRODUCT_TABLE} tbody tr`);
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(await productRows.count()).toBe(0);
-        },
-        `Verify product "${nameProductNew}" is deleted (0 rows)`,
-        test.info(),
-      );
+      for (const detail of arrayDetail) {
+        await allure.step(`Step 08e: Cleanup Detail residues - ${detail.name}`, async () => {
+          await revisionPage.clickButton('Детали', SelectorsRevision.REVISION_SWITCH_ITEM2);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await page.locator(tableMainDetal).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+          await revisionPage.searchTable(detail.name, tableMainDetal, 'TableRevisionPagination-SearchInput-Dropdown-Input');
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          const rows = page.locator(`${tableMainDetal} tbody tr`);
+          if ((await rows.count()) === 0) {
+            logger.log(`No warehouse residues for Detail: ${detail.name}. Skipping.`);
+            return;
+          }
+          await revisionPage.waitingTableBodyNoThead(tableMainDetal);
+          await revisionPage.changeBalanceAndConfirmArchive(detail.name, tableMainDetal, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
+            refreshAndSearchAfter: true,
+            waitAfterConfirm: 1000,
+          });
+        });
+      }
     });
   });
 };

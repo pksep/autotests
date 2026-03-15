@@ -142,9 +142,9 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
+          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
         },
-        `Verify urgency date equals "${urgencyDateSecond}"`,
+        `Verify urgency date equals "${urgencyDate}"`,
         test.info(),
       );
     });
@@ -339,13 +339,12 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
 
           // Test Cases 29-30 are part of the "Second Production Launch" suite, which is for the second task.
-          // The second task uses urgencyDateSecond ('21.01.2025'), so we expect that date here.
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
             },
-            `Verify urgency date equals "${urgencyDateSecond}"`,
+            `Verify urgency date equals "${urgencyDate}"`,
             test.info(),
           );
         });

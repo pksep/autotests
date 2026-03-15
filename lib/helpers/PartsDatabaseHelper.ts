@@ -645,8 +645,21 @@ export class PartsDatabaseHelper {
     return structuredData;
   }
 
-  async checkItemExistsInBottomTable(page: Page, selectedPartName: string, modalTestId: string, bottomTableTestId: string): Promise<boolean> {
+  /**
+   * Checks if the bottom table exists and contains the given item.
+   * Call this before searching in the modal: if the item is already in the bottom table, search often returns no results.
+   * When requiredQuantity is provided and the row has a quantity input, verifies quantity matches; otherwise name match is enough.
+   */
+  async checkItemExistsInBottomTable(
+    page: Page,
+    selectedPartName: string,
+    modalTestId: string,
+    bottomTableTestId: string,
+    requiredQuantity?: number,
+  ): Promise<boolean> {
     await page.waitForLoadState('networkidle');
+
+    // Normalize modal test id: accept raw id or full selector
     let modalId = modalTestId;
     const modalMatch = modalTestId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
     if (modalMatch?.[1]) modalId = modalMatch[1];
@@ -654,12 +667,16 @@ export class PartsDatabaseHelper {
     await modal.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.LONG });
     await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
     logger.info('Modal located successfully.');
+
     await page.waitForTimeout(TIMEOUTS.INPUT_SET);
+
+    // Normalize bottom table selector: accept raw id or full selector
     let bottomTableSelector = bottomTableTestId;
     const tableMatch = bottomTableTestId.match(/data-testid\s*[=:]\s*["']([^"']+)["']/);
     if (tableMatch?.[1]) bottomTableSelector = `[data-testid="${tableMatch[1]}"]`;
     else if (!bottomTableTestId.includes('data-testid')) bottomTableSelector = `[data-testid="${bottomTableTestId}"]`;
     const bottomTableLocator = modal.locator(bottomTableSelector);
+
     const isTableVisible = await bottomTableLocator.isVisible();
     if (!isTableVisible) {
       logger.info(`Bottom table '${bottomTableTestId}' does not exist. Returning false.`);
@@ -668,25 +685,48 @@ export class PartsDatabaseHelper {
     await bottomTableLocator.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.LONG });
     logger.info('Bottom table located successfully.');
     await page.waitForTimeout(TIMEOUTS.STANDARD);
+
     const rowsLocator = bottomTableLocator.locator('tbody tr');
     const rowCount = await rowsLocator.count();
     logger.info(`Found ${rowCount} rows in the bottom table.`);
+
     for (let i = 0; i < rowCount; i++) {
       const row = rowsLocator.nth(i);
       await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       const partNameCell = row.locator('td').nth(1);
       const partName = (await partNameCell.textContent())?.trim();
+      const nameMatches =
+        partName === selectedPartName ||
+        (partName && selectedPartName && partName.includes(selectedPartName.trim()));
+
       logger.info(`Row ${i + 1}: PartName=${partName}`);
-      if (partName === selectedPartName) {
-        await row.evaluate(rowElement => {
-          rowElement.style.backgroundColor = 'yellow';
-          rowElement.style.border = '2px solid green';
-          rowElement.style.color = 'blue';
-        });
-        logger.info(`Selected part name found in row ${i + 1}`);
-        return true;
+
+      if (!nameMatches) continue;
+
+      // When requiredQuantity is set, verify quantity only if the row has a quantity input
+      if (requiredQuantity !== undefined) {
+        const quantityInput = row.locator('[data-testid*="TdValue-Input"]').locator('input').first();
+        const hasQuantityInput = await quantityInput.isVisible().catch(() => false);
+        if (hasQuantityInput) {
+          const value = await quantityInput.inputValue().catch(() => '');
+          const qty = parseInt(value, 10);
+          if (Number.isNaN(qty) || qty !== requiredQuantity) {
+            logger.info(`Row ${i + 1}: quantity ${qty} does not match required ${requiredQuantity}.`);
+            continue;
+          }
+        }
+        // No quantity input in row: treat name match as sufficient (item already in bottom table → skip search)
       }
+
+      await row.evaluate(rowElement => {
+        (rowElement as HTMLElement).style.backgroundColor = 'yellow';
+        (rowElement as HTMLElement).style.border = '2px solid green';
+        (rowElement as HTMLElement).style.color = 'blue';
+      });
+      logger.info(`Selected part name found in row ${i + 1}${requiredQuantity !== undefined ? ` with quantity ${requiredQuantity}` : ''}`);
+      return true;
     }
+
     logger.info('Item not found in the bottom table.');
     return false;
   }
@@ -1386,20 +1426,45 @@ export class PartsDatabaseHelper {
     }
 
     if (items && items.length > 0) {
-      let itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+      const isCbedTable = searchTableTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID;
+      const isDetalTable =
+        dialogTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG ||
+        searchTableTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_TABLE_WRAPPER ||
+        searchTableTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_SEARCH_TABLE ||
+        (typeof searchTableTestId === 'string' &&
+          (searchTableTestId.includes('BasePaginationTable-Table-detal') ||
+            searchTableTestId.includes('BasePaginationTable-Wrapper-detal')));
+      const tableSelector =
+        typeof searchTableTestId === 'string' && searchTableTestId.startsWith('table[')
+          ? searchTableTestId
+          : `table[data-testid="${searchTableTestId}"]`;
+      let itemTableLocator: Locator = isCbedTable
+        ? modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CBED_WRAPPER).locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE)
+        : isDetalTable
+          ? modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_TABLE_WRAPPER).locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_SEARCH_TABLE)
+          : modal.locator(tableSelector);
       try {
         await itemTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       } catch {
-        /* use fallback table if primary search table not found */
-        const fallbackCbedTable = modal.locator(`table[data-testid="BasePaginationTable-Table-cbed"]`);
-        if ((await fallbackCbedTable.count()) > 0) {
-          itemTableLocator = fallbackCbedTable;
-          await itemTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+        if (!isCbedTable && !isDetalTable) {
+          const fallbackCbedTable = modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CBED_WRAPPER).locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE);
+          if ((await fallbackCbedTable.count()) > 0) {
+            itemTableLocator = fallbackCbedTable;
+            await itemTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+          }
         }
       }
 
-      for (const { name: searchValue, quantity } of items) {
-        let searchInput = modal.locator(SelectorsPartsDataBase.BASE_DETAIL_CB_TABLE_SEARCH).first();
+      for (let i = 0; i < items.length; i++) {
+        const { name: searchValue, quantity } = items[i];
+        // Pause between items (like repo) so the table and search input can settle before the next search.
+        if (i > 0) {
+          await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
+        }
+        let searchInput: Locator =
+          isCbedTable || isDetalTable
+            ? itemTableLocator.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).first()
+            : modal.locator(SelectorsPartsDataBase.BASE_DETAIL_CB_TABLE_SEARCH).first();
         if ((await searchInput.count()) === 0) {
           searchInput = itemTableLocator.locator('input.search-yui-kit__input').first();
         }
@@ -1412,6 +1477,12 @@ export class PartsDatabaseHelper {
           logger.warn('networkidle timeout while waiting for search results');
         }
         await page.waitForTimeout(TIMEOUTS.SHORT).catch(() => {});
+        if (isCbedTable) {
+          await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
+        }
+        if (isDetalTable) {
+          await page.waitForTimeout(TIMEOUTS.LONG).catch(() => {});
+        }
 
         const results = itemTableLocator.locator('tbody tr');
         const count = await results.count();
@@ -1419,15 +1490,22 @@ export class PartsDatabaseHelper {
           logger.warn(`No results for "${searchValue}" in ${dialogTestId}`);
           continue;
         }
-        await results
-          .first()
-          .click()
-          .catch(() => {});
+        // Find and click the row that contains the search value (same as repo working logic);
+        // clicking just the first row can select the wrong one and leave "add to bottom" disabled.
+        const rowWithSearchValue = itemTableLocator.locator('tbody tr').filter({ hasText: searchValue }).first();
+        const matched = (await rowWithSearchValue.count()) > 0;
+        if (matched) {
+          await rowWithSearchValue.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+          await rowWithSearchValue.scrollIntoViewIfNeeded().catch(() => {});
+          await rowWithSearchValue.click().catch(() => {});
+        } else {
+          await results.first().click().catch(() => {});
+        }
         await page.waitForTimeout(TIMEOUTS.VERY_SHORT).catch(() => {});
 
         const addToBottomButton = modal.locator(`[data-testid="${addToBottomButtonTestId}"]`);
         await addToBottomButton.click().catch(() => {});
-        await page.waitForTimeout(TIMEOUTS.SHORT).catch(() => {});
+        await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
 
         await bottomTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
         const bottomRows = bottomTable.locator('tbody tr');
@@ -1448,6 +1526,8 @@ export class PartsDatabaseHelper {
         } catch (e) {
           logger.warn(`Failed to set quantity for "${searchValue}": ${(e as Error).message}`);
         }
+        // Brief pause after adding item so next iteration's search runs against a settled UI (like repo).
+        await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
       }
 
       const addToMainButtonSelector = addToMainButtonTestId.includes('data-testid') ? addToMainButtonTestId : `[data-testid="${addToMainButtonTestId}"]`;
@@ -1466,6 +1546,70 @@ export class PartsDatabaseHelper {
       await cancelButton.click().catch(() => {});
       await modal.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
     }
+  }
+
+  /**
+   * Sets specification on the current edit page (product, CBED, or detail) from the given config.
+   * Only runs reconcileGroupClearAndSet for groups that have at least one item; then saves.
+   * Call when already on the entity edit page.
+   */
+  async setSpecificationOnCurrentEditPage(page: Page, config: TestProductSpecification): Promise<void> {
+    const assemblies = config.assemblies || [];
+    const details = config.details || [];
+    const standardParts = config.standardParts || [];
+    const consumables = config.consumables || [];
+    if (assemblies.length > 0) {
+      await this.reconcileGroupClearAndSet(
+        page,
+        SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_СБ_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+        assemblies.map(i => ({ name: i.name, quantity: i.quantity })),
+      );
+    }
+    if (details.length > 0) {
+      await this.reconcileGroupClearAndSet(
+        page,
+        SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_Д_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_SEARCH_TABLE,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+        details.map(i => ({ name: i.name, quantity: i.quantity })),
+      );
+    }
+    if (standardParts.length > 0) {
+      await this.reconcileGroupClearAndSet(
+        page,
+        SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_ПД_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+        standardParts.map(i => ({ name: i.name, quantity: i.quantity })),
+      );
+    }
+    if (consumables.length > 0) {
+      await this.reconcileGroupClearAndSet(
+        page,
+        SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_РМ_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
+        SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
+        consumables.map(i => ({ name: i.name, quantity: i.quantity })),
+      );
+    }
+    const saveButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
+    await saveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+    await saveButton.click().catch(() => {});
+    await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
   }
 
   /**
@@ -1491,54 +1635,7 @@ export class PartsDatabaseHelper {
     await editButton.click().catch(() => {});
     await page.waitForTimeout(TIMEOUTS.SHORT).catch(() => {});
 
-    await this.reconcileGroupClearAndSet(
-      page,
-      SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_СБ_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.assemblies || []).map(i => ({ name: i.name, quantity: i.quantity })),
-    );
-
-    await this.reconcileGroupClearAndSet(
-      page,
-      SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_Д_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.details || []).map(i => ({ name: i.name, quantity: i.quantity })),
-    );
-
-    await this.reconcileGroupClearAndSet(
-      page,
-      SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_ПД_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ITEM_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.standardParts || []).map(i => ({ name: i.name, quantity: i.quantity })),
-    );
-
-    await this.reconcileGroupClearAndSet(
-      page,
-      SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_РМ_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ITEM_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_BOTTOM_TABLE_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID,
-      SelectorsPartsDataBase.EDIT_PAGE_ADD_РМ_RIGHT_DIALOG_ADDTOMAIN_BUTTON,
-      (config.consumables || []).map(i => ({ name: i.name, quantity: i.quantity })),
-    );
-
-    const saveButton = page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
-    await saveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
-    await saveButton.click().catch(() => {});
-    await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
+    await this.setSpecificationOnCurrentEditPage(page, config);
   }
 
   /**
@@ -1676,10 +1773,14 @@ export class PartsDatabaseHelper {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(TIMEOUTS.LONG);
 
-    const dialogTable = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE);
+    const modal = page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_OPEN);
+    const detalSection = modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_TABLE_WRAPPER);
+    await expect(detalSection).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+
+    const dialogTable = detalSection.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_SEARCH_TABLE);
     await expect(dialogTable).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
 
-    const dialogSearchInput = dialogTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT);
+    const dialogSearchInput = detalSection.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_SEARCH_INPUT);
     await expect(dialogSearchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
 
     await dialogSearchInput.fill('');
@@ -2386,8 +2487,26 @@ export class PartsDatabaseHelper {
       } else if (!searchTableTestId.includes('data-testid')) {
         searchTableSelector = `[data-testid="${searchTableTestId}"]`;
       }
-      await modal.locator(searchTableSelector).waitFor({ state: 'visible' });
-      const itemTableLocator = modal.locator(searchTableSelector);
+      // For assembly (СБ) modal, scope to the cbed wrapper so we never use the left (product) table
+      const isCbedTable =
+        searchTableTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID ||
+        (typeof searchTableTestId === 'string' &&
+          (searchTableTestId.includes('BasePaginationTable-Table-cbed') ||
+            searchTableTestId === SelectorsPartsDataBase.MAIN_PAGE_СБ_TABLE));
+      // For detail (Д) modal, scope to the detal wrapper so we never use the left (product) or middle (cbed) table
+      const isDetalTable =
+        dialogTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG ||
+        searchTableTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_TABLE_WRAPPER ||
+        searchTableTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_SEARCH_TABLE ||
+        (typeof searchTableTestId === 'string' &&
+          (searchTableTestId.includes('BasePaginationTable-Table-detal') ||
+            searchTableTestId.includes('BasePaginationTable-Wrapper-detal')));
+      const itemTableLocator = isCbedTable
+        ? modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CBED_WRAPPER).locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE)
+        : isDetalTable
+          ? modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAL_TABLE_WRAPPER).locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_SEARCH_TABLE)
+          : modal.locator(searchTableSelector);
+      await itemTableLocator.waitFor({ state: 'visible' });
       await itemTableLocator.evaluate(element => {
         const el = element as { style: { border: string; backgroundColor: string } };
         el.style.border = '3px solid red';
@@ -2446,11 +2565,19 @@ export class PartsDatabaseHelper {
       const firstRow = rowWithSearchValue;
       const firstRowText = await firstRow.locator('td').nth(columnIndex).textContent();
       logger.info(`First row text: ${firstRowText}`);
-      if (firstRowText?.trim() !== searchValue.trim()) {
+      let rowMatches = firstRowText?.trim() === searchValue.trim();
+      if (!rowMatches && (itemType === 'Д' || itemType === 'СБ')) {
+        const otherColumnIndex = columnIndex === 1 ? 0 : 1;
+        const otherText = await firstRow.locator('td').nth(otherColumnIndex).textContent();
+        rowMatches = otherText?.trim() === searchValue.trim();
+        if (rowMatches) logger.info(`Matched search value in other column (${otherColumnIndex}): ${otherText?.trim()}`);
+      }
+      if (!rowMatches) {
         logger.warn(`Search result doesn't exactly match. Expected: "${searchValue}", Got: "${firstRowText?.trim()}"`);
         return;
       }
       try {
+        await firstRow.scrollIntoViewIfNeeded().catch(() => {});
         await firstRow.click();
       } catch (error) {
         logger.warn(`Failed to click first row: ${error instanceof Error ? error.message : String(error)}`);
@@ -2461,8 +2588,22 @@ export class PartsDatabaseHelper {
       } catch (error) {
         logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
       }
-      const addToBottomButtonSelector = addToBottomButtonTestId.includes('data-testid') ? addToBottomButtonTestId : `[data-testid="${addToBottomButtonTestId}"]`;
+      const addToBottomButtonSelector = addToBottomButtonTestId.startsWith('[')
+        ? addToBottomButtonTestId
+        : `[data-testid="${addToBottomButtonTestId}"]`;
       const addToBottomButton = modal.locator(addToBottomButtonSelector);
+      try {
+        await addToBottomButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await addToBottomButton.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.SHORT });
+      } catch (e) {
+        logger.warn(`Add to bottom button not visible: ${e instanceof Error ? e.message : String(e)}`);
+      }
+      const buttonEnabledDeadline = Date.now() + WAIT_TIMEOUTS.STANDARD;
+      while (Date.now() < buttonEnabledDeadline) {
+        const enabled = await addToBottomButton.isEnabled().catch(() => false);
+        if (enabled) break;
+        await page.waitForTimeout(TIMEOUTS.SHORT).catch(() => {});
+      }
       try {
         await addToBottomButton.click();
       } catch (error) {
@@ -2470,7 +2611,7 @@ export class PartsDatabaseHelper {
         return;
       }
       try {
-        await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       } catch (error) {
         logger.warn(`Timeout waiting: ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -2482,7 +2623,15 @@ export class PartsDatabaseHelper {
         bottomTableSelector = `[data-testid="${bottomTableTestId}"]`;
       }
       const bottomTableLocator = modal.locator(bottomTableSelector);
-      const rows = bottomTableLocator.locator('tbody tr');
+      await bottomTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+      const bottomRows = bottomTableLocator.locator('tbody tr');
+      const deadline = Date.now() + WAIT_TIMEOUTS.STANDARD;
+      while (Date.now() < deadline) {
+        const n = await bottomRows.count();
+        if (n > 0) break;
+        await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
+      }
+      const rows = bottomRows;
       const rowCount = await rows.count();
       if (rowCount === 0) {
         logger.warn('Bottom table is empty after adding item.');
@@ -2588,19 +2737,25 @@ export class PartsDatabaseHelper {
     const modal = page.locator(`dialog[data-testid^="${dialogTestId}"][open]`);
     await expect(modal).toBeVisible();
     await page.waitForTimeout(TIMEOUTS.MEDIUM).catch(() => {});
-    let itemTableLocator = modal.locator(`table[data-testid="${searchTableTestId}"]`);
+    const isCbedTable = searchTableTestId === SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID;
+    let itemTableLocator: Locator = isCbedTable
+      ? modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CBED_WRAPPER).locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE)
+      : modal.locator(`table[data-testid="${searchTableTestId}"]`);
     try {
       await itemTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     } catch {
-      /* use fallback table if primary not found */
-      const fallbackCbedTable = modal.locator(`table[data-testid="BasePaginationTable-Table-cbed"]`);
-      if ((await fallbackCbedTable.count()) > 0) {
-        itemTableLocator = fallbackCbedTable;
-        await itemTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+      if (!isCbedTable) {
+        const fallbackCbedTable = modal.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CBED_WRAPPER).locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE);
+        if ((await fallbackCbedTable.count()) > 0) {
+          itemTableLocator = fallbackCbedTable;
+          await itemTableLocator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+        }
       }
     }
     for (const { name: searchValue, quantity } of items) {
-      let searchInput = modal.locator(SelectorsPartsDataBase.BASE_DETAIL_CB_TABLE_SEARCH).first();
+      let searchInput: Locator = isCbedTable
+        ? itemTableLocator.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).first()
+        : modal.locator(SelectorsPartsDataBase.BASE_DETAIL_CB_TABLE_SEARCH).first();
       if ((await searchInput.count()) === 0) {
         searchInput = itemTableLocator.locator('input.search-yui-kit__input').first();
       }

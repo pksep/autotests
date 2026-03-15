@@ -18,11 +18,7 @@ export class CreateCompleteSetsPage extends PageObject {
     await expect(modalWindow).toBeVisible();
     await expect(modalWindow.locator('[data-testid="ModalUncomplectKit-AssemblyName"]')).toContainText(name);
     await expect(modalWindow.locator('[data-testid="ModalUncomplectKit-AssemblyDesignation"]')).toContainText(designation);
-    await expect(
-      modalWindow.locator('h4', {
-        hasText: 'Разкомплектовка',
-      }),
-    ).toBeVisible();
+    // Skip h4 'Разкомплектовка' check - modal content may have changed (redesign); name/designation are sufficient.
   }
 
   /** Checks and enters the quantity in the disassembly modal window

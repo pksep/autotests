@@ -664,6 +664,15 @@ export class PageObject extends AbstractPage {
     return this.modalHelper.validateModalH4Titles(page, modalTestId, expectedTitles, options);
   }
 
+  async validateModalH3AndH4Titles(
+    page: Page,
+    modalTestId: string,
+    expectedTitles: string[],
+    options?: { testInfo?: TestInfo; allowPartialMatch?: boolean },
+  ): Promise<void> {
+    return this.modalHelper.validateModalH3AndH4Titles(page, modalTestId, expectedTitles, options);
+  }
+
   /** Check button visible and active/inactive. */
   async checkButtonState(name: string, selector: string, expectedState: 'active' | 'inactive'): Promise<boolean> {
     return this.validationHelper.checkButtonState(name, selector, expectedState);

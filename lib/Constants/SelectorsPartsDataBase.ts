@@ -148,8 +148,11 @@ export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_STARTS_WITH = 'table[d
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="Specification-ModalBaseCbed-Select-Button"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOMAIN_BUTTON = '[data-testid="Specification-ModalBaseCbed-Add-Button"]';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CANCEL_BUTTON = '[data-testid="Specification-ModalBaseCbed-Cancel-Button"]';
-export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE = '[data-testid="Specification-ModalCbed-AccordionCbed-Table"]';
-export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID = 'Specification-ModalCbed-AccordionCbed-Table';
+/** Wrapper for the right panel "Сборочная единица (Тип СБ)" in the modal; scope search and table to this so we never use the left (product) table. */
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_CBED_WRAPPER = '[data-testid="BasePaginationTable-Wrapper-cbed"]';
+/** Right-panel table "Сборочная единица (Тип СБ)" in Specification-ModalBaseCbed — use this for assembly search (left panel is BasePaginationTable-Table-product). */
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE = 'table[data-testid="BasePaginationTable-Table-cbed"]';
+export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_SEARCH_TABLE_TESTID = 'BasePaginationTable-Table-cbed';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_BOTTOM_TABLE_TESTID = 'Specification-ModalBaseCbed-Table';
 export const EDIT_PAGE_ADD_СБ_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON_TESTID = 'Specification-ModalBaseCbed-Select-Button';
 
@@ -159,6 +162,8 @@ export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DIALOG = 'dialog[data-testid^="Specif
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_OPEN = 'dialog[data-testid^="Specification-ModalBaseDetal"][open]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE = '[data-testid="BasePaginationTable-Table-detal"]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_DETAIL_TABLE_TESTID = 'BasePaginationTable-Table-detal';
+/** Right-panel table "Деталь (Тип Д)" in Specification-ModalBaseDetal — use this for detail search (modal has three tables: product, detal, bottom). */
+export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_SEARCH_TABLE = 'table[data-testid="BasePaginationTable-Table-detal"]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE = '[data-testid="Specification-ModalBaseDetal-Table"]';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE_TESTID = 'Specification-ModalBaseDetal-Table';
 export const EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON = '[data-testid="Specification-ModalBaseDetal-Select-Button"]';

@@ -155,6 +155,20 @@ export class CreatePartsDatabasePage extends PageObject {
     return this.partsDatabaseHelper.dismissKitsDeactivationConfirmModalIfPresent(this.page);
   }
 
+  /**
+   * Clicks the main Save button on the product/edit page (Creator) and, if the
+   * "Дезактивация набора" confirmation modal appears, dismisses it by clicking Yes.
+   * Use this after any Save that may change product specification (e.g. in U004).
+   */
+  async clickMainSaveButtonAndDismissKitsDeactivationModalIfPresent(): Promise<void> {
+    await this.page.waitForLoadState('networkidle').catch(() => {});
+    const button = this.page.locator(SelectorsPartsDataBase.MAIN_PAGE_SAVE_BUTTON_STARTS_WITH);
+    await button.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await button.click();
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+    await this.dismissKitsDeactivationConfirmModalIfPresent();
+  }
+
   async removeItemFromSpecification(page: Page, smallDialogButtonId: string, dialogTestId: string, bottomTableTestId: string, removeButtonColumnIndex: number, searchValue: string, returnButtonTestId: string, itemType?: string): Promise<void> {
     return this.partsDatabaseHelper.removeItemFromSpecification(page, smallDialogButtonId, dialogTestId, bottomTableTestId, removeButtonColumnIndex, searchValue, returnButtonTestId, itemType);
   }
@@ -270,8 +284,20 @@ export class CreatePartsDatabasePage extends PageObject {
     return this.partsDatabaseHelper.extractAllTableData(page, dialogTestId);
   }
 
-  async checkItemExistsInBottomTable(page: Page, selectedPartName: string, modalTestId: string, bottomTableTestId: string): Promise<boolean> {
-    return this.partsDatabaseHelper.checkItemExistsInBottomTable(page, selectedPartName, modalTestId, bottomTableTestId);
+  async checkItemExistsInBottomTable(
+    page: Page,
+    selectedPartName: string,
+    modalTestId: string,
+    bottomTableTestId: string,
+    requiredQuantity?: number,
+  ): Promise<boolean> {
+    return this.partsDatabaseHelper.checkItemExistsInBottomTable(
+      page,
+      selectedPartName,
+      modalTestId,
+      bottomTableTestId,
+      requiredQuantity,
+    );
   }
 
   async fillDetailName(detailName: string, dataTestId: string = 'AddDetal-Information-Input-Input'): Promise<void> {
@@ -536,6 +562,100 @@ export class CreatePartsDatabasePage extends PageObject {
    * Create a new detail from the Parts Database main page (click Create → Detail, fill name, save). Leaves user on edit page.
    * Use when starting from PARTS_DATABASE.URL to mirror the UI flow.
    */
+  /**
+   * Creates one Д (detail) with the given name via UI. Uses: Create detail page → fill name and designation (-) → Save → Cancel.
+   */
+  async createOneDetail(name: string): Promise<void> {
+    const navigate = () => this.goto(SELECTORS.SUBPAGES.CREATEDETAIL.URL).then(() => this.waitForNetworkIdle());
+    await this.partsDatabaseHelper.createDetailFlow(navigate, name);
+    const cancelButton = this.page.locator(SelectorsPartsDataBase.CREATOR_BUTTON_CANCEL);
+    await cancelButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+    await cancelButton.click().catch(() => {});
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+  }
+
+  /**
+   * Creates one СБ (assembly unit) with the given name and designation via UI.
+   */
+  async createOneCBED(name: string, designation: string): Promise<void> {
+    await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+    await this.waitForNetworkIdle();
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    const createButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
+    await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await createButton.click();
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    const assemblyButton = this.page.locator(SelectorsPartsDataBase.BASE_PRODUCTS_CREAT_LINK_ASSEMBLY_UNITS).first();
+    await assemblyButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await assemblyButton.click();
+    await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+
+    const nameInput = this.page.locator(SelectorsPartsDataBase.INPUT_NAME_IZD);
+    await nameInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+    await nameInput.fill(name);
+    const designationInput = this.page.locator(SelectorsPartsDataBase.INPUT_DESUGNTATION_IZD);
+    await designationInput.fill(designation);
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    const saveButton = this.page.locator(SelectorsPartsDataBase.BUTTON_SAVE_CBED);
+    await saveButton.click();
+    await this.page.waitForTimeout(TIMEOUTS.LONG);
+    await this.waitForNetworkIdle();
+
+    const cancelButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CANCEL_CBED);
+    await cancelButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+    await cancelButton.click().catch(() => {});
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+  }
+
+  /**
+   * Creates a new product (изделие) with the given name and full specification (СБ, Д, ПД, РМ).
+   */
+  async createProductWithSpecification(
+    productName: string,
+    config: TestProductSpecification,
+    options?: { articleNumber?: string; designation?: string },
+  ): Promise<void> {
+    const article = options?.articleNumber ?? productName;
+    const designation = options?.designation ?? '-';
+
+    await this.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
+    await this.page.waitForLoadState('networkidle').catch(() => {});
+
+    const createButton = this.page.locator(SelectorsPartsDataBase.BUTTON_CREATE_NEW_PART);
+    await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await createButton.click();
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    const dialog = this.page.locator(SelectorsPartsDataBase.DIALOG_CREATE_OPTIONS);
+    await dialog.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    const productButton = this.page.locator(SelectorsPartsDataBase.BUTTON_PRODUCT).filter({ hasText: 'Изделие' });
+    await productButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await productButton.click();
+    await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+
+    const articleInput = this.page.locator(SelectorsPartsDataBase.INPUT_ARTICLE_NUMBER);
+    await articleInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await articleInput.fill(article);
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    const nameInput = this.page.locator(SelectorsPartsDataBase.INPUT_NAME_IZD);
+    await nameInput.fill(productName);
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    const designationInput = this.page.locator(SelectorsPartsDataBase.INPUT_DESUGNTATION_IZD);
+    await designationInput.fill(designation);
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    await this.saveProduct();
+    await this.dismissKitsDeactivationConfirmModalIfPresent();
+    await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+
+    await this.partsDatabaseHelper.setSpecificationOnCurrentEditPage(this.page, config);
+  }
+
   async createDetailFromPartsDatabaseMain(detailName: string): Promise<void> {
     const navigate = async (): Promise<void> => {
       await this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);

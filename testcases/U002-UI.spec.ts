@@ -118,7 +118,13 @@ export const runU002_02_UI = (_isSingleTest: boolean, _iterations: number) => {
 
     await allure.step('Step 09: Проверка модального окна Создание заказа поставщика', async () => {
       const titles = testData1.elements.ModalCreateOrderSupplier.titles.map((t: string) => t.trim());
-      await orderedFromSuppliersPage.validateModalH4Titles(page, SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID, titles, { allowPartialMatch: true });
+      // Modal has main title in h3 ("Создание заказа на металлообработку №...") and section in h4 ("Описание/Примечание")
+      // Pass bare testId: getAllH3AndH4TitlesInModalTestId expects testId value, not full selector
+      const modalTestId = extractIdFromSelector(SelectorsOrderedFromSuppliers.MODAL_ADD_ORDER_PRODUCTION_MODAL_TEST_ID);
+      await orderedFromSuppliersPage.validateModalH3AndH4Titles(page, modalTestId, titles, {
+        allowPartialMatch: true,
+        testInfo: test.info(),
+      });
     });
 
     await allure.step('Step 10: Проверяем кнопки в модальном окне Создание заказа поставщика', async () => {

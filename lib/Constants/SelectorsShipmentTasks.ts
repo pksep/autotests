@@ -20,6 +20,8 @@ export const SHIPMENTS_SEARCH_INPUT_SELECTOR = '[data-testid="IssueToPull-Shipme
 export const SHIPMENTS_TABLE_BODY = '[data-testid="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Table-Tbody"]';
 export const PRODUCT_WRAPPER = '[data-testid^="IssueToPull-ShipmentsTableBlock-ShippingTasks-ShipmentsTable-Product-Wrapper"]';
 export const MODAL_SHIPMENT_DETAILS = '[data-testid^="IssueToPull-ShipmentDetails-ModalShComlit"][data-testid$="-Content"]';
+/** Dialog wrapper for shipment modal (use this when asserting header h4 + content; header is outside -Content). */
+export const MODAL_SHIPMENT_DIALOG = 'dialog[data-testid^="IssueToPull-ShipmentDetails-ModalShComlit"][open]';
 
 // Shipment-Table patterns
 export const SHIPMENT_TBODY_NUMBER_ORDER_PATTERN = '[data-testid^="Shipment-Tbody-NumberOrder"]';

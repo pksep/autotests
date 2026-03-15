@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { SELECTORS, PRODUCT_SPECS } from '../config';
-import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import logger from '../lib/utils/logger';
@@ -11,7 +10,15 @@ import { expectSoftWithScreenshot } from '../lib/Page';
 let tableData_original_15: { groupName: string; items: string[][] }[] = [];
 let tableData_temp: { groupName: string; items: string[][] }[] = [];
 
-const { productName: T15_PRODUCT_NAME, assemblies: T15_ASSEMBLIES, details: T15_DETAILS, standardParts: T15_STANDARD_PARTS, consumables: T15_CONSUMABLES } = PRODUCT_SPECS.T15;
+// U004 script-specific test data (same pattern as U004-1 / U004-3; no Т15)
+const {
+  productName: U004_PRODUCT_NAME,
+  assemblies: U004_ASSEMBLIES,
+  details: U004_DETAILS,
+  standardParts: U004_STANDARD_PARTS,
+  consumables: U004_CONSUMABLES,
+} = PRODUCT_SPECS.U004_PRODUCT;
+const U004_FIRST_DETAIL_NAME = U004_DETAILS[0].name;
 
 export const runU004_7 = () => {
   logger.info(`Starting test U004`);
@@ -21,13 +28,13 @@ export const runU004_7 = () => {
     const shortagePage = new CreatePartsDatabasePage(page);
     const leftTable = page.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
 
-    await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      logger.log('Setup: Clean up Т15 product specifications');
-      await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
-        assemblies: T15_ASSEMBLIES,
-        details: T15_DETAILS,
-        standardParts: T15_STANDARD_PARTS,
-        consumables: T15_CONSUMABLES,
+    await allure.step('Setup: Clean up U004 product specifications', async () => {
+      logger.log('Setup: Clean up U004 product specifications');
+      await shortagePage.resetProductSpecificationsByConfig(U004_PRODUCT_NAME, {
+        assemblies: U004_ASSEMBLIES,
+        details: U004_DETAILS,
+        standardParts: U004_STANDARD_PARTS,
+        consumables: U004_CONSUMABLES,
       });
     });
     await allure.step('Step 01: Открываем страницу базы деталей (Open the parts database page)', async () => {
@@ -66,7 +73,7 @@ export const runU004_7 = () => {
     });
     await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
       // Locate the search field within the left table and fill it
-      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
+      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(U004_PRODUCT_NAME);
       await page.waitForLoadState('load');
       // Optionally, validate that the search input is visible
       await expectSoftWithScreenshot(
@@ -154,7 +161,7 @@ export const runU004_7 = () => {
       await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
       const searchInput = productsTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT);
       await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await searchInput.fill(TestDataU004.TEST_PRODUCT);
+      await searchInput.fill(U004_PRODUCT_NAME);
       await searchInput.press('Enter');
       await page.waitForLoadState('load');
       await shortagePage.validateTableIsDisplayedWithRows(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE);
@@ -227,7 +234,7 @@ export const runU004_7 = () => {
     });
     await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
       // Locate the search field within the left table and fill it
-      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
+      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(U004_PRODUCT_NAME);
       await page.waitForLoadState('load');
       // Optionally, validate that the search input is visible
       await expectSoftWithScreenshot(
@@ -241,7 +248,7 @@ export const runU004_7 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(TestDataU004.TEST_PRODUCT);
+          await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(U004_PRODUCT_NAME);
         },
         'Step 04 complete',
         testInfo,
@@ -306,7 +313,7 @@ export const runU004_7 = () => {
           smallDialogButtonId: SelectorsPartsDataBase.MAIN_PAGE_SMALL_DIALOG_Д,
           dialogTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG,
           searchTableTestId: SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE,
-          searchValue: TestDataU004.TESTCASE_2_PRODUCT_Д,
+          searchValue: U004_FIRST_DETAIL_NAME,
           bottomTableTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_BOTTOM_TABLE,
           addToBottomButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON,
           addToMainButtonTestId: SelectorsPartsDataBase.EDIT_PAGE_ADD_Д_RIGHT_DIALOG_ADDTOMAIN_BUTTON,

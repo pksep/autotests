@@ -550,6 +550,68 @@ export class ModalHelper {
   }
 
   /**
+   * Validates H3 + H4 titles in a modal by test ID (for modals where main title is h3 and section titles are h4).
+   * Uses same assertion rules as validateModalH4Titles; allowPartialMatch applies to first title.
+   */
+  async validateModalH3AndH4Titles(
+    page: Page,
+    modalTestId: string,
+    expectedTitles: string[],
+    options?: {
+      testInfo?: TestInfo;
+      allowPartialMatch?: boolean;
+    },
+  ): Promise<void> {
+    const expectedTitlesNormalized = expectedTitles.map(title => title.trim());
+    const titles = await this.getAllH3AndH4TitlesInModalTestId(page, modalTestId);
+    const normalizedTitles = titles.map(title => title.trim());
+
+    logger.log('Expected Titles (H3+H4):', expectedTitlesNormalized);
+    logger.log('Received Titles (H3+H4):', normalizedTitles);
+
+    await expectSoftWithScreenshot(
+      page,
+      () => {
+        expect.soft(normalizedTitles.length).toBe(expectedTitlesNormalized.length);
+      },
+      `Verify H3+H4 titles count: expected ${expectedTitlesNormalized.length}, actual ${normalizedTitles.length}`,
+      options?.testInfo,
+    );
+
+    if (options?.allowPartialMatch && normalizedTitles.length > 0 && expectedTitlesNormalized.length > 0) {
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedTitles[0]).toContain(expectedTitlesNormalized[0]);
+        },
+        `Verify first title contains expected: "${expectedTitlesNormalized[0]}"`,
+        options?.testInfo,
+      );
+      for (let i = 1; i < expectedTitlesNormalized.length; i++) {
+        if (i < normalizedTitles.length) {
+          await expectSoftWithScreenshot(
+            page,
+            () => {
+              expect.soft(normalizedTitles[i]).toBe(expectedTitlesNormalized[i]);
+            },
+            `Verify title at index ${i}: expected "${expectedTitlesNormalized[i]}", actual "${normalizedTitles[i]}"`,
+            options?.testInfo,
+          );
+        }
+      }
+    } else {
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(normalizedTitles).toEqual(expectedTitlesNormalized);
+        },
+        `Verify H3+H4 titles match: expected ${JSON.stringify(expectedTitlesNormalized)}, actual ${JSON.stringify(normalizedTitles)}`,
+        options?.testInfo,
+      );
+    }
+  }
+
+  /**
    * Get buttons from a dialog by class and button selector
    * @param page - The Playwright page instance
    * @param dialogClass - The class name of the dialog

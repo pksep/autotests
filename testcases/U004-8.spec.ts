@@ -1,6 +1,5 @@
 import { test, expect, Locator } from '@playwright/test';
 import { SELECTORS, PRODUCT_SPECS } from '../config';
-import * as TestDataU004 from '../lib/Constants/TestDataU004';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import logger from '../lib/utils/logger';
@@ -10,7 +9,14 @@ import { expectSoftWithScreenshot } from '../lib/Page';
 
 let table2Locator: Locator | null = null;
 
-const { productName: T15_PRODUCT_NAME, assemblies: T15_ASSEMBLIES, details: T15_DETAILS, standardParts: T15_STANDARD_PARTS, consumables: T15_CONSUMABLES } = PRODUCT_SPECS.T15;
+// U004 script-specific test data (same pattern as U004-1 / U004-3; no Т15)
+const {
+  productName: U004_PRODUCT_NAME,
+  assemblies: U004_ASSEMBLIES,
+  details: U004_DETAILS,
+  standardParts: U004_STANDARD_PARTS,
+  consumables: U004_CONSUMABLES,
+} = PRODUCT_SPECS.U004_PRODUCT;
 
 export const runU004_8 = () => {
   logger.info(`Starting test U004`);
@@ -18,13 +24,13 @@ export const runU004_8 = () => {
   test('TestCase 16 - Добавьте больше материалов, чем ограниченное количество в спецификацию и проверка сохранения (Exceed Allowed Materials)', async ({ page }, testInfo) => {
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortagePage = new CreatePartsDatabasePage(page);
-    await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      logger.log('Setup: Clean up Т15 product specifications');
-      await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
-        assemblies: T15_ASSEMBLIES,
-        details: T15_DETAILS,
-        standardParts: T15_STANDARD_PARTS,
-        consumables: T15_CONSUMABLES,
+    await allure.step('Setup: Clean up U004 product specifications', async () => {
+      logger.log('Setup: Clean up U004 product specifications');
+      await shortagePage.resetProductSpecificationsByConfig(U004_PRODUCT_NAME, {
+        assemblies: U004_ASSEMBLIES,
+        details: U004_DETAILS,
+        standardParts: U004_STANDARD_PARTS,
+        consumables: U004_CONSUMABLES,
       });
     });
     await allure.step('Step 01: Открываем страницу базы деталей (Open the parts database page)', async () => {
@@ -68,7 +74,7 @@ export const runU004_8 = () => {
     });
     await allure.step('Step 04: Вводим значение переменной в поиск таблицы "Изделий" (Enter a variable value in the \'Products\' table search)', async () => {
       // Locate the search field within the left table and fill it
-      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(TestDataU004.TEST_PRODUCT);
+      await leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT).fill(U004_PRODUCT_NAME);
       await page.waitForLoadState('load');
       // Optionally, validate that the search input is visible
       await expectSoftWithScreenshot(
@@ -82,7 +88,7 @@ export const runU004_8 = () => {
       await expectSoftWithScreenshot(
         page,
         async () => {
-          await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(TestDataU004.TEST_PRODUCT);
+          await expect.soft(leftTable.locator(SelectorsPartsDataBase.MAIN_PAGE_ИЗДЕЛИЕ_TABLE_SEARCH_INPUT)).toHaveValue(U004_PRODUCT_NAME);
         },
         'Step 04 complete',
         testInfo,
@@ -411,15 +417,13 @@ export const runU004_8 = () => {
   test('TestCase 17 - cleanup delete all added details (cleanup delete all added details)', async ({ page }, testInfo) => {
     test.setTimeout(TEST_TIMEOUTS.MEDIUM);
     const shortagePage = new CreatePartsDatabasePage(page);
-    const { productName: T15_PRODUCT_NAME, assemblies: T15_ASSEMBLIES, details: T15_DETAILS, standardParts: T15_STANDARD_PARTS, consumables: T15_CONSUMABLES } = PRODUCT_SPECS.T15;
-
-    await allure.step('Setup: Clean up Т15 product specifications', async () => {
-      logger.log('Step: Clean up Т15 product specifications');
-      await shortagePage.resetProductSpecificationsByConfig(T15_PRODUCT_NAME, {
-        assemblies: T15_ASSEMBLIES,
-        details: T15_DETAILS,
-        standardParts: T15_STANDARD_PARTS,
-        consumables: T15_CONSUMABLES,
+    await allure.step('Setup: Clean up U004 product specifications', async () => {
+      logger.log('Step: Clean up U004 product specifications');
+      await shortagePage.resetProductSpecificationsByConfig(U004_PRODUCT_NAME, {
+        assemblies: U004_ASSEMBLIES,
+        details: U004_DETAILS,
+        standardParts: U004_STANDARD_PARTS,
+        consumables: U004_CONSUMABLES,
       });
       await page.waitForLoadState('load');
       await page.waitForTimeout(TIMEOUTS.STANDARD);

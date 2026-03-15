@@ -183,4 +183,22 @@ export const PRODUCT_SPECS = {
     ],
     consumables: [] as Array<{ name: string; quantity: number }>,
   },
+  /**
+   * U004 suite: script-specific test data (unique names for parallel runs).
+   * All names use U004_ prefix; no shared catalog or Т15 items.
+   */
+  U004_PRODUCT: {
+    productName: 'U004_PRODUCT_001',
+    assemblies: [
+      { partNumber: 'U004_SB_01', name: 'U004_SB_001', quantity: 2 },
+      { partNumber: 'U004_SB_02', name: 'U004_SB_002', quantity: 1 },
+      { partNumber: 'U004_SB_03', name: 'U004_SB_003', quantity: 2 },
+    ],
+    details: [{ partNumber: 'U004_DETAIL_01', name: 'U004_DETAIL_001', quantity: 2 }],
+    standardParts: [
+      { name: 'U004_MAT_001', quantity: 4 },
+      { name: 'U004_MAT_002', quantity: 4 },
+    ],
+    consumables: [{ name: 'U004_CONSUMABLE_001', quantity: 1 }],
+  },
 };

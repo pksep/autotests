@@ -279,7 +279,7 @@ export class RowCellHelper {
         if (rowText.toLowerCase().includes(name.trim().toLowerCase())) {
           foundValue = rowText;
           foundRowIndex = i;
-          console.warn(`Value "${name.trim()}" found in row ${i}, not in the first row.`);
+          logger.log(`Value "${name.trim()}" found in row ${i}, not in the first row.`);
           break;
         }
       }

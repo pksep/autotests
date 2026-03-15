@@ -146,11 +146,10 @@ export const runU005_02 = () => {
       // Locate the hidden file input element
       const fileInput = page.locator('input#docsFileSelected');
 
-      // Set the files to be uploaded
-      await fileInput.setInputFiles([
-        'testdata/Test_imagexx_1.jpg', // Replace with your actual file paths
-        'testdata/Test_imagexx_2.png',
-      ]);
+      // Set the files to be uploaded (paths from U005-Constants so U005 uses its own files, no conflict with U006)
+      await fileInput.setInputFiles(
+        baseFileNamesToVerify.map(f => `testdata/${f.name}${f.extension}`),
+      );
       // await fileInput.setInputFiles([
       //     'testdata/1.3.1.1 Клапан М6х10.jpg__+__92d7aeee-893c-4140-8611-9019ea4d63ff.jpg', // Replace with your actual file paths
       //     'testdata/1.3.1.1 Клапан М6х10.PNG__+__c3a2fced-9b03-461b-a596-ef3808d8a475.png',
@@ -874,14 +873,16 @@ export const runU005_02 = () => {
           searchInputDataTestId: SelectorsPartsDataBase.TABLE_SEARCH_INPUT_TESTID,
         });
         await page.waitForLoadState('load');
-        await page.keyboard.press('Escape');
-        await page.keyboard.press('Escape');
-        const historyDropdown = page.locator(SelectorsPartsDataBase.TABLE_SEARCH_HISTORY_DROPDOWN_TITLE);
-        if (await historyDropdown.isVisible().catch(() => false)) {
-          await page.keyboard.press('Escape');
-          await historyDropdown.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
-        }
+        // After Enter in search, history dropdown stays open and blocks clicks. Move mouse up ~20px so dropdown closes, then click row.
         const tableSelector = SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE;
+        const searchInput = page.locator(SelectorsPartsDataBase.TABLE_SEARCH_INPUT).first();
+        await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+        const searchBox = await searchInput.boundingBox();
+        if (searchBox) {
+          const moveY = Math.max(10, searchBox.y - 25);
+          await page.mouse.move(searchBox.x + searchBox.width / 2, moveY);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        }
         const firstRow = page.locator(`${tableSelector} tbody tr`).first();
         await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
         await firstRow.scrollIntoViewIfNeeded();
@@ -889,6 +890,7 @@ export const runU005_02 = () => {
         await firstRow.click();
         const editButton = page.locator(SelectorsPartsDataBase.BASE_PRODUCTS_BUTTON_EDIT);
         await editButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
+        await expect(editButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
         await shortagePage.highlightElement(editButton, HIGHLIGHT_PENDING);
         await editButton.click();
         await page.waitForLoadState('load');

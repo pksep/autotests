@@ -327,9 +327,14 @@ export class ElementHelper {
    * @param textButton - The button text to match
    * @param locator - The locator for the button
    * @param click - Whether to actually click (Click.Yes) or just verify (Click.No)
-   * @param options - Optional: waitForEnabled (wait for button to be enabled before clicking), enabledTimeout (ms)
+   * @param options - Optional: waitForEnabled, enabledTimeout (ms), failIfDisabled (throw instead of force click when button not clickable)
    */
-  async clickButton(textButton: string, locator: string, click: Click = Click.Yes, options?: { waitForEnabled?: boolean; enabledTimeout?: number }) {
+  async clickButton(
+    textButton: string,
+    locator: string,
+    click: Click = Click.Yes,
+    options?: { waitForEnabled?: boolean; enabledTimeout?: number; failIfDisabled?: boolean },
+  ) {
     const button = this.page.locator(locator, { hasText: textButton });
     await button.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     await this.highlightElement(button, {
@@ -348,7 +353,12 @@ export class ElementHelper {
       }
       try {
         await button.click();
-      } catch {
+      } catch (err) {
+        if (options?.failIfDisabled) {
+          throw new Error(
+            `Button "${textButton}" is not clickable (e.g. disabled). Stopping so you can investigate. Original error: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
         logger.warn(`Button "${textButton}" not clickable (e.g. disabled), trying force click.`);
         try {
           await button.click({ force: true, timeout: WAIT_TIMEOUTS.SHORT });

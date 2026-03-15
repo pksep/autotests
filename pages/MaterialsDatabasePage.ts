@@ -18,36 +18,43 @@ export class CreateMaterialsDatabasePage extends PageObject {
   }
 
   /**
-   * Creates a material (материал) in the Materials Database
-   * @param materialName - Name of the material to create
-   * @param testInfo - TestInfo for expectSoftWithScreenshot
-   * @returns Promise<boolean> - true if creation was successful
+   * Creates a material (материал) in the Materials Database as "Покупные детали" (ПД / bought materials).
+   * Uses type "Гидравлика" and subtype "Насосы гидравлические" so the material is classified as ПД
+   * and appears in the product spec ПД modal.
    */
   async createMaterial(materialName: string, testInfo: TestInfo): Promise<boolean> {
+    let isSuccess = false;
     await allure.step(`Create material "${materialName}"`, async () => {
-      // Navigate to materials database page
       await this.goto(SELECTORS.MAINMENU.MATERIALS.URL);
       await this.waitForNetworkIdle();
       await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-      // Click create button - button with data-testid "Button" and text ending with "Создать"
-      // Need to filter for enabled button (not disabled) and exact text match
-      const createButton = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_BUTTON).filter({ hasText: 'Создать' }).filter({ hasNotText: 'копированием' }).first();
+      // Select "Покупные детали" (ПД) so the new material is in the same category as product spec ПД modal
+      const switchWrapper = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_LIST_SWITCH_WRAPPER);
+      const pokupnyeDetali = switchWrapper.getByText('Покупные детали');
+      const isSwitchVisible = await switchWrapper.isVisible().catch(() => false);
+      if (isSwitchVisible) {
+        await pokupnyeDetali.click().catch(() => {});
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await this.waitForNetworkIdle();
+      }
+
       await expectSoftWithScreenshot(
         this.page,
-        () => {
-          expect.soft(createButton).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        async () => {
+          const btn = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_BUTTON).first();
+          expect.soft(await btn.isVisible({ timeout: WAIT_TIMEOUTS.STANDARD })).toBe(true);
         },
         'Verify create material button is visible',
         testInfo,
       );
-      await this.highlightElement(createButton);
-      await createButton.click();
+      await this.clickButton('Создать', SelectorsMaterialsDatabase.MATERIAL_CREATE_BUTTON);
       await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
       await this.waitForNetworkIdle();
 
-      // Verify page title "Создание материала"
-      const pageTitle = this.page.locator('h1, h2, h3, h4').filter({ hasText: SelectorsMaterialsDatabase.MATERIAL_CREATE_PAGE_TITLE });
+      const pageTitle = this.page
+        .locator('h1, h2, h3, h4')
+        .filter({ hasText: SelectorsMaterialsDatabase.MATERIAL_CREATE_PAGE_TITLE });
       await expectSoftWithScreenshot(
         this.page,
         () => {
@@ -57,8 +64,8 @@ export class CreateMaterialsDatabasePage extends PageObject {
         testInfo,
       );
 
-      // Enter material name in input with data-testid "Input-Input"
-      const materialNameInput = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_INPUT);
+      const materialNameInputWrapper = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_INPUT);
+      const materialNameInput = materialNameInputWrapper.locator('input');
       await expectSoftWithScreenshot(
         this.page,
         () => {
@@ -67,7 +74,6 @@ export class CreateMaterialsDatabasePage extends PageObject {
         'Verify material name input is visible',
         testInfo,
       );
-      // Fill material name field
       await materialNameInput.fill(materialName);
       await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       const filledValue = await materialNameInput.inputValue();
@@ -80,72 +86,72 @@ export class CreateMaterialsDatabasePage extends PageObject {
         testInfo,
       );
 
-      // First table: find input with data-testid "Search-Dropdown-Input" and enter "3D печать"
-      const tables = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE);
-      const firstTable = tables.first();
+      // Type table (Тип) — search and select one row
+      const typeTable = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE_TYPE);
       await expectSoftWithScreenshot(
         this.page,
         () => {
-          expect.soft(firstTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          expect.soft(typeTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
-        'Verify first table is visible',
+        'Verify type table is visible',
         testInfo,
       );
 
-      const firstTableSearchInput = firstTable.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE_SEARCH_INPUT);
+      const typeSearchLocator = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE_TYPE_SEARCH);
+      const typeSearchInput = typeSearchLocator.locator('input').first();
       await expectSoftWithScreenshot(
         this.page,
         () => {
-          expect.soft(firstTableSearchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          expect.soft(typeSearchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
-        'Verify first table search input is visible',
+        'Verify type search input is visible',
         testInfo,
       );
-      await firstTableSearchInput.fill(SelectorsMaterialsDatabase.MATERIAL_TYPE_SEARCH_VALUE);
-      await firstTableSearchInput.press('Enter');
+      // ПД: type "Гидравлика", subtype "Насосы гидравлические" → material is Покупные детали
+      await typeSearchInput.fill(SelectorsMaterialsDatabase.MATERIAL_TYPE_POKUPNYE_DETALI);
+      await typeSearchInput.press('Enter');
       await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
       await this.waitForNetworkIdle();
 
-      // Click the first row in the first table results
-      const firstTableRows = firstTable.locator('tbody tr').filter({ hasNotText: 'table-yui-kit__empty' });
-      const firstTableFirstRow = firstTableRows.first();
+      const typeTableRows = typeTable.locator('tbody tr:not([data-testid*="TrEmpty"])');
+      const typeRow = typeTableRows.filter({ hasText: SelectorsMaterialsDatabase.MATERIAL_TYPE_POKUPNYE_DETALI }).first();
       await expectSoftWithScreenshot(
         this.page,
         () => {
-          expect.soft(firstTableFirstRow).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+          expect.soft(typeRow).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
         },
-        'Verify first table result row is visible',
+        'Verify type row (Гидравлика) is visible',
         testInfo,
       );
-      await this.highlightElement(firstTableFirstRow);
-      await firstTableFirstRow.click();
+      await this.highlightElement(typeRow);
+      await typeRow.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+
+      // Subtype table (Подтип) — select "Насосы гидравлические" for ПД
+      const subtypeTable = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE_SUBTYPE);
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(subtypeTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify subtype table is visible',
+        testInfo,
+      );
+      const subtypeDataRows = subtypeTable.locator('tbody tr:not([data-testid*="TrEmpty"])');
+      const subtypeRow = subtypeDataRows.filter({ hasText: SelectorsMaterialsDatabase.MATERIAL_SUBTYPE_POKUPNYE_DETALI }).first();
+      await expectSoftWithScreenshot(
+        this.page,
+        async () => {
+          await expect.soft(subtypeRow).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+        },
+        'Verify subtype row (Насосы гидравлические) is visible',
+        testInfo,
+      );
+      await this.highlightElement(subtypeRow);
+      await subtypeRow.click();
       await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-      // Second table: click first row (no search needed)
-      const secondTable = tables.nth(1);
-      await expectSoftWithScreenshot(
-        this.page,
-        () => {
-          expect.soft(secondTable).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-        },
-        'Verify second table is visible',
-        testInfo,
-      );
-      const secondTableRows = secondTable.locator('tbody tr').filter({ hasNotText: 'table-yui-kit__empty' });
-      const secondTableFirstRow = secondTableRows.first();
-      await expectSoftWithScreenshot(
-        this.page,
-        () => {
-          expect.soft(secondTableFirstRow).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-        },
-        'Verify second table first row is visible',
-        testInfo,
-      );
-      await this.highlightElement(secondTableFirstRow);
-      await secondTableFirstRow.click();
-      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-
-      // Set quantity values in TableSimple table to 1
       const quantityTable = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_QUANTITY_TABLE);
       await expectSoftWithScreenshot(
         this.page,
@@ -156,40 +162,26 @@ export class CreateMaterialsDatabasePage extends PageObject {
         testInfo,
       );
 
-      // Get all rows in tbody (should be 3 rows)
-      const tableRows = quantityTable.locator('tbody tr');
-      const rowCount = await tableRows.count();
+      // CreatorMaterial: value inputs are [data-testid*="TdValue-Input"] (YInputNumber; fill inner input). Fill each that has a visible input.
+      const quantityInputWrappers = quantityTable.locator('[data-testid*="TdValue-Input"]');
+      const wrapperCount = await quantityInputWrappers.count();
       await expectSoftWithScreenshot(
         this.page,
         () => {
-          expect.soft(rowCount).toBe(3);
+          expect.soft(wrapperCount).toBeGreaterThanOrEqual(1);
         },
-        'Verify quantity table has 3 rows',
+        'Verify at least one quantity input exists',
         testInfo,
       );
 
-      // For each row, find the third TD and set the InputNumber-Input value to 1
-      for (let i = 0; i < rowCount; i++) {
-        const row = tableRows.nth(i);
-        const thirdTd = row.locator('td').nth(2); // Third TD (0-indexed, so nth(2))
-        const inputNumberFieldset = thirdTd.locator('[data-testid="InputNumber"]');
-        const inputNumberInput = inputNumberFieldset.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_QUANTITY_INPUT);
-
-        await expectSoftWithScreenshot(
-          this.page,
-          () => {
-            expect.soft(inputNumberInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-          },
-          `Verify quantity input ${i + 1} is visible`,
-          testInfo,
-        );
-
-        await this.highlightElement(inputNumberInput);
-        await inputNumberInput.fill('1');
+      for (let i = 0; i < wrapperCount; i++) {
+        const inputWrapper = quantityInputWrappers.nth(i);
+        const inputEl = inputWrapper.locator('input').first();
+        const isVisible = await inputEl.isVisible().catch(() => false);
+        if (!isVisible) continue;
+        await inputEl.fill('1');
         await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-
-        // Verify the value was set
-        const inputValue = await inputNumberInput.inputValue();
+        const inputValue = await inputEl.inputValue();
         await expectSoftWithScreenshot(
           this.page,
           () => {
@@ -200,8 +192,47 @@ export class CreateMaterialsDatabasePage extends PageObject {
         );
       }
 
-      // Click save button with data-testid "ButtonSaveAndCancel-ButtonsCenter-Save" and text "Сохранить"
-      const saveButton = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_SAVE_BUTTON).filter({ hasText: 'Сохранить' });
+      // Select base unit (Базовая ЕИ) - required for save ("Необходимо указать базовую единицу измерения")
+      const baseUnitDropdown = this.page.locator(
+        SelectorsMaterialsDatabase.MATERIAL_CREATE_BASE_UNIT_DROPDOWN,
+      ).first();
+      const isBaseUnitVisible = await baseUnitDropdown.isVisible().catch(() => false);
+      if (isBaseUnitVisible) {
+        await baseUnitDropdown.click();
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const option = this.page.getByRole('option').first();
+        const optionVisible = await option.isVisible({ timeout: WAIT_TIMEOUTS.SHORT }).catch(() => false);
+        if (optionVisible) {
+          await option.click();
+        } else {
+          await this.page.keyboard.press('ArrowDown');
+          await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+          await this.page.keyboard.press('Enter');
+        }
+        await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+      }
+
+      // Fill characteristics (Характеристики) when visible so save succeeds on first try
+      const characteristicsSection = this.page.locator(
+        SelectorsMaterialsDatabase.MATERIAL_CREATE_CHARACTERISTICS_SECTION,
+      );
+      const isCharVisible = await characteristicsSection.isVisible().catch(() => false);
+      if (isCharVisible) {
+        const charInputs = characteristicsSection.locator('input');
+        const inputCount = await charInputs.count();
+        for (let i = 0; i < inputCount; i++) {
+          const input = charInputs.nth(i);
+          const visible = await input.isVisible().catch(() => false);
+          if (visible) {
+            await input.fill('1');
+            await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+          }
+        }
+      }
+
+      const saveButton = this.page
+        .locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_SAVE_BUTTON)
+        .filter({ hasText: 'Сохранить' });
       await expectSoftWithScreenshot(
         this.page,
         () => {
@@ -215,31 +246,265 @@ export class CreateMaterialsDatabasePage extends PageObject {
       await this.page.waitForTimeout(TIMEOUTS.STANDARD);
       await this.waitForNetworkIdle();
 
-      // Verify success message (non-blocking - page may navigate away)
-      // Wait a bit to see if message appears, but don't fail if it doesn't
-      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
-      const successMessage = this.page.locator('[data-testid="Notification-Notification-Description"]').last();
-      const isVisible = await successMessage.isVisible().catch(() => false);
-      if (isVisible) {
-        const messageText = await successMessage.textContent();
-        // Material creation is successful if either:
-        // 1. Material was created successfully, OR
-        // 2. Material already exists (from previous test run)
-        const isSuccess = messageText?.includes('Материал успешно создан') || messageText?.includes('Объект с таким наименованием уже существует');
-        await expectSoftWithScreenshot(
-          this.page,
-          () => {
-            expect.soft(isSuccess).toBe(true);
-          },
-          'Verify material creation or existence',
-          testInfo,
+      let notificationMessage = '';
+      const notificationSelector = '[data-testid="Notification-Notification-Description"]';
+      const readNotification = async (): Promise<string> => {
+        const notification = this.page.locator(notificationSelector).last();
+        const waitUntil = Date.now() + WAIT_TIMEOUTS.STANDARD;
+        while (Date.now() < waitUntil) {
+          const visible = await notification.isVisible().catch(() => false);
+          if (visible) {
+            return (await notification.textContent())?.trim() ?? '';
+          }
+          await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        }
+        return '';
+      };
+
+      const isMaterialSuccessMessage = (msg: string) =>
+        (msg.includes('Материал успешно') && (msg.includes('создан') || msg.includes('Создана'))) ||
+        msg.includes('Объект с таким наименованием уже существует');
+
+      notificationMessage = await readNotification();
+      isSuccess = isMaterialSuccessMessage(notificationMessage);
+
+      if (!isSuccess && notificationMessage && notificationMessage.includes('характеристик')) {
+        logger.warn(`Material save asked for characteristics: "${notificationMessage}". Filling characteristics and retrying save.`);
+        const characteristicsSectionRetry = this.page.locator(
+          SelectorsMaterialsDatabase.MATERIAL_CREATE_CHARACTERISTICS_SECTION,
+        );
+        const isCharVisibleRetry = await characteristicsSectionRetry.isVisible().catch(() => false);
+        if (isCharVisibleRetry) {
+          const charInputs = characteristicsSectionRetry.locator('input');
+          const inputCount = await charInputs.count();
+          for (let i = 0; i < inputCount; i++) {
+            const input = charInputs.nth(i);
+            const visible = await input.isVisible().catch(() => false);
+            if (visible) {
+              await input.fill('1');
+              await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+            }
+          }
+          await this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_SAVE_BUTTON).filter({ hasText: 'Сохранить' }).click();
+          await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+          await this.waitForNetworkIdle();
+          notificationMessage = await readNotification();
+          isSuccess = isMaterialSuccessMessage(notificationMessage);
+        }
+      }
+
+      if (!isSuccess && notificationMessage) {
+        logger.warn(`Material create notification (not success): "${notificationMessage}".`);
+      }
+      if (!isSuccess && !notificationMessage) {
+        logger.warn(
+          `No notification after save for "${materialName}". Possible: save failed silently, selector changed, or page navigated.`,
         );
       }
-      // Wait additional time for material to be indexed in database
+
+      const assertionDescription = notificationMessage
+        ? `Verify material creation or existence. Notification: "${notificationMessage}"`
+        : 'Verify material creation or existence';
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(isSuccess, `Material save failed. Notification: "${notificationMessage}"`).toBe(true);
+        },
+        assertionDescription,
+        testInfo,
+      );
       await this.page.waitForTimeout(TIMEOUTS.STANDARD);
     });
 
-    return true;
+    return isSuccess;
+  }
+
+  /**
+   * Creates a consumable material (расходный материал, РМ) in the Materials Database.
+   * Selects main task "Ветошь, полотенца" and sub task "Ветошь" so the material is classified as РМ
+   * and appears in the product spec consumables modal.
+   */
+  async createConsumable(materialName: string, testInfo: TestInfo): Promise<boolean> {
+    let isSuccess = false;
+    await allure.step(`Create consumable material "${materialName}"`, async () => {
+      await this.goto(SELECTORS.MAINMENU.MATERIALS.URL);
+      await this.waitForNetworkIdle();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Select "Расходные материалы" (РМ) so the new material is in the consumables category
+      const switchWrapper = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_LIST_SWITCH_WRAPPER);
+      const rashodnye = switchWrapper.getByText('Расходные материалы');
+      const isSwitchVisible = await switchWrapper.isVisible().catch(() => false);
+      if (isSwitchVisible) {
+        await rashodnye.click().catch(() => {});
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await this.waitForNetworkIdle();
+      }
+
+      await this.clickButton('Создать', SelectorsMaterialsDatabase.MATERIAL_CREATE_BUTTON);
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+
+      const pageTitle = this.page
+        .locator('h1, h2, h3, h4')
+        .filter({ hasText: SelectorsMaterialsDatabase.MATERIAL_CREATE_PAGE_TITLE });
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(pageTitle).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        'Verify material creation page title is visible',
+        testInfo,
+      );
+
+      const materialNameInputWrapper = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_INPUT);
+      const materialNameInput = materialNameInputWrapper.locator('input');
+      await materialNameInput.fill(materialName);
+      await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+
+      // Main task table: search and select "Ветошь, полотенца" for РМ
+      const typeTable = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE_TYPE);
+      await typeTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+      const typeSearchInput = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE_TYPE_SEARCH).locator('input').first();
+      await typeSearchInput.fill(SelectorsMaterialsDatabase.MATERIAL_TYPE_RASHODNYE);
+      await typeSearchInput.press('Enter');
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+
+      const typeTableRows = typeTable.locator('tbody tr:not([data-testid*="TrEmpty"])');
+      const typeRow = typeTableRows.filter({ hasText: SelectorsMaterialsDatabase.MATERIAL_TYPE_RASHODNYE }).first();
+      await typeRow.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      await this.waitForNetworkIdle();
+
+      // Sub task table: select "Ветошь" for РМ
+      const subtypeTable = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_TABLE_SUBTYPE);
+      await subtypeTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+      const subtypeDataRows = subtypeTable.locator('tbody tr:not([data-testid*="TrEmpty"])');
+      const subtypeRow = subtypeDataRows.filter({ hasText: SelectorsMaterialsDatabase.MATERIAL_SUBTYPE_RASHODNYE }).first();
+      await subtypeRow.click();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      // Quantity table and base unit (same as createMaterial)
+      const quantityTable = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_QUANTITY_TABLE);
+      const quantityInputWrappers = quantityTable.locator('[data-testid*="TdValue-Input"]');
+      const wrapperCount = await quantityInputWrappers.count();
+      for (let i = 0; i < wrapperCount; i++) {
+        const inputWrapper = quantityInputWrappers.nth(i);
+        const inputEl = inputWrapper.locator('input').first();
+        const isVisible = await inputEl.isVisible().catch(() => false);
+        if (isVisible) {
+          await inputEl.fill('1');
+          await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+        }
+      }
+
+      const baseUnitDropdown = this.page
+        .locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_BASE_UNIT_DROPDOWN)
+        .first();
+      const isBaseUnitVisible = await baseUnitDropdown.isVisible().catch(() => false);
+      if (isBaseUnitVisible) {
+        await baseUnitDropdown.click();
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const option = this.page.getByRole('option').first();
+        const optionVisible = await option.isVisible({ timeout: WAIT_TIMEOUTS.SHORT }).catch(() => false);
+        if (optionVisible) {
+          await option.click();
+        } else {
+          await this.page.keyboard.press('ArrowDown');
+          await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+          await this.page.keyboard.press('Enter');
+        }
+      }
+
+      const characteristicsSection = this.page.locator(
+        SelectorsMaterialsDatabase.MATERIAL_CREATE_CHARACTERISTICS_SECTION,
+      );
+      const isCharVisible = await characteristicsSection.isVisible().catch(() => false);
+      if (isCharVisible) {
+        const charInputs = characteristicsSection.locator('input');
+        const inputCount = await charInputs.count();
+        for (let i = 0; i < inputCount; i++) {
+          const input = charInputs.nth(i);
+          const visible = await input.isVisible().catch(() => false);
+          if (visible) {
+            await input.fill('1');
+            await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+          }
+        }
+      }
+
+      const saveButton = this.page
+        .locator(SelectorsMaterialsDatabase.MATERIAL_CREATE_SAVE_BUTTON)
+        .filter({ hasText: 'Сохранить' });
+      await saveButton.click();
+      await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+      await this.waitForNetworkIdle();
+
+      const notificationSelector = '[data-testid="Notification-Notification-Description"]';
+      const notification = this.page.locator(notificationSelector).last();
+      const notificationVisible = await notification.isVisible({ timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => false);
+      const notificationMessage = notificationVisible ? (await notification.textContent())?.trim() ?? '' : '';
+      const isMaterialSuccessMessage =
+        (notificationMessage.includes('Материал успешно') &&
+          (notificationMessage.includes('создан') || notificationMessage.includes('Создана'))) ||
+        notificationMessage.includes('Объект с таким наименованием уже существует');
+      isSuccess = isMaterialSuccessMessage;
+
+      await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+    });
+
+    return isSuccess;
+  }
+
+  /**
+   * Cleans up (archives) all materials whose name starts with the given prefix.
+   * Same pattern as U001 parts cleanup: search prefix, loop until no matching rows, archive each with confirm.
+   */
+  async cleanupTestMaterialsByPrefix(searchPrefix: string): Promise<void> {
+    await allure.step(`Clean up materials by prefix "${searchPrefix}"`, async () => {
+      await this.goto(SELECTORS.MAINMENU.MATERIALS.URL);
+      await this.waitForNetworkIdle();
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+      const searchInput = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_LIST_SEARCH_INPUT).first();
+      await searchInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+
+      let hasMoreItems = true;
+      let iterationCount = 0;
+      const maxIterations = 100;
+
+      while (hasMoreItems && iterationCount < maxIterations) {
+        iterationCount++;
+        await searchInput.clear();
+        await searchInput.fill(searchPrefix);
+        await searchInput.press('Enter');
+        await this.waitForNetworkIdle();
+        await this.page.waitForTimeout(TIMEOUTS.STANDARD);
+
+        const rows = this.page.locator(SelectorsMaterialsDatabase.MATERIAL_LIST_TABLE_BODY_ROWS);
+        const rowCount = await rows.count();
+        if (rowCount === 0) {
+          hasMoreItems = false;
+          break;
+        }
+
+        // Archive one row per iteration: select last row (avoids index shift), then archive and confirm.
+        const lastRow = rows.nth(rowCount - 1);
+        await lastRow.click();
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await this.archiveAndConfirm(
+          SelectorsMaterialsDatabase.MATERIAL_LIST_ARCHIVE_BUTTON,
+          SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
+        );
+        await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      }
+
+      await searchInput.clear();
+      await searchInput.press('Enter');
+      await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+      logger.info(`Materials cleanup by prefix "${searchPrefix}" completed.`);
+    });
   }
 
   /**

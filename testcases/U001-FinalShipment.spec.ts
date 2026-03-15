@@ -21,7 +21,7 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import * as U001Constants from './U001-Constants';
-const { orderNumber, nameProduct, urgencyDate, urgencyDateSecond, descendantsCbedArray, descendantsDetailArray, tableMainUploading, buttonUploading, buttonLaunchIntoProductionCbed, deficitTable, deficitTableDetail } = U001Constants;
+const { orderNumber, nameProduct, urgencyDate, descendantsCbedArray, descendantsDetailArray, tableMainUploading, buttonUploading, buttonLaunchIntoProductionCbed, deficitTable, deficitTableDetail } = U001Constants;
 // Mutable variable that needs to be reassigned
 let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
@@ -87,31 +87,25 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
       await warehouseTaskForShipment.checkNameInLineFromFirstRow(searchTerm, tableMainUploading);
     });
 
-    await allure.step('Step 05: Find the row with the order and click its number cell', async () => {
-      // Click the row that contains searchTerm (e.g. order "26-4471"), not always the first row.
-      // When there are two shipment tasks, the second is in row 1; selecting the wrong row leaves "Отгрузить" disabled.
-      const rowWithOrder = page.locator(`${tableMainUploading} tbody tr`).filter({ hasText: searchTerm }).first();
-      await rowWithOrder.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      const cellToClick = rowWithOrder.locator(SelectorsShipmentTasks.ROW_NUMBER_PATTERN).first();
-      await cellToClick.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await cellToClick.scrollIntoViewIfNeeded();
+    await allure.step('Step 05: Find the checkbox column and click', async () => {
+      // Match single U001.spec.ts: click the first row's number cell (first row = remaining task to ship after first was shipped in Case 19)
+      const firstRowCell = page.locator(SelectorsShipmentTasks.ROW_NUMBER_PATTERN).first();
 
-      await cellToClick.evaluate((el: HTMLElement) => {
+      await firstRowCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await firstRowCell.scrollIntoViewIfNeeded();
+
+      await firstRowCell.evaluate((el: HTMLElement) => {
         el.style.backgroundColor = 'yellow';
         el.style.border = '2px solid red';
       });
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-      await cellToClick.click();
-      logger.log(`Row containing "${searchTerm}" clicked`);
+      await firstRowCell.click();
+      logger.log('First row cell clicked');
     });
 
     await allure.step('Step 06: Click on the ship button', async () => {
-      // Wait for button to be enabled after row selection, then click
-      await warehouseTaskForShipment.clickButton('Отгрузить', buttonUploading, undefined, {
-        waitForEnabled: true,
-        enabledTimeout: WAIT_TIMEOUTS.STANDARD,
-      });
+      await warehouseTaskForShipment.clickButton('Отгрузить', buttonUploading);
     });
 
     await allure.step('Step 07: Check the Shipping modal window', async () => {
@@ -120,11 +114,7 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
     });
 
     await allure.step('Step 08: Click on the ship button', async () => {
-      try {
-        await warehouseTaskForShipment.clickButton('Отгрузить', SelectorsWarehouseTaskForShipment.BUTTON_SHIP);
-      } catch (err) {
-        logger.log(`Step 08: Ship button click failed (modal may keep button disabled). Continuing so Cleanup can run. Error: ${err}`);
-      }
+      await warehouseTaskForShipment.clickButton('Отгрузить', SelectorsWarehouseTaskForShipment.BUTTON_SHIP);
     });
   });
 
@@ -189,9 +179,9 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
       await expectSoftWithScreenshot(
         page,
         async () => {
-          expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
+          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
         },
-        `Verify urgency date equals "${urgencyDateSecond}" (second task)`,
+        `Verify urgency date equals "${urgencyDate}"`,
         test.info(),
       );
     });
@@ -250,9 +240,9 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
           await expectSoftWithScreenshot(
             page,
             async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
+              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
             },
-            `Verify urgency date equals "${urgencyDateSecond}" (second task)`,
+            `Verify urgency date equals "${urgencyDate}"`,
             test.info(),
           );
         });
@@ -360,7 +350,7 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
             async () => {
               expect.soft(urgencyDateOnTable).toBe(urgencyDate);
             },
-            `Verify urgency date equals "${urgencyDate}" (second task)`,
+            `Verify urgency date equals "${urgencyDate}"`,
             test.info(),
           );
         });
