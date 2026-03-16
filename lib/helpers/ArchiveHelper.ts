@@ -43,6 +43,8 @@ export class ArchiveHelper {
    *   - verifyTableSelector: Selector for verification table (default: tableSelector)
    *   - tableBodySelector: Selector for table body to check for archived item
    *   - searchInputDataTestId: Data test ID for search input
+   *   - requireArchiveButtonEnabled: If true (default), wait for archive button to be enabled and do not force-click when disabled. Set false to restore legacy force-click behavior.
+   *   - checkColumnIndexForCheckbox: 0-based column index to check for searchTerm when useCheckboxMark is true (e.g. 5 for nth(5)). When set, only that column's text is matched.
    */
   async archiveItem(
     pageObject: any, // PageObject instance to call helper methods
@@ -61,33 +63,38 @@ export class ArchiveHelper {
       verifyTableSelector?: string;
       tableBodySelector?: string;
       searchInputDataTestId?: string;
+      /** If true (default), wait for archive button enabled and fail if disabled. If false, use legacy behavior (force-click when disabled). */
+      requireArchiveButtonEnabled?: boolean;
+      /** 0-based column index to check for searchTerm when useCheckboxMark (e.g. 5 = nth(5)). */
+      checkColumnIndexForCheckbox?: number;
     },
   ): Promise<void> {
-    // Select/check the first row (calls RowCellHelper through PageObject)
-    if (options?.useCheckboxMark) {
-      await pageObject.checkboxMarkNameInLineFromFirstRow(searchTerm, tableSelector);
+    const useCheckboxMark = options?.useCheckboxMark;
+
+    if (useCheckboxMark) {
+      const found = await pageObject.checkboxMarkNameInLineFromFirstRow(searchTerm, tableSelector, {
+        checkColumnIndex: options?.checkColumnIndexForCheckbox,
+        returnIfNotFound: true,
+      });
+      if (!found) return;
     } else {
       await pageObject.checkNameInLineFromFirstRow(searchTerm, tableSelector);
     }
 
     // Click on table header cell if specified (some archive operations require this)
-    // Calls RowCellHelper through PageObject
     if (options?.headerCellIndex !== undefined) {
       await pageObject.clickOnTheTableHeaderCell(options.headerCellIndex, tableSelector);
     }
 
-    // Click archive button (calls ElementHelper)
     const archiveLabel = options?.archiveButtonLabel || 'Архив';
-    await pageObject.clickButton(archiveLabel, archiveButtonSelector);
+    const requireEnabled = options?.requireArchiveButtonEnabled !== false;
+    await pageObject.clickButton(archiveLabel, archiveButtonSelector, undefined, requireEnabled ? { waitForEnabled: true, failIfDisabled: true } : undefined);
 
-    // Wait a bit for modal to appear
     await page.waitForTimeout(200);
 
-    // Confirm the archive (calls ElementHelper)
     const confirmLabel = options?.confirmButtonLabel || 'Да';
     await pageObject.clickButton(confirmLabel, confirmButtonSelector);
 
-    // Wait for the modal to close and table to update
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(options?.waitAfterConfirm || 1000);
 

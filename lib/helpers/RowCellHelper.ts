@@ -195,34 +195,58 @@ export class RowCellHelper {
   }
 
   /**
-   * Checks if the first row contains the specified name and marks the checkbox in the second cell
+   * Finds the first data row that contains the specified name and clicks the checkbox (first cell) in that row.
+   * Skips rows whose first cell contains an input (e.g. filter row). Used by archive flows that need row selection.
    * @param name - the value to search for
    * @param locator - the full locator of the table
+   * @param options - optional: checkColumnIndex (0-based); returnIfNotFound - when true, return false instead of throwing when no row matches
+   * @returns true if a row was found and checkbox clicked; false only when returnIfNotFound is true and no row matches
    */
-  async checkboxMarkNameInLineFromFirstRow(name: string, locator: string) {
-    const cells = await this.page.locator(`${locator} tbody td`);
-
-    const cellTexts = await cells.allInnerTexts();
-
-    const containsSearchValue = cellTexts.some(cellText => cellText.trim().toLowerCase().includes(name.trim().toLowerCase()));
-
-    if (containsSearchValue) {
-      logger.info('Имя найдено');
-
-      const secondCell = cells.nth(0);
-      const isSecondCellVisible = await secondCell.isVisible();
-
-      if (isSecondCellVisible) {
-        await secondCell.click();
-        logger.info('Кликнули по второй ячейке');
-      } else {
-        logger.info('Вторая ячейка не видима для клика');
-      }
-    } else {
-      logger.info('Имя не найдено');
+  async checkboxMarkNameInLineFromFirstRow(
+    name: string,
+    locator: string,
+    options?: { checkColumnIndex?: number; returnIfNotFound?: boolean },
+  ): Promise<boolean> {
+    const rows = this.page.locator(`${locator} tbody tr`);
+    const rowCount = await rows.count();
+    if (rowCount === 0) {
+      if (options?.returnIfNotFound) return false;
+      await expect(false, 'Table has no rows').toBe(true);
+      return false;
     }
 
-    await expect(containsSearchValue).toBe(true);
+    const nameLower = name.trim().toLowerCase();
+    const colIndex = options?.checkColumnIndex;
+    let rowWithName: Locator | null = null;
+    for (let i = 0; i < rowCount; i++) {
+      const row = rows.nth(i);
+      const firstCell = row.locator('td').first();
+      const hasNonCheckboxInput = (await firstCell.locator('input:not([type="checkbox"])').count()) > 0;
+      if (hasNonCheckboxInput) continue;
+
+      const textToCheck =
+        colIndex !== undefined
+          ? (await row.locator('td').nth(colIndex).textContent())?.trim().toLowerCase() ?? ''
+          : (await row.textContent())?.trim().toLowerCase() ?? '';
+      if (!textToCheck.startsWith(nameLower)) continue;
+      rowWithName = row;
+      logger.info(`Имя найдено в строке ${i + 1}${colIndex !== undefined ? ` (колонка ${colIndex})` : ''}`);
+      break;
+    }
+
+    if (!rowWithName) {
+      logger.info('Имя не найдено ни в одной строке (или только в строке с input)');
+      if (options?.returnIfNotFound) return false;
+      await expect(false, `No data row contains "${name}"${colIndex !== undefined ? ` in column ${colIndex}` : ''}`).toBe(true);
+      return false;
+    }
+
+    const checkboxInput = rowWithName.locator('td').first().locator('input[type="checkbox"]');
+    await checkboxInput.scrollIntoViewIfNeeded();
+    await checkboxInput.click();
+    await this.page.waitForTimeout(TIMEOUTS.SHORT);
+    logger.info('Кликнули по чекбоксу в найденной строке');
+    return true;
   }
 
   /**

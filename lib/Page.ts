@@ -206,6 +206,9 @@ export class PageObject extends AbstractPage {
       verifyTableSelector?: string;
       tableBodySelector?: string;
       searchInputDataTestId?: string;
+      requireArchiveButtonEnabled?: boolean;
+      /** 0-based column index (e.g. 5 = 6th column) to check for searchTerm when useCheckboxMark. */
+      checkColumnIndexForCheckbox?: number;
     },
   ): Promise<void> {
     return this.archiveHelper.archiveItem(this, page, searchTerm, tableSelector, archiveButtonSelector, confirmButtonSelector, options);
@@ -366,7 +369,12 @@ export class PageObject extends AbstractPage {
   }
 
   /** Click button by text and locator. */
-  async clickButton(textButton: string, locator: string, click: Click = Click.Yes, options?: { waitForEnabled?: boolean; enabledTimeout?: number }) {
+  async clickButton(
+    textButton: string,
+    locator: string,
+    click: Click = Click.Yes,
+    options?: { waitForEnabled?: boolean; enabledTimeout?: number; failIfDisabled?: boolean },
+  ) {
     return this.elementHelper.clickButton(textButton, locator, click, options);
   }
 
@@ -457,12 +465,13 @@ export class PageObject extends AbstractPage {
     return this.rowCellHelper.clickIconOperationNew(locator, cellIndex, click);
   }
 
-  /** Checks if the first row contains the specified name and marks the checkbox in the second cell
-   * @param name - the value to search for
-   * @param locator - the full locator of the table
-   */
-  async checkboxMarkNameInLineFromFirstRow(name: string, locator: string) {
-    return this.rowCellHelper.checkboxMarkNameInLineFromFirstRow(name, locator);
+  /** Finds the first data row containing the name and marks its checkbox. See RowCellHelper for options (e.g. checkColumnIndex, returnIfNotFound). */
+  async checkboxMarkNameInLineFromFirstRow(
+    name: string,
+    locator: string,
+    options?: { checkColumnIndex?: number; returnIfNotFound?: boolean },
+  ): Promise<boolean> {
+    return this.rowCellHelper.checkboxMarkNameInLineFromFirstRow(name, locator, options);
   }
 
   /**

@@ -709,19 +709,21 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     logger.log('Test Case 13 - Disassembly of the set');
     test.setTimeout(TEST_TIMEOUTS.SHORT);
 
-    // Log request failures (skip image/static noise: ERR_ABORTED often from navigation closing in-flight loads)
+    // Log request failures (images/fetch of images that aren't on server → info; rest → error)
     const failedRequests: Array<{ url: string; resourceType: string }> = [];
     page.on('requestfailed', request => {
       const url = request.url();
       const resourceType = request.resourceType();
       failedRequests.push({ url, resourceType });
       const errorText = request.failure()?.errorText || 'Unknown';
-      // Image/font failures with ERR_ABORTED are usually aborted by navigation or DOM change; log at debug only
-      const isLikelyAbortedStatic = (resourceType === 'image' || resourceType === 'stylesheet' || resourceType === 'font') && errorText.includes('ERR_ABORTED');
-      if (!isLikelyAbortedStatic) {
-        logger.error(`Request FAILED (${resourceType}): ${url} - Status: ${errorText}`);
-      } else {
+      const isImageOrFetchImage = resourceType === 'image' || (resourceType === 'fetch' && /\.(png|jpg|jpeg|gif|webp|ico|svg)(\?|$)/i.test(url));
+      const isAbortedStatic = (resourceType === 'image' || resourceType === 'stylesheet' || resourceType === 'font') && errorText.includes('ERR_ABORTED');
+      if (isAbortedStatic) {
         logger.debug(`Request aborted (${resourceType}): ${url}`);
+      } else if (isImageOrFetchImage || errorText.includes('ERR_ABORTED')) {
+        logger.info(`Request FAILED (${resourceType}): ${url} - Status: ${errorText}`);
+      } else {
+        logger.error(`Request FAILED (${resourceType}): ${url} - Status: ${errorText}`);
       }
     });
 

@@ -62,51 +62,43 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
     });
 
     await allure.step('Step 04-06: Archive all matching items', async () => {
-      // Loop through all search results and archive them
-      let hasMoreItems = true;
+      // Logic same as products/details: search, then delete from bottom up; re-search after each archive
+      // because this list does not refresh after archiving. All actions on metalworking page.
       let iterationCount = 0;
-      const maxIterations = 100; // Safety limit to prevent infinite loops
+      const maxIterations = 100;
 
-      while (hasMoreItems && iterationCount < maxIterations) {
+      while (iterationCount < maxIterations) {
         iterationCount++;
-        logger.log(`Archive iteration ${iterationCount}`);
-
-        await metalworkingWarehouse.waitingTableBody(warehouseTable, {
-          minRows: 0,
-          timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
-        });
+        await metalworkingWarehouse.searchTable(designation, warehouseTable, MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_SEARCH_INPUT);
+        await metalworkingWarehouse.waitingTableBody(warehouseTable, { minRows: 0, timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-        // Check if there are any rows in the table
         const rows = page.locator(`${warehouseTable} tbody tr`);
         const rowCount = await rows.count();
-
-        if (rowCount === 0) {
-          logger.log('No more items to archive');
-          hasMoreItems = false;
-          break;
+        let lastDataRowIndex = -1;
+        for (let i = 0; i < rowCount; i++) {
+          const firstCell = rows.nth(i).locator('td').first();
+          const hasNonCheckboxInput = (await firstCell.locator('input:not([type="checkbox"])').count()) > 0;
+          if (!hasNonCheckboxInput) lastDataRowIndex = i;
         }
+        if (lastDataRowIndex === -1) break;
 
-        // Archive the item
-        await metalworkingWarehouse.archiveItem(page, designation, warehouseTable, MetalWorkingWarhouseSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM, {
-          useCheckboxMark: true,
-          headerCellIndex: 15,
-        });
+        const lastRow = rows.nth(lastDataRowIndex);
+        const checkboxInput = lastRow.locator('td').first().locator('input[type="checkbox"]');
+        await checkboxInput.scrollIntoViewIfNeeded();
+        await checkboxInput.click();
+        await page.waitForTimeout(TIMEOUTS.SHORT);
 
-        // Check if there are still items left
-        const remainingRows = page.locator(`${warehouseTable} tbody tr`);
-        const remainingCount = await remainingRows.count();
+        await metalworkingWarehouse.clickOnTheTableHeaderCell(15, warehouseTable);
+        await metalworkingWarehouse.clickButton('Архив', MetalWorkingWarhouseSelectors.BUTTON_ARCHIVE, undefined, { waitForEnabled: true, failIfDisabled: true });
+        await page.waitForTimeout(200);
+        await metalworkingWarehouse.clickButton('Да', PartsDBSelectors.BUTTON_CONFIRM);
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-        if (remainingCount === 0) {
-          logger.log('All items archived');
-          hasMoreItems = false;
-        } else {
-          logger.log(`Remaining items: ${remainingCount}`);
-        }
-      }
-
-      if (iterationCount >= maxIterations) {
-        console.warn(`Reached maximum iterations (${maxIterations}). Some items may not have been archived.`);
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+        await metalworkingWarehouse.waitingTableBody(warehouseTable, { minRows: 0, timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD });
       }
     });
   });
@@ -138,6 +130,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
       await assemblyWarehouse.archiveItem(page, designation, warehouseTable, SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_BUTTON_ARCHIVE_ASSEMBLY, SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_BAN_MODAL_YES_BUTTON, {
         useCheckboxMark: true,
         headerCellIndex: 16,
+        checkColumnIndexForCheckbox: 5,
       });
     });
   });

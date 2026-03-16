@@ -13,6 +13,7 @@ import * as SelectorsOrderedFromSuppliers from '../lib/Constants/SelectorsOrdere
 import * as SelectorsMetalWorkingWarhouse from '../lib/Constants/SelectorsMetalWorkingWarhouse';
 import * as SelectorsMetalworkingOperations from '../lib/Constants/SelectorsMetalworkingOperations';
 import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
+import * as SelectorsArchiveModal from '../lib/Constants/SelectorsArchiveModal';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import logger from '../lib/utils/logger';
 import { arrayDetail, arrayCbed, arrayIzd, setQuantityLaunchInProduct } from './U002-Constants';
@@ -228,7 +229,34 @@ export const runU002_04_Details = (_isSingleTest: boolean, _iterations: number) 
       });
 
       await allure.step('Step 3: Select checkbox and archive all matching tasks', async () => {
-        const archivedCount = await metalworkingWarehouse.archiveAllMetalworkingTasksForDetail(detail.name, { maxArchives: 10 });
+        const maxArchives = 10;
+        let archivedCount = 0;
+        const tableLocator = SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE;
+        const searchOptions = { searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT };
+
+        while (archivedCount < maxArchives) {
+          await metalworkingWarehouse.searchAndWaitForTable(detail.name, tableLocator, tableLocator, searchOptions);
+          let rows = page.locator(`${tableLocator} tbody tr`);
+          const rowCount = await rows.count();
+          if (rowCount === 0) break;
+
+          const firstRow = rows.first();
+          await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+          const checkbox = firstRow.locator(SelectorsMetalworkingOperations.METALWORKING_ROW_CHECKBOX_SELECTOR).first();
+          await checkbox.click();
+          await metalworkingWarehouse.archiveAndConfirm(
+            SelectorsMetalWorkingWarhouse.BUTTON_MOVE_TO_ARCHIVE_NEW,
+            SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON,
+          );
+          archivedCount++;
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await metalworkingWarehouse.waitForNetworkIdle();
+
+          await page.reload();
+          await page.waitForLoadState('networkidle');
+          await metalworkingWarehouse.waitingTableBody(tableLocator, { minRows: 0, timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD });
+        }
+
         await expectSoftWithScreenshot(
           page,
           () => {
@@ -242,6 +270,13 @@ export const runU002_04_Details = (_isSingleTest: boolean, _iterations: number) 
       await allure.step('Step 4: Verify all tasks are archived', async () => {
         await page.waitForTimeout(TIMEOUTS.LONG);
         await metalworkingWarehouse.waitForNetworkIdle();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+        await metalworkingWarehouse.waitingTableBody(SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE, {
+          minRows: 0,
+          timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
+        });
 
         await metalworkingWarehouse.searchAndWaitForTable(detail.name, SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE, SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE, {
           searchInputDataTestId: SelectorsMetalworkingOperations.ORDER_METALWORKING_PAGE_TABLE_SEARCH_INPUT,
