@@ -458,7 +458,7 @@ export class CreatePartsDatabasePage extends PageObject {
   /**
    * Archives all test products matching the given search prefix.
    */
-  async archiveAllTestProductsByPrefix(searchPrefix: string, options?: { maxIterations?: number }): Promise<number> {
+  async archiveAllTestProductsByPrefix(searchPrefix: string, options?: { maxIterations?: number; reloadAfterEach?: boolean }): Promise<number> {
     return this.partsDatabaseHelper.archiveAllTestProductsByPrefix(this.page, () => this.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL).then(() => this.waitForNetworkIdle()), searchPrefix, options);
   }
 

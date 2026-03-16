@@ -1874,9 +1874,16 @@ export class PartsDatabaseHelper {
 
   /**
    * Archives all test products matching the given search prefix.
+   * @param options.reloadAfterEach - If true, reloads the page after each archive (for lists that do not refresh in place) and skips totals row (Итого/colspan 15) when picking the last data row.
    */
-  async archiveAllTestProductsByPrefix(page: Page, navigateToPartsDb: () => Promise<void>, searchPrefix: string, options?: { maxIterations?: number }): Promise<number> {
+  async archiveAllTestProductsByPrefix(
+    page: Page,
+    navigateToPartsDb: () => Promise<void>,
+    searchPrefix: string,
+    options?: { maxIterations?: number; reloadAfterEach?: boolean },
+  ): Promise<number> {
     const maxIterations = options?.maxIterations ?? 100;
+    const reloadAfterEach = options?.reloadAfterEach === true;
     let iteration = 0;
     let archivedCount = 0;
 
@@ -1895,7 +1902,7 @@ export class PartsDatabaseHelper {
       await searchInput.press('Enter');
       await page.waitForTimeout(TIMEOUTS.STANDARD);
       await this.navigationHelper.waitForNetworkIdle();
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      await page.waitForTimeout(reloadAfterEach ? TIMEOUTS.MEDIUM : TIMEOUTS.STANDARD);
 
       const tableBody = table.locator('tbody');
       await tableBody.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
@@ -1907,8 +1914,22 @@ export class PartsDatabaseHelper {
         break;
       }
 
-      const lastRow = rows.nth(rowCount - 1);
-      await lastRow.scrollIntoViewIfNeeded();
+      let targetRowIndex: number;
+      if (reloadAfterEach) {
+        let lastDataRowIndex = -1;
+        for (let i = 0; i < rowCount; i++) {
+          const row = rows.nth(i);
+          const rowText = (await row.textContent()) ?? '';
+          const firstCell = row.locator('td').first();
+          const colspan = await firstCell.getAttribute('colspan');
+          if (rowText.includes('Итого:') || colspan === '15') continue;
+          lastDataRowIndex = i;
+        }
+        if (lastDataRowIndex === -1) break;
+        targetRowIndex = lastDataRowIndex;
+      } else {
+        targetRowIndex = rowCount - 1;
+      }
 
       const currentRows = tableBody.locator('tr');
       const currentRowCount = await currentRows.count();
@@ -1917,7 +1938,7 @@ export class PartsDatabaseHelper {
         break;
       }
 
-      const targetRow = currentRows.nth(currentRowCount - 1);
+      const targetRow = currentRows.nth(Math.min(targetRowIndex, currentRowCount - 1));
       await targetRow.scrollIntoViewIfNeeded();
 
       try {
@@ -1940,6 +1961,13 @@ export class PartsDatabaseHelper {
       }
 
       if (!isEnabled) {
+        if (reloadAfterEach) {
+          await page.reload();
+          await page.waitForLoadState('networkidle');
+          const tableAfter = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE).locator('tbody');
+          await tableAfter.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.PAGE_RELOAD }).catch(() => {});
+          continue;
+        }
         logger.log('Archive button is disabled after retries. Re-checking if item still exists...');
         await page.waitForTimeout(TIMEOUTS.STANDARD);
         const recheckTable = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE);
@@ -1971,8 +1999,17 @@ export class PartsDatabaseHelper {
       await confirmButton.click();
 
       archivedCount++;
-      await page.waitForTimeout(TIMEOUTS.STANDARD);
-      await this.navigationHelper.waitForNetworkIdle();
+      if (reloadAfterEach) {
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+        const tableAfter = page.locator(SelectorsPartsDataBase.PRODUCT_TABLE).locator('tbody');
+        await tableAfter.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.PAGE_RELOAD }).catch(() => {});
+      } else {
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await this.navigationHelper.waitForNetworkIdle();
+      }
     }
 
     if (iteration >= maxIterations) {
