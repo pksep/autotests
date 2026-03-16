@@ -9641,9 +9641,69 @@ export const runU003 = (isSingleTest: boolean, iterations: number) => {
     const partsDatabasePage = new CreatePartsDatabasePage(page);
 
     const searchPrefix = 'TEST_PRODUCT';
+    const tableLocator = SelectorsPartsDataBase.PRODUCT_TABLE;
+    const tableBodySelector = `${SelectorsPartsDataBase.PRODUCT_TABLE} tbody`;
+    const maxIterations = 100;
+    let archivedCount = 0;
 
-    await allure.step('Step 1: Archive all test products', async () => {
-      const archivedCount = await partsDatabasePage.archiveAllTestProductsByPrefix(searchPrefix);
+    await allure.step('Step 1: Archive all test products (search, bottom-up, refresh after each)', async () => {
+      await partsDatabasePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+      await partsDatabasePage.waitForNetworkIdle();
+
+      while (archivedCount < maxIterations) {
+        await partsDatabasePage.searchAndWaitForTable(searchPrefix, tableLocator, tableBodySelector, {
+          searchInputDataTestId: SelectorsPartsDataBase.TABLE_SEARCH_INPUT_TESTID,
+        });
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+        const tableBody = page.locator(tableBodySelector);
+        await tableBody.waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+        const rows = tableBody.locator('tr');
+        const totalRows = await rows.count();
+        let lastDataRowIndex = -1;
+        for (let i = 0; i < totalRows; i++) {
+          const row = rows.nth(i);
+          const rowText = (await row.textContent()) ?? '';
+          const firstCell = row.locator('td').first();
+          const colspan = await firstCell.getAttribute('colspan');
+          if (rowText.includes('Итого:') || colspan === '15') continue;
+          lastDataRowIndex = i;
+        }
+        if (lastDataRowIndex === -1) break;
+
+        const lastRow = rows.nth(lastDataRowIndex);
+        await lastRow.scrollIntoViewIfNeeded();
+        await lastRow.click({ timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
+
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        const archiveButton = page.locator(SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
+        await archiveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        let enabled = await archiveButton.isEnabled();
+        if (!enabled) {
+          for (let retry = 0; retry < 5; retry++) {
+            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+            enabled = await archiveButton.isEnabled();
+            if (enabled) break;
+          }
+        }
+        if (!enabled) {
+          await page.reload();
+          await page.waitForLoadState('networkidle');
+          await partsDatabasePage.waitingTableBody(tableLocator, { minRows: 0, timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD });
+          continue;
+        }
+        await partsDatabasePage.clickButton('Архив', SelectorsArchiveModal.PARTS_PAGE_ARCHIVE_BUTTON);
+        await page.waitForTimeout(200);
+        await partsDatabasePage.clickButton('Да', SelectorsArchiveModal.ARCHIVE_MODAL_CONFIRM_DIALOG_YES_BUTTON);
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+        await partsDatabasePage.waitingTableBody(tableLocator, { minRows: 0, timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD });
+        archivedCount++;
+      }
 
       await expectSoftWithScreenshot(
         page,
