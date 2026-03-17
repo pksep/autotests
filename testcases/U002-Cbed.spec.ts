@@ -85,6 +85,15 @@ export const runU002_05_Cbed = (_isSingleTest: boolean, _iterations: number) => 
       let firstOrderNumber: string;
       let secondOrderNumber: string;
 
+      await allure.step('Setup: Archive any existing CBED orders in Assembly Warehouse', async () => {
+        await metalworkingWarehouse.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+        await page.locator(SelectorsAssemblyWarehouse.WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON).click();
+        await assemblyWarehouse.waitForNetworkIdle();
+        await metalworkingWarehouse.waitingTableBody(SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE, { minRows: 0 });
+        await assemblyWarehouse.archiveAllAssemblyTasksForItem(cbed.name, { maxArchives: 10 });
+        await page.waitForTimeout(TIMEOUTS.LONG);
+      });
+
       await allure.step('Step 1: Create first CBED order with quantity 50', async () => {
         logger.info('Creating first CBED order with quantity 50...');
         const result = await orderedFromSuppliersPage.launchIntoProductionSupplier(cbed.name, '50', Supplier.cbed);
