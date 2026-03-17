@@ -77,7 +77,15 @@ Set `TEST_SUITE=parallel` to run these suites at the same time (each suite’s t
 
 - U001, U002, U003, suite01 (U004_1–U004_9), U005, U006
 
-Each suite uses different test data, so they can run in parallel. Playwright uses 6 workers (one per suite). Example:
+Each suite uses different test data, so they can run in parallel. Playwright uses 6 workers (one per suite). The config sets `fullyParallel: true` in this mode so that tests from the single entry file can run in parallel.
+
+**Easiest:** use the script (works on Windows without setting env manually):
+
+```bash
+pnpm run test:parallel
+```
+
+Or set the env and run tests:
 
 ```bash
 # Windows (PowerShell)
@@ -87,7 +95,7 @@ $env:TEST_SUITE='parallel'; pnpm test
 TEST_SUITE=parallel pnpm test
 ```
 
-The list of suites is defined by `PARALLEL_SUITE_KEYS` in `testSuiteConfig.ts`.
+The list of suites is defined by `PARALLEL_SUITE_KEYS` in `testSuiteConfig.ts`. To force a different worker count: `PLAYWRIGHT_WORKERS=4 pnpm test` (with `TEST_SUITE=parallel` in `.env` or env).
 
 ---
 
@@ -214,6 +222,7 @@ CI runs `pnpm run lint -- --max-warnings 5000` before tests. Use `lib/Constants/
 | Goal | Action |
 |------|--------|
 | Run one specific suite | Set `TEST_SUITE` in config or env to the suite key (e.g. `U002`, `U004_1`) and run `pnpm exec playwright test` |
+| Run all parallel suites (6 workers) | `pnpm run test:parallel` or set `TEST_SUITE=parallel` and run `pnpm test` |
 | Run without opening browser | Set `HEADLESS: true` in config or `HEADLESS=true` in env |
 | Point to another environment | Set `BASE_URL` / `API_BASE_URL` in config or env |
 | See more logs | Set `LOG_LEVEL=info` or `LOG_LEVEL=debug` in env |
