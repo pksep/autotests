@@ -85,6 +85,19 @@ To change which suite or environment runs **without changing code**, set in the 
 | `BASE_URL` | App URL for UI tests. |
 | `API_BASE_URL` | Base URL for API tests. |
 
+### 4.1 Pushing Allure report to GitHub Pages (gh-pages branch)
+
+After a test run, Allure results are in `allure-results/`. To generate the report and publish it to the `gh-pages` branch (so it is served at `https://<org>.github.io/<repo>/`):
+
+1. Run tests so that `allure-results/` is populated.
+2. Run:
+   ```bash
+   pnpm run deploy:gh-pages
+   ```
+   This runs `allure generate allure-results -o allure-report --clean` and then pushes the contents of `allure-report/` to the `gh-pages` branch via the `gh-pages` package.
+
+To only generate the report locally (no push): `pnpm run allure:generate`, then open `allure-report/index.html` in a browser.
+
 ---
 
 ## 5. config — what you can change
