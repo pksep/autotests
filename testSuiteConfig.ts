@@ -11,3 +11,6 @@ export const testSuites = {
   ...uiSuites,
   ...apiSuites,
 };
+
+/** Suite keys to run in parallel when TEST_SUITE=parallel. Each suite's tests still run sequentially. */
+export const PARALLEL_SUITE_KEYS = ['U001', 'U002', 'U003', 'suite01', 'U005', 'U006'] as const;

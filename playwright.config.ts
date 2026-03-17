@@ -1,13 +1,20 @@
-import { defineConfig } from '@playwright/test';
-import { ENV } from './config';
 import path from 'path';
-import logger from './lib/utils/logger';
+import { defineConfig } from '@playwright/test';
+// Load .env from project root so TEST_SUITE is set before config runs (cwd may differ in some environments)
+import dotenv from 'dotenv';
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+import { ENV } from './config';
+import { PARALLEL_SUITE_KEYS } from './testSuiteConfig';
+
+const isParallel = process.env.TEST_SUITE === 'parallel' || ENV.TEST_SUITE === 'parallel';
 
 export default defineConfig({
-  testDir: process.env.TEST_DIR || ENV.TEST_DIR, //path.join(__dirname, "."), set in config.ts
+  testDir: process.env.TEST_DIR || ENV.TEST_DIR,
   timeout: 30000,
-  globalTimeout: 30 * 60 * 1000, // 30 minutes for full suite (e.g. U001)
-  workers: 1, // Sequential only: suites like U001 create then use then delete data; parallel workers would conflict
+  globalTimeout: 30 * 60 * 1000, // 30 minutes (parallel: wall time ~longest suite)
+  workers: isParallel ? PARALLEL_SUITE_KEYS.length : 1,
+  fullyParallel: isParallel, // required so multiple workers run when only one file (main.spec.ts) matches
   retries: 0,
   use: {
     baseURL: process.env.BASE_URL || ENV.BASE_URL, //setgit a this in your config.ts
@@ -38,14 +45,16 @@ export default defineConfig({
       ignoreHTTPSErrors: true,
     },
   },
+  testIgnore: 'repo-at-single-U001/**',
   projects: [
     {
       name: 'suite01',
-      testMatch: '**/main.spec.ts', // Match the dynamically generated test entry point
+      testMatch: 'main.spec.ts',
     },
   ],
   reporter: [
     ['line'], // Console output
-    ['allure-playwright'], // Allure reporter
+    ['html', { open: 'never' }], // playwright-report/ — for deploy:gh-pages (no Java required)
+    ['allure-playwright'], // Allure reporter (allure generate needs Java)
   ],
 });

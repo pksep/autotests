@@ -33,5 +33,6 @@ pnpm-debug.log*
 .prettierrc
 mcp.json
 *.png
+!testdata/*.png
 QAReport.md
 #docs/

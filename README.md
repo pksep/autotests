@@ -71,6 +71,24 @@ The value of `TEST_SUITE` must match one of the keys in the merged registry (e.g
 
 So: **one suite per run**, selected by `TEST_SUITE` in config or env.
 
+### 3.3 Running multiple suites in parallel
+
+Set `TEST_SUITE=parallel` to run these suites at the same time (each suite’s tests still run sequentially within that suite):
+
+- U001, U002, U003, suite01 (U004_1–U004_9), U005, U006
+
+Each suite uses different test data, so they can run in parallel. Playwright uses 6 workers (one per suite). Example:
+
+```bash
+# Windows (PowerShell)
+$env:TEST_SUITE='parallel'; pnpm test
+
+# Linux / macOS
+TEST_SUITE=parallel pnpm test
+```
+
+The list of suites is defined by `PARALLEL_SUITE_KEYS` in `testSuiteConfig.ts`.
+
 ---
 
 ## 4. CI/CD (GitHub Actions)
@@ -85,18 +103,20 @@ To change which suite or environment runs **without changing code**, set in the 
 | `BASE_URL` | App URL for UI tests. |
 | `API_BASE_URL` | Base URL for API tests. |
 
-### 4.1 Pushing Allure report to GitHub Pages (gh-pages branch)
+### 4.1 Pushing test report to GitHub Pages (gh-pages branch)
 
-After a test run, Allure results are in `allure-results/`. To generate the report and publish it to the `gh-pages` branch (so it is served at `https://<org>.github.io/<repo>/`):
+**Playwright HTML report (no Java required)**  
+After a test run, the HTML report is in `playwright-report/`. To push it to the `gh-pages` branch:
 
-1. Run tests so that `allure-results/` is populated.
-2. Run:
-   ```bash
-   pnpm run deploy:gh-pages
-   ```
-   This runs `allure generate allure-results -o allure-report --clean` and then pushes the contents of `allure-report/` to the `gh-pages` branch via the `gh-pages` package.
+1. Run tests: `pnpm test`
+2. Run: `pnpm run deploy:gh-pages`
 
-To only generate the report locally (no push): `pnpm run allure:generate`, then open `allure-report/index.html` in a browser.
+This pushes the contents of `playwright-report/` to `gh-pages` via the `gh-pages` package. No Java is required.
+
+**Allure report (requires Java)**  
+If you prefer the Allure report on GitHub Pages, install Java and set `JAVA_HOME`, then run `pnpm run deploy:gh-pages:allure`. That generates the report from `allure-results/` and pushes `allure-report/` to `gh-pages`.
+
+To only generate the Allure report locally: `pnpm run allure:generate`, then open `allure-report/index.html` in a browser.
 
 ---
 

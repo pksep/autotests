@@ -9,13 +9,16 @@
   "scripts": {
     "pretest": "echo 'No pretest script'",
     "test": "npx playwright test",
+    "test:parallel": "cross-env TEST_SUITE=parallel npx playwright test",
     "ui": "pnpm exec playwright test --ui",
     "allure:generate": "allure generate allure-results -o allure-report --clean",
-    "deploy:gh-pages": "pnpm run allure:generate && npx gh-pages -d allure-report"
+    "deploy:gh-pages": "npx gh-pages -d playwright-report",
+    "deploy:gh-pages:allure": "pnpm run allure:generate && npx gh-pages -d allure-report"
   },
   "author": "Your Name",
   "license": "ISC",
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "gh-pages": "^6.2.0",
     "@playwright/test": "^1.50.1",
     "dotenv": "^16.4.5",
