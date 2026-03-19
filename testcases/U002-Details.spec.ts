@@ -124,8 +124,6 @@ export const runU002_04_Details = (_isSingleTest: boolean, _iterations: number) 
           true,
           SelectorsMetalWorkingWarhouse.METALWORKING_SCLAD_TABLE_ROW0_PREFIX,
           SelectorsMetalworkingOperations.ASSEMBLY_OPERATIONS_ROW_PATTERN_ORDERED,
-          WAIT_TIMEOUTS.LONG,
-          SelectorsMetalWorkingWarhouse.TABLE_METAL_WORKING_WARHOUSE,
         );
       });
 

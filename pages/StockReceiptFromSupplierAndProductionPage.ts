@@ -2,6 +2,7 @@ import { Page, expect } from '@playwright/test';
 import { PageObject, Click } from '../lib/Page';
 import logger from '../lib/utils/logger';
 import { table } from 'console';
+import { TIMEOUTS, WAIT_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 
 export enum StockReceipt {
   metalworking = 'Металлообработка',
@@ -42,20 +43,24 @@ export class CreateStockReceiptFromSupplierAndProductionPage extends PageObject 
     // Wait for the receipt modal dialog to appear after clicking
     await this.page.locator('[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill"]').waitFor({ state: 'visible', timeout: 10000 });
     await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
 
     // Check the selected supplier type by reading the block title in the modal
     // The title contains: "Потенциальные от {Type}" - we extract the last word
     const blockTitleElement = this.page.locator('[data-testid="ComingToSclad-ModalComing-ModalAddNewWaybill-Main-TableWrapper-ContrastBlock-BlockTitle"]');
 
-    await blockTitleElement.waitFor({ state: 'visible', timeout: 10000 });
+    await blockTitleElement.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
     // Highlight the element for visual confirmation
-    await blockTitleElement.evaluate((el: HTMLElement) => {
-      el.style.backgroundColor = 'yellow';
-      el.style.border = '2px solid red';
-      el.style.color = 'blue';
-    });
+    // This is visual-only, so avoid failing the test if the DOM rerenders and the locator becomes transient.
+    const blockTitleHandle = await blockTitleElement.elementHandle().catch(() => null);
+    if (blockTitleHandle) {
+      await blockTitleHandle.evaluate((el: HTMLElement) => {
+        el.style.backgroundColor = 'yellow';
+        el.style.border = '2px solid red';
+        el.style.color = 'blue';
+      });
+    }
 
     const blockTitle = await blockTitleElement.textContent();
     logger.log(`Заголовок блока: ${blockTitle}`);

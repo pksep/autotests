@@ -123,7 +123,7 @@ export const runU002_06_Izd = (_isSingleTest: boolean, _iterations: number) => {
       });
 
       await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
-        await metalworkingWarehouse.openContextMenuAndClickOrders(SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_HEAD_POPOVER, SelectorsPartsDataBase.POPOVER_ITEM0, SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_RIGHT_MENU_MODAL, 1);
+        await assemblyWarehouse.openOrdersContextMenuForItemRow(izd.name, 55);
       });
 
       await allure.step('Step 5: Verify orders are present', async () => {

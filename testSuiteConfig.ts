@@ -13,4 +13,21 @@ export const testSuites = {
 };
 
 /** Suite keys to run in parallel when TEST_SUITE=parallel. Each suite's tests still run sequentially. */
-export const PARALLEL_SUITE_KEYS = ['U001', 'U002', 'U003', 'suite01'] as const;
+const DEFAULT_PARALLEL_SUITE_KEYS = ['U001', 'U002', 'U003', 'suite01'] as const;
+
+function parseParallelSuiteKeysFromEnv(): readonly string[] {
+  // Override from .env:
+  //   PARALLEL_SUITE_KEYS=U001,U002,U003,suite01
+  const raw = process.env.PARALLEL_SUITE_KEYS;
+  if (!raw) return [...DEFAULT_PARALLEL_SUITE_KEYS];
+
+  const parts = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  // If env var is empty/invalid, fall back to defaults (avoid workers=0).
+  return parts.length > 0 ? parts : [...DEFAULT_PARALLEL_SUITE_KEYS];
+}
+
+export const PARALLEL_SUITE_KEYS = parseParallelSuiteKeysFromEnv();

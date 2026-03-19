@@ -124,7 +124,7 @@ export const runU002_05_Cbed = (_isSingleTest: boolean, _iterations: number) => 
       });
 
       await allure.step("Step 4: Open context menu and click 'Заказы'", async () => {
-        await metalworkingWarehouse.openContextMenuAndClickOrders(SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_HEAD_POPOVER, SelectorsPartsDataBase.POPOVER_ITEM0, undefined, 1);
+        await assemblyWarehouse.openOrdersContextMenuForItemRow(cbed.name, 55);
       });
 
       await allure.step('Step 5: Verify orders modal opens and shows both orders', async () => {

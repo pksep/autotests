@@ -79,6 +79,83 @@ export class CreateAssemblyWarehousePage extends PageObject {
   }
 
   /**
+   * Opens «Заказы» for the assembly warehouse row whose name cell matches `itemName`.
+   * When `expectedQuantity` is provided, only matches the row whose quantity cell equals it
+   * (pins to the row just verified in the previous step and avoids opening another product's orders).
+   *
+   * This avoids relying on a fixed popover index (nth/first/second), because DOM order of rows
+   * can change when previous tests leave additional rows.
+   */
+  async openOrdersContextMenuForItemRow(itemName: string, expectedQuantity?: number): Promise<void> {
+    await allure.step(`Open «Заказы» for assembly row: ${itemName}${expectedQuantity != null ? ` (qty ${expectedQuantity})` : ''}`, async () => {
+      const normalize = (s: string) =>
+        s
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .replace(/[тТ]/g, 't');
+
+      const needle = normalize(itemName);
+
+      const tableRows = this.page.locator(`${SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE} tbody tr`);
+      const rowCount = await tableRows.count();
+      if (rowCount === 0) {
+        throw new Error(`openOrdersContextMenuForItemRow: no rows found in assembly table for "${itemName}"`);
+      }
+
+      let matchRow: any = null;
+      for (let i = 0; i < rowCount; i++) {
+        const row = tableRows.nth(i);
+        const nameCell = row.locator(SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_NAME).first();
+        const nameTextRaw = (await nameCell.innerText().catch(() => '')).toString();
+        const haystack = normalize(nameTextRaw);
+
+        const nameMatches = haystack === needle || haystack.includes(needle) || needle.includes(haystack);
+        if (!nameMatches) continue;
+
+        if (expectedQuantity != null) {
+          const qtyCell = row.locator(SelectorsAssemblyWarehouse.ASSEMBLY_SCLAD_TABLE_BODY_TD_KOLVO).first();
+          const qtyText = (await qtyCell.innerText().catch(() => '')).toString().trim();
+          const qty = parseInt(qtyText, 10);
+          if (Number.isNaN(qty) || qty !== expectedQuantity) continue;
+        }
+
+        matchRow = row;
+        break;
+      }
+
+      if (!matchRow) {
+        const hint =
+          expectedQuantity != null
+            ? ` with quantity ${expectedQuantity}`
+            : '';
+        throw new Error(`openOrdersContextMenuForItemRow: no row matched name "${itemName}"${hint}`);
+      }
+
+      const secondCell = matchRow.locator('td').nth(1);
+      await secondCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await this.waitAndHighlight(secondCell);
+      await secondCell.click();
+
+      // Wait for the visible popover option “Заказы”
+      const popoverContainer = this.page
+        .locator('.popover-yui-kit__options:visible')
+        .filter({ hasText: 'Заказы' })
+        .first();
+      await popoverContainer.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+
+      const ordersMenuItem = popoverContainer.locator(SelectorsPartsDataBase.POPOVER_ITEM0).filter({ hasText: 'Заказы' }).first();
+      await ordersMenuItem.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
+      await this.waitAndHighlight(ordersMenuItem);
+      await ordersMenuItem.click();
+
+      // Wait for “Список заказов” modal
+      const modal = this.page.locator(`${SelectorsOrderedFromSuppliers.MODAL_SHIPMENTS_TO_IZED_RIGHT_MENU_MODAL}[open]`);
+      await modal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    });
+  }
+
+  /**
    * Archives all orders for items matching the given prefixes.
    * Follows the exact process:
    * 1. Search for product on "Заказ склада на сборку" page
