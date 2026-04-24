@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="350781">
+<fb version="0.19.6" size="351045">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">61.211471114</seconds>
+    <seconds t="F">8.301694021</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-04-24T15:52:25Z</when>
+    <when t="T">2026-04-24T17:36:34Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -22403,16 +22403,6 @@
     <when t="T">2026-03-03T18:27:39Z</when>
   </f>
   <f>
-    <_id t="I">1225</_id>
-    <_job t="I">63936</_job>
-    <_time t="T">2026-03-03T23:02:26Z</_time>
-    <_version t="S">0.19.9/0.60.0/0.17.11!0.17.15</_version>
-    <analyzers t="I">18</analyzers>
-    <text t="S">The average monthly turnover (1.0 developers) is increasing (R=0.51).</text>
-    <what t="S">assessment</what>
-    <when t="T">2026-03-03T23:02:26Z</when>
-  </f>
-  <f>
     <_id t="I">1231</_id>
     <_job t="I">22685493764</_job>
     <_time t="T">2026-03-04T19:26:17Z</_time>
@@ -22441,14 +22431,6 @@
     <when t="T">2026-03-04T23:03:10Z</when>
   </f>
   <f>
-    <_id t="I">1238</_id>
-    <_job t="I">64187</_job>
-    <_time t="T">2026-03-05T17:50:39Z</_time>
-    <_version t="S">0.19.9/0.60.1/0.17.11!0.17.15</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-03-05T17:50:39Z</when>
-  </f>
-  <f>
     <_id t="I">1240</_id>
     <_job t="I">22733761309</_job>
     <_time t="T">2026-03-05T19:46:43Z</_time>
@@ -22465,19 +22447,6 @@
     <total_stars t="I">0</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-03-05T19:46:43Z</when>
-  </f>
-  <f>
-    <_id t="I">1241</_id>
-    <_job t="I">22736702176</_job>
-    <_time t="T">2026-03-05T21:06:10Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">9082889895</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
   </f>
   <f>
     <_id t="I">1242</_id>
@@ -22656,5 +22625,52 @@
     <some_unmerged_pulls t="I">0</some_unmerged_pulls>
     <what t="S">quality-of-service</what>
     <when t="T">2026-04-24T15:51:40Z</when>
+  </f>
+  <f>
+    <_id t="I">1245</_id>
+    <_job t="I">69107</_job>
+    <_time t="T">2026-04-24T15:52:51Z</_time>
+    <_version t="S">0.19.9/0.60.2/0.17.11!0.17.17</_version>
+    <analyzers t="I">18</analyzers>
+    <text t="S">The average monthly turnover (1.0 developers) is increasing (R=1.00).</text>
+    <what t="S">assessment</what>
+    <when t="T">2026-04-24T15:52:51Z</when>
+  </f>
+  <f>
+    <_id t="I">1246</_id>
+    <_job t="I">69107</_job>
+    <_time t="T">2026-04-24T15:53:20Z</_time>
+    <_version t="S">0.19.9/0.60.2/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-04-24T15:53:20Z</when>
+  </f>
+  <f>
+    <_id t="I">1247</_id>
+    <_job t="I">69107</_job>
+    <_time t="T">2026-04-24T15:53:20Z</_time>
+    <_version t="S">0.19.9/0.60.2/0.17.11!0.17.17</_version>
+    <ac t="I">0</ac>
+    <cost_of_qod t="F">3.6479392426844504</cost_of_qod>
+    <ev t="I">0</ev>
+    <pv t="I">6516</pv>
+    <qod t="I">0</qod>
+    <qod_per_day t="F">26.9537452089075</qod_per_day>
+    <qod_per_sec t="F">0.0</qod_per_sec>
+    <start t="T">2026-02-17T09:19:57Z</start>
+    <what t="S">earned-value</what>
+    <when t="T">2026-04-24T15:53:20Z</when>
+  </f>
+  <f>
+    <_id t="I">1248</_id>
+    <_job t="I">24903172594</_job>
+    <_time t="T">2026-04-24T17:36:27Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">11005031990</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
