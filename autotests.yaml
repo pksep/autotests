@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 10.437741637
+  seconds: 8.025945174
   version: 0.60.0
   what: judges-summary
-  when: 2026-04-25 23:22:15.830172838 Z
+  when: 2026-04-26 01:13:08.282265041 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -20539,11 +20539,11 @@
   what: learn-eva
   when: 2026-04-25 22:06:46.421361665 Z
 - _id: 1257
-  _job: 24943073769
-  _time: 2026-04-25 23:22:07.390733263 Z
+  _job: 24944974450
+  _time: 2026-04-26 01:13:01.838961493 Z
   _version: 0.19.6/0.60.0/0.17.11
   earliest_issue_was_found: 1
-  events_were_scanned: 11045629381
+  events_were_scanned: 11046966105
   latest_issue_was_found: 529
   min_pull_was_found: 529
   repository: 935866864
