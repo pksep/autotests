@@ -28,7 +28,7 @@ const waybillCollections: number = 0; // Global variable to track waybill collec
 const currentBuildQuantity: number = 1; // Global variable for current build quantity (how many items we're building now)
 
 export const runERP_969_2 = () => {
-  test('ERP-969-2 - Create 2 details and СБ assembly containing both details', async ({ page }, testInfo) => {
+  test('TestCase 04 - ERP-969-2 - Create 2 details and СБ assembly containing both details', async ({ page }, testInfo) => {
     test.setTimeout(600000);
     const detailsPage = new CreatePartsDatabasePage(page);
 

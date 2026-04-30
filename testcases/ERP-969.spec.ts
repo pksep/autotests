@@ -32,7 +32,7 @@ const today = new Date().toLocaleDateString('ru-RU', {
 });
 
 export const runERP_969 = () => {
-  test(`TestCase 06 - Архивация всех совпадающих деталей (Cleanup) ${TEST_DATA.NEW_DETAIL_A}`, async ({ page }) => {
+  test(`TestCase 01 - Архивация всех совпадающих деталей (Cleanup) ${TEST_DATA.NEW_DETAIL_A}`, async ({ page }) => {
     test.setTimeout(600000);
 
     const detailsPage = new CreatePartsDatabasePage(page);
@@ -151,7 +151,7 @@ export const runERP_969 = () => {
     });
   });
 
-  test(`TestCase 06 - Архивация всех совпадающих деталей (Cleanup) ${TEST_DATA.NEW_SB_A}`, async ({ page }) => {
+  test(`TestCase 02 - Архивация всех совпадающих деталей (Cleanup) ${TEST_DATA.NEW_SB_A}`, async ({ page }) => {
     test.setTimeout(600000);
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -270,7 +270,7 @@ export const runERP_969 = () => {
     });
   });
 
-  test('ERP-969 - Big urgent test for details & specifications', async ({ page }) => {
+  test('TestCase 03 - ERP-969 - Big urgent test for details & specifications', async ({ page }) => {
     test.setTimeout(600000);
     const detailsPage = new CreatePartsDatabasePage(page);
 
