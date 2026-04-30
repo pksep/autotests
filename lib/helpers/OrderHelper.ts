@@ -246,8 +246,9 @@ export class OrderHelper {
    */
   async checkOrderQuantityNew(quantity: string, quantityOrder?: string) {
     const modalWindowLaunchIntoProduction = this.page.locator(SelectorsStartProduction.MODAL_START_PRODUCTION_MODAL_CONTENT);
+    const input = this.getOrderQuantityInput(modalWindowLaunchIntoProduction);
     if (quantityOrder) {
-      await modalWindowLaunchIntoProduction.locator('input').fill(quantityOrder);
+      await input.fill(quantityOrder);
     }
   }
 
@@ -258,7 +259,7 @@ export class OrderHelper {
    * @param quantityOrder - if specified, enters this value in the input field
    */
   async checkOrderQuantity(locator: string, quantity: string, quantityOrder?: string) {
-    const input = this.page.locator(locator).locator('input');
+    const input = this.getOrderQuantityInput(this.page.locator(locator));
 
     if (quantityOrder) {
       // Если указано quantityOrder, просто вводим его значение
@@ -268,6 +269,11 @@ export class OrderHelper {
       const currentValue = await input.inputValue();
       expect(currentValue).toBe(quantity);
     }
+  }
+
+  private getOrderQuantityInput(container: Locator): Locator {
+    const ownQuantityInput = container.locator('[data-testid="ModalStartProduction-ComplectationTable-ShipmentsCenterInput-Input"]');
+    return ownQuantityInput.or(container.locator('input')).last();
   }
 
   /**

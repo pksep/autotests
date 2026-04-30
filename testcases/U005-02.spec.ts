@@ -209,6 +209,15 @@ export const runU005_02 = () => {
       );
 
       const titlesh4 = testData1.elements.CreatePage.modalAddDocuments.titlesh4.map(title => title.replace(/\s+/g, ' ').trim());
+      await expect
+        .poll(
+          async () => (await shortagePage.getAllH4TitlesInModalByTestId(page, 'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal')).length,
+          {
+            timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+            intervals: [250, 500, 1000],
+          },
+        )
+        .toBeGreaterThanOrEqual(titlesh4.length);
       const h4Titles = await shortagePage.getAllH4TitlesInModalByTestId(page, 'AddDetal-FileComponent-DragAndDrop-ModalAddFile-Modal');
       const normalizedH4Titles = h4Titles.map(title => title.replace(/\s+/g, ' ').trim());
 
@@ -246,6 +255,12 @@ export const runU005_02 = () => {
 
       // Locate ALL FILE SECTIONS inside the section (wildcard for '-File')
       const fileSections = section.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_DRAG_AND_DROP_MODAL_ADD_FILE_FILE);
+      await expect
+        .poll(async () => await fileSections.count(), {
+          timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+          intervals: [250, 500, 1000],
+        })
+        .toBeGreaterThanOrEqual(2);
       const fileCount = await fileSections.count();
 
       if (fileCount < 2) {
@@ -627,14 +642,14 @@ export const runU005_02 = () => {
       );
       await searchField.press('Enter');
       await page.waitForLoadState('load');
-      const firstRow = leftTable.locator('tbody tr:first-child');
-      await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await expect(firstRow).toContainText(TEST_FILE, { timeout: WAIT_TIMEOUTS.SHORT });
-      logger.log('First Row:', await firstRow.textContent());
-      await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
+      const targetRow = leftTable.locator('tbody tr').filter({ hasText: TEST_FILE }).first();
+      await targetRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await expect(targetRow).toContainText(TEST_FILE, { timeout: WAIT_TIMEOUTS.SHORT });
+      logger.log('Target file row:', await targetRow.textContent());
+      await shortagePage.highlightElement(targetRow, HIGHLIGHT_PENDING);
 
-      const rowText = await firstRow.textContent();
-      logger.log('First row text:', rowText);
+      const rowText = await targetRow.textContent();
+      logger.log('Target row text:', rowText);
       await expectSoftWithScreenshot(
         page,
         () => {
@@ -654,12 +669,13 @@ export const runU005_02 = () => {
 
       // Locate the parent container of the table
       const tableContainer = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_FILE_TABLE_TABLE);
-      const firstRow = tableContainer.locator('tbody tr:first-child');
-      selectedFileType = (await firstRow.locator('td').nth(2).textContent()) ?? '';
-      selectedFileName = (await firstRow.locator('td').nth(3).textContent()) ?? '';
+      const targetRow = tableContainer.locator('tbody tr').filter({ hasText: TEST_FILE }).first();
+      await targetRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      selectedFileType = (await targetRow.locator('td').nth(2).textContent()) ?? '';
+      selectedFileName = (await targetRow.locator('td').nth(3).textContent()) ?? '';
 
       const shortagePage = new CreatePartsDatabasePage(page);
-      await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
+      await shortagePage.highlightElement(targetRow, HIGHLIGHT_PENDING);
       const addButton = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON, { hasText: 'Добавить' });
       await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       await shortagePage.highlightElement(addButton, HIGHLIGHT_PENDING);
@@ -673,8 +689,8 @@ export const runU005_02 = () => {
         'Verify button is ready',
         test.info(),
       );
-      await firstRow.click();
-      await shortagePage.highlightElement(firstRow, HIGHLIGHT_SUCCESS);
+      await targetRow.click();
+      await shortagePage.highlightElement(targetRow, HIGHLIGHT_SUCCESS);
       await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       const isButtonReady2 = await shortagePage.isButtonVisibleTestId(page, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FILE_WINDOW_ADD_BUTTON, 'Добавить', true, SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES);
       await expectSoftWithScreenshot(
@@ -809,9 +825,30 @@ export const runU005_02 = () => {
       const parentSection = page.locator(SelectorsPartsDataBase.ADD_DETAIL_FILE_COMPONENT);
       logger.log('Located parent section for the file table.');
 
-      // Locate all visible table rows within the scoped section
+      // Locate all visible table rows within the scoped section. Delete a different
+      // file so the file selected from the database can still be verified after save.
       const tableRows = parentSection.locator(SelectorsPartsDataBase.DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_TABLEROW);
-      const row = tableRows.first();
+      const rowCount = await tableRows.count();
+      let row = tableRows.first();
+      let deleteTargetFound = false;
+
+      for (let i = 0; i < rowCount; i++) {
+        const currentRow = tableRows.nth(i);
+        const fileNameCell = currentRow.locator(SelectorsPartsDataBase.DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TBODY_NAME);
+        await fileNameCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        const fileNameText = (await fileNameCell.textContent())?.trim();
+
+        if (fileNameText !== selectedFileName.trim()) {
+          row = currentRow;
+          deleteTargetFound = true;
+          logger.log(`Deleting non-selected file row ${i + 1}: ${fileNameText}`);
+          break;
+        }
+      }
+
+      if (!deleteTargetFound) {
+        throw new Error(`Could not find a non-selected file to delete. Selected file "${selectedFileName}" must remain for the persistence check.`);
+      }
 
       // Refine the locator to target the checkbox input inside the third column
       const checkboxInput = row.locator(SelectorsPartsDataBase.DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_CHECKBOX);
@@ -864,9 +901,10 @@ export const runU005_02 = () => {
       await page.waitForLoadState('load');
 
       const documentTable = page.locator(SelectorsPartsDataBase.DETAIL_FILE_COMPONENT_DOCUMENT_TABLE_TABLE);
+      const currentDetailName = await page.locator(SelectorsPartsDataBase.EDIT_DETAL_INFORMATION_INPUT_FILL).inputValue().catch(() => '');
       const tableVisible = await documentTable.isVisible().catch(() => false);
-      if (!tableVisible) {
-        logger.log('Document table not on current page (likely redirected to list after save). Navigating to parts database and opening the detail.');
+      if (!tableVisible || currentDetailName.trim() !== TEST_DETAIL_NAME) {
+        logger.log(`Current page is not the created detail (name="${currentDetailName}"). Navigating to parts database and opening "${TEST_DETAIL_NAME}".`);
         await shortagePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
         await page.waitForLoadState('load');
         await shortagePage.searchAndWaitForTable(TEST_DETAIL_NAME, SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE, SelectorsPartsDataBase.MAIN_PAGE_Д_TABLE, {
@@ -883,8 +921,16 @@ export const runU005_02 = () => {
           await page.mouse.move(searchBox.x + searchBox.width / 2, moveY);
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
         }
-        const firstRow = page.locator(`${tableSelector} tbody tr`).first();
-        await firstRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        const firstRow = page.locator(`${tableSelector} tbody tr:has(td)`).first();
+        await expect
+          .poll(
+            async () => ((await firstRow.textContent()) ?? '').toLowerCase().includes(TEST_DETAIL_NAME.toLowerCase()),
+            {
+              timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+              intervals: [500, 1000, 2000],
+            },
+          )
+          .toBe(true);
         await firstRow.scrollIntoViewIfNeeded();
         await shortagePage.highlightElement(firstRow, HIGHLIGHT_PENDING);
         await firstRow.click();
@@ -894,6 +940,9 @@ export const runU005_02 = () => {
         await shortagePage.highlightElement(editButton, HIGHLIGHT_PENDING);
         await editButton.click();
         await page.waitForLoadState('load');
+        await expect(page.locator(SelectorsPartsDataBase.EDIT_DETAL_INFORMATION_INPUT_FILL)).toHaveValue(TEST_DETAIL_NAME, {
+          timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+        });
       }
 
       await documentTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });

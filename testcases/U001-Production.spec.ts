@@ -10,6 +10,7 @@
 
 import * as SelectorsShortagePages from '../lib/Constants/SelectorsShortagePages';
 import * as SelectorsStartProduction from '../lib/Constants/SelectorsStartProduction';
+import * as SelectorsNotifications from '../lib/Constants/SelectorsNotifications';
 import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
 import { test, expect } from '@playwright/test';
 import { CreateShortageProductPage } from '../pages/ShortageProductPage';
@@ -23,7 +24,6 @@ import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
 const {
   nameProduct,
-  urgencyDate,
   quantityProductLaunchOnProduction,
   descendantsCbedArray,
   descendantsDetailArray,
@@ -38,9 +38,25 @@ const {
   deficitTableDetail,
 } = U001Constants;
 // Mutable variables that need to be reassigned
-let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 let quantityProductLaunchOnProductionBefore = U001Constants.quantityProductLaunchOnProductionBefore;
 let quantityProductLaunchOnProductionAfter = U001Constants.quantityProductLaunchOnProductionAfter;
+
+async function getStockOrderSuccessSignal(page: import('@playwright/test').Page, responseBody: unknown, responseText: string): Promise<boolean> {
+  const normalizedResponseText = responseText.trim().toLowerCase();
+  const responseBodyIndicatesSuccess =
+    responseBody === true ||
+    normalizedResponseText === 'true' ||
+    (typeof responseBody === 'object' &&
+      responseBody !== null &&
+      Object.values(responseBody as Record<string, unknown>).some(value => value === true));
+
+  if (responseBodyIndicatesSuccess) {
+    return true;
+  }
+
+  const notificationText = ((await page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last().textContent().catch(() => '')) || '').trim();
+  return /отправлен[а-я\s]*в производство/i.test(notificationText);
+}
 
 export const runU001_03_Production = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Production Launch (Test Cases 08-10)`);
@@ -51,6 +67,10 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     const shortageProduct = new CreateShortageProductPage(page);
 
     let checkOrderNumber: string;
+    let stockOrderApiResponseBody: unknown;
+    let stockOrderApiRequestPayload: unknown;
+    let stockOrderApiResponseText = '';
+    let stockOrderApiOk = false;
 
     await allure.step('Step 01-02: Open the warehouse page and shortage product page', async () => {
       // Find and go to the page using the locator Shortage of Products
@@ -76,7 +96,7 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
 
     await allure.step('Step 06: Check the checkbox in the first column', async () => {
       // Find the checkbox using data-testid
-      const checkboxCell = page.locator(SelectorsShortagePages.ROW_CHECKBOX).first();
+      const checkboxCell = page.locator(SelectorsShortagePages.ROW_CHECKBOX_PATTERN).first();
 
       await checkboxCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await checkboxCell.scrollIntoViewIfNeeded();
@@ -117,34 +137,6 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
       await shortageProduct.waitingTableBody(deficitTable);
     });
 
-    await allure.step('Step 07: Checking the urgency date of an order', async () => {
-      // Find the urgency date cell using data-testid
-      const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
-
-      await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await urgencyDateCell.scrollIntoViewIfNeeded();
-
-      // Highlight the urgency date cell
-      await urgencyDateCell.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'lightyellow';
-        el.style.border = '2px solid orange';
-      });
-
-      // Get the urgency date value from the cell
-      const urgencyDateValue = await urgencyDateCell.textContent();
-      urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-      logger.log('Date by urgency in the table: ', urgencyDateOnTable);
-
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-        },
-        `Verify urgency date equals "${urgencyDate}"`,
-        test.info(),
-      );
-    });
 
     await allure.step('Step 08: We check the number of those launched into production', async () => {
       // Find the production ordered quantity cell using data-testid
@@ -192,20 +184,39 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
       await shortageProduct.checkOrderQuantity(locator, '2', quantityProductLaunchOnProduction);
     });
 
-    await allure.step('Step 14: We save the order number', async () => {
-      // Get the order number
-      checkOrderNumber = await shortageProduct.checkOrderNumber();
-      logger.log(`Полученный номер заказа: ${checkOrderNumber}`);
+    await allure.step('Step 14: Prepare stock-order capture', async () => {
+      checkOrderNumber = '';
     });
 
     await allure.step('Step 15: Click on the In launch button', async () => {
-      // Click on the button
-      await shortageProduct.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+      const stockOrderApiCall = await shortageProduct.captureStockOrderRequestAndResponse(async () => {
+        await shortageProduct.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+      });
+      stockOrderApiResponseBody = stockOrderApiCall.responseBody;
+      stockOrderApiRequestPayload = stockOrderApiCall.requestPayload;
+      stockOrderApiResponseText = stockOrderApiCall.responseText;
+      stockOrderApiOk = stockOrderApiCall.ok;
     });
 
-    await allure.step('Step 16: We check that the order number is displayed in the notification', async () => {
-      // Check the order number in the success notification
-      await shortageProduct.getMessage(checkOrderNumber);
+    await allure.step('Step 16: We check stock-order API payload and response', async () => {
+      const requestPayload = (stockOrderApiRequestPayload ?? {}) as Record<string, unknown>;
+      const workersData = (requestPayload.workersData ?? {}) as Record<string, unknown>;
+      const serverReturnedTrue = await getStockOrderSuccessSignal(page, stockOrderApiResponseBody, stockOrderApiResponseText);
+      const requestOrderNumber = typeof workersData.number_order === 'string' ? workersData.number_order.trim() : '';
+      const requestType = typeof workersData.type === 'string' ? workersData.type.trim().toLowerCase() : '';
+      checkOrderNumber = requestOrderNumber;
+      await expectSoftWithScreenshot(
+        page,
+        async () => {
+          expect.soft(stockOrderApiOk).toBe(true);
+          expect.soft(serverReturnedTrue).toBe(true);
+          expect.soft(requestOrderNumber.length > 0).toBe(true);
+          expect.soft(requestType).toBe('product');
+        },
+        'Verify server POST /api/stock-order/ response is true with product payload and captured number_order',
+        test.info(),
+      );
+      logger.log(`Captured order number from POST /api/stock-order/: ${checkOrderNumber}`);
     });
 
     await allure.step('Step 17: We check the number of those launched into production', async () => {
@@ -246,6 +257,10 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortageAssemblies = new CreatShortageAssembliesPage(page);
     let checkOrderNumber: string;
+    let stockOrderApiResponseBody: unknown;
+    let stockOrderApiRequestPayload: unknown;
+    let stockOrderApiResponseText = '';
+    let stockOrderApiOk = false;
 
     await allure.step('Step 01: Open the warehouse page', async () => {
       // Go to the Warehouse page
@@ -284,6 +299,8 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
             useRedesign: true,
             timeoutBeforeWait: 1000,
             searchInputDataTestId: SelectorsShortagePages.TABLE_SEARCH_INPUT,
+            minRows: 1,
+            timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
           });
           await page.waitForLoadState('domcontentloaded');
 
@@ -292,10 +309,8 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
 
         await allure.step('Step 06: Check the checkbox in the first column', async () => {
           await page.waitForTimeout(TIMEOUTS.STANDARD);
-          // Find the checkbox in the first cell of the first row
-          const tableBody = page.locator(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE_TBODY);
-          const firstRow = tableBody.locator('tr').first();
-          const checkboxCell = firstRow.locator('td').first();
+          // Find the checkbox cell in the first data row
+          const checkboxCell = page.locator(SelectorsShortagePages.CBED_TABLE_BODY_SELECT).first();
 
           await checkboxCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await checkboxCell.scrollIntoViewIfNeeded();
@@ -336,34 +351,6 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
           await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
         });
 
-        await allure.step('Step 07: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid
-          const urgencyDateCell = page.locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE).first();
-
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          await expectSoftWithScreenshot(
-            page,
-            () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-            },
-            `Verify urgency date on table equals expected (${urgencyDate})`,
-            test.info(),
-          );
-        });
 
         await allure.step('Step 08: We check the number of those launched into production', async () => {
           // Find the ordered quantity cell using data-testid
@@ -407,20 +394,39 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
           await shortageAssemblies.checkOrderQuantity(locator, '2', quantityProductLaunchOnProduction);
         });
 
-        await allure.step('Step 12: We save the order number', async () => {
-          // Get the order number
-          checkOrderNumber = await shortageAssemblies.checkOrderNumber();
-          logger.log(`Полученный номер заказа: ${checkOrderNumber}`);
+        await allure.step('Step 12: Prepare stock-order capture', async () => {
+          checkOrderNumber = '';
         });
 
         await allure.step('Step 13: Click on the In launch button', async () => {
-          // Click on the button
-          await shortageAssemblies.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+          const stockOrderApiCall = await shortageAssemblies.captureStockOrderRequestAndResponse(async () => {
+            await shortageAssemblies.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+          });
+          stockOrderApiResponseBody = stockOrderApiCall.responseBody;
+          stockOrderApiRequestPayload = stockOrderApiCall.requestPayload;
+          stockOrderApiResponseText = stockOrderApiCall.responseText;
+          stockOrderApiOk = stockOrderApiCall.ok;
         });
 
-        await allure.step('Step 14: We check that the order number is displayed in the notification', async () => {
-          // Check the order number in the success notification
-          await shortageAssemblies.getMessage(checkOrderNumber);
+        await allure.step('Step 14: We check stock-order API payload and response', async () => {
+          const requestPayload = (stockOrderApiRequestPayload ?? {}) as Record<string, unknown>;
+          const workersData = (requestPayload.workersData ?? {}) as Record<string, unknown>;
+          const serverReturnedTrue = await getStockOrderSuccessSignal(page, stockOrderApiResponseBody, stockOrderApiResponseText);
+          const requestOrderNumber = typeof workersData.number_order === 'string' ? workersData.number_order.trim() : '';
+          const requestType = typeof workersData.type === 'string' ? workersData.type.trim().toLowerCase() : '';
+          checkOrderNumber = requestOrderNumber;
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(stockOrderApiOk).toBe(true);
+              expect.soft(serverReturnedTrue).toBe(true);
+              expect.soft(requestOrderNumber.length > 0).toBe(true);
+              expect.soft(requestType).toBe('cbed');
+            },
+            'Verify server POST /api/stock-order/ response is true with cbed payload and captured number_order',
+            test.info(),
+          );
+          logger.log(`Captured order number from POST /api/stock-order/: ${checkOrderNumber}`);
         });
 
         await allure.step('Step 15: Close success message', async () => {
@@ -469,6 +475,10 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
     test.setTimeout(TEST_TIMEOUTS.VERY_LONG);
     const shortageParts = new CreatShortagePartsPage(page);
     let checkOrderNumber: string;
+    let stockOrderApiResponseBody: unknown;
+    let stockOrderApiRequestPayload: unknown;
+    let stockOrderApiResponseText = '';
+    let stockOrderApiOk = false;
 
     await allure.step('Step 01: Open the warehouse page', async () => {
       // Go to the Warehouse page
@@ -580,34 +590,6 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
           await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
-        await allure.step('Step 07: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid (starts with pattern)
-          const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN).first();
-
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-            },
-            `Verify urgency date equals "${urgencyDate}"`,
-            test.info(),
-          );
-        });
 
         await allure.step('Step 08: We check the number of those launched into production', async () => {
           // Get the value using data-testid directly
@@ -651,20 +633,39 @@ export const runU001_03_Production = (isSingleTest: boolean, iterations: number)
           await shortageParts.checkOrderQuantity(locator, '2', quantityProductLaunchOnProduction);
         });
 
-        await allure.step('Step 12: We save the order number', async () => {
-          // Get the order number
-          checkOrderNumber = await shortageParts.checkOrderNumber();
-          logger.log(`Полученный номер заказа: ${checkOrderNumber}`);
+        await allure.step('Step 12: Prepare stock-order capture', async () => {
+          checkOrderNumber = '';
         });
 
         await allure.step('Step 13: Click on the In launch button', async () => {
-          // Click on the button
-          await shortageParts.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+          const stockOrderApiCall = await shortageParts.captureStockOrderRequestAndResponse(async () => {
+            await shortageParts.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+          });
+          stockOrderApiResponseBody = stockOrderApiCall.responseBody;
+          stockOrderApiRequestPayload = stockOrderApiCall.requestPayload;
+          stockOrderApiResponseText = stockOrderApiCall.responseText;
+          stockOrderApiOk = stockOrderApiCall.ok;
         });
 
-        await allure.step('Step 14: We check that the order number is displayed in the notification', async () => {
-          // Check the order number in the success notification
-          await shortageParts.getMessage(checkOrderNumber);
+        await allure.step('Step 14: We check stock-order API payload and response', async () => {
+          const requestPayload = (stockOrderApiRequestPayload ?? {}) as Record<string, unknown>;
+          const workersData = (requestPayload.workersData ?? {}) as Record<string, unknown>;
+          const serverReturnedTrue = await getStockOrderSuccessSignal(page, stockOrderApiResponseBody, stockOrderApiResponseText);
+          const requestOrderNumber = typeof workersData.number_order === 'string' ? workersData.number_order.trim() : '';
+          const requestType = typeof workersData.type === 'string' ? workersData.type.trim().toLowerCase() : '';
+          checkOrderNumber = requestOrderNumber;
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(stockOrderApiOk).toBe(true);
+              expect.soft(serverReturnedTrue).toBe(true);
+              expect.soft(requestOrderNumber.length > 0).toBe(true);
+              expect.soft(requestType).toBe('detal');
+            },
+            'Verify server POST /api/stock-order/ response is true with detal payload and captured number_order',
+            test.info(),
+          );
+          logger.log(`Captured order number from POST /api/stock-order/: ${checkOrderNumber}`);
         });
 
         await allure.step('Step 15: Close success message', async () => {

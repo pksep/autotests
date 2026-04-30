@@ -165,14 +165,28 @@ export class ArchiveHelper {
       color: 'blue',
     });
     await this.page.waitForTimeout(500);
-    await archiveButton.click();
-
-    // Wait a bit for modal to appear
-    await this.page.waitForTimeout(200);
-
-    // Confirm the archive (calls ElementHelper)
     const confirmLabel = options?.confirmButtonLabel || 'Да';
-    await pageObject.clickButton(confirmLabel, confirmButtonSelector);
+    const confirmButton = this.page.locator(confirmButtonSelector, { hasText: confirmLabel });
+    const confirmTextPattern = new RegExp(`^\\s*${confirmLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`);
+
+    await archiveButton.click();
+    try {
+      await confirmButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    } catch (error) {
+      logger.warn(`Archive confirmation did not appear after first click. Retrying archive click once. Original error: ${error instanceof Error ? error.message : String(error)}`);
+      await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+      await archiveButton.click();
+      await confirmButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+    }
+
+    await pageObject.highlightElement(confirmButton, {
+      backgroundColor: 'yellow',
+      border: '2px solid red',
+      color: 'blue',
+    });
+    await expect(confirmButton).toHaveText(confirmTextPattern);
+    await expect(confirmButton).toBeVisible();
+    await confirmButton.click();
 
     // Wait for the modal to close
     await this.page.waitForLoadState('networkidle');

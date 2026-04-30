@@ -107,3 +107,27 @@ export const getTaskByEquipmentTableByIndex = (index: number): string => {
 // Helper function to get all TaskByEquipment tables selector pattern
 // This matches any table with the pattern TaskByEquipment-Content-List-ExecutiveBody{N}-Table
 export const TASK_BY_EQUIPMENT_TABLE_PATTERN = '[data-testid^="TaskByEquipment-Content-List-ExecutiveBody"][data-testid$="-Table"]';
+
+// Column Setup
+export const PRODUCTION_GEAR_ICON = '[data-testid="Production-column-setup-gear-icon"]';
+export const PRODUCTION_SIDEBAR_MODAL = '[data-testid="Production-column-setup-sidebar"]';
+export const PRODUCTION_CHECKBOX_NO = '[data-testid="Production-column-setup-checkbox-no"]';
+export const PRODUCTION_CHECKBOX_NO_PZ = '[data-testid="Production-column-setup-checkbox-no-pz"]';
+export const PRODUCTION_SAVE_BUTTON = '[data-testid="Production-column-setup-save-button"]';
+export const PRODUCTION_TABLE_HEADER_NO = '[data-testid="Production-table-header-no"]';
+export const PRODUCTION_TABLE_HEADER_NO_PZ = '[data-testid="Production-table-header-no-pz"]';
+
+// ERP-3482 workload view selectors
+export const PRODUCTION_WORKLOAD_ACCORDION_BUTTON = '[data-testid="AccordionNoNative-Accordion-Button"]';
+export const PRODUCTION_WORKLOAD_SWITCH_ITEM_0 = '[data-testid="WorkloadBody-Switch-Item0"]';
+export const PRODUCTION_WORKLOAD_SWITCH_ITEM_1 = '[data-testid="WorkloadBody-Switch-Item1"]';
+export const PRODUCTION_WORKLOAD_TABLE = '[data-testid="WorkloadBody-WorkloadTable"]';
+export const TASK_BY_USER_EXECUTIVE_TABLE = '[data-testid="TaskByUser-Content-List-ExecutiveContent-Table"]';
+export const TASK_BY_EQUIPMENT_EXECUTIVE_TABLE = '[data-testid="Table"]';
+export const WORKLOAD_ROW_FIRST_CELL = 'td:first-child';
+export const TASK_BY_USER_REQUIRED_TIME_CELL = '[data-testid$="-TdRequiredTime"]';
+export const TASK_BY_USER_CALCULATED_TIME_CELL = '[data-testid$="-TdCalculatedTime"]';
+export const TASK_BY_USER_DELTA_TIME_CELL = '[data-testid$="-TdDeltaTime"]';
+export const TASK_BY_EQUIPMENT_SHIPMENT_DATE_CELL = '[data-testid$="-DateShipment"]';
+export const TASK_BY_EQUIPMENT_CALCULATED_CELL = '[data-testid="DataCell"]';
+export const TASK_BY_EQUIPMENT_DELTA_TIME_CELL = '[data-testid$="-DeltaTime"]';

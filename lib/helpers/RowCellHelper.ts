@@ -264,8 +264,10 @@ export class RowCellHelper {
     },
   ) {
     // Debug: Check if table has any rows at all
-    const allRows = await this.page.locator(`${locator} tbody tr`);
-    const rowCount = await allRows.count();
+    const allRows = this.page.locator(`${locator} tbody tr`);
+    await allRows.first().waitFor({ state: 'attached', timeout: WAIT_TIMEOUTS.STANDARD });
+    const rowTexts = await allRows.allTextContents();
+    const rowCount = rowTexts.length;
     logger.log(`DEBUG: Total rows in table: ${rowCount}`);
 
     if (rowCount === 0) {
@@ -293,12 +295,11 @@ export class RowCellHelper {
 
     if (!foundValue) {
       // Дополнительная проверка: ищем значение в остальных строках таблицы
-      const rows = await this.page.locator(`${locator} tbody tr`);
-      const rowsCount = await rows.count();
+      const rowsCount = rowTexts.length;
       logger.log(`DEBUG: Searching remaining ${rowsCount} rows for "${name.trim()}"`);
 
       for (let i = 0; i < rowsCount; i++) {
-        const rowText = (await rows.nth(i).textContent())?.trim() || '';
+        const rowText = rowTexts[i]?.trim() || '';
         logger.log(`DEBUG: Row ${i} content: "${rowText}"`);
         if (rowText.toLowerCase().includes(name.trim().toLowerCase())) {
           foundValue = rowText;

@@ -299,7 +299,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
       await allure.step('Step 08c: Cleanup product residues', async () => {
         await revisionPage.searchTable(nameProductNew, tableMain, 'TableRevisionPagination-SearchInput-Dropdown-Input');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const rows = page.locator(`${tableMain} tbody tr`);
+        const rows = page.locator(`${tableMain} tbody tr`).filter({ hasText: nameProductNew });
         if ((await rows.count()) === 0) {
           logger.log(`No warehouse residues for product: ${nameProductNew}. Skipping.`);
         } else {
@@ -317,7 +317,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
           await page.locator(tableMainCbed).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(cbed.name, tableMainCbed, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          const rows = page.locator(`${tableMainCbed} tbody tr`);
+          const rows = page.locator(`${tableMainCbed} tbody tr`).filter({ hasText: cbed.name });
           if ((await rows.count()) === 0) {
             logger.log(`No warehouse residues for CBED: ${cbed.name}. Skipping.`);
             return;
@@ -326,6 +326,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
           await revisionPage.changeBalanceAndConfirmArchive(cbed.name, tableMainCbed, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
             waitAfterConfirm: 1000,
+            switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM1,
           });
         });
       }
@@ -336,7 +337,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
           await page.locator(tableMainDetal).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(detail.name, tableMainDetal, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          const rows = page.locator(`${tableMainDetal} tbody tr`);
+          const rows = page.locator(`${tableMainDetal} tbody tr`).filter({ hasText: detail.name });
           if ((await rows.count()) === 0) {
             logger.log(`No warehouse residues for Detail: ${detail.name}. Skipping.`);
             return;
@@ -345,6 +346,7 @@ export const runU001_11_Cleanup = (isSingleTest: boolean, iterations: number) =>
           await revisionPage.changeBalanceAndConfirmArchive(detail.name, tableMainDetal, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
             waitAfterConfirm: 1000,
+            switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM2,
           });
         });
       }

@@ -16,6 +16,41 @@ import { extractIdFromSelector } from '../utils/utilities';
 import { expectSoftWithScreenshot } from '../utils/utilities';
 import logger from '../utils/logger';
 
+export const OPEN_DIALOG_SELECTOR =
+  'dialog[open], [role="dialog"]:visible, .modal:visible, .modal-yui-kit__modal-content:visible, [data-testid*="Modal"]:visible, [data-testid*="Dialog"]:visible, [data-testid*="Confirm"]:visible';
+
+export interface DialogButtonExpectation {
+  selector?: string;
+  label?: string | RegExp;
+  enabled?: boolean;
+}
+
+export interface DialogValidationOptions {
+  dialogSelector?: string;
+  expectedTitle?: string | RegExp;
+  expectedTexts?: Array<string | RegExp>;
+  expectedButtons?: DialogButtonExpectation[];
+  expectedInputSelectors?: string[];
+  mustHaveMeaningfulText?: boolean;
+  closeAfterValidation?: boolean;
+  closeSelector?: string;
+  timeout?: number;
+  testInfo?: TestInfo;
+}
+
+export interface DialogValidationResult {
+  selector: string;
+  title: string | null;
+  text: string;
+  buttons: string[];
+  inputs: string[];
+  closed: boolean;
+}
+
+function normalizeDialogText(text: string | null | undefined): string {
+  return (text ?? '').replace(/\s+/g, ' ').trim();
+}
+
 export class ModalHelper {
   constructor(private page: Page) {}
 
@@ -27,6 +62,174 @@ export class ModalHelper {
   async checkCloseModalWindow(locator: string, timeout: number = WAIT_TIMEOUTS.PAGE_RELOAD) {
     const modalWindow = this.page.locator(locator);
     await expect(modalWindow).toBeHidden({ timeout });
+  }
+
+  /**
+   * Returns the first visible open dialog/modal. Use a selector for known dialogs,
+   * otherwise this falls back to common dialog/modal patterns used in the app.
+   */
+  getOpenDialog(dialogSelector: string = OPEN_DIALOG_SELECTOR): Locator {
+    return this.page.locator(dialogSelector).filter({ hasNot: this.page.locator('[aria-hidden="true"]') }).first();
+  }
+
+  /**
+   * Lightweight dialog snapshot for exploration/debug assertions.
+   */
+  async getOpenDialogSnapshot(dialogSelector: string = OPEN_DIALOG_SELECTOR): Promise<DialogValidationResult> {
+    const dialog = this.getOpenDialog(dialogSelector);
+    await expect(dialog).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+
+    const titleLocator = dialog.locator('h1,h2,h3,h4,h5,[data-testid*="Title"],[class*="title"]').first();
+    const title = normalizeDialogText(await titleLocator.textContent({ timeout: 1000 }).catch(() => null)) || null;
+    const text = normalizeDialogText(await dialog.innerText({ timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => ''));
+    const buttons = await dialog
+      .locator('button:visible,[role="button"]:visible')
+      .evaluateAll(elements => elements.map(element => (element.textContent || element.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim()).filter(Boolean));
+    const inputs = await dialog
+      .locator('input:visible, textarea:visible, select:visible')
+      .evaluateAll(elements => elements.map(element => element.getAttribute('data-testid') || element.getAttribute('placeholder') || element.tagName.toLowerCase()).filter(Boolean));
+
+    return {
+      selector: dialogSelector,
+      title,
+      text,
+      buttons,
+      inputs,
+      closed: false,
+    };
+  }
+
+  /**
+   * Generic validation for dialogs/popups/modals:
+   * - visible open dialog
+   * - title/text content
+   * - expected buttons and enabled/disabled state
+   * - expected inputs
+   * - optional close behavior
+   */
+  async validateDialog(options: DialogValidationOptions = {}): Promise<DialogValidationResult> {
+    const dialogSelector = options.dialogSelector ?? OPEN_DIALOG_SELECTOR;
+    const dialog = this.getOpenDialog(dialogSelector);
+    await expect(dialog).toBeVisible({ timeout: options.timeout ?? WAIT_TIMEOUTS.STANDARD });
+
+    const snapshot = await this.getOpenDialogSnapshot(dialogSelector);
+
+    if (options.mustHaveMeaningfulText ?? true) {
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          expect.soft(snapshot.text.length).toBeGreaterThan(0);
+        },
+        `Verify dialog has meaningful text. Actual: "${snapshot.text}"`,
+        options.testInfo,
+      );
+    }
+
+    if (options.expectedTitle) {
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          if (options.expectedTitle instanceof RegExp) {
+            expect.soft(snapshot.title ?? '').toMatch(options.expectedTitle);
+          } else {
+            expect.soft(snapshot.title ?? '').toContain(options.expectedTitle);
+          }
+        },
+        `Verify dialog title. Expected: ${String(options.expectedTitle)}, actual: "${snapshot.title ?? ''}"`,
+        options.testInfo,
+      );
+    }
+
+    for (const expectedText of options.expectedTexts ?? []) {
+      await expectSoftWithScreenshot(
+        this.page,
+        () => {
+          if (expectedText instanceof RegExp) {
+            expect.soft(snapshot.text).toMatch(expectedText);
+          } else {
+            expect.soft(snapshot.text).toContain(expectedText);
+          }
+        },
+        `Verify dialog text contains ${String(expectedText)}`,
+        options.testInfo,
+      );
+    }
+
+    for (const expectedInputSelector of options.expectedInputSelectors ?? []) {
+      const input = dialog.locator(expectedInputSelector).first();
+      await expectSoftWithScreenshot(
+        this.page,
+        async () => {
+          await expect.soft(input).toBeVisible();
+        },
+        `Verify dialog input is visible: ${expectedInputSelector}`,
+        options.testInfo,
+      );
+    }
+
+    for (const expectedButton of options.expectedButtons ?? []) {
+      let button = expectedButton.selector ? dialog.locator(expectedButton.selector).first() : dialog.locator('button:visible,[role="button"]:visible');
+      if (expectedButton.label) {
+        button = button.filter({ hasText: expectedButton.label }).first();
+      }
+
+      await expectSoftWithScreenshot(
+        this.page,
+        async () => {
+          await expect.soft(button).toBeVisible();
+        },
+        `Verify dialog button is visible: ${expectedButton.selector ?? String(expectedButton.label ?? '')}`,
+        options.testInfo,
+      );
+
+      if (typeof expectedButton.enabled === 'boolean') {
+        const disabled = await button
+          .evaluate(element => element.hasAttribute('disabled') || element.classList.contains('disabled-yui-kit') || element.getAttribute('aria-disabled') === 'true')
+          .catch(() => false);
+        await expectSoftWithScreenshot(
+          this.page,
+          () => {
+            expect.soft(!disabled).toBe(expectedButton.enabled);
+          },
+          `Verify dialog button enabled state: expected ${expectedButton.enabled}, actual ${!disabled}`,
+          options.testInfo,
+        );
+      }
+    }
+
+    if (options.closeAfterValidation) {
+      await this.closeOpenDialog(dialogSelector, options.closeSelector, options.timeout);
+      snapshot.closed = true;
+    }
+
+    return snapshot;
+  }
+
+  /**
+   * Closes an open dialog using a known close/cancel selector first, then Escape.
+   */
+  async closeOpenDialog(dialogSelector: string = OPEN_DIALOG_SELECTOR, closeSelector?: string, timeout: number = WAIT_TIMEOUTS.STANDARD): Promise<void> {
+    const dialog = this.getOpenDialog(dialogSelector);
+    await expect(dialog).toBeVisible({ timeout });
+
+    const closeLocator = closeSelector
+      ? dialog.locator(closeSelector).first()
+      : dialog.locator('[data-testid$="Cancel-Button"], [data-testid*="Cancel"], button:has-text("Отмена"), button:has-text("Закрыть"), button:has-text("Нет"), [aria-label*="Закрыть"], [aria-label*="Close"]').first();
+
+    if (await closeLocator.isVisible().catch(() => false)) {
+      await closeLocator.click();
+    } else {
+      await this.page.keyboard.press('Escape');
+    }
+
+    await expect(dialog).toBeHidden({ timeout });
+  }
+
+  /**
+   * Validates that no dialog/modal is currently visible.
+   */
+  async validateNoOpenDialogs(dialogSelector: string = OPEN_DIALOG_SELECTOR): Promise<void> {
+    await expect(this.page.locator(dialogSelector)).toHaveCount(0, { timeout: WAIT_TIMEOUTS.STANDARD });
   }
 
   /**

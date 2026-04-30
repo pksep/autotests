@@ -24,7 +24,28 @@ export class NavigationHelper {
    * @param url - The URL to navigate to. Defaults to BASE_URL from ENV if not provided.
    */
   async goto(url: string = ENV.BASE_URL): Promise<void> {
-    await this.page.goto(url, { waitUntil: 'domcontentloaded' }); // Navigate to the provided URL and wait until the DOM content is loaded
+    const maxAttempts = 3;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+        return;
+      } catch (error) {
+        lastError = error;
+        const message = error instanceof Error ? error.message : String(error);
+        const shouldRetry = message.includes('ERR_HTTP_RESPONSE_CODE_FAILURE') || message.includes('interrupted');
+
+        if (!shouldRetry || attempt === maxAttempts) {
+          throw error;
+        }
+
+        logger.warn(`Navigation to "${url}" failed on attempt ${attempt}/${maxAttempts}: ${message}`);
+        await this.page.waitForTimeout(TIMEOUTS.STANDARD * attempt);
+      }
+    }
+
+    throw lastError;
   }
 
   /**

@@ -124,8 +124,20 @@ export const MAIN_PAGE_SMALL_DIALOG_ПД_TESTID = 'Specification-Dialog-CardtheD
 export const MAIN_PAGE_SMALL_DIALOG_РМ = 'div[data-testid="Specification-Dialog-CardtheDatabaseOfMaterials3"]';
 export const MAIN_PAGE_SMALL_DIALOG_РМ_TESTID = 'Specification-Dialog-CardtheDatabaseOfMaterials3';
 export const TABLE_SEARCH_INPUT = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-Input"]';
+/** Filebase table in Files page. */
+export const FILEBASE_RESULTS_TABLE = '[data-testid="BaseFile-FileWindow-Table-Table"]';
+/**
+ * Search input inside the filebase UniTable search row only.
+ * Do not use bare Search-Dropdown-Input — another control on the page can match first and the real table filter never runs.
+ */
+export const FILEBASE_PAGE_TABLE_SEARCH_INPUT =
+    '[data-testid="BaseFile-FileWindow-Table-Table-SearchRow-Search"] [data-testid="Search-Dropdown-Input"]';
+/** Filebase data rows (excludes head/search rows). */
+export const FILEBASE_RESULTS_TABLE_ROWS = '[data-testid^="BaseFile-FileWindow-Table-TableRow-"]';
+export const U006_SEARCH_PREFIX = 'U006';
 /** Raw data-testid for table search input (e.g. for searchAndWaitForTable searchInputDataTestId). */
 export const TABLE_SEARCH_INPUT_TESTID = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
+export const TABLE_SEARCH_DROPDOWN = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown"]';
 /** Search history dropdown title (can intercept row click; close with Escape before clicking first row). */
 export const TABLE_SEARCH_HISTORY_DROPDOWN_TITLE = '[data-testid="BasePaginationTable-Thead-SearchInput-Dropdown-History-ShowResult-Title"]';
 export const TABLE_FIRST_ROW_SELECTOR = 'tbody tr:first-child';
@@ -290,7 +302,9 @@ export const ADD_DETAIL_BUTTON_SAVE_AND_CANCEL_BUTTONS_CENTER_SAVE = '[data-test
 // U006 specific constants (added for Rule 1 compliance)
 export const SEARCH_DROPDOWN_INPUT = '[data-testid="Search-Dropdown-Input"]';
 export const ARCHIVE_BUTTON_GENERIC = 'button[data-testid="Button"]';
+export const BASE_FILE_BUTTONS_BAN_BUTTON = '[data-testid="BaseFile-Buttons-Ban"]';
 export const MODAL_CONFIRM_GENERIC = 'dialog[data-testid="ModalConfirm"]';
+export const BASE_FILE_BAN_DIALOG = 'dialog[data-testid="BaseFile-BanDialog"]';
 export const MODAL_CONFIRM_YES_BUTTON_GENERIC = 'dialog[data-testid="ModalConfirm-Content-Buttons-Yes"]';
 export const CHARACTERISTIC_BLANKS_MATERIAL_RESET_BUTTON = '[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Reset"]';
 export const MATERIAL_TABLE = '[data-testid="BasePaginationTable-Table-material"]';
@@ -316,14 +330,19 @@ export const CONFIRM_MODAL = 'ModalConfirm';
 export const EDIT_BUTTON = 'EditDetal-Buttons-Edit';
 export const ADD_DETAILE_RESET_MATERIAL_BUTTON = '[data-testid="AddDetal-CharacteristicBlanks-SelectedMaterialName-Reset"]';
 export const TEST_DETAIL_NAME = 'U005_test2_DETAILName';
+export const U006_TEST_DETAIL_NAME = 'U006_test2_DETAILName';
 export const ADD_DETAIL_PAGE = '[data-testid="AddDetal"]';
 export const EDIT_DETAIL_PAGE = '[data-testid="EditDetal"]';
 export const CHARACTERISTIC_BLANKS_TITLE = '[data-testid="AddDetal-CharacteristicBlanks-Title"]';
+/** U006 golden (repo-at-single-U001 CONST.CHR_TABLE): characteristic blanks table root; CHR_TABLE remains tbody for other suites. */
+export const U006_CHARACTERISTIC_BLANKS_TABLE = '[data-testid="AddDetal-CharacteristicBlanks-Table"]';
 export const CHR_TABLE = '[data-testid="AddDetal-CharacteristicBlanks-Tbody"]';
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN = 'AddDetal-CharacteristicBlanks-';
 export const EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN = 'EditDetal-CharacteristicBlanks';
 export const CHARACTERISTIC_BLANKS_INPUT_SUFFIX = 'Input-Input';
 export const CHARACTERISTIC_BLANKS_INPUT_SUFFIX_SELECTOR = `input[data-testid$="${CHARACTERISTIC_BLANKS_INPUT_SUFFIX}"]`;
+/** Create detail page: numeric characteristic cells (YInputNumber inner input). */
+export const ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR = `${ADD_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`;
 export const EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_SELECTOR = `${EDIT_DETAIL_CHARACTERISTIC_BLANKS_INPUT_PATTERN_2}${CHARACTERISTIC_BLANKS_INPUT_SUFFIX_2}`;
 export const EDIT_CHARACTERISTIC_BLANKS_INPUT_PATTERN = 'EditDetal-CharacteristicBlanks';
 export const EDIT_CHARACTERISTIC_BLANKS_CONTAINER = 'EditDetal-CharacteristicBlanks';
@@ -344,6 +363,7 @@ export const TEST_MATERIAL_NAME = 'Круг Сталь 09Г2С Ø100мм';
 export const TEST_MATERIAL_HEXAGON = 'Шестигранник Сталь 40х S22';
 export const TEST_MATERIAL_NAME_2 = 'Войлок акустический 10мм';
 export const U006_SPECIAL_CHAR_NAME = 'Деталь@#!$%^&*()_+';
+export const U006_TEST_SPECIAL_CHAR_NAME = 'U006_Деталь@#!$%^&*()_+';
 export const TEST_MATERIAL_NAME_2_ATTRIBUTE_COUNT = 3;
 
 /** Expected validation error when saving detail with missing required material attributes (U006 test 03, 04). */
@@ -353,6 +373,7 @@ export const FILE_DRAG_DROP_MODAL = 'dialog[data-testid="AddDetal-FileComponent-
 export const DOCUMENT_TABLE_DELETE_BUTTON = '[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-DeleteDoc"]';
 export const DOCUMENT_TABLE_PRINT_BUTTON = '[data-testid="AddDetal-FileComponent-DocumentTable-Buttons-ButtonPrint"]';
 export const TEST_FILE = '87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg';
+export const U006_TEST_FILE = '87.02-05.01.00СБ Маслобак (ДГП15)СБ.jpg';
 export const FILE_DRAG_DROP_SECTION = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Section"]';
 export const FILE_UPLOAD_BUTTON = '[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Button-Upload"]';
 export const FILE_COMPONENT = '[data-testid="AddDetal-FileComponent"]';
@@ -361,6 +382,8 @@ export const FILE_COMPONENT_SECTION = 'section[data-testid="AddDetal-FileCompone
 export const FILE_BASE_ADD_BUTTON = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-AddButton"]';
 export const FILE_NAME_INPUT = 'input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Input-FileName-Input"]';
 export const TEST_NAME = 'test';
+export const U006_TEST_NAME = 'Круг Сталь 09Г2С Ø100мм';
+export const U006_TEST_NAME_2 = 'Войлок акустический 10мм';
 export const DOCUMENT_TABLE_NAME_CELL = '[data-testid="AddDetal-FileComponent-DocumentTable-Tbody-Name"]';
 export const DOCUMENT_TABLE_NAME_CELL_ID = 'AddDetal-FileComponent-DocumentTable-Tbody-Name';
 export const DOCUMENT_TABLE_NAME_CELL_PREFIX = '[data-testid^="AddDetal-FileComponent-DocumentTable-Tbody-Name"]';
@@ -387,9 +410,14 @@ export const FILE_VERSION_INPUT = 'input[data-testid="AddDetal-FileComponent-Dra
 export const FILE_BASE_FOOTER_ADD_BUTTON = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-AddButton"]';
 export const FILE_MAIN_CHECKBOX = 'input[data-testid="AddDetal-FileComponent-DragAndDrop-ModalAddFile-Checkbox-Main"]';
 export const FILE_BASE_SWITCH_ITEM0 = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Switch-Item0"]';
+/** U006 golden (repo-at-single-U001 CONST.FILE_BASE_TABLE): filebase modal table wrapper. */
+export const U006_FILE_BASE_TABLE_WRAPPER = '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FileWindow-Table-Wrapper"]';
 
 // Archive dialog constants for U005
+/** Edit page: characteristic blanks tbody (stable for non-U006 scripts). Golden U006 uses {@link U006_EDIT_CHARACTERISTIC_BLANKS_TABLE}. */
 export const EDIT_CHR_TABLE = '[data-testid="EditDetal-CharacteristicBlanks-Tbody"]';
+/** U006 only: edit page table root (repo-at-single-U001 CONST.EDIT_CHR_TABLE = …-Table). */
+export const U006_EDIT_CHARACTERISTIC_BLANKS_TABLE = '[data-testid="EditDetal-CharacteristicBlanks-Table"]';
 export const ADD_DETAIL_CHARACTERISTIC_BLANKS_BAN_DIALOG = '[data-testid="ModalConfirm"]';
 
 // U004 dialogs (РМ) — share ModalBaseMaterial
@@ -439,6 +467,7 @@ export const DOCUMENT_TABLE_THEAD_SEARCH_INPUT = 'thead tr:nth-child(2) input[da
 export const MODAL_BASE_MATERIAL_CANCEL_BUTTON = '[data-testid="ModalBaseMaterial-Cancel-Button"]';
 export const MODAL_CONFIRM_CONTENT_BUTTONS_NO = '[data-testid="ModalConfirm-Content-Buttons-No"]';
 export const MODAL_CONFIRM_CONTENT_BUTTONS_YES = '[data-testid="ModalConfirm-Content-Buttons-Yes"]';
+export const BASE_FILE_BAN_DIALOG_CONTENT_BUTTONS_YES = '[data-testid="BaseFile-BanDialog-Content-Buttons-Yes"]';
 export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_CANCEL =
   '[data-testid="AddDetal-FileComponent-ModalBaseFiles-FooterButtons-CancelButton"]';
 export const ADD_DETAIL_FILE_COMPONENT_MODAL_BASE_FILES_FOOTER_ADD =

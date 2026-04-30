@@ -22,14 +22,104 @@ export class NotificationHelper {
   constructor(private page: Page) {}
 
   /**
+   * Captures the POST /api/stock-order/ request+response around a user action.
+   * This is used for "В производство" validation when notification text is no longer reliable.
+   */
+  async captureStockOrderRequestAndResponse(
+    action: () => Promise<void>,
+    timeoutMs: number = WAIT_TIMEOUTS.PAGE_RELOAD,
+  ): Promise<{
+    url: string;
+    status: number;
+    ok: boolean;
+    requestPayload: unknown;
+    responseBody: unknown;
+    responseText: string;
+  }> {
+    const responsePromise = this.page.waitForResponse(
+      response => {
+        const request = response.request();
+        if (request.method() !== 'POST') {
+          return false;
+        }
+
+        try {
+          const pathname = new URL(response.url()).pathname;
+          return /\/api\/stock-order\/?$/.test(pathname);
+        } catch {
+          return response.url().includes('/api/stock-order/');
+        }
+      },
+      { timeout: timeoutMs },
+    );
+
+    await action();
+    const response = await responsePromise;
+    const request = response.request();
+
+    let requestPayload: unknown = null;
+    try {
+      requestPayload = request.postDataJSON();
+    } catch {
+      requestPayload = request.postData() ?? null;
+    }
+
+    let responseBody: unknown = null;
+    let responseText = '';
+    try {
+      responseBody = await response.json();
+      responseText = typeof responseBody === 'string' ? responseBody : JSON.stringify(responseBody);
+    } catch {
+      responseText = (await response.text().catch(() => '')) || '';
+      responseBody = responseText;
+    }
+
+    const result = {
+      url: response.url(),
+      status: response.status(),
+      ok: response.ok(),
+      requestPayload,
+      responseBody,
+      responseText,
+    };
+
+    logger.log(`Captured stock-order API call: ${JSON.stringify(result)}`);
+    return result;
+  }
+
+  /**
    * Gets and verifies a success message, optionally checking for order number
    * @param orderNumber - Optional order number to verify in the message
    */
   async getMessage(orderNumber?: string) {
-    const successMessageLocator = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION).last();
+    const successMessages = this.page.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION);
+    const successMessageLocator = successMessages.last();
     await expect(successMessageLocator).toBeVisible();
     if (orderNumber) {
-      const successMessageText = (await successMessageLocator.textContent()) || '';
+      let successMessageText = '';
+      const deadline = Date.now() + WAIT_TIMEOUTS.STANDARD;
+
+      while (Date.now() < deadline && !successMessageText.includes(orderNumber)) {
+        const count = await successMessages.count();
+        const visibleTexts: string[] = [];
+
+        for (let index = 0; index < count; index++) {
+          const message = successMessages.nth(index);
+          if (await message.isVisible().catch(() => false)) {
+            visibleTexts.push(((await message.textContent().catch(() => '')) || '').trim());
+          }
+        }
+
+        successMessageText =
+          visibleTexts.find(messageText => messageText.includes(orderNumber)) ||
+          visibleTexts[visibleTexts.length - 1] ||
+          '';
+
+        if (!successMessageText.includes(orderNumber)) {
+          await this.page.waitForTimeout(250);
+        }
+      }
+
       expect(successMessageText).toContain(orderNumber);
     }
   }
@@ -60,32 +150,37 @@ export class NotificationHelper {
   async extractNotificationMessage(page: Page): Promise<{ title: string; message: string } | null> {
     // Extract using data-testid; poll briefly due to transient nature
     const container = page.locator('[data-testid="Notification-Notification"]').last();
-    //let visible = await container.isVisible().catch(() => false);
-    // for (let i = 0; i < 10 && !visible; i++) {
-    //   await page.waitForTimeout(100);
-    //   visible = await container.isVisible().catch(() => false);
-    // }
-    // if (!visible) {
-    //   console.log('Notification not visible.');
-    //   return null;
-    // }
+    await container.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
+    if (!(await container.isVisible().catch(() => false))) {
+      logger.warn('Notification not visible while extracting message.');
+      return null;
+    }
+
     const titleLoc = container.locator('[data-testid="Notification-Notification-Title"]');
-    await titleLoc.evaluate(row => {
-      row.style.backgroundColor = 'yellow';
-      row.style.border = '2px solid red';
-      row.style.color = 'blue';
-    });
     const descLoc = container.locator(SelectorsNotifications.NOTIFICATION_DESCRIPTION);
-    await descLoc.evaluate(row => {
-      row.style.backgroundColor = 'yellow';
-      row.style.border = '2px solid red';
-      row.style.color = 'blue';
-    });
-    // Highlight data-testid elements
-    //await titleLoc.evaluate((el: HTMLElement) => { el.style.backgroundColor = 'yellow'; el.style.border = '2px solid red'; el.style.color = 'blue'; }).catch(() => { });
-    //await descLoc.evaluate((el: HTMLElement) => { el.style.backgroundColor = 'yellow'; el.style.border = '2px solid red'; el.style.color = 'blue'; }).catch(() => { });
-    const title = ((await titleLoc.textContent().catch(() => '')) || '').trim();
-    const message = ((await descLoc.textContent().catch(() => '')) || '').trim();
+
+    const title = ((await titleLoc.textContent({ timeout: WAIT_TIMEOUTS.SHORT }).catch(() => '')) || '').trim();
+    const message = ((await descLoc.textContent({ timeout: WAIT_TIMEOUTS.SHORT }).catch(() => '')) || '').trim();
+    if (!title && !message) {
+      logger.warn('Notification was visible, but title and description were empty.');
+      return null;
+    }
+
+    await titleLoc
+      .evaluate(row => {
+        row.style.backgroundColor = 'yellow';
+        row.style.border = '2px solid red';
+        row.style.color = 'blue';
+      })
+      .catch(() => {});
+    await descLoc
+      .evaluate(row => {
+        row.style.backgroundColor = 'yellow';
+        row.style.border = '2px solid red';
+        row.style.color = 'blue';
+      })
+      .catch(() => {});
+
     return { title, message };
   }
 

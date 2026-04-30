@@ -336,6 +336,10 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     // Quantity launched into production
     let quantityLaunchInProduct: string = '0';
     let checkOrderNumber: string = '';
+    let stockOrderApiResponseBody: unknown = null;
+    let stockOrderApiRequestPayload: unknown = null;
+    let stockOrderApiResponseText = '';
+    let stockOrderApiOk = false;
 
     const test = '[data-testid="OrderSuppliers-Modal-AddOrder-ModalAddStockOrderSupply-Main-Content-Block-TableWrapper-Table1"]';
     const selector = '[data-testid="Sclad-orderingSuppliers"]';
@@ -452,33 +456,60 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         color: 'white',
       });
 
-      await orderButton.click();
+      const stockOrderApiCall = await this.captureStockOrderRequestAndResponse(async () => {
+        await orderButton.click();
+      });
+      stockOrderApiResponseBody = stockOrderApiCall.responseBody;
+      stockOrderApiRequestPayload = stockOrderApiCall.requestPayload;
+      stockOrderApiResponseText = stockOrderApiCall.responseText;
+      stockOrderApiOk = stockOrderApiCall.ok;
       logger.log('Clicked Order button');
     });
 
-    await allure.step('Step 10: Extract order number from notification', async () => {
+    await allure.step('Step 10: Extract order number from stock-order payload', async () => {
       // Wait for notification to appear after Order button click
       await this.page.waitForTimeout(2000);
 
-      // Extract notification message
+      // Extract notification message for diagnostics (fallback source if backend payload is missing).
       const notification = await this.notificationHelper.extractNotificationMessage(this.page);
       if (notification) {
         logger.log(`Notification title: ${notification.title}`);
         logger.log(`Notification message: ${notification.message}`);
-
-        // Extract order number from message (format: "Заказ №25-7147 отправлен в производство")
-        const orderMatch = notification.message.match(/№([\d-]+)/i);
-        if (orderMatch) {
-          checkOrderNumber = orderMatch[1];
-          logger.log(`Extracted order number: ${checkOrderNumber}`);
-        } else {
-          logger.log('Could not extract order number from notification');
-          checkOrderNumber = 'TEST_ORDER_' + Date.now();
-        }
-      } else {
-        logger.log('No notification found');
-        checkOrderNumber = 'TEST_ORDER_' + Date.now();
       }
+
+      if (!stockOrderApiOk) {
+        throw new Error(`POST /api/stock-order/ returned non-OK response. responseBody=${JSON.stringify(stockOrderApiResponseBody)}`);
+      }
+
+      const normalizedResponseText = stockOrderApiResponseText.trim().toLowerCase();
+      const serverReturnedTrue = stockOrderApiResponseBody === true || normalizedResponseText === 'true';
+      if (!serverReturnedTrue) {
+        throw new Error(`POST /api/stock-order/ expected response true, got: ${JSON.stringify(stockOrderApiResponseBody)}`);
+      }
+
+      const requestPayload = (stockOrderApiRequestPayload ?? {}) as Record<string, unknown>;
+      const workersData = (requestPayload.workersData ?? {}) as Record<string, unknown>;
+      const payloadOrderRaw = workersData.number_order;
+      const requestOrderNumber = typeof payloadOrderRaw === 'string' ? payloadOrderRaw.trim() : typeof payloadOrderRaw === 'number' ? String(payloadOrderRaw) : '';
+
+      if (requestOrderNumber) {
+        checkOrderNumber = requestOrderNumber;
+        logger.log(`Captured order number from POST /api/stock-order/: ${checkOrderNumber}`);
+        return;
+      }
+
+      // Safety fallback for environments where payload format differs.
+      const notificationMessage = notification?.message ?? '';
+      const orderMatch = notificationMessage.match(/№([\d-]+)/i);
+      if (orderMatch?.[1]) {
+        checkOrderNumber = orderMatch[1];
+        logger.log(`Extracted order number from notification fallback: ${checkOrderNumber}`);
+        return;
+      }
+
+      throw new Error(
+        `Could not resolve order number from POST /api/stock-order/ payload or notification. payload=${JSON.stringify(stockOrderApiRequestPayload)}, notification=${notificationMessage}`,
+      );
     });
 
     await allure.step('Step 11: Check quantity on order', async () => {
@@ -503,6 +534,10 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
     // Quantity launched into production
     let quantityLaunchInProduct: string = '0';
     let checkOrderNumber: string = '';
+    let stockOrderApiResponseBody: unknown = null;
+    let stockOrderApiRequestPayload: unknown = null;
+    let stockOrderApiResponseText = '';
+    let stockOrderApiOk = false;
 
     await allure.step('Step 1: Open the warehouse page', async () => {
       // Go to the Warehouse page
@@ -646,33 +681,60 @@ export class CreateOrderedFromSuppliersPage extends PageObject {
         color: 'white',
       });
 
-      await orderButton.click();
+      const stockOrderApiCall = await this.captureStockOrderRequestAndResponse(async () => {
+        await orderButton.click();
+      });
+      stockOrderApiResponseBody = stockOrderApiCall.responseBody;
+      stockOrderApiRequestPayload = stockOrderApiCall.requestPayload;
+      stockOrderApiResponseText = stockOrderApiCall.responseText;
+      stockOrderApiOk = stockOrderApiCall.ok;
       logger.log('Clicked Order button');
     });
 
-    await allure.step('Step 10: Extract order number from notification', async () => {
+    await allure.step('Step 10: Extract order number from stock-order payload', async () => {
       // Wait for notification to appear after Order button click
       await this.page.waitForTimeout(2000);
 
-      // Extract notification message
+      // Extract notification message for diagnostics (fallback source if backend payload is missing).
       const notification = await this.notificationHelper.extractNotificationMessage(this.page);
       if (notification) {
         logger.log(`Notification title: ${notification.title}`);
         logger.log(`Notification message: ${notification.message}`);
-
-        // Extract order number from message (format: "Заказ №25-7147 отправлен в производство")
-        const orderMatch = notification.message.match(/№([\d-]+)/i);
-        if (orderMatch) {
-          checkOrderNumber = orderMatch[1];
-          logger.log(`Extracted order number: ${checkOrderNumber}`);
-        } else {
-          logger.log('Could not extract order number from notification');
-          checkOrderNumber = 'TEST_ORDER_' + Date.now();
-        }
-      } else {
-        logger.log('No notification found');
-        checkOrderNumber = 'TEST_ORDER_' + Date.now();
       }
+
+      if (!stockOrderApiOk) {
+        throw new Error(`POST /api/stock-order/ returned non-OK response. responseBody=${JSON.stringify(stockOrderApiResponseBody)}`);
+      }
+
+      const normalizedResponseText = stockOrderApiResponseText.trim().toLowerCase();
+      const serverReturnedTrue = stockOrderApiResponseBody === true || normalizedResponseText === 'true';
+      if (!serverReturnedTrue) {
+        throw new Error(`POST /api/stock-order/ expected response true, got: ${JSON.stringify(stockOrderApiResponseBody)}`);
+      }
+
+      const requestPayload = (stockOrderApiRequestPayload ?? {}) as Record<string, unknown>;
+      const workersData = (requestPayload.workersData ?? {}) as Record<string, unknown>;
+      const payloadOrderRaw = workersData.number_order;
+      const requestOrderNumber = typeof payloadOrderRaw === 'string' ? payloadOrderRaw.trim() : typeof payloadOrderRaw === 'number' ? String(payloadOrderRaw) : '';
+
+      if (requestOrderNumber) {
+        checkOrderNumber = requestOrderNumber;
+        logger.log(`Captured order number from POST /api/stock-order/: ${checkOrderNumber}`);
+        return;
+      }
+
+      // Safety fallback for environments where payload format differs.
+      const notificationMessage = notification?.message ?? '';
+      const orderMatch = notificationMessage.match(/№([\d-]+)/i);
+      if (orderMatch?.[1]) {
+        checkOrderNumber = orderMatch[1];
+        logger.log(`Extracted order number from notification fallback: ${checkOrderNumber}`);
+        return;
+      }
+
+      throw new Error(
+        `Could not resolve order number from POST /api/stock-order/ payload or notification. payload=${JSON.stringify(stockOrderApiRequestPayload)}, notification=${notificationMessage}`,
+      );
     });
 
     await allure.step('Step 11: Check quantity on order', async () => {

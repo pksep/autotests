@@ -73,7 +73,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         await metalworkingWarehouse.waitingTableBody(warehouseTable, { minRows: 0, timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD });
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-        const rows = page.locator(`${warehouseTable} tbody tr`);
+        const rows = page.locator(`${warehouseTable} tbody tr`).filter({ hasText: designation });
         const rowCount = await rows.count();
         let lastDataRowIndex = -1;
         for (let i = 0; i < rowCount; i++) {
@@ -93,11 +93,11 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
         await metalworkingWarehouse.clickButton('Архив', MetalWorkingWarhouseSelectors.BUTTON_ARCHIVE, undefined, { waitForEnabled: true, failIfDisabled: true });
         await page.waitForTimeout(200);
         await metalworkingWarehouse.clickButton('Да', PartsDBSelectors.BUTTON_CONFIRM);
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('networkidle').catch(() => {});
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await page.locator(warehouseTable).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
         await metalworkingWarehouse.waitingTableBody(warehouseTable, { minRows: 0, timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD });
       }
     });
@@ -118,7 +118,7 @@ export const runU001_10_Archive = (isSingleTest: boolean, iterations: number) =>
     });
 
     await allure.step('Step 03: Search product', async () => {
-      await assemblyWarehouse.searchTable(designation, warehouseTable, '${props.dataTestid}-TableHead-Search-Dropdown-Input');
+      await assemblyWarehouse.searchTable(designation, warehouseTable, SelectorsAssemblyWarehouse.ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT);
 
       await assemblyWarehouse.waitingTableBody(warehouseTable, {
         minRows: 0,

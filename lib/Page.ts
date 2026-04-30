@@ -24,7 +24,8 @@ import { TIMEOUTS, WAIT_TIMEOUTS } from './Constants/TimeoutConstants'; // Impor
 import { expectSoftWithScreenshot, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities'; // Import utility functions
 import { ElementHelper } from './helpers/ElementHelper'; // Import ElementHelper for element interaction operations
 import { NavigationHelper } from './helpers/NavigationHelper'; // Import NavigationHelper for navigation operations
-import { ModalHelper } from './helpers/ModalHelper'; // Import ModalHelper for modal operations
+import { ModalHelper, type DialogValidationOptions, type DialogValidationResult } from './helpers/ModalHelper'; // Import ModalHelper for modal operations
+import { ModalValidationHelper, type ModalValidationOptions } from './helpers/ModalValidationHelper'; // Import ModalValidationHelper for reusable modal validation
 import { ValidationHelper } from './helpers/ValidationHelper'; // Import ValidationHelper for validation operations
 import { ArchiveHelper } from './helpers/ArchiveHelper'; // Import ArchiveHelper for archive operations
 import { OrderHelper } from './helpers/OrderHelper'; // Import OrderHelper for order operations
@@ -37,6 +38,7 @@ import { TableHelper, type ValidationResult } from './helpers/TableHelper'; // I
 export { expectSoftWithScreenshot, populateTestData, normalizeText, normalizeOrderNumber, normalizeDate, extractIdFromSelector, arraysAreIdentical, countColumns, extractDataSpetification, ISpetificationData } from './utils/utilities';
 // Re-export ValidationResult from TableHelper
 export type { ValidationResult } from './helpers/TableHelper';
+export type { ModalValidationOptions } from './helpers/ModalValidationHelper';
 
 /**
  * PageObject class that provides common page actions, such as interacting with inputs, buttons, and retrieving text.
@@ -49,6 +51,7 @@ export class PageObject extends AbstractPage {
   protected navigationHelper: NavigationHelper; // Navigation helper instance
   protected tableHelper: TableHelper; // Table operations helper instance
   protected modalHelper: ModalHelper; // Modal operations helper instance
+  protected modalValidationHelper: ModalValidationHelper; // Reusable modal validation helper instance
   protected validationHelper: ValidationHelper; // Validation operations helper instance
   protected archiveHelper: ArchiveHelper; // Archive operations helper instance
   protected orderHelper: OrderHelper; // Order operations helper instance
@@ -65,6 +68,7 @@ export class PageObject extends AbstractPage {
     this.navigationHelper = new NavigationHelper(page); // Initialize the navigation helper
     this.tableHelper = new TableHelper(page); // Initialize the table helper
     this.modalHelper = new ModalHelper(page); // Initialize the modal helper
+    this.modalValidationHelper = new ModalValidationHelper(page); // Initialize the modal validation helper
     this.validationHelper = new ValidationHelper(page); // Initialize the validation helper
     this.archiveHelper = new ArchiveHelper(page); // Initialize the archive helper
     this.orderHelper = new OrderHelper(page); // Initialize the order helper
@@ -124,6 +128,11 @@ export class PageObject extends AbstractPage {
     return this.elementHelper.waitAndHighlight(locator, options);
   }
 
+  /** Select a table row whose visible area can be overlapped by sticky headers. */
+  async clickTableRow(row: Locator, options?: { timeout?: number }): Promise<void> {
+    return this.elementHelper.clickTableRow(row, options);
+  }
+
   /** Create new tab, navigate to URL, return page and PageObject instance. */
   async createNewTabAndNavigate<T extends PageObject>(url: string, PageObjectClass: new (page: Page) => T): Promise<{ page: Page; pageObject: T }> {
     return this.navigationHelper.createNewTabAndNavigate(url, PageObjectClass);
@@ -171,6 +180,66 @@ export class PageObject extends AbstractPage {
     },
   ): Promise<void> {
     return this.validationHelper.validatePageHeadersAndButtons(page, titles, buttons, containerSelector, options);
+  }
+
+  /** Validates an already-open reusable modal using testdata/modals.json expectations. */
+  async validateModalFromJson(modalKey: string, options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateModalFromJson(modalKey, options);
+  }
+
+  /** Validates an already-open reusable HistoryAction modal from any owning component. */
+  async validateHistoryActionModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateHistoryActionModal(options);
+  }
+
+  /** Validates an already-open compact nested HistoryAction modal. */
+  async validateCompactHistoryActionModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateCompactHistoryActionModal(options);
+  }
+
+  /** Validates an already-open equipment filter modal. */
+  async validateEquipmentFilterModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateEquipmentFilterModal(options);
+  }
+
+  /** Validates an already-open tool/instrument filter modal. */
+  async validateToolFilterModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateToolFilterModal(options);
+  }
+
+  /** Validates an already-open add-operation modal and its child resource pickers. */
+  async validateAddOperationModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateAddOperationModal(options);
+  }
+
+  /** Validates an already-open archive confirmation modal. */
+  async validateArchiveConfirmModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateArchiveConfirmModal(options);
+  }
+
+  /** Validates an already-open unsaved-changes confirmation modal. */
+  async validateUnsavedChangesConfirmModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateUnsavedChangesConfirmModal(options);
+  }
+
+  /** Validates an already-open technical process modal and its nested operation actions. */
+  async validateTechProcessModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateTechProcessModal(options);
+  }
+
+  /** Validates an already-open short information modal and its nested detail actions. */
+  async validateShortInformationModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateShortInformationModal(options);
+  }
+
+  /** Validates an already-open user information modal. */
+  async validateUserInfoModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateUserInfoModal(options);
+  }
+
+  /** Validates an already-open instrument/tooling short information modal. */
+  async validateInstrumentInformationModal(options?: ModalValidationOptions): Promise<Locator> {
+    return this.modalValidationHelper.validateInstrumentInformationModal(options);
   }
 
   /** Search table and verify first row contains term. */
@@ -325,6 +394,11 @@ export class PageObject extends AbstractPage {
   /** Get success message (optional order number). */
   async getMessage(orderNumber?: string) {
     return this.notificationHelper.getMessage(orderNumber);
+  }
+
+  /** Capture POST /api/stock-order/ request and response around a user action. */
+  async captureStockOrderRequestAndResponse(action: () => Promise<void>, timeoutMs: number = WAIT_TIMEOUTS.PAGE_RELOAD) {
+    return this.notificationHelper.captureStockOrderRequestAndResponse(action, timeoutMs);
   }
 
   /** Close success message. */
@@ -719,6 +793,26 @@ export class PageObject extends AbstractPage {
 
   async getButtonsFromDialog(page: Page, dialogClass: string, buttonSelector: string): Promise<Locator> {
     return this.modalHelper.getButtonsFromDialog(page, dialogClass, buttonSelector);
+  }
+
+  /** Generic dialog/modal validation. */
+  async validateDialog(options?: DialogValidationOptions): Promise<DialogValidationResult> {
+    return this.modalHelper.validateDialog(options);
+  }
+
+  /** Snapshot the first open dialog/modal for debugging or discovery. */
+  async getOpenDialogSnapshot(dialogSelector?: string): Promise<DialogValidationResult> {
+    return this.modalHelper.getOpenDialogSnapshot(dialogSelector);
+  }
+
+  /** Close the first open dialog/modal by cancel/close button or Escape. */
+  async closeOpenDialog(dialogSelector?: string, closeSelector?: string, timeout?: number): Promise<void> {
+    return this.modalHelper.closeOpenDialog(dialogSelector, closeSelector, timeout);
+  }
+
+  /** Assert that no dialog/modal is open. */
+  async validateNoOpenDialogs(dialogSelector?: string): Promise<void> {
+    return this.modalHelper.validateNoOpenDialogs(dialogSelector);
   }
 
   async getAllH3TitlesInModalClassNew(page: Page, className: string): Promise<string[]> {

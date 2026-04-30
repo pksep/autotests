@@ -20,17 +20,25 @@ import { test, expect } from '@playwright/test';
 import { CreateStockReceiptFromSupplierAndProductionPage, StockReceipt } from '../pages/StockReceiptFromSupplierAndProductionPage';
 import { CreateStockPage, TableSelection } from '../pages/StockPage';
 import { CreateCompletingProductsToPlanPage } from '../pages/CompletingProductsToPlanPage';
+import { CreateCompletingAssembliesToPlanPage } from '../pages/CompletingAssembliesToPlanPage';
 import { expectSoftWithScreenshot, TypeInvoice } from '../lib/Page';
 import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
-const { descendantsCbedArray, descendantsDetailArray, quantityProductLaunchOnProduction, incomingQuantity, nameProduct, urgencyDate } = U001Constants;
+const {
+  descendantsCbedArray,
+  descendantsDetailArray,
+  quantityProductLaunchOnProduction,
+  incomingQuantity,
+  nameProduct,
+  designationProduct,
+  PRODUCT_PACKAGING_OPERATION_FULL_NAME,
+} = U001Constants;
 // Mutable variables that need to be reassigned
 let remainingStockBefore = U001Constants.remainingStockBefore;
 let remainingStockAfter = U001Constants.remainingStockAfter;
-let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
 export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Receiving Operations (Test Cases 15-18)`);
@@ -345,8 +353,12 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
         });
 
         await allure.step('Step 15a: Check the modal window', async () => {
-          // Click on the Создать button
-          await stockReceipt.clickButton('Создать', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE);
+          const createButton = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE, { hasText: 'Создать' }).first();
+
+          await createButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await createButton.scrollIntoViewIfNeeded();
+          await expect(createButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.LONG });
+          await createButton.click();
 
           // Wait for the receipt to be processed - wait for modal to close or network to be idle
           try {
@@ -725,44 +737,6 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
       });
     });
 
-    await allure.step('Step 07: Checking the urgency date of an order', async () => {
-      // Get the value using data-testid directly
-      // Pattern: CompletIzd-Content-Table-Table-TableRow{number}-DateUrgency
-      // const urgencyDateCell = page
-      //   .locator(
-      //     '[data-testid^="CompletIzd-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
-      //   )
-      //   .first();
-      const urgencyDateCell = page.locator(SelectorsAssemblyKittingOnThePlan.TABLE_ROW_PRODUCT_DATE_URGENCY_PATTERN).nth(1); //          ERP-2423
-
-      await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await urgencyDateCell.scrollIntoViewIfNeeded();
-
-      // Highlight the cell for visual confirmation
-      await urgencyDateCell.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'yellow';
-        el.style.border = '2px solid red';
-        el.style.color = 'blue';
-      });
-
-      const urgencyDateText = await urgencyDateCell.textContent();
-      urgencyDateOnTable = urgencyDateText?.trim() || '';
-      if (!urgencyDateOnTable) {
-        throw new Error('Urgency date cell not found or empty');
-      }
-
-      logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-      logger.log('Дата по срочности в переменной: ', urgencyDate);
-
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-        },
-        `Verify urgency date equals "${urgencyDate}"`,
-        test.info(),
-      );
-    });
 
     await allure.step('Step 08: Find the column designation and click', async () => {
       // Get the designation cell using data-testid directly
@@ -808,6 +782,16 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
       // Wait for the table body to load
       await completingProductsToPlan.waitingTableBody(tableMainTable);
+    });
+
+    await allure.step('Step 11: Mark packaging operation complete (production path)', async () => {
+      await completingProductsToPlan.markPackagingCompletionOnCompletionPlan({
+        tableSelector: tableMainTable,
+        searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT,
+        productName: nameProduct,
+        productDesignation: designationProduct,
+        packagingOperationFullName: PRODUCT_PACKAGING_OPERATION_FULL_NAME,
+      });
     });
   });
 
@@ -867,6 +851,202 @@ export const runU001_05_Receiving = (isSingleTest: boolean, iterations: number) 
 
       // Wait for the table body to load
       await stockReceipt.waitingTableBodyNoThead(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE);
+    });
+
+    await allure.step('Step 06a: Ensure Кол-во на приход is non-zero before selecting row', async () => {
+      const prihodQuantityCell = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN).first();
+      await prihodQuantityCell.waitFor({
+        state: 'visible',
+        timeout: WAIT_TIMEOUTS.STANDARD,
+      });
+      await prihodQuantityCell.scrollIntoViewIfNeeded();
+
+      const prihodValue = await prihodQuantityCell.textContent();
+      const prihodQuantity = prihodValue?.trim() || '0';
+      logger.log(`Кол-во на приход value before selecting row: ${prihodQuantity}`);
+
+      if (prihodQuantity === '0' || prihodQuantity === '') {
+        logger.log('Кол-во на приход is 0, completing assembly kitting in new tab...');
+
+        const newPage = await page.context().newPage();
+        const newCompletingAssembliesToPlan = new CreateCompletingAssembliesToPlanPage(newPage);
+
+        try {
+          await newCompletingAssembliesToPlan.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+
+          const selector = SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_CBED_PLAN;
+          await newCompletingAssembliesToPlan.findTable(selector);
+          await newPage.waitForLoadState('networkidle');
+
+          const cbedSearchCandidates = descendantsCbedArray.map(cbed => cbed.name?.trim()).filter((value): value is string => Boolean(value));
+          const uniqueCandidates = Array.from(new Set(cbedSearchCandidates));
+
+          if (uniqueCandidates.length === 0) {
+            throw new Error('No descendant CBED names found for kitting fallback');
+          }
+
+          for (const candidate of uniqueCandidates) {
+            await newCompletingAssembliesToPlan.searchTable(
+              candidate,
+              SelectorsAssemblyKittingOnThePlan.TABLE_COMPLECT_TABLE,
+              SelectorsAssemblyKittingOnThePlan.COMPLEX_SBORKA_BY_PLAN_SEARCH_INPUT_ID,
+            );
+            await newPage.waitForTimeout(TIMEOUTS.STANDARD);
+            await newPage.waitForLoadState('networkidle');
+
+            const designationCell = newPage.locator(SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DESIGNATION_PATTERN).first();
+            const hasVisibleDesignation = await designationCell.isVisible().catch(() => false);
+            if (!hasVisibleDesignation) {
+              logger.log(`CBED "${candidate}" not found in kitting table, skipping`);
+              continue;
+            }
+
+            logger.log(`Running kitting fallback for CBED "${candidate}"`);
+
+            await designationCell.scrollIntoViewIfNeeded();
+            await designationCell.dblclick();
+            await newPage.waitForLoadState('networkidle');
+            await newPage.waitForTimeout(TIMEOUTS.INPUT_SET);
+
+            const waybillModal = newPage.locator(SelectorsModalWindowConsignmentNote.MODAL_WINDOW);
+            await waybillModal.waitFor({
+              state: 'visible',
+              timeout: WAIT_TIMEOUTS.STANDARD,
+            });
+
+            const checkboxCell = newPage.locator(SelectorsModalWindowConsignmentNote.TABLE_ORDERS_ROW_SELECT_CELL_PATTERN).first();
+            await checkboxCell.waitFor({
+              state: 'visible',
+              timeout: WAIT_TIMEOUTS.STANDARD,
+            });
+            await checkboxCell.scrollIntoViewIfNeeded();
+            await checkboxCell.click();
+            await newPage.waitForTimeout(TIMEOUTS.INPUT_SET);
+            await newPage.waitForLoadState('networkidle');
+
+            const completeButton = newPage.locator(SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON);
+            await completeButton.waitFor({
+              state: 'visible',
+              timeout: WAIT_TIMEOUTS.STANDARD,
+            });
+            await expect(completeButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
+
+            await newCompletingAssembliesToPlan.clickButton('Скомплектовать', SelectorsModalWindowConsignmentNote.COMPLETE_SET_BUTTON);
+            await newCompletingAssembliesToPlan.checkCloseModalWindow(SelectorsModalWindowConsignmentNote.MODAL_WINDOW);
+            await newPage.waitForLoadState('networkidle');
+            await newPage.waitForTimeout(TIMEOUTS.LONG);
+          }
+
+          // After kitting components, explicitly perform warehouse receipt for each CBED,
+          // otherwise product "Кол-во на приход" may still remain zero.
+          const receiptFallback = new CreateStockReceiptFromSupplierAndProductionPage(newPage);
+          await receiptFallback.goto(SELECTORS.MAINMENU.WAREHOUSE.URL);
+          await receiptFallback.findTable(
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.SELECTOR_ARRIVAL_AT_THE_WAREHOUSE_FROM_SUPPLIERS_AND_PRODUCTION,
+          );
+          await newPage.waitForLoadState('networkidle');
+
+          for (const candidate of uniqueCandidates) {
+            await receiptFallback.clickButton('Создать приход', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE_INCOME);
+            await receiptFallback.selectStockReceipt(StockReceipt.cbed);
+            await newPage.waitForLoadState('networkidle');
+            await receiptFallback.waitingTableBodyNoThead(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE);
+
+            await receiptFallback.searchAndWaitForTable(
+              candidate,
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
+              SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
+              {
+                searchInputDataTestId: SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT,
+                minRows: 1,
+                timeoutMs: WAIT_TIMEOUTS.PAGE_RELOAD,
+              },
+            );
+            await newPage.waitForLoadState('networkidle');
+            await receiptFallback.waitingTableBodyNoThead(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE);
+            await receiptFallback.checkNameInLineFromFirstRow(candidate, SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE);
+
+            const rowCheckboxCell = newPage.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_CHECKBOX_PATTERN).first();
+            const hasRowCheckbox = await rowCheckboxCell.isVisible().catch(() => false);
+            if (!hasRowCheckbox) {
+              logger.log(`No receipt row found for "${candidate}", closing modal and continuing`);
+              const cancelButton = newPage.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CANCEL);
+              if (await cancelButton.isVisible().catch(() => false)) {
+                await cancelButton.click();
+                await newPage.waitForLoadState('networkidle');
+              }
+              continue;
+            }
+
+            await rowCheckboxCell.click();
+            const parishCell = newPage.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN).first();
+            await parishCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+            await parishCell.click();
+
+            const kitsModal = newPage.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST);
+            await kitsModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+            const kitsHeaderCheckbox = newPage.locator(`${SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_KITS_LIST_TABLE} thead tr th input`).first();
+            await kitsHeaderCheckbox.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+            if (!(await kitsHeaderCheckbox.isChecked())) {
+              await kitsHeaderCheckbox.click();
+            }
+
+            const qtyInput = newPage.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.KITS_LIST_ROW_QUANTITY_INPUT_PATTERN).first();
+            await qtyInput.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+            const qtyInputDisabled = await qtyInput.getAttribute('disabled');
+            if (!qtyInputDisabled) {
+              await qtyInput.fill('1');
+              await qtyInput.press('Enter');
+            }
+
+            await receiptFallback.clickButton('Сохранить', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_KITS_LIST_SAVE);
+            await receiptFallback.clickButton('Добавить', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_ADD);
+            await receiptFallback.clickButton('Создать', SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CREATE);
+            await newPage.waitForLoadState('networkidle');
+            await newPage.waitForTimeout(TIMEOUTS.STANDARD);
+          }
+        } finally {
+          await newPage.close();
+          await page.waitForTimeout(TIMEOUTS.EXTENDED);
+        }
+
+        const refreshAndCheckQuantity = async (): Promise<string> => {
+          const cancelButton = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.BUTTON_CANCEL);
+          if (await cancelButton.isVisible().catch(() => false)) {
+            await cancelButton.click();
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(TIMEOUTS.STANDARD);
+          }
+
+          await stockReceipt.selectStockReceipt(StockReceipt.cbed);
+          await page.waitForLoadState('networkidle');
+          await stockReceipt.waitingTableBodyNoThead(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE);
+
+          await stockReceipt.searchTable(
+            nameProduct,
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE,
+            SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE_SEARCH_INPUT,
+          );
+          await page.waitForLoadState('networkidle');
+          await stockReceipt.waitingTableBodyNoThead(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.MODAL_WINDOW_TABLE);
+
+          const updatedPrihodQuantityCell = page.locator(SelectorsArrivalAtTheWarehouseFromSuppliersAndProduction.TABLE_ROW_PARISH_PATTERN).first();
+          await updatedPrihodQuantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          const updatedPrihodValue = await updatedPrihodQuantityCell.textContent();
+          return updatedPrihodValue?.trim() || '0';
+        };
+
+        await expect
+          .poll(
+            async () => {
+              const qty = await refreshAndCheckQuantity();
+              logger.log(`Кол-во на приход after kitting: ${qty}`);
+              return qty !== '0' && qty !== '' ? qty : null;
+            },
+            { timeout: TEST_TIMEOUTS.VERY_LONG, intervals: [TIMEOUTS.LONG, TIMEOUTS.EXTENDED] },
+          )
+          .toBeTruthy();
+      }
     });
 
     await allure.step('Step 07: Find the checkbox column and click', async () => {

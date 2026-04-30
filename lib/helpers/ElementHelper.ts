@@ -267,6 +267,20 @@ export class ElementHelper {
     }
   }
 
+  async clickTableRow(row: Locator, options?: { timeout?: number }): Promise<void> {
+    const timeout = options?.timeout ?? WAIT_TIMEOUTS.STANDARD;
+
+    await row.waitFor({ state: 'visible', timeout });
+    await this.page.mouse.move(1, 1);
+    await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+    await row.evaluate((element: Element) => {
+      element.scrollIntoView({ block: 'center', inline: 'nearest' });
+    });
+    await this.page.waitForTimeout(TIMEOUTS.VERY_SHORT);
+
+    await row.dispatchEvent('click');
+  }
+
   /**
    * Highlights an element with custom styles
    * @param element - The locator to highlight

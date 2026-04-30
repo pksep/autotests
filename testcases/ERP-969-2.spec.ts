@@ -28,7 +28,7 @@ const waybillCollections: number = 0; // Global variable to track waybill collec
 const currentBuildQuantity: number = 1; // Global variable for current build quantity (how many items we're building now)
 
 export const runERP_969_2 = () => {
-  test('ERP-969-2 - Create 2 details and СБ assembly containing both details', async ({ page }) => {
+  test('ERP-969-2 - Create 2 details and СБ assembly containing both details', async ({ page }, testInfo) => {
     test.setTimeout(600000);
     const detailsPage = new CreatePartsDatabasePage(page);
 
@@ -41,15 +41,42 @@ export const runERP_969_2 = () => {
       await page.waitForLoadState('networkidle');
 
       // Clean up existing detail 1
-      await detailsPage.cleanupTestDetail(page, TEST_DATA.DETAIL_1_NAME, TEST_DATA.PARTS_PAGE_DETAL_TABLE);
+      await detailsPage.cleanupTestDetail(
+        page,
+        TEST_DATA.DETAIL_1_NAME,
+        TEST_DATA.PARTS_PAGE_DETAL_TABLE,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        testInfo,
+      );
       await detailsPage.verifyDetailSuccessMessage('Деталь успешно перенесена в архив');
 
       // Clean up existing detail 2
-      await detailsPage.cleanupTestDetail(page, TEST_DATA.DETAIL_2_NAME, TEST_DATA.PARTS_PAGE_DETAL_TABLE);
+      await detailsPage.cleanupTestDetail(
+        page,
+        TEST_DATA.DETAIL_2_NAME,
+        TEST_DATA.PARTS_PAGE_DETAL_TABLE,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        testInfo,
+      );
       await detailsPage.verifyDetailSuccessMessage('Деталь успешно перенесена в архив');
 
       // Clean up existing assembly
-      await detailsPage.cleanupTestDetail(page, TEST_DATA.ASSEMBLY_NAME, TEST_DATA.MAIN_PAGE_СБ_TABLE);
+      await detailsPage.cleanupTestDetail(
+        page,
+        TEST_DATA.ASSEMBLY_NAME,
+        TEST_DATA.MAIN_PAGE_СБ_TABLE,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        testInfo,
+      );
       await detailsPage.verifyDetailSuccessMessage('Сборочная единица успешно перенесён в архив');
     });
 

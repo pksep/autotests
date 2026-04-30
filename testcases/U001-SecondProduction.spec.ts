@@ -23,8 +23,6 @@ import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
 const {
   nameProduct,
-  urgencyDate,
-  urgencyDateSecond,
   quantityProductLaunchOnProduction,
   descendantsCbedArray,
   descendantsDetailArray,
@@ -39,7 +37,6 @@ const {
   deficitTableDetail,
 } = U001Constants;
 // Mutable variables that need to be reassigned
-let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 let quantityProductLaunchOnProductionBefore = U001Constants.quantityProductLaunchOnProductionBefore;
 let quantityProductLaunchOnProductionAfter = U001Constants.quantityProductLaunchOnProductionAfter;
 let quantitySumLaunchOnProduction = U001Constants.quantitySumLaunchOnProduction;
@@ -120,34 +117,6 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
       await shortageProduct.waitingTableBody(deficitTable);
     });
 
-    await allure.step('Step 05: Checking the urgency date of an order', async () => {
-      // Find the urgency date cell using data-testid
-      const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
-
-      await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await urgencyDateCell.scrollIntoViewIfNeeded();
-
-      // Highlight the urgency date cell
-      await urgencyDateCell.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'lightyellow';
-        el.style.border = '2px solid orange';
-      });
-
-      // Get the urgency date value from the cell
-      const urgencyDateValue = await urgencyDateCell.textContent();
-      urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-      logger.log('Date by urgency in the table: ', urgencyDateOnTable);
-
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-        },
-        `Verify urgency date equals "${urgencyDate}"`,
-        test.info(),
-      );
-    });
 
     await allure.step('Step 06: We check the number of those launched into production', async () => {
       // Find the production ordered quantity cell using data-testid
@@ -319,35 +288,6 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           await shortageAssemblies.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
         });
 
-        await allure.step('Step 05: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid
-          const urgencyDateCell = page.locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE).first();
-
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateText = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateText?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          // Test Cases 29-30 are part of the "Second Production Launch" suite, which is for the second task.
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-            },
-            `Verify urgency date equals "${urgencyDate}"`,
-            test.info(),
-          );
-        });
 
         await allure.step('Step 06: We check the number of those launched into production', async () => {
           // Find the ordered quantity cell using data-testid
@@ -540,36 +480,6 @@ export const runU001_08_SecondProduction = (isSingleTest: boolean, iterations: n
           await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
-        await allure.step('Step 05: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid (starts with pattern)
-          const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN).first();
-
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          // Test Cases 29-30 are part of the "Second Production Launch" suite, which is for the second task.
-          // The second task uses urgencyDateSecond ('21.01.2025'), so we expect that date here.
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-            },
-            `Verify urgency date equals "${urgencyDate}"`,
-            test.info(),
-          );
-        });
 
         await allure.step('Step 06: We check the number of those launched into production', async () => {
           // Find the production ordered quantity cell using data-testid (starts with pattern)

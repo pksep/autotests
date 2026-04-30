@@ -13,7 +13,7 @@ export const testSuites = {
 };
 
 /** Suite keys to run in parallel when TEST_SUITE=parallel. Each suite's tests still run sequentially. */
-const DEFAULT_PARALLEL_SUITE_KEYS = ['U001', 'U002', 'U003', 'suite01'] as const;
+const DEFAULT_PARALLEL_SUITE_KEYS = ['U005', 'U006'] as const;
 
 function parseParallelSuiteKeysFromEnv(): readonly string[] {
   // Override from .env:

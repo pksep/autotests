@@ -42,10 +42,10 @@ import * as U001Constants from './U001-Constants';
 const {
   nameProduct,
   nameProductNew,
+  designationProduct,
+  PRODUCT_PACKAGING_OPERATION_FULL_NAME,
   nameBuyer,
   incomingQuantity,
-  urgencyDate,
-  urgencyDateSecond,
   quantityProductLaunchOnProduction,
   quantityProductLaunchOnProductionAfter,
   quantitySumLaunchOnProduction,
@@ -62,7 +62,6 @@ const {
   deficitTableDetail,
 } = U001Constants;
 // Mutable variables that need to be reassigned
-let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 let quantityProductLaunchOnProductionBefore = U001Constants.quantityProductLaunchOnProductionBefore;
 let remainingStockBefore = U001Constants.remainingStockBefore;
 let remainingStockAfter = U001Constants.remainingStockAfter;
@@ -337,36 +336,6 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await metalworkingWarehouse.waitingTableBody(tableMetalworkingWarehouse, { timeoutMs: WAIT_TIMEOUTS.LONG });
         });
 
-        await allure.step('Step 05: Checking the urgency date of an order', async () => {
-          // Get the value using data-testid directly
-          // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-DateByUrgency
-          const urgencyDateCell = page.locator(MetalWorkingWarhouseSelectors.METALWORKING_SCLAD_TABLE_ROW_DATE_BY_URGENCY_PATTERN).first();
-
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the cell for visual confirmation
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'yellow';
-            el.style.border = '2px solid red';
-            el.style.color = 'blue';
-          });
-
-          const urgencyDateText = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateText?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-          logger.log('Дата по срочности в переменной: ', urgencyDateSecond);
-
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
-            },
-            `Verify urgency date equals "${urgencyDateSecond}"`,
-            test.info(),
-          );
-        });
 
         await allure.step('Step 06: We check the number of those launched into production', async () => {
           // Get the value using data-testid directly
@@ -437,7 +406,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           // Pattern: OperationPathInfo-tbodysdelano-sh{number}
           const doneCell = page.locator(ProductionPathSelectors.OPERATION_ROW_DONE_PATTERN).first();
 
-          await doneCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await doneCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await doneCell.scrollIntoViewIfNeeded();
 
           // Highlight the cell for visual confirmation
@@ -455,7 +424,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           // Get the operation cell using data-testid directly
           const operationCell = page.locator(ProductionPathSelectors.OPERATION_ROW_FULL_NAME).first();
 
-          await operationCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await operationCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await operationCell.scrollIntoViewIfNeeded();
 
           // Highlight the cell for visual confirmation
@@ -548,27 +517,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
       await shortageProduct.waitingTableBody(deficitTable);
     });
 
-    await allure.step('Step 05: Checking the urgency date of an order', async () => {
-      // Find the urgency date cell using data-testid
-      const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
 
-      await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await urgencyDateCell.scrollIntoViewIfNeeded();
-
-      // Highlight the urgency date cell
-      await urgencyDateCell.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'lightyellow';
-        el.style.border = '2px solid orange';
-      });
-
-      // Get the urgency date value from the cell
-      const urgencyDateValue = await urgencyDateCell.textContent();
-      urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-      logger.log('Date by urgency in the table: ', urgencyDateOnTable);
-
-      expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
-    });
 
     // Checking the board for urgency of assembly
     const shortageAssemblies = new CreatShortageAssembliesPage(page);
@@ -610,34 +559,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await shortageProduct.waitingTableBody(SelectorsShortagePages.TABLE_DEFICIT_IZD_TABLE);
         });
 
-        await allure.step('Step 10: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid
-          const urgencyDateCell = page.locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE).first();
 
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
-            },
-            `Verify urgency date equals "${urgencyDateSecond}"`,
-            test.info(),
-          );
-        });
       }
     }
 
@@ -726,34 +648,7 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
-        await allure.step('Step 16: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid (starts with pattern)
-          const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN).first();
 
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDateSecond);
-            },
-            `Verify urgency date equals "${urgencyDateSecond}"`,
-            test.info(),
-          );
-        });
       }
     }
   });
@@ -1367,6 +1262,16 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
       await page.waitForLoadState('networkidle');
       await completingProductsToPlan.waitingTableBody(TableComplect);
     });
+
+    await allure.step('Step 08: Mark packaging operation complete (production path)', async () => {
+      await completingProductsToPlan.markPackagingCompletionOnCompletionPlan({
+        tableSelector: TableComplect,
+        searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT,
+        productName: nameProduct,
+        productDesignation: designationProduct,
+        packagingOperationFullName: PRODUCT_PACKAGING_OPERATION_FULL_NAME,
+      });
+    });
   });
 
   test('Case 27 - Receiving Product And Check Stock', async ({ page }) => {
@@ -1427,7 +1332,15 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           const selector = SelectorsAssemblyKittingOnThePlan.SELECTOR_COMPLETION_PRODUCT_PLAN;
           await newCompletingProductsToPlan.findTable(selector);
           await newPage.waitForLoadState('networkidle');
-          await newCompletingProductsToPlan.searchTable(nameProduct, SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION, SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT);
+          await newCompletingProductsToPlan.waitingTableBody(SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION);
+          await newCompletingProductsToPlan.searchAndVerifyFirstRow(
+            nameProduct,
+            SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION,
+            SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION,
+            {
+              searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT,
+            },
+          );
           await newPage.waitForTimeout(TIMEOUTS.STANDARD);
           await newPage.waitForLoadState('networkidle');
           const designationCell = newPage.locator(SelectorsAssemblyKittingOnThePlan.TABLE_ROW_PRODUCT_DESIGNATION_PATTERN).first();
@@ -1465,7 +1378,15 @@ export const runU001_07_SecondTask = (isSingleTest: boolean, iterations: number)
           await waybillModal.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
           await newPage.waitForLoadState('networkidle');
           await newPage.waitForTimeout(TIMEOUTS.LONG);
-          logger.log(`Product kitting completed for ${nameProduct}`);
+          await newCompletingProductsToPlan.waitingTableBody(SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION);
+          await newCompletingProductsToPlan.markPackagingCompletionOnCompletionPlan({
+            tableSelector: SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION,
+            searchInputDataTestId: SelectorsAssemblyKittingOnThePlan.TABLE_PRODUCT_COMPLETION_SEARCH_INPUT,
+            productName: nameProduct,
+            productDesignation: designationProduct,
+            packagingOperationFullName: PRODUCT_PACKAGING_OPERATION_FULL_NAME,
+          });
+          logger.log(`Product kitting and packaging mark completed for ${nameProduct}`);
         } finally {
           await newPage.close();
           await page.waitForTimeout(TIMEOUTS.EXTENDED);

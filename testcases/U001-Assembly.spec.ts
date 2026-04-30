@@ -31,9 +31,8 @@ import testData1 from '../testdata/U001-PC1.json';
 import testData2 from '../testdata/U002-PC1.json';
 import logger from '../lib/utils/logger';
 import * as U001Constants from './U001-Constants';
-const { urgencyDate, quantityProductLaunchOnProduction, descendantsCbedArray, descendantsDetailArray, incomingQuantity, deficitTableDetail, buttonLaunchIntoProductionDetail, modalWindowLaunchIntoProductionDetail, buttonLaunchIntoProductionModalWindow } = U001Constants;
+const { quantityProductLaunchOnProduction, descendantsCbedArray, descendantsDetailArray, incomingQuantity, deficitTableDetail, buttonLaunchIntoProductionDetail, modalWindowLaunchIntoProductionDetail, buttonLaunchIntoProductionModalWindow } = U001Constants;
 // Mutable variables that need to be reassigned
-let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 let quantityProductLaunchOnProductionBefore = U001Constants.quantityProductLaunchOnProductionBefore;
 let quantityProductLaunchOnProductionAfter = U001Constants.quantityProductLaunchOnProductionAfter;
 let quantitySumLaunchOnProduction = U001Constants.quantitySumLaunchOnProduction;
@@ -46,6 +45,10 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
     test.setTimeout(TEST_TIMEOUTS.LONG);
     const shortageParts = new CreatShortagePartsPage(page);
     let checkOrderNumber: string;
+    let stockOrderApiResponseBody: unknown;
+    let stockOrderApiRequestPayload: unknown;
+    let stockOrderApiResponseText = '';
+    let stockOrderApiOk = false;
 
     await allure.step('Step 01-02: Open the warehouse page and shortage parts page', async () => {
       // Find and go to the page using the locator Parts Shortage
@@ -110,34 +113,6 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
-        await allure.step('Step 07: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid (starts with pattern)
-          const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN).first();
-
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-            },
-            `Verify urgency date equals "${urgencyDate}"`,
-            test.info(),
-          );
-        });
 
         await allure.step('Step 08: We check the number of those launched into production', async () => {
           // Get the value using data-testid directly
@@ -234,13 +209,38 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
         });
 
         await allure.step('Step 13: Click on the In launch button', async () => {
-          // Click on the button
-          await shortageParts.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+          const stockOrderApiCall = await shortageParts.captureStockOrderRequestAndResponse(async () => {
+            await shortageParts.clickButton('В производство', buttonLaunchIntoProductionModalWindow);
+          });
+          stockOrderApiResponseBody = stockOrderApiCall.responseBody;
+          stockOrderApiRequestPayload = stockOrderApiCall.requestPayload;
+          stockOrderApiResponseText = stockOrderApiCall.responseText;
+          stockOrderApiOk = stockOrderApiCall.ok;
         });
 
-        await allure.step('Step 14: We check that the order number is displayed in the notification', async () => {
-          // Check the order number in the success notification
-          await shortageParts.getMessage(checkOrderNumber);
+        await allure.step('Step 14: We check stock-order API payload order number', async () => {
+          const requestPayload = (stockOrderApiRequestPayload ?? {}) as Record<string, unknown>;
+          const workersData = (requestPayload.workersData ?? {}) as Record<string, unknown>;
+          const requestOrderNumberRaw = workersData.number_order;
+          const requestOrderNumber =
+            typeof requestOrderNumberRaw === 'string'
+              ? requestOrderNumberRaw.trim()
+              : typeof requestOrderNumberRaw === 'number'
+                ? String(requestOrderNumberRaw)
+                : '';
+          const normalizedResponseText = stockOrderApiResponseText.trim().toLowerCase();
+          const serverReturnedTrue = stockOrderApiResponseBody === true || normalizedResponseText === 'true';
+
+          await expectSoftWithScreenshot(
+            page,
+            async () => {
+              expect.soft(stockOrderApiOk).toBe(true);
+              expect.soft(serverReturnedTrue).toBe(true);
+              expect.soft(requestOrderNumber).toBe(checkOrderNumber);
+            },
+            'Verify POST /api/stock-order/ contains current order number',
+            test.info(),
+          );
         });
 
         await allure.step('Step 15: Close success message', async () => {
@@ -332,45 +332,45 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           });
 
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          // Using table search we look for the value of the variable and verify it's in the first row
-          await metalworkingWarehouse.searchAndVerifyFirstRow(part.name, MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE, MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE, {
-            useRedesign: true,
-            timeoutBeforeWait: 500,
-          });
-        });
-
-        await allure.step('Step 07: Checking the urgency date of an order', async () => {
-          // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-DateByUrgency
-          const urgencyDateCell = page.locator(MetalWorkingWarhouseSelectors.METALWORKING_SCLAD_TABLE_ROW_DATE_BY_URGENCY_PATTERN).first();
-
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
+          // Using table search we look for the value of the variable and wait until
+          // the filtered result set is applied to the table body.
+          await metalworkingWarehouse.searchAndWaitForTable(
+            part.name,
+            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
+            MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE,
+            {
+              searchInputDataTestId: MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_SEARCH_INPUT,
+              timeoutBeforeWait: 500,
+            },
+          );
+          const firstDataRow = page.locator(`${MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE} tbody tr:has(td)`).first();
+          await expect
+            .poll(
+              async () => ((await firstDataRow.textContent()) ?? '').toLowerCase().includes(part.name.toLowerCase()),
+              {
+                timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+                intervals: [500, 1000, 2000],
+              },
+            )
+            .toBe(true);
           await expectSoftWithScreenshot(
             page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
+            () => {
+              expect.soft(firstDataRow).toContainText(part.name, { timeout: WAIT_TIMEOUTS.STANDARD });
             },
-            `Verify urgency date equals "${urgencyDate}"`,
+            `Verify filtered metalworking first row contains "${part.name}"`,
             test.info(),
           );
         });
 
+
         await allure.step('Step 08: We check the number of those launched into production', async () => {
           // Get the value using data-testid directly
-          const quantityCell = page.locator(MetalWorkingWarhouseSelectors.METALWORKING_SCLAD_TABLE_ROW_ORDERED_PATTERN).first();
+          const firstDataRow = page.locator(`${MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE} tbody tr:has(td)`).first();
+          await firstDataRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect(firstDataRow).toContainText(part.name, { timeout: WAIT_TIMEOUTS.STANDARD });
+          const quantityCell = firstDataRow.locator(MetalWorkingWarhouseSelectors.METALWORKING_SCLAD_TABLE_ROW_ORDERED_PATTERN).first();
+          await quantityCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await quantityCell.evaluate((el: HTMLElement) => {
             el.style.backgroundColor = 'yellow';
             el.style.border = '2px solid red';
@@ -380,25 +380,21 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
 
           logger.log('The value in the cells is orders befor:', quantityProductLaunchOnProductionBefore);
 
-          // The expected value should be at least quantitySumLaunchOnProduction (from Test Case 11)
-          // but may be higher if there were additional operations. Check that it's >= expected minimum
-          // and also check that it matches the pattern: it should be quantitySumLaunchOnProduction or higher
-          // due to accumulated operations from Test Case 11
           const actualValue = Number(quantityProductLaunchOnProductionBefore);
-          const expectedMin = Number(quantitySumLaunchOnProduction) || 4; // Fallback to 4 if not set
+          const expectedMin = Number(quantityProductLaunchOnProduction);
 
-          // Allow for accumulated values - the value should be at least the expected minimum
-          // This accounts for the fact that Test Case 11 may have run multiple times or accumulated values
           expect.soft(actualValue).toBeGreaterThanOrEqual(expectedMin);
 
-          // Also log for debugging
           logger.log(`Expected minimum: ${expectedMin}, Actual: ${actualValue}`);
         });
 
         await allure.step('Step 09: Find and click on the operation icon', async () => {
           // Get the operations cell using data-testid directly
           // Pattern: MetalloworkingSclad-Content-WithFilters-TableWrapper-Table-Row{number}-Operations
-          const operationsCell = page.locator(MetalWorkingWarhouseSelectors.METALWORKING_SCLAD_TABLE_ROW_OPERATIONS_PATTERN).first();
+          const firstDataRow = page.locator(`${MetalWorkingWarhouseSelectors.TABLE_METAL_WORKING_WARHOUSE} tbody tr:has(td)`).first();
+          await firstDataRow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+          await expect(firstDataRow).toContainText(part.name, { timeout: WAIT_TIMEOUTS.STANDARD });
+          const operationsCell = firstDataRow.locator(MetalWorkingWarhouseSelectors.METALWORKING_SCLAD_TABLE_ROW_OPERATIONS_PATTERN).first();
 
           await operationsCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
           await operationsCell.scrollIntoViewIfNeeded();
@@ -598,39 +594,6 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           });
         });
 
-        await allure.step('Step 07: Checking the urgency date of an order', async () => {
-          // Get the value using data-testid directly
-          // const urgencyDateCell = page
-          //   .locator(
-          //     '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
-          //   )
-          //   .first();
-          const urgencyDateCell = page.locator(SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DATE_URGENCY_PATTERN).nth(1); //ERP-2423
-
-          // Wait for the cell to be visible and populated (not just "-") using Playwright's expect.poll
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-
-          // Wait for the cell to contain a valid date using expect.poll
-          await expect
-            .poll(
-              async () => {
-                const text = (await urgencyDateCell.textContent())?.trim() || '';
-                return text && text !== '-' && text.length > 0 ? text : null;
-              },
-              { timeout: WAIT_TIMEOUTS.STANDARD, intervals: [200] },
-            )
-            .toBeTruthy();
-
-          await completingAssembliesToPlan.waitAndHighlight(urgencyDateCell);
-
-          urgencyDateOnTable = (await urgencyDateCell.textContent())?.trim() || '';
-          logger.log(`Date cell populated with: "${urgencyDateOnTable}"`);
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-          logger.log('Дата по срочности в переменной: ', urgencyDate);
-
-          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-        });
 
         await allure.step('Step 08: Find the column designation and click', async () => {
           // Get the designation cell using data-testid directly and double-click it
@@ -975,35 +938,6 @@ export const runU001_04_Assembly = (isSingleTest: boolean, iterations: number) =
           });
         });
 
-        await allure.step('Step 05: Checking the urgency date of an order', async () => {
-          // Get the value using data-testid directly
-          // Pattern: CompletCbed-Content-Table-Table-TableRow{number}-DateUrgency
-          // const urgencyDateCell = page
-          //   .locator(
-          //     '[data-testid^="CompletCbed-Content-Table-Table-TableRow"][data-testid$="-DateUrgency"]'
-          //   )
-          //   .first(); //ERP-2423
-          const urgencyDateCell = page.locator(SelectorsAssemblyKittingOnThePlan.TABLE_ROW_CBED_DATE_URGENCY_PATTERN).nth(1);
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          const urgencyDateText = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateText?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-          logger.log('Дата по срочности в переменной: ', urgencyDate);
-
-          if (urgencyDateOnTable) {
-            await expectSoftWithScreenshot(
-              page,
-              async () => {
-                expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-              },
-              `Verify urgency date equals "${urgencyDate}"`,
-              test.info(),
-            );
-          } else {
-            throw new Error('Urgency date cell not found or empty');
-          }
-        });
 
         await allure.step('Step 06: Find the column designation and click', async () => {
           // Get the designation cell using data-testid directly

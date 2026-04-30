@@ -12,7 +12,7 @@ const isParallel = process.env.TEST_SUITE === 'parallel' || ENV.TEST_SUITE === '
 export default defineConfig({
   testDir: process.env.TEST_DIR || ENV.TEST_DIR,
   timeout: 30000,
-  globalTimeout: 30 * 60 * 1000, // 30 minutes (parallel: wall time ~longest suite)
+  globalTimeout: isParallel ? 60 * 60 * 1000 : 30 * 60 * 1000, // U001+U005+U006 parallel can run longer than the old 30m cap
   workers: isParallel ? PARALLEL_SUITE_KEYS.length : 1,
   fullyParallel: isParallel, // required so multiple workers run when only one file (main.spec.ts) matches
   retries: 0,
@@ -48,7 +48,7 @@ export default defineConfig({
   testIgnore: 'repo-at-single-U001/**',
   projects: [
     {
-      name: 'suite01',
+      name: 'SEP ERP',
       testMatch: 'main.spec.ts',
     },
   ],

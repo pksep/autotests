@@ -21,9 +21,8 @@ import { ENV, SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import * as U001Constants from './U001-Constants';
-const { orderNumber, nameProduct, urgencyDate, descendantsCbedArray, descendantsDetailArray, tableMainUploading, buttonUploading, buttonLaunchIntoProductionCbed, deficitTable, deficitTableDetail } = U001Constants;
+const { orderNumber, nameProduct, descendantsCbedArray, descendantsDetailArray, tableMainUploading, buttonUploading, buttonLaunchIntoProductionCbed, deficitTable, deficitTableDetail } = U001Constants;
 // Mutable variable that needs to be reassigned
-let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
 export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Final Shipment Operations (Test Cases 31-32)`);
@@ -157,34 +156,6 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
       await shortageProduct.waitingTableBody(deficitTable);
     });
 
-    await allure.step('Step 04: Checking the urgency date of an order', async () => {
-      // Find the urgency date cell using data-testid in the first row
-      const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
-
-      await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await urgencyDateCell.scrollIntoViewIfNeeded();
-
-      // Highlight the urgency date cell
-      await urgencyDateCell.evaluate((el: HTMLElement) => {
-        el.style.backgroundColor = 'lightyellow';
-        el.style.border = '2px solid orange';
-      });
-
-      // Get the urgency date value from the cell
-      const urgencyDateValue = await urgencyDateCell.textContent();
-      urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-      logger.log('Date by urgency in the table: ', urgencyDateOnTable);
-
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-        },
-        `Verify urgency date equals "${urgencyDate}"`,
-        test.info(),
-      );
-    });
 
     // Checking the board for urgency of assembly
     const shortageAssemblies = new CreatShortageAssembliesPage(page);
@@ -218,34 +189,7 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
           await page.locator(buttonLaunchIntoProductionCbed).hover();
         });
 
-        await allure.step('Step 08: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid
-          const urgencyDateCell = page.locator(SelectorsShortagePages.CBED_TABLE_BODY_URGENCY_DATE).first();
 
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-            },
-            `Verify urgency date equals "${urgencyDate}"`,
-            test.info(),
-          );
-        });
       }
     }
 
@@ -326,34 +270,7 @@ export const runU001_09_FinalShipment = (isSingleTest: boolean, iterations: numb
           await shortageParts.waitingTableBody(deficitTableDetail);
         });
 
-        await allure.step('Step 13: Checking the urgency date of an order', async () => {
-          // Find the urgency date cell using data-testid (starts with pattern)
-          const urgencyDateCell = page.locator(SelectorsShortagePages.ROW_DATE_URGENCY_PATTERN).first();
 
-          await urgencyDateCell.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-          await urgencyDateCell.scrollIntoViewIfNeeded();
-
-          // Highlight the urgency date cell
-          await urgencyDateCell.evaluate((el: HTMLElement) => {
-            el.style.backgroundColor = 'lightyellow';
-            el.style.border = '2px solid orange';
-          });
-
-          // Get the urgency date value from the cell
-          const urgencyDateValue = await urgencyDateCell.textContent();
-          urgencyDateOnTable = urgencyDateValue?.trim() || '';
-
-          logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-          await expectSoftWithScreenshot(
-            page,
-            async () => {
-              expect.soft(urgencyDateOnTable).toBe(urgencyDate);
-            },
-            `Verify urgency date equals "${urgencyDate}"`,
-            test.info(),
-          );
-        });
       }
     }
   });

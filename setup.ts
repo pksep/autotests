@@ -3,7 +3,13 @@ import { performLogin } from './testcases/TC000.spec';
 import { ENV, LOGIN_TEST_CONFIG } from './config';
 import { WAIT_TIMEOUTS } from './lib/Constants/TimeoutConstants';
 
-export function runSetup() {
+type LoginCredentials = {
+  tabel: string;
+  username: string;
+  password: string;
+};
+
+export function runSetup(credentials: LoginCredentials = LOGIN_TEST_CONFIG.TEST_CREDENTIALS) {
   // ✅ Use function declaration instead of arrow function
   test.beforeEach('Test Case 00 - Authorization', async ({ page }) => {
     // Skip web UI setup for API tests
@@ -11,7 +17,7 @@ export function runSetup() {
       return;
     }
 
-    const { tabel, username, password } = LOGIN_TEST_CONFIG.TEST_CREDENTIALS;
+    const { tabel, username, password } = credentials;
     await performLogin(page, tabel, username, password);
     await page.waitForSelector('[data-testid="LoginForm-Login-Button"]', { state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     await page.locator('[data-testid="LoginForm-Login-Button"]').click();

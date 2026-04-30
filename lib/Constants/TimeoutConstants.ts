@@ -9,6 +9,8 @@
 
 // Timeout constants for waitForTimeout() operations (in milliseconds)
 export const TIMEOUTS = {
+  MICRO: 50, // Minimal debounce / attached poll
+  FLASH: 100, // Brief UI tick
   VERY_SHORT: 200, // Quick pauses
   SHORT: 300, // Brief waits
   MEDIUM: 500, // Standard wait / pause for validation

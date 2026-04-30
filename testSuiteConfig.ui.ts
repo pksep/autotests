@@ -47,10 +47,17 @@ import { runU006 } from './testcases/U006.spec';
 import { runU007 } from './testcases/U007.spec';
 import { runU007_01_Actions } from './testcases/U007-Actions.spec';
 import { runV001 } from './testcases/V001.spec';
+import { runV001_Archive } from './testcases/V001-Archive.spec';
 import { runCheckTableTotals } from './testcases/CheckTableTotals.spec';
 import { runERP_969 } from './testcases/ERP-969.spec';
 import { runERP_3015 } from './testcases/ERP-3015.spec';
 import { runERP_969_2 } from './testcases/ERP-969-2.spec';
+import { runErp3371 } from './testcases/erp-3371.spec';
+import { runERP_3372 } from './testcases/erp-3372.spec';
+import { runERP_3482 } from './testcases/ERP-3482.spec';
+import { runERP_3623 } from './testcases/erp-3623-online-table-by-pz.spec';
+import { runERP_3623_OnlineTable } from './testcases/erp-3623-online-table.spec';
+import { runERP_3623_ProductionAssembly } from './testcases/erp-3623-production-assembly.spec';
 
 // ——— Bugs: ticket-driven / regression suites ———
 const uiSuitesBugs = {
@@ -69,11 +76,40 @@ const uiSuitesBugs = {
     description: 'verify changes to full specifications after adding items to the product',
     tests: [{ test: runERP_969_2, description: 'verify changes to full specifications after adding items to the product' }],
   },
+  ERP_3371: {
+    description: 'ERP-3371: hide/show No and No PZ columns on production boards and verify table headers.',
+    tests: [{ test: runErp3371, description: 'ERP-3371 regression checks across configured production pages.' }],
+  },
+  ERP_3372: {
+    description: 'ERP-3372: verify Требуемое время готовности on Online Tablo against parent, warehouse, and production task dates.',
+    tests: [{ test: runERP_3372, description: 'ERP-3372 regression check for earliest ready time on Online Tablo.' }],
+  },
+  ERP_3482: {
+    description: 'ERP-3482: Verify Дельта по времени column values on the TaskByUser production page (working hours 11:00–19:00, weekends only, ±0.02 tolerance).',
+    tests: [{ test: runERP_3482, description: 'ERP-3482 — row-by-row delta time verification with visual green/red highlighting.' }],
+  },
+  ERP_3623: {
+    description: 'ERP-3623: verify Online Tablo by PZ rows can open assembly complectation waybills with enabled completion button.',
+    tests: [{ test: runERP_3623, description: 'ERP-3623 regression check for assembly complectation waybill availability.' }],
+  },
+  ERP_3623_OnlineTable: {
+    description: 'ERP-3623: verify Online Tablo rows can open complectation waybills with enabled completion button.',
+    tests: [{ test: runERP_3623_OnlineTable, description: 'ERP-3623 regression check for Online Tablo complectation waybill availability.' }],
+  },
+  ERP_3623_ProductionAssembly: {
+    description: 'ERP-3623: verify Production Assembly rows can open complectation waybills with enabled completion button.',
+    tests: [
+      {
+        test: runERP_3623_ProductionAssembly,
+        description: 'ERP-3623 regression check for Production Assembly complectation waybill availability.',
+      },
+    ],
+  },
 };
 
-// ——— Suites: multi-step flows (U001 and slices, suite01/02) ———
+// ——— Suites: multi-step flows (U001 and slices, U004) ———
 const uiSuitesSuites = {
-  suite01: {
+  U004: {
     description: 'This is a group of full page tests p02 - P04',
     tests: [
       { test: runU004_1, description: 'This test checks the User Scenario series of tests U004_1' },
@@ -224,6 +260,10 @@ const uiSuitesSingle = {
   V001: {
     description: 'V001 - Validation tour: walk the site page-by-page and validate titles, buttons, and filters from JSON (U001-PC1, U002-PC1). No functional testing; minimal actions only to open dialogs/sections.',
     tests: [{ test: runV001, description: 'V001 - Full validation tour (titles, buttons, filters from JSON).' }],
+  },
+  V001_Archive: {
+    description: 'V001_Archive - Validation of the Archive module: iterate through entities, validate headers, buttons, and modals.',
+    tests: [{ test: runV001_Archive, description: 'Validate Archive entities, headers, and modals against JSON test data.' }],
   },
   U002: {
     description: 'Launch into production (Orders from Suppliers & Warehouse).',

@@ -9,24 +9,25 @@ export const TABLE_DEFICIT_IZD_ID = 'DeficitIzd-Main-Table';
 export const TABLE_SEARCH_INPUT = 'DeficitCbed-Section-Table-Search-Dropdown-Input';
 export const BUTTON_LAUNCH_INTO_PRODUCTION = '[data-testid="DeficitIzd-Main-Footer-Button-IntoProduction"]';
 export const MODAL_START_PRODUCTION = '[data-testid="DeficitIzd-ModalStartProduction-ModalContent"]';
-export const ROW_CHECKBOX = '[data-testid="DeficitIzdTable-Row-Checkbox"]';
-export const ROW_CHECKBOX_PATTERN = '[data-testid^="DeficitIzdTable-Row-Checkbox"]';
-export const ROW_DATE_URGENCY = '[data-testid="DeficitIzdTable-Row-DateUrgency"]';
-export const ROW_DATE_URGENCY_PATTERN = '[data-testid^="DeficitIzdTable-Row-DateUrgency"]';
-export const ROW_DATE_SHIPMENTS = '[data-testid="DeficitIzdTable-Row-DateShipments"]';
-export const ROW_ARTICLE = '[data-testid="DeficitIzdTable-Row-Article"]';
-export const ROW_NAME = '[data-testid="DeficitIzdTable-Row-Name"]';
-export const ROW_DESIGNATION = '[data-testid="DeficitIzdTable-Row-Designation"]';
-export const ROW_DEMAND_LINK = '[data-testid="DeficitIzdTable-Row-Demand-Link"]';
-export const ROW_DEFICIT = '[data-testid="DeficitIzdTable-Row-Deficit"]';
-export const ROW_QUANTITY = '[data-testid="DeficitIzdTable-Row-Quantity"]';
-export const ROW_STATUS_BADGES_TEXT = '[data-testid="DeficitIzdTable-Row-Status-Badges-BadgesText"]';
-export const ROW_NORM = '[data-testid="DeficitIzdTable-Row-Norm"]';
-export const ROW_REAL_BALANCE = '[data-testid="DeficitIzdTable-Row-RealBalance"]';
-export const ROW_PRODUCTION_ORDERED = '[data-testid="DeficitIzdTable-Row-ProductionOrdered"]';
-export const ROW_PRODUCTION_ORDERED_PATTERN = '[data-testid^="DeficitIzdTable-Row-ProductionOrdered"]';
+export const ROW_CHECKBOX = '[data-testid="DeficitIzd-Main-Table-Row-Checkbox"]';
+export const ROW_CHECKBOX_PATTERN = '[data-testid*="Row-Checkbox"]';
+export const ROW_DATE_URGENCY = '[data-testid="DeficitIzd-Main-Table-Row-DateUrgency"]';
+export const ROW_DATE_URGENCY_PATTERN = '[data-testid*="Row-DateUrgency"]';
+export const ROW_DATE_SHIPMENTS = '[data-testid="DeficitIzd-Main-Table-Row-DateShipments"]';
+export const ROW_DATE_SHIPMENTS_PATTERN = '[data-testid*="Row-DateShipments"]';
+export const ROW_ARTICLE = '[data-testid="DeficitIzd-Main-Table-Row-Article"]';
+export const ROW_NAME = '[data-testid="DeficitIzd-Main-Table-Row-Name"]';
+export const ROW_DESIGNATION = '[data-testid="DeficitIzd-Main-Table-Row-Designation"]';
+export const ROW_DEMAND_LINK = '[data-testid="DeficitIzd-Main-Table-Row-Demand-Link"]';
+export const ROW_DEFICIT = '[data-testid="DeficitIzd-Main-Table-Row-Deficit"]';
+export const ROW_QUANTITY = '[data-testid="DeficitIzd-Main-Table-Row-Quantity"]';
+export const ROW_STATUS_BADGES_TEXT = '[data-testid="DeficitIzd-Main-Table-Row-Status-Badges-BadgesText"]';
+export const ROW_NORM = '[data-testid="DeficitIzd-Main-Table-Row-Norm"]';
+export const ROW_REAL_BALANCE = '[data-testid="DeficitIzd-Main-Table-Row-RealBalance"]';
+export const ROW_PRODUCTION_ORDERED = '[data-testid="DeficitIzd-Main-Table-Row-ProductionOrdered"]';
+export const ROW_PRODUCTION_ORDERED_PATTERN = '[data-testid*="Row-ProductionOrdered"]';
 export const ROW_PRODUCTION_INPUT = '[data-testid="ModalStartProduction-ComplectationTable-ShipmentsCenter"]';
-export const DEFICIT_TABLE_SEARCH_INPUT = '[data-testid="DeficitIzdTable-Search-Dropdown-Input"]';
+export const DEFICIT_TABLE_SEARCH_INPUT = '[data-testid="DeficitIzd-Main-Table-Search-Dropdown-Input"]';
 export const ORDER_FILTER_ORDER_FILTER = '[data-testid="DeficitIzd-Main-OrderFilter-OrderFilter"]';
 export const ORDER_FILTER_LABEL = '[data-testid="DeficitIzd-Main-OrderFilter-Label"]';
 export const ORDER_FILTER_SETTINGS_TYPES = '[data-testid="OrderFilterSettings-Types"]';
@@ -35,7 +36,7 @@ export const ORDER_FILTER_SETTINGS_TABLE = '[data-testid="OrderFilterSettings-Ta
 export const ORDER_FILTER_SETTINGS_TABLE_SEARCH_INPUT = '[data-testid="OrderFilterSettings-Table-Search-Dropdown-Input"]';
 export const ORDER_FILTER_DATA_CELL = '[data-testid="DataCell"]';
 
-export const ROW_PATTERN = '[data-testid^="DeficitIzdTable-Row"]';
+export const ROW_PATTERN = '[data-testid*="Table-Row"]';
 
 // Assembly Shortage (DeficitCbed)
 export const PAGE_TESTID_CBED = '[data-testid="DeficitCbed"]';
@@ -45,6 +46,7 @@ export const BUTTON_LAUNCH_INTO_PRODUCTION_CBED = '[data-testid="DeficitCbed-Sta
 export const MODAL_START_PRODUCTION_CBED = '[data-testid="DeficitCbed-StartProductionModal-ModalContent"]';
 export const CBED_TABLE_BODY_SELECT = '[data-testid^="DeficitCbed-Section-Table-Row"][data-testid$="-TdCheckbox"]';
 export const CBED_TABLE_BODY_URGENCY_DATE = '[data-testid^="DeficitCbed-Section-Table-Row"][data-testid$="-TdUrgencyDate"]';
+export const CBED_TABLE_BODY_DATE_SHIPMENTS = '[data-testid^="DeficitCbed-Section-Table-Row"][data-testid$="-TdDateShipments"]';
 export const CBED_TABLE_BODY_ORDERED = '[data-testid^="DeficitCbed-Section-Table-Row"][data-testid$="-TdOrderedByProduction"]';
 
 // Page selectors

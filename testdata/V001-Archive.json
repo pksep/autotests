@@ -1,0 +1,3769 @@
+{
+    "elements": {
+        "ArchiveMainPage": {
+            "titles": {
+                "ru": [
+                    "Архив"
+                ],
+                "en": [
+                    "Archive"
+                ]
+            },
+            "dropdown": {
+                "selector": ".select-list-yui-kit__current.filter__header",
+                "options": {
+                    "ru": [
+                        "Деталь",
+                        "Документ",
+                        "Изделие",
+                        "Инвентарь",
+                        "Инструмент",
+                        "Материалы",
+                        "Оборудование",
+                        "Пользователь",
+                        "Сборочная единица"
+                    ],
+                    "en": [
+                        "Part",
+                        "Document",
+                        "Product",
+                        "Inventory",
+                        "Instrument",
+                        "Materials",
+                        "Equipment",
+                        "User",
+                        "Cbed"
+                    ]
+                }
+            },
+            "labels": {
+                "ru": [
+                    "Тип сущности:",
+                    "Поиск:"
+                ],
+                "en": [
+                    "Entity type:",
+                    "Search:"
+                ]
+            },
+            "breadcrumbs": {
+                "ru": [
+                    "Главная",
+                    "Архив"
+                ],
+                "en": [
+                    "Home",
+                    "Archive"
+                ]
+            }
+        },
+        "ArchiveTable_Изделие": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Обозначение",
+                    "Артикул",
+                    "Наименование"
+                ],
+                "en": [
+                    "#",
+                    "Designation",
+                    "Article",
+                    "Name"
+                ]
+            }
+        },
+        "ArchiveTable_Деталь": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Обозначение",
+                    "Наименование"
+                ],
+                "en": [
+                    "#",
+                    "Designation",
+                    "Name"
+                ]
+            }
+        },
+        "ArchiveTable_Документ": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Тип",
+                    "Наименование",
+                    "Дата",
+                    "Примечание"
+                ],
+                "en": [
+                    "#",
+                    "Type",
+                    "Name",
+                    "Date",
+                    "Note"
+                ]
+            },
+            "noModal": true
+        },
+        "ArchiveTable_Инвентарь": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Наименование"
+                ],
+                "en": [
+                    "#",
+                    "Name"
+                ]
+            }
+        },
+        "ArchiveTable_Инструмент": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Тип",
+                    "Наименование"
+                ],
+                "en": [
+                    "#",
+                    "Type",
+                    "Name"
+                ]
+            }
+        },
+        "ArchiveTable_Материалы": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Тип",
+                    "Наименование"
+                ],
+                "en": [
+                    "#",
+                    "Type",
+                    "Name"
+                ]
+            }
+        },
+        "ArchiveTable_Оборудование": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Наименование"
+                ],
+                "en": [
+                    "#",
+                    "Name"
+                ]
+            }
+        },
+        "ArchiveTable_Пользователь": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Табельный номер",
+                    "Должность",
+                    "Инициалы"
+                ],
+                "en": [
+                    "#",
+                    "Tabel number",
+                    "Position",
+                    "Initials"
+                ]
+            }
+        },
+        "ArchiveTable_Сборочная_единица": {
+            "headers": {
+                "ru": [
+                    "№",
+                    "Обозначение",
+                    "Наименование"
+                ],
+                "en": [
+                    "#",
+                    "Designation",
+                    "Name"
+                ]
+            }
+        },
+        "ShortInfoModal_Изделие": {
+            "titles": {
+                "ru": [
+                    {
+                        "testid": "ModalProduct-Section-Title",
+                        "label": "Краткая информация об изделии"
+                    },
+                    {
+                        "testid": "ModalProduct-MediaSlider-Information",
+                        "label": "Медиа файлы"
+                    },
+                    {
+                        "testid": "Specification-Heading",
+                        "label": "Спецификация"
+                    },
+                    {
+                        "testid": "ModalProduct-CategoryCharactestic-Title",
+                        "label": "Характеристики"
+                    },
+                    {
+                        "testid": "ModalProduct-CategoryParameters-Title",
+                        "label": "Параметры"
+                    },
+                    {
+                        "testid": "ModalProduct-Description-Title",
+                        "label": "Описание / Примечание"
+                    }
+                ],
+                "en": [
+                    {
+                        "testid": "ModalProduct-Section-Title",
+                        "label": "Short product information"
+                    },
+                    {
+                        "testid": "ModalProduct-MediaSlider-Information",
+                        "label": "Media files"
+                    },
+                    {
+                        "testid": "Specification-Heading",
+                        "label": "Specification"
+                    },
+                    {
+                        "testid": "ModalProduct-CategoryCharactestic-Title",
+                        "label": "Characteristics"
+                    },
+                    {
+                        "testid": "ModalProduct-CategoryParameters-Title",
+                        "label": "Parameters"
+                    },
+                    {
+                        "testid": "ModalProduct-Description-Title",
+                        "label": "Description / Note"
+                    }
+                ]
+            },
+            "labels": {
+                "ru": [
+                    {
+                        "testid": "ModalProduct-Information-Title",
+                        "label": "Наименование:"
+                    },
+                    {
+                        "testid": "ModalProduct-Articl-Title",
+                        "label": "Артикул:"
+                    },
+                    {
+                        "testid": "ModalProduct-discontinued-Title",
+                        "label": "Снято с производства:"
+                    }
+                ],
+                "en": [
+                    {
+                        "testid": "ModalProduct-Information-Title",
+                        "label": "Name:"
+                    },
+                    {
+                        "testid": "ModalProduct-Articl-Title",
+                        "label": "Article:"
+                    },
+                    {
+                        "testid": "ModalProduct-discontinued-Title",
+                        "label": "Discontinued:"
+                    }
+                ]
+            },
+            "buttons": [
+                {
+                    "testid": "ModalProduct-FullInfoButton-OpenInNewTableHandle",
+                    "label": {
+                        "ru": "Полная информация",
+                        "en": "Full info"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-TechProcessButton",
+                    "label": {
+                        "ru": "Технологический процесс",
+                        "en": "Tech process"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-TableDocument-Buttons-ButtonPrint",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Print"
+                    }
+                },
+                {
+                    "testid": "Specification-Buttons-openSpecification",
+                    "label": {
+                        "ru": "Полная спецификация",
+                        "en": "Full specification"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-CostButton",
+                    "label": {
+                        "ru": "Себестоимость",
+                        "en": "Cost"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-HistoryButton",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "History changes"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-HistoryButton",
+                    "label": {
+                        "ru": "Комплектация",
+                        "en": "Complectation"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Закрыть",
+                        "en": "Close"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Медиа файлы",
+                        "en": "Media files"
+                    },
+                    "testid": "ModalProduct-TableDocument-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Файлы",
+                            ""
+                        ],
+                        "en": [
+                            "#",
+                            "Files",
+                            ""
+                        ]
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Спецификация",
+                        "en": "Specification"
+                    },
+                    "testid": "ModalProduct-TableSpecification-Product",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Обозначение",
+                            "Наименование",
+                            "Ед.",
+                            "Кол-во"
+                        ],
+                        "en": [
+                            "#",
+                            "Designation",
+                            "Name",
+                            "Unit",
+                            "Qty"
+                        ]
+                    }
+                }
+            ]
+        },
+        "ShortInfoModal_Деталь": {
+            "titles": [
+                {
+                    "testid": "undefined-SectionInformation-Heading",
+                    "label": {
+                        "ru": "Краткая информация о детали",
+                        "en": "Short detail information"
+                    }
+                },
+                {
+                    "testid": "undefined-Media",
+                    "label": {
+                        "ru": "Медиа файлы",
+                        "en": "Media files"
+                    }
+                },
+                {
+                    "testid": "undefined-Characteristics-Title",
+                    "label": {
+                        "ru": "Характеристики",
+                        "en": "Characteristics"
+                    }
+                },
+                {
+                    "testid": "undefined-Description-Title",
+                    "label": {
+                        "ru": "Описание / Примечание",
+                        "en": "Description / Note"
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "testid": "undefined-InformationName-Title",
+                    "label": {
+                        "ru": "Наименование:",
+                        "en": "Name:"
+                    }
+                },
+                {
+                    "testid": "undefined-Designation-Title",
+                    "label": {
+                        "ru": "Обозначение:",
+                        "en": "Designation:"
+                    }
+                },
+                {
+                    "testid": "undefined-discontinued-Title",
+                    "label": {
+                        "ru": "Снято с производства:",
+                        "en": "Discontinued:"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "undefined-Buttons-ShowFullInformationButton",
+                    "label": {
+                        "ru": "Полная информация",
+                        "en": "Full info"
+                    }
+                },
+                {
+                    "testid": "undefined-Buttons-createTechProcessButton",
+                    "label": {
+                        "ru": "Технологический процесс",
+                        "en": "Tech process"
+                    }
+                },
+                {
+                    "testid": "undefined-CostPrice",
+                    "label": {
+                        "ru": "Себестоимость",
+                        "en": "Cost"
+                    }
+                },
+                {
+                    "testid": "undefined-HistoryButton",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "History changes"
+                    }
+                }
+            ]
+        },
+        "ShortInfoModal_Сборочная_единица": {
+            "titles": {
+                "ru": [
+                    {
+                        "testid": "undefined-Section-Title",
+                        "label": "Краткая информация о Cборочной единице"
+                    },
+                    {
+                        "testid": "undefined-MediaTitle",
+                        "label": "Медиа файлы"
+                    },
+                    {
+                        "testid": "Specification-Heading",
+                        "label": "Спецификация"
+                    },
+                    {
+                        "testid": "undefined-CategoryCharactestic-Title",
+                        "label": "Характеристики"
+                    },
+                    {
+                        "testid": "undefined-Parameters-Title",
+                        "label": "Параметры"
+                    },
+                    {
+                        "testid": "undefined-DescriptionCategory-Title",
+                        "label": "Описание / Примечание"
+                    }
+                ],
+                "en": [
+                    {
+                        "testid": "undefined-Section-Title",
+                        "label": "Short assembly information"
+                    },
+                    {
+                        "testid": "undefined-MediaTitle",
+                        "label": "Media files"
+                    },
+                    {
+                        "testid": "Specification-Heading",
+                        "label": "Specification"
+                    },
+                    {
+                        "testid": "undefined-CategoryCharactestic-Title",
+                        "label": "Characteristics"
+                    },
+                    {
+                        "testid": "undefined-Parameters-Title",
+                        "label": "Parameters"
+                    },
+                    {
+                        "testid": "undefined-DescriptionCategory-Title",
+                        "label": "Description / Note"
+                    }
+                ]
+            },
+            "labels": {
+                "ru": [
+                    {
+                        "testid": "undefined-Information-Title",
+                        "label": "Наименование:"
+                    },
+                    {
+                        "testid": "undefined-Designation-Title",
+                        "label": "Обозначение:"
+                    },
+                    {
+                        "testid": "undefined-discontinued-Title",
+                        "label": "Снято с производства:"
+                    }
+                ],
+                "en": [
+                    {
+                        "testid": "undefined-Information-Title",
+                        "label": "Name:"
+                    },
+                    {
+                        "testid": "undefined-Designation-Title",
+                        "label": "Designation:"
+                    },
+                    {
+                        "testid": "undefined-discontinued-Title",
+                        "label": "Discontinued:"
+                    }
+                ]
+            },
+            "buttons": [
+                {
+                    "testid": "undefined-FullInfoButton",
+                    "label": {
+                        "ru": "Полная информация",
+                        "en": "Full info"
+                    }
+                },
+                {
+                    "testid": "undefined-AddTechProcessButton",
+                    "label": {
+                        "ru": "Технологический процесс",
+                        "en": "Tech process"
+                    }
+                },
+                {
+                    "testid": "undefined-TableDocument-Buttons-ButtonPrint",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Print"
+                    }
+                },
+                {
+                    "testid": "Specification-Buttons-openSpecification",
+                    "label": {
+                        "ru": "Полная спецификация",
+                        "en": "Full specification"
+                    }
+                },
+                {
+                    "testid": "undefined-CostButton",
+                    "label": {
+                        "ru": "Себестоимость",
+                        "en": "Cost"
+                    }
+                },
+                {
+                    "testid": "undefined-HistoryButton",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "History changes"
+                    }
+                },
+                {
+                    "testid": "undefined-HistoryButton",
+                    "label": {
+                        "ru": "Комплектация",
+                        "en": "Complectation"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Закрыть",
+                        "en": "Close"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Медиа файлы",
+                        "en": "Media files"
+                    },
+                    "testid": "undefined-TableDocument-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Файлы",
+                            ""
+                        ],
+                        "en": [
+                            "#",
+                            "Files",
+                            ""
+                        ]
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Спецификация",
+                        "en": "Specification"
+                    },
+                    "testid": "undefined-TableSpecification-Cbed",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Обозначение",
+                            "Наименование",
+                            "Ед.",
+                            "Кол-во"
+                        ],
+                        "en": [
+                            "#",
+                            "Designation",
+                            "Name",
+                            "Unit",
+                            "Qty"
+                        ]
+                    }
+                }
+            ]
+        },
+        "TechProcessModal_Изделие": {
+            "titles": {
+                "ru": [
+                    "Технологический процесс"
+                ],
+                "en": [
+                    "Technological process"
+                ]
+            },
+            "headers": {
+                "ru": [
+                    "№",
+                    "Наименование операции",
+                    "Подготовительное время, н.м.",
+                    "Вспомогательное время, н.м.",
+                    "Основное время, н.м.",
+                    "Требуемое оборудование",
+                    "Требуемый инструмент",
+                    "Оснастка",
+                    "Мерительный инструмент"
+                ],
+                "en": [
+                    "#",
+                    "Operation Name",
+                    "Setup Time, m.m.",
+                    "Auxiliary Time, m.m.",
+                    "Main Time, m.m.",
+                    "Required Equipment",
+                    "Required Tool",
+                    "Rigging",
+                    "Measuring Tool"
+                ]
+            },
+            "labels": [
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Heading",
+                    "label": {
+                        "ru": "Технологический процесс",
+                        "en": "Технологический процесс"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Media-Title",
+                    "label": {
+                        "ru": "Медиа файлы",
+                        "en": "Медиа файлы"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Textarea-Title",
+                    "label": {
+                        "ru": "Описание/Примечание",
+                        "en": "Описание/Примечание"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Buttons-ButtonCreate",
+                    "label": {
+                        "ru": "Добавить операцию",
+                        "en": "Добавить операцию"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Buttons-ButtonUpdate",
+                    "label": {
+                        "ru": "Редактировать",
+                        "en": "Редактировать"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Buttons-ButtonUpdate",
+                    "label": {
+                        "ru": "Архив",
+                        "en": "Архив"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-AttachFile-DocumentTable-Buttons-ButtonPrint",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-ButtonHistory",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Button-Cancel",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Button-Save",
+                    "label": {
+                        "ru": "Сохранить",
+                        "en": "Сохранить"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalTechProcess1013-Button-Print",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "ModalProduct-ModalTechProcess1013-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Наименование операции",
+                            "Подготовительное время, н.м.",
+                            "Вспомогательное время, н.м.",
+                            "Основное время, н.м.",
+                            "Требуемое оборудование",
+                            "Требуемый инструмент",
+                            "Оснастка",
+                            "Мерительный инструмент"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "1",
+                            "Комплектация сборок и изд.",
+                            "10",
+                            "0",
+                            "7"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "ModalProduct-ModalTechProcess1013-AttachFile-DocumentTable-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Файлы"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "1",
+                            "Выпрессовщик пальцев и втулок универсальный ВСГ100П для спецтехники.PNG"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "HistoryModal_Изделие": {
+            "titles": {
+                "ru": [
+                    "История изменений"
+                ],
+                "en": [
+                    "Change history"
+                ]
+            },
+            "headers": {
+                "ru": [
+                    "Дата и время",
+                    "Сотрудник",
+                    "Действие"
+                ],
+                "en": [
+                    "Date and Time",
+                    "Employee",
+                    "Action"
+                ]
+            },
+            "labels": [
+                {
+                    "testid": "ModalProduct-ModalHistoryAction-Main-Title",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalHistoryAction-Main-Title-Name",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "ModalProduct-ModalHistoryAction-Information-Title0",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Тип сущности:"
+                    }
+                },
+                {
+                    "testid": "FilterUser-Title",
+                    "label": {
+                        "ru": "Сотрудники:",
+                        "en": "Сотрудники:"
+                    }
+                },
+                {
+                    "testid": "BaseFilter-Title",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Тип сущности:"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "Calendar-DataPickerRange-Component-Start-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр 10, 2026",
+                        "en": "Апр 10, 2026"
+                    }
+                },
+                {
+                    "testid": "Calendar-DataPickerRange-Component-End-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр 10, 2026",
+                        "en": "Апр 10, 2026"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Сбросить",
+                        "en": "Сбросить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Закрыть",
+                        "en": "Закрыть"
+                    }
+                }
+            ]
+        },
+        "EquipmentModal_Изделие": {
+            "titles": {
+                "ru": [
+                    "Комплектация изделия"
+                ],
+                "en": [
+                    "Product equipment"
+                ]
+            },
+            "headers": {
+                "ru": [
+                    "№",
+                    "Изображение",
+                    "Обозначение",
+                    "Наименование",
+                    "Кол-во на ед.",
+                    "Потребность",
+                    "Скомплектованные наборы",
+                    "Дефицит по комплектации",
+                    "Потребность по заказам склада",
+                    "Общий дефицит",
+                    "Свободное кол-во",
+                    "Кол-во",
+                    "В наборах",
+                    "Место",
+                    "Заказано",
+                    "Готовность в %"
+                ],
+                "en": [
+                    "#",
+                    "Image",
+                    "Designation",
+                    "Name",
+                    "Qty per unit",
+                    "Requirement",
+                    "Completed sets",
+                    "Shortage",
+                    "Warehouse need",
+                    "Total shortage",
+                    "Free Qty",
+                    "Qty",
+                    "In sets",
+                    "Location",
+                    "Ordered",
+                    "Readiness %"
+                ]
+            }
+        },
+        "FullSpecificationModal_Изделие": {
+            "titles": {
+                "ru": [
+                    "Полная спецификация"
+                ],
+                "en": [
+                    "Full specification"
+                ]
+            },
+            "headers": {
+                "ru": [
+                    "№",
+                    "Тип родителя",
+                    "Изображение родителя",
+                    "Обозначение родителя",
+                    "Кол-во по родителю",
+                    "Фото",
+                    "Обозначение",
+                    "Наименование СБ",
+                    "Потребность"
+                ],
+                "en": [
+                    "#",
+                    "Parent Type",
+                    "Parent Image",
+                    "Parent Designation",
+                    "Parent Qty",
+                    "Photo",
+                    "Designation",
+                    "SB Name",
+                    "Requirement"
+                ]
+            },
+            "labels": [
+                {
+                    "testid": "Specification-ModalCbed-Specification-ModalCbed-Title",
+                    "label": {
+                        "ru": "Полная спецификация",
+                        "en": "Полная спецификация"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-MainBlockName-Title",
+                    "label": {
+                        "ru": "Наименование:",
+                        "en": "Наименование:"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-AccordionCbed-Title",
+                    "label": {
+                        "ru": "Сборочная единица (6)",
+                        "en": "Сборочная единица (6)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-AccordionDetal-Title",
+                    "label": {
+                        "ru": "Детали (22)",
+                        "en": "Детали (22)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-AccordionBuyersMaterial-Title",
+                    "label": {
+                        "ru": "Покупные материалы (11)",
+                        "en": "Покупные материалы (11)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-MaterialDetal-Title",
+                    "label": {
+                        "ru": "Материалы для деталей (3)",
+                        "en": "Материалы для деталей (3)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-Accordion-MaterialRashod-Title",
+                    "label": {
+                        "ru": "Расходные материалы (0)",
+                        "en": "Расходные материалы (0)"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "Specification-ModalCbed-HandlePrint",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "Specification-ModalCbed-AccordionCbed-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Тип родителя",
+                            "Изображение родителя",
+                            "Обозначение родителя",
+                            "Кол-во по родителю",
+                            "Фото",
+                            "Обозначение",
+                            "Наименование СБ",
+                            "Потребность"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "1",
+                            "Изделие",
+                            "-",
+                            "1",
+                            "044.5-01.00СБ",
+                            "Гидроцилиндр СБ (ВСГ100Б)",
+                            "1"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "Specification-ModalCbed-AccordionDetalContent-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Тип родителя",
+                            "Изображение родителя",
+                            "Обозначение родителя",
+                            "Кол-во по родителю",
+                            "Фото",
+                            "Обозначение",
+                            "Наименование детали",
+                            "Материал заготовки",
+                            "Размер заготовки",
+                            "Потребность",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "ТС",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "ТС",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "Ш",
+                            "В",
+                            "Д",
+                            "ТС",
+                            "НД",
+                            "ПС",
+                            "Д",
+                            "Ш",
+                            "В",
+                            "Д",
+                            "Ш",
+                            "В",
+                            "Д",
+                            "Ш",
+                            "В",
+                            "Д",
+                            "Ш",
+                            "В",
+                            "Д",
+                            "Ш",
+                            "В"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "1",
+                            "Изделие",
+                            "-",
+                            "1",
+                            "044.05-01",
+                            "Адаптер ВСГ100П",
+                            "Д мм 60 НД мм 250 ПС м.кв 0.04908739",
+                            "Д",
+                            "мм",
+                            "60",
+                            "НД",
+                            "мм",
+                            "250",
+                            "ПС",
+                            "м.кв",
+                            "0.04908739",
+                            "1"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "60"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 4",
+                        "en": "Table 4"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "ТС",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "286"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 5",
+                        "en": "Table 5"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "375"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 6",
+                        "en": "Table 6"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "70"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 7",
+                        "en": "Table 7"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "70"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 8",
+                        "en": "Table 8"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "ТС",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "5"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 9",
+                        "en": "Table 9"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "5020"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 10",
+                        "en": "Table 10"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "2190"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 11",
+                        "en": "Table 11"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "1060"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 12",
+                        "en": "Table 12"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "600"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 13",
+                        "en": "Table 13"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "5030"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 14",
+                        "en": "Table 14"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "12290"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 15",
+                        "en": "Table 15"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "1030"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 16",
+                        "en": "Table 16"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "720"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 17",
+                        "en": "Table 17"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "Ш",
+                            "В"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "124"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 18",
+                        "en": "Table 18"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "ТС",
+                            "НД",
+                            "ПС"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "305"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 19",
+                        "en": "Table 19"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "Ш",
+                            "В"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "400"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 20",
+                        "en": "Table 20"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "Ш",
+                            "В"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "400"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 21",
+                        "en": "Table 21"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "Ш",
+                            "В"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "340"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 22",
+                        "en": "Table 22"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "Ш",
+                            "В"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "316"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 23",
+                        "en": "Table 23"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "Д",
+                            "Ш",
+                            "В"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Д",
+                            "мм",
+                            "340"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 24",
+                        "en": "Table 24"
+                    },
+                    "testid": "Specification-ModalCbed-AccordionBuyersMaterial-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Наименование",
+                            "Кол-во"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "1",
+                            "БРС (розетка BSPT 3/8)",
+                            "1"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 25",
+                        "en": "Table 25"
+                    },
+                    "testid": "Specification-ModalCbed-ModalComplect-MateriaDetalTable",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Наименование",
+                            "Параметры",
+                            "кг",
+                            "м",
+                            "кг",
+                            "м",
+                            "кг",
+                            "м"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "1",
+                            "Круг Сталь 40х Ø180мм +",
+                            "м2 0 кг 15.542 м 0.14",
+                            "м2",
+                            "0",
+                            "кг",
+                            "15.542",
+                            "м",
+                            "0.14"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 26",
+                        "en": "Table 26"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "кг",
+                            "м"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "м2",
+                            "0"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 27",
+                        "en": "Table 27"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "кг",
+                            "м"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "м2",
+                            "0.007"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 28",
+                        "en": "Table 28"
+                    },
+                    "testid": null,
+                    "headers": {
+                        "ru": [
+                            "кг",
+                            "м"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "м2",
+                            "0.095"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "ShortInfoModal_Материалы": {
+            "titles": {
+                "ru": [
+                    "Краткая информация о материале",
+                    "Медиа файлы",
+                    "Описание / Примечание"
+                ],
+                "en": [
+                    "Short materials information",
+                    "Media files",
+                    "Description / Note"
+                ]
+            },
+            "labels": {
+                "ru": [
+                    "Наименование:",
+                    "Тип:",
+                    "Подтип:"
+                ],
+                "en": [
+                    "Name:",
+                    "Type:",
+                    "Subtype:"
+                ]
+            },
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Полная информация",
+                        "en": "Full info"
+                    }
+                },
+                {
+                    "testid": "undefined-HistoryButton",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "History changes"
+                    }
+                }
+            ]
+        },
+        "ShortInfoModal_Оборудование": {
+            "titles": {
+                "ru": [
+                    "Краткая информация об оборудовании",
+                    "Медиа файлы",
+                    "Описание / Примечание"
+                ],
+                "en": [
+                    "Short equipment information",
+                    "Media files",
+                    "Description / Note"
+                ]
+            },
+            "labels": {
+                "ru": [
+                    "Наименование:",
+                    "Тип:",
+                    "Подтип:"
+                ],
+                "en": [
+                    "Name:",
+                    "Type:",
+                    "Subtype:"
+                ]
+            },
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Полная информация",
+                        "en": "Full info"
+                    }
+                },
+                {
+                    "testid": "undefined-HistoryButton",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "History changes"
+                    }
+                }
+            ]
+        },
+        "HistoryModal_Деталь": {
+            "titles": {
+                "ru": [
+                    {
+                        "testid": "undefined-ModalHistoryAction-Main-Title-Name",
+                        "label": "История изменений"
+                    }
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Дата и время",
+                    "Сотрудник",
+                    "Тип сущности",
+                    "Действие"
+                ],
+                "en": []
+            },
+            "labels": [
+                {
+                    "testid": "undefined-ModalHistoryAction-Information-Title0",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Entity type:"
+                    }
+                },
+                {
+                    "testid": "FilterUser-Title",
+                    "label": {
+                        "ru": "Сотрудники:",
+                        "en": "Employees:"
+                    }
+                },
+                {
+                    "testid": "BaseFilter-Title",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Entity type:"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "Calendar-DataPickerRange-Component-Start-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр",
+                        "en": ""
+                    }
+                },
+                {
+                    "testid": "Calendar-DataPickerRange-Component-End-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр",
+                        "en": ""
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Сбросить",
+                        "en": "Reset"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Закрыть",
+                        "en": "Close"
+                    }
+                }
+            ],
+            "userModalKey": "UserModal_Деталь",
+            "userModalSelector": "[data-testid=\"ModalUser\"]",
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "undefined-ModalHistoryAction-Table",
+                    "headers": {
+                        "ru": [
+                            "Дата и время",
+                            "Сотрудник",
+                            "Тип сущности",
+                            "Действие"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "17.04.2026 05:23:04",
+                            "Джойс Р.Г.",
+                            "Деталь",
+                            "Прикрепил тех процесс"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "UserModal_Деталь": {
+            "titles": {
+                "ru": [
+                    {
+                        "testid": "ModalUser-Main-Title-Name",
+                        "label": "Информация о пользователе"
+                    },
+                    "Контактные данные"
+                ],
+                "en": []
+            },
+            "labels": [
+                "Был в сети:",
+                "Должность:",
+                "Табельный номер",
+                "Логин",
+                "Телефон",
+                "Эл. почта",
+                "Телеграм"
+            ],
+            "headers": {
+                "ru": [],
+                "en": []
+            },
+            "buttons": [],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "UserContactInfo-v-29",
+                    "headers": {
+                        "ru": [],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "TechProcessModal_Деталь": {
+            "titles": {
+                "ru": [
+                    "Технологический процесс",
+                    "Описание/Примечание"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "№",
+                    "Наименование операции",
+                    "Подготовительное время, н.м.",
+                    "Вспомогательное время, н.м.",
+                    "Основное время, н.м.",
+                    "Требуемое оборудование",
+                    "Требуемый инструмент",
+                    "Оснастка",
+                    "Мерительный инструмент"
+                ],
+                "en": []
+            },
+            "buttons": [
+                {
+                    "testid": "ModalTechProcess-Buttons-ButtonCreate",
+                    "label": {
+                        "ru": "Добавить операцию",
+                        "en": "Добавить операцию"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-Buttons-ButtonUpdate",
+                    "label": {
+                        "ru": "Редактировать",
+                        "en": "Редактировать"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-Buttons-ButtonUpdate",
+                    "label": {
+                        "ru": "Архив",
+                        "en": "Архив"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ButtonHistory",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-Button-Cancel",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-Button-Save",
+                    "label": {
+                        "ru": "Сохранить",
+                        "en": "Сохранить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-Button-Print",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "testid": "ModalTechProcess-Heading",
+                    "label": {
+                        "ru": "Технологический процесс",
+                        "en": "Технологический процесс"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-Textarea-Title",
+                    "label": {
+                        "ru": "Описание/Примечание",
+                        "en": "Описание/Примечание"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "ModalTechProcess-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Наименование операции",
+                            "Подготовительное время, н.м.",
+                            "Вспомогательное время, н.м.",
+                            "Основное время, н.м.",
+                            "Требуемое оборудование",
+                            "Требуемый инструмент",
+                            "Оснастка",
+                            "Мерительный инструмент"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationModal_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление операции технологического процесса"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Выбранное оборудование",
+                    "Выбранный инструмент",
+                    "Выбранный оснастки",
+                    "Выбранный мерительный инструмент"
+                ],
+                "en": []
+            },
+            "labels": [
+                "Выбор типа операции:",
+                "Подготовительное время, н.м.:",
+                "Вспомогательное время, н.м.:",
+                "Основное время, н.м.:",
+                "Общее число время, м.:",
+                "Выбор оборудования",
+                "Выбор инструмента",
+                "Выбор оснастки",
+                "Выбор мерительного инструмента",
+                "Описание/Примечание"
+            ],
+            "buttons": [
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddEquipmentBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddToolsBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddToolingBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddResourcesBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-CancelButton",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-SaveButton",
+                    "label": {
+                        "ru": "Сохранить",
+                        "en": "Сохранить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-PrintButton",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-EquipmentTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранное оборудование"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-ToolsTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранный инструмент"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-EquipmentTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранный оснастки"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 4",
+                        "en": "Table 4"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-ResourcesTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранный мерительный инструмент"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationEquipmentPickerModal_Деталь": {
+            "titles": {
+                "ru": [
+                    "Фильтр по оборудованию"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип",
+                    "Подтип",
+                    "Наименование (Марка/Типоразмер)"
+                ],
+                "en": []
+            },
+            "labels": [
+                "Просмотреть историю запросов"
+            ],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "TableEquipmentList-TableType",
+                    "headers": {
+                        "ru": [
+                            "Тип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Погрузочная техника, оборудование"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "TableEquipmentList-TableSubType",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "3D-печать"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "TableEquipmentList-TableEntity",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Вальцовочный станок"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationToolsPickerModal_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление инструмента"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип (Инструмента или оснастки)",
+                    "Подтип",
+                    "Наименование (Марка/Типоразмер)"
+                ],
+                "en": []
+            },
+            "labels": [
+                "Все",
+                "Инструмент",
+                "Оснастка",
+                "Мерительный инструмент"
+            ],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Тип (Инструмента или оснастки)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Инструмент для ленточнопильных станков"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Для термообработки"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Кулачки прямые 3-200.33.11.004 комплект (для маленького ЧПУ патрон 200мм)"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationToolingPickerModal_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление инструмента"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип (Инструмента или оснастки)",
+                    "Подтип",
+                    "Наименование (Марка/Типоразмер)"
+                ],
+                "en": []
+            },
+            "labels": [
+                "Все",
+                "Инструмент",
+                "Оснастка",
+                "Мерительный инструмент"
+            ],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Тип (Инструмента или оснастки)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Оснастка для ленточнопильных станков"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Оправки"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Оправка для сверлильного патрона 6039-0013, КМ3-В18"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationResourcesPickerModal_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление инструмента"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип (Инструмента или оснастки)",
+                    "Подтип",
+                    "Наименование (Марка/Типоразмер)"
+                ],
+                "en": []
+            },
+            "labels": [
+                "Все",
+                "Инструмент",
+                "Оснастка",
+                "Мерительный инструмент"
+            ],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Тип (Инструмента или оснастки)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Мерительный инструмент"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Для термообработки"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Микрометр 0-25"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "ArchiveConfirmModal_Деталь": {
+            "titles": {
+                "ru": [
+                    "Архив"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [],
+                "en": []
+            },
+            "labels": [
+                "Вы уверены, что хотите перенести в архив"
+            ],
+            "buttons": [
+                {
+                    "testid": "ModalConfirm-Content-Buttons-No",
+                    "label": {
+                        "ru": "Нет",
+                        "en": "Нет"
+                    }
+                },
+                {
+                    "testid": "ModalConfirm-Content-Buttons-Yes",
+                    "label": {
+                        "ru": "Да",
+                        "en": "Да"
+                    }
+                }
+            ],
+            "tables": []
+        },
+        "TechProcessModal_Сборочная_единица": {
+            "titles": {
+                "ru": [
+                    "Технологический процесс",
+                    "Медиа файлы",
+                    "Описание/Примечание"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "№",
+                    "Наименование операции",
+                    "Подготовительное время, н.м.",
+                    "Вспомогательное время, н.м.",
+                    "Основное время, н.м.",
+                    "Требуемое оборудование",
+                    "Требуемый инструмент",
+                    "Оснастка",
+                    "Мерительный инструмент"
+                ],
+                "en": []
+            },
+            "buttons": [
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Buttons-ButtonCreate",
+                    "label": {
+                        "ru": "Добавить операцию",
+                        "en": "Добавить операцию"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Buttons-ButtonUpdate",
+                    "label": {
+                        "ru": "Редактировать",
+                        "en": "Редактировать"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Buttons-ButtonUpdate",
+                    "label": {
+                        "ru": "Архив",
+                        "en": "Архив"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-AttachFile-DocumentTable-Buttons-ButtonPrint",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-ButtonHistory",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Button-Cancel",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Button-Save",
+                    "label": {
+                        "ru": "Сохранить",
+                        "en": "Сохранить"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Button-Print",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Heading",
+                    "label": {
+                        "ru": "Технологический процесс",
+                        "en": "Технологический процесс"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Media-Title",
+                    "label": {
+                        "ru": "Медиа файлы",
+                        "en": "Медиа файлы"
+                    }
+                },
+                {
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Textarea-Title",
+                    "label": {
+                        "ru": "Описание/Примечание",
+                        "en": "Описание/Примечание"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Наименование операции",
+                            "Подготовительное время, н.м.",
+                            "Вспомогательное время, н.м.",
+                            "Основное время, н.м.",
+                            "Требуемое оборудование",
+                            "Требуемый инструмент",
+                            "Оснастка",
+                            "Мерительный инструмент"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "`ModalCbed-ModalTechProcess${state.selectedCbEd?.id}`-AttachFile-DocumentTable-Table",
+                    "headers": {
+                        "ru": [
+                            "№",
+                            "Файлы"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "1",
+                            "085.7.3.1-С1 СБ Опоры траверсы L100мм.15т.SLDDRW"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "FullSpecificationModal_Сборочная_единица": {
+            "titles": {
+                "ru": [
+                    "Полная спецификация",
+                    "СБ Опоры траверсы L100мм.15т",
+                    "085.7.3.1-С1 АРХИВ",
+                    "Сборочная единица (0)",
+                    "Детали (5)",
+                    "Покупные материалы (2)",
+                    "Материалы для деталей (2)",
+                    "Расходные материалы (0)"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "№",
+                    "Тип родителя",
+                    "Изображение родителя",
+                    "Обозначение родителя",
+                    "Кол-во по родителю",
+                    "Фото",
+                    "Обозначение",
+                    "Наименование СБ",
+                    "Потребность"
+                ],
+                "en": []
+            },
+            "buttons": [
+                {
+                    "testid": "Specification-ModalCbed-HandlePrint",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                }
+            ],
+            "labels": [
+                {
+                    "testid": "Specification-ModalCbed-Specification-ModalCbed-Title",
+                    "label": {
+                        "ru": "Полная спецификация",
+                        "en": "Полная спецификация"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-MainBlockName-Title",
+                    "label": {
+                        "ru": "Наименование:",
+                        "en": "Наименование:"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-Designation-Title",
+                    "label": {
+                        "ru": "Обозначение:",
+                        "en": "Обозначение:"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-DesignationDeepSpetification-Title",
+                    "label": {
+                        "ru": "085.7.3.1-С1 АРХИВ",
+                        "en": "085.7.3.1-С1 АРХИВ"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-AccordionCbed-Title",
+                    "label": {
+                        "ru": "Сборочная единица (0)",
+                        "en": "Сборочная единица (0)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-AccordionDetal-Title",
+                    "label": {
+                        "ru": "Детали (5)",
+                        "en": "Детали (5)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-AccordionBuyersMaterial-Title",
+                    "label": {
+                        "ru": "Покупные материалы (2)",
+                        "en": "Покупные материалы (2)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-MaterialDetal-Title",
+                    "label": {
+                        "ru": "Материалы для деталей (2)",
+                        "en": "Материалы для деталей (2)"
+                    }
+                },
+                {
+                    "testid": "Specification-ModalCbed-Accordion-MaterialRashod-Title",
+                    "label": {
+                        "ru": "Расходные материалы (0)",
+                        "en": "Расходные материалы (0)"
+                    }
+                }
+            ],
+            "tables": []
+        },
+        "HistoryModal_Материалы": {
+            "titles": {
+                "ru": [
+                    "История изменений"
+                ],
+                "en": []
+            },
+            "labels": [
+                {
+                    "testid": "undefined-ModalHistoryAction-Main-Title",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "undefined-ModalHistoryAction-Main-Title-Name",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "undefined-ModalHistoryAction-Information-Title0",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Тип сущности:"
+                    }
+                },
+                {
+                    "testid": "FilterUser-Title",
+                    "label": {
+                        "ru": "Сотрудники:",
+                        "en": "Сотрудники:"
+                    }
+                },
+                {
+                    "testid": "BaseFilter-Title",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Тип сущности:"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "Calendar-DataPickerRange-Component-Start-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр 10, 2026",
+                        "en": "Апр 10, 2026"
+                    }
+                },
+                {
+                    "testid": "Calendar-DataPickerRange-Component-End-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр 10, 2026",
+                        "en": "Апр 10, 2026"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Сбросить",
+                        "en": "Сбросить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Закрыть",
+                        "en": "Закрыть"
+                    }
+                }
+            ],
+            "tables": []
+        },
+        "HistoryModal_Оборудование": {
+            "titles": {
+                "ru": [
+                    "История изменений"
+                ],
+                "en": []
+            },
+            "labels": [
+                {
+                    "testid": "undefined-ModalHistoryAction-Main-Title",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "undefined-ModalHistoryAction-Main-Title-Name",
+                    "label": {
+                        "ru": "История изменений",
+                        "en": "История изменений"
+                    }
+                },
+                {
+                    "testid": "undefined-ModalHistoryAction-Information-Title0",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Тип сущности:"
+                    }
+                },
+                {
+                    "testid": "FilterUser-Title",
+                    "label": {
+                        "ru": "Сотрудники:",
+                        "en": "Сотрудники:"
+                    }
+                },
+                {
+                    "testid": "BaseFilter-Title",
+                    "label": {
+                        "ru": "Тип сущности:",
+                        "en": "Тип сущности:"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "Calendar-DataPickerRange-Component-Start-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр 10, 2026",
+                        "en": "Апр 10, 2026"
+                    }
+                },
+                {
+                    "testid": "Calendar-DataPickerRange-Component-End-Choose-HeaderBtn-Trigger",
+                    "label": {
+                        "ru": "Апр 10, 2026",
+                        "en": "Апр 10, 2026"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Сбросить",
+                        "en": "Сбросить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Закрыть",
+                        "en": "Закрыть"
+                    }
+                }
+            ],
+            "tables": []
+        },
+        "AddOperationToolsPickerModal_Все_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление инструмента"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип (Инструмента или оснастки)"
+                ],
+                "en": []
+            },
+            "labels": [],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Тип (Инструмента или оснастки)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Инструмент для ленточнопильных станков"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Для термообработки"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Кулачки прямые 3-200.33.11.004 комплект (для маленького ЧПУ патрон 200мм)"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationToolsPickerModal_Инструмент_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление инструмента"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип (Инструмента или оснастки)"
+                ],
+                "en": []
+            },
+            "labels": [],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Тип (Инструмента или оснастки)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Инструмент для ленточнопильных станков"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Корончатые сверла/фрезы и оснастка к ним"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Кулачки прямые 3-200.33.11.004 комплект (для маленького ЧПУ патрон 200мм)"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationToolsPickerModal_Оснастка_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление инструмента"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип (Инструмента или оснастки)"
+                ],
+                "en": []
+            },
+            "labels": [],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Тип (Инструмента или оснастки)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Оснастка для ленточнопильных станков"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Оправки"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Оправка для сверлильного патрона 6039-0013, КМ3-В18"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "AddOperationToolsPickerModal_Мерительный_инструмент_Деталь": {
+            "titles": {
+                "ru": [
+                    "Добавление инструмента"
+                ],
+                "en": []
+            },
+            "headers": {
+                "ru": [
+                    "Тип (Инструмента или оснастки)"
+                ],
+                "en": []
+            },
+            "labels": [],
+            "buttons": [
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Выбрать",
+                        "en": "Выбрать"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "Button",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Тип (Инструмента или оснастки)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Мерительный инструмент"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Подтип"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Для термообработки"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "PaginationTable",
+                    "headers": {
+                        "ru": [
+                            "Наименование (Марка/Типоразмер)"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "Микрометр 0-25"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        },
+        "EditOperationModal_Деталь": {
+            "labels": [
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-OperationTitle",
+                    "label": {
+                        "ru": "Изменение операции технологического процесса",
+                        "en": "Изменение операции технологического процесса"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-OperationTypeLabel",
+                    "label": {
+                        "ru": "Выбор типа операции:",
+                        "en": "Выбор типа операции:"
+                    }
+                },
+                {
+                    "testid": "BaseFilter-Title",
+                    "label": {
+                        "ru": "Тип операции:",
+                        "en": "Тип операции:"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-PreTimeLabel",
+                    "label": {
+                        "ru": "Подготовительное время, н.м.:",
+                        "en": "Подготовительное время, н.м.:"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-HelperTimeLabel",
+                    "label": {
+                        "ru": "Вспомогательное время, н.м.:",
+                        "en": "Вспомогательное время, н.м.:"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-MainTimeLabel",
+                    "label": {
+                        "ru": "Основное время, н.м.:",
+                        "en": "Основное время, н.м.:"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-TotalTimeLabel",
+                    "label": {
+                        "ru": "Общее число время, м.:",
+                        "en": "Общее число время, м.:"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-EquipmentTitle",
+                    "label": {
+                        "ru": "Выбор оборудования",
+                        "en": "Выбор оборудования"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-ToolsTitle",
+                    "label": {
+                        "ru": "Выбор инструмента",
+                        "en": "Выбор инструмента"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-EquipmentTitle",
+                    "label": {
+                        "ru": "Выбор оснастки",
+                        "en": "Выбор оснастки"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-ResourcesTitle",
+                    "label": {
+                        "ru": "Выбор мерительного инструмента",
+                        "en": "Выбор мерительного инструмента"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-DescriptionLabel",
+                    "label": {
+                        "ru": "Описание/Примечание",
+                        "en": "Описание/Примечание"
+                    }
+                }
+            ],
+            "buttons": [
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddEquipmentBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddToolsBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddToolingBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-AddResourcesBtn",
+                    "label": {
+                        "ru": "Добавить",
+                        "en": "Добавить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-CancelButton",
+                    "label": {
+                        "ru": "Отменить",
+                        "en": "Отменить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-SaveButton",
+                    "label": {
+                        "ru": "Сохранить",
+                        "en": "Сохранить"
+                    }
+                },
+                {
+                    "testid": "ModalTechProcess-ModalAddOperation-PrintButton",
+                    "label": {
+                        "ru": "Печать",
+                        "en": "Печать"
+                    }
+                }
+            ],
+            "tables": [
+                {
+                    "name": {
+                        "ru": "Таблица 1",
+                        "en": "Table 1"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-EquipmentTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранное оборудование"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 2",
+                        "en": "Table 2"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-ToolsTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранный инструмент"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 3",
+                        "en": "Table 3"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-EquipmentTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранный оснастки"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                },
+                {
+                    "name": {
+                        "ru": "Таблица 4",
+                        "en": "Table 4"
+                    },
+                    "testid": "ModalTechProcess-ModalAddOperation-ResourcesTable",
+                    "headers": {
+                        "ru": [
+                            "Выбранный мерительный инструмент"
+                        ],
+                        "en": []
+                    },
+                    "sampleRow": {
+                        "ru": [
+                            "-"
+                        ],
+                        "en": []
+                    }
+                }
+            ]
+        }
+    }
+}

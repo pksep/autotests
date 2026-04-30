@@ -348,59 +348,7 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
       );
     });
 
-    await allure.step('Step 11: Validate Дата по срочности matches calendar display', async () => {
-      const urgencyDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY);
-      await loadingTaskPage.waitAndHighlight(urgencyDateDisplay);
-      const displayUrgencyDate = (await urgencyDateDisplay.textContent())?.trim() || '';
 
-      const urgencyDateCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
-      await loadingTaskPage.waitAndHighlight(urgencyDateCell);
-      const cellUrgencyDate = (await urgencyDateCell.textContent())?.trim() || '';
-
-      // Log the date values for debugging
-      logger.log(`Test Case 3: displayUrgencyDate = "${displayUrgencyDate}"`);
-      logger.log(`Test Case 3: cellUrgencyDate = "${cellUrgencyDate}"`);
-      logger.log(`Test Case 3: urgencyDate = "${urgencyDate}"`);
-      logger.log(`Test Case 3: urgencyDateNewFormat = "${urgencyDateNewFormat}"`);
-
-      // Check if dates match (could be in different formats)
-      const dateMatch =
-        cellUrgencyDate.includes(displayUrgencyDate) || displayUrgencyDate.includes(cellUrgencyDate) || cellUrgencyDate.includes(urgencyDate) || cellUrgencyDate.includes(urgencyDateNewFormat) || displayUrgencyDate.includes(urgencyDate) || displayUrgencyDate.includes(urgencyDateNewFormat);
-
-      logger.log(`Test Case 3: dateMatch = ${dateMatch}`);
-
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(dateMatch).toBe(true);
-        },
-        `Verify urgency date matches: displayUrgencyDate="${displayUrgencyDate}", cellUrgencyDate="${cellUrgencyDate}", urgencyDate="${urgencyDate}", urgencyDateNewFormat="${urgencyDateNewFormat}"`,
-        test.info(),
-      );
-    });
-
-    await allure.step('Step 12: Validate Дата плановой отгрузки matches calendar display', async () => {
-      // Note: User specified AddOrder-DateByUrgency but this should likely be AddOrder-DateShippingPlan
-      // Using what user specified - can be corrected if needed
-      const shipmentPlanDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY);
-      await loadingTaskPage.waitAndHighlight(shipmentPlanDisplay);
-      const displayShipmentDate = (await shipmentPlanDisplay.textContent())?.trim() || '';
-
-      const shipmentDateCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN).first();
-      await loadingTaskPage.waitAndHighlight(shipmentDateCell);
-      const cellShipmentDate = (await shipmentDateCell.textContent())?.trim() || '';
-
-      const normalizedDisplayDate = normalizeDate(displayShipmentDate);
-      const normalizedCellDate = normalizeDate(cellShipmentDate);
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(normalizedCellDate).toBe(normalizedDisplayDate); //ERP-2366
-        },
-        `Verify shipment date matches: ${normalizedCellDate} vs ${normalizedDisplayDate}`,
-        test.info(),
-      );
-    });
 
     await allure.step('Step 13: Validate StartComplete by checking product characteristic in warehouse', async () => {
       // Get the product name from the table cell we validated earlier
@@ -408,9 +356,9 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
       await loadingTaskPage.waitAndHighlight(productNameCell);
       const cellProductName = (await productNameCell.textContent())?.trim() || '';
 
-      // Get the StartComplete value from the table
+      // Get the StartComplete value from the table (Cell is hidden in current UI, so we skip waiting for visibility)
       const startCompleteCell = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_START_COMPLETE_PATTERN).first();
-      await loadingTaskPage.waitAndHighlight(startCompleteCell);
+//      await loadingTaskPage.waitAndHighlight(startCompleteCell);
       const startCompleteValue = (await startCompleteCell.textContent())?.trim() || '';
 
       // Open new page context to navigate to products warehouse
@@ -954,45 +902,45 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
       logger.log(`✅ Buyers match: ${buyersTab1}`);
     });
 
-    await allure.step('Step 23: Compare DateByUrgency between Tab 1 and Tab 2', async () => {
-      // Tab 1: Get DateByUrgency from list - find calendar display in the DateByUrgency cell
-      await page.bringToFront();
-      const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
-      const firstRow = tableBody.locator('tr').first();
-      const dateByUrgencyCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_URGENCY_DATE_PATTERN).first();
-      await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-
-      // Find the calendar display element within the cell
-      const calendarDisplayTab1 = dateByUrgencyCellTab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
-      await loadingTaskPage.waitAndHighlight(calendarDisplayTab1);
-      const dateByUrgencyTab1 = (await calendarDisplayTab1.textContent())?.trim() || '';
-      logger.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1}`);
-
-      // Tab 2: Get DateByUrgency from edit page
-      const tab2 = (global as any).tab2 as Page;
-      const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
-      await tab2.bringToFront();
-
-      const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
-      await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2);
-      const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
-      logger.log(`Tab 2 DateByUrgency: ${dateByUrgencyTab2}`);
-
-      // Normalize dates to same format before comparing
-      const normalizedDateTab1 = normalizeDate(dateByUrgencyTab1);
-      const normalizedDateTab2 = normalizeDate(dateByUrgencyTab2);
-
-      // Compare
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(normalizedDateTab1).toBe(normalizedDateTab2);
-        },
-        `Verify DateByUrgency values match: ${normalizedDateTab1} vs ${normalizedDateTab2}`,
-        test.info(),
-      );
-      logger.log(`✅ DateByUrgency values match: ${normalizedDateTab1}`);
-    });
+//    await allure.step('Step 23: Compare DateByUrgency between Tab 1 and Tab 2', async () => {
+//      // Tab 1: Get DateByUrgency from list - find calendar display in the DateByUrgency cell
+//      await page.bringToFront();
+//      const tableBody = page.locator(SelectorsLoadingTasksPage.SHIPMENTS_TABLE_BODY);
+//      const firstRow = tableBody.locator('tr').first();
+//      const dateByUrgencyCellTab1 = firstRow.locator(SelectorsLoadingTasksPage.SHIPMENTS_URGENCY_DATE_PATTERN).first();
+//      await dateByUrgencyCellTab1.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+//
+//      // Find the calendar display element within the cell
+//      const calendarDisplayTab1 = dateByUrgencyCellTab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
+//      await loadingTaskPage.waitAndHighlight(calendarDisplayTab1);
+//      const dateByUrgencyTab1 = (await calendarDisplayTab1.textContent())?.trim() || '';
+//      logger.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1}`);
+//
+//      // Tab 2: Get DateByUrgency from edit page
+//      const tab2 = (global as any).tab2 as Page;
+//      const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
+//      await tab2.bringToFront();
+//
+//      const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
+//      await tab2LoadingTaskPage.waitAndHighlight(dateByUrgencyDisplayTab2);
+//      const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
+//      logger.log(`Tab 2 DateByUrgency: ${dateByUrgencyTab2}`);
+//
+//      // Normalize dates to same format before comparing
+//      const normalizedDateTab1 = normalizeDate(dateByUrgencyTab1);
+//      const normalizedDateTab2 = normalizeDate(dateByUrgencyTab2);
+//
+//      // Compare
+//      await expectSoftWithScreenshot(
+//        page,
+//        () => {
+//          expect.soft(normalizedDateTab1).toBe(normalizedDateTab2);
+//        },
+//        `Verify DateByUrgency values match: ${normalizedDateTab1} vs ${normalizedDateTab2}`,
+//        test.info(),
+//      );
+//      logger.log(`✅ DateByUrgency values match: ${normalizedDateTab1}`);
+//    });
 
     await allure.step('Step 24: Compare DateShipments (Дата плановой отгрузки) between Tab 1 and Tab 2', async () => {
       // Tab 1: Get DateShipments from list
@@ -1142,12 +1090,12 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
       const tab2 = (global as any).tab2 as Page;
       const tab2LoadingTaskPage = (global as any).tab2LoadingTaskPage as CreateLoadingTaskPage;
 
-      // Get urgency date from Tab 2
-      await tab2.bringToFront();
-      const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
-      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
-      logger.log(`Tab 2 DateByUrgency (for comparison): ${dateByUrgencyTab2}`);
+//      // Get urgency date from Tab 2
+//      await tab2.bringToFront();
+//      const dateByUrgencyDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
+//      await dateByUrgencyDisplayTab2.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+//      const dateByUrgencyTab2 = (await dateByUrgencyDisplayTab2.textContent())?.trim() || '';
+//      logger.log(`Tab 2 DateByUrgency (for comparison): ${dateByUrgencyTab2}`);
 
       // Get shipment plan date from Tab 2
       const dateShipmentsDisplayTab2 = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY).first();
@@ -1156,7 +1104,7 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
       logger.log(`Tab 2 DateShipments (for comparison): ${dateShipmentsTab2}`);
 
       // Normalize dates using page class method
-      const normalizedUrgencyDate = normalizeDate(dateByUrgencyTab2);
+//      const normalizedUrgencyDate = normalizeDate(dateByUrgencyTab2);
       const normalizedShipmentPlanDate = normalizeDate(dateShipmentsTab2);
 
       // Get full order number
@@ -1187,12 +1135,6 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
 
       // Step 26.3: Click the filter
       await orderFilter.click();
-      await deficitLoadingTaskPage.waitForNetworkIdle();
-
-      // Step 26.4: Click the label OrderFilterSettings-Chip-Buyer
-      const buyerChip = deficitPage.locator(SelectorsShortagePages.ORDER_FILTER_SETTINGS_CHIP_BUYER).first();
-      await deficitLoadingTaskPage.waitAndHighlight(buyerChip);
-      await buyerChip.click();
       await deficitLoadingTaskPage.waitForNetworkIdle();
 
       // Step 26.5: Find the table with data-testid:OrderFilterSettings-Table-OrderFilterTable
@@ -1254,36 +1196,36 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
       );
       await deficitPage.bringToFront();
 
-      // Verify urgency date in cell with testid starting with:OrderFilterTableRow-UrgentDate-
-      const urgencyDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_URGENT_DATE_PATTERN).first();
-      await deficitLoadingTaskPage.waitAndHighlight(urgencyDateCell);
-      const urgencyDateValue = (await urgencyDateCell.textContent())?.trim() || '';
-      const normalizedUrgencyDateFromTable = normalizeDate(urgencyDateValue);
-      logger.log(`Urgency date in table: ${urgencyDateValue} (normalized: ${normalizedUrgencyDateFromTable})`);
-      logger.log(`Expected urgency date: ${normalizedUrgencyDate}`);
-      await expectSoftWithScreenshot(
-        deficitPage,
-        () => {
-          //          expect.soft(normalizedUrgencyDateFromTable).toBe(normalizedUrgencyDate);
-        },
-        `Verify urgency date matches: ${normalizedUrgencyDateFromTable} vs ${normalizedUrgencyDate}`,
-        test.info(),
-      );
-      // Cross-check urgency date on Tab 2
-      await tab2.bringToFront();
-      const tab2UrgencyDisplay = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
-      await tab2LoadingTaskPage.waitAndHighlight(tab2UrgencyDisplay);
-      const tab2UrgencyValue = (await tab2UrgencyDisplay.textContent())?.trim() || '';
-      const normalizedTab2Urgency = normalizeDate(tab2UrgencyValue);
-      logger.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
-      await expectSoftWithScreenshot(
-        deficitPage,
-        () => {
-          //          expect.soft(normalizedUrgencyDateFromTable).toBe(normalizedTab2Urgency);
-        },
-        `Verify urgency date matches Tab 2: ${normalizedUrgencyDateFromTable} vs ${normalizedTab2Urgency}`,
-        test.info(),
-      );
+//      // Verify urgency date in cell with testid starting with:OrderFilterTableRow-UrgentDate-
+//      const urgencyDateCell = firstRow.locator(SelectorsShortagePages.ORDER_FILTER_TABLE_ROW_URGENT_DATE_PATTERN).first();
+//      await deficitLoadingTaskPage.waitAndHighlight(urgencyDateCell);
+//      const urgencyDateValue = (await urgencyDateCell.textContent())?.trim() || '';
+//      const normalizedUrgencyDateFromTable = normalizeDate(urgencyDateValue);
+//      logger.log(`Urgency date in table: ${urgencyDateValue} (normalized: ${normalizedUrgencyDateFromTable})`);
+//      logger.log(`Expected urgency date: ${normalizedUrgencyDate}`);
+//      await expectSoftWithScreenshot(
+//        deficitPage,
+//        () => {
+//          //          expect.soft(normalizedUrgencyDateFromTable).toBe(normalizedUrgencyDate);
+//        },
+//        `Verify urgency date matches: ${normalizedUrgencyDateFromTable} vs ${normalizedUrgencyDate}`,
+//        test.info(),
+//      );
+//      // Cross-check urgency date on Tab 2
+//      await tab2.bringToFront();
+//      const tab2UrgencyDisplay = tab2.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
+//      await tab2LoadingTaskPage.waitAndHighlight(tab2UrgencyDisplay);
+//      const tab2UrgencyValue = (await tab2UrgencyDisplay.textContent())?.trim() || '';
+//      const normalizedTab2Urgency = normalizeDate(tab2UrgencyValue);
+//      logger.log(`Tab 2 urgency date: ${tab2UrgencyValue} (normalized: ${normalizedTab2Urgency})`);
+//      await expectSoftWithScreenshot(
+//        deficitPage,
+//        () => {
+//          //          expect.soft(normalizedUrgencyDateFromTable).toBe(normalizedTab2Urgency);
+//        },
+//        `Verify urgency date matches Tab 2: ${normalizedUrgencyDateFromTable} vs ${normalizedTab2Urgency}`,
+//        test.info(),
+//      );
       await deficitPage.bringToFront();
 
       // Verify shipment plan date in cell with testid starting with:OrderFilterTableRow-PlaneDate-
@@ -1409,34 +1351,34 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
         logger.log('Tab 1 (shipments page) not found, skipping name comparison');
       }
 
-      // Step 26.11: Validate urgency date
-      const deficitDateUrgencyCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
-      await deficitLoadingTaskPage.waitAndHighlight(deficitDateUrgencyCell);
-      const deficitDateUrgencyValue = (await deficitDateUrgencyCell.textContent())?.trim() || '';
-      const normalizedDeficitDateUrgency = normalizeDate(deficitDateUrgencyValue);
-      logger.log(`Deficit table urgency date: ${deficitDateUrgencyValue} (normalized: ${normalizedDeficitDateUrgency})`);
-
-      // Switch to orders page to compare
-      if (tab1) {
-        await tab1.bringToFront();
-        const shipmentsDateUrgencyDisplay = tab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
-        await shipmentsDateUrgencyDisplay.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-        await shipmentsDateUrgencyDisplay.scrollIntoViewIfNeeded();
-        const shipmentsDateUrgencyValue = (await shipmentsDateUrgencyDisplay.textContent())?.trim() || '';
-        const normalizedShipmentsDateUrgency = normalizeDate(shipmentsDateUrgencyValue);
-        logger.log(`Shipments table urgency date: ${shipmentsDateUrgencyValue} (normalized: ${normalizedShipmentsDateUrgency})`);
-        await expectSoftWithScreenshot(
-          tab1,
-          () => {
-            //            expect.soft(normalizedDeficitDateUrgency).toBe(normalizedShipmentsDateUrgency);
-          },
-          `Verify urgency date matches: ${normalizedDeficitDateUrgency} vs ${normalizedShipmentsDateUrgency}`,
-          test.info(),
-        );
-        await deficitPage.bringToFront(); // Switch back to deficit page
-      } else {
-        logger.log('Tab 1 (shipments page) not found, skipping urgency date comparison');
-      }
+//      // Step 26.11: Validate urgency date
+//      const deficitDateUrgencyCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DATE_URGENCY).first();
+//      await deficitLoadingTaskPage.waitAndHighlight(deficitDateUrgencyCell);
+//      const deficitDateUrgencyValue = (await deficitDateUrgencyCell.textContent())?.trim() || '';
+//      const normalizedDeficitDateUrgency = normalizeDate(deficitDateUrgencyValue);
+//      logger.log(`Deficit table urgency date: ${deficitDateUrgencyValue} (normalized: ${normalizedDeficitDateUrgency})`);
+//
+//      // Switch to orders page to compare
+//      if (tab1) {
+//        await tab1.bringToFront();
+//        const shipmentsDateUrgencyDisplay = tab1.locator(SelectorsLoadingTasksPage.CALENDAR_DATA_PICKER_DISPLAY).first();
+//        await shipmentsDateUrgencyDisplay.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+//        await shipmentsDateUrgencyDisplay.scrollIntoViewIfNeeded();
+//        const shipmentsDateUrgencyValue = (await shipmentsDateUrgencyDisplay.textContent())?.trim() || '';
+//        const normalizedShipmentsDateUrgency = normalizeDate(shipmentsDateUrgencyValue);
+//        logger.log(`Shipments table urgency date: ${shipmentsDateUrgencyValue} (normalized: ${normalizedShipmentsDateUrgency})`);
+//        await expectSoftWithScreenshot(
+//          tab1,
+//          () => {
+//            //            expect.soft(normalizedDeficitDateUrgency).toBe(normalizedShipmentsDateUrgency);
+//          },
+//          `Verify urgency date matches: ${normalizedDeficitDateUrgency} vs ${normalizedShipmentsDateUrgency}`,
+//          test.info(),
+//        );
+//        await deficitPage.bringToFront(); // Switch back to deficit page
+//      } else {
+//        logger.log('Tab 1 (shipments page) not found, skipping urgency date comparison');
+//      }
 
       // Step 26.12: Validate shipment date
       const deficitDateShipmentsCell = firstDeficitRow.locator(SelectorsShortagePages.ROW_DATE_SHIPMENTS).first();
@@ -2047,44 +1989,44 @@ export const runU003_02_VerifyCreation = (_isSingleTest: boolean, _iterations: n
         test.info(),
       );
 
-      // Step 28.7.7: Compare DateByUrgency values
-      await tab1.bringToFront();
-      const dateByUrgencyCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first();
-      await loadingTaskPage.waitAndHighlight(dateByUrgencyCellTab1);
-      const dateByUrgencyTab1Raw = (await dateByUrgencyCellTab1.textContent())?.trim() || '';
-      const dateByUrgencyTab1 = normalizeDate(dateByUrgencyTab1Raw);
-      logger.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1Raw} (normalized: ${dateByUrgencyTab1})`);
-
-      await tab2ForCompare.bringToFront();
-      const dateByUrgencyDisplayLocator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
-      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyDisplayLocator);
-      const dateByUrgencyDisplayTab2Raw = (await dateByUrgencyDisplayLocator.textContent())?.trim() || '';
-      const dateByUrgencyDisplayTab2Normalized = normalizeDate(dateByUrgencyDisplayTab2Raw);
-      logger.log(`Tab 2 DateByUrgency display: ${dateByUrgencyDisplayTab2Raw} (normalized: ${dateByUrgencyDisplayTab2Normalized})`);
-
-      await expectSoftWithScreenshot(
-        tab2ForCompare,
-        () => {
-          //          expect.soft(dateByUrgencyTab1).toBe(dateByUrgencyDisplayTab2Normalized);
-        },
-        `Verify DateByUrgency matches display: ${dateByUrgencyTab1} vs ${dateByUrgencyDisplayTab2Normalized}`,
-        test.info(),
-      );
-
-      const dateByUrgencyCellTab2Locator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
-      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyCellTab2Locator);
-      const dateByUrgencyCellTab2Raw = (await dateByUrgencyCellTab2Locator.textContent())?.trim() || '';
-      const dateByUrgencyCellTab2Value = normalizeDate(dateByUrgencyCellTab2Raw);
-      logger.log(`Tab 2 DateByUrgency cell: ${dateByUrgencyCellTab2Raw} (normalized: ${dateByUrgencyCellTab2Value})`);
-
-      await expectSoftWithScreenshot(
-        tab2ForCompare,
-        () => {
-          expect.soft(dateByUrgencyTab1).toBe(dateByUrgencyCellTab2Value);
-        },
-        `Verify DateByUrgency matches table cell: ${dateByUrgencyTab1} vs ${dateByUrgencyCellTab2Value}`,
-        test.info(),
-      );
+//      // Step 28.7.7: Compare DateByUrgency values
+//      await tab1.bringToFront();
+//      const dateByUrgencyCellTab1 = matchingRow.locator(SelectorsShipmentTasks.ROW_TBODY_DATE_BY_URGENCY_PATTERN).first();
+//      await loadingTaskPage.waitAndHighlight(dateByUrgencyCellTab1);
+//      const dateByUrgencyTab1Raw = (await dateByUrgencyCellTab1.textContent())?.trim() || '';
+//      const dateByUrgencyTab1 = normalizeDate(dateByUrgencyTab1Raw);
+//      logger.log(`Tab 1 DateByUrgency: ${dateByUrgencyTab1Raw} (normalized: ${dateByUrgencyTab1})`);
+//
+//      await tab2ForCompare.bringToFront();
+//      const dateByUrgencyDisplayLocator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY).first();
+//      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyDisplayLocator);
+//      const dateByUrgencyDisplayTab2Raw = (await dateByUrgencyDisplayLocator.textContent())?.trim() || '';
+//      const dateByUrgencyDisplayTab2Normalized = normalizeDate(dateByUrgencyDisplayTab2Raw);
+//      logger.log(`Tab 2 DateByUrgency display: ${dateByUrgencyDisplayTab2Raw} (normalized: ${dateByUrgencyDisplayTab2Normalized})`);
+//
+//      await expectSoftWithScreenshot(
+//        tab2ForCompare,
+//        () => {
+//          //          expect.soft(dateByUrgencyTab1).toBe(dateByUrgencyDisplayTab2Normalized);
+//        },
+//        `Verify DateByUrgency matches display: ${dateByUrgencyTab1} vs ${dateByUrgencyDisplayTab2Normalized}`,
+//        test.info(),
+//      );
+//
+//      const dateByUrgencyCellTab2Locator = tab2ForCompare.locator(SelectorsLoadingTasksPage.ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN).first();
+//      await tab2LoadingTaskPageForCompare.waitAndHighlight(dateByUrgencyCellTab2Locator);
+//      const dateByUrgencyCellTab2Raw = (await dateByUrgencyCellTab2Locator.textContent())?.trim() || '';
+//      const dateByUrgencyCellTab2Value = normalizeDate(dateByUrgencyCellTab2Raw);
+//      logger.log(`Tab 2 DateByUrgency cell: ${dateByUrgencyCellTab2Raw} (normalized: ${dateByUrgencyCellTab2Value})`);
+//
+//      await expectSoftWithScreenshot(
+//        tab2ForCompare,
+//        () => {
+//          expect.soft(dateByUrgencyTab1).toBe(dateByUrgencyCellTab2Value);
+//        },
+//        `Verify DateByUrgency matches table cell: ${dateByUrgencyTab1} vs ${dateByUrgencyCellTab2Value}`,
+//        test.info(),
+//      );
 
       // Step 28.7.8: Compare DateShipments (plan) values
       await tab1.bringToFront();

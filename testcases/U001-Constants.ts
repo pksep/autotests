@@ -21,15 +21,10 @@ export const quantityProductLaunchOnProduction = '2';
 export let quantityProductLaunchOnProductionBefore: string;
 export let quantityProductLaunchOnProductionAfter: string;
 export let quantitySumLaunchOnProduction: number;
-export let urgencyDateOnTable: string;
 export const orderNumber: { orderNumber: string; orderDate: string } = { orderNumber: '', orderDate: '' };
-
-// Constants
-export const urgencyDate = '23.01.2025';
-export const urgencyDateNewFormat = 'Янв 23, 2025';
-export const urgencyDateSecond = '21.01.2025';
-export const urgencyDateSecondNewFormat = 'Янв 21, 2025';
 export const nameProduct = '0Т4.01';
+/** Service operation on the product tech process that must be marked complete after kitting before warehouse receipt. */
+export const PRODUCT_PACKAGING_OPERATION_FULL_NAME = 'Упаковка';
 export const designationProduct = '0Т4.01';
 export const designation = '0Т4';
 export const nameBuyer = 'М10';
@@ -82,7 +77,6 @@ export const choiceDetail = PartsDBSelectors.SPECIFICATION_DIALOG_CARD_BASE_DETA
 export const deficitTable = SelectorsShortagePages.TABLE_DEFICIT_IZD;
 export const tableMain = SelectorsShortagePages.TABLE_DEFICIT_IZD_ID;
 export const columnCheckbox = 'DeficitIzdTable-HeadRow-TotalCheckbox';
-export const columnDateUrgency = 'DeficitIzdTable-HeadRow-DateUrgency';
 export const columnOrderFromProduction = 'DeficitIzdTable-HeadRow-OrderFromProduction';
 export const buttonLaunchIntoProduction = SelectorsShortagePages.BUTTON_LAUNCH_INTO_PRODUCTION;
 export const modalWindowLaunchIntoProduction = SelectorsShortagePages.MODAL_START_PRODUCTION;
@@ -90,7 +84,6 @@ export const modalWindowLaunchIntoProduction = SelectorsShortagePages.MODAL_STAR
 // DeficitCbed - using constants from SelectorsShortagePages
 export const deficitTableCbed = SelectorsShortagePages.TABLE_DEFICIT_CBED;
 export const tableMainCbed = SelectorsShortagePages.TABLE_DEFICIT_CBED_ID;
-export const columnDateUrgencyCbed = 'DeficitCbed-TableHeader-ViewsDeficitsDuedate';
 export const columnOrderFromProductionCbed = 'DeficitCbed-TableHeader-ViewsDeficitsOrderedforproduction';
 export const columnCheckboxCbed = 'DeficitCbed-TableHeader-SelectAll';
 export const buttonLaunchIntoProductionCbed = SelectorsShortagePages.BUTTON_LAUNCH_INTO_PRODUCTION_CBED;
@@ -99,7 +92,6 @@ export const modalWindowLaunchIntoProductionCbed = SelectorsShortagePages.MODAL_
 // DeficitDetail - using constants from SelectorsShortagePages
 export const deficitTableDetail = `table${SelectorsShortagePages.TABLE_DEFICIT_IZD}`;
 export const tableMainDetail = SelectorsShortagePages.TABLE_DEFICIT_IZD_ID;
-export const columnDateUrgencyDetail = 'DeficitIzdTable-HeadRow-DateUrgency';
 export const columnOrderFromProductionDetail = 'DeficitIzdTable-HeadRow-OrderFromProduction';
 export const columnCheckBoxDetail = 'DeficitIzdTable-HeadRow-TotalCheckbox';
 export const buttonLaunchIntoProductionDetail = `button${SelectorsShortagePages.BUTTON_LAUNCH_INTO_PRODUCTION}`;

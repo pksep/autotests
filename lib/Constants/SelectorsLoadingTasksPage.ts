@@ -10,10 +10,14 @@ export const buttonSaveOrder = '[data-testid="AddOrder-ButtonSaveAndCancel-Butto
 export const buttonCancelOrder = '[data-testid="AddOrder-ButtonSaveAndCancel-ButtonsCenter-Cancel"]';
 export const buttonArchive = '[data-testid="IssueShipment-ActionsButtons-Archive"]';
 
-// Calendar selectors
-export const calendarTrigger = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-HeaderBtn-Trigger"]';
-export const calendarPopover = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Popover"]';
-export const calendarComponent = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Component"]';
+// Calendar selectors - Adapted to use DateShippingPlan since DateByUrgency was removed
+// export const calendarTrigger = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-HeaderBtn-Trigger"]';
+// export const calendarPopover = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Popover"]';
+// export const calendarComponent = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Component"]';
+
+export const calendarTrigger = '[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-HeaderBtn-Trigger"]';
+export const calendarPopover = '[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Popover"]';
+export const calendarComponent = '[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Component"]';
 
 export const loadingMainTable = '.scroll-wrapper__slot';
 
@@ -41,7 +45,7 @@ export const SHIPMENTS_ORDER_NUMBER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_T
 export const SHIPMENTS_ARTICLE_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Article"]`;
 export const SHIPMENTS_PRODUCT_NAME_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Name"]`;
 export const SHIPMENTS_PRODUCT_QUANTITY_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-Kol"]`;
-export const SHIPMENTS_URGENCY_DATE_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-DateByUrgency"]`;
+// export const SHIPMENTS_URGENCY_DATE_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-DateByUrgency"]`; // DEPRECATED
 export const SHIPMENTS_TBODY_NUMBER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Tbody-Number"]`;
 export const SHIPMENTS_PRODUCT_DATE_ORDER_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-DateOrder"]`;
 export const SHIPMENTS_PRODUCT_DATE_SHIPMENTS_PATTERN = `[data-testid^="${ISSUE_SHIPMENT_TABLE_PREFIX}-Product-DateShipments"]`;
@@ -64,15 +68,15 @@ export const ADD_ORDER_POSITIONS_TBODY_NAME_PATTERN = `[data-testid^="${ADD_ORDE
 export const ADD_ORDER_POSITIONS_PRODUCT_KOL_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-Kol"]`;
 export const ADD_ORDER_POSITIONS_PRODUCT_DATE_ORDER_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-DateOrder"]`;
 export const ADD_ORDER_POSITIONS_PRODUCT_DATE_SHIPMENTS_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-DateShipments"]`;
-export const ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-Buyers"]`;
-export const ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-DateByUrgency"]`;
+export const ADD_ORDER_POSITIONS_TBODY_BUYERS_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-Company"]`;
+// export const ADD_ORDER_POSITIONS_TBODY_DATE_BY_URGENCY_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-DateByUrgency"]`; // DEPRECATED
 export const ADD_ORDER_POSITIONS_TBODY_DATE_SHIPMENTS_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-DateShipments"]`;
 export const ADD_ORDER_POSITIONS_TBODY_START_COMPLETE_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-StartComplete"]`;
 export const ADD_ORDER_POSITIONS_TBODY_NUMBER_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Tbody-Number"]`;
 export const ADD_ORDER_POSITIONS_PRODUCT_NAME_PATTERN = `[data-testid^="${ADD_ORDER_POSITIONS_TABLE_PREFIX}-Product-Name"]`;
 
 // AddOrder date selectors
-export const ADD_ORDER_DATE_BY_URGENCY_DISPLAY = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]';
+// export const ADD_ORDER_DATE_BY_URGENCY_DISPLAY = '[data-testid="AddOrder-DateByUrgency-Calendar-DataPicker-Choose-Value-Display"]'; // DEPRECATED
 export const ADD_ORDER_DATE_SHIPPING_PLAN_DISPLAY = '[data-testid="AddOrder-DateShippingPlan-Calendar-DataPicker-Choose-Value-Display"]';
 export const ADD_ORDER_DATE_ORDER_DISPLAY = '[data-testid="AddOrder-DateOrder-Calendar-DataPicker-Choose-Value-Display"]';
 
@@ -89,7 +93,7 @@ export const ISSUE_SHIPMENT_ACTIONS_BUTTONS_EDIT_ORDER = '[data-testid="IssueShi
 export const ISSUE_SHIPMENT_MODAL_SHIPMENT_CONTENT_INFO_COUNT = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-ContentInfo-Count"]';
 export const ISSUE_SHIPMENT_MODAL_SHIPMENT_ONE_SHIPMENTS_DATE = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-OneShipments-Date"]';
 export const ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_SHIPMENTS_DATE = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateShipments-Date"]';
-export const ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_BY_URGENCY_WRAPPER = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateByUrgency-Wrapper"]';
+// export const ISSUE_SHIPMENT_MODAL_SHIPMENT_DATE_BY_URGENCY_WRAPPER = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-ShipmentsHeader-DateByUrgency-Wrapper"]'; // DEPRECATED
 export const ISSUE_SHIPMENT_MODAL_SHIPMENT_PRODUCT_NAME = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-Product-Name"]';
 export const ISSUE_SHIPMENT_MODAL_SHIPMENT_COMPANY_NAME = '[data-testid="IssueShipment-ShipmentsTableBlock-Main-ShipmentsTable-ModalShipment-Company-Name"]';
 export const SHIPMENT_TABLE = '[data-testid="Shipment-Table"]';

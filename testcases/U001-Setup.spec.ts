@@ -37,10 +37,32 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
     const tableMain = SelectorsRevision.WAREHOUSE_REVISION_PRODUCTS_TABLE;
     const tableMainCbed = SelectorsRevision.TABLE_REVISION_PAGINATION_CBEDS_TABLE;
     const tableMainDetal = SelectorsRevision.TABLE_REVISION_PAGINATION_TABLE;
+    const archiveMatchingPartsDbRows = async (tableSelector: string, targetCellIndex: number): Promise<boolean> => {
+      const rows = page.locator(`${tableSelector} tbody tr`);
+      const rowCount = await rows.count();
+
+      for (let i = 0; i < rowCount; i++) {
+        const row = rows.nth(i);
+        const cellText = await row.locator('td').nth(targetCellIndex).textContent().catch(() => '');
+        if (cellText?.trim().startsWith('0Т4')) {
+          await row.scrollIntoViewIfNeeded();
+          await row.click();
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
+          await page.waitForTimeout(TIMEOUTS.MEDIUM);
+          return true;
+        }
+      }
+
+      return false;
+    };
 
     await allure.step('Step 01: Open the parts database page', async () => {
       await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
       await partsDatabsePage.waitForNetworkIdle();
+      await searchProduct.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await searchCbed.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await searchDetail.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
     });
 
     await allure.step('Step 01a: Clear all search input fields', async () => {
@@ -61,9 +83,9 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
-    await allure.step('Step 02: Process Details table - search and delete all items starting with 0Т4', async () => {
-      await searchDetail.fill('0Т4');
-      await searchDetail.press('Enter');
+    await allure.step('Step 02: Process Product table - search and delete all items starting with 0Т4', async () => {
+      await searchProduct.fill('0Т4');
+      await searchProduct.press('Enter');
       await partsDatabsePage.waitForNetworkIdle();
       await page.waitForTimeout(TIMEOUTS.STANDARD);
       let hasMoreItems = true;
@@ -71,38 +93,26 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       const maxIterations = 100;
       while (hasMoreItems && iterationCount < maxIterations) {
         iterationCount++;
-        const rows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) {
+        const archivedAny = await archiveMatchingPartsDbRows(PartsDBSelectors.PRODUCT_TABLE, 2);
+        if (!archivedAny) {
           hasMoreItems = false;
           break;
         }
-        for (let i = rowCount - 1; i >= 0; i--) {
-          const row = rows.nth(i);
-          const nameCell = row.locator('td').nth(1);
-          const cellText = await nameCell.textContent();
-          if (cellText?.trim().startsWith('0Т4')) {
-            await row.click();
-            await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-            await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          }
-        }
-        const remainingRows = page.locator(`${PartsDBSelectors.DETAIL_TABLE_DIV} tbody tr`);
-        if ((await remainingRows.count()) === 0) hasMoreItems = false;
-        else await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
-      await searchDetail.evaluate((el: HTMLInputElement) => (el.value = ''));
-      await searchDetail.press('Enter');
+      await searchProduct.evaluate((el: HTMLInputElement) => (el.value = ''));
+      await searchProduct.press('Enter');
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
-    await allure.step('Step 02b: Refresh the page after Details cleanup', async () => {
+    await allure.step('Step 02b: Refresh the page after Product cleanup', async () => {
       await page.reload();
       await partsDatabsePage.waitForNetworkIdle();
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
     await allure.step('Step 03: Process CBED table - search and delete all items starting with 0Т4', async () => {
+      await searchCbed.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
       await searchCbed.fill('0Т4');
       await searchCbed.press('Enter');
       await partsDatabsePage.waitForNetworkIdle();
@@ -112,25 +122,12 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       const maxIterations = 100;
       while (hasMoreItems && iterationCount < maxIterations) {
         iterationCount++;
-        const rows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) {
+        const archivedAny = await archiveMatchingPartsDbRows(PartsDBSelectors.CBED_TABLE_DIV, 1);
+        if (!archivedAny) {
           hasMoreItems = false;
           break;
         }
-        for (let i = rowCount - 1; i >= 0; i--) {
-          const row = rows.nth(i);
-          const nameCell = row.locator('td').nth(1);
-          const cellText = await nameCell.textContent();
-          if (cellText?.trim().startsWith('0Т4')) {
-            await row.click();
-            await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-            await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          }
-        }
-        const remainingRows = page.locator(`${PartsDBSelectors.CBED_TABLE_DIV} tbody tr`);
-        if ((await remainingRows.count()) === 0) hasMoreItems = false;
-        else await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
       await searchCbed.evaluate((el: HTMLInputElement) => (el.value = ''));
       await searchCbed.press('Enter');
@@ -143,9 +140,10 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
-    await allure.step('Step 04: Process Product table - search and delete all items starting with 0Т4', async () => {
-      await searchProduct.fill('0Т4');
-      await searchProduct.press('Enter');
+    await allure.step('Step 04: Process Details table - search and delete all items starting with 0Т4', async () => {
+      await searchDetail.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await searchDetail.fill('0Т4');
+      await searchDetail.press('Enter');
       await partsDatabsePage.waitForNetworkIdle();
       await page.waitForTimeout(TIMEOUTS.STANDARD);
       let hasMoreItems = true;
@@ -153,28 +151,15 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       const maxIterations = 100;
       while (hasMoreItems && iterationCount < maxIterations) {
         iterationCount++;
-        const rows = page.locator(`${PartsDBSelectors.PRODUCT_TABLE} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) {
+        const archivedAny = await archiveMatchingPartsDbRows(PartsDBSelectors.DETAIL_TABLE_DIV, 1);
+        if (!archivedAny) {
           hasMoreItems = false;
           break;
         }
-        for (let i = rowCount - 1; i >= 0; i--) {
-          const row = rows.nth(i);
-          const nameCell = row.locator('td').nth(2);
-          const cellText = await nameCell.textContent();
-          if (cellText?.trim().startsWith('0Т4')) {
-            await row.click();
-            await partsDatabsePage.archiveAndConfirm(PartsDBSelectors.BUTTON_ARCHIVE, PartsDBSelectors.BUTTON_CONFIRM);
-            await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          }
-        }
-        const remainingRows = page.locator(`${PartsDBSelectors.PRODUCT_TABLE} tbody tr`);
-        if ((await remainingRows.count()) === 0) hasMoreItems = false;
-        else await page.waitForTimeout(TIMEOUTS.MEDIUM);
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
       }
-      await searchProduct.evaluate((el: HTMLInputElement) => (el.value = ''));
-      await searchProduct.press('Enter');
+      await searchDetail.evaluate((el: HTMLInputElement) => (el.value = ''));
+      await searchDetail.press('Enter');
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
@@ -191,7 +176,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 08c: Cleanup product residues', async () => {
         await revisionPage.searchTable(nameProductNew, tableMain, 'TableRevisionPagination-SearchInput-Dropdown-Input');
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        const rows = page.locator(`${tableMain} tbody tr`);
+        const rows = page.locator(`${tableMain} tbody tr`).filter({ hasText: nameProductNew });
         if ((await rows.count()) === 0) {
           logger.log(`No warehouse residues for product: ${nameProductNew}. Skipping.`);
         } else {
@@ -209,7 +194,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await page.locator(tableMainCbed).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(cbed.name, tableMainCbed, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          const rows = page.locator(`${tableMainCbed} tbody tr`);
+          const rows = page.locator(`${tableMainCbed} tbody tr`).filter({ hasText: cbed.name });
           if ((await rows.count()) === 0) {
             logger.log(`No warehouse residues for CBED: ${cbed.name}. Skipping.`);
             return;
@@ -218,6 +203,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await revisionPage.changeBalanceAndConfirmArchive(cbed.name, tableMainCbed, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
             waitAfterConfirm: 1000,
+            switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM1,
           });
         });
       }
@@ -228,7 +214,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await page.locator(tableMainDetal).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
           await revisionPage.searchTable(detail.name, tableMainDetal, 'TableRevisionPagination-SearchInput-Dropdown-Input');
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
-          const rows = page.locator(`${tableMainDetal} tbody tr`);
+          const rows = page.locator(`${tableMainDetal} tbody tr`).filter({ hasText: detail.name });
           if ((await rows.count()) === 0) {
             logger.log(`No warehouse residues for Detail: ${detail.name}. Skipping.`);
             return;
@@ -237,6 +223,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await revisionPage.changeBalanceAndConfirmArchive(detail.name, tableMainDetal, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
             waitAfterConfirm: 1000,
+            switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM2,
           });
         });
       }
@@ -472,7 +459,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
         await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
         // Check if there are any rows in the table
-        const rows = page.locator(`${tableMain} tbody tr`);
+        const rows = page.locator(`${tableMain} tbody tr`).filter({ hasText: nameProductNew });
         const rowCount = await rows.count();
 
         if (rowCount === 0) {
@@ -497,7 +484,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Check if there are any rows in the table
-          const rows = page.locator(`${tableMainCbed} tbody tr`);
+          const rows = page.locator(`${tableMainCbed} tbody tr`).filter({ hasText: cbed.name });
           const rowCount = await rows.count();
 
           if (rowCount === 0) {
@@ -509,6 +496,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await revisionPage.changeBalanceAndConfirmArchive(cbed.name, tableMainCbed, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
             waitAfterConfirm: 1000,
+            switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM1,
           });
         });
       }
@@ -523,7 +511,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
           // Check if there are any rows in the table
-          const rows = page.locator(`${tableMainDetal} tbody tr`);
+          const rows = page.locator(`${tableMainDetal} tbody tr`).filter({ hasText: detail.name });
           const rowCount = await rows.count();
 
           if (rowCount === 0) {
@@ -535,6 +523,7 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
           await revisionPage.changeBalanceAndConfirmArchive(detail.name, tableMainDetal, '0', SelectorsRevision.TABLE_REVISION_PAGINATION_CONFIRM_DIALOG_APPROVE, {
             refreshAndSearchAfter: true,
             waitAfterConfirm: 1000,
+            switchToTabSelector: SelectorsRevision.REVISION_SWITCH_ITEM2,
           });
         });
       }
@@ -714,6 +703,11 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       await allure.step('Step 02: Click on the Create button', async () => {
         await partsDatabsePage.waitForNetworkIdle();
         await page.waitForTimeout(TIMEOUTS.STANDARD);
+        const createButton = page.locator(PartsDBSelectors.BUTTON_CREATE_NEW_PART, { hasText: 'Создать' });
+        if (!(await createButton.isVisible().catch(() => false))) {
+          await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+          await partsDatabsePage.waitingTableBody(PartsDBSelectors.CBED_TABLE_WRAPPER);
+        }
         await partsDatabsePage.clickButton('Создать', PartsDBSelectors.BUTTON_CREATE_NEW_PART);
       });
 
@@ -791,10 +785,12 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 04: Enter the name of the part', async () => {
       await partsDatabsePage.waitForNetworkIdle();
-      const nameParts = page.locator(PartsDBSelectors.INPUT_NAME_IZD).first();
+      const creator = page.locator(PartsDBSelectors.EDIT_PAGE_MAIN_ID);
+      await creator.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      const nameParts = creator.locator(PartsDBSelectors.INPUT_NAME_IZD).first();
       await nameParts.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      await nameParts.fill(nameProductNew);
+      await partsDatabsePage.fillInputWithRetries(nameParts, nameProductNew, 5);
       await expectSoftWithScreenshot(
         page,
         async () => {
@@ -836,12 +832,32 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 08: Check name in first row', async () => {
-        await partsDatabsePage.waitAndCheckFirstRow(page, cbed.name, PartsDBSelectors.CBED_TABLE, { timeoutMs: 500 });
+        const firstCbedRow = page.locator(`${PartsDBSelectors.CBED_TABLE} tbody tr:has(td)`).first();
+        await expect
+          .poll(
+            async () => ((await firstCbedRow.textContent()) ?? '').toLowerCase().includes(cbed.name.toLowerCase()),
+            {
+              timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+              intervals: [500, 1000, 2000],
+            },
+          )
+          .toBe(true);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(firstCbedRow).toContainText(cbed.name, { timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          `Verify filtered CBED first row contains "${cbed.name}"`,
+          test.info(),
+        );
       });
       await allure.step('Step 09: Choice first row', async () => {
         await partsDatabsePage.waitForNetworkIdle();
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        await partsDatabsePage.getValueOrClickFromFirstRow(PartsDBSelectors.CBED_TABLE, 1, Click.Yes, Click.No);
+        const firstCbedRow = page.locator(`${PartsDBSelectors.CBED_TABLE} tbody tr:has(td)`).first();
+        await expect(firstCbedRow).toContainText(cbed.name, { timeout: WAIT_TIMEOUTS.STANDARD });
+        const cbedNameCell = firstCbedRow.locator('td').nth(1);
+        await cbedNameCell.scrollIntoViewIfNeeded();
+        await cbedNameCell.click({ timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
       });
 
       await allure.step('Step 10: Click on the Add button', async () => {
@@ -887,15 +903,33 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
       });
 
       await allure.step('Step 14: Check name in first row', async () => {
-        await partsDatabsePage.waitAndCheckFirstRow(page, detail.name, PartsDBSelectors.DETAIL_TABLE, {
-          timeoutMs: 1500,
-        });
+        const firstDetailRow = page.locator(`${PartsDBSelectors.DETAIL_TABLE} tbody tr:has(td)`).first();
+        await expect
+          .poll(
+            async () => ((await firstDetailRow.textContent()) ?? '').toLowerCase().includes(detail.name.toLowerCase()),
+            {
+              timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+              intervals: [500, 1000, 2000],
+            },
+          )
+          .toBe(true);
+        await expectSoftWithScreenshot(
+          page,
+          async () => {
+            await expect.soft(firstDetailRow).toContainText(detail.name, { timeout: WAIT_TIMEOUTS.STANDARD });
+          },
+          `Verify filtered detail first row contains "${detail.name}"`,
+          test.info(),
+        );
       });
 
       await allure.step('Step 15: Choice first row', async () => {
         await partsDatabsePage.waitForNetworkIdle();
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-        await partsDatabsePage.getValueOrClickFromFirstRow(PartsDBSelectors.DETAIL_TABLE, 1, Click.Yes, Click.No);
+        const firstDetailRow = page.locator(`${PartsDBSelectors.DETAIL_TABLE} tbody tr:has(td)`).first();
+        await expect(firstDetailRow).toContainText(detail.name, { timeout: WAIT_TIMEOUTS.STANDARD });
+        const detailNameCell = firstDetailRow.locator('td').nth(1);
+        await detailNameCell.scrollIntoViewIfNeeded();
+        await detailNameCell.click({ timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
       });
 
       await allure.step('Step 16: Click on the Add button', async () => {
@@ -915,6 +949,40 @@ export const runU001_01_Setup = (isSingleTest: boolean, iterations: number) => {
 
     await allure.step('Step 18: Click on the Save button', async () => {
       await partsDatabsePage.clickButton('Сохранить', PartsDBSelectors.BUTTON_SAVE_CBED);
+      await page.waitForLoadState('networkidle');
+      await partsDatabsePage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+      await partsDatabsePage.waitingTableBody(PartsDBSelectors.PRODUCT_TABLE);
+
+      const productTable = page.locator(PartsDBSelectors.PRODUCT_TABLE);
+      const searchProduct = productTable.locator(PartsDBSelectors.SEARCH_PRODUCT_ATTRIBUT);
+      await expect(searchProduct).toBeVisible({ timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+
+      let productFound = false;
+      for (let attempt = 1; attempt <= 5; attempt++) {
+        await searchProduct.fill('');
+        await searchProduct.press('Enter');
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await searchProduct.fill(nameProductNew);
+        await searchProduct.press('Enter');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+        const productRow = productTable.locator('tbody tr').filter({ hasText: nameProductNew }).first();
+        productFound = await productRow.isVisible().catch(() => false);
+        if (productFound) {
+          break;
+        }
+      }
+
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(productFound).toBeTruthy();
+        },
+        `Verify product "${nameProductNew}" is available after save`,
+        test.info(),
+      );
+      expect(productFound).toBeTruthy();
     });
   });
 };

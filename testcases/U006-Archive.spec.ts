@@ -1,296 +1,361 @@
-import { test, expect } from '@playwright/test';
-import { SELECTORS } from '../config';
-import logger from '../lib/utils/logger';
-import { allure } from 'allure-playwright';
-import { CreatePartsDatabasePage } from '../pages/PartsDatabasePage';
-import * as SelectorsFileComponents from '../lib/Constants/SelectorsFileComponents';
-import * as SelectorsPartsDataBase from '../lib/Constants/SelectorsPartsDataBase';
-import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from '../lib/Constants/TimeoutConstants';
-import { HIGHLIGHT_PENDING, HIGHLIGHT_SUCCESS, HIGHLIGHT_ERROR } from '../lib/Constants/HighlightStyles';
-import { expectSoftWithScreenshot } from '../lib/Page';
-import { archiveMatchingDetailsInPartsDb } from '../lib/helpers/U006Flows';
+import { test, expect } from "@playwright/test";
+import { SELECTORS } from "../config";
+import logger from "../lib/utils/logger";
+import { allure } from "allure-playwright";
+import { CreatePartsDatabasePage } from "../pages/PartsDatabasePage";
+import * as SelectorsPartsDataBase from "../lib/Constants/SelectorsPartsDataBase";
+import { expectSoftWithScreenshot } from "../lib/Page";
+import { TIMEOUTS, WAIT_TIMEOUTS, TEST_TIMEOUTS } from "../lib/Constants/TimeoutConstants";
 
+/**
+ * U006 archive + parts DB cleanup (golden: repo-at-single-U001/testcases/U006.spec.ts lines 28–369).
+ */
 export const runU006Archive = () => {
-  test('00 - Archive All - Archive all items in filebase table', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    const detailsPage = new CreatePartsDatabasePage(page);
+    test('U006 TC 01 — Файловая база: архив строк по фильтру «Test»', async ({ page }, testInfo) => {
+        test.setTimeout(TEST_TIMEOUTS.LONG);
+        const detailsPage = new CreatePartsDatabasePage(page);
+        const getVisibleFilteredRows = async () => {
+            const table = page.locator(SelectorsPartsDataBase.FILEBASE_RESULTS_TABLE).first();
+            const rows = table
+                .locator(SelectorsPartsDataBase.FILEBASE_RESULTS_TABLE_ROWS)
+                .filter({ hasText: SelectorsPartsDataBase.U006_SEARCH_PREFIX });
+            const visibleRows = [];
+            const count = await rows.count();
 
-    await allure.step('Step 1: Navigate to filebase page', async () => {
-      await detailsPage.goto(SELECTORS.MAINMENU.FILES.URL);
-      await page.waitForLoadState('load');
-      logger.info('Navigated to filebase page');
+            for (let index = 0; index < count; index++) {
+                const row = rows.nth(index);
+                if (await row.isVisible().catch(() => false)) {
+                    visibleRows.push(row);
+                }
+            }
+
+            return visibleRows;
+        };
+
+        await allure.step("Step 1: Navigate to filebase page", async () => {
+            await detailsPage.goto(SELECTORS.MAINMENU.FILES.URL);
+            await page.waitForLoadState("networkidle");
+            logger.info("Navigated to filebase page");
+        });
+
+        await allure.step("Step 2: Найти поле поиска в таблице файловой базы", async () => {
+            const searchInput = page.locator(SelectorsPartsDataBase.FILEBASE_PAGE_TABLE_SEARCH_INPUT);
+            await expectSoftWithScreenshot(
+                page,
+                () => {
+                    expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                },
+                "Step 2: Verify search input is visible",
+                testInfo,
+            );
+            await detailsPage.highlightElement(searchInput);
+
+            logger.info("Found search input for filebase filtering");
+        });
+
+        await allure.step("Step 3: Search for 'Test' and press Enter", async () => {
+            const table = page.locator(SelectorsPartsDataBase.FILEBASE_RESULTS_TABLE).first();
+            await expectSoftWithScreenshot(
+                page,
+                () => {
+                    expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                },
+                "Step 3: Verify filebase results table is visible",
+                testInfo,
+            );
+
+            const searchInput = page.locator(SelectorsPartsDataBase.FILEBASE_PAGE_TABLE_SEARCH_INPUT);
+            await expectSoftWithScreenshot(
+                page,
+                () => {
+                    expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                },
+                "Step 3: Verify filebase table search input is visible before entering prefix",
+                testInfo,
+            );
+            await detailsPage.highlightElement(searchInput);
+
+            await searchInput.fill(SelectorsPartsDataBase.U006_SEARCH_PREFIX);
+            await expectSoftWithScreenshot(
+                page,
+                async () => {
+                    await expect.soft(searchInput).toHaveValue(SelectorsPartsDataBase.U006_SEARCH_PREFIX, {
+                        timeout: WAIT_TIMEOUTS.SHORT,
+                    });
+                },
+                "Step 3: Verify search value synced before Enter (Vue v-model)",
+                testInfo,
+            );
+            await searchInput.press("Enter");
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+            const filteredRows = table
+                .locator(SelectorsPartsDataBase.FILEBASE_RESULTS_TABLE_ROWS)
+                .filter({ hasText: SelectorsPartsDataBase.U006_SEARCH_PREFIX });
+            // Do not require filteredCount === total row count: virtualized / DOM row count can include
+            // many slots while only some rows contain the prefix text.
+            await filteredRows.first().waitFor({ state: "visible", timeout: WAIT_TIMEOUTS.PAGE_RELOAD }).catch(() => {
+                logger.info(`No filtered rows visible for '${SelectorsPartsDataBase.U006_SEARCH_PREFIX}'`);
+            });
+
+            logger.info("Searched filebase for prefix");
+        });
+
+        await allure.step("Step 4: Archive all items in the table", async () => {
+            const table = page.locator(SelectorsPartsDataBase.FILEBASE_RESULTS_TABLE).first();
+            await expectSoftWithScreenshot(
+                page,
+                () => {
+                    expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
+                },
+                "Step 4: Verify filebase results table is visible before archiving",
+                testInfo,
+            );
+            await page.waitForLoadState("load");
+            await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+            let visibleFilteredRows = await getVisibleFilteredRows();
+            let rowCount = visibleFilteredRows.length;
+            if (rowCount === 0) {
+                await page.waitForLoadState("networkidle");
+                await page.waitForTimeout(TIMEOUTS.STANDARD);
+                visibleFilteredRows = await getVisibleFilteredRows();
+                rowCount = visibleFilteredRows.length;
+            }
+            console.log(`Found ${rowCount} rows to archive`);
+
+            let archivedCount = 0;
+
+            // Continue until no filtered rows remain (archive bottom-up).
+            while (rowCount > 0) {
+                const rowCountBeforeArchive = rowCount;
+                // Re-evaluate visible filtered rows every iteration and take the last one.
+                visibleFilteredRows = await getVisibleFilteredRows();
+                rowCount = visibleFilteredRows.length;
+                if (rowCount === 0) {
+                    break;
+                }
+                const targetRow = visibleFilteredRows[rowCount - 1];
+
+                await detailsPage.highlightElement(targetRow);
+
+                console.log(`Processing row ${archivedCount + 1} of ${rowCount}`);
+
+                // Find and click the Archive button
+                const archiveButton = page.locator(SelectorsPartsDataBase.BASE_FILE_BUTTONS_BAN_BUTTON);
+                await expectSoftWithScreenshot(
+                    page,
+                    () => {
+                        expect.soft(archiveButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                    },
+                    "Step 4: Verify archive button is visible",
+                    testInfo,
+                );
+                await detailsPage.highlightElement(archiveButton);
+
+                let archivedThisRow = false;
+                let currentRowCount = rowCountBeforeArchive;
+                const maxArchiveAttempts = 3;
+                for (let archiveAttempt = 1; archiveAttempt <= maxArchiveAttempts; archiveAttempt++) {
+                    visibleFilteredRows = await getVisibleFilteredRows();
+                    currentRowCount = visibleFilteredRows.length;
+                    if (currentRowCount < rowCountBeforeArchive) {
+                        archivedThisRow = true;
+                        break;
+                    }
+
+                    const rowForAttempt = visibleFilteredRows[currentRowCount - 1];
+                    await detailsPage.highlightElement(rowForAttempt);
+                    await rowForAttempt.click({ force: true });
+                    await page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+                    if (!(await archiveButton.isEnabled().catch(() => false))) {
+                        if (await rowForAttempt.isVisible().catch(() => false)) {
+                            await rowForAttempt.locator("td").first().click({ force: true });
+                            await page.waitForTimeout(TIMEOUTS.MEDIUM);
+                        }
+                    }
+                    await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+                    await archiveButton.click();
+                    await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+                    // Wait for and interact with the confirmation dialog
+                    const confirmDialog = page.locator(SelectorsPartsDataBase.BASE_FILE_BAN_DIALOG);
+                    await confirmDialog.waitFor({ state: "visible", timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => {});
+                    if (!(await confirmDialog.isVisible().catch(() => false))) {
+                        await page.waitForLoadState("networkidle").catch(() => {});
+                        await page.waitForTimeout(TIMEOUTS.STANDARD);
+                        currentRowCount = (await getVisibleFilteredRows()).length;
+
+                        if (currentRowCount < rowCountBeforeArchive) {
+                            archivedThisRow = true;
+                            console.log(`✅ Archived item ${archivedCount + 1} without confirmation dialog`);
+                            break;
+                        }
+                    } else {
+                        await expectSoftWithScreenshot(
+                            page,
+                            () => {
+                                expect.soft(confirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                            },
+                            "Step 4: Verify confirmation dialog is visible",
+                            testInfo,
+                        );
+                        await detailsPage.highlightElement(confirmDialog);
+
+                        // Click the Yes button in the dialog
+                        const yesButton = confirmDialog.locator(SelectorsPartsDataBase.BASE_FILE_BAN_DIALOG_CONTENT_BUTTONS_YES);
+                        await expectSoftWithScreenshot(
+                            page,
+                            () => {
+                                expect.soft(yesButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+                            },
+                            "Step 4: Verify Yes button is visible in confirmation dialog",
+                            testInfo,
+                        );
+                        await detailsPage.highlightElement(yesButton);
+
+                        await yesButton.click();
+                        await page.waitForLoadState("networkidle").catch(() => {});
+                    }
+
+                    currentRowCount = await expect
+                        .poll(async () => (await getVisibleFilteredRows()).length, {
+                            timeout: WAIT_TIMEOUTS.SHORT,
+                        })
+                        .toBeLessThan(rowCountBeforeArchive)
+                        .then(async () => (await getVisibleFilteredRows()).length)
+                        .catch(async () => (await getVisibleFilteredRows()).length);
+
+                    if (currentRowCount < rowCountBeforeArchive) {
+                        archivedThisRow = true;
+                        break;
+                    }
+
+                    console.log(`Archive attempt ${archiveAttempt} did not remove a row; retrying.`);
+                    await page.waitForTimeout(TIMEOUTS.STANDARD);
+                }
+
+                expect(archivedThisRow).toBeTruthy();
+
+                archivedCount++;
+                console.log(`✅ Archived item ${archivedCount}`);
+
+                // Update row count after archiving
+                rowCount = currentRowCount;
+                console.log(`Remaining rows: ${rowCount}`);
+
+                // Small delay to make the process visible
+                await page.waitForTimeout(TIMEOUTS.MEDIUM);
+            }
+
+            console.log(`✅ Successfully archived all ${archivedCount} items`);
+            logger.info(`All items have been archived successfully. Total archived: ${archivedCount}`);
+        });
+
+        await allure.step("Step 5: Verify no rows left for the search prefix", async () => {
+            const table = page.locator(SelectorsPartsDataBase.FILEBASE_RESULTS_TABLE).first();
+            const rowsMatchingPrefix = table
+                .locator(SelectorsPartsDataBase.FILEBASE_RESULTS_TABLE_ROWS)
+                .filter({ hasText: SelectorsPartsDataBase.U006_SEARCH_PREFIX });
+            const remainingMatching = await rowsMatchingPrefix.count();
+
+            await expectSoftWithScreenshot(
+                page,
+                () => {
+                    expect.soft(remainingMatching).toBe(0);
+                },
+                "Step 5: Verify no filebase rows still match the archive prefix after archiving",
+                testInfo,
+            );
+            console.log(`✅ No rows left matching prefix (${remainingMatching} matching rows)`);
+            logger.info("Filebase verification complete — no remaining rows for prefix");
+        });
     });
 
-    await allure.step("Step 2: Find the table with class 'table-yui-kit'", async () => {
-      const table = page.locator(SelectorsFileComponents.BASE_FILE_FILE_WINDOW_TABLE_TABLE);
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          await expect.soft(table).toBeVisible({ timeout: WAIT_TIMEOUTS.STANDARD });
-        },
-        'Verify table is visible',
-        test.info(),
-      );
 
-      // Highlight the table for visibility
-      await detailsPage.waitAndHighlight(table);
+    test(`U006 CL 01 — Архивация совпадающих деталей: ${SelectorsPartsDataBase.U006_TEST_DETAIL_NAME}`, async ({ page }, testInfo) => {
+        test.setTimeout(TEST_TIMEOUTS.LONG);
 
-      logger.info("Found table with class 'table-yui-kit'");
+
+        const detailsPage = new CreatePartsDatabasePage(page);
+
+        await allure.step("Step 1: Перейдите на страницу 'База деталей'", async () => {
+            await detailsPage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+            await page.waitForLoadState("networkidle");
+        });
+
+        await allure.step("Step 2: Архивировать все детали с точным совпадением имени", async () => {
+            // Same flow as ERP-969 cleanup: search full name, exact row text match, archive bottom-up (PartsDatabaseHelper.cleanupTestDetail).
+            await detailsPage.cleanupTestDetail(
+                page,
+                SelectorsPartsDataBase.U006_TEST_DETAIL_NAME,
+                SelectorsPartsDataBase.DETAIL_TABLE,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                testInfo,
+            );
+        });
+
+        await allure.step("Step 3: Проверить, что не осталось строк с точным совпадением имени", async () => {
+            const remainingExactMatches = await detailsPage.getExactMatchRowCount(
+                page,
+                SelectorsPartsDataBase.U006_TEST_DETAIL_NAME,
+                SelectorsPartsDataBase.DETAIL_TABLE,
+            );
+            await expectSoftWithScreenshot(
+                page,
+                () => {
+                    expect.soft(remainingExactMatches).toBe(0);
+                },
+                "CL 01: Verify zero exact-match rows remain after archive cleanup",
+                testInfo,
+            );
+        });
     });
+    test(`U006 CL 02 — Архивация совпадающих деталей: ${SelectorsPartsDataBase.U006_TEST_SPECIAL_CHAR_NAME}`, async ({ page }, testInfo) => {
+        test.setTimeout(TEST_TIMEOUTS.LONG);
 
-    await allure.step("Step 3: Search for 'Test' and press Enter", async () => {
-      // Find the search input field using the specific data-testid
-      const searchInput = page.locator(SelectorsPartsDataBase.SEARCH_DROPDOWN_INPUT);
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          await expect.soft(searchInput).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-        },
-        'Verify search input is visible',
-        test.info(),
-      );
 
-      // Highlight the search input for visibility
-      await detailsPage.highlightElement(searchInput, HIGHLIGHT_PENDING);
+        const detailsPage = new CreatePartsDatabasePage(page);
 
-      // Clear any existing text and search for "Test"
-      await searchInput.fill('Test');
-      await searchInput.press('Enter');
-      await page.locator(SelectorsFileComponents.BASE_FILE_FILE_WINDOW_TABLE_TABLE).waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+        await allure.step("Step 1: Перейдите на страницу 'База деталей'", async () => {
+            await detailsPage.goto(SELECTORS.MAINMENU.PARTS_DATABASE.URL);
+            await page.waitForLoadState("networkidle");
+        });
 
-      logger.info("Searched for 'Test' and pressed Enter");
+        await allure.step("Step 2: Архивировать все детали с точным совпадением имени", async () => {
+            await detailsPage.cleanupTestDetail(
+                page,
+                SelectorsPartsDataBase.U006_TEST_SPECIAL_CHAR_NAME,
+                SelectorsPartsDataBase.DETAIL_TABLE,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                testInfo,
+            );
+        });
+
+        await allure.step("Step 3: Проверить, что не осталось строк с точным совпадением имени", async () => {
+            const remainingExactMatches = await detailsPage.getExactMatchRowCount(
+                page,
+                SelectorsPartsDataBase.U006_TEST_SPECIAL_CHAR_NAME,
+                SelectorsPartsDataBase.DETAIL_TABLE,
+            );
+            await expectSoftWithScreenshot(
+                page,
+                () => {
+                    expect.soft(remainingExactMatches).toBe(0);
+                },
+                "CL 02: Verify zero exact-match rows remain after archive cleanup",
+                testInfo,
+            );
+        });
     });
-
-    await allure.step('Step 4: Archive all items in the table', async () => {
-      const table = page.locator(SelectorsFileComponents.BASE_FILE_FILE_WINDOW_TABLE_TABLE);
-      await table.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      // When search returns no results, the table may have only thead (no tbody), so do not wait for tbody
-      const rows = table.locator('tbody tr');
-      let rowCount = await rows.count();
-      logger.log(`Found ${rowCount} rows to archive`);
-      if (rowCount === 0) {
-        logger.log('Search returned no results (test items may already be archived) - nothing to archive');
-      }
-
-      let archivedCount = 0;
-
-      // Continue until table is empty. Process from bottom up so removing a row does not shift indices.
-      while (rowCount > 0) {
-        const lastIndex = rowCount - 1;
-        const rowToArchive = rows.nth(lastIndex);
-
-        // Check if the row has actual content (td elements)
-        const tdElements = rowToArchive.locator('td');
-        const tdCount = await tdElements.count();
-
-        if (tdCount === 0) {
-          logger.log('Found empty row (no td elements) - search returned no results');
-          break;
-        }
-
-        // Highlight the current row being processed
-        await detailsPage.highlightElement(rowToArchive, HIGHLIGHT_ERROR);
-
-        logger.log(`Processing row ${archivedCount + 1} (index ${lastIndex} from bottom)`);
-
-        // Click the row to select it
-        await rowToArchive.click();
-        // eslint-disable-next-line playwright/no-wait-for-timeout -- wait after row click
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-
-        // Find and click the Archive button (filebase page uses BaseFile-Buttons-Ban)
-        const archiveButton = page.locator(SelectorsFileComponents.BASE_FILE_BUTTON_ARCHIVE);
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            await expect.soft(archiveButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-          },
-          'Verify archive button is visible',
-          test.info(),
-        );
-
-        // Highlight the archive button
-        await detailsPage.highlightElement(archiveButton, HIGHLIGHT_ERROR);
-
-        await archiveButton.click();
-        // eslint-disable-next-line playwright/no-wait-for-timeout -- wait for UI
-        await page.waitForTimeout(TIMEOUTS.STANDARD);
-
-        // Wait for and interact with the confirmation dialog (filebase uses BaseFile-BanDialog)
-        const confirmDialog = page.locator(SelectorsFileComponents.BASE_FILE_BAN_DIALOG);
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            await expect.soft(confirmDialog).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-          },
-          'Verify confirmation dialog is visible',
-          test.info(),
-        );
-
-        // Highlight the dialog
-        await detailsPage.highlightElement(confirmDialog, HIGHLIGHT_SUCCESS);
-
-        // Click the Yes button in the dialog
-        const yesButton = page.locator(SelectorsFileComponents.BASE_FILE_BAN_DIALOG_YES);
-        await expectSoftWithScreenshot(
-          page,
-          async () => {
-            await expect.soft(yesButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
-          },
-          'Verify Yes button is visible',
-          test.info(),
-        );
-
-        // Highlight the Yes button
-        await detailsPage.highlightElement(yesButton, HIGHLIGHT_SUCCESS);
-
-        await yesButton.click();
-        await page.waitForLoadState('load');
-        // eslint-disable-next-line playwright/no-wait-for-timeout -- wait for UI
-        await page.waitForTimeout(TIMEOUTS.STANDARD);
-
-        archivedCount++;
-        logger.log(`✅ Archived item ${archivedCount}`);
-
-        // Update row count after archiving
-        rowCount = await rows.count();
-        logger.log(`Remaining rows: ${rowCount}`);
-
-        // Small delay to make the process visible
-        // eslint-disable-next-line playwright/no-wait-for-timeout -- wait after row click
-        await page.waitForTimeout(TIMEOUTS.MEDIUM);
-      }
-
-      logger.log(`✅ Successfully archived all ${archivedCount} items`);
-      logger.info(`All items have been archived successfully. Total archived: ${archivedCount}`);
-    });
-
-    await allure.step('Step 5: Verify table is empty', async () => {
-      const table = page.locator(SelectorsFileComponents.BASE_FILE_FILE_WINDOW_TABLE_TABLE);
-      const rows = table.locator('tbody tr');
-      const finalRowCount = await rows.count();
-
-      // Check if there are any rows with actual content (td elements)
-      let contentRowCount = 0;
-      for (let i = 0; i < finalRowCount; i++) {
-        const row = rows.nth(i);
-        const tdElements = row.locator('td');
-        const tdCount = await tdElements.count();
-        if (tdCount > 0) {
-          contentRowCount++;
-        }
-      }
-
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(contentRowCount).toBe(0);
-        },
-        `Verify table has no content rows: ${contentRowCount} content rows, ${finalRowCount} total rows`,
-        test.info(),
-      );
-      logger.log(`✅ Table has no content rows (${contentRowCount} content rows, ${finalRowCount} total rows)`);
-      logger.info('Table verification complete - all items archived');
-    });
-  });
-
-  test('Cleanup 01 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 02 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.U006_SPECIAL_CHAR_NAME, test.info());
-  });
-
-  test('Cleanup 03 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 04 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 05 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 06 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 07 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 08 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 09 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 10 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 11 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 12 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 13 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 14 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 15 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 16 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 17 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 18 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 19 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
-
-  test('Cleanup 20 - Архивация всех совпадающих деталей (Cleanup) `${SelectorsPartsDataBase.TEST_DETAIL_NAME}`', async ({ page }) => {
-    test.setTimeout(TEST_TIMEOUTS.LONG);
-    await archiveMatchingDetailsInPartsDb(page, SelectorsPartsDataBase.TEST_DETAIL_NAME, test.info());
-  });
 };
+
+

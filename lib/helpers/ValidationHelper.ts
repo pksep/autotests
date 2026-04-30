@@ -195,6 +195,7 @@ export class ValidationHelper {
     }
 
     const locator = this.page.locator(`${selector} h3`); // Locate H3 elements within the section
+
     const actualTitles = await locator.allTextContents();
     const normalizedTitles = actualTitles.map(title => title.trim());
 

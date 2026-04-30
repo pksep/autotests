@@ -4,8 +4,9 @@ import { runU006SaveAndEdit } from './U006-SaveAndEdit.spec';
 import { runU006EdgeCasesAndBulk } from './U006-EdgeCasesAndBulk.spec';
 
 /**
- * U006 suite entry point. Registers all U006 tests in order:
- * Archive (filebase + cleanup) → Create/Validation (01–07) → Save/Edit (08–12) → Edge/Bulk (13–17, 19).
+ * U006 suite entry point. Split bodies match `repo-at-single-U001/testcases/U006.spec.ts` (golden).
+ * Regenerate from golden: `python scripts/regenerate_u006_from_golden.py` (then verify locator fixes if constants drift).
+ * Order: Archive (TC 01, CL 01–02) → Create/Validation (TC 02–09, CL 03–10) → Save/Edit (TC 10–14, CL 11–15) → Edge/Bulk (TC 15–21, CL 16–22).
  */
 export const runU006 = () => {
   runU006Archive();

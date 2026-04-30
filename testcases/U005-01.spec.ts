@@ -21,10 +21,20 @@ export const runU005_01 = () => {
     const searchProduct = page.locator(SelectorsPartsDataBase.SEARCH_PRODUCT_ATTRIBUT).first();
     const searchCbed = page.locator(SelectorsPartsDataBase.SEARCH_CBED_ATTRIBUT).nth(1);
     const searchDetail = page.locator(SelectorsPartsDataBase.SEARCH_DETAIL_ATTRIBUT).last();
+    const waitForPartsDatabaseReady = async (): Promise<void> => {
+      await page.waitForLoadState('domcontentloaded');
+      await page.locator(SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID).waitFor({
+        state: 'visible',
+        timeout: WAIT_TIMEOUTS.PAGE_RELOAD,
+      });
+      await searchProduct.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await searchCbed.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+      await searchDetail.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
+    };
 
     await allure.step('Step 01: Open the parts database page', async () => {
       await partsDatabasePage.navigateToPage(SELECTORS.MAINMENU.PARTS_DATABASE.URL, SelectorsPartsDataBase.MAIN_PAGE_TITLE_ID);
-      await partsDatabasePage.waitForNetworkIdle();
+      await waitForPartsDatabaseReady();
     });
 
     await allure.step('Step 01a: Clear all search input fields', async () => {
@@ -47,7 +57,7 @@ export const runU005_01 = () => {
 
     await allure.step('Step 01b: Refresh the page', async () => {
       await page.reload();
-      await partsDatabasePage.waitForNetworkIdle();
+      await waitForPartsDatabaseReady();
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
@@ -60,20 +70,19 @@ export const runU005_01 = () => {
         iterationCount++;
         await searchDetail.fill(U005_CLEANUP_PREFIX);
         await searchDetail.press('Enter');
-        await partsDatabasePage.waitForNetworkIdle();
+        await waitForPartsDatabaseReady();
         await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         const rows = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE_DIV} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) {
+        const rowTexts = await rows.locator('td:nth-child(2)').allTextContents();
+        if (rowTexts.length === 0) {
           hasMoreItems = false;
           break;
         }
 
-        for (let i = rowCount - 1; i >= 0; i--) {
+        for (let i = rowTexts.length - 1; i >= 0; i--) {
           const row = rows.nth(i);
-          const nameCell = row.locator('td').nth(1);
-          const cellText = await nameCell.textContent();
+          const cellText = rowTexts[i];
           if (cellText?.trim().startsWith(U005_CLEANUP_PREFIX)) {
             await row.click();
             await partsDatabasePage.archiveAndConfirm(
@@ -85,12 +94,13 @@ export const runU005_01 = () => {
         }
 
         const remainingRows = page.locator(`${SelectorsPartsDataBase.DETAIL_TABLE_DIV} tbody tr`);
-        const remainingCount = await remainingRows.count();
+        const remainingTexts = await remainingRows.locator('td:nth-child(2)').allTextContents();
+        const remainingCount = remainingTexts.filter(cellText => cellText.trim().startsWith(U005_CLEANUP_PREFIX)).length;
         if (remainingCount === 0) {
           hasMoreItems = false;
         } else {
           await page.reload();
-          await partsDatabasePage.waitForNetworkIdle();
+          await waitForPartsDatabaseReady();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
         }
       }
@@ -104,7 +114,7 @@ export const runU005_01 = () => {
 
     await allure.step('Step 02b: Refresh the page after Details cleanup', async () => {
       await page.reload();
-      await partsDatabasePage.waitForNetworkIdle();
+      await waitForPartsDatabaseReady();
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
@@ -117,20 +127,19 @@ export const runU005_01 = () => {
         iterationCount++;
         await searchCbed.fill(U005_CLEANUP_PREFIX);
         await searchCbed.press('Enter');
-        await partsDatabasePage.waitForNetworkIdle();
+        await waitForPartsDatabaseReady();
         await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         const rows = page.locator(`${SelectorsPartsDataBase.CBED_TABLE_DIV} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) {
+        const rowTexts = await rows.locator('td:nth-child(2)').allTextContents();
+        if (rowTexts.length === 0) {
           hasMoreItems = false;
           break;
         }
 
-        for (let i = rowCount - 1; i >= 0; i--) {
+        for (let i = rowTexts.length - 1; i >= 0; i--) {
           const row = rows.nth(i);
-          const nameCell = row.locator('td').nth(1);
-          const cellText = await nameCell.textContent();
+          const cellText = rowTexts[i];
           if (cellText?.trim().startsWith(U005_CLEANUP_PREFIX)) {
             await row.click();
             await page.waitForTimeout(TIMEOUTS.MEDIUM);
@@ -143,12 +152,13 @@ export const runU005_01 = () => {
         }
 
         const remainingRows = page.locator(`${SelectorsPartsDataBase.CBED_TABLE_DIV} tbody tr`);
-        const remainingCount = await remainingRows.count();
+        const remainingTexts = await remainingRows.locator('td:nth-child(2)').allTextContents();
+        const remainingCount = remainingTexts.filter(cellText => cellText.trim().startsWith(U005_CLEANUP_PREFIX)).length;
         if (remainingCount === 0) {
           hasMoreItems = false;
         } else {
           await page.reload();
-          await partsDatabasePage.waitForNetworkIdle();
+          await waitForPartsDatabaseReady();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
         }
       }
@@ -162,7 +172,7 @@ export const runU005_01 = () => {
 
     await allure.step('Step 03b: Refresh the page after Assemblies cleanup', async () => {
       await page.reload();
-      await partsDatabasePage.waitForNetworkIdle();
+      await waitForPartsDatabaseReady();
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
     });
 
@@ -175,20 +185,19 @@ export const runU005_01 = () => {
         iterationCount++;
         await searchProduct.fill(U005_CLEANUP_PREFIX);
         await searchProduct.press('Enter');
-        await partsDatabasePage.waitForNetworkIdle();
+        await waitForPartsDatabaseReady();
         await page.waitForTimeout(TIMEOUTS.STANDARD);
 
         const rows = page.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`);
-        const rowCount = await rows.count();
-        if (rowCount === 0) {
+        const rowTexts = await rows.locator('td:nth-child(3)').allTextContents();
+        if (rowTexts.length === 0) {
           hasMoreItems = false;
           break;
         }
 
-        for (let i = rowCount - 1; i >= 0; i--) {
+        for (let i = rowTexts.length - 1; i >= 0; i--) {
           const row = rows.nth(i);
-          const nameCell = row.locator('td').nth(2);
-          const cellText = await nameCell.textContent();
+          const cellText = rowTexts[i];
           if (cellText?.trim().startsWith(U005_CLEANUP_PREFIX)) {
             await row.click();
             await partsDatabasePage.archiveAndConfirm(
@@ -200,12 +209,13 @@ export const runU005_01 = () => {
         }
 
         const remainingRows = page.locator(`${SelectorsPartsDataBase.PRODUCT_TABLE} tbody tr`);
-        const remainingCount = await remainingRows.count();
+        const remainingTexts = await remainingRows.locator('td:nth-child(3)').allTextContents();
+        const remainingCount = remainingTexts.filter(cellText => cellText.trim().startsWith(U005_CLEANUP_PREFIX)).length;
         if (remainingCount === 0) {
           hasMoreItems = false;
         } else {
           await page.reload();
-          await partsDatabasePage.waitForNetworkIdle();
+          await waitForPartsDatabaseReady();
           await page.waitForTimeout(TIMEOUTS.MEDIUM);
         }
       }
@@ -427,7 +437,7 @@ export const runU005_01 = () => {
       await matchingRow.waitFor({ state: 'visible' });
 
       await shortagePage.highlightElement(matchingRow, HIGHLIGHT_SUCCESS);
-      await matchingRow.click();
+      await shortagePage.clickTableRow(matchingRow);
       await page.waitForLoadState('load');
     });
     await allure.step('Step 08: Открыть поток архива (Open archive flow)', async () => {
@@ -441,11 +451,6 @@ export const runU005_01 = () => {
       const firstRow = targetTable.locator('tbody tr').first();
 
       await shortagePage.highlightElement(firstRow, HIGHLIGHT_SUCCESS);
-
-      await firstRow.click();
-      await page.waitForLoadState('load');
-      await shortagePage.highlightElement(firstRow, HIGHLIGHT_ERROR);
-      await firstRow.click();
       await page.waitForLoadState('load');
       // Archive dialog locator
       const dialogTestId = 'ModalBaseMaterial'; // No brackets

@@ -3,7 +3,8 @@ export const WAREHOUSE_PAGE_STOCK_ORDER_ASSEMBLY_BUTTON = '[data-testid="Sclad-s
 
 export const ZAKAZ_SCLAD_TABLE_ASSEMBLY_WARHOUSE = '[data-testid="AssemblySclad-ScrollTable"]';
 
-export const ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT = '${props.dataTestid}-TableHead-Search-Dropdown-Input';
+/** YSearch on AssemblySclad scroll table (`AssemblySclad.vue` → `AssemblySclad-TableHead-Search`). */
+export const ZAKAZ_SCLAD_TABLE_ASSEMBLY_SEARCH_INPUT = 'AssemblySclad-TableHead-Search-Dropdown-Input';
 
 export const DATA_CELL = '[data-testid="AssemblySclad-TableHead-TableTd"]';
 

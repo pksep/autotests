@@ -344,10 +344,13 @@ export class PartsDatabaseHelper {
 
   async searchAndSelectMaterial(sliderDataTestId: string, materialName: string): Promise<void> {
     const normalizedSliderSelector = sliderDataTestId.trim().startsWith('[data-testid=') ? sliderDataTestId : `[data-testid="${sliderDataTestId}"]`;
-    const switchItem = this.page.locator(normalizedSliderSelector);
+    const openDialog = this.page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN).last();
+    await openDialog.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+
+    const switchItem = openDialog.locator(normalizedSliderSelector);
     await switchItem.click();
     await this.page.waitForTimeout(TIMEOUTS.SHORT);
-    const searchInput = this.page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT);
+    const searchInput = openDialog.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_SEARCH_INPUT_DROPDOWN_INPUT);
     await searchInput.fill(materialName);
     await searchInput.press('Enter');
     await searchInput.evaluate(el => {
@@ -357,7 +360,7 @@ export class PartsDatabaseHelper {
       node.style.color = 'blue';
     });
     // Wait for search to complete and results to display (modal table visible and at least one data row)
-    const materialTable = this.page.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
+    const materialTable = openDialog.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM);
     await materialTable.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.LONG });
     const table = materialTable.first();
     const resultRows = table.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_TABLE_LIST_TABLE_ITEM_TBODY_TABLEROW);
@@ -368,25 +371,35 @@ export class PartsDatabaseHelper {
       node.style.border = '2px solid red';
       node.style.color = 'blue';
     });
-    const rowsCount = await resultRows.count();
-    let materialFound = false;
-    if (rowsCount === 1) {
-      const row = resultRows.first();
-      await this.elementHelper.highlightElement(row);
-      await row.click();
-      materialFound = true;
-    } else if (rowsCount > 1) {
-      const rowWithMaterial = resultRows.filter({ hasText: materialName }).first();
-      await rowWithMaterial.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      await this.elementHelper.highlightElement(rowWithMaterial);
-      await rowWithMaterial.click();
-      materialFound = true;
-    }
-    expect(materialFound).toBe(true);
+    const rowWithMaterial = resultRows.filter({ hasText: materialName }).first();
+    await rowWithMaterial.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+    await this.elementHelper.highlightElement(rowWithMaterial);
+    await rowWithMaterial.click();
     // Short wait so modal state updates and Add button becomes enabled after row selection
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
+
+    const selectButton = openDialog.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_ADDTOBOTTOM_BUTTON);
+    const selectedMaterialTable = openDialog.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_BOTTOM_TABLE);
+    const hasSelectButton = await selectButton.count().then(count => count > 0).catch(() => false);
+    if (hasSelectButton) {
+      await selectButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+      await expect(selectButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+      await this.elementHelper.highlightElement(selectButton);
+      await selectButton.click();
+
+      const selectedRow = selectedMaterialTable.locator('tbody tr').filter({ hasText: materialName }).first();
+      if (!(await selectedRow.isVisible({ timeout: WAIT_TIMEOUTS.STANDARD }).catch(() => false))) {
+        await rowWithMaterial.click();
+        await expect(selectButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+        await selectButton.click();
+      }
+
+      await expect(selectedMaterialTable).toContainText(materialName, {
+        timeout: WAIT_TIMEOUTS.LONG,
+      });
+    }
+
     // Scope Add button to the open material dialog; use exact ModalBaseMaterial-Add-Button so we click the correct button
-    const openDialog = this.page.locator(SelectorsPartsDataBase.EDIT_PAGE_ADD_ПД_RIGHT_DIALOG_OPEN);
     const addButton = openDialog.locator(SelectorsPartsDataBase.MODAL_BASE_MATERIAL_ADD_BUTTON);
     await addButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
     await expect(addButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
@@ -396,6 +409,9 @@ export class PartsDatabaseHelper {
     await this.page.waitForTimeout(TIMEOUTS.MEDIUM);
     await openDialog.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.STANDARD });
     await this.navigationHelper.waitForNetworkIdle();
+
+    const characteristicTable = this.page.locator(SelectorsPartsDataBase.ADD_DETAIL_CHARACTERISTIC_BLANKS);
+    await expect(characteristicTable).toContainText(materialName, { timeout: WAIT_TIMEOUTS.LONG });
   }
 
   async parseRecursiveStructuredTable(page: Page, tableTestId: string, parentId: string, multiplier: number, parsedData: Record<string, SpecificationTableRow[]>): Promise<void> {
@@ -1141,13 +1157,14 @@ export class PartsDatabaseHelper {
         await this.page.waitForTimeout(stabilizationDelay);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error(`Error on attempt ${i + 1}: ${errorMessage}`);
-        // If we already clicked at least once and Save button is no longer found, save likely succeeded and page navigated
+        // In rapid-save scenario, once first click is accepted, the button can become unavailable
+        // (disabled/hidden/navigation in progress). Treat this as expected, not as test error noise.
         if (clicksPerformed >= 1 && (errorMessage.includes(this.SAVE_BUTTON) || errorMessage.includes('Timeout'))) {
-          logger.info('Save button no longer found after successful click - page likely transitioned');
+          logger.info(`Attempt ${i + 1}: save button unavailable after prior successful click - expected fast-click behavior`);
           pageTransitioned = true;
           break;
         }
+        logger.error(`Error on attempt ${i + 1}: ${errorMessage}`);
         errors.push(`Attempt ${i + 1}: ${errorMessage}`);
         consecutiveFailures++;
         if (consecutiveFailures >= maxConsecutiveFailures) {
@@ -1329,7 +1346,7 @@ export class PartsDatabaseHelper {
       await expect(archiveButton).toBeVisible();
       await this.elementHelper.highlightElement(archiveButton, { backgroundColor: 'yellow', border: '2px solid red', color: 'blue' });
       await page.waitForTimeout(TIMEOUTS.STANDARD);
-      await archiveButton.click();
+      await archiveButton.click({ force: true });
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(TIMEOUTS.STANDARD);
       const confirmModal = page.locator(`[data-testid="${confirmModalTestId}"]`);
@@ -1640,8 +1657,18 @@ export class PartsDatabaseHelper {
 
   /**
    * Clean up test detail by searching and archiving all exact matches.
+   * @param testInfo - When provided, visibility assertions use expectSoftWithScreenshot (Rule 7.1).
    */
-  async cleanupTestDetail(page: Page, detailName: string, tableTestId: string, searchInputTestId?: string, archiveButtonTestId?: string, confirmModalTestId?: string, confirmButtonTestId?: string): Promise<void> {
+  async cleanupTestDetail(
+    page: Page,
+    detailName: string,
+    tableTestId: string,
+    searchInputTestId?: string,
+    archiveButtonTestId?: string,
+    confirmModalTestId?: string,
+    confirmButtonTestId?: string,
+    testInfo?: TestInfo,
+  ): Promise<void> {
     const detailTableSelector = tableTestId.includes('[data-testid') || tableTestId.includes('[') ? tableTestId : `[data-testid="${tableTestId}"]`;
     const detailTable = page.locator(detailTableSelector);
 
@@ -1658,46 +1685,163 @@ export class PartsDatabaseHelper {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(TIMEOUTS.STANDARD);
 
-    const rows = detailTable.locator('tbody tr');
-    const rowCount = await rows.count();
+    let archiveStep = 0;
+    const maxArchiveAttempts = 25;
+    while (archiveStep < maxArchiveAttempts) {
+      const rows = detailTable.locator('tbody tr');
+      const rowTexts = await rows.allTextContents();
+      const matchIndex = rowTexts.findIndex(rowText => rowText.trim() === detailName);
 
-    if (rowCount === 0) {
-      logger.log(`No existing ${detailName} found for cleanup`);
-      return;
-    }
+      if (matchIndex === -1) {
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await searchInput.fill('');
+        await searchInput.press('Enter');
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await searchInput.fill(detailName);
+        await searchInput.press('Enter');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
 
-    const matchingRows: Locator[] = [];
-    for (let i = 0; i < rowCount; i++) {
-      const rowText = await rows.nth(i).textContent();
-      if (rowText && rowText.trim() === detailName) {
-        matchingRows.push(rows.nth(i));
+        const stableRowTexts = await detailTable.locator('tbody tr').allTextContents();
+        const stableMatchIndex = stableRowTexts.findIndex(rowText => rowText.trim() === detailName);
+        if (stableMatchIndex !== -1) {
+          continue;
+        }
+
+        if (archiveStep === 0) {
+          logger.log(`No existing ${detailName} found for cleanup`);
+        } else {
+          logger.log(`✅ Cleaned up ${archiveStep} instances of ${detailName}`);
+        }
+        return;
       }
-    }
 
-    for (let i = matchingRows.length - 1; i >= 0; i--) {
-      const currentRow = matchingRows[i];
-      await currentRow.click();
+      archiveStep++;
+      const currentRow = rows.nth(matchIndex);
+      await this.elementHelper.clickTableRow(currentRow, { timeout: WAIT_TIMEOUTS.SHORT });
       await page.waitForTimeout(TIMEOUTS.MEDIUM);
 
       const archiveButtonSelector = archiveButtonTestId || 'BaseProducts-Button-Archive';
       const archiveButton = page.locator(`[data-testid="${archiveButtonSelector}"]`);
-      await expect(archiveButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archiveButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        `cleanupTestDetail: parts archive button visible (${archiveStep})`,
+        testInfo,
+      );
+      if (!(await archiveButton.isEnabled().catch(() => false))) {
+        await currentRow.click({ force: true }).catch(() => {});
+        await page.waitForTimeout(TIMEOUTS.MEDIUM);
+      }
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        `cleanupTestDetail: parts archive button enabled (${archiveStep})`,
+        testInfo,
+      );
+      await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
+      await page.evaluate(() => {
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLElement) {
+          activeElement.blur();
+        }
+      });
+      await detailTable.locator('thead tr').first().locator('th').first().click({ force: true });
+      await detailTable.locator(SelectorsPartsDataBase.TABLE_SEARCH_DROPDOWN).waitFor({
+        state: 'hidden',
+        timeout: WAIT_TIMEOUTS.SHORT,
+      }).catch(() => {});
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       await archiveButton.click();
       await page.waitForLoadState('networkidle');
 
       const confirmModalSelector = confirmModalTestId || 'ModalConfirm';
       const archiveModal = page.locator(`dialog[data-testid="${confirmModalSelector}"]`);
-      await expect(archiveModal).toBeVisible();
+      await archiveModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT }).catch(() => {});
+      if (!(await archiveModal.isVisible().catch(() => false))) {
+        await searchInput.fill('');
+        await searchInput.press('Enter');
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+        await searchInput.fill(detailName);
+        await searchInput.press('Enter');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+        const remainingRowTexts = await detailTable.locator('tbody tr').allTextContents();
+        const remainingMatchIndex = remainingRowTexts.findIndex(rowText => rowText.trim() === detailName);
+        if (remainingMatchIndex === -1) {
+          logger.log(`Archived ${detailName} without a confirmation dialog (${archiveStep})`);
+          continue;
+        }
+      }
+
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(archiveModal).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        `cleanupTestDetail: archive confirm dialog visible (${archiveStep})`,
+        testInfo,
+      );
 
       const confirmButtonSelector = confirmButtonTestId ? `[data-testid="${confirmButtonTestId}"]` : SelectorsArchiveModal.MODAL_CONFIRM_DIALOG_YES_BUTTON;
       const yesButton = archiveModal.locator(confirmButtonSelector);
-      await expect(yesButton).toBeVisible();
+      await expectSoftWithScreenshot(
+        page,
+        () => {
+          expect.soft(yesButton).toBeVisible({ timeout: WAIT_TIMEOUTS.SHORT });
+        },
+        `cleanupTestDetail: archive confirm Yes visible (${archiveStep})`,
+        testInfo,
+      );
       await yesButton.click();
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+      await searchInput.fill('');
+      await searchInput.press('Enter');
+      await page.waitForTimeout(TIMEOUTS.STANDARD);
+      await searchInput.fill(detailName);
+      await searchInput.press('Enter');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(TIMEOUTS.STANDARD);
     }
 
-    logger.log(`✅ Cleaned up ${matchingRows.length} instances of ${detailName}`);
+    logger.warn(`Stopped cleanup for ${detailName} after ${maxArchiveAttempts} archive attempts.`);
+  }
+
+  /**
+   * Returns count of rows whose full trimmed text exactly matches detailName
+   * after applying table search for detailName.
+   */
+  async getExactMatchRowCount(
+    page: Page,
+    detailName: string,
+    tableTestId: string,
+    searchInputTestId?: string,
+  ): Promise<number> {
+    const detailTableSelector = tableTestId.includes('[data-testid') || tableTestId.includes('[') ? tableTestId : `[data-testid="${tableTestId}"]`;
+    const detailTable = page.locator(detailTableSelector);
+
+    const defaultSearchInput = 'BasePaginationTable-Thead-SearchInput-Dropdown-Input';
+    const searchInputTestIdValue = searchInputTestId || defaultSearchInput;
+    const searchInputSelector = searchInputTestIdValue.includes('[data-testid') || searchInputTestIdValue.includes('[') ? searchInputTestIdValue : `[data-testid="${searchInputTestIdValue}"]`;
+    const searchInput = detailTable.locator(searchInputSelector);
+
+    await searchInput.fill('');
+    await searchInput.press('Enter');
+    await page.waitForTimeout(TIMEOUTS.STANDARD);
+    await searchInput.fill(detailName);
+    await searchInput.press('Enter');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(TIMEOUTS.STANDARD);
+
+    const rowTexts = await detailTable.locator('tbody tr').allTextContents();
+    return rowTexts.filter(rowText => rowText.trim() === detailName).length;
   }
 
   /**
@@ -1736,17 +1880,21 @@ export class PartsDatabaseHelper {
 
     for (let i = rowCount - 1; i >= 0; i--) {
       const row = rows.nth(i);
-      await row.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
-      await row.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
-
-      await row.click();
+      await this.elementHelper.clickTableRow(row, { timeout: WAIT_TIMEOUTS.SHORT });
       await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 
       const archiveButton = page.locator(archiveButtonSelector).filter({ hasText: 'Архив' }).first();
       await archiveButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.SHORT });
       await expect(archiveButton).toBeEnabled({ timeout: WAIT_TIMEOUTS.STANDARD });
 
+      await page.evaluate(() => {
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLElement) {
+          activeElement.blur();
+        }
+      });
+      await archiveButton.focus();
+      await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
       await archiveButton.click();
       await page.waitForTimeout(TIMEOUTS.VERY_SHORT);
 

@@ -13,6 +13,6 @@ export type InputLike = {
 
 /** Base file names (and extensions) used in filebase verification steps. */
 export const baseFileNamesToVerify = [
-  { name: 'Test_imagexx_1', extension: '.jpg' },
-  { name: 'Test_imagexx_2', extension: '.png' },
+  { name: 'U006_Test_imagexx_1', extension: '.jpg' },
+  { name: 'U006_Test_imagexx_2', extension: '.png' },
 ];

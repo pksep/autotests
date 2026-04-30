@@ -287,26 +287,24 @@ export class CreateLoadingTaskPage extends PageObject {
   }
 
   async clickFromFirstRowBug(locator: string, cellIndex: number) {
-    const modalWindow = await this.page.locator('.modal-yui-kit__modal-content');
-    const rows = await modalWindow.locator(`${locator} tbody tr`);
+    const modalWindow = this.page.locator('.modal-yui-kit__modal-content').last();
+    await modalWindow.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
 
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      throw new Error('В таблице нет строк.');
-    }
+    const rows = modalWindow.locator(`${locator} tbody tr`);
+    const firstDataRow = rows.filter({ has: this.page.locator('td') }).first();
+    await expect(firstDataRow).toBeVisible({ timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
 
-    const firstRow = rows.nth(0);
-
-    const cells = await firstRow.locator('td').allInnerTexts();
-
-    if (cellIndex < 0 || cellIndex > cells.length) {
-      throw new Error(`Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 0-${cells.length}.`);
+    const cells = await firstDataRow.locator('td').allInnerTexts();
+    if (cellIndex < 0 || cellIndex >= cells.length) {
+      throw new Error(`Индекс ячейки ${cellIndex} вне диапазона. Доступные ячейки: 0-${cells.length - 1}.`);
     }
 
     const valueInCell = cells[cellIndex];
+    const targetCell = firstDataRow.locator('td').nth(cellIndex);
 
     logger.info(`Значение в ячейке ${cellIndex} первой строки: ${valueInCell}`);
-    await firstRow.locator('td').nth(cellIndex).click();
+    await targetCell.scrollIntoViewIfNeeded();
+    await targetCell.click();
     logger.info(`Кликнули по ячейке ${cellIndex} первой строки.`);
     return valueInCell;
   }
@@ -980,7 +978,7 @@ export class CreateLoadingTaskPage extends PageObject {
     await page.waitForTimeout(500);
 
     // Find and use the search input field
-    const searchInput = deficitMainTable.locator('input[data-testid="DeficitIzdTable-Search-Dropdown-Input"]').first();
+    const searchInput = this.page.locator('input[data-testid="DeficitIzd-Main-Table-Search-Dropdown-Input"], [data-testid="DeficitIzd-Main-Table"] .search-yui-kit__input').first();
     await searchInput.waitFor({ state: 'visible', timeout: 3000 });
     await searchInput.scrollIntoViewIfNeeded();
     await this.highlightElement(searchInput, {

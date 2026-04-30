@@ -170,7 +170,7 @@
                 {
                     "class": "button.button-yui-kit.small.disabled-yui-kit.primary-yui-kit.assembly__button",
                     "datatestid": "AssemblySclad-Button-Archive",
-                    "label": "Архив",
+                    "label": "Archive",
                     "state": "false"
                 },
                 {

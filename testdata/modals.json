@@ -1,0 +1,1013 @@
+{
+  "HistoryActionModal": {
+    "description": "Reusable right-side history dialog. Root data-testid is prefixed by the owning component, for example ModalProduct-ModalHistoryAction or Creator-ModalHistoryAction.",
+    "root": {
+      "testIdSuffix": "ModalHistoryAction"
+    },
+    "structure": [
+      {
+        "testIdSuffix": "ModalContent"
+      },
+      {
+        "testIdSuffix": "Content"
+      },
+      {
+        "testIdSuffix": "Main"
+      },
+      {
+        "testIdSuffix": "Bottom"
+      }
+    ],
+    "titles": [
+      {
+        "testIdSuffix": "Main-Title-Name",
+        "text": "История изменений"
+      }
+    ],
+    "labels": [
+      {
+        "testIdSuffix": "Information-Title0",
+        "text": "Тип сущности:"
+      },
+      {
+        "testIdSuffix": "Information-Text0",
+        "required": true,
+        "dynamic": true,
+        "allowedValues": [
+          "Деталь",
+          "Документ",
+          "Задача",
+          "Задача на отгрузку",
+          "Заказ на склад",
+          "Изделие",
+          "Инвентарь",
+          "Инструмент",
+          "Интрумент",
+          "Комплект сборки",
+          "Материалы",
+          "Металлообработка",
+          "Оборудование",
+          "Объект перемещения",
+          "Операция",
+          "Отгрузка покупателю",
+          "Отметка о выполнении",
+          "Пользователь",
+          "Поставки",
+          "Приход на склад",
+          "Продукт",
+          "Производственная задача",
+          "Ревизия",
+          "Роль",
+          "Сборка",
+          "Сборочная единица",
+          "Стеллаж",
+          "Технологический процесс",
+          "Тип операции",
+          "Элемент заказа на склад"
+        ]
+      }
+    ],
+    "datePickers": [
+      {
+        "name": "Start date",
+        "wrapperTestId": "Calendar-DataPickerRange-Component-Start-Wrapper",
+        "triggerTestId": "Calendar-DataPickerRange-Component-Start-Choose-HeaderBtn-Trigger",
+        "displayTestId": "Calendar-DataPickerRange-Component-Start-Choose-Value-Display",
+        "clearButtonTestId": "Calendar-DataPickerRange-Component-Start-Choose-Button-Clear"
+      },
+      {
+        "name": "End date",
+        "wrapperTestId": "Calendar-DataPickerRange-Component-End-Wrapper",
+        "triggerTestId": "Calendar-DataPickerRange-Component-End-Choose-HeaderBtn-Trigger",
+        "displayTestId": "Calendar-DataPickerRange-Component-End-Choose-Value-Display",
+        "clearButtonTestId": "Calendar-DataPickerRange-Component-End-Choose-Button-Clear"
+      }
+    ],
+    "filters": [
+      {
+        "name": "Сотрудники",
+        "rootTestId": "FilterUser",
+        "currentTestId": "FilterUser-Current",
+        "titleTestId": "FilterUser-Title",
+        "titleText": "Сотрудники:",
+        "badgeTextTestId": "FilterUser-Badge-BadgesText",
+        "optionsListTestId": "FilterUser-OptionsList",
+        "searchInputTestId": "FilterUser-Search-Dropdown-Input",
+        "optionTestIdPrefix": "FilterUser-Options-",
+        "minimumOptions": 1
+      },
+      {
+        "name": "Тип сущности",
+        "rootTestId": "BaseFilter",
+        "currentTestId": "BaseFilter-Current",
+        "titleTestId": "BaseFilter-Title",
+        "titleText": "Тип сущности:",
+        "badgeTextTestId": "BaseFilter-Badge-BadgesText",
+        "optionsListTestId": "BaseFilter-OptionsList",
+        "searchInputTestId": "BaseFilter-Search-Dropdown-Input",
+        "optionTestIdPrefix": "BaseFilter-Options-",
+        "minimumOptions": 1,
+        "expectedOptions": [
+          "Деталь",
+          "Документ",
+          "Задача",
+          "Изделие",
+          "Материалы",
+          "Пользователь",
+          "Сборочная единица",
+          "Технологический процесс"
+        ]
+      }
+    ],
+    "buttons": [
+      {
+        "name": "Reset",
+        "testId": "Button",
+        "text": "Сбросить",
+        "expectedEnabled": false
+      },
+      {
+        "name": "Close",
+        "testId": "Button",
+        "text": "Закрыть",
+        "expectedEnabled": true
+      }
+    ],
+    "content": {
+      "emptyStateText": "Нет сохраненных действий пользователей",
+      "allowRowsInsteadOfEmptyState": true
+    },
+    "functionalChecks": {
+      "openFilters": true,
+      "resetButton": true,
+      "closeButton": false
+    }
+  },
+  "CompactHistoryActionModal": {
+    "description": "Compact scoped right-side history dialog used from nested dialogs such as technical process and instrument information. It contains only the title, table, row links, and close button.",
+    "root": {
+      "testIdSuffix": "ModalHistoryAction"
+    },
+    "structure": [
+      {
+        "testIdSuffix": "ModalContent"
+      },
+      {
+        "testIdSuffix": "Content"
+      },
+      {
+        "testIdSuffix": "Main"
+      },
+      {
+        "testIdSuffix": "Bottom"
+      }
+    ],
+    "titles": [
+      {
+        "testIdSuffix": "Main-Title-Name",
+        "text": "История изменений"
+      }
+    ],
+    "buttons": [
+      {
+        "name": "Close",
+        "testId": "Button",
+        "text": "Закрыть",
+        "expectedEnabled": true
+      }
+    ],
+    "content": {
+      "emptyStateText": "Нет сохраненных действий пользователей",
+      "allowRowsInsteadOfEmptyState": true
+    }
+  },
+  "UserInfoModal": {
+    "description": "Right-side user information dialog opened from user links in history tables.",
+    "root": {
+      "testId": "ModalUser"
+    },
+    "structure": [
+      {
+        "testId": "ModalUser-ModalContent"
+      },
+      {
+        "testId": "ModalUser-Content"
+      },
+      {
+        "testId": "ModalUser-Main"
+      }
+    ],
+    "titles": [
+      {
+        "testId": "ModalUser-Main-Title-Name",
+        "text": "Информация о пользователе"
+      }
+    ],
+    "required": [
+      {
+        "testId": "AvatarBlock"
+      },
+      {
+        "testIdPrefix": "UserContactInfo-"
+      }
+    ],
+    "content": {
+      "requiredTexts": [
+        "Контактные данные",
+        "Должность:",
+        "Табельный номер",
+        "Логин"
+      ]
+    },
+    "userInfoFlow": {
+      "titleTestId": "ModalUser-Main-Title-Name",
+      "avatarTestId": "AvatarBlock",
+      "contactTableTestIdPrefix": "UserContactInfo-",
+      "contactRowTestIdPrefix": "UserInfoRow-",
+      "loginLabelText": "Логин",
+      "roleLabelText": "Должность:",
+      "onlineLabelText": "Был в сети:",
+      "contactLabels": [
+        "Табельный номер",
+        "Логин",
+        "Телефон",
+        "Эл. почта",
+        "Телеграм"
+      ]
+    }
+  },
+  "InstrumentInformationModal": {
+    "description": "Right-side short information dialog for tools, tooling, and measuring instruments linked from technical-process resource cells.",
+    "root": {
+      "testIdSuffix": "ModalInstrumentInformation"
+    },
+    "structure": [
+      {
+        "testIdSuffix": "ModalInstrumentInformation-ModalContent"
+      },
+      {
+        "testIdSuffix": "ModalInstrumentInformation-Content"
+      },
+      {
+        "testIdSuffix": "ModalInstrumentInformation-Main"
+      }
+    ],
+    "content": {
+      "requiredTexts": [
+        "Краткая информация об инструменте или оснастке",
+        "Наименование:",
+        "Тип:",
+        "Подтип:",
+        "Медиа файлы",
+        "Описание / Примечание",
+        "История изменений"
+      ]
+    },
+    "buttons": [
+      {
+        "name": "Full information",
+        "testId": "Button",
+        "text": "Полная информация",
+        "expectedEnabled": true
+      }
+    ],
+    "instrumentInformationFlow": {
+      "headingText": "Краткая информация об инструменте или оснастке",
+      "fieldLabels": [
+        "Наименование:",
+        "Тип:",
+        "Подтип:"
+      ],
+      "nameLabelText": "Наименование:",
+      "fullInformationButtonText": "Полная информация",
+      "historyButtonTestIdSuffix": "ModalInstrumentInformation-HistoryButton",
+      "descriptionTextareaTestId": "Textarea-Textarea",
+      "suppliersTitleText": "Поставщики",
+      "minimumSupplierRows": 1
+    }
+  },
+  "EquipmentFilterModal": {
+    "description": "Equipment filter modal with type, subtype, and equipment/entity tables. Root uses the generic Modal test id, so validation anchors on the TableEquipmentList descendant.",
+    "root": {
+      "testId": "Modal",
+      "hasTestId": "TableEquipmentList"
+    },
+    "structure": [
+      {
+        "testId": "Modal-ModalContent"
+      },
+      {
+        "testId": "TableEquipmentList"
+      }
+    ],
+    "content": {
+      "requiredTexts": [
+        "Фильтр по оборудованию"
+      ]
+    },
+    "tables": [
+      {
+        "name": "Equipment type",
+        "wrapperTestId": "TableEquipmentList-TableType-Wrapper",
+        "tableTestId": "TableEquipmentList-TableType",
+        "theadTestId": "TableEquipmentList-TableType-Thead",
+        "headerTestId": "TableEquipmentList-TableType-Thead-Title",
+        "headerText": "Тип",
+        "searchInputTestId": "TableEquipmentList-TableType-SearchInput-Dropdown-Input",
+        "searchPlaceholder": "Поиск по наименованию",
+        "tbodyTestId": "TableEquipmentList-TableType-Tbody",
+        "rowTestId": "TableEquipmentList-TableType-Tbody-TableRow",
+        "minimumRows": 1
+      },
+      {
+        "name": "Equipment subtype",
+        "wrapperTestId": "TableEquipmentList-TableSubType-Wrapper",
+        "tableTestId": "TableEquipmentList-TableSubType",
+        "theadTestId": "TableEquipmentList-TableSubType-Thead",
+        "headerTestId": "TableEquipmentList-TableSubType-Thead-Title",
+        "headerText": "Подтип",
+        "searchInputTestId": "TableEquipmentList-TableSubType-SearchInput-Dropdown-Input",
+        "searchPlaceholder": "Поиск по наименованию",
+        "tbodyTestId": "TableEquipmentList-TableSubType-Tbody",
+        "rowTestId": "TableEquipmentList-TableSubType-Tbody-TableRow",
+        "minimumRows": 1
+      },
+      {
+        "name": "Equipment entity",
+        "wrapperTestId": "TableEquipmentList-TableEntity-Wrapper",
+        "tableTestId": "TableEquipmentList-TableEntity",
+        "theadTestId": "TableEquipmentList-TableEntity-Thead",
+        "headerTestId": "TableEquipmentList-TableEntity-Thead-Title",
+        "headerText": "Наименование (Марка/Типоразмер)",
+        "searchInputTestId": "TableEquipmentList-TableEntity-SearchInput-Dropdown-Input",
+        "searchPlaceholder": "Поиск по наименованию",
+        "tbodyTestId": "TableEquipmentList-TableEntity-Tbody",
+        "rowTestId": "TableEquipmentList-TableEntity-Tbody-TableRow",
+        "minimumRows": 1
+      }
+    ],
+    "buttons": [
+      {
+        "name": "Select",
+        "testId": "Button",
+        "text": "Выбрать",
+        "expectedEnabled": false
+      },
+      {
+        "name": "Cancel",
+        "testId": "Button",
+        "text": "Отменить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Add",
+        "testId": "Button",
+        "text": "Добавить",
+        "expectedEnabled": true
+      }
+    ],
+    "selectionFlow": {
+      "typeTableRowTestId": "TableEquipmentList-TableType-Tbody-TableRow",
+      "subTypeTableRowTestId": "TableEquipmentList-TableSubType-Tbody-TableRow",
+      "entityTableRowTestId": "TableEquipmentList-TableEntity-Tbody-TableRow",
+      "selectButtonText": "Выбрать",
+      "addButtonText": "Добавить",
+      "cancelButtonText": "Отменить",
+      "selectedTableHeaderText": "Выбранный инструмент",
+      "minimumSelectedRows": 1
+    },
+    "functionalChecks": {
+      "tableRows": true,
+      "closeButton": false
+    }
+  },
+  "ToolFilterModal": {
+    "description": "Tool/instrument adding modal. Similar to EquipmentFilterModal, but table test ids are reused as PaginationTable, so validation uses table group order and the Switch tabs.",
+    "root": {
+      "testId": "Modal",
+      "hasTestId": "Switch"
+    },
+    "structure": [
+      {
+        "testId": "Modal-ModalContent"
+      },
+      {
+        "testId": "Switch"
+      }
+    ],
+    "content": {
+      "requiredTexts": [
+        "Добавление инструмента"
+      ]
+    },
+    "switch": {
+      "rootTestId": "Switch",
+      "items": [
+        {
+          "testId": "Switch-Item0",
+          "text": "Все"
+        },
+        {
+          "testId": "Switch-Item1",
+          "text": "Инструмент"
+        },
+        {
+          "testId": "Switch-Item2",
+          "text": "Оснастка"
+        },
+        {
+          "testId": "Switch-Item3",
+          "text": "Мерительный инструмент"
+        }
+      ],
+      "activeClass": "switch-yui-kit-active",
+      "validateTablesAfterEachClick": true
+    },
+    "tables": [
+      {
+        "name": "Tool type",
+        "wrapperTestId": "PaginationTable-Wrapper",
+        "wrapperIndex": 0,
+        "tableTestId": "PaginationTable",
+        "theadTestId": "PaginationTable-Thead",
+        "headerTestId": "PaginationTable-Thead-Title",
+        "headerText": "Тип (Инструмента или оснастки)",
+        "searchInputTestId": "PaginationTable-SearchInput-Dropdown-Input",
+        "searchPlaceholder": "Поиск по наименованию",
+        "tbodyTestId": "PaginationTable-Tbody",
+        "rowTestId": "PaginationTable-Tbody-TableRow",
+        "minimumRows": 1
+      },
+      {
+        "name": "Tool subtype",
+        "wrapperTestId": "PaginationTable-Wrapper",
+        "wrapperIndex": 1,
+        "tableTestId": "PaginationTable",
+        "theadTestId": "PaginationTable-Thead",
+        "headerTestId": "PaginationTable-Thead-Title",
+        "headerText": "Подтип",
+        "searchInputTestId": "PaginationTable-SearchInput-Dropdown-Input",
+        "searchPlaceholder": "Поиск по наименованию",
+        "tbodyTestId": "PaginationTable-Tbody",
+        "rowTestId": "PaginationTable-Tbody-TableRow",
+        "minimumRows": 1
+      },
+      {
+        "name": "Tool entity",
+        "wrapperTestId": "PaginationTable-Wrapper",
+        "wrapperIndex": 2,
+        "tableTestId": "PaginationTable",
+        "theadTestId": "PaginationTable-Thead",
+        "headerTestId": "PaginationTable-Thead-Title",
+        "headerText": "Наименование (Марка/Типоразмер)",
+        "searchInputTestId": "PaginationTable-SearchInput-Dropdown-Input",
+        "searchPlaceholder": "Поиск по наименованию",
+        "tbodyTestId": "PaginationTable-Tbody",
+        "rowTestId": "PaginationTable-Tbody-TableRow",
+        "minimumRows": 1
+      }
+    ],
+    "buttons": [
+      {
+        "name": "Select",
+        "testId": "Button",
+        "text": "Выбрать",
+        "expectedEnabled": false
+      },
+      {
+        "name": "Cancel",
+        "testId": "Button",
+        "text": "Отменить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Add",
+        "testId": "Button",
+        "text": "Добавить",
+        "expectedEnabled": true
+      }
+    ],
+    "selectionFlow": {
+      "tableWrapperTestId": "PaginationTable-Wrapper",
+      "typeTableRowTestId": "PaginationTable-Tbody-TableRow",
+      "typeTableIndex": 0,
+      "subTypeTableRowTestId": "PaginationTable-Tbody-TableRow",
+      "subTypeTableIndex": 1,
+      "entityTableRowTestId": "PaginationTable-Tbody-TableRow",
+      "entityTableIndex": 2,
+      "selectButtonText": "Выбрать",
+      "addButtonText": "Добавить",
+      "cancelButtonText": "Отменить",
+      "selectedTableHeaderText": "Выбранный инструмент",
+      "minimumSelectedRows": 1
+    },
+    "functionalChecks": {
+      "tableRows": true,
+      "switchTabs": true,
+      "closeButton": false
+    }
+  },
+  "AddOperationModal": {
+    "description": "Parent add-operation modal for a technological process. It validates operation type, main time, resource child pickers, save, and cancel.",
+    "root": {
+      "testIdSuffix": "ModalAddOperation-Modal"
+    },
+    "structure": [
+      {
+        "testIdSuffix": "ModalAddOperation-Modal-ModalContent"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-Modal-Content"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-Modal-Main"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-Modal-Bottom"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-ModalContent"
+      }
+    ],
+    "titles": [
+      {
+        "testIdSuffix": "ModalAddOperation-OperationTitle",
+        "text": "операции технологического процесса"
+      }
+    ],
+    "labels": [
+      {
+        "testIdSuffix": "ModalAddOperation-OperationTypeLabel",
+        "text": "Выбор типа операции:"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-PreTimeLabel",
+        "text": "Подготовительное время, н.м.:"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-HelperTimeLabel",
+        "text": "Вспомогательное время, н.м.:"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-MainTimeLabel",
+        "text": "Основное время, н.м.:"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-TotalTimeLabel",
+        "text": "Общее число время, м.:"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-EquipmentTitle",
+        "text": "Выбор оборудования"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-ToolsTitle",
+        "text": "Выбор инструмента"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-ResourcesTitle",
+        "text": "Выбор мерительного инструмента"
+      },
+      {
+        "testIdSuffix": "ModalAddOperation-DescriptionLabel",
+        "text": "Описание/Примечание"
+      }
+    ],
+    "filters": [
+      {
+        "name": "Тип операции",
+        "rootTestId": "BaseFilter",
+        "currentTestId": "BaseFilter-Current",
+        "titleTestId": "BaseFilter-Title",
+        "titleText": "Тип операции:",
+        "badgeTextTestId": "BaseFilter-Badge-BadgesText",
+        "optionsListTestId": "BaseFilter-OptionsList",
+        "searchInputTestId": "BaseFilter-Search-Dropdown-Input",
+        "optionTestIdPrefix": "BaseFilter-Options-",
+        "minimumOptions": 1,
+        "expectedOptions": [
+          "Заготовительная-резка ленточнопильная",
+          "Токарный-универсал",
+          "Токарный-ЧПУ",
+          "Фрезерный-универсал",
+          "Сварочная",
+          "Покраска",
+          "Упаковка"
+        ]
+      }
+    ],
+    "buttons": [
+      {
+        "name": "Add equipment",
+        "testId": "ModalTechProcess-ModalAddOperation-AddEquipmentBtn",
+        "text": "Добавить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Add tools",
+        "testId": "ModalTechProcess-ModalAddOperation-AddToolsBtn",
+        "text": "Добавить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Add tooling",
+        "testId": "ModalTechProcess-ModalAddOperation-AddToolingBtn",
+        "text": "Добавить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Add measuring tools",
+        "testId": "ModalTechProcess-ModalAddOperation-AddResourcesBtn",
+        "text": "Добавить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Cancel",
+        "testId": "ModalTechProcess-ModalAddOperation-CancelButton",
+        "text": "Отменить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Save",
+        "testId": "ModalTechProcess-ModalAddOperation-SaveButton",
+        "text": "Сохранить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Print",
+        "testId": "ModalTechProcess-ModalAddOperation-PrintButton",
+        "text": "Печать",
+        "expectedEnabled": true
+      }
+    ],
+    "content": {
+      "requiredTexts": [
+        "Выбор оборудования",
+        "Выбор инструмента",
+        "Выбор оснастки",
+        "Выбор мерительного инструмента"
+      ]
+    },
+    "addOperationFlow": {
+      "operationFilterCurrentTestId": "BaseFilter-Current",
+      "operationFilterBadgeTestId": "BaseFilter-Badge-BadgesText",
+      "operationFilterOptionPrefix": "BaseFilter-Options-",
+      "operationTitleTestId": "ModalTechProcess-ModalAddOperation-OperationTitle",
+      "preTimeDisplayTestId": "ModalTechProcess-ModalAddOperation-PreTimeDisplay",
+      "helperTimeDisplayTestId": "ModalTechProcess-ModalAddOperation-HelperTimeDisplay",
+      "mainTimeInputTestId": "ModalTechProcess-ModalAddOperation-MainTimeInput-Input",
+      "totalTimeDisplayTestId": "ModalTechProcess-ModalAddOperation-TotalTimeDisplay",
+      "saveButtonTestId": "ModalTechProcess-ModalAddOperation-SaveButton",
+      "cancelButtonTestId": "ModalTechProcess-ModalAddOperation-CancelButton",
+      "warningTitle": "Предупреждение",
+      "warningText": "Выберите тип операции",
+      "resources": [
+        {
+          "key": "equipment",
+          "addButtonTestId": "ModalTechProcess-ModalAddOperation-AddEquipmentBtn",
+          "childModalKey": "EquipmentFilterModal",
+          "parentTableTestId": "ModalTechProcess-ModalAddOperation-EquipmentTable",
+          "parentTableIndex": 0,
+          "parentTableHeaderText": "Выбранное оборудование"
+        },
+        {
+          "key": "tools",
+          "addButtonTestId": "ModalTechProcess-ModalAddOperation-AddToolsBtn",
+          "childModalKey": "ToolFilterModal",
+          "childSwitchText": "Все",
+          "parentTableTestId": "ModalTechProcess-ModalAddOperation-ToolsTable",
+          "parentTableHeaderText": "Выбранный инструмент"
+        },
+        {
+          "key": "tooling",
+          "addButtonTestId": "ModalTechProcess-ModalAddOperation-AddToolingBtn",
+          "childModalKey": "ToolFilterModal",
+          "childSwitchText": "Оснастка",
+          "parentTableTestId": "ModalTechProcess-ModalAddOperation-EquipmentTable",
+          "parentTableIndex": 1,
+          "parentTableHeaderText": "Выбранный оснастки"
+        },
+        {
+          "key": "measuringTools",
+          "addButtonTestId": "ModalTechProcess-ModalAddOperation-AddResourcesBtn",
+          "childModalKey": "ToolFilterModal",
+          "childSwitchText": "Мерительный инструмент",
+          "parentTableTestId": "ModalTechProcess-ModalAddOperation-ResourcesTable",
+          "parentTableHeaderText": "Выбранный мерительный инструмент"
+        }
+      ]
+    }
+  },
+  "TechProcessModal": {
+    "description": "Technical process dialog. It validates the note field, operation table actions, and delegates add/edit/archive/history dialogs to their reusable validators.",
+    "root": {
+      "testId": "ModalRight",
+      "hasTestId": "ModalTechProcess-Textarea"
+    },
+    "structure": [
+      {
+        "testId": "ModalRight-ModalContent"
+      },
+      {
+        "testId": "ModalRight-Content"
+      },
+      {
+        "testId": "ModalRight-Main"
+      },
+      {
+        "testId": "ModalTechProcess-Textarea"
+      }
+    ],
+    "titles": [
+      {
+        "testId": "ModalTechProcess-Textarea-Title",
+        "text": "Описание/Примечание"
+      }
+    ],
+    "required": [
+      {
+        "testId": "ModalTechProcess-Textarea-Textarea"
+      }
+    ],
+    "buttons": [
+      {
+        "name": "Add operation",
+        "testId": "ModalTechProcess-Buttons-ButtonCreate",
+        "expectedEnabled": true
+      },
+      {
+        "name": "History",
+        "testId": "ModalTechProcess-ButtonHistory",
+        "text": "История изменений",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Cancel",
+        "testId": "ModalTechProcess-Button-Cancel",
+        "text": "Отменить",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Save",
+        "testId": "ModalTechProcess-Button-Save",
+        "text": "Сохранить",
+        "expectedEnabled": true
+      }
+    ],
+    "techProcessFlow": {
+      "tableTestId": "ModalTechProcess-Table",
+      "textareaTestId": "ModalTechProcess-Textarea-Textarea",
+      "saveButtonTestId": "ModalTechProcess-Button-Save",
+      "cancelButtonTestId": "ModalTechProcess-Button-Cancel",
+      "historyButtonTestId": "ModalTechProcess-ButtonHistory",
+      "addOperationButtonTestId": "ModalTechProcess-Buttons-ButtonCreate",
+      "updateButtonTestId": "ModalTechProcess-Buttons-ButtonUpdate",
+      "mediaTitleText": "Медиа файлы",
+      "mediaTableHeaderTexts": [
+        "№",
+        "Файлы"
+      ],
+      "editButtonText": "Редактировать",
+      "archiveButtonText": "Архив",
+      "operationNameColumnIndex": 2,
+      "preTimeColumnIndex": 3,
+      "helperTimeColumnIndex": 4,
+      "mainTimeColumnIndex": 5,
+      "resourceColumnIndexes": {
+        "equipment": 6,
+        "tools": 7,
+        "tooling": 8,
+        "measuringTools": 9
+      }
+    }
+  },
+  "ShortInformationModal": {
+    "description": "Short information right-side modal. It validates selected row name/designation, can open full information in a new tab, and delegates technical process/history dialogs.",
+    "root": {
+      "testId": "ModalRight",
+      "hasTestId": "undefined-SectionInformation"
+    },
+    "structure": [
+      {
+        "testId": "ModalRight-ModalContent"
+      },
+      {
+        "testId": "ModalRight-Content"
+      },
+      {
+        "testId": "ModalRight-Main"
+      },
+      {
+        "testId": "undefined-SectionInformation"
+      }
+    ],
+    "titles": [
+      {
+        "testId": "undefined-SectionInformation-Heading",
+        "text": "Краткая информация"
+      },
+      {
+        "testId": "undefined-Characteristics-Title",
+        "text": "Характеристики"
+      },
+      {
+        "testId": "undefined-Description-Title",
+        "text": "Описание / Примечание"
+      }
+    ],
+    "labels": [
+      {
+        "testId": "undefined-InformationName-Title",
+        "text": "Наименование:"
+      },
+      {
+        "testId": "undefined-Designation-Title",
+        "text": "Обозначение:"
+      },
+      {
+        "testId": "undefined-discontinued-Title",
+        "text": "Снято с производства:"
+      },
+      {
+        "testId": "undefined-CharacteristicsMass-Title",
+        "text": "Масса (кг)"
+      },
+      {
+        "testId": "undefined-CharacteristicsMaterial-Title",
+        "text": "Материал"
+      },
+      {
+        "testId": "undefined-CharacteristicsMassZag-Title",
+        "text": "Масса заготовки (кг)"
+      },
+      {
+        "testId": "undefined-CharacteristicsZag-Title",
+        "text": "Характеристики заготовки"
+      }
+    ],
+    "required": [
+      {
+        "testId": "undefined-InformationName-Name"
+      },
+      {
+        "testId": "undefined-DesignationInformation-Title"
+      },
+      {
+        "testId": "undefined-Description-Textarea-Textarea"
+      },
+      {
+        "testId": "Checkbox"
+      }
+    ],
+    "buttons": [
+      {
+        "name": "Full information",
+        "testId": "undefined-Buttons-ShowFullInformationButton",
+        "text": "Полная информация",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Technical process",
+        "testId": "undefined-Buttons-createTechProcessButton",
+        "text": "Технологический процесс",
+        "expectedEnabled": true
+      },
+      {
+        "name": "History",
+        "testId": "undefined-HistoryButton",
+        "text": "История изменений",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Cost price",
+        "testId": "undefined-CostPrice",
+        "text": "Себестоимость",
+        "expectedEnabled": false
+      }
+    ],
+    "shortInformationFlow": {
+      "nameTestId": "undefined-InformationName-Name",
+      "designationTestId": "undefined-DesignationInformation-Title",
+      "massTestId": "undefined-CharacteristicsMass-Items",
+      "materialTestId": "undefined-CharacteristicsMaterial-Items",
+      "workpieceMassTestId": "undefined-CharacteristicsMassZag-Items",
+      "workpieceTableWrapperTestId": "undefined-CharacteristicsZag-TableWrapper",
+      "fullInformationButtonTestId": "undefined-Buttons-ShowFullInformationButton",
+      "techProcessButtonTestId": "undefined-Buttons-createTechProcessButton",
+      "externalLinkButtonTestId": "undefined-Buttons-Icon",
+      "historyButtonTestId": "undefined-HistoryButton",
+      "fullInfoRootTestId": "EditDetal",
+      "fullInfoNameInputSelector": "[data-testid=\"EditDetal-Information-Input\"] input",
+      "fullInfoDesignationInputTestId": "EditDetal-Designation-Input-Input",
+      "fullInfoMassInputTestId": "EditDetal-Characteristic-ZnachInput0-Input",
+      "fullInfoMaterialTestId": "EditDetal-CharacteristicBlanks-SelectedMaterialName-Text",
+      "fullInfoWorkpieceMassTestId": "EditDetal-CharacteristicBlanks-Tbody-Znach4",
+      "fullInfoWorkpieceLengthInputTestId": "EditDetal-CharacteristicBlanks-Tbody-InputNumber0-Input",
+      "fullInfoWorkpieceWidthInputTestId": "EditDetal-CharacteristicBlanks-Tbody-InputNumber1-Input",
+      "fullInfoWorkpieceHeightValueTestId": "EditDetal-CharacteristicBlanks-Tbody-Znach2"
+    }
+  },
+  "ArchiveConfirmModal": {
+    "description": "Reusable confirmation dialog for archive actions. The text includes the selected row/entity name dynamically.",
+    "root": {
+      "testId": "ModalConfirm"
+    },
+    "structure": [
+      {
+        "testId": "ModalConfirm-ModalContent"
+      },
+      {
+        "testId": "ModalConfirm-Content"
+      },
+      {
+        "testId": "ModalConfirm-Content-Main"
+      },
+      {
+        "testId": "ModalConfirm-Content-Buttons"
+      }
+    ],
+    "titles": [
+      {
+        "testId": "ModalConfirm-Content-Main-Title",
+        "text": "Архив"
+      }
+    ],
+    "labels": [
+      {
+        "testId": "ModalConfirm-Content-Text",
+        "text": "Вы уверены, что хотите перенести в архив",
+        "required": true,
+        "dynamic": true
+      }
+    ],
+    "buttons": [
+      {
+        "name": "No",
+        "testId": "ModalConfirm-Content-Buttons-No",
+        "text": "Нет",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Yes",
+        "testId": "ModalConfirm-Content-Buttons-Yes",
+        "text": "Да",
+        "expectedEnabled": true
+      }
+    ],
+    "confirmFlow": {
+      "titleTestId": "ModalConfirm-Content-Main-Title",
+      "textTestId": "ModalConfirm-Content-Text",
+      "yesButtonTestId": "ModalConfirm-Content-Buttons-Yes",
+      "noButtonTestId": "ModalConfirm-Content-Buttons-No",
+      "defaultTitleText": "Архив",
+      "defaultMessageText": "Вы уверены, что хотите перенести в архив"
+    }
+  },
+  "UnsavedChangesConfirmModal": {
+    "description": "Reusable confirmation dialog shown when closing a dialog with unapplied changes.",
+    "root": {
+      "testId": "ModalConfirm"
+    },
+    "structure": [
+      {
+        "testId": "ModalConfirm-ModalContent"
+      },
+      {
+        "testId": "ModalConfirm-Content"
+      },
+      {
+        "testId": "ModalConfirm-Content-Main"
+      },
+      {
+        "testId": "ModalConfirm-Content-Buttons"
+      }
+    ],
+    "labels": [
+      {
+        "testId": "ModalConfirm-Content-Text",
+        "text": "Изменения не будут применены, продолжить?",
+        "required": true
+      }
+    ],
+    "buttons": [
+      {
+        "name": "No",
+        "testId": "ModalConfirm-Content-Buttons-No",
+        "text": "Нет",
+        "expectedEnabled": true
+      },
+      {
+        "name": "Yes",
+        "testId": "ModalConfirm-Content-Buttons-Yes",
+        "text": "Да",
+        "expectedEnabled": true
+      }
+    ],
+    "confirmFlow": {
+      "textTestId": "ModalConfirm-Content-Text",
+      "yesButtonTestId": "ModalConfirm-Content-Buttons-Yes",
+      "noButtonTestId": "ModalConfirm-Content-Buttons-No",
+      "defaultMessageText": "Изменения не будут применены, продолжить?"
+    }
+  }
+}

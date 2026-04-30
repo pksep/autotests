@@ -3,6 +3,7 @@ import { ENV } from './config';
 import { testSuites, PARALLEL_SUITE_KEYS } from './testSuiteConfig';
 import { runSetup } from './setup';
 import logger from './lib/utils/logger';
+import { tagBrowserScript } from './lib/utils/scriptBadge';
 
 // Suppress allure-js-commons NoopTestRuntime warning (appears when using allure.step() with dynamic test registration)
 const ALLURE_NOOP_MESSAGE = 'no test runtime is found. Please check test framework configuration';
@@ -13,6 +14,28 @@ console.log = (...args: unknown[]) => {
 };
 
 type TestSuiteKeys = keyof typeof testSuites;
+type SuiteLoginCredentials = {
+  tabel: string;
+  username: string;
+  password: string;
+};
+
+function getSuiteLoginCredentials(suiteKey: string): SuiteLoginCredentials | undefined {
+  const prefix = `PARALLEL_${suiteKey}_`;
+  const tabel = process.env[`${prefix}LOGIN_TABEL`];
+  const username = process.env[`${prefix}LOGIN_USERNAME`];
+  const password = process.env[`${prefix}LOGIN_PASSWORD`];
+
+  if (!tabel && !username && !password) {
+    return undefined;
+  }
+
+  if (!tabel || !username || !password) {
+    throw new Error(`Incomplete login override for ${suiteKey}. Set ${prefix}LOGIN_TABEL, ${prefix}LOGIN_USERNAME, and ${prefix}LOGIN_PASSWORD.`);
+  }
+
+  return { tabel, username, password };
+}
 
 function registerSuite(suiteKey: TestSuiteKeys) {
   const suite = testSuites[suiteKey];
@@ -21,7 +44,10 @@ function registerSuite(suiteKey: TestSuiteKeys) {
     return;
   }
   test.describe.serial(`Test Suite: ${suiteKey} - ${suite.description}`, () => {
-    runSetup();
+    test.beforeEach(`Tag browser as ${suiteKey}`, async ({ page }) => {
+      await tagBrowserScript(page, suiteKey);
+    });
+    runSetup(getSuiteLoginCredentials(suiteKey));
     suite.tests.forEach(({ test: testFunc }) => {
       if (typeof testFunc === 'function') {
         try {

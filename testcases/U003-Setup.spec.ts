@@ -402,22 +402,22 @@ export const runU003_01_Setup = (_isSingleTest: boolean, _iterations: number) =>
       );
     });
 
-    await allure.step('Step 19: Enter urgency date', async () => {
-      await loadingTaskPage.selectCalendarDate(2025, 1, 23);
-      const urgencyDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY);
-      await urgencyDateDisplay.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
-      const actualDateText = (await urgencyDateDisplay.textContent())?.trim() || '';
-      await expectSoftWithScreenshot(
-        page,
-        () => {
-          expect.soft(actualDateText).toContain('2025');
-          expect.soft(actualDateText).toContain('23');
-        },
-        `Verify urgency date selected successfully: 23.01.2025 - actual: "${actualDateText}"`,
-        test.info(),
-      );
-      logger.log('Selected urgency date: 23.01.2025');
-    });
+//    await allure.step('Step 19: Enter urgency date', async () => {
+//      await loadingTaskPage.selectCalendarDate(2025, 1, 23);
+//      const urgencyDateDisplay = page.locator(SelectorsLoadingTasksPage.ADD_ORDER_DATE_BY_URGENCY_DISPLAY);
+//      await urgencyDateDisplay.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.STANDARD });
+//      const actualDateText = (await urgencyDateDisplay.textContent())?.trim() || '';
+//      await expectSoftWithScreenshot(
+//        page,
+//        () => {
+//          expect.soft(actualDateText).toContain('2025');
+//          expect.soft(actualDateText).toContain('23');
+//        },
+//        `Verify urgency date selected successfully: 23.01.2025 - actual: "${actualDateText}"`,
+//        test.info(),
+//      );
+//      logger.log('Selected urgency date: 23.01.2025');
+//    });
 
     await allure.step('Step 20: Enter shipment plan date', async () => {
       logger.log('Step 20: Enter shipment plan date - TODO');

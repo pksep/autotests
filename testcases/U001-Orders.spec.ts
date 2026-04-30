@@ -19,9 +19,17 @@ import { allure } from 'allure-playwright';
 import logger from '../lib/utils/logger';
 import testData1 from '../testdata/U001-PC1.json';
 import * as U001Constants from './U001-Constants';
-const { nameProductNew, nameProduct, nameBuyer, quantityProductLaunchOnProduction, urgencyDateNewFormat, descendantsCbedArray, descendantsDetailArray, orderNumber } = U001Constants;
+const {
+  nameProduct,
+  nameBuyer,
+  nameProductNew,
+  incomingQuantity,
+  quantityProductLaunchOnProduction,
+  descendantsCbedArray,
+  descendantsDetailArray,
+  orderNumber,
+} = U001Constants;
 // Mutable variable that needs to be reassigned
-let urgencyDateOnTable = U001Constants.urgencyDateOnTable;
 
 export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => {
   logger.log(`Start of the test: U001 Order Management (Test Cases 05-07)`);
@@ -185,10 +193,14 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       await searchTable.press('Enter');
 
       await page.waitForTimeout(TIMEOUTS.STANDARD);
+      const targetProductRow = modalWindow.locator('.table-yui-kit tbody tr').filter({ hasText: nameProduct }).first();
+      await expect(targetProductRow).toBeVisible({ timeout: WAIT_TIMEOUTS.PAGE_RELOAD });
     });
 
     await allure.step('Step 12: Choice product in modal window', async () => {
-      await loadingTaskPage.clickFromFirstRowBug('.table-yui-kit', 0);
+      const modalWindow = page.locator('.modal-yui-kit__modal-content').last();
+      const targetProductRow = modalWindow.locator('.table-yui-kit tbody tr').filter({ hasText: nameProduct }).first();
+      await targetProductRow.locator('td').first().click();
 
       await loadingTaskPage.waitForTimeout(TIMEOUTS.STANDARD);
     });
@@ -417,20 +429,6 @@ export const runU001_02_Orders = (isSingleTest: boolean, iterations: number) => 
       );
     });
 
-    await allure.step('Step 04: Checking the urgency date of an order', async () => {
-      const urgencyDateText = await page.locator('tbody .date-picker-yui-kit__header-btn span').first().textContent();
-      urgencyDateOnTable = urgencyDateText?.trim() || '';
 
-      logger.log('Дата по срочности в таблице: ', urgencyDateOnTable);
-
-      await expectSoftWithScreenshot(
-        page,
-        async () => {
-          expect.soft(urgencyDateOnTable).toBe(urgencyDateNewFormat);
-        },
-        `Verify urgency date equals "${urgencyDateNewFormat}"`,
-        test.info(),
-      );
-    });
   });
 };

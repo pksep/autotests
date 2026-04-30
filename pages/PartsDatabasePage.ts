@@ -361,9 +361,37 @@ export class CreatePartsDatabasePage extends PageObject {
    * @param archiveButtonTestId - The data-testid of the archive button (optional, defaults to standard archive button)
    * @param confirmModalTestId - The data-testid of the confirm modal (optional, defaults to standard confirm modal)
    * @param confirmButtonTestId - The data-testid of the confirm button (optional, defaults to standard confirm button)
+   * @param testInfo - When provided, cleanup assertions use expectSoftWithScreenshot (Rule 7.1).
    */
-  async cleanupTestDetail(page: Page, detailName: string, tableTestId: string, searchInputTestId?: string, archiveButtonTestId?: string, confirmModalTestId?: string, confirmButtonTestId?: string): Promise<void> {
-    return this.partsDatabaseHelper.cleanupTestDetail(page, detailName, tableTestId, searchInputTestId, archiveButtonTestId, confirmModalTestId, confirmButtonTestId);
+  async cleanupTestDetail(
+    page: Page,
+    detailName: string,
+    tableTestId: string,
+    searchInputTestId?: string,
+    archiveButtonTestId?: string,
+    confirmModalTestId?: string,
+    confirmButtonTestId?: string,
+    testInfo?: TestInfo,
+  ): Promise<void> {
+    return this.partsDatabaseHelper.cleanupTestDetail(
+      page,
+      detailName,
+      tableTestId,
+      searchInputTestId,
+      archiveButtonTestId,
+      confirmModalTestId,
+      confirmButtonTestId,
+      testInfo,
+    );
+  }
+
+  async getExactMatchRowCount(
+    page: Page,
+    detailName: string,
+    tableTestId: string,
+    searchInputTestId?: string,
+  ): Promise<number> {
+    return this.partsDatabaseHelper.getExactMatchRowCount(page, detailName, tableTestId, searchInputTestId);
   }
 
   /**
