@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 6.261612333
+  seconds: 8.336791038
   version: 0.60.0
   what: judges-summary
-  when: 2026-05-01 16:37:32.637853901 Z
+  when: 2026-05-01 17:39:43.856508229 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -20588,12 +20588,6 @@
   text: The average monthly turnover (1.0 developers) is increasing (R=1.00).
   what: assessment
   when: 2026-04-30 07:53:48.900382739 Z
-- _id: 1293
-  _job: 70015
-  _time: 2026-05-01 07:53:11.755198604 Z
-  _version: 0.19.10/0.60.2/0.17.11!0.17.17
-  what: learn-eva
-  when: 2026-05-01 07:53:11.748854451 Z
 - _id: 1295
   _job: 25210706027
   _time: 2026-05-01 10:11:10.909994960 Z
@@ -20618,12 +20612,18 @@
   text: The average monthly turnover (1.0 developers) is increasing (R=1.00).
   what: assessment
   when: 2026-05-01 10:11:41.864283915 Z
-- _id: 1297
-  _job: 25220678540
-  _time: 2026-05-01 15:37:47.281773117 Z
+- _id: 1298
+  _job: 70093
+  _time: 2026-05-01 16:38:23.543961306 Z
+  _version: 0.19.10/0.60.2/0.17.11!0.17.17
+  what: learn-eva
+  when: 2026-05-01 16:38:23.537474615 Z
+- _id: 1299
+  _job: 25225293697
+  _time: 2026-05-01 17:39:37.131038197 Z
   _version: 0.19.6/0.60.0/0.17.11
   earliest_issue_was_found: 1
-  events_were_scanned: 11294958710
+  events_were_scanned: 11300138065
   latest_issue_was_found: 529
   min_pull_was_found: 529
   repository: 935866864
