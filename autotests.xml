@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="352710">
+<fb version="0.19.6" size="352708">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">14.076179752</seconds>
+    <seconds t="F">6.207868871</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-05-02T10:32:59Z</when>
+    <when t="T">2026-05-02T11:29:51Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -22723,16 +22723,6 @@
     <when t="T">2026-04-30T07:53:19Z</when>
   </f>
   <f>
-    <_id t="I">1287</_id>
-    <_job t="I">69845</_job>
-    <_time t="T">2026-04-30T07:53:48Z</_time>
-    <_version t="S">0.19.9/0.60.2/0.17.11!0.17.17</_version>
-    <analyzers t="I">18</analyzers>
-    <text t="S">The average monthly turnover (1.0 developers) is increasing (R=1.00).</text>
-    <what t="S">assessment</what>
-    <when t="T">2026-04-30T07:53:48Z</when>
-  </f>
-  <f>
     <_id t="I">1295</_id>
     <_job t="I">25210706027</_job>
     <_time t="T">2026-05-01T10:11:10Z</_time>
@@ -22759,14 +22749,6 @@
     <text t="S">The average monthly turnover (1.0 developers) is increasing (R=1.00).</text>
     <what t="S">assessment</what>
     <when t="T">2026-05-01T10:11:41Z</when>
-  </f>
-  <f>
-    <_id t="I">1300</_id>
-    <_job t="I">70170</_job>
-    <_time t="T">2026-05-02T01:18:31Z</_time>
-    <_version t="S">0.19.10/0.60.2/0.17.11!0.17.17</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-05-02T01:18:31Z</when>
   </f>
   <f>
     <_id t="I">1301</_id>
@@ -22798,5 +22780,23 @@
     <total_stars t="I">0</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-05-02T10:32:49Z</when>
+  </f>
+  <f>
+    <_id t="I">1303</_id>
+    <_job t="I">70243</_job>
+    <_time t="T">2026-05-02T10:33:21Z</_time>
+    <_version t="S">0.19.10/0.60.2/0.17.11!0.17.17</_version>
+    <analyzers t="I">18</analyzers>
+    <text t="S">The average monthly turnover (1.0 developers) is increasing (R=1.00).</text>
+    <what t="S">assessment</what>
+    <when t="T">2026-05-02T10:33:21Z</when>
+  </f>
+  <f>
+    <_id t="I">1304</_id>
+    <_job t="I">70243</_job>
+    <_time t="T">2026-05-02T10:33:46Z</_time>
+    <_version t="S">0.19.10/0.60.2/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-05-02T10:33:46Z</when>
   </f>
 </fb>
