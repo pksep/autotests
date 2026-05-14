@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">12.315575114</seconds>
+    <seconds t="F">8.674828893</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-05-14T15:58:58Z</when>
+    <when t="T">2026-05-14T18:22:43Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23002,11 +23002,11 @@
   </f>
   <f>
     <_id t="I">1389</_id>
-    <_job t="I">25870380769</_job>
-    <_time t="T">2026-05-14T15:58:49Z</_time>
+    <_job t="I">25877548088</_job>
+    <_time t="T">2026-05-14T18:22:36Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">11854748378</events_were_scanned>
+    <events_were_scanned t="I">11862046216</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
