@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 9.913131232
+  seconds: 14.491433431
   version: 0.60.0
   what: judges-summary
-  when: 2026-05-27 06:01:38.540627425 Z
+  when: 2026-05-27 10:42:21.555561782 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -21195,18 +21195,18 @@
   some_unmerged_pulls: 0
   what: quality-of-service
   when: 2026-05-26 16:30:55.000000000 Z
-- _id: 1474
-  _job: 73912
-  _time: 2026-05-26 19:08:48.665297443 Z
+- _id: 1476
+  _job: 74086
+  _time: 2026-05-27 09:44:21.075065389 Z
   _version: 0.19.10/0.60.3/0.17.11!0.17.17
   what: learn-eva
-  when: 2026-05-26 19:08:48.657998989 Z
-- _id: 1475
-  _job: 26493773984
-  _time: 2026-05-27 06:01:31.436353135 Z
+  when: 2026-05-27 09:44:21.068561398 Z
+- _id: 1477
+  _job: 26506256465
+  _time: 2026-05-27 10:42:10.966678765 Z
   _version: 0.19.6/0.60.0/0.17.11
   earliest_issue_was_found: 1
-  events_were_scanned: 12412956529
+  events_were_scanned: 12420446200
   latest_issue_was_found: 529
   min_pull_was_found: 529
   repository: 935866864
