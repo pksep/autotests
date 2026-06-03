@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="361243">
+<fb version="0.19.6" size="361500">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">11.541406656</seconds>
+    <seconds t="F">13.080169331</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-03T20:41:53Z</when>
+    <when t="T">2026-06-03T22:54:19Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23532,20 +23532,36 @@
     <when t="T">2026-06-03T02:13:04Z</when>
   </f>
   <f>
-    <_id t="I">1522</_id>
-    <_job t="I">75392</_job>
-    <_time t="T">2026-06-03T12:26:10Z</_time>
-    <_version t="S">0.19.11/0.60.3/0.17.11</_version>
+    <_id t="I">1524</_id>
+    <_job t="I">75474</_job>
+    <_time t="T">2026-06-03T21:24:27Z</_time>
+    <_version t="S">0.19.11/0.60.3/0.17.11!0.17.17</_version>
     <what t="S">learn-eva</what>
-    <when t="T">2026-06-03T12:26:10Z</when>
+    <when t="T">2026-06-03T21:24:27Z</when>
   </f>
   <f>
-    <_id t="I">1523</_id>
-    <_job t="I">26911686117</_job>
-    <_time t="T">2026-06-03T20:41:45Z</_time>
+    <_id t="I">1525</_id>
+    <_job t="I">75474</_job>
+    <_time t="T">2026-06-03T21:24:27Z</_time>
+    <_version t="S">0.19.11/0.60.3/0.17.11!0.17.17</_version>
+    <ac t="I">0</ac>
+    <cost_of_qod t="F">1.9315644926289746</cost_of_qod>
+    <ev t="I">0</ev>
+    <pv t="I">3730</pv>
+    <qod t="I">0</qod>
+    <qod_per_day t="F">18.13402373959668</qod_per_day>
+    <qod_per_sec t="F">0.0</qod_per_sec>
+    <start t="T">2026-02-17T09:19:57Z</start>
+    <what t="S">earned-value</what>
+    <when t="T">2026-06-03T21:24:27Z</when>
+  </f>
+  <f>
+    <_id t="I">1526</_id>
+    <_job t="I">26918098032</_job>
+    <_time t="T">2026-06-03T22:54:10Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">12779044733</events_were_scanned>
+    <events_were_scanned t="I">12788074888</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
