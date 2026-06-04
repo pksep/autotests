@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="361732">
+<fb version="0.19.6" size="361730">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">17.796322733</seconds>
+    <seconds t="F">13.514569198</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-04T07:10:28Z</when>
+    <when t="T">2026-06-04T10:51:04Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23532,14 +23532,6 @@
     <when t="T">2026-06-03T02:13:04Z</when>
   </f>
   <f>
-    <_id t="I">1524</_id>
-    <_job t="I">75474</_job>
-    <_time t="T">2026-06-03T21:24:27Z</_time>
-    <_version t="S">0.19.11/0.60.3/0.17.11!0.17.17</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-06-03T21:24:27Z</when>
-  </f>
-  <f>
     <_id t="I">1525</_id>
     <_job t="I">75474</_job>
     <_time t="T">2026-06-03T21:24:27Z</_time>
@@ -23554,19 +23546,6 @@
     <start t="T">2026-02-17T09:19:57Z</start>
     <what t="S">earned-value</what>
     <when t="T">2026-06-03T21:24:27Z</when>
-  </f>
-  <f>
-    <_id t="I">1526</_id>
-    <_job t="I">26936622570</_job>
-    <_time t="T">2026-06-04T07:10:13Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">12798165725</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
   </f>
   <f>
     <_id t="I">1527</_id>
@@ -23585,5 +23564,26 @@
     <total_stars t="I">0</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-06-04T07:10:16Z</when>
+  </f>
+  <f>
+    <_id t="I">1528</_id>
+    <_job t="I">75570</_job>
+    <_time t="T">2026-06-04T07:11:53Z</_time>
+    <_version t="S">0.19.11/0.60.3/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-06-04T07:11:53Z</when>
+  </f>
+  <f>
+    <_id t="I">1529</_id>
+    <_job t="I">26947139134</_job>
+    <_time t="T">2026-06-04T10:50:53Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">12807455973</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
