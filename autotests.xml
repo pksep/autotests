@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">12.556923598</seconds>
+    <seconds t="F">10.322901698</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-06T14:20:12Z</when>
+    <when t="T">2026-06-06T15:55:49Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23584,20 +23584,20 @@
     <when t="T">2026-06-05T19:23:13Z</when>
   </f>
   <f>
-    <_id t="I">1537</_id>
-    <_job t="I">75970</_job>
-    <_time t="T">2026-06-06T05:40:48Z</_time>
+    <_id t="I">1539</_id>
+    <_job t="I">76048</_job>
+    <_time t="T">2026-06-06T15:05:35Z</_time>
     <_version t="S">0.19.11/0.60.3/0.17.11!0.17.17</_version>
     <what t="S">learn-eva</what>
-    <when t="T">2026-06-06T05:40:48Z</when>
+    <when t="T">2026-06-06T15:05:35Z</when>
   </f>
   <f>
-    <_id t="I">1538</_id>
-    <_job t="I">27064692554</_job>
-    <_time t="T">2026-06-06T14:20:02Z</_time>
+    <_id t="I">1540</_id>
+    <_job t="I">27066872640</_job>
+    <_time t="T">2026-06-06T15:55:41Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">12915948250</events_were_scanned>
+    <events_were_scanned t="I">12919421685</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
