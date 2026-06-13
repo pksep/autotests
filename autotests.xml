@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">15.349222885</seconds>
+    <seconds t="F">12.188805496</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-13T18:56:20Z</when>
+    <when t="T">2026-06-13T20:52:19Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23700,19 +23700,6 @@
     <when t="T">2026-06-13T14:58:36Z</when>
   </f>
   <f>
-    <_id t="I">1582</_id>
-    <_job t="I">27475959223</_job>
-    <_time t="T">2026-06-13T18:56:07Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">13277349412</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">1583</_id>
     <_job t="I">27475959223</_job>
     <_time t="T">2026-06-13T18:56:10Z</_time>
@@ -23729,5 +23716,18 @@
     <total_stars t="I">1</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-06-13T18:56:10Z</when>
+  </f>
+  <f>
+    <_id t="I">1584</_id>
+    <_job t="I">27478747544</_job>
+    <_time t="T">2026-06-13T20:52:10Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">13280323240</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
