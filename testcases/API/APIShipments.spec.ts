@@ -42,13 +42,17 @@ export const runShipmentsAPI = () => {
     await test.step('Test 2: Create shipment with SQL injection in tracking number', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         trackingNumber: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         status: API_CONST.API_TEST_SHIPMENT_STATUS,
         destination: API_CONST.API_TEST_SHIPMENT_DESTINATION,
       };
 
-      const sqlInjectionResponse = await shipmentsAPI.createShipment(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await shipmentsAPI.createShipment(request, sqlInjectionData, token);
 
       // API PROBLEM: If this returns 201, there's a SQL injection vulnerability
       expect.soft(sqlInjectionResponse.status).toBe(400);
@@ -68,13 +72,17 @@ export const runShipmentsAPI = () => {
     await test.step('Test 3: Create shipment with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         trackingNumber: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         status: API_CONST.API_TEST_SHIPMENT_STATUS,
         destination: API_CONST.API_TEST_SHIPMENT_DESTINATION,
       };
 
-      const xssResponse = await shipmentsAPI.createShipment(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await shipmentsAPI.createShipment(request, xssData, token);
 
       // API PROBLEM: If this returns 201, XSS protection is missing
       expect.soft(xssResponse.status).toBe(400);
@@ -131,7 +139,7 @@ export const runShipmentsAPI = () => {
         destination: API_CONST.API_TEST_SHIPMENT_DESTINATION,
       };
 
-      const invalidCreateResponse = await shipmentsAPI.createShipment(request, invalidData, API_CONST.API_TEST_USER_ID);
+      const invalidCreateResponse = await shipmentsAPI.createShipment(request, invalidData, authToken);
 
       // API PROBLEM: If this returns 201, data validation is missing
       expect.soft(invalidCreateResponse.status).toBe(400);
@@ -157,7 +165,7 @@ export const runShipmentsAPI = () => {
         destination: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
       };
 
-      const emptyCreateResponse = await shipmentsAPI.createShipment(request, emptyData, API_CONST.API_TEST_USER_ID);
+      const emptyCreateResponse = await shipmentsAPI.createShipment(request, emptyData, authToken);
 
       // API PROBLEM: If this returns 201, required field validation is missing
       expect.soft(emptyCreateResponse.status).toBe(400);
@@ -202,7 +210,7 @@ export const runShipmentsAPI = () => {
       };
 
       const startTime = Date.now();
-      const performanceCreateResponse = await shipmentsAPI.createShipment(request, shipmentData, API_CONST.API_TEST_USER_ID);
+      const performanceCreateResponse = await shipmentsAPI.createShipment(request, shipmentData, authToken);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -223,7 +231,7 @@ export const runShipmentsAPI = () => {
 
       const promises = Array(5)
         .fill(null)
-        .map(() => shipmentsAPI.createShipment(request, shipmentData, API_CONST.API_TEST_USER_ID));
+        .map(() => shipmentsAPI.createShipment(request, shipmentData, authToken));
       const responses = await Promise.all(promises);
 
       // API PROBLEM: If any operation fails, there's a concurrency issue

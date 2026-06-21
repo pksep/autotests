@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 import { SELECTORS } from "../config";
 import { TIMEOUTS, WAIT_TIMEOUTS } from "../lib/Constants/TimeoutConstants";
 import logger from "../lib/utils/logger";

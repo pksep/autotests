@@ -32,7 +32,7 @@ export class CBEDAPI extends APIPageObject {
   async updateCBED(request: APIRequestContext, cbedData: any, userId: string) {
     logger.info(`Updating CBED with data:`, cbedData);
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/cbed', {
+    const response = await request.post(ENV.API_BASE_URL + 'api/cbed/update', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
@@ -53,9 +53,15 @@ export class CBEDAPI extends APIPageObject {
   async attachFileToCBED(request: APIRequestContext, cbedId: number, fileId: number, userId: string) {
     logger.info(`Attaching file ${fileId} to CBED ${cbedId}`);
 
-    const response = await request.post(ENV.API_BASE_URL + `api/cbed/files/${cbedId}/${fileId}`, {
+    const response = await request.put(ENV.API_BASE_URL + 'api/documents/attach-to-entity', {
       headers: {
+        'Content-Type': 'application/json',
         'user-id': userId,
+      },
+      data: {
+        idEntity: cbedId,
+        idDocument: fileId,
+        typeEntity: 'cbed',
       },
     });
 
@@ -92,7 +98,12 @@ export class CBEDAPI extends APIPageObject {
   async getOneCBED(request: APIRequestContext, id: number) {
     logger.info(`Getting CBED by id: ${id}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/cbed/${id}`);
+    const response = await request.post(ENV.API_BASE_URL + 'api/cbed/one', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: { id },
+    });
 
     let responseData: any;
     try {
@@ -112,7 +123,7 @@ export class CBEDAPI extends APIPageObject {
   async getOneCBEDSpecification(request: APIRequestContext, id: number, isFull: boolean) {
     logger.info(`Getting CBED specification by id: ${id}, isFull: ${isFull}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/cbed/one/spetification/${id}/${isFull}`);
+    const response = await request.get(ENV.API_BASE_URL + `api/cbed/one/spetification/${isFull}/${id}`);
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -147,7 +158,7 @@ export class CBEDAPI extends APIPageObject {
   async getTechByCBEDId(request: APIRequestContext, id: number) {
     logger.info(`Getting tech process by CBED id: ${id}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/cbed/tech_by_id_cbed/${id}`);
+    const response = await request.get(ENV.API_BASE_URL + `api/cbed/tech-process/${id}`);
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -168,7 +179,16 @@ export class CBEDAPI extends APIPageObject {
     if (pageSize !== undefined) params.append('pageSize', String(pageSize));
     const query = params.toString();
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/cbed/list' + (query ? '?' + query : ''));
+    const response = await request.post(ENV.API_BASE_URL + 'api/cbed/pagination', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: {
+        isFull: full,
+        page: page ?? 1,
+        limit: pageSize ?? 10,
+      },
+    });
 
     let responseData: any;
     try {
@@ -203,11 +223,14 @@ export class CBEDAPI extends APIPageObject {
   async removeDocumentCBED(request: APIRequestContext, documentData: any) {
     logger.info(`Removing document from CBED:`, documentData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/cbed/removedocument', {
+    const response = await request.put(ENV.API_BASE_URL + 'api/documents/unpin-documents', {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: documentData,
+      data: {
+        typeEntity: 'cbed',
+        ...documentData,
+      },
     });
 
     if (response.ok()) {

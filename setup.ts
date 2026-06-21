@@ -11,7 +11,7 @@ type LoginCredentials = {
 
 export function runSetup(credentials: LoginCredentials = LOGIN_TEST_CONFIG.TEST_CREDENTIALS) {
   // ✅ Use function declaration instead of arrow function
-  test.beforeEach('Test Case 00 - Authorization', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     // Skip web UI setup for API tests
     if (ENV.TEST_SUITE.includes('api')) {
       return;

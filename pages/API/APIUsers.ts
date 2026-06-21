@@ -8,13 +8,12 @@ export class UsersAPI extends APIPageObject {
     super(page);
   }
 
-  async createUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
+  async createUser(request: APIRequestContext, userData: any, _userId: string, authToken?: string) {
     logger.info(`Creating user with data:`, userData);
 
     const headers = {
-      'user-id': userId,
       compress: 'no-compress',
-      ...(authToken && { authorization: authToken }),
+      ...this.authHeaders(authToken),
     };
 
     logger.log(`🔍 Creating user with headers:`, headers);
@@ -36,13 +35,12 @@ export class UsersAPI extends APIPageObject {
     return { status: response.status(), data: responseData };
   }
 
-  async updateUser(request: APIRequestContext, userData: any, userId: string, authToken?: string) {
+  async updateUser(request: APIRequestContext, userData: any, _userId: string, authToken?: string) {
     logger.info(`Updating user with data:`, userData);
 
     const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/update', userData, {
-      'user-id': userId,
       compress: 'no-compress',
-      ...(authToken && { authorization: authToken }),
+      ...this.authHeaders(authToken),
     });
 
     const responseData = await response.json();
@@ -146,7 +144,7 @@ export class UsersAPI extends APIPageObject {
   async getArchivedUsers(request: APIRequestContext, archiveData: any) {
     logger.info(`Getting archived users:`, archiveData);
 
-    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/archive', archiveData, {
+    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/archive/', archiveData, {
       compress: 'no-compress',
     });
 
@@ -172,7 +170,7 @@ export class UsersAPI extends APIPageObject {
 
     const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/role', roleData, {
       compress: 'no-compress',
-      ...(authToken && { authorization: authToken }),
+      ...this.authHeaders(authToken),
     });
 
     let responseData;
@@ -197,7 +195,7 @@ export class UsersAPI extends APIPageObject {
 
     const headers = {
       compress: 'no-compress',
-      ...(authToken && { authorization: authToken }),
+      ...this.authHeaders(authToken),
     };
 
     const response = await request.get(ENV.API_BASE_URL + `api/users/role/${roleId}`, {
@@ -230,7 +228,7 @@ export class UsersAPI extends APIPageObject {
       {},
       {
         compress: 'no-compress',
-        ...(authToken && { authorization: authToken }),
+        ...this.authHeaders(authToken),
       },
     );
 
@@ -258,7 +256,7 @@ export class UsersAPI extends APIPageObject {
       headers: {
         'Content-Type': 'application/json',
         compress: 'no-compress',
-        ...(authToken && { authorization: authToken }),
+        ...this.authHeaders(authToken),
       },
       data: banData,
     });
@@ -286,12 +284,11 @@ export class UsersAPI extends APIPageObject {
     const headers: Record<string, string> = {
       compress: 'no-compress',
     };
-    if (authToken) {
-      headers['authorization'] = authToken;
-    }
+    Object.assign(headers, this.authHeaders(authToken));
 
-    const response = await request.delete(ENV.API_BASE_URL + `api/users/${userId}`, {
+    const response = await request.delete(ENV.API_BASE_URL + 'api/users/ban', {
       headers,
+      data: { id: Number(userId) },
     });
 
     let responseData: any;
@@ -316,11 +313,15 @@ export class UsersAPI extends APIPageObject {
 
     const headers = {
       compress: 'no-compress',
-      ...(authToken && { authorization: authToken }),
+      ...this.authHeaders(authToken),
     };
 
-    const response = await request.get(ENV.API_BASE_URL + `api/users/${userId}`, {
-      headers: headers,
+    const response = await request.post(ENV.API_BASE_URL + 'api/users/one', {
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json',
+      },
+      data: { id: Number(userId) },
     });
 
     let responseData;
@@ -345,7 +346,7 @@ export class UsersAPI extends APIPageObject {
 
     const headers = {
       compress: 'no-compress',
-      ...(authToken && { authorization: authToken }),
+      ...this.authHeaders(authToken),
     };
 
     const response = await request.delete(ENV.API_BASE_URL + `api/users/files/${userToUpdateId}/${fileId}`, {
@@ -374,7 +375,7 @@ export class UsersAPI extends APIPageObject {
 
     const headers = {
       compress: 'no-compress',
-      ...(authToken && { authorization: authToken }),
+      ...this.authHeaders(authToken),
     };
 
     const response = await request.get(ENV.API_BASE_URL + `api/users/by-type-operation/${typeOperationId}`, {

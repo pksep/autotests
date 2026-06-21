@@ -2,159 +2,110 @@ import { APIRequestContext, Page } from '@playwright/test';
 import { APIPageObject } from '../../lib/APIPage';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
+// External shared types aren't always available in the test project workspace.
+// Use a permissive local alias to avoid build errors while keeping typing useful.
+type CreateInventaryDtoType = Record<string, unknown>;
 
+/** `api/inventary/*` — Nest `InventaryController` on sep_erp_server. */
 export class InventoryAPI extends APIPageObject {
   constructor(page: Page) {
     super(page);
   }
 
-  async createInventoryType(request: APIRequestContext, typeData: any, userId: string) {
-    logger.info(`Creating inventory type with data:`, typeData);
+  private base = () => ENV.API_BASE_URL + 'api/inventary';
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/inventory/type', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
+  async createInventoryType(request: APIRequestContext, typeData: { name: string }, accessToken?: string) {
+    logger.info(`Creating inventary type:`, typeData);
+    const response = await request.post(this.base() + '/', {
+      headers: { ...this.authHeaders(accessToken), 'Content-Type': 'application/json', compress: 'no-compress' },
       data: typeData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Inventory type created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create inventory type, status: ${response.status()}`);
-      throw new Error(`Failed to create inventory type with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) logger.error(`createInventoryType failed: ${response.status()}`);
+    else logger.info(`Inventary type created`);
+    return { status: response.status(), data };
   }
 
-  async updateInventoryType(request: APIRequestContext, typeData: any, userId: string) {
-    logger.info(`Updating inventory type with data:`, typeData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/inventory/type/update', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
+  async updateInventoryType(request: APIRequestContext, typeData: any, accessToken?: string) {
+    logger.info(`Updating inventary type:`, typeData);
+    const response = await request.put(this.base() + '/', {
+      headers: { ...this.authHeaders(accessToken), 'Content-Type': 'application/json', compress: 'no-compress' },
       data: typeData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Inventory type updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update inventory type, status: ${response.status()}`);
-      throw new Error(`Failed to update inventory type with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) logger.error(`updateInventoryType failed: ${response.status()}`);
+    else logger.info(`Inventary type updated`);
+    return { status: response.status(), data };
   }
 
-  async createInventory(request: APIRequestContext, inventoryData: any, userId: string) {
-    logger.info(`Creating inventory with data:`, inventoryData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/inventory/inventory', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: inventoryData,
+  /**
+   * Creates inventary item (POST `name/`). Server expects multipart + CreateInventaryDto fields.
+   * @param accessToken JWT from login, or `invalid_user` / omit for no Authorization header.
+   */
+  async createInventory(request: APIRequestContext, inventoryData: CreateInventaryDtoType, accessToken?: string) {
+    logger.info(`Creating inventary item:`, inventoryData);
+    const response = await request.post(this.base() + '/name/', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+      multipart: this.toMultipartFields(inventoryData as Record<string, unknown>),
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Inventory created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create inventory, status: ${response.status()}`);
-      throw new Error(`Failed to create inventory with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) logger.error(`createInventory failed: ${response.status()}`);
+    else logger.info(`Inventary item created`);
+    return { status: response.status(), data };
   }
 
-  async getOneInventory(request: APIRequestContext, id: number) {
-    logger.info(`Getting inventory by ID: ${id}`);
-
-    const response = await request.get(ENV.API_BASE_URL + `api/inventory/inventory/${id}`);
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved inventory by ID`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get inventory by ID, status: ${response.status()}`);
-      throw new Error(`Failed to get inventory by ID with status: ${response.status()}`);
-    }
-  }
-
-  async updateInventory(request: APIRequestContext, inventoryData: any, userId: string) {
-    logger.info(`Updating inventory with data:`, inventoryData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/inventory/inventory/update', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: inventoryData,
+  async getOneInventory(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting inventary by id: ${id}`);
+    const response = await request.get(this.base() + `/name/${id}`, {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Inventory updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update inventory, status: ${response.status()}`);
-      throw new Error(`Failed to update inventory with status: ${response.status()}`);
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`getOneInventory failed: ${response.status()}`);
+      throw new Error(`getOneInventory failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
   }
 
-  async removeFileInventory(request: APIRequestContext, id: number) {
-    logger.info(`Removing file from inventory with ID: ${id}`);
-
-    const response = await request.delete(ENV.API_BASE_URL + `api/inventory/file/${id}`);
-
-    if (response.ok()) {
-      const responseText = await response.text();
-      const responseData = responseText ? JSON.parse(responseText) : { message: 'File removed from inventory successfully' };
-      logger.info(`File removed from inventory successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to remove file from inventory, status: ${response.status()}`);
-      throw new Error(`Failed to remove file from inventory with status: ${response.status()}`);
-    }
-  }
-
-  async banInventory(request: APIRequestContext, id: number, userId: string) {
-    logger.info(`Banning inventory with ID: ${id}`);
-
-    const response = await request.delete(ENV.API_BASE_URL + `api/inventory/ban/${id}`, {
-      headers: {
-        'user-id': userId,
-      },
+  async updateInventory(request: APIRequestContext, inventoryData: CreateInventaryDtoType, accessToken?: string) {
+    logger.info(`Updating inventary item:`, inventoryData);
+    const response = await request.put(this.base() + '/name/', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+      multipart: this.toMultipartFields(inventoryData as Record<string, unknown>),
     });
-
-    if (response.ok()) {
-      const responseText = await response.text();
-      const responseData = responseText ? JSON.parse(responseText) : { message: 'Inventory banned successfully' };
-      logger.info(`Inventory banned successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to ban inventory, status: ${response.status()}`);
-      throw new Error(`Failed to ban inventory with status: ${response.status()}`);
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`updateInventory failed: ${response.status()}`);
+      throw new Error(`updateInventory failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
   }
 
-  async getAllInventory(request: APIRequestContext, light: boolean) {
-    logger.info(`Getting all inventory, light: ${light}`);
-
-    const response = await request.get(ENV.API_BASE_URL + `api/inventory/inventory/all/${light}`);
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved all inventory`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get all inventory, status: ${response.status()}`);
-      throw new Error(`Failed to get all inventory with status: ${response.status()}`);
+  /** Deletes inventary item (server: DELETE `name/:id`). */
+  async banInventory(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Deleting inventary id: ${id}`);
+    const response = await request.delete(this.base() + `/name/${id}`, {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`banInventory failed: ${response.status()}`);
+      throw new Error(`banInventory failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
+  }
+
+  async getAllInventory(request: APIRequestContext, accessToken?: string) {
+    logger.info(`Getting all inventary items`);
+    const response = await request.get(this.base() + '/name/', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`getAllInventory failed: ${response.status()}`);
+      throw new Error(`getAllInventory failed: ${response.status()}`);
+    }
+    return { status: response.status(), data };
   }
 }
+

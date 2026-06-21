@@ -42,7 +42,7 @@ export const runOrdersAPI = () => {
         role: 'customer',
       };
 
-      const userResponse = await usersAPI.createUser(request, userData, API_CONST.API_TEST_USER_ID);
+      const userResponse = await usersAPI.createUser(request, userData, '', authToken);
 
       expect.soft(userResponse.status).toBe(201);
       expect.soft(userResponse.data).toHaveProperty('id');
@@ -61,7 +61,7 @@ export const runOrdersAPI = () => {
         price: 50.0,
       };
 
-      const productResponse = await productsAPI.createProduct(request, productData, API_CONST.API_TEST_USER_ID);
+      const productResponse = await productsAPI.createProduct(request, productData, authToken);
 
       expect.soft(productResponse.status).toBe(201);
       expect.soft(productResponse.data).toHaveProperty('id');
@@ -86,7 +86,7 @@ export const runOrdersAPI = () => {
         notes: 'Test order',
       };
 
-      const createResponse = await ordersAPI.createOrder(request, orderData, API_CONST.API_TEST_USER_ID);
+      const createResponse = await ordersAPI.createOrder(request, orderData, authToken);
 
       expect.soft(createResponse.status).toBe(201);
       expect.soft(createResponse.data).toHaveProperty('id');
@@ -126,7 +126,7 @@ export const runOrdersAPI = () => {
         price: 50.0,
       };
 
-      const addItemResponse = await ordersAPI.addOrderItem(request, createdOrderId, itemData, API_CONST.API_TEST_USER_ID);
+      const addItemResponse = await ordersAPI.addOrderItem(request, createdOrderId, itemData, authToken);
 
       expect.soft(addItemResponse.status).toBe(201);
       expect.soft(addItemResponse.data).toHaveProperty('id');
@@ -136,7 +136,7 @@ export const runOrdersAPI = () => {
     await allure.step('Step 8: Update Order Status', async () => {
       logger.log('Step 8: Update Order Status');
 
-      const statusResponse = await ordersAPI.updateOrderStatus(request, createdOrderId, 'confirmed', API_CONST.API_TEST_USER_ID);
+      const statusResponse = await ordersAPI.updateOrderStatus(request, createdOrderId, 'confirmed', authToken);
 
       expect.soft(statusResponse.status).toBe(200);
       expect.soft(statusResponse.data.status).toBe('confirmed');
@@ -154,7 +154,7 @@ export const runOrdersAPI = () => {
         notes: 'Updated test order',
       };
 
-      const updateResponse = await ordersAPI.updateOrder(request, updateData, API_CONST.API_TEST_USER_ID);
+      const updateResponse = await ordersAPI.updateOrder(request, updateData, authToken);
 
       expect.soft(updateResponse.status).toBe(200);
       expect.soft(updateResponse.data.status).toBe('processing');
@@ -174,7 +174,7 @@ export const runOrdersAPI = () => {
     await allure.step('Step 11: Delete Order', async () => {
       logger.log('Step 11: Delete Order');
 
-      const deleteResponse = await ordersAPI.deleteOrder(request, createdOrderId, API_CONST.API_TEST_USER_ID);
+      const deleteResponse = await ordersAPI.deleteOrder(request, createdOrderId, authToken);
 
       expect.soft(deleteResponse.status).toBe(204);
       logger.log('Order deleted successfully');
@@ -183,7 +183,7 @@ export const runOrdersAPI = () => {
     await allure.step('Step 12: Cleanup - Delete Product', async () => {
       logger.log('Step 12: Cleanup - Delete Product');
 
-      const deleteProductResponse = await productsAPI.deleteProduct(request, createdProductId, API_CONST.API_TEST_USER_ID);
+      const deleteProductResponse = await productsAPI.deleteProduct(request, createdProductId, authToken);
 
       expect.soft(deleteProductResponse.status).toBe(204);
       logger.log('Product deleted successfully');

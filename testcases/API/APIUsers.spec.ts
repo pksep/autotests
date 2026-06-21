@@ -9,7 +9,7 @@ import logger from '../../lib/utils/logger';
 export const runUsersAPI = () => {
   logger.info(`Starting Users API defensive tests - looking for API problems`);
 
-  test('Users API - Security & Authentication Tests', async ({ request }) => {
+  test('Users API - Security & Authentication Tests', async ({ request, page }) => {
     test.setTimeout(60000);
     const usersAPI = new UsersAPI(null as any);
     const authAPI = new AuthAPI(null as any);
@@ -56,19 +56,23 @@ export const runUsersAPI = () => {
     await test.step('Test 2: Create user with SQL injection in initials', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         initials: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         tabel: API_CONST.API_TEST_USER_TABEL,
       };
 
-      const sqlInjectionResponse = await usersAPI.createUser(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await usersAPI.createUser(request, sqlInjectionData, '', token);
 
-      // API ANALYSIS: SQL injection should be blocked
-      const expectedStatus = 401;
+      // API ANALYSIS: SQL injection should be blocked (401 without auth, 400/422 with auth)
+      const acceptableBlockStatuses = [401, 400, 422];
       const actualStatus = sqlInjectionResponse.status;
 
-      if (actualStatus === expectedStatus) {
-        logger.log('✅ SQL injection attempt correctly blocked with 401');
+      if (acceptableBlockStatuses.includes(actualStatus)) {
+        logger.log(`✅ SQL injection attempt correctly blocked with ${actualStatus}`);
         testsPassed++;
       } else if (actualStatus === 201) {
         logger.log('🚨 CRITICAL SECURITY VULNERABILITY: SQL injection successful!');
@@ -76,7 +80,7 @@ export const runUsersAPI = () => {
         securityIssuesFound++;
         testsFailed++;
       } else {
-        logger.log(`❌ SECURITY ISSUE: SQL injection returned ${actualStatus}, expected ${expectedStatus}`);
+        logger.log(`❌ SECURITY ISSUE: SQL injection returned ${actualStatus}, expected one of ${acceptableBlockStatuses.join(', ')}`);
         securityIssuesFound++;
         testsFailed++;
       }
@@ -91,19 +95,23 @@ export const runUsersAPI = () => {
     await test.step('Test 3: Create user with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         initials: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         tabel: API_CONST.API_TEST_USER_TABEL,
       };
 
-      const xssResponse = await usersAPI.createUser(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await usersAPI.createUser(request, xssData, '', token);
 
-      // API ANALYSIS: XSS should be blocked
-      const expectedStatus = 401;
+      // API ANALYSIS: XSS should be blocked (401 without auth, 400/422 with auth)
+      const acceptableBlockStatuses = [401, 400, 422];
       const actualStatus = xssResponse.status;
 
-      if (actualStatus === expectedStatus) {
-        logger.log('✅ XSS attempt correctly blocked with 401');
+      if (acceptableBlockStatuses.includes(actualStatus)) {
+        logger.log(`✅ XSS attempt correctly blocked with ${actualStatus}`);
         testsPassed++;
       } else if (actualStatus === 201) {
         logger.log('🚨 CRITICAL SECURITY VULNERABILITY: XSS successful!');
@@ -111,7 +119,7 @@ export const runUsersAPI = () => {
         securityIssuesFound++;
         testsFailed++;
       } else {
-        logger.log(`❌ SECURITY ISSUE: XSS returned ${actualStatus}, expected ${expectedStatus}`);
+        logger.log(`❌ SECURITY ISSUE: XSS returned ${actualStatus}, expected one of ${acceptableBlockStatuses.join(', ')}`);
         securityIssuesFound++;
         testsFailed++;
       }

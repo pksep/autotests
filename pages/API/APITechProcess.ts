@@ -3,99 +3,45 @@ import { APIPageObject } from '../../lib/APIPage';
 import logger from '../../lib/utils/logger';
 import { ENV } from '../../config';
 
+/** `api/tech-process/*` — Nest `TechProcessController` + `PUT api/shipments/actual` for batch “actual” refresh. */
 export class TechProcessAPI extends APIPageObject {
   constructor(page: Page | null) {
     super(page as any);
   }
 
-  async createOrUpdateTechProcess(request: APIRequestContext, techProcessData: any, authToken?: string) {
-    logger.info(`Creating or updating tech process with data:`, JSON.stringify(techProcessData, null, 2));
+  private base = () => ENV.API_BASE_URL + 'api/tech-process';
 
-    const headers = {
-      accept: '*/*',
-      'user-id': '1',
-      Authorization: `Bearer ${authToken}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/tech-process', {
-      headers: headers,
-      data: techProcessData,
+  async createOrUpdateTechProcess(request: APIRequestContext, techProcessData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`POST tech-process/ (multipart)`);
+    const response = await request.post(this.base() + '/', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+      multipart: this.toMultipartFields(techProcessData),
     });
-
-    try {
-      const responseData = await response.json();
-      logger.info(`Tech process creation/update response received`);
-      return { status: response.status(), data: responseData };
-    } catch (error) {
-      logger.error(`Failed to parse response, status: ${response.status()}`);
-      return { status: response.status(), data: null };
-    }
+    const data = await this.parseJsonBody(response);
+    return { status: response.status(), data };
   }
 
-  async updateActualOperations(request: APIRequestContext, authToken?: string) {
-    logger.info(`Updating actual operations`);
-
-    const headers = {
-      accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-    };
-
-    const response = await request.put(ENV.API_BASE_URL + 'api/tech-process/actual/operations', {
-      headers: headers,
+  /** Обновление всех отгрузок “актуальных” (сервер: ShipmentsController.actualAllShipments). */
+  async updateActualOperations(request: APIRequestContext, accessToken?: string) {
+    logger.info(`PUT shipments/actual`);
+    const response = await request.put(ENV.API_BASE_URL + 'api/shipments/actual', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
     });
-
-    try {
-      const responseData = await response.json();
-      logger.info(`Update actual operations response received`);
-      return { status: response.status(), data: responseData };
-    } catch (error) {
-      logger.error(`Failed to parse response, status: ${response.status()}`);
-      return { status: response.status(), data: null };
-    }
+    const data = await this.parseJsonBody(response);
+    return { status: response.status(), data };
   }
 
-  async updateActual(request: APIRequestContext, authToken?: string) {
-    logger.info(`Updating actual tech process`);
-
-    const headers = {
-      accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-    };
-
-    const response = await request.put(ENV.API_BASE_URL + 'api/tech-process/actual', {
-      headers: headers,
-    });
-
-    try {
-      const responseData = await response.json();
-      logger.info(`Update actual response received`);
-      return { status: response.status(), data: responseData };
-    } catch (error) {
-      logger.error(`Failed to parse response, status: ${response.status()}`);
-      return { status: response.status(), data: null };
-    }
+  /** Alias: same as {@link updateActualOperations} (legacy spec name). */
+  async updateActual(request: APIRequestContext, accessToken?: string) {
+    return this.updateActualOperations(request, accessToken);
   }
 
-  async getTechProcessById(request: APIRequestContext, id: string, authToken?: string) {
-    logger.info(`Getting tech process by ID: ${id}`);
-
-    const headers = {
-      accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-    };
-
-    const response = await request.get(ENV.API_BASE_URL + `api/tech-process/${id}`, {
-      headers: headers,
+  async getTechProcessById(request: APIRequestContext, id: string, accessToken?: string) {
+    logger.info(`GET tech-process/${id}`);
+    const response = await request.get(this.base() + `/${encodeURIComponent(id)}`, {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
     });
-
-    try {
-      const responseData = await response.json();
-      logger.info(`Get tech process by ID response received`);
-      return { status: response.status(), data: responseData };
-    } catch (error) {
-      logger.error(`Failed to parse response, status: ${response.status()}`);
-      return { status: response.status(), data: null };
-    }
+    const data = await this.parseJsonBody(response);
+    return { status: response.status(), data };
   }
 }

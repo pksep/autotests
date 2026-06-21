@@ -42,13 +42,17 @@ export const runWarehouseAPI = () => {
     await test.step('Test 2: Create warehouse with SQL injection in name', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         location: API_CONST.API_TEST_WAREHOUSE_LOCATION,
         capacity: API_CONST.API_TEST_WAREHOUSE_CAPACITY,
       };
 
-      const sqlInjectionResponse = await warehouseAPI.createWarehouseItem(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await warehouseAPI.createWarehouseItem(request, sqlInjectionData, token);
 
       // API PROBLEM: If this returns 201, there's a SQL injection vulnerability
       expect.soft(sqlInjectionResponse.status).toBe(400);
@@ -68,13 +72,17 @@ export const runWarehouseAPI = () => {
     await test.step('Test 3: Create warehouse with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         location: API_CONST.API_TEST_WAREHOUSE_LOCATION,
         capacity: API_CONST.API_TEST_WAREHOUSE_CAPACITY,
       };
 
-      const xssResponse = await warehouseAPI.createWarehouseItem(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await warehouseAPI.createWarehouseItem(request, xssData, token);
 
       // API PROBLEM: If this returns 201, XSS protection is missing
       expect.soft(xssResponse.status).toBe(400);
@@ -131,7 +139,7 @@ export const runWarehouseAPI = () => {
         capacity: API_CONST.API_TEST_WAREHOUSE_CAPACITY,
       };
 
-      const invalidCreateResponse = await warehouseAPI.createWarehouseItem(request, invalidData, API_CONST.API_TEST_USER_ID);
+      const invalidCreateResponse = await warehouseAPI.createWarehouseItem(request, invalidData, authToken);
 
       // API PROBLEM: If this returns 201, data validation is missing
       expect.soft(invalidCreateResponse.status).toBe(400);
@@ -157,7 +165,7 @@ export const runWarehouseAPI = () => {
         capacity: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
       };
 
-      const emptyCreateResponse = await warehouseAPI.createWarehouseItem(request, emptyData, API_CONST.API_TEST_USER_ID);
+      const emptyCreateResponse = await warehouseAPI.createWarehouseItem(request, emptyData, authToken);
 
       // API PROBLEM: If this returns 201, required field validation is missing
       expect.soft(emptyCreateResponse.status).toBe(400);
@@ -202,7 +210,7 @@ export const runWarehouseAPI = () => {
       };
 
       const startTime = Date.now();
-      const performanceCreateResponse = await warehouseAPI.createWarehouseItem(request, warehouseData, API_CONST.API_TEST_USER_ID);
+      const performanceCreateResponse = await warehouseAPI.createWarehouseItem(request, warehouseData, authToken);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -223,7 +231,7 @@ export const runWarehouseAPI = () => {
 
       const promises = Array(5)
         .fill(null)
-        .map(() => warehouseAPI.createWarehouseItem(request, warehouseData, API_CONST.API_TEST_USER_ID));
+        .map(() => warehouseAPI.createWarehouseItem(request, warehouseData, authToken));
       const responses = await Promise.all(promises);
 
       // API PROBLEM: If any operation fails, there's a concurrency issue

@@ -122,8 +122,9 @@ export class DetailsAPI extends APIPageObject {
       compress: 'no-compress',
     };
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/detal/operation/include', {
+    const response = await request.post(ENV.API_BASE_URL + 'api/detal/operation/include', {
       headers: headers,
+      data: {},
     });
 
     try {
@@ -554,8 +555,9 @@ export class DetailsAPI extends APIPageObject {
       compress: 'no-compress',
     };
 
-    const response = await request.get(ENV.API_BASE_URL + `api/detal/${detailId}/files`, {
+    const response = await request.post(ENV.API_BASE_URL + `api/detal/getinclude/${detailId}`, {
       headers: headers,
+      data: { includes: ['documents'] },
     });
 
     try {

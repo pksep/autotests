@@ -41,12 +41,16 @@ export const runProductionTasksAPI = () => {
     await test.step('Test 2: Create production task with SQL injection in name', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         status: API_CONST.API_TEST_PRODUCTION_TASK_STATUS,
       };
 
-      const sqlInjectionResponse = await productionTasksAPI.createProductionTask(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await productionTasksAPI.createProductionTask(request, sqlInjectionData, token);
 
       // API PROBLEM: If this returns 201, there's a SQL injection vulnerability
       expect.soft(sqlInjectionResponse.status).toBe(400);
@@ -66,12 +70,16 @@ export const runProductionTasksAPI = () => {
     await test.step('Test 3: Create production task with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         status: API_CONST.API_TEST_PRODUCTION_TASK_STATUS,
       };
 
-      const xssResponse = await productionTasksAPI.createProductionTask(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await productionTasksAPI.createProductionTask(request, xssData, token);
 
       // API PROBLEM: If this returns 201, XSS protection is missing
       expect.soft(xssResponse.status).toBe(400);
@@ -127,7 +135,7 @@ export const runProductionTasksAPI = () => {
         status: ['invalid'], // Should be string, not array
       };
 
-      const invalidCreateResponse = await productionTasksAPI.createProductionTask(request, invalidData, API_CONST.API_TEST_USER_ID);
+      const invalidCreateResponse = await productionTasksAPI.createProductionTask(request, invalidData, authToken);
 
       // API PROBLEM: If this returns 201, data validation is missing
       expect.soft(invalidCreateResponse.status).toBe(400);
@@ -152,7 +160,7 @@ export const runProductionTasksAPI = () => {
         status: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
       };
 
-      const emptyCreateResponse = await productionTasksAPI.createProductionTask(request, emptyData, API_CONST.API_TEST_USER_ID);
+      const emptyCreateResponse = await productionTasksAPI.createProductionTask(request, emptyData, authToken);
 
       // API PROBLEM: If this returns 201, required field validation is missing
       expect.soft(emptyCreateResponse.status).toBe(400);
@@ -196,7 +204,7 @@ export const runProductionTasksAPI = () => {
       };
 
       const startTime = Date.now();
-      const performanceCreateResponse = await productionTasksAPI.createProductionTask(request, taskData, API_CONST.API_TEST_USER_ID);
+      const performanceCreateResponse = await productionTasksAPI.createProductionTask(request, taskData, authToken);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -216,7 +224,7 @@ export const runProductionTasksAPI = () => {
 
       const promises = Array(5)
         .fill(null)
-        .map(() => productionTasksAPI.createProductionTask(request, taskData, API_CONST.API_TEST_USER_ID));
+        .map(() => productionTasksAPI.createProductionTask(request, taskData, authToken));
       const responses = await Promise.all(promises);
 
       // API PROBLEM: If any operation fails, there's a concurrency issue

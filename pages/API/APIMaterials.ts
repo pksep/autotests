@@ -8,25 +8,20 @@ export class MaterialsAPI extends APIPageObject {
     super(page);
   }
 
-  async createSubtypeMaterial(request: APIRequestContext, subtypeData: any, userId: string) {
+  async createSubtypeMaterial(request: APIRequestContext, subtypeData: any, accessToken?: string) {
     logger.info(`Creating subtype material with data:`, subtypeData);
 
     const response = await request.post(ENV.API_BASE_URL + 'api/material/subtype', {
       headers: {
         'Content-Type': 'application/json',
-        'user-id': userId,
+        compress: 'no-compress',
+        ...this.authHeaders(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined),
       },
       data: subtypeData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Subtype material created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create subtype material, status: ${response.status()}`);
-      throw new Error(`Failed to create subtype material with status: ${response.status()}`);
-    }
+    const responseData = await this.parseJsonBody(response);
+    return { status: response.status(), data: responseData };
   }
 
   async removeSubtypeMaterial(request: APIRequestContext, id: number) {
@@ -66,15 +61,12 @@ export class MaterialsAPI extends APIPageObject {
     }
   }
 
-  async createAndUpdateMaterial(request: APIRequestContext, materialData: any, userId: string) {
+  async createAndUpdateMaterial(request: APIRequestContext, materialData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Creating/updating material with data:`, materialData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/material/material', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: materialData,
+    const response = await request.post(ENV.API_BASE_URL + 'api/material/material/', {
+      headers: { ...this.authHeaders(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined), compress: 'no-compress' },
+      multipart: this.toMultipartFields(materialData),
     });
 
     if (response.ok()) {
@@ -87,10 +79,12 @@ export class MaterialsAPI extends APIPageObject {
     }
   }
 
-  async getAllMaterials(request: APIRequestContext) {
+  async getAllMaterials(request: APIRequestContext, accessToken?: string) {
     logger.info(`Getting all materials`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/material/material');
+    const response = await request.get(ENV.API_BASE_URL + 'api/material/material/', {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -125,7 +119,7 @@ export class MaterialsAPI extends APIPageObject {
   async actualMaterialLists(request: APIRequestContext) {
     logger.info(`Actualizing material lists`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/material/actuallists');
+    const response = await request.get(ENV.API_BASE_URL + 'api/material/type-material');
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -140,7 +134,7 @@ export class MaterialsAPI extends APIPageObject {
   async actualListsSpecification(request: APIRequestContext) {
     logger.info(`Actualizing lists specification`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/material/actualspecification');
+    const response = await request.get(ENV.API_BASE_URL + 'api/material/material/');
 
     if (response.ok()) {
       const responseData = await response.json();

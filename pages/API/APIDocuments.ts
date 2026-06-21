@@ -11,9 +11,15 @@ export class DocumentsAPI extends APIPageObject {
   async attachFileToUser(request: APIRequestContext, userToUpdateId: number, fileId: number, unpin: boolean, userId: string) {
     logger.info(`Attaching file ${fileId} to user ${userToUpdateId}, unpin: ${unpin}`);
 
-    const response = await request.post(ENV.API_BASE_URL + `api/users/files/${userToUpdateId}/${fileId}/${unpin}`, {
+    const response = await request.put(ENV.API_BASE_URL + (unpin ? 'api/documents/unpin-documents' : 'api/documents/attach-to-entity'), {
       headers: {
+        'Content-Type': 'application/json',
         'user-id': userId,
+      },
+      data: {
+        idEntity: userToUpdateId,
+        idDocument: fileId,
+        typeEntity: 'user',
       },
     });
 
@@ -66,7 +72,7 @@ export class DocumentsAPI extends APIPageObject {
   async deleteDocument(request: APIRequestContext, id: number, userId: string) {
     logger.info(`Deleting document with id: ${id}`);
 
-    const response = await request.delete(ENV.API_BASE_URL + `api/documents/documents/delete/${id}`, {
+    const response = await request.delete(ENV.API_BASE_URL + `api/documents/${id}/false`, {
       headers: {
         'user-id': userId,
       },
@@ -87,12 +93,15 @@ export class DocumentsAPI extends APIPageObject {
   async setDetalForDocument(request: APIRequestContext, detalData: any, userId: string) {
     logger.info(`Setting detal for document:`, detalData);
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/documents/setdetal', {
+    const response = await request.put(ENV.API_BASE_URL + 'api/documents/attach-to-entity', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
       },
-      data: detalData,
+      data: {
+        typeEntity: 'detal',
+        ...detalData,
+      },
     });
 
     if (response.ok()) {

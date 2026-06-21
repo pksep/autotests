@@ -1,13 +1,7 @@
 import { Page } from '@playwright/test';
 import { SELECTORS } from '../config';
-import { AbstractPage } from '../lib/AbstractPage';
+import { PageObject } from '../lib/Page';
 import logger from '../lib/utils/logger';
-
-class ConcretePage extends AbstractPage {
-  async open(url: string): Promise<void> {
-    await this.page.goto(url, { waitUntil: 'domcontentloaded' });
-  }
-}
 
 /**
  * Function to perform navigation for the TC001 test case.
@@ -26,7 +20,7 @@ export async function runTC001(page: Page, dataTestId: string): Promise<true | s
   }
 
   // Create an instance of ConcretePage
-  const concretePage = new ConcretePage(page);
+  const concretePage = new PageObject(page);
 
   logger.info(`Starting navigation for data-testid: ${dataTestId}`);
 

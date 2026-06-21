@@ -42,13 +42,17 @@ export const runSpecificationsAPI = () => {
     await test.step('Test 2: Create specification with SQL injection in name', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         version: API_CONST.API_TEST_SPECIFICATION_VERSION,
         status: API_CONST.API_TEST_SPECIFICATION_STATUS,
       };
 
-      const sqlInjectionResponse = await specificationsAPI.createSpecification(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await specificationsAPI.createSpecification(request, sqlInjectionData, token);
 
       // API PROBLEM: If this returns 201, there's a SQL injection vulnerability
       expect.soft(sqlInjectionResponse.status).toBe(400);
@@ -68,13 +72,17 @@ export const runSpecificationsAPI = () => {
     await test.step('Test 3: Create specification with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         version: API_CONST.API_TEST_SPECIFICATION_VERSION,
         status: API_CONST.API_TEST_SPECIFICATION_STATUS,
       };
 
-      const xssResponse = await specificationsAPI.createSpecification(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await specificationsAPI.createSpecification(request, xssData, token);
 
       // API PROBLEM: If this returns 201, XSS protection is missing
       expect.soft(xssResponse.status).toBe(400);
@@ -131,7 +139,7 @@ export const runSpecificationsAPI = () => {
         status: API_CONST.API_TEST_SPECIFICATION_STATUS,
       };
 
-      const invalidCreateResponse = await specificationsAPI.createSpecification(request, invalidData, API_CONST.API_TEST_USER_ID);
+      const invalidCreateResponse = await specificationsAPI.createSpecification(request, invalidData, authToken);
 
       // API PROBLEM: If this returns 201, data validation is missing
       expect.soft(invalidCreateResponse.status).toBe(400);
@@ -157,7 +165,7 @@ export const runSpecificationsAPI = () => {
         status: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
       };
 
-      const emptyCreateResponse = await specificationsAPI.createSpecification(request, emptyData, API_CONST.API_TEST_USER_ID);
+      const emptyCreateResponse = await specificationsAPI.createSpecification(request, emptyData, authToken);
 
       // API PROBLEM: If this returns 201, required field validation is missing
       expect.soft(emptyCreateResponse.status).toBe(400);
@@ -202,7 +210,7 @@ export const runSpecificationsAPI = () => {
       };
 
       const startTime = Date.now();
-      const performanceCreateResponse = await specificationsAPI.createSpecification(request, specificationData, API_CONST.API_TEST_USER_ID);
+      const performanceCreateResponse = await specificationsAPI.createSpecification(request, specificationData, authToken);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -223,7 +231,7 @@ export const runSpecificationsAPI = () => {
 
       const promises = Array(5)
         .fill(null)
-        .map(() => specificationsAPI.createSpecification(request, specificationData, API_CONST.API_TEST_USER_ID));
+        .map(() => specificationsAPI.createSpecification(request, specificationData, authToken));
       const responses = await Promise.all(promises);
 
       // API PROBLEM: If any operation fails, there's a concurrency issue

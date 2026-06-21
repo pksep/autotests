@@ -32,7 +32,7 @@ export class AssembleAPI extends APIPageObject {
   async updateAssemble(request: APIRequestContext, assembleData: any, userId: string) {
     logger.info(`Updating assemble with data:`, assembleData);
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/assemble', {
+    const response = await request.put(ENV.API_BASE_URL + 'api/assemble/complectkit/update', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
@@ -53,7 +53,7 @@ export class AssembleAPI extends APIPageObject {
   async getActualAssembleOrders(request: APIRequestContext) {
     logger.info(`Getting actual assemble orders`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/assemble/actual');
+    const response = await request.get(ENV.API_BASE_URL + 'api/assemble/complects');
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -108,11 +108,13 @@ export class AssembleAPI extends APIPageObject {
   async getAssembleByParent(request: APIRequestContext, parentData: any) {
     logger.info(`Getting assemble by parent:`, parentData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/assemble/relative', {
+    const entityId = parentData?.entityId ?? parentData?.parentId ?? parentData?.id;
+    const entityType = parentData?.entityType ?? parentData?.type ?? 'cbed';
+
+    const response = await request.get(ENV.API_BASE_URL + `api/assemble/kits-by-parents/${entityId}/${entityType}`, {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: parentData,
     });
 
     if (response.ok()) {

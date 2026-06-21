@@ -9,14 +9,14 @@ export class NotificationsAPI extends APIPageObject {
   }
 
   async createNotification(request: APIRequestContext, notificationData: any, userId: string) {
-    logger.info(`Creating notification with data:`, notificationData);
+    logger.info(`Enriching notification batch with data:`, notificationData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/notifications', {
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
       },
-      data: notificationData,
+      data: [notificationData],
     });
 
     if (response.ok()) {
@@ -30,14 +30,14 @@ export class NotificationsAPI extends APIPageObject {
   }
 
   async updateNotification(request: APIRequestContext, notificationData: any, userId: string) {
-    logger.info(`Updating notification with data:`, notificationData);
+    logger.info(`Enriching notification batch for update-shaped data:`, notificationData);
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/notifications', {
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
       },
-      data: notificationData,
+      data: [notificationData],
     });
 
     if (response.ok()) {
@@ -53,7 +53,12 @@ export class NotificationsAPI extends APIPageObject {
   async getNotificationById(request: APIRequestContext, id: number) {
     logger.info(`Getting notification by ID: ${id}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/notifications/${id}`);
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: [{ uuid: String(id), isSystem: true }],
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -68,10 +73,12 @@ export class NotificationsAPI extends APIPageObject {
   async deleteNotification(request: APIRequestContext, id: number, userId: string) {
     logger.info(`Deleting notification with ID: ${id}`);
 
-    const response = await request.delete(ENV.API_BASE_URL + `api/notifications/${id}`, {
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
       headers: {
+        'Content-Type': 'application/json',
         'user-id': userId,
       },
+      data: [{ uuid: String(id), event: 'delete', isSystem: true }],
     });
 
     if (response.ok()) {
@@ -88,11 +95,11 @@ export class NotificationsAPI extends APIPageObject {
   async getAllNotifications(request: APIRequestContext, paginationData: any) {
     logger.info(`Getting all notifications with pagination:`, paginationData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/notifications/pagination', {
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: paginationData,
+      data: Array.isArray(paginationData) ? paginationData : [],
     });
 
     if (response.ok()) {
@@ -108,7 +115,12 @@ export class NotificationsAPI extends APIPageObject {
   async getNotificationsByType(request: APIRequestContext, type: string) {
     logger.info(`Getting notifications by type: ${type}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/notifications/type/${type}`);
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: [{ uuid: type, entity: type, isSystem: true }],
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -123,12 +135,12 @@ export class NotificationsAPI extends APIPageObject {
   async markNotificationAsRead(request: APIRequestContext, id: number, userId: string) {
     logger.info(`Marking notification as read - ID: ${id}`);
 
-    const response = await request.put(ENV.API_BASE_URL + `api/notifications/${id}/read`, {
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
       },
-      data: { read: true },
+      data: [{ uuid: String(id), isSystem: true, read: true }],
     });
 
     if (response.ok()) {
@@ -144,11 +156,12 @@ export class NotificationsAPI extends APIPageObject {
   async markAllNotificationsAsRead(request: APIRequestContext, userId: string) {
     logger.info(`Marking all notifications as read for user: ${userId}`);
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/notifications/mark-all-read', {
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
       },
+      data: [],
     });
 
     if (response.ok()) {
@@ -164,7 +177,12 @@ export class NotificationsAPI extends APIPageObject {
   async getUnreadNotificationsCount(request: APIRequestContext, userId: string) {
     logger.info(`Getting unread notifications count for user: ${userId}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/notifications/unread-count/${userId}`);
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: [{ uuid: `unread-count-${userId}`, userId, isSystem: true }],
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -179,12 +197,12 @@ export class NotificationsAPI extends APIPageObject {
   async sendBulkNotification(request: APIRequestContext, notificationData: any, userId: string) {
     logger.info(`Sending bulk notification:`, notificationData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/notifications/bulk', {
+    const response = await request.post(ENV.API_BASE_URL + 'api/external/notifications/enrich/batch', {
       headers: {
         'Content-Type': 'application/json',
         'user-id': userId,
       },
-      data: notificationData,
+      data: Array.isArray(notificationData) ? notificationData : [notificationData],
     });
 
     if (response.ok()) {

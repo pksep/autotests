@@ -42,13 +42,17 @@ export const runToolsAPI = () => {
     await test.step('Test 2: Create tool with SQL injection in name', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         type: API_CONST.API_TEST_TOOL_TYPE,
         status: API_CONST.API_TEST_TOOL_STATUS,
       };
 
-      const sqlInjectionResponse = await toolsAPI.createTool(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await toolsAPI.createTool(request, sqlInjectionData, token);
 
       // API PROBLEM: If this returns 201, there's a SQL injection vulnerability
       expect.soft(sqlInjectionResponse.status).toBe(400);
@@ -68,13 +72,17 @@ export const runToolsAPI = () => {
     await test.step('Test 3: Create tool with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         type: API_CONST.API_TEST_TOOL_TYPE,
         status: API_CONST.API_TEST_TOOL_STATUS,
       };
 
-      const xssResponse = await toolsAPI.createTool(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await toolsAPI.createTool(request, xssData, token);
 
       // API PROBLEM: If this returns 201, XSS protection is missing
       expect.soft(xssResponse.status).toBe(400);
@@ -131,7 +139,7 @@ export const runToolsAPI = () => {
         status: API_CONST.API_TEST_TOOL_STATUS,
       };
 
-      const invalidCreateResponse = await toolsAPI.createTool(request, invalidData, API_CONST.API_TEST_USER_ID);
+      const invalidCreateResponse = await toolsAPI.createTool(request, invalidData, authToken);
 
       // API PROBLEM: If this returns 201, data validation is missing
       expect.soft(invalidCreateResponse.status).toBe(400);
@@ -157,7 +165,7 @@ export const runToolsAPI = () => {
         status: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
       };
 
-      const emptyCreateResponse = await toolsAPI.createTool(request, emptyData, API_CONST.API_TEST_USER_ID);
+      const emptyCreateResponse = await toolsAPI.createTool(request, emptyData, authToken);
 
       // API PROBLEM: If this returns 201, required field validation is missing
       expect.soft(emptyCreateResponse.status).toBe(400);
@@ -202,7 +210,7 @@ export const runToolsAPI = () => {
       };
 
       const startTime = Date.now();
-      const performanceCreateResponse = await toolsAPI.createTool(request, toolData, API_CONST.API_TEST_USER_ID);
+      const performanceCreateResponse = await toolsAPI.createTool(request, toolData, authToken);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -223,7 +231,7 @@ export const runToolsAPI = () => {
 
       const promises = Array(5)
         .fill(null)
-        .map(() => toolsAPI.createTool(request, toolData, API_CONST.API_TEST_USER_ID));
+        .map(() => toolsAPI.createTool(request, toolData, authToken));
       const responses = await Promise.all(promises);
 
       // API PROBLEM: If any operation fails, there's a concurrency issue

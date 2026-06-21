@@ -6,8 +6,8 @@ import 'dotenv/config';
  */
 
 export const ENV = {
-  BASE_URL: process.env.BASE_URL || 'http://stage.pksep.ru/',
-  API_BASE_URL: process.env.API_BASE_URL || 'http://dev.pksep.ru/',
+  BASE_URL: process.env.BASE_URL || 'https://dev.pksep.ru/',
+  API_BASE_URL: process.env.API_BASE_URL || 'https://dev.pksep.ru/',
   HEADLESS: process.env.HEADLESS === 'true',
   TIMEOUT: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 5000,
   LOGIN_DELAY_MS: process.env.LOGIN_DELAY_MS ? parseInt(process.env.LOGIN_DELAY_MS, 10) : 0,

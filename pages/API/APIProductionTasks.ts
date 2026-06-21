@@ -3,206 +3,140 @@ import { APIPageObject } from '../../lib/APIPage';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
 
+/** `api/production-task/*` — Nest `ProductionTaskController`. */
 export class ProductionTasksAPI extends APIPageObject {
   constructor(page: Page) {
     super(page);
   }
 
-  async createProductionTask(request: APIRequestContext, taskData: any, userId: string) {
-    logger.info(`Creating production task with data:`, taskData);
+  private base = () => ENV.API_BASE_URL + 'api/production-task';
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/production-task', {
+  private token(accessToken?: string) {
+    return accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined;
+  }
+
+  async createProductionTask(request: APIRequestContext, taskData: any, accessToken?: string) {
+    logger.info(`POST production-task/`);
+    const response = await request.post(this.base() + '/', {
       headers: {
         'Content-Type': 'application/json',
-        'user-id': userId,
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
       data: taskData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Production task created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create production task, status: ${response.status()}`);
-      throw new Error(`Failed to create production task with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    return { status: response.status(), data };
   }
 
-  async updateProductionTask(request: APIRequestContext, taskData: any, userId: string) {
-    logger.info(`Updating production task with data:`, taskData);
-
-    const response = await request.put(ENV.API_BASE_URL + 'api/production-task', {
+  async updateProductionTask(request: APIRequestContext, taskData: any, accessToken?: string) {
+    const response = await request.put(this.base() + '/', {
       headers: {
         'Content-Type': 'application/json',
-        'user-id': userId,
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
       data: taskData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Production task updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update production task, status: ${response.status()}`);
-      throw new Error(`Failed to update production task with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`updateProductionTask: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async getProductionTaskPaginate(request: APIRequestContext, paginationData: any) {
-    logger.info(`Getting production tasks with pagination:`, paginationData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/production-task/list', {
+  async getProductionTaskPaginate(request: APIRequestContext, paginationData: any, accessToken?: string) {
+    const response = await request.post(this.base() + '/list', {
       headers: {
         'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
       data: paginationData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved production tasks with pagination`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get production tasks with pagination, status: ${response.status()}`);
-      throw new Error(`Failed to get production tasks with pagination with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`getProductionTaskPaginate: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async getProductionTaskByUser(request: APIRequestContext, userData: any) {
-    logger.info(`Getting production task by user:`, userData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/production-task/by-user', {
+  async getProductionTaskByUser(request: APIRequestContext, userData: any, accessToken?: string) {
+    const response = await request.post(this.base() + '/by-user', {
       headers: {
         'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
       data: userData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved production task by user`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get production task by user, status: ${response.status()}`);
-      throw new Error(`Failed to get production task by user with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`getProductionTaskByUser: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async getProductionTaskById(request: APIRequestContext, productionTaskId: number) {
-    logger.info(`Getting production task by ID: ${productionTaskId}`);
-
-    const response = await request.get(ENV.API_BASE_URL + `api/production-task/by-id/${productionTaskId}`);
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved production task by ID`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get production task by ID, status: ${response.status()}`);
-      throw new Error(`Failed to get production task by ID with status: ${response.status()}`);
-    }
+  async getProductionTaskById(request: APIRequestContext, productionTaskId: number, accessToken?: string) {
+    const response = await request.get(this.base() + `/by-id/${productionTaskId}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`getProductionTaskById: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async getProductionTaskCount(request: APIRequestContext) {
-    logger.info(`Getting production task count`);
-
-    const response = await request.get(ENV.API_BASE_URL + 'api/production-task/count');
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved production task count`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get production task count, status: ${response.status()}`);
-      throw new Error(`Failed to get production task count with status: ${response.status()}`);
-    }
+  async getProductionTaskCount(request: APIRequestContext, accessToken?: string) {
+    const response = await request.get(this.base() + '/count', {
+      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`getProductionTaskCount: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async updateStatusProductionTask(request: APIRequestContext, statusData: any, userId: string) {
-    logger.info(`Updating production task status:`, statusData);
-
-    const response = await request.put(ENV.API_BASE_URL + 'api/production-task/status', {
+  async updateStatusProductionTask(request: APIRequestContext, statusData: any, accessToken?: string) {
+    const response = await request.put(this.base() + '/due-date', {
       headers: {
         'Content-Type': 'application/json',
-        'user-id': userId,
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
       data: statusData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Production task status updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update production task status, status: ${response.status()}`);
-      throw new Error(`Failed to update production task status with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`updateStatusProductionTask: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async getProductionTaskByAllUsers(request: APIRequestContext) {
-    logger.info(`Getting production tasks for all users`);
-
-    const response = await request.get(ENV.API_BASE_URL + 'api/production-task/for-all-users');
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved production tasks for all users`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get production tasks for all users, status: ${response.status()}`);
-      throw new Error(`Failed to get production tasks for all users with status: ${response.status()}`);
-    }
+  async getProductionTaskByAllUsers(request: APIRequestContext, subdivisionType: string, accessToken?: string) {
+    const response = await request.get(this.base() + `/for-all-users/${encodeURIComponent(subdivisionType)}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`getProductionTaskByAllUsers: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async updateProductionTaskMarks(request: APIRequestContext, marksData: any) {
-    logger.info(`Updating production task marks:`, marksData);
+  async updateProductionTaskMarks(request: APIRequestContext, marksData: any, accessToken?: string) {
+    return this.apiProbe(request, 'ProductionTasksAPI.updateProductionTaskMarks', marksData, this.token(accessToken));
+  }
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/production-task/update-marks', {
+  async getTaskByProductionOperation(request: APIRequestContext, dto: any, accessToken?: string) {
+    const response = await request.post(this.base() + '/by-operation', {
       headers: {
         'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
-      data: marksData,
+      data: dto,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Production task marks updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update production task marks, status: ${response.status()}`);
-      throw new Error(`Failed to update production task marks with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`getTaskByProductionOperation: ${response.status()}`);
+    return { status: response.status(), data };
   }
 
-  async getTaskByProductionOperation(request: APIRequestContext, id: number) {
-    logger.info(`Getting task by production operation ID: ${id}`);
-
-    const response = await request.get(ENV.API_BASE_URL + `api/production-task/get-by-production-operatioin/${id}`);
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved task by production operation`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get task by production operation, status: ${response.status()}`);
-      throw new Error(`Failed to get task by production operation with status: ${response.status()}`);
-    }
-  }
-
-  async getTOperationList(request: APIRequestContext) {
-    logger.info(`Getting T-operation list`);
-
-    const response = await request.get(ENV.API_BASE_URL + 'api/production-task/toperations-list');
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved T-operation list`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get T-operation list, status: ${response.status()}`);
-      throw new Error(`Failed to get T-operation list with status: ${response.status()}`);
-    }
+  async getTOperationList(request: APIRequestContext, query: Record<string, unknown>, accessToken?: string) {
+    const qs = new URLSearchParams(query as any).toString();
+    const response = await request.get(this.base() + '/toperations-list' + (qs ? `?${qs}` : ''), {
+      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) throw new Error(`getTOperationList: ${response.status()}`);
+    return { status: response.status(), data };
   }
 }

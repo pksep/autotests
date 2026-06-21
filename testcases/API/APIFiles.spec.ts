@@ -221,11 +221,108 @@ export const runFilesAPI = () => {
       const responses = await Promise.all(promises);
 
       // API PROBLEM: If any operation fails, there's a concurrency issue
-      responses.forEach(response => {
+            responses.forEach(response => {
         expect.soft(response.status).toBe(201);
         expect.soft(response.data).toBeDefined();
       });
       logger.log('✅ Concurrent file operations handled successfully');
     });
   });
+
+  test('Files API - Standard CRUD & Functional Tests', async ({ request, page }) => {
+    test.setTimeout(120000);
+    const filesAPI = new FilesAPI(page);
+    const authAPI = new AuthAPI(page);
+    let authToken: string;
+
+    await test.step('1: Authenticate user', async () => {
+      logger.log('Authenticating user...');
+      const loginResponse = await authAPI.login(
+        request,
+        API_CONST.API_TEST_USERNAME,
+        API_CONST.API_TEST_PASSWORD,
+        API_CONST.API_TEST_TABEL,
+      );
+
+      expect(loginResponse.status).toBe(200);
+      expect(loginResponse.data).toHaveProperty('token');
+      authToken = loginResponse.data.token;
+      logger.log('✅ Authentication successful');
+    });
+
+    let uploadedFileId: string | null = null;
+    await test.step('2: Upload a file', async () => {
+      logger.log('Uploading a file...');
+      const fileData = {
+        name: API_CONST.API_TEST_FILE_NAME,
+        type: API_CONST.API_TEST_FILE_TYPE,
+        size: API_CONST.API_TEST_FILE_SIZE,
+      };
+      const uploadResponse = await filesAPI.uploadFile(request, fileData, authToken);
+      expect(uploadResponse.status).toBe(201);
+      expect(uploadResponse.data).toBeDefined();
+      uploadedFileId = uploadResponse.data.id;
+      logger.log(`✅ File uploaded successfully with ID: ${uploadedFileId}`);
+    });
+
+    if (uploadedFileId) {
+      await test.step('3: Get file by ID', async () => {
+        logger.log('Getting file by ID...');
+        const getResponse = await filesAPI.getFileById(request, uploadedFileId, authToken);
+        expect(getResponse.status).toBe(200);
+        expect(getResponse.data.id).toBe(uploadedFileId);
+        logger.log('✅ File retrieved by ID successfully');
+      });
+
+      await test.step('4: Update file metadata', async () => {
+        logger.log('Updating file metadata...');
+        const updateData = {
+          name: API_CONST.API_TEST_FILE_NAME_UPDATED,
+          type: API_CONST.API_TEST_FILE_TYPE_UPDATED,
+        };
+        const updateResponse = await filesAPI.updateFileMetadata(request, uploadedFileId, updateData, authToken);
+        expect(updateResponse.status).toBe(200);
+        expect(updateResponse.data.name).toBe(API_CONST.API_TEST_FILE_NAME_UPDATED);
+        logger.log('✅ File metadata updated successfully');
+      });
+
+      await test.step('5: Download file', async () => {
+        logger.log('Downloading file...');
+        const downloadResponse = await filesAPI.downloadFile(request, uploadedFileId, authToken);
+        expect(downloadResponse.status).toBe(200);
+        logger.log('✅ File downloaded successfully');
+      });
+
+      await test.step('6: Get file versions', async () => {
+        logger.log('Getting file versions...');
+        const versionsResponse = await filesAPI.getFileVersions(request, uploadedFileId, authToken);
+        expect(versionsResponse.status).toBe(200);
+        expect(Array.isArray(versionsResponse.data)).toBe(true);
+        logger.log('✅ File versions retrieved successfully');
+      });
+
+      await test.step('7: Search files', async () => {
+        logger.log('Searching files...');
+        const searchResponse = await filesAPI.searchFiles(request, { name: API_CONST.API_TEST_FILE_NAME_UPDATED }, authToken);
+        expect(searchResponse.status).toBe(200);
+        expect(Array.isArray(searchResponse.data)).toBe(true);
+        logger.log('✅ Files searched successfully');
+      });
+
+      await test.step('8: Delete file', async () => {
+        logger.log('Deleting file...');
+        const deleteResponse = await filesAPI.deleteFile(request, uploadedFileId, authToken);
+        expect(deleteResponse.status).toBe(200);
+        logger.log('✅ File deleted successfully');
+      });
+
+      await test.step('9: Verify file is deleted', async () => {
+        logger.log('Verifying file deletion...');
+        const getResponse = await filesAPI.getFileById(request, uploadedFileId, authToken);
+        expect(getResponse.status).toBe(404);
+        logger.log('✅ File deletion verified');
+      });
+    }
+  });
 };
+

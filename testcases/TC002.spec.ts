@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { SELECTORS } from '../config';
-import { AbstractPage } from '../lib/AbstractPage';
+import { PageObject } from '../lib/Page';
 import logger from '../lib/utils/logger'; // Added logger import
 
 export function runTC002(dataTestId: string) {
@@ -17,19 +17,18 @@ export function runTC002(dataTestId: string) {
       return;
     }
 
-    // Create an instance of AbstractPage
-    const abstractPage = new AbstractPage(page);
+    const pageObject = new PageObject(page);
 
     logger.info(`Test Case: ${testCaseId} - Starting test for data-testid: ${dataTestId}`);
 
-    const navigationResult = await abstractPage.nav(dataTestId);
+    const navigationResult = await pageObject.nav(dataTestId);
 
     if (navigationResult !== true) {
       const navErrorMessage = `Test Case: ${testCaseId} - Navigation failed for data-testid: ${dataTestId} with message: ${navigationResult}`;
       logger.error(navErrorMessage);
       expect(navigationResult).toBe(true); // This will fail the test case
     } else {
-      const urlCheckResult = await abstractPage.checkUrl(pageConfig.URL);
+      const urlCheckResult = await pageObject.checkUrl(pageConfig.URL);
 
       if (urlCheckResult !== true) {
         const urlErrorMessage = `Test Case: ${testCaseId} - URL path verification failed for data-testid: ${dataTestId} with message: ${urlCheckResult}`;

@@ -3,158 +3,118 @@ import { APIPageObject } from '../../lib/APIPage';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
 
+/** `api/instrument/*` — Nest `InstrumentController` on sep_erp_server. */
 export class ToolsAPI extends APIPageObject {
   constructor(page: Page) {
     super(page);
   }
 
-  async createToolType(request: APIRequestContext, typeData: any, userId: string) {
-    logger.info(`Creating tool type with data:`, typeData);
+  private base = () => ENV.API_BASE_URL + 'api/instrument';
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/tools/type', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
+  async createToolType(request: APIRequestContext, typeData: any, accessToken?: string) {
+    logger.info(`Creating instrument type:`, typeData);
+    const response = await request.post(this.base() + '/', {
+      headers: { ...this.authHeaders(accessToken), 'Content-Type': 'application/json', compress: 'no-compress' },
       data: typeData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Tool type created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create tool type, status: ${response.status()}`);
-      throw new Error(`Failed to create tool type with status: ${response.status()}`);
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`createToolType failed: ${response.status()}`);
+      throw new Error(`createToolType failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
   }
 
-  async updateToolType(request: APIRequestContext, typeData: any, userId: string) {
-    logger.info(`Updating tool type with data:`, typeData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/tools/type/update', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
+  async updateToolType(request: APIRequestContext, typeData: any, accessToken?: string) {
+    logger.info(`Updating instrument type:`, typeData);
+    const response = await request.post(this.base() + '/update', {
+      headers: { ...this.authHeaders(accessToken), 'Content-Type': 'application/json', compress: 'no-compress' },
       data: typeData,
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Tool type updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update tool type, status: ${response.status()}`);
-      throw new Error(`Failed to update tool type with status: ${response.status()}`);
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`updateToolType failed: ${response.status()}`);
+      throw new Error(`updateToolType failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
   }
 
-  async createTool(request: APIRequestContext, toolData: any, userId: string) {
-    logger.info(`Creating tool with data:`, toolData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/tools/tool', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: toolData,
+  /** Creates instrument name (multipart). */
+  async createTool(request: APIRequestContext, toolData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Creating instrument name:`, toolData);
+    const response = await request.post(this.base() + '/nameinstrument', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+      multipart: this.toMultipartFields(toolData),
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Tool created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create tool, status: ${response.status()}`);
-      throw new Error(`Failed to create tool with status: ${response.status()}`);
-    }
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) logger.error(`createTool failed: ${response.status()}`);
+    else logger.info(`Instrument name created`);
+    return { status: response.status(), data };
   }
 
-  async getOneTool(request: APIRequestContext, id: number) {
-    logger.info(`Getting tool by ID: ${id}`);
-
-    const response = await request.get(ENV.API_BASE_URL + `api/tools/tool/${id}`);
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved tool by ID`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get tool by ID, status: ${response.status()}`);
-      throw new Error(`Failed to get tool by ID with status: ${response.status()}`);
-    }
-  }
-
-  async updateTool(request: APIRequestContext, toolData: any, userId: string) {
-    logger.info(`Updating tool with data:`, toolData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/tools/tool/update', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: toolData,
+  async getOneTool(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting instrument name by id: ${id}`);
+    const response = await request.get(this.base() + `/name/${id}`, {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
     });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Tool updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update tool, status: ${response.status()}`);
-      throw new Error(`Failed to update tool with status: ${response.status()}`);
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`getOneTool failed: ${response.status()}`);
+      throw new Error(`getOneTool failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
   }
 
-  async removeFileTool(request: APIRequestContext, id: number) {
-    logger.info(`Removing file from tool with ID: ${id}`);
-
-    const response = await request.delete(ENV.API_BASE_URL + `api/tools/file/${id}`);
-
-    if (response.ok()) {
-      const responseText = await response.text();
-      const responseData = responseText ? JSON.parse(responseText) : { message: 'File removed from tool successfully' };
-      logger.info(`File removed from tool successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to remove file from tool, status: ${response.status()}`);
-      throw new Error(`Failed to remove file from tool with status: ${response.status()}`);
-    }
-  }
-
-  async banTool(request: APIRequestContext, id: number, userId: string) {
-    logger.info(`Banning tool with ID: ${id}`);
-
-    const response = await request.delete(ENV.API_BASE_URL + `api/tools/ban/${id}`, {
-      headers: {
-        'user-id': userId,
-      },
+  async updateTool(request: APIRequestContext, toolData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Updating instrument name:`, toolData);
+    const response = await request.post(this.base() + '/nameinstrument/update', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+      multipart: this.toMultipartFields(toolData),
     });
-
-    if (response.ok()) {
-      const responseText = await response.text();
-      const responseData = responseText ? JSON.parse(responseText) : { message: 'Tool banned successfully' };
-      logger.info(`Tool banned successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to ban tool, status: ${response.status()}`);
-      throw new Error(`Failed to ban tool with status: ${response.status()}`);
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`updateTool failed: ${response.status()}`);
+      throw new Error(`updateTool failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
   }
 
-  async getAllTools(request: APIRequestContext, light: boolean) {
-    logger.info(`Getting all tools, light: ${light}`);
-
-    const response = await request.get(ENV.API_BASE_URL + `api/tools/tool/all/${light}`);
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved all tools`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get all tools, status: ${response.status()}`);
-      throw new Error(`Failed to get all tools with status: ${response.status()}`);
+  async removeFileTool(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Removing file from instrument, id: ${id}`);
+    const response = await request.delete(this.base() + `/file/${id}`, {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`removeFileTool failed: ${response.status()}`);
+      throw new Error(`removeFileTool failed: ${response.status()}`);
     }
+    return { status: response.status(), data };
+  }
+
+  async banTool(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Archiving instrument name id: ${id}`);
+    const response = await request.delete(this.base() + `/ban/${id}`, {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`banTool failed: ${response.status()}`);
+      throw new Error(`banTool failed: ${response.status()}`);
+    }
+    return { status: response.status(), data };
+  }
+
+  async getAllTools(request: APIRequestContext, accessToken?: string) {
+    logger.info(`Getting all instrument names`);
+    const response = await request.get(this.base() + '/nameinstrument', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`getAllTools failed: ${response.status()}`);
+      throw new Error(`getAllTools failed: ${response.status()}`);
+    }
+    return { status: response.status(), data };
   }
 }

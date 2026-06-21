@@ -40,7 +40,7 @@ export const runProductsAPI = () => {
         status: 'draft',
       };
 
-      const specResponse = await specificationsAPI.createSpecification(request, specData, API_CONST.API_TEST_USER_ID);
+      const specResponse = await specificationsAPI.createSpecification(request, specData, authToken);
 
       expect.soft(specResponse.status).toBe(201);
       expect.soft(specResponse.data).toHaveProperty('id');
@@ -60,7 +60,7 @@ export const runProductsAPI = () => {
         price: 100.0,
       };
 
-      const createResponse = await productsAPI.createProduct(request, productData, API_CONST.API_TEST_USER_ID);
+      const createResponse = await productsAPI.createProduct(request, productData, authToken);
 
       expect.soft(createResponse.status).toBe(201);
       expect.soft(createResponse.data).toHaveProperty('id');
@@ -113,7 +113,7 @@ export const runProductsAPI = () => {
         price: 150.0,
       };
 
-      const updateResponse = await productsAPI.updateProduct(request, updateData, API_CONST.API_TEST_USER_ID);
+      const updateResponse = await productsAPI.updateProduct(request, updateData, authToken);
 
       expect.soft(updateResponse.status).toBe(200);
       expect.soft(updateResponse.data.name).toBe(API_CONST.API_TEST_PRODUCT_NAME_UPDATED);
@@ -139,7 +139,7 @@ export const runProductsAPI = () => {
     await allure.step('Step 9: Delete Product', async () => {
       logger.log('Step 9: Delete Product');
 
-      const deleteResponse = await productsAPI.deleteProduct(request, createdProductId, API_CONST.API_TEST_USER_ID);
+      const deleteResponse = await productsAPI.deleteProduct(request, createdProductId, authToken);
 
       expect.soft(deleteResponse.status).toBe(204);
       logger.log('Product deleted successfully');
@@ -148,7 +148,7 @@ export const runProductsAPI = () => {
     await allure.step('Step 10: Delete Specification', async () => {
       logger.log('Step 10: Delete Specification');
 
-      const deleteSpecResponse = await specificationsAPI.deleteSpecification(request, createdSpecificationId, API_CONST.API_TEST_USER_ID);
+      const deleteSpecResponse = await specificationsAPI.deleteSpecification(request, createdSpecificationId, authToken);
 
       expect.soft(deleteSpecResponse.status).toBe(204);
       logger.log('Specification deleted successfully');

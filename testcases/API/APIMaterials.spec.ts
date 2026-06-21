@@ -42,12 +42,16 @@ export const runMaterialsAPI = () => {
     await test.step('Test 2: Create material with SQL injection in name', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         type: API_CONST.API_TEST_MATERIAL_TYPE,
       };
 
-      const sqlInjectionResponse = await materialsAPI.createSubtypeMaterial(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await materialsAPI.createSubtypeMaterial(request, sqlInjectionData, token);
 
       // API PROBLEM: If this returns 201, there's a SQL injection vulnerability
       expect.soft(sqlInjectionResponse.status).toBe(400);
@@ -60,12 +64,16 @@ export const runMaterialsAPI = () => {
     await test.step('Test 3: Create material with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         type: API_CONST.API_TEST_MATERIAL_TYPE,
       };
 
-      const xssResponse = await materialsAPI.createSubtypeMaterial(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await materialsAPI.createSubtypeMaterial(request, xssData, token);
 
       // API PROBLEM: If this returns 201, XSS protection is missing
       expect.soft(xssResponse.status).toBe(400);
@@ -110,7 +118,7 @@ export const runMaterialsAPI = () => {
         status: ['active'], // Should be string, not array
       };
 
-      const invalidCreateResponse = await materialsAPI.createSubtypeMaterial(request, invalidData, API_CONST.API_TEST_USER_ID);
+      const invalidCreateResponse = await materialsAPI.createSubtypeMaterial(request, invalidData, authToken);
 
       // API PROBLEM: If this returns 201, data validation is missing
       expect.soft(invalidCreateResponse.status).toBe(400);
@@ -128,7 +136,7 @@ export const runMaterialsAPI = () => {
         type: API_CONST.API_TEST_MATERIAL_TYPE,
       };
 
-      const emptyResponse = await materialsAPI.createSubtypeMaterial(request, emptyData, API_CONST.API_TEST_USER_ID);
+      const emptyResponse = await materialsAPI.createSubtypeMaterial(request, emptyData, authToken);
 
       // API PROBLEM: If this returns 201, required field validation is missing
       expect.soft(emptyResponse.status).toBe(400);
@@ -146,7 +154,7 @@ export const runMaterialsAPI = () => {
         type: API_CONST.API_TEST_MATERIAL_TYPE,
       };
 
-      const longNameResponse = await materialsAPI.createSubtypeMaterial(request, longNameData, API_CONST.API_TEST_USER_ID);
+      const longNameResponse = await materialsAPI.createSubtypeMaterial(request, longNameData, authToken);
 
       // API PROBLEM: If this returns 201, length validation is missing
       expect.soft(longNameResponse.status).toBe(400);
@@ -164,7 +172,7 @@ export const runMaterialsAPI = () => {
         type: API_CONST.API_TEST_MATERIAL_TYPE,
       };
 
-      const createResponse = await materialsAPI.createSubtypeMaterial(request, materialData, API_CONST.API_TEST_USER_ID);
+      const createResponse = await materialsAPI.createSubtypeMaterial(request, materialData, authToken);
 
       // API PROBLEM: If this fails, the API is broken
       expect.soft(createResponse.status).toBe(201);

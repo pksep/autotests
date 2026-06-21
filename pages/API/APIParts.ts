@@ -8,10 +8,17 @@ export class PartsAPI extends APIPageObject {
     super(page);
   }
 
-  async getPartAttribute(request: APIRequestContext, id: number) {
+  async getPartAttribute(request: APIRequestContext, id: number, body: { attributes: string[] } = { attributes: ['id'] }, accessToken?: string) {
     logger.info(`Getting part attribute by ID: ${id}`);
 
-    const response = await request.post(ENV.API_BASE_URL + `api/detal/getattribute/${id}`);
+    const response = await request.post(ENV.API_BASE_URL + `api/detal/getattribute/${id}/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(accessToken),
+      },
+      data: body,
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -61,7 +68,7 @@ export class PartsAPI extends APIPageObject {
   async actualListsSpecification(request: APIRequestContext) {
     logger.info(`Actualizing parts lists specification`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/detal/actualspecification');
+    const response = await request.get(ENV.API_BASE_URL + 'api/detal/all/false/%5B%5D');
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -76,7 +83,12 @@ export class PartsAPI extends APIPageObject {
   async getPartAvatar(request: APIRequestContext, id: number) {
     logger.info(`Getting part avatar by ID: ${id}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/detal/ava/${id}`);
+    const response = await request.post(ENV.API_BASE_URL + 'api/detal/one', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: { id, attributes: ['image'] },
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -88,40 +100,34 @@ export class PartsAPI extends APIPageObject {
     }
   }
 
-  async createPart(request: APIRequestContext, partData: any, userId: string) {
-    logger.info(`Creating part with data:`, partData);
+  async createPart(request: APIRequestContext, partData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Creating part (detal)`);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/detal/detal', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: partData,
+    const response = await request.post(ENV.API_BASE_URL + 'api/detal/', {
+      headers: { ...this.authHeaders(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined), compress: 'no-compress' },
+      multipart: this.toMultipartFields(partData),
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Part created successfully`);
       return { status: response.status(), data: responseData };
     } else {
       logger.error(`Failed to create part, status: ${response.status()}`);
-      throw new Error(`Failed to create part with status: ${response.status()}`);
+      return { status: response.status(), data: responseData };
     }
   }
 
-  async updatePart(request: APIRequestContext, partData: any, userId: string) {
-    logger.info(`Updating part with data:`, partData);
+  async updatePart(request: APIRequestContext, partData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Updating part (detal)`);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/detal/detal/update', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: partData,
+    const response = await request.post(ENV.API_BASE_URL + 'api/detal/update', {
+      headers: { ...this.authHeaders(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined), compress: 'no-compress' },
+      multipart: this.toMultipartFields(partData),
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Part updated successfully`);
       return { status: response.status(), data: responseData };
     } else {
@@ -130,12 +136,13 @@ export class PartsAPI extends APIPageObject {
     }
   }
 
-  async banPart(request: APIRequestContext, id: number, userId: string) {
-    logger.info(`Banning part with ID: ${id}`);
+  async banPart(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Deleting (archiving) part ID: ${id}`);
 
-    const response = await request.delete(ENV.API_BASE_URL + `api/detal/ban/${id}`, {
+    const response = await request.delete(ENV.API_BASE_URL + `api/detal/${id}`, {
       headers: {
-        'user-id': userId,
+        ...this.authHeaders(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined),
+        compress: 'no-compress',
       },
     });
 
@@ -150,10 +157,15 @@ export class PartsAPI extends APIPageObject {
     }
   }
 
-  async getAllParts(request: APIRequestContext, light: boolean) {
+  async getAllParts(request: APIRequestContext, light: boolean, attributes: string = '[]', accessToken?: string) {
     logger.info(`Getting all parts, light: ${light}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/detal/detal/all/${light}`);
+    const response = await request.get(
+      ENV.API_BASE_URL + `api/detal/all/${light}/${encodeURIComponent(attributes)}`,
+      {
+        headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+      }
+    );
 
     if (response.ok()) {
       const responseData = await response.json();

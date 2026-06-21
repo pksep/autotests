@@ -8,19 +8,22 @@ export class ProductsAPI extends APIPageObject {
     super(page);
   }
 
-  async createProduct(request: APIRequestContext, productData: any, userId: string) {
-    logger.info(`Creating product with data:`, productData);
+  private base = () => ENV.API_BASE_URL + 'api/product';
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/product', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: productData,
+  private token(accessToken?: string) {
+    return accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined;
+  }
+
+  async createProduct(request: APIRequestContext, productData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Creating product (multipart)`);
+
+    const response = await request.post(this.base() + '/', {
+      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
+      multipart: this.toMultipartFields(productData),
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Product created successfully`);
       return { status: response.status(), data: responseData };
     } else {
@@ -29,19 +32,16 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async updateProduct(request: APIRequestContext, productData: any, userId: string) {
-    logger.info(`Updating product with data:`, productData);
+  async updateProduct(request: APIRequestContext, productData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Updating product (multipart)`);
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/product', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: productData,
+    const response = await request.post(this.base() + '/update', {
+      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
+      multipart: this.toMultipartFields(productData),
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Product updated successfully`);
       return { status: response.status(), data: responseData };
     } else {
@@ -50,13 +50,20 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async getProductById(request: APIRequestContext, id: number) {
+  async getProductById(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Getting product by ID: ${id}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/product/${id}`);
+    const response = await request.post(this.base() + '/one', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
+      },
+      data: { id },
+    });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Successfully retrieved product by ID`);
       return { status: response.status(), data: responseData };
     } else {
@@ -65,18 +72,15 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async deleteProduct(request: APIRequestContext, id: number, userId: string) {
+  async deleteProduct(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Deleting product with ID: ${id}`);
 
-    const response = await request.delete(ENV.API_BASE_URL + `api/product/${id}`, {
-      headers: {
-        'user-id': userId,
-      },
+    const response = await request.delete(this.base() + `/${id}`, {
+      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseText = await response.text();
-      const responseData = responseText ? JSON.parse(responseText) : { message: 'Product deleted successfully' };
       logger.info(`Product deleted successfully`);
       return { status: response.status(), data: responseData };
     } else {
@@ -85,18 +89,20 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async getAllProducts(request: APIRequestContext, paginationData: any) {
+  async getAllProducts(request: APIRequestContext, paginationData: any, accessToken?: string) {
     logger.info(`Getting all products with pagination:`, paginationData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/product/pagination', {
+    const response = await request.post(this.base() + '/pagination', {
       headers: {
         'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
       data: paginationData,
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Successfully retrieved all products`);
       return { status: response.status(), data: responseData };
     } else {
@@ -105,18 +111,20 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async searchProducts(request: APIRequestContext, searchData: any) {
-    logger.info(`Searching products:`, searchData);
+  async searchProducts(request: APIRequestContext, searchData: any, accessToken?: string) {
+    logger.info(`Searching products (operation/include):`, searchData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/product/search', {
+    const response = await request.post(this.base() + '/operation/include', {
       headers: {
         'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
       data: searchData,
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Successfully searched products`);
       return { status: response.status(), data: responseData };
     } else {
@@ -125,13 +133,15 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async getProductSpecifications(request: APIRequestContext, productId: number) {
-    logger.info(`Getting product specifications for ID: ${productId}`);
+  async getProductSpecifications(request: APIRequestContext, productId: number, accessToken?: string) {
+    logger.info(`Getting product shipments for ID: ${productId}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/product/${productId}/specifications`);
+    const response = await request.get(this.base() + `/shipments/${productId}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+    });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Successfully retrieved product specifications`);
       return { status: response.status(), data: responseData };
     } else {
@@ -140,13 +150,20 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async getProductComponents(request: APIRequestContext, productId: number) {
-    logger.info(`Getting product components for ID: ${productId}`);
+  async getProductComponents(request: APIRequestContext, productId: number, accessToken?: string) {
+    logger.info(`Getting product graph children for ID: ${productId}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/product/${productId}/components`);
+    const response = await request.post(this.base() + '/graph-childrens', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
+      },
+      data: { id: productId },
+    });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Successfully retrieved product components`);
       return { status: response.status(), data: responseData };
     } else {
@@ -155,18 +172,20 @@ export class ProductsAPI extends APIPageObject {
     }
   }
 
-  async validateProduct(request: APIRequestContext, productData: any) {
-    logger.info(`Validating product:`, productData);
+  async validateProduct(request: APIRequestContext, productData: any, accessToken?: string) {
+    logger.info(`Validating product (designation/check):`, productData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/product/validate', {
+    const response = await request.post(this.base() + '/designation/check', {
       headers: {
         'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
       },
-      data: productData,
+      data: productData?.designation ? { designation: productData.designation } : productData,
     });
 
+    const responseData = await this.parseJsonBody(response);
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Product validation completed`);
       return { status: response.status(), data: responseData };
     } else {

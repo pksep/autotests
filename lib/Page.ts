@@ -427,6 +427,85 @@ export class PageObject extends AbstractPage {
   }
 
   /** Check table row ordering by urgency/planned shipment dates. */
+  async checkTableRowOrdering(
+    page: Page,
+    tableId: string,
+    urgencyColIndex: number,
+    plannedShipmentColIndex: number,
+  ): Promise<{ success: boolean; message?: string }> {
+    const values = await page.evaluate(
+      ({ tableId, urgencyColIndex, plannedShipmentColIndex }) => {
+        const table =
+          document.querySelector(tableId) ||
+          document.querySelector(`[data-testid="${tableId}"]`) ||
+          document.getElementById(tableId.replace(/^#/, ''));
+
+        if (!table) {
+          return { found: false, rows: [] as Array<{ urgency: string; planned: string }> };
+        }
+
+        const rows = Array.from(table.querySelectorAll('tbody tr'))
+          .filter(row => row.querySelectorAll('td').length > 0)
+          .map(row => {
+            const cells = Array.from(row.querySelectorAll('td'));
+            return {
+              urgency: (cells[urgencyColIndex]?.textContent || '').trim(),
+              planned: (cells[plannedShipmentColIndex]?.textContent || '').trim(),
+            };
+          });
+
+        return { found: true, rows };
+      },
+      { tableId, urgencyColIndex, plannedShipmentColIndex },
+    );
+
+    if (!values.found) {
+      const message = `Table "${tableId}" not found while checking row ordering`;
+      logger.warn(message);
+      return { success: false, message };
+    }
+
+    const rank = (value: string): number => {
+      const normalized = value.trim().toLowerCase();
+      if (!normalized) return Number.MAX_SAFE_INTEGER;
+      if (normalized.includes('сроч')) return 0;
+      if (normalized.includes('важ')) return 1;
+      return 2;
+    };
+
+    const parseDate = (value: string): number => {
+      const match = value.match(/(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2,4})/);
+      if (!match) return Number.MAX_SAFE_INTEGER;
+      const [, day, month, year] = match;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      return new Date(Number(fullYear), Number(month) - 1, Number(day)).getTime();
+    };
+
+    for (let index = 1; index < values.rows.length; index++) {
+      const previous = values.rows[index - 1];
+      const current = values.rows[index];
+      const previousRank = rank(previous.urgency);
+      const currentRank = rank(current.urgency);
+
+      if (previousRank > currentRank) {
+        return {
+          success: false,
+          message: `Row ${index} urgency "${previous.urgency}" should not come before "${current.urgency}"`,
+        };
+      }
+
+      if (previousRank === currentRank && parseDate(previous.planned) > parseDate(current.planned)) {
+        return {
+          success: false,
+          message: `Row ${index} planned date "${previous.planned}" should not come before "${current.planned}"`,
+        };
+      }
+    }
+
+    return { success: true };
+  }
+
+  /** Check table row ordering by urgency/planned shipment dates. */
   async checkDatesWithOrderList(
     page: Page,
     tableId: string,

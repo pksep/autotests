@@ -43,6 +43,10 @@ export const runContactsAPI = () => {
     await test.step('Test 2: Create contact with SQL injection in name', async () => {
       logger.log('Testing SQL injection protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const sqlInjectionData = {
         name: API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
         email: API_CONST.API_TEST_CONTACT_EMAIL,
@@ -50,7 +54,7 @@ export const runContactsAPI = () => {
         type: API_CONST.API_TEST_CONTACT_TYPE,
       };
 
-      const sqlInjectionResponse = await contactsAPI.createContact(request, sqlInjectionData, API_CONST.API_TEST_USER_ID);
+      const sqlInjectionResponse = await contactsAPI.createContact(request, sqlInjectionData, token);
 
       // API PROBLEM: If this returns 201, there's a SQL injection vulnerability
       expect.soft(sqlInjectionResponse.status).toBe(400);
@@ -70,6 +74,10 @@ export const runContactsAPI = () => {
     await test.step('Test 3: Create contact with XSS payload', async () => {
       logger.log('Testing XSS protection...');
 
+      const loginResponse = await authAPI.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+      expect.soft(loginResponse.status).toBe(200);
+      const token = loginResponse.data.token;
+
       const xssData = {
         name: API_CONST.API_TEST_EDGE_CASES.XSS_PAYLOAD,
         email: API_CONST.API_TEST_CONTACT_EMAIL,
@@ -77,7 +85,7 @@ export const runContactsAPI = () => {
         type: API_CONST.API_TEST_CONTACT_TYPE,
       };
 
-      const xssResponse = await contactsAPI.createContact(request, xssData, API_CONST.API_TEST_USER_ID);
+      const xssResponse = await contactsAPI.createContact(request, xssData, token);
 
       // API PROBLEM: If this returns 201, XSS protection is missing
       expect.soft(xssResponse.status).toBe(400);
@@ -135,7 +143,7 @@ export const runContactsAPI = () => {
         type: API_CONST.API_TEST_CONTACT_TYPE,
       };
 
-      const invalidCreateResponse = await contactsAPI.createContact(request, invalidData, API_CONST.API_TEST_USER_ID);
+      const invalidCreateResponse = await contactsAPI.createContact(request, invalidData, authToken);
 
       // API PROBLEM: If this returns 201, data validation is missing
       expect.soft(invalidCreateResponse.status).toBe(400);
@@ -162,7 +170,7 @@ export const runContactsAPI = () => {
         type: API_CONST.API_TEST_EDGE_CASES.EMPTY_STRING,
       };
 
-      const emptyCreateResponse = await contactsAPI.createContact(request, emptyData, API_CONST.API_TEST_USER_ID);
+      const emptyCreateResponse = await contactsAPI.createContact(request, emptyData, authToken);
 
       // API PROBLEM: If this returns 201, required field validation is missing
       expect.soft(emptyCreateResponse.status).toBe(400);
@@ -208,7 +216,7 @@ export const runContactsAPI = () => {
       };
 
       const startTime = Date.now();
-      const performanceCreateResponse = await contactsAPI.createContact(request, contactData, API_CONST.API_TEST_USER_ID);
+      const performanceCreateResponse = await contactsAPI.createContact(request, contactData, authToken);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -230,7 +238,7 @@ export const runContactsAPI = () => {
 
       const promises = Array(5)
         .fill(null)
-        .map(() => contactsAPI.createContact(request, contactData, API_CONST.API_TEST_USER_ID));
+        .map(() => contactsAPI.createContact(request, contactData, authToken));
       const responses = await Promise.all(promises);
 
       // API PROBLEM: If any operation fails, there's a concurrency issue

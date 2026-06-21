@@ -2,7 +2,7 @@
  * @file U003-AddProducts.spec.ts
  * @purpose U003 Case 4: Add two products to shipment task.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import { SELECTORS } from '../config';
 import { allure } from 'allure-playwright';
 import { expectSoftWithScreenshot } from '../lib/Page';
