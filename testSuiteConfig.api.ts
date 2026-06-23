@@ -10,8 +10,10 @@ import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
+import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
 import { runUsersAPINew } from './testcases/API/APIUsers.spec';
+import { runWarehouseAPINew } from './testcases/API/APIWarehouse.spec';
 
 export const apiSuites = {
   auth_api: {
@@ -91,6 +93,28 @@ export const apiSuites = {
     ]
   },
 
+  shipments_api: {
+    description: 'Набор тестов Shipments API для проверки задач на отгрузку, комплектации, документов, связей и defensive-сценариев.',
+    tests: [
+      {
+        test: runShipmentsAPINew,
+        description:
+          'Тестирует эндпоинты API задач на отгрузку: основные пагинации, отметки отгрузки, чтение по id, комплектацию, документы, include-модели, связи с изделием и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  warehouse_api: {
+    description: 'Набор тестов Warehouse/Sclad API для проверки остатков, ревизий, флагов дефицитов, потребностей и defensive-сценариев.',
+    tests: [
+      {
+        test: runWarehouseAPINew,
+        description:
+          'Тестирует эндпоинты API склада: остатки по типам сущностей, пагинацию остатков, историю ревизий, флаги дефицитов, потребности по родителям и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
   assemble_api: {
     description: 'Набор тестов Assemble API для проверки сборки, наборов, приходов, планов и defensive-сценариев.',
     tests: [
@@ -150,6 +174,16 @@ export const apiSuites = {
         test: runStockOrderAPINew,
         description:
           'Тестирует эндпоинты API заказов склада: создание, чтение, обновление, архив, позиции, связи с сущностями, пагинацию и безопасную обработку ошибочных запросов.'
+      },
+      {
+        test: runShipmentsAPINew,
+        description:
+          'Тестирует эндпоинты API задач на отгрузку: основные пагинации, отметки отгрузки, чтение по id, комплектацию, документы, include-модели, связи с изделием и безопасную обработку ошибочных запросов.'
+      },
+      {
+        test: runWarehouseAPINew,
+        description:
+          'Тестирует эндпоинты API склада: остатки по типам сущностей, пагинацию остатков, историю ревизий, флаги дефицитов, потребности по родителям и безопасную обработку ошибочных запросов.'
       },
       {
         test: runAssembleAPINew,

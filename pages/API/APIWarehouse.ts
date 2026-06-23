@@ -13,13 +13,24 @@ export class WarehouseAPI extends APIPageObject {
 
   async getNeedsByParents(request: APIRequestContext, type: string, id: number, accessToken?: string) {
     logger.info(`needs_by_parents type=${type} id=${id}`);
-    const response = await request.get(this.base() + `/needs_by_parents/${type}/${id}`, {
+    const response = await request.get(this.base() + `/needs-by-parents/${type}/${id}`, {
       headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
     });
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`getNeedsByParents failed: ${response.status()}`);
-      throw new Error(`getNeedsByParents failed: ${response.status()}`);
+    }
+    return { status: response.status(), data };
+  }
+
+  async getDeficitFlags(request: APIRequestContext, accessToken?: string) {
+    logger.info(`deficit flags`);
+    const response = await request.get(this.base() + '/flags', {
+      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    });
+    const data = await this.parseJsonBody(response);
+    if (!response.ok()) {
+      logger.error(`getDeficitFlags failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
@@ -33,7 +44,6 @@ export class WarehouseAPI extends APIPageObject {
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`getNeedsByParent failed: ${response.status()}`);
-      throw new Error(`getNeedsByParent failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
@@ -46,7 +56,6 @@ export class WarehouseAPI extends APIPageObject {
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`resetInSets failed: ${response.status()}`);
-      throw new Error(`resetInSets failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
@@ -61,7 +70,6 @@ export class WarehouseAPI extends APIPageObject {
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`getWarehouseRemains failed: ${response.status()}`);
-      throw new Error(`getWarehouseRemains failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
@@ -74,7 +82,6 @@ export class WarehouseAPI extends APIPageObject {
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`getRemainsByEntityType failed: ${response.status()}`);
-      throw new Error(`getRemainsByEntityType failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
@@ -88,7 +95,6 @@ export class WarehouseAPI extends APIPageObject {
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`updateWarehouseItem failed: ${response.status()}`);
-      throw new Error(`updateWarehouseItem failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
@@ -102,7 +108,6 @@ export class WarehouseAPI extends APIPageObject {
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`getRevisionHistory failed: ${response.status()}`);
-      throw new Error(`getRevisionHistory failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
@@ -115,7 +120,6 @@ export class WarehouseAPI extends APIPageObject {
     const data = await this.parseJsonBody(response);
     if (!response.ok()) {
       logger.error(`complitAssembly failed: ${response.status()}`);
-      throw new Error(`complitAssembly failed: ${response.status()}`);
     }
     return { status: response.status(), data };
   }
