@@ -28,6 +28,8 @@ export class APIPageObject extends AbstractPage {
     const headers: Record<string, string> = { ...extra };
     if (accessToken && accessToken !== 'invalid_user') {
       headers['Authorization'] = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`;
+      const rawToken = accessToken.startsWith('Bearer ') ? accessToken.slice('Bearer '.length) : accessToken;
+      headers['Cookie'] = `access_token=${rawToken}; refresh_token=${rawToken}`;
     }
     return headers;
   }

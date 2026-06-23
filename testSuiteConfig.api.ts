@@ -6,7 +6,9 @@
 import { runAuthAPINew } from './testcases/API/APIAuth.spec';
 import { runCBEDAPINew } from './testcases/API/APICBED.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
+import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
+import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
 import { runUsersAPINew } from './testcases/API/APIUsers.spec';
 
 export const apiSuites = {
@@ -65,6 +67,28 @@ export const apiSuites = {
     ]
   },
 
+  materials_api: {
+    description: 'Набор тестов Materials API для проверки жизненного цикла материала, типов, подтипов и контрактов чтения.',
+    tests: [
+      {
+        test: runMaterialsAPINew,
+        description:
+          'Тестирует эндпоинты API материалов: создание типа и подтипа, создание/обновление/архивацию материала, пагинацию, include, aliases, restrictions, дефициты и defensive-сценарии.'
+      }
+    ]
+  },
+
+  stock_order_api: {
+    description: 'Набор тестов Stock Order API для проверки заказов склада, позиций, пагинации и defensive-сценариев.',
+    tests: [
+      {
+        test: runStockOrderAPINew,
+        description:
+          'Тестирует эндпоинты API заказов склада: создание, чтение, обновление, архив, позиции, связи с сущностями, пагинацию и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
   all_api_tests: {
     description: 'Полный набор оставшихся API-тестов.',
     tests: [
@@ -92,6 +116,16 @@ export const apiSuites = {
         test: runCBEDAPINew,
         description:
           'Тестирует эндпоинты API сборочных единиц: создание, чтение, обновление, архивацию, пагинацию, include, принадлежность, graph, остатки, дефициты, операции и defensive-сценарии.'
+      },
+      {
+        test: runMaterialsAPINew,
+        description:
+          'Тестирует эндпоинты API материалов: создание типа и подтипа, создание/обновление/архивацию материала, пагинацию, include, aliases, restrictions, дефициты и defensive-сценарии.'
+      },
+      {
+        test: runStockOrderAPINew,
+        description:
+          'Тестирует эндпоинты API заказов склада: создание, чтение, обновление, архив, позиции, связи с сущностями, пагинацию и безопасную обработку ошибочных запросов.'
       }
     ]
   }

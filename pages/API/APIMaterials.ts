@@ -8,6 +8,54 @@ export class MaterialsAPI extends APIPageObject {
     super(page);
   }
 
+  private base() {
+    return ENV.API_BASE_URL + 'api/material';
+  }
+
+  private jsonHeaders(accessToken?: string) {
+    return {
+      'Content-Type': 'application/json',
+      compress: 'no-compress',
+      ...this.authHeaders(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined),
+    };
+  }
+
+  private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
+    return { status: response.status(), data: await this.parseJsonBody(response) };
+  }
+
+  async createTypeMaterial(request: APIRequestContext, typeData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Creating type material with data:`, typeData);
+
+    const response = await request.post(this.base() + '/type-material', {
+      headers: this.jsonHeaders(accessToken),
+      data: typeData,
+    });
+
+    return this.result(response);
+  }
+
+  async updateTypeMaterial(request: APIRequestContext, typeData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Updating type material with data:`, typeData);
+
+    const response = await request.post(this.base() + '/type-material/update', {
+      headers: this.jsonHeaders(accessToken),
+      data: typeData,
+    });
+
+    return this.result(response);
+  }
+
+  async removeTypeMaterial(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Removing type material with id: ${id}`);
+
+    const response = await request.delete(this.base() + `/type-material/${id}`, {
+      headers: this.jsonHeaders(accessToken),
+    });
+
+    return this.result(response);
+  }
+
   async createSubtypeMaterial(request: APIRequestContext, subtypeData: any, accessToken?: string) {
     logger.info(`Creating subtype material with data:`, subtypeData);
 
@@ -24,41 +72,25 @@ export class MaterialsAPI extends APIPageObject {
     return { status: response.status(), data: responseData };
   }
 
-  async removeSubtypeMaterial(request: APIRequestContext, id: number) {
+  async removeSubtypeMaterial(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Removing subtype material with id: ${id}`);
 
-    const response = await request.delete(ENV.API_BASE_URL + `api/material/subtype/${id}`);
+    const response = await request.delete(ENV.API_BASE_URL + `api/material/subtype/${id}`, {
+      headers: this.jsonHeaders(accessToken),
+    });
 
-    if (response.ok()) {
-      // Handle empty response for DELETE operations
-      const responseText = await response.text();
-      const responseData = responseText ? JSON.parse(responseText) : { message: 'Subtype material removed successfully' };
-      logger.info(`Subtype material removed successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to remove subtype material, status: ${response.status()}`);
-      throw new Error(`Failed to remove subtype material with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async updateSubtypeMaterial(request: APIRequestContext, subtypeData: any) {
+  async updateSubtypeMaterial(request: APIRequestContext, subtypeData: any, accessToken?: string) {
     logger.info(`Updating subtype material with data:`, subtypeData);
 
     const response = await request.post(ENV.API_BASE_URL + 'api/material/subtype/update', {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: this.jsonHeaders(accessToken),
       data: subtypeData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Subtype material updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update subtype material, status: ${response.status()}`);
-      throw new Error(`Failed to update subtype material with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async createAndUpdateMaterial(request: APIRequestContext, materialData: Record<string, unknown>, accessToken?: string) {
@@ -69,14 +101,7 @@ export class MaterialsAPI extends APIPageObject {
       multipart: this.toMultipartFields(materialData),
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Material created/updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create/update material, status: ${response.status()}`);
-      throw new Error(`Failed to create/update material with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async getAllMaterials(request: APIRequestContext, accessToken?: string) {
@@ -86,40 +111,174 @@ export class MaterialsAPI extends APIPageObject {
       headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved all materials`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get all materials, status: ${response.status()}`);
-      throw new Error(`Failed to get all materials with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getIncludeForMaterial(request: APIRequestContext, includeData: any) {
+  async getMaterialsPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting materials pagination with data:`, paginationData);
+
+    const response = await request.post(this.base() + '/material/pagination', {
+      headers: this.jsonHeaders(accessToken),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async getTypeMaterialsPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting type materials pagination with data:`, paginationData);
+
+    const response = await request.post(this.base() + '/pagination/type-material', {
+      headers: this.jsonHeaders(accessToken),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async getSubtypeMaterialsPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting subtype materials pagination with data:`, paginationData);
+
+    const response = await request.post(this.base() + '/pagination/subtype-materials', {
+      headers: this.jsonHeaders(accessToken),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async getMaterialById(request: APIRequestContext, id: number, light = true, accessToken?: string) {
+    logger.info(`Getting material by id: ${id}, light: ${light}`);
+
+    const response = await request.get(this.base() + `/material/get/${id}/${light}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async banMaterial(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Archiving material with id: ${id}`);
+
+    const response = await request.delete(this.base() + `/ban/${id}`, {
+      headers: this.jsonHeaders(accessToken),
+    });
+
+    return this.result(response);
+  }
+
+  async getArchivedMaterials(request: APIRequestContext, archiveData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting archived materials with data:`, archiveData);
+
+    const response = await request.post(this.base() + '/material/archive/', {
+      headers: this.jsonHeaders(accessToken),
+      data: archiveData,
+    });
+
+    return this.result(response);
+  }
+
+  async checkNameUnique(request: APIRequestContext, checkData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Checking material namespace uniqueness with data:`, checkData);
+
+    const response = await request.post(this.base() + '/name/unique', {
+      headers: this.jsonHeaders(accessToken),
+      data: checkData,
+    });
+
+    return this.result(response);
+  }
+
+  async checkNameExisting(request: APIRequestContext, checkData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Checking material name existing with data:`, checkData);
+
+    const response = await request.post(this.base() + '/name/check', {
+      headers: this.jsonHeaders(accessToken),
+      data: checkData,
+    });
+
+    return this.result(response);
+  }
+
+  async getIncludeForMaterial(request: APIRequestContext, includeData: any, accessToken?: string) {
     logger.info(`Getting include for material:`, includeData);
 
     const response = await request.post(ENV.API_BASE_URL + 'api/material/material/include', {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: this.jsonHeaders(accessToken),
       data: includeData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved include for material`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get include for material, status: ${response.status()}`);
-      throw new Error(`Failed to get include for material with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async actualMaterialLists(request: APIRequestContext) {
+  async getMaterialAliases(request: APIRequestContext, materialId: number, accessToken?: string) {
+    logger.info(`Getting aliases for material id: ${materialId}`);
+
+    const response = await request.get(this.base() + `/aliases/${materialId}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async createMaterialAlias(request: APIRequestContext, aliasData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Creating material alias with data:`, aliasData);
+
+    const response = await request.post(this.base() + '/aliases', {
+      headers: this.jsonHeaders(accessToken),
+      data: aliasData,
+    });
+
+    return this.result(response);
+  }
+
+  async getMaterialShipmentsAndOrders(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting material shipments and orders for id: ${id}`);
+
+    const response = await request.get(this.base() + `/shipments/${id}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async getMeasurementUnitRestrictionsInfo(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting material measurement unit restrictions for id: ${id}`);
+
+    const response = await request.get(this.base() + `/restrictions/measurement-unit/${id}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async getMeasurementCoefficientRestrictionsInfo(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting material measurement coefficient restrictions for id: ${id}`);
+
+    const response = await request.get(this.base() + `/restrictions/measurement-coefficient/${id}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async getMaterialDeficits(request: APIRequestContext, deficitData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting material deficits with data:`, deficitData);
+
+    const response = await request.post(this.base() + '/deficits', {
+      headers: this.jsonHeaders(accessToken),
+      data: deficitData,
+    });
+
+    return this.result(response);
+  }
+
+  async actualMaterialLists(request: APIRequestContext, accessToken?: string) {
     logger.info(`Actualizing material lists`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/material/type-material');
+    const response = await request.get(ENV.API_BASE_URL + 'api/material/type-material', {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -131,10 +290,12 @@ export class MaterialsAPI extends APIPageObject {
     }
   }
 
-  async actualListsSpecification(request: APIRequestContext) {
+  async actualListsSpecification(request: APIRequestContext, accessToken?: string) {
     logger.info(`Actualizing lists specification`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/material/material/');
+    const response = await request.get(ENV.API_BASE_URL + 'api/material/material/', {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
 
     if (response.ok()) {
       const responseData = await response.json();
@@ -146,18 +307,13 @@ export class MaterialsAPI extends APIPageObject {
     }
   }
 
-  async getAllSubtypeMaterial(request: APIRequestContext, instans: string) {
+  async getAllSubtypeMaterial(request: APIRequestContext, instans: string, accessToken?: string) {
     logger.info(`Getting all subtype materials for instans: ${instans}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/material/subtype-material/${instans}`);
+    const response = await request.get(ENV.API_BASE_URL + `api/material/subtype-material/${instans}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved all subtype materials`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get all subtype materials, status: ${response.status()}`);
-      throw new Error(`Failed to get all subtype materials with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 }
