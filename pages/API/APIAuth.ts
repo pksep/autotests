@@ -37,13 +37,7 @@ export class AuthAPI extends APIPageObject {
 
   private async handleResponse(response: any, username: string) {
     const status = response.status();
-    let responseData;
-
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = await response.text();
-    }
+    const responseData = await this.parseJsonBody(response);
 
     if (response.ok()) {
       logger.info(`Login successful for user: ${username}`);
@@ -54,41 +48,22 @@ export class AuthAPI extends APIPageObject {
     return { status: status, data: responseData, headers: response.headers(), headersArray: response.headersArray() };
   }
 
-    async getUserByToken(request: APIRequestContext, token: string) {
-      logger.info(`Getting user by token`);
+  async getUserByToken(request: APIRequestContext, token: string) {
+    logger.info(`Getting user by token`);
 
-      // Token validation endpoint returns a success status for a valid token and 401 for an invalid token.
-      const response = await request.post(ENV.API_BASE_URL + 'api/auth/check', {
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': '*/*',
-          'compress': 'no-compress',
-        },
-        data: {
-          token: token
-        }
-      });
+    // Token validation endpoint returns a success status for a valid token and 401 for an invalid token.
+    const result = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/auth/check', {
+      data: { token },
+      headers: { accept: '*/*' },
+    });
 
-    const status = response.status();
-    let responseData;
-
-    try {
-      responseData = await response.json();
-      logger.log(`🔍 JSON response parsed successfully: ${JSON.stringify(responseData).substring(0, 200)}...`);
-    } catch (e) {
-      responseData = await response.text();
-      logger.log(`🔍 Text response: "${responseData}" (length: ${responseData.length})`);
-    }
-
-    // Response processed
-
-    if (response.ok()) {
+    if (result.status >= 200 && result.status < 300) {
       logger.info(`Successfully retrieved user by token`);
     } else {
-      logger.info(`Failed to get user by token, status: ${status} - This is expected for defensive testing`);
+      logger.info(`Failed to get user by token, status: ${result.status} - This is expected for defensive testing`);
     }
 
-        return { status: status, data: responseData };
+    return result;
   }
 
   /**
@@ -100,34 +75,23 @@ export class AuthAPI extends APIPageObject {
   async refreshTokens(request: APIRequestContext, refreshToken?: string) {
     logger.info(`Refreshing tokens using refresh token`);
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
 
     if (refreshToken) {
       headers.Cookie = `refresh_token=${refreshToken}`;
     }
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/auth/refresh', {
+    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/auth/refresh', {
       headers,
     });
 
-    const status = response.status();
-    let responseData;
-
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = await response.text();
-    }
-
-    if (response.ok()) {
+    if (response.status >= 200 && response.status < 300) {
       logger.info(`Token refresh successful`);
     } else {
-      logger.info(`Token refresh failed, status: ${status}`);
+      logger.info(`Token refresh failed, status: ${response.status}`);
     }
 
-    return { status: status, data: responseData };
+    return response;
   }
 
   /**
@@ -139,30 +103,16 @@ export class AuthAPI extends APIPageObject {
   async logout(request: APIRequestContext, userId: number) {
     logger.info(`Logging out user with ID: ${userId}`);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/auth/logout', {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: {
-        userId: userId,
-      },
+    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/auth/logout', {
+      data: { userId },
     });
 
-    const status = response.status();
-    let responseData;
-
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = await response.text();
-    }
-
-    if (response.ok()) {
+    if (response.status >= 200 && response.status < 300) {
       logger.info(`Logout successful for user ID: ${userId}`);
     } else {
-      logger.info(`Logout failed for user ID: ${userId}, status: ${status}`);
+      logger.info(`Logout failed for user ID: ${userId}, status: ${response.status}`);
     }
 
-    return { status: status, data: responseData };
+    return response;
   }
 }

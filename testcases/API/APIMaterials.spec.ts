@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { AuthAPI } from '../../pages/API/APIAuth';
 import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
+import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -11,39 +12,7 @@ type ApiResult = {
 
 type MaterialLike = Record<string, any>;
 
-const authAPI = new AuthAPI();
 const materialsAPI = new MaterialsAPI(null as any);
-
-const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
-const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
-const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
-
-const extractAccessToken = (data: any): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
-};
-
-const getRows = (data: unknown): MaterialLike[] => {
-  if (Array.isArray(data)) return data as MaterialLike[];
-  if (data && typeof data === 'object' && Array.isArray((data as any).rows)) return (data as any).rows;
-  if (data && typeof data === 'object' && Array.isArray((data as any).data)) return (data as any).data;
-  return [];
-};
-
-const getCount = (data: unknown): number | undefined => {
-  if (!data || typeof data !== 'object') return undefined;
-  const value = (data as any).count ?? (data as any).total;
-  return typeof value === 'number' ? value : undefined;
-};
-
-const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
-};
-
-const expectNotSuccessful = (response: ApiResult) => {
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
-  expectNoServerError(response);
-};
 
 const expectMaterialShape = (material: MaterialLike) => {
   expect(material).toBeTruthy();
@@ -109,17 +78,13 @@ const findMaterialByName = async (
   name: string,
   accessToken?: string,
 ): Promise<MaterialLike | undefined> => {
-  for (let attempt = 0; attempt < 8; attempt++) {
+  const response = await eventually(async () => {
     const response = await materialsAPI.getMaterialsPagination(request, materialPaginationDto({ searchString: name }), accessToken);
     expectNoServerError(response);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.name === name));
 
-    const material = getRows(response.data).find((row) => row.name === name);
-    if (material) return material;
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  return undefined;
+  return response ? getRows(response.data).find((row) => row.name === name) : undefined;
 };
 
 const waitForMaterialInActiveSearch = async (
@@ -129,17 +94,13 @@ const waitForMaterialInActiveSearch = async (
   expectedPresent: boolean,
   accessToken?: string,
 ): Promise<boolean> => {
-  for (let attempt = 0; attempt < 8; attempt++) {
+  const response = await eventually(async () => {
     const response = await materialsAPI.getMaterialsPagination(request, materialPaginationDto({ searchString: name }), accessToken);
     expect(response.status).toBe(201);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.id === materialId) === expectedPresent);
 
-    const isPresent = getRows(response.data).some((row) => row.id === materialId);
-    if (isPresent === expectedPresent) return true;
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  return false;
+  return Boolean(response);
 };
 
 const waitForMaterialInArchive = async (
@@ -148,18 +109,13 @@ const waitForMaterialInArchive = async (
   materialId: number,
   accessToken?: string,
 ): Promise<boolean> => {
-  for (let attempt = 0; attempt < 8; attempt++) {
+  const response = await eventually(async () => {
     const response = await materialsAPI.getArchivedMaterials(request, { searchString: name }, accessToken);
     expect(response.status).toBe(201);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.id === materialId));
 
-    if (getRows(response.data).some((row) => row.id === materialId)) {
-      return true;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  return false;
+  return Boolean(response);
 };
 
 export const runMaterialsAPINew = () => {
@@ -179,16 +135,7 @@ export const runMaterialsAPINew = () => {
     let updatedPayload: Record<string, unknown>;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
+      accessToken = await getAuthToken(request);
     });
 
     test.afterAll(async ({ request }) => {
@@ -209,7 +156,7 @@ export const runMaterialsAPINew = () => {
     });
 
     test('создает тип и подтип материала для изолированного тестового материала', async ({ request }) => {
-      const suffix = `${Date.now()}`;
+      const suffix = uniqueApiSuffix('material');
       const typeName = `API Type Material ${suffix}`;
       const subtypeName = `API Subtype Material ${suffix}`;
 
@@ -297,6 +244,10 @@ export const runMaterialsAPINew = () => {
       );
       expect(aliasSearch.status).toBe(201);
       expect(getRows(aliasSearch.data).some((row) => row.id === createdMaterialId)).toBe(true);
+
+      const duplicateName = await materialsAPI.checkNameExisting(request, { name: createdName }, accessToken);
+      expect(duplicateName.status).toBe(201);
+      expect(Number(duplicateName.data), JSON.stringify(duplicateName.data)).toBeGreaterThanOrEqual(1);
     });
 
     test('обрабатывает обновление материала без серверных ошибок', async ({ request }) => {
@@ -362,13 +313,16 @@ export const runMaterialsAPINew = () => {
       const archiveResponse = await materialsAPI.banMaterial(request, materialId, accessToken);
       expect(successCodes).toContain(archiveResponse.status);
       expectNoServerError(archiveResponse);
-      createdMaterialId = undefined;
 
       expect(
         await waitForMaterialInActiveSearch(request, activeMaterialName, materialId, false, accessToken),
       ).toBe(true);
 
       expect(await waitForMaterialInArchive(request, activeMaterialName, materialId, accessToken)).toBe(true);
+
+      const secondArchiveResponse = await materialsAPI.banMaterial(request, materialId, accessToken);
+      expectNoServerError(secondArchiveResponse);
+      createdMaterialId = undefined;
     });
   });
 
@@ -378,16 +332,7 @@ export const runMaterialsAPINew = () => {
     let accessToken: string | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
+      accessToken = await getAuthToken(request);
     });
 
     test('возвращает страницу материалов без серверных ошибок', async ({ request }) => {
@@ -412,6 +357,27 @@ export const runMaterialsAPINew = () => {
       expect(response.status).toBe(201);
       expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
       expect(getRows(response.data)).toEqual([]);
+    });
+
+    test('пагинация материалов поддерживает граничные значения page/pageSize', async ({ request }) => {
+      const firstPage = await materialsAPI.getMaterialsPagination(
+        request,
+        materialPaginationDto({ page: 0, pageSize: 1 }),
+        accessToken,
+      );
+      expect(firstPage.status).toBe(201);
+      expectPaginationContract(firstPage.data, 1);
+
+      const farPage = await materialsAPI.getMaterialsPagination(
+        request,
+        materialPaginationDto({ page: 999999, pageSize: 5 }),
+        accessToken,
+      );
+      expectNoServerError(farPage);
+      if (!clientErrorCodes.includes(farPage.status)) {
+        expect(successCodes).toContain(farPage.status);
+        expectPaginationContract(farPage.data, 5);
+      }
     });
 
     test('пагинация типов и подтипов материалов не отвечает 5xx на базовые фильтры', async ({ request }) => {
@@ -475,6 +441,26 @@ export const runMaterialsAPINew = () => {
     test('чтение несуществующего id не приводит к серверным ошибкам', async ({ request }) => {
       const byId = await materialsAPI.getMaterialById(request, 999999999, true, accessToken);
       expectNoServerError(byId);
+    });
+
+    test('мутации материала без авторизации не проходят успешно', async ({ request }) => {
+      const createResponse = await materialsAPI.createAndUpdateMaterial(
+        request,
+        {
+          name: `API Material NoAuth ${uniqueApiSuffix('material')}`,
+          rootParentId: 1,
+          subtypeMaterialId: 1,
+          units_measurement: [{ unitTypeId: 1, convertRate: 1, isBase: true }],
+          characteristics: materialCharacteristics(),
+          material_aliases: [],
+          companyIds: '[]',
+          file_base: '[]',
+        },
+      );
+      expectNotSuccessful(createResponse);
+
+      const deleteResponse = await materialsAPI.banMaterial(request, 999999999);
+      expectNotSuccessful(deleteResponse);
     });
   });
 };

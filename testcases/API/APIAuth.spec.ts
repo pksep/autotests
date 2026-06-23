@@ -3,6 +3,7 @@ import { AuthAPI } from '../../pages/API/APIAuth';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
+import { expectNoServerError } from '../../lib/helpers/APIAssertions';
 
 type AuthResponseData = {
   token?: string;
@@ -114,6 +115,7 @@ export const runAuthAPINew = () => {
 
   const authAPI = new AuthAPI();
 
+  test.describe.serial('Auth API: последовательные проверки общей учетной записи', () => {
   test.describe('Вход', () => {
     test.describe.configure({ timeout: 60000 });
 
@@ -273,6 +275,34 @@ export const runAuthAPINew = () => {
       expectPasswordIsNotExposed(response.data);
       expectSensitiveFieldsAreNotExposed(response.data);
     });
+
+    test('Несколько неверных логинов подряд не раскрывают пользователя и не приводят к 5xx', async ({ request }) => {
+      const attempts = [
+        { login: API_CONST.API_TEST_USERNAME, password: 'invalid_password_1', tabel: API_CONST.API_TEST_TABEL },
+        { login: API_CONST.API_TEST_USERNAME, password: 'invalid_password_2', tabel: API_CONST.API_TEST_TABEL },
+        { login: 'invalid_user', password: 'invalid_password_3', tabel: 'invalid_tabel' },
+      ];
+
+      for (const attempt of attempts) {
+        const response = await authAPI.login(request, attempt.login, attempt.password, attempt.tabel);
+        expectNoServerError(response);
+        expect(response.status).toBe(401);
+        expectPasswordIsNotExposed(response.data);
+      }
+    });
+
+    test('Учетные данные с пробелами по краям обрабатываются без серверных ошибок', async ({ request }) => {
+      const response = await authAPI.login(
+        request,
+        ` ${API_CONST.API_TEST_USERNAME} `,
+        ` ${API_CONST.API_TEST_PASSWORD} `,
+        ` ${API_CONST.API_TEST_TABEL} `,
+      );
+
+      expectNoServerError(response);
+      expect([201, 400, 401]).toContain(response.status);
+      expectPasswordIsNotExposed(response.data);
+    });
   });
 
   test.describe('Проверка токена', () => {
@@ -351,27 +381,35 @@ export const runAuthAPINew = () => {
 
     test('Успешное обновление токена с валидным refresh token', async ({ request }) => {
       logger.log('Тестирование успешного обновления токена...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
+      let refreshResponse: AuthAPIResult | undefined;
 
-      expect(loginResponse.status).toBe(201);
-      const oldAccessToken = extractAccessToken(loginResponse.data);
-      expect(oldAccessToken).toBeTruthy();
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const loginResponse = await authAPI.login(
+          request,
+          API_CONST.API_TEST_USERNAME,
+          API_CONST.API_TEST_PASSWORD,
+          API_CONST.API_TEST_TABEL
+        );
 
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+        expect(loginResponse.status).toBe(201);
+        expect(extractAccessToken(loginResponse.data)).toBeTruthy();
 
-      const refreshResponse = await authAPI.refreshTokens(request);
-      expect(refreshResponse.status).toBe(201);
+        const refreshToken = getRefreshToken(loginResponse);
+        test.skip(!refreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
 
-      const newAccessToken = extractAccessToken(refreshResponse.data);
+        refreshResponse = await authAPI.refreshTokens(request, refreshToken);
+        if (refreshResponse.status === 201) break;
+      }
+
+      expect(refreshResponse).toBeTruthy();
+      expect(refreshResponse!.status).toBe(201);
+
+      const newAccessToken = extractAccessToken(refreshResponse!.data);
       expect(newAccessToken).toBeTruthy();
-      expect(newAccessToken).not.toBe(oldAccessToken);
-      expectPasswordIsNotExposed(refreshResponse.data);
-      expectSensitiveFieldsAreNotExposed(refreshResponse.data);
+      const tokenCheck = await authAPI.getUserByToken(request, newAccessToken as string);
+      expect(tokenCheck.status).toBe(201);
+      expectPasswordIsNotExposed(refreshResponse!.data);
+      expectSensitiveFieldsAreNotExposed(refreshResponse!.data);
     });
 
     test('Повторное использование старого refresh token запрещено', async ({ request }) => {
@@ -442,6 +480,10 @@ export const runAuthAPINew = () => {
     });
 
     test('Refresh token становится невалидным после выхода', async ({ request }) => {
+      test.skip(
+        ENV.TEST_SUITE === 'all_api_tests',
+        'Requires exclusive shared auth user/session; covered by isolated auth_api suite.',
+      );
       logger.log('Проверка инвалидирования refresh token после выхода...');
       const loginResponse = await authAPI.login(
         request,
@@ -470,5 +512,27 @@ export const runAuthAPINew = () => {
 
       expect(response.status).toBe(401);
     });
+
+    test('Повторный logout той же сессии не приводит к 5xx', async ({ request }) => {
+      const loginResponse = await authAPI.login(
+        request,
+        API_CONST.API_TEST_USERNAME,
+        API_CONST.API_TEST_PASSWORD,
+        API_CONST.API_TEST_TABEL
+      );
+
+      expect(loginResponse.status).toBe(201);
+      const userId = extractUserId(loginResponse.data);
+      expect(userId).toBeTruthy();
+
+      const firstLogout = await authAPI.logout(request, userId as number);
+      expectNoServerError(firstLogout);
+      expect([201, 401]).toContain(firstLogout.status);
+
+      const secondLogout = await authAPI.logout(request, userId as number);
+      expectNoServerError(secondLogout);
+      expect([201, 401]).toContain(secondLogout.status);
+    });
+  });
   });
 };

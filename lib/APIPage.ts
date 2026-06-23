@@ -57,6 +57,51 @@ export class APIPageObject extends AbstractPage {
     }
   }
 
+  protected async apiResult(response: APIResponse): Promise<{ status: number; data: any; headers: Record<string, string> }> {
+    return {
+      status: response.status(),
+      data: await this.parseJsonBody(response),
+      headers: response.headers(),
+    };
+  }
+
+  protected async apiRequest(
+    requestContext: APIRequestContext,
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
+    url: string,
+    options: {
+      data?: unknown;
+      headers?: Record<string, string>;
+      accessToken?: string;
+      json?: boolean;
+    } = {},
+  ): Promise<{ status: number; data: any; headers: Record<string, string> }> {
+    const headers = {
+      ...(options.json === false ? {} : { 'Content-Type': 'application/json' }),
+      compress: 'no-compress',
+      ...this.authHeaders(options.accessToken),
+      ...options.headers,
+    };
+
+    const requestOptions = {
+      headers,
+      ...(options.data === undefined ? {} : { data: options.data }),
+    };
+
+    const response =
+      method === 'GET'
+        ? await requestContext.get(url, requestOptions)
+        : method === 'POST'
+          ? await requestContext.post(url, requestOptions)
+          : method === 'PUT'
+            ? await requestContext.put(url, requestOptions)
+            : method === 'DELETE'
+              ? await requestContext.delete(url, requestOptions)
+              : await requestContext.patch(url, requestOptions);
+
+    return this.apiResult(response);
+  }
+
   /**
    * Domains without a dedicated REST module: forwards to {@code POST api/actions/get-by-params}
    * (see sep_erp_server ActionsController). Merges {@code dto}; default {@code relativeActionType} is {@code assembly_kit}.

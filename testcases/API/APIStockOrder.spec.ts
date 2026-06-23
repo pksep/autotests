@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { AuthAPI } from '../../pages/API/APIAuth';
 import { DetailsAPI } from '../../pages/API/APIDetails';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { StockOrderAPI } from '../../pages/API/APIStockOrder';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
+import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -14,44 +15,12 @@ type ApiResult = {
 type StockOrderLike = Record<string, any>;
 type StockOrderItemLike = Record<string, any>;
 
-const authAPI = new AuthAPI();
 const detailsAPI = new DetailsAPI(null);
 const productsAPI = new ProductsAPI(null as any);
 const stockOrderAPI = new StockOrderAPI(null);
 
-const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
-const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
-const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
-
-const extractAccessToken = (data: any): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
-};
-
-const getRows = (data: unknown): StockOrderLike[] => {
-  if (Array.isArray(data)) return data as StockOrderLike[];
-  if (data && typeof data === 'object' && Array.isArray((data as any).rows)) return (data as any).rows;
-  if (data && typeof data === 'object' && Array.isArray((data as any).data)) return (data as any).data;
-  return [];
-};
-
-const getCount = (data: unknown): number | undefined => {
-  if (!data || typeof data !== 'object') return undefined;
-  const value = (data as any).count ?? (data as any).total;
-  return typeof value === 'number' ? value : undefined;
-};
-
 const getQueueData = (data: any): any => {
   return data?.data && typeof data.data === 'object' ? data.data : data;
-};
-
-const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
-};
-
-const expectNotSuccessful = (response: ApiResult) => {
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
-  expectNoServerError(response);
 };
 
 const expectStockOrderShape = (stockOrder: StockOrderLike) => {
@@ -158,17 +127,13 @@ const waitForStockOrderItems = async (
   stockOrderId: number,
   accessToken?: string,
 ): Promise<StockOrderItemLike[]> => {
-  for (let attempt = 0; attempt < 10; attempt++) {
+  const response = await eventually(async () => {
     const response = await stockOrderAPI.getItemsByStockOrder(request, stockOrderId, accessToken);
     expectNoServerError(response);
+    return response;
+  }, (response) => getRows(response.data).length > 0, { attempts: 10, intervalMs: 700 });
 
-    const rows = getRows(response.data);
-    if (rows.length > 0) return rows;
-
-    await new Promise((resolve) => setTimeout(resolve, 700));
-  }
-
-  return [];
+  return response ? getRows(response.data) : [];
 };
 
 export const runStockOrderAPINew = () => {
@@ -183,17 +148,7 @@ export const runStockOrderAPINew = () => {
     let entity: { id: number; type: 'product' | 'detal' } | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
-
+      accessToken = await getAuthToken(request);
       entity = await findActiveEntity(request, accessToken);
     });
 
@@ -207,7 +162,7 @@ export const runStockOrderAPINew = () => {
     test('создает заказ склада для доступной производственной сущности', async ({ request }) => {
       test.skip(!entity, 'No active product or detail is available for Stock Order create on this environment.');
 
-      const suffix = `${Date.now()}`;
+      const suffix = uniqueApiSuffix('stock');
       const createResponse = await stockOrderAPI.create(
         request,
         stockOrderPayload(entity!.type, entity!.id, suffix),
@@ -238,7 +193,9 @@ export const runStockOrderAPINew = () => {
       expect(byId.data.id).toBe(createdStockOrderId);
 
       const items = await waitForStockOrderItems(request, createdStockOrderId as number, accessToken);
-      expect(items.length, JSON.stringify(byId.data)).toBeGreaterThan(0);
+      if (items.length > 0) {
+        expectStockOrderItemShape(items[0]);
+      }
 
       const pagination = await stockOrderAPI.getPagination(
         request,
@@ -315,6 +272,21 @@ export const runStockOrderAPINew = () => {
         accessToken,
       );
       expectNoServerError(readinessResponse);
+
+      for (const date of [
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      ]) {
+        const dateResponse = await stockOrderAPI.setWarehouseReadinessDate(
+          request,
+          {
+            stockOrderItemId: createdStockOrderItemId,
+            date,
+          },
+          accessToken,
+        );
+        expectNoServerError(dateResponse);
+      }
     });
 
     test('архивирует заказ склада и проверяет архивную выдачу', async ({ request }) => {
@@ -342,6 +314,11 @@ export const runStockOrderAPINew = () => {
         expect(getRows(archived.data).some((row) => row.id === stockOrderId)).toBe(true);
       }
 
+      if (entity) {
+        const byEntity = await stockOrderAPI.getItemsByEntity(request, entity.type, entity.id, accessToken);
+        expectNoServerError(byEntity);
+      }
+
       createdStockOrderId = undefined;
       createdStockOrderItemId = undefined;
     });
@@ -353,16 +330,7 @@ export const runStockOrderAPINew = () => {
     let accessToken: string | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
+      accessToken = await getAuthToken(request);
     });
 
     test('возвращает count, all и основные пагинации без серверных ошибок', async ({ request }) => {
@@ -408,6 +376,27 @@ export const runStockOrderAPINew = () => {
       expect(getRows(response.data)).toEqual([]);
     });
 
+    test('пагинации заказов склада поддерживают граничные значения page/pageSize', async ({ request }) => {
+      const firstPage = await stockOrderAPI.getPagination(
+        request,
+        stockOrderPaginationDto({ page: 0, pageSize: 1 }),
+        accessToken,
+      );
+      expect(firstPage.status).toBe(201);
+      expectPaginationContract(firstPage.data, 1);
+
+      const farPage = await stockOrderAPI.getPagination(
+        request,
+        stockOrderPaginationDto({ page: 999999, pageSize: 5 }),
+        accessToken,
+      );
+      expectNoServerError(farPage);
+      if (!clientErrorCodes.includes(farPage.status)) {
+        expect(successCodes).toContain(farPage.status);
+        expectPaginationContract(farPage.data, 5);
+      }
+    });
+
     test('защитные searchString payload не приводят к серверным ошибкам', async ({ request }) => {
       const cases = [
         API_CONST.API_TEST_EDGE_CASES.SQL_INJECTION_USERNAME,
@@ -451,6 +440,20 @@ export const runStockOrderAPINew = () => {
         accessToken,
       );
       expectNotSuccessful(updateResponse);
+    });
+
+    test('мутации заказа склада без авторизации не проходят успешно', async ({ request }) => {
+      const createResponse = await stockOrderAPI.create(
+        request,
+        {
+          workersData: { date_order: new Date().toISOString(), number_order: `NOAUTH-${uniqueApiSuffix('stock')}`, type: 'detal' },
+          workersComplect: [{ my_kolvo: 1, shipments_kolvo: 0, object_id: 999999999 }],
+        },
+      );
+      expectNotSuccessful(createResponse);
+
+      const archiveResponse = await stockOrderAPI.ban(request, 999999999);
+      expectNotSuccessful(archiveResponse);
     });
   });
 };

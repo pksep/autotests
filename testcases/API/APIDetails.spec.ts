@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { AuthAPI } from '../../pages/API/APIAuth';
 import { DetailsAPI } from '../../pages/API/APIDetails';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
+import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -11,43 +12,12 @@ type ApiResult = {
 
 type DetailLike = Record<string, any>;
 
-const authAPI = new AuthAPI();
 const detailsAPI = new DetailsAPI(null);
 
-const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
-const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
-const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
 const testUserId = API_CONST.API_TEST_TABEL;
-
-const extractAccessToken = (data: any): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
-};
-
-const getRows = (data: unknown): DetailLike[] => {
-  if (Array.isArray(data)) return data as DetailLike[];
-  if (data && typeof data === 'object' && Array.isArray((data as any).rows)) return (data as any).rows;
-  if (data && typeof data === 'object' && Array.isArray((data as any).data)) return (data as any).data;
-  return [];
-};
-
-const getCount = (data: unknown): number | undefined => {
-  if (!data || typeof data !== 'object') return undefined;
-  const value = (data as any).count ?? (data as any).total;
-  return typeof value === 'number' ? value : undefined;
-};
 
 const getQueueData = (data: any): any => {
   return data?.data && typeof data.data === 'object' ? data.data : data;
-};
-
-const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
-};
-
-const expectNotSuccessful = (response: ApiResult) => {
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
-  expectNoServerError(response);
 };
 
 const expectDetailShape = (detail: DetailLike) => {
@@ -118,17 +88,13 @@ const findDetailByDesignation = async (
   designation: string,
   accessToken?: string,
 ): Promise<DetailLike | undefined> => {
-  for (let attempt = 0; attempt < 8; attempt++) {
+  const response = await eventually(async () => {
     const response = await detailsAPI.getPaginationDetails(request, detailPaginationDto({ searchString: designation }), testUserId, accessToken);
     expectNoServerError(response);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.designation === designation));
 
-    const detail = getRows(response.data).find((row) => row.designation === designation);
-    if (detail) return detail;
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  return undefined;
+  return response ? getRows(response.data).find((row) => row.designation === designation) : undefined;
 };
 
 const waitForDetailInArchive = async (
@@ -137,18 +103,13 @@ const waitForDetailInArchive = async (
   detailId: number,
   accessToken?: string,
 ): Promise<boolean> => {
-  for (let attempt = 0; attempt < 8; attempt++) {
+  const response = await eventually(async () => {
     const response = await detailsAPI.getArchivedDetails(request, designation, accessToken);
     expectNoServerError(response);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.id === detailId && row.ban === true));
 
-    if (getRows(response.data).some((row) => row.id === detailId && row.ban === true)) {
-      return true;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  return false;
+  return Boolean(response);
 };
 
 export const runDetailsAPINew = () => {
@@ -165,18 +126,8 @@ export const runDetailsAPINew = () => {
     let updatedPayload: Record<string, unknown>;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
-
-      const suffix = `${Date.now()}`;
+      accessToken = await getAuthToken(request);
+      const suffix = uniqueApiSuffix('detail');
       createdPayload = detailPayload(suffix);
       updatedPayload = detailPayload(`${suffix}-UPD`, {
         description: `Updated by API autotest ${suffix}`,
@@ -285,6 +236,9 @@ export const runDetailsAPINew = () => {
       expect(archiveSearch.status).toBe(201);
       expect(await waitForDetailInArchive(request, updatedDesignation, createdDetailId as number, accessToken)).toBe(true);
 
+      const secondArchiveResponse = await detailsAPI.deleteDetail(request, String(createdDetailId), testUserId, accessToken);
+      expectNoServerError(secondArchiveResponse);
+
       createdDetailId = undefined;
     });
   });
@@ -295,16 +249,7 @@ export const runDetailsAPINew = () => {
     let accessToken: string | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
+      accessToken = await getAuthToken(request);
     });
 
     test('возвращает список деталей без серверных ошибок', async ({ request }) => {
@@ -330,6 +275,50 @@ export const runDetailsAPINew = () => {
       expect(response.status).toBe(201);
       expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
       expect(getRows(response.data)).toEqual([]);
+    });
+
+    test('пагинация деталей поддерживает граничные значения page/pageSize', async ({ request }) => {
+      const firstPage = await detailsAPI.getPaginationDetails(
+        request,
+        detailPaginationDto({ page: 0, pageSize: 1 }),
+        testUserId,
+        accessToken,
+      );
+      expect(firstPage.status).toBe(201);
+      expectPaginationContract(firstPage.data, 1);
+
+      const farPage = await detailsAPI.getPaginationDetails(
+        request,
+        detailPaginationDto({ page: 999999, pageSize: 5 }),
+        testUserId,
+        accessToken,
+      );
+      expectNoServerError(farPage);
+      if (!clientErrorCodes.includes(farPage.status)) {
+        expect(successCodes).toContain(farPage.status);
+        expectPaginationContract(farPage.data, 5);
+      }
+    });
+
+    test('include детали обрабатывает пустой и неизвестный include без 5xx', async ({ request }) => {
+      const list = await detailsAPI.getPaginationDetails(
+        request,
+        detailPaginationDto({ pageSize: 1 }),
+        testUserId,
+        accessToken,
+      );
+      expectNoServerError(list);
+      const detail = getRows(list.data).find((row) => row.id);
+      test.skip(!detail, 'No active detail is available for include variants.');
+
+      for (const includes of [[], ['unknownInclude']]) {
+        const response = await detailsAPI.getDetailById(
+          request,
+          { id: detail!.id, modelsInclude: includes, attributes: [] },
+          accessToken,
+        );
+        expectNoServerError(response);
+      }
     });
 
     test('эндпоинты остатков, дефицитов и операций не отвечают 5xx на базовые фильтры', async ({ request }) => {
@@ -380,6 +369,18 @@ export const runDetailsAPINew = () => {
       expectNoServerError(byId);
 
       const deleteResponse = await detailsAPI.deleteDetail(request, '999999999', testUserId, accessToken);
+      expectNotSuccessful(deleteResponse);
+    });
+
+    test('мутации детали без авторизации не проходят успешно', async ({ request }) => {
+      const createResponse = await detailsAPI.createDetail(
+        request,
+        detailPayload(`NOAUTH-${uniqueApiSuffix('detail')}`),
+        testUserId,
+      );
+      expectNotSuccessful(createResponse);
+
+      const deleteResponse = await detailsAPI.deleteDetail(request, '999999999', testUserId);
       expectNotSuccessful(deleteResponse);
     });
   });

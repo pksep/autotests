@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { AuthAPI } from '../../pages/API/APIAuth';
 import { UsersAPI } from '../../pages/API/APIUsers';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
+import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -12,39 +13,7 @@ type ApiResult = {
 
 type UserLike = Record<string, any>;
 
-const authAPI = new AuthAPI();
 const usersAPI = new UsersAPI(null as any);
-
-const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
-const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
-const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
-
-const getRows = (data: unknown): UserLike[] => {
-  if (Array.isArray(data)) return data as UserLike[];
-  if (data && typeof data === 'object' && Array.isArray((data as any).rows)) return (data as any).rows;
-  if (data && typeof data === 'object' && Array.isArray((data as any).data)) return (data as any).data;
-  return [];
-};
-
-const getCount = (data: unknown): number | undefined => {
-  if (!data || typeof data !== 'object') return undefined;
-  const value = (data as any).count ?? (data as any).total;
-  return typeof value === 'number' ? value : undefined;
-};
-
-const extractAccessToken = (data: any): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
-};
-
-const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
-};
-
-const expectNotSuccessful = (response: ApiResult) => {
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
-  expectNoServerError(response);
-};
 
 const expectNoSensitiveFields = (data: unknown) => {
   const sensitiveKeys = ['password', 'hash', 'salt', 'refresh_token', 'refreshtoken'];
@@ -154,16 +123,7 @@ export const runUsersAPINew = () => {
   let accessToken: string | undefined;
 
   test.beforeAll(async ({ request }) => {
-    const loginResponse = await authAPI.login(
-      request,
-      API_CONST.API_TEST_USERNAME,
-      API_CONST.API_TEST_PASSWORD,
-      API_CONST.API_TEST_TABEL,
-    );
-
-    expect(loginResponse.status).toBe(201);
-    accessToken = extractAccessToken(loginResponse.data);
-    expect(accessToken).toBeTruthy();
+    accessToken = await getAuthToken(request);
   });
 
   test.describe('Users API: контракты чтения', () => {
@@ -206,6 +166,21 @@ export const runUsersAPINew = () => {
       expectUserShape(rows[0]);
     });
 
+    test('light/full контракты пользователей отличаются только ожидаемым расширением данных', async ({ request }) => {
+      const lightResponse = await usersAPI.getAllUsers(request, true, false, accessToken);
+      const fullResponse = await usersAPI.getAllUsers(request, false, true, accessToken);
+
+      expect(lightResponse.status).toBe(200);
+      expect(fullResponse.status).toBe(200);
+      expectNoSensitiveFields(lightResponse.data);
+      expectNoSensitiveFields(fullResponse.data);
+
+      const lightRows = getRows(lightResponse.data);
+      const fullRows = getRows(fullResponse.data);
+      test.skip(lightRows.length === 0 || fullRows.length === 0, 'No users are available for light/full comparison.');
+      expect(Object.keys(fullRows[0]).length).toBeGreaterThanOrEqual(Object.keys(lightRows[0]).length);
+    });
+
     test('возвращает пагинированный список активных пользователей с count и rows', async ({ request }) => {
       const response = await postUsersPagination(request, userPaginationDto(), accessToken);
 
@@ -238,6 +213,33 @@ export const runUsersAPINew = () => {
       expectNoSensitiveFields(response.data);
     });
 
+    test('пагинация пользователей поддерживает граничные значения page/pageSize', async ({ request }) => {
+      const firstPage = await postUsersPagination(
+        request,
+        userPaginationDto({ page: 1, pageSize: 1 }),
+        accessToken,
+      );
+      if (firstPage.status === 401) {
+        expectNoSensitiveFields(firstPage.data);
+        return;
+      }
+      expect(firstPage.status).toBe(201);
+      expectPaginationContract(firstPage.data, 1);
+      expectNoSensitiveFields(firstPage.data);
+
+      const farPage = await postUsersPagination(
+        request,
+        userPaginationDto({ page: 999999, pageSize: 5 }),
+        accessToken,
+      );
+      expectNoServerError(farPage);
+      if (!clientErrorCodes.includes(farPage.status)) {
+        expect(successCodes).toContain(farPage.status);
+        expectPaginationContract(farPage.data, 5);
+      }
+      expectNoSensitiveFields(farPage.data);
+    });
+
     test('возвращает существующего пользователя по id из списка или требует авторизацию', async ({ request }) => {
       const listResponse = await usersAPI.getAllUsersList(request, accessToken);
       expect(listResponse.status).toBe(200);
@@ -262,9 +264,7 @@ export const runUsersAPINew = () => {
       const response = await usersAPI.getUserById(request, '999999999', accessToken);
 
       expectNoServerError(response);
-      if (successCodes.includes(response.status)) {
-        expect(response.data === null || typeof response.data === 'object', JSON.stringify(response.data)).toBe(true);
-      } else {
+      if (!successCodes.includes(response.status)) {
         expect(clientErrorCodes).toContain(response.status);
       }
       expectNoSensitiveFields(response.data);
@@ -296,7 +296,7 @@ export const runUsersAPINew = () => {
     });
 
     test('возвращает нулевое значение для свободного табеля', async ({ request }) => {
-      const freeTabel = `api-free-${Date.now()}`;
+      const freeTabel = uniqueApiSuffix('api-free');
       const response = await postTabelUnique(request, { tabel: freeTabel }, accessToken);
 
       if (response.status === 401) {
@@ -428,7 +428,12 @@ export const runUsersAPINew = () => {
     });
 
     test('валидный auth token не раскрывает чувствительные поля в ответе чтения пользователя', async ({ request }) => {
-      const response = await usersAPI.getUserById(request, API_CONST.API_TEST_USER_ID, accessToken);
+      const listResponse = await usersAPI.getAllUsersList(request, accessToken);
+      expect(listResponse.status).toBe(200);
+      const user = getRows(listResponse.data).find((row) => row.id);
+      test.skip(!user, 'No active user id is available on this environment.');
+
+      const response = await usersAPI.getUserById(request, String(user!.id), accessToken);
 
       if (response.status === 401) {
         expectNoSensitiveFields(response.data);

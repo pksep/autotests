@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { AuthAPI } from '../../pages/API/APIAuth';
 import { AssembleAPI } from '../../pages/API/APIAssemble';
 import { CBEDAPI } from '../../pages/API/APICBED';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
+import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { getAuthToken } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -13,41 +14,9 @@ type ApiResult = {
 
 type ApiRow = Record<string, any>;
 
-const authAPI = new AuthAPI();
 const assembleAPI = new AssembleAPI(null);
 const cbedAPI = new CBEDAPI(null);
 const productsAPI = new ProductsAPI(null as any);
-
-const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
-const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
-const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
-
-const extractAccessToken = (data: any): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
-};
-
-const getRows = (data: unknown): ApiRow[] => {
-  if (Array.isArray(data)) return data as ApiRow[];
-  if (data && typeof data === 'object' && Array.isArray((data as any).rows)) return (data as any).rows;
-  if (data && typeof data === 'object' && Array.isArray((data as any).data)) return (data as any).data;
-  return [];
-};
-
-const getCount = (data: unknown): number | undefined => {
-  if (!data || typeof data !== 'object') return undefined;
-  const value = (data as any).count ?? (data as any).total;
-  return typeof value === 'number' ? value : undefined;
-};
-
-const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
-};
-
-const expectNotSuccessful = (response: ApiResult) => {
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
-  expectNoServerError(response);
-};
 
 const byParents = (overrides: Record<string, unknown> = {}) => ({
   productIds: [],
@@ -183,17 +152,7 @@ export const runAssembleAPINew = () => {
     let parentEntity: { id: number; type: 'product' | 'cbed' } | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
-
+      accessToken = await getAuthToken(request);
       parentEntity = await findParentEntity(request, accessToken);
     });
 
@@ -236,6 +195,30 @@ export const runAssembleAPINew = () => {
       expectNoServerError(kits);
     });
 
+    test('пагинации сборки поддерживают граничные значения page/pageSize', async ({ request }) => {
+      const main = await assembleAPI.getAllAssembleWithPagination(
+        request,
+        assemblePaginationDto({ page: 0, pageSize: 1 }),
+        accessToken,
+      );
+      expectNoServerError(main);
+      if (!clientErrorCodes.includes(main.status)) {
+        expect(successCodes).toContain(main.status);
+        expectPaginationContract(main.data, 1);
+      }
+
+      const kits = await assembleAPI.getComplectKitPagination(
+        request,
+        kitPaginationDto({ page: 999999, pageSize: 5 }),
+        accessToken,
+      );
+      expectNoServerError(kits);
+      if (!clientErrorCodes.includes(kits.status)) {
+        expect(successCodes).toContain(kits.status);
+        expectPaginationContract(kits.data, 5);
+      }
+    });
+
     test('читает сборку по id и light endpoint, если в базе есть активная сборка', async ({ request }) => {
       if (!firstAssemble) {
         const main = await assembleAPI.getAllAssembleWithPagination(request, assemblePaginationDto(), accessToken);
@@ -259,6 +242,10 @@ export const runAssembleAPINew = () => {
         expect(successCodes).toContain(light.status);
         expect(Number(light.data?.id), JSON.stringify(light.data)).toBe(assembleId);
       }
+
+      if (!clientErrorCodes.includes(byId.status) && !clientErrorCodes.includes(light.status)) {
+        expect(Object.keys(byId.data || {}).length).toBeGreaterThanOrEqual(Object.keys(light.data || {}).length);
+      }
     });
 
     test('проверяет связи сборки с родительскими сущностями без серверных ошибок', async ({ request }) => {
@@ -278,16 +265,7 @@ export const runAssembleAPINew = () => {
     let accessToken: string | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
+      accessToken = await getAuthToken(request);
     });
 
     test('поиск с защитными searchString payload не приводит к 5xx', async ({ request }) => {
@@ -332,6 +310,13 @@ export const runAssembleAPINew = () => {
         accessToken,
       );
       expectNotSuccessful(invalidCreate);
+
+      const noAuthCreate = await assembleAPI.createAssemble(
+        request,
+        { numberOrder: '', myKolvo: 0, description: '', izdId: null, type: 'cbed' },
+        API_CONST.API_TEST_TABEL,
+      );
+      expectNotSuccessful(noAuthCreate);
     });
   });
 };

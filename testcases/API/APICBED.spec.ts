@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { AuthAPI } from '../../pages/API/APIAuth';
 import { CBEDAPI } from '../../pages/API/APICBED';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
+import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -11,43 +12,12 @@ type ApiResult = {
 
 type CbedLike = Record<string, any>;
 
-const authAPI = new AuthAPI();
 const cbedAPI = new CBEDAPI(null);
 
-const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
-const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
-const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
 const testUserId = API_CONST.API_TEST_TABEL;
-
-const extractAccessToken = (data: any): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
-};
-
-const getRows = (data: unknown): CbedLike[] => {
-  if (Array.isArray(data)) return data as CbedLike[];
-  if (data && typeof data === 'object' && Array.isArray((data as any).rows)) return (data as any).rows;
-  if (data && typeof data === 'object' && Array.isArray((data as any).data)) return (data as any).data;
-  return [];
-};
-
-const getCount = (data: unknown): number | undefined => {
-  if (!data || typeof data !== 'object') return undefined;
-  const value = (data as any).count ?? (data as any).total;
-  return typeof value === 'number' ? value : undefined;
-};
 
 const getQueueData = (data: any): any => {
   return data?.data && typeof data.data === 'object' ? data.data : data;
-};
-
-const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
-};
-
-const expectNotSuccessful = (response: ApiResult) => {
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
-  expectNoServerError(response);
 };
 
 const expectCbedShape = (cbed: CbedLike) => {
@@ -114,17 +84,28 @@ const findCbedByDesignation = async (
   designation: string,
   accessToken?: string,
 ): Promise<CbedLike | undefined> => {
-  for (let attempt = 0; attempt < 8; attempt++) {
+  const response = await eventually(async () => {
     const response = await cbedAPI.getCBEDPagination(request, cbedPaginationDto({ searchString: designation }), testUserId, accessToken);
     expectNoServerError(response);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.designation === designation));
 
-    const cbed = getRows(response.data).find((row) => row.designation === designation);
-    if (cbed) return cbed;
+  return response ? getRows(response.data).find((row) => row.designation === designation) : undefined;
+};
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
+const waitForArchivedCbed = async (
+  request: any,
+  cbedId: number,
+  designation: string,
+  accessToken?: string,
+): Promise<CbedLike | undefined> => {
+  const response = await eventually(async () => {
+    const response = await cbedAPI.getArchivedCBED(request, { searchString: designation }, accessToken);
+    expect(response.status).toBe(201);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.id === cbedId && row.ban === true), { attempts: 12, intervalMs: 700 });
 
-  return undefined;
+  return response ? getRows(response.data).find((row) => row.id === cbedId && row.ban === true) : undefined;
 };
 
 export const runCBEDAPINew = () => {
@@ -141,18 +122,8 @@ export const runCBEDAPINew = () => {
     let updatedPayload: Record<string, unknown>;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
-
-      const suffix = `${Date.now()}`;
+      accessToken = await getAuthToken(request);
+      const suffix = uniqueApiSuffix('cbed');
       createdPayload = cbedPayload(suffix);
       updatedPayload = cbedPayload(`${suffix}-UPD`, {
         description: `Updated by API autotest ${suffix}`,
@@ -263,9 +234,11 @@ export const runCBEDAPINew = () => {
       expect(successCodes).toContain(archiveResponse.status);
       expectNoServerError(archiveResponse);
 
-      const archiveSearch = await cbedAPI.getArchivedCBED(request, { searchString: updatedDesignation }, accessToken);
-      expect(archiveSearch.status).toBe(201);
-      expect(getRows(archiveSearch.data).some((row) => row.id === createdCbedId && row.ban === true)).toBe(true);
+      const archived = await waitForArchivedCbed(request, createdCbedId as number, updatedDesignation, accessToken);
+      expect(archived, `CBED ${updatedDesignation} was not found in archive after ban`).toBeTruthy();
+
+      const secondArchiveResponse = await cbedAPI.banCBED(request, createdCbedId as number, testUserId, accessToken);
+      expectNoServerError(secondArchiveResponse);
 
       createdCbedId = undefined;
     });
@@ -277,16 +250,7 @@ export const runCBEDAPINew = () => {
     let accessToken: string | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
+      accessToken = await getAuthToken(request);
     });
 
     test('пагинация сборочных единиц возвращает count и rows', async ({ request }) => {
@@ -310,6 +274,46 @@ export const runCBEDAPINew = () => {
       expect(getRows(response.data)).toEqual([]);
     });
 
+    test('пагинация сборочных единиц поддерживает граничные значения page/pageSize', async ({ request }) => {
+      const firstPage = await cbedAPI.getCBEDPagination(
+        request,
+        cbedPaginationDto({ page: 0, pageSize: 1 }),
+        testUserId,
+        accessToken,
+      );
+      expect(firstPage.status).toBe(201);
+      expectPaginationContract(firstPage.data, 1);
+
+      const farPage = await cbedAPI.getCBEDPagination(
+        request,
+        cbedPaginationDto({ page: 999999, pageSize: 5 }),
+        testUserId,
+        accessToken,
+      );
+      expectNoServerError(farPage);
+      if (!clientErrorCodes.includes(farPage.status)) {
+        expect(successCodes).toContain(farPage.status);
+        expectPaginationContract(farPage.data, 5);
+      }
+    });
+
+    test('include сборочной единицы обрабатывает пустой и неизвестный include без 5xx', async ({ request }) => {
+      const list = await cbedAPI.getCBEDPagination(
+        request,
+        cbedPaginationDto({ pageSize: 1 }),
+        testUserId,
+        accessToken,
+      );
+      expectNoServerError(list);
+      const cbed = getRows(list.data).find((row) => row.id);
+      test.skip(!cbed, 'No active CBED is available for include variants.');
+
+      for (const includes of [[], ['unknownInclude']]) {
+        const response = await cbedAPI.getCBEDInclude(request, Number(cbed!.id), { includes }, accessToken);
+        expectNoServerError(response);
+      }
+    });
+
     test('эндпоинты остатков, дефицитов, операций и отгрузок не отвечают 5xx на базовые фильтры', async ({ request }) => {
       const remains = await cbedAPI.getCBEDRemains(request, remainsDto(), accessToken);
       expectNoServerError(remains);
@@ -320,7 +324,10 @@ export const runCBEDAPINew = () => {
       const operations = await cbedAPI.getOperationInclude(request, cbedPaginationDto({ isSortedByOperations: true }), accessToken);
       expectNoServerError(operations);
 
-      const shipments = await cbedAPI.getCBEDShipmentsAndOrders(request, Number(API_CONST.API_TEST_CBED_ID), accessToken);
+      const list = await cbedAPI.getCBEDPagination(request, cbedPaginationDto({ pageSize: 1 }), testUserId, accessToken);
+      const cbed = getRows(list.data).find((row) => row.id);
+      test.skip(!cbed, 'No active CBED is available for shipments check.');
+      const shipments = await cbedAPI.getCBEDShipmentsAndOrders(request, Number(cbed!.id), accessToken);
       expectNoServerError(shipments);
     });
 
@@ -362,6 +369,18 @@ export const runCBEDAPINew = () => {
       expectNoServerError(byId);
 
       const deleteResponse = await cbedAPI.banCBED(request, 999999999, testUserId, accessToken);
+      expectNotSuccessful(deleteResponse);
+    });
+
+    test('мутации сборочной единицы без авторизации не проходят успешно', async ({ request }) => {
+      const createResponse = await cbedAPI.createCBED(
+        request,
+        cbedPayload(`NOAUTH-${uniqueApiSuffix('cbed')}`),
+        testUserId,
+      );
+      expectNotSuccessful(createResponse);
+
+      const deleteResponse = await cbedAPI.banCBED(request, 999999999, testUserId);
       expectNotSuccessful(deleteResponse);
     });
   });

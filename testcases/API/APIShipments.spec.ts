@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { AuthAPI } from '../../pages/API/APIAuth';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
+import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -12,38 +13,11 @@ type ApiResult = {
 
 type ApiRow = Record<string, any>;
 
-const authAPI = new AuthAPI();
 const productsAPI = new ProductsAPI(null as any);
 const shipmentsAPI = new ShipmentsAPI(null as any);
 
-const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
-const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
-const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
-
-const extractAccessToken = (data: any): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
-};
-
-const getRows = (data: unknown): ApiRow[] => {
-  if (Array.isArray(data)) return data as ApiRow[];
-  if (data && typeof data === 'object' && Array.isArray((data as any).rows)) return (data as any).rows;
-  if (data && typeof data === 'object' && Array.isArray((data as any).data)) return (data as any).data;
-  return [];
-};
-
-const getCount = (data: unknown): number | undefined => {
-  if (!data || typeof data !== 'object') return undefined;
-  const value = (data as any).count ?? (data as any).total;
-  return typeof value === 'number' ? value : undefined;
-};
-
 const getQueueData = (data: any): any => {
   return data?.data && typeof data.data === 'object' ? data.data : data;
-};
-
-const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
 };
 
 const shipmentsPaginationDto = (overrides: Record<string, unknown> = {}) => ({
@@ -129,15 +103,13 @@ const waitForShipment = async (
   predicate: (shipment: ApiRow) => boolean,
   accessToken?: string,
 ): Promise<ApiRow | undefined> => {
-  for (let attempt = 0; attempt < 10; attempt++) {
+  const response = await eventually(async () => {
     const response = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
     expectNoServerError(response);
+    return response;
+  }, (response) => Boolean(response.data && predicate(response.data)), { attempts: 10, intervalMs: 700 });
 
-    if (response.data && predicate(response.data)) return response.data;
-    await new Promise((resolve) => setTimeout(resolve, 700));
-  }
-
-  return undefined;
+  return response?.data;
 };
 
 const extractProductIdFromShipment = (shipment: ApiRow | undefined): number | undefined => {
@@ -165,17 +137,7 @@ export const runShipmentsAPINew = () => {
     let productId: number | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
-
+      accessToken = await getAuthToken(request);
       productId = await findProductId(request, accessToken);
     });
 
@@ -296,6 +258,57 @@ export const runShipmentsAPINew = () => {
       );
       expectNoServerError(list);
     });
+
+    test('пагинации отгрузок поддерживают граничные значения page/pageSize', async ({ request }) => {
+      const main = await shipmentsAPI.getAllShipments(
+        request,
+        shipmentsPaginationDto({ offset: 0, limit: 1 }),
+        accessToken,
+      );
+      expectNoServerError(main);
+      if (!clientErrorCodes.includes(main.status)) {
+        expect(successCodes).toContain(main.status);
+        expectPaginationContract(main.data, 1);
+      }
+
+      const list = await shipmentsAPI.getShipmentsListPagination(
+        request,
+        true,
+        shipmentsListPaginationDto({ page: 999999, pageSize: 5 }),
+        accessToken,
+      );
+      expectNoServerError(list);
+      if (!clientErrorCodes.includes(list.status)) {
+        expect(successCodes).toContain(list.status);
+        expectPaginationContract(list.data, 5);
+      }
+    });
+
+    test('light/full пагинация отгрузок возвращает совместимые контракты', async ({ request }) => {
+      const light = await shipmentsAPI.getShipmentsListPagination(
+        request,
+        true,
+        shipmentsListPaginationDto({ page: 1, pageSize: 1 }),
+        accessToken,
+      );
+      const full = await shipmentsAPI.getShipmentsListPagination(
+        request,
+        false,
+        shipmentsListPaginationDto({ page: 1, pageSize: 1 }),
+        accessToken,
+      );
+
+      expectNoServerError(light);
+      expectNoServerError(full);
+      if (clientErrorCodes.includes(light.status) || clientErrorCodes.includes(full.status)) return;
+
+      expect(successCodes).toContain(light.status);
+      expect(successCodes).toContain(full.status);
+      const lightRow = getRows(light.data)[0];
+      const fullRow = getRows(full.data)[0];
+      if (!lightRow || !fullRow) return;
+      expect(Object.keys(fullRow).length).toBeGreaterThanOrEqual(Object.keys(lightRow).length);
+    });
   });
 
   test.describe.serial('Shipments API: безопасный жизненный цикл тестовой отгрузки', () => {
@@ -304,22 +317,12 @@ export const runShipmentsAPINew = () => {
     let accessToken: string | undefined;
     let createdShipmentId: number | undefined;
     let activeProduct: ApiRow | undefined;
-    const suffix = `${Date.now()}`;
+    const suffix = uniqueApiSuffix('shipment');
     const initialDescription = `API shipment lifecycle ${suffix}`;
     const updatedDescription = `API shipment lifecycle updated ${suffix}`;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
-
+      accessToken = await getAuthToken(request);
       activeProduct = await findActiveProduct(request, accessToken);
     });
 
@@ -407,6 +410,9 @@ export const runShipmentsAPINew = () => {
       const archive = await shipmentsAPI.deleteShipment(request, createdShipmentId as number, accessToken);
       expectNoServerError(archive);
       expect(successCodes, JSON.stringify(archive.data)).toContain(archive.status);
+
+      const secondArchive = await shipmentsAPI.deleteShipment(request, createdShipmentId as number, accessToken);
+      expectNoServerError(secondArchive);
       createdShipmentId = undefined;
     });
   });
@@ -417,16 +423,7 @@ export const runShipmentsAPINew = () => {
     let accessToken: string | undefined;
 
     test.beforeAll(async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-      );
-
-      expect(loginResponse.status).toBe(201);
-      accessToken = extractAccessToken(loginResponse.data);
-      expect(accessToken).toBeTruthy();
+      accessToken = await getAuthToken(request);
     });
 
     test('поиск с защитными payload не приводит к 5xx', async ({ request }) => {
