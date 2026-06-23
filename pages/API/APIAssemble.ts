@@ -4,186 +4,218 @@ import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
 
 export class AssembleAPI extends APIPageObject {
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page | null) {
+    super(page as any);
   }
 
-  async createAssemble(request: APIRequestContext, assembleData: any, userId: string) {
+  private base = () => ENV.API_BASE_URL + 'api/assemble';
+
+  private assembleAuthHeaders(accessToken?: string, extra: Record<string, string> = {}) {
+    return {
+      ...extra,
+      ...this.authHeaders(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined),
+      ...(accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken)
+        ? { Cookie: `access_token=${accessToken}` }
+        : {}),
+    };
+  }
+
+  private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
+    return { status: response.status(), data: await this.parseJsonBody(response) };
+  }
+
+  async createAssemble(request: APIRequestContext, assembleData: any, userId: string, accessToken?: string) {
     logger.info(`Creating assemble with data:`, assembleData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/assemble', {
-      headers: {
+    const response = await request.post(this.base() + '/', {
+      headers: this.assembleAuthHeaders(accessToken, {
         'Content-Type': 'application/json',
         'user-id': userId,
-      },
+        compress: 'no-compress',
+      }),
       data: assembleData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Assemble created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create assemble, status: ${response.status()}`);
-      throw new Error(`Failed to create assemble with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async updateAssemble(request: APIRequestContext, assembleData: any, userId: string) {
+  async updateAssemble(request: APIRequestContext, assembleData: any, userId: string, accessToken?: string) {
     logger.info(`Updating assemble with data:`, assembleData);
 
-    const response = await request.put(ENV.API_BASE_URL + 'api/assemble/complectkit/update', {
-      headers: {
+    const response = await request.put(this.base() + '/complectkit/update', {
+      headers: this.assembleAuthHeaders(accessToken, {
         'Content-Type': 'application/json',
         'user-id': userId,
-      },
+        compress: 'no-compress',
+      }),
       data: assembleData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Assemble updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update assemble, status: ${response.status()}`);
-      throw new Error(`Failed to update assemble with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getActualAssembleOrders(request: APIRequestContext) {
+  async getActualAssembleOrders(request: APIRequestContext, accessToken?: string) {
     logger.info(`Getting actual assemble orders`);
 
-    const response = await request.get(ENV.API_BASE_URL + 'api/assemble/complects');
+    const response = await request.get(this.base() + '/complects', {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved actual assemble orders`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get actual assemble orders, status: ${response.status()}`);
-      throw new Error(`Failed to get actual assemble orders with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getAllAssembleWithPagination(request: APIRequestContext, paginationData: any) {
+  async getAllAssembleWithPagination(request: APIRequestContext, paginationData: any, accessToken?: string) {
     logger.info(`Getting all assemble with pagination:`, paginationData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/assemble/pagination', {
-      headers: {
+    const response = await request.post(this.base() + '/pagination', {
+      headers: this.assembleAuthHeaders(accessToken, {
         'Content-Type': 'application/json',
-      },
+        compress: 'no-compress',
+      }),
       data: paginationData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved assemble with pagination`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get assemble with pagination, status: ${response.status()}`);
-      throw new Error(`Failed to get assemble with pagination with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getAllAssembleWithPaginationSclad(request: APIRequestContext, paginationData: any) {
+  async getAllAssembleWithPaginationSclad(request: APIRequestContext, paginationData: any, accessToken?: string) {
     logger.info(`Getting all assemble with pagination sclad:`, paginationData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/assemble/sclad/pagination', {
-      headers: {
+    const response = await request.post(this.base() + '/sclad/pagination', {
+      headers: this.assembleAuthHeaders(accessToken, {
         'Content-Type': 'application/json',
-      },
+        compress: 'no-compress',
+      }),
       data: paginationData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved assemble with pagination sclad`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get assemble with pagination sclad, status: ${response.status()}`);
-      throw new Error(`Failed to get assemble with pagination sclad with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getAssembleByParent(request: APIRequestContext, parentData: any) {
+  async getAssembleByParent(request: APIRequestContext, parentData: any, accessToken?: string) {
     logger.info(`Getting assemble by parent:`, parentData);
 
     const entityId = parentData?.entityId ?? parentData?.parentId ?? parentData?.id;
     const entityType = parentData?.entityType ?? parentData?.type ?? 'cbed';
 
-    const response = await request.get(ENV.API_BASE_URL + `api/assemble/kits-by-parents/${entityId}/${entityType}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const response = await request.get(this.base() + `/kits-by-parents/${entityId}/${entityType}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved assemble by parent`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get assemble by parent, status: ${response.status()}`);
-      throw new Error(`Failed to get assemble by parent with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getMetalloworkingComing(request: APIRequestContext, comingData: any) {
-    logger.info(`Getting metalloworking coming:`, comingData);
+  async getAssembleComing(request: APIRequestContext, comingData: any, accessToken?: string) {
+    logger.info(`Getting assemble coming:`, comingData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/assemble/coming/pagination', {
-      headers: {
+    const response = await request.post(this.base() + '/coming/pagination', {
+      headers: this.assembleAuthHeaders(accessToken, {
         'Content-Type': 'application/json',
-      },
+        compress: 'no-compress',
+      }),
       data: comingData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved metalloworking coming`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get metalloworking coming, status: ${response.status()}`);
-      throw new Error(`Failed to get metalloworking coming with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getDeepDeficitObject(request: APIRequestContext, deficitData: any) {
+  async getMetalloworkingComing(request: APIRequestContext, comingData: any, accessToken?: string) {
+    return this.getAssembleComing(request, comingData, accessToken);
+  }
+
+  async getDeepDeficitObject(request: APIRequestContext, deficitData: any, accessToken?: string) {
     logger.info(`Getting deep deficit object:`, deficitData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/assemble/deficit/deep', {
-      headers: {
+    const response = await request.post(this.base() + '/deficit/deep', {
+      headers: this.assembleAuthHeaders(accessToken, {
         'Content-Type': 'application/json',
-      },
+        compress: 'no-compress',
+      }),
       data: deficitData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved deep deficit object`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get deep deficit object, status: ${response.status()}`);
-      throw new Error(`Failed to get deep deficit object with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
-  async getAllAssemblePlan(request: APIRequestContext, planData: any) {
+  async getAllAssemblePlan(request: APIRequestContext, planData: any, accessToken?: string) {
     logger.info(`Getting all assemble plan:`, planData);
 
-    const response = await request.post(ENV.API_BASE_URL + 'api/assemble/asstoplan', {
-      headers: {
+    const response = await request.post(this.base() + '/asstoplan', {
+      headers: this.assembleAuthHeaders(accessToken, {
         'Content-Type': 'application/json',
-      },
+        compress: 'no-compress',
+      }),
       data: planData,
     });
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved all assemble plan`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get all assemble plan, status: ${response.status()}`);
-      throw new Error(`Failed to get all assemble plan with status: ${response.status()}`);
-    }
+    return this.result(response);
+  }
+
+  async getById(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting assemble by ID: ${id}`);
+
+    const response = await request.get(this.base() + `/${id}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getByIdLight(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting light assemble by ID: ${id}`);
+
+    const response = await request.get(this.base() + `/light/${id}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getByIzd(request: APIRequestContext, id: number, typeIzd: string, accessToken?: string) {
+    logger.info(`Getting assemble by izd ${typeIzd}:${id}`);
+
+    const response = await request.get(this.base() + `/byizd/${id}/${encodeURIComponent(typeIzd)}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getOperationPagination(request: APIRequestContext, paginationData: any, accessToken?: string) {
+    logger.info(`Getting assemble operation pagination`);
+
+    const response = await request.post(this.base() + '/pagination/operation', {
+      headers: this.assembleAuthHeaders(accessToken, {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+      }),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async getComplectKitPagination(request: APIRequestContext, paginationData: any, accessToken?: string) {
+    logger.info(`Getting assemble kit pagination`);
+
+    const response = await request.post(this.base() + '/complectkit/getall/', {
+      headers: this.assembleAuthHeaders(accessToken, {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+      }),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async deleteAssemble(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Deleting assemble ID: ${id}`);
+
+    const response = await request.delete(this.base() + `/${id}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
   }
 }

@@ -4,9 +4,11 @@
  */
 
 import { runAuthAPINew } from './testcases/API/APIAuth.spec';
+import { runAssembleAPINew } from './testcases/API/APIAssemble.spec';
 import { runCBEDAPINew } from './testcases/API/APICBED.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
+import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
 import { runUsersAPINew } from './testcases/API/APIUsers.spec';
@@ -89,6 +91,28 @@ export const apiSuites = {
     ]
   },
 
+  assemble_api: {
+    description: 'Набор тестов Assemble API для проверки сборки, наборов, приходов, планов и defensive-сценариев.',
+    tests: [
+      {
+        test: runAssembleAPINew,
+        description:
+          'Тестирует эндпоинты API сборки: основные и складские пагинации, актуальные комплекты, приход, план, операции, связи с родителями, чтение по id и defensive-сценарии.'
+      }
+    ]
+  },
+
+  metaloworking_api: {
+    description: 'Набор тестов Metaloworking API для проверки металлообработки, приходов, операций и defensive-сценариев.',
+    tests: [
+      {
+        test: runMetaloworkingAPINew,
+        description:
+          'Тестирует эндпоинты API металлообработки: основную пагинацию, приход, операции, комплектацию по операциям, чтение по id, связь с деталями и defensive-сценарии.'
+      }
+    ]
+  },
+
   all_api_tests: {
     description: 'Полный набор оставшихся API-тестов.',
     tests: [
@@ -126,6 +150,16 @@ export const apiSuites = {
         test: runStockOrderAPINew,
         description:
           'Тестирует эндпоинты API заказов склада: создание, чтение, обновление, архив, позиции, связи с сущностями, пагинацию и безопасную обработку ошибочных запросов.'
+      },
+      {
+        test: runAssembleAPINew,
+        description:
+          'Тестирует эндпоинты API сборки: основные и складские пагинации, актуальные комплекты, приход, план, операции, связи с родителями, чтение по id и defensive-сценарии.'
+      },
+      {
+        test: runMetaloworkingAPINew,
+        description:
+          'Тестирует эндпоинты API металлообработки: основную пагинацию, приход, операции, комплектацию по операциям, чтение по id, связь с деталями и defensive-сценарии.'
       }
     ]
   }
