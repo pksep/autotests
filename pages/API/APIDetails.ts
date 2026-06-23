@@ -8,12 +8,27 @@ export class DetailsAPI extends APIPageObject {
     super(page as any);
   }
 
+  private base = () => ENV.API_BASE_URL + 'api/detal';
+
+  private detailAuthHeaders(authToken?: string, extra: Record<string, string> = {}) {
+    return {
+      ...extra,
+      ...this.authHeaders(authToken),
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+    };
+  }
+
+  private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
+    return { status: response.status(), data: await this.parseJsonBody(response) };
+  }
+
   async getAttributeById(request: APIRequestContext, id: string, attributes: string[], authToken?: string) {
     logger.info(`Getting attributes for detail ID: ${id}`);
 
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -49,6 +64,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -84,6 +100,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -113,18 +130,19 @@ export class DetailsAPI extends APIPageObject {
     }
   }
 
-  async getOperationInclude(request: APIRequestContext, authToken?: string) {
+  async getOperationInclude(request: APIRequestContext, paginationData: any = {}, authToken?: string) {
     logger.info(`Getting operation include details`);
 
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       compress: 'no-compress',
     };
 
     const response = await request.post(ENV.API_BASE_URL + 'api/detal/operation/include', {
       headers: headers,
-      data: {},
+      data: paginationData,
     });
 
     try {
@@ -147,6 +165,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -181,13 +200,14 @@ export class DetailsAPI extends APIPageObject {
       accept: '*/*',
       'user-id': userId,
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
 
     const response = await request.post(ENV.API_BASE_URL + 'api/detal', {
       headers: headers,
-      data: detailData,
+      data: this.toMultipartFields(detailData),
     });
 
     try {
@@ -211,6 +231,7 @@ export class DetailsAPI extends APIPageObject {
       accept: '*/*',
       'user-id': userId,
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -234,17 +255,20 @@ export class DetailsAPI extends APIPageObject {
     }
   }
 
-  async checkDesignation(request: APIRequestContext, authToken?: string) {
+  async checkDesignation(request: APIRequestContext, designationData: Record<string, unknown>, authToken?: string) {
     logger.info(`Checking designation availability`);
 
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      'Content-Type': 'application/json',
       compress: 'no-compress',
     };
 
     const response = await request.post(ENV.API_BASE_URL + 'api/detal/designation/check', {
       headers: headers,
+      data: designationData,
     });
 
     try {
@@ -268,13 +292,14 @@ export class DetailsAPI extends APIPageObject {
       accept: '*/*',
       'user-id': userId,
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
 
     const response = await request.post(ENV.API_BASE_URL + 'api/detal/update', {
       headers: headers,
-      data: detailData,
+      data: this.toMultipartFields(detailData),
     });
 
     try {
@@ -297,6 +322,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -327,6 +353,7 @@ export class DetailsAPI extends APIPageObject {
       accept: '*/*',
       'user-id': userId,
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -356,6 +383,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       compress: 'no-compress',
     };
 
@@ -384,6 +412,7 @@ export class DetailsAPI extends APIPageObject {
       accept: '*/*',
       'user-id': userId,
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       compress: 'no-compress',
     };
 
@@ -411,6 +440,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -440,6 +470,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       compress: 'no-compress',
     };
 
@@ -467,6 +498,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       compress: 'no-compress',
     };
 
@@ -494,6 +526,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       compress: 'no-compress',
     };
 
@@ -522,6 +555,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -551,6 +585,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       Authorization: `Bearer ${authToken}`,
+      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -568,5 +603,15 @@ export class DetailsAPI extends APIPageObject {
       logger.error(`Failed to parse response, status: ${response.status()}`);
       return { status: response.status(), data: null };
     }
+  }
+
+  async getDetailShipmentsAndOrders(request: APIRequestContext, detailId: number, authToken?: string) {
+    logger.info(`Getting shipments and orders for detail ID: ${detailId}`);
+
+    const response = await request.get(this.base() + `/shipments/${detailId}`, {
+      headers: this.detailAuthHeaders(authToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
   }
 }
