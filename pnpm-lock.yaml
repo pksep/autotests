@@ -23,6 +23,15 @@ importers:
       allure-playwright:
         specifier: ^3.1.0
         version: 3.2.0(@playwright/test@1.50.1)
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
+      gh-pages:
+        specifier: ^6.2.0
+        version: 6.3.0
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@14.18.63)(typescript@5.7.3)

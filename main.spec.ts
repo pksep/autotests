@@ -46,7 +46,13 @@ function registerSuite(suiteKey: TestSuiteKeys) {
     logger.error(`Suite "${suiteKey}" not found in registry. Skipping.`);
     return;
   }
-  test.describe.serial(`Test Suite: ${suiteKey} - ${suite.description}`, () => {
+  const describeSuite = isApi ? test.describe : test.describe.serial;
+
+  describeSuite(`Test Suite: ${suiteKey} - ${suite.description}`, () => {
+    if (isApi) {
+      test.describe.configure({ mode: 'parallel' });
+    }
+
     if (!isApi) {
       test.beforeEach(`Tag browser as ${suiteKey}`, async ({ page }) => {
         await tagBrowserScript(page, suiteKey);

@@ -50,3 +50,29 @@
 5. Keep changes scoped to autotests.
 
 More detailed route and DTO notes are in `docs/codex-project-map.md`.
+
+## Running Tests
+
+- Work from `D:\Work\Git\autotests`.
+- The normal entry point is `main.spec.ts`; suites are selected by `TEST_SUITE`.
+- Suite keys are registered in `testSuiteConfig.ts`, `testSuiteConfig.ui.ts`, and `testSuiteConfig.api.ts`.
+- To run any suite, set `TEST_SUITE` and run `pnpm test`:
+
+```powershell
+$env:TEST_SUITE='<suite_key>'; pnpm test
+```
+
+- Example:
+
+```powershell
+$env:TEST_SUITE='auth_api'; pnpm test
+```
+
+- For the configured parallel suite set:
+
+```powershell
+$env:TEST_SUITE='parallel'; pnpm test
+```
+
+- Do not run spec files directly when they only export runner functions that are called from a suite; Playwright may report `No tests found`. Direct file runs are only appropriate for files with top-level Playwright `test(...)` declarations and when `playwright.config.ts` test matching allows them.
+- If an API run fails with `connect EACCES` against `https://dev.pksep.ru`, rerun the same command with network/escalated permission; this is a sandbox/network access issue, not a test failure.

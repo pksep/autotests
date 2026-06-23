@@ -8,7 +8,13 @@ export class AuthAPI extends APIPageObject {
     super(context);
   }
 
-  async login(request: APIRequestContext, login: string, password: string, tabel: string) {
+  async login(
+    request: APIRequestContext,
+    login: string,
+    password: string,
+    tabel: string,
+    additionalHeaders: Record<string, string> = {},
+  ) {
     logger.info(`Attempting login for user: ${login}`);
 
     // Use the correct endpoint and field names with compress header
@@ -22,6 +28,7 @@ export class AuthAPI extends APIPageObject {
       },
       {
         compress: 'no-compress',
+        ...additionalHeaders,
       },
     );
 
@@ -44,14 +51,13 @@ export class AuthAPI extends APIPageObject {
       logger.info(`Login failed for user: ${username}, status: ${status} - This is expected for defensive testing`);
     }
 
-    return { status: status, data: responseData };
+    return { status: status, data: responseData, headers: response.headers(), headersArray: response.headersArray() };
   }
 
     async getUserByToken(request: APIRequestContext, token: string) {
       logger.info(`Getting user by token`);
 
-      // Token validation endpoint - returns 200 OK if token is valid (no user data returned)
-      // This is correct API behavior: 200 = valid token, 401 = invalid token
+      // Token validation endpoint returns a success status for a valid token and 401 for an invalid token.
       const response = await request.post(ENV.API_BASE_URL + 'api/auth/check', {
         headers: {
           'Content-Type': 'application/json',
@@ -91,14 +97,19 @@ export class AuthAPI extends APIPageObject {
    * @param refreshToken Valid refresh token
    * @returns Response with new tokens
    */
-  async refreshTokens(request: APIRequestContext, refreshToken: string) {
+  async refreshTokens(request: APIRequestContext, refreshToken?: string) {
     logger.info(`Refreshing tokens using refresh token`);
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (refreshToken) {
+      headers.Cookie = `refresh_token=${refreshToken}`;
+    }
+
     const response = await request.post(ENV.API_BASE_URL + 'api/auth/refresh', {
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `refresh_token=${refreshToken}`,
-      },
+      headers,
     });
 
     const status = response.status();

@@ -14,40 +14,45 @@ export class ProductsAPI extends APIPageObject {
     return accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined;
   }
 
+  private productAuthHeaders(accessToken?: string, extra: Record<string, string> = {}) {
+    const token = this.token(accessToken);
+    return {
+      ...extra,
+      ...this.authHeaders(token),
+      ...(token ? { Cookie: `access_token=${token}` } : {}),
+    };
+  }
+
+  private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
+    return { status: response.status(), data: await this.parseJsonBody(response) };
+  }
+
   async createProduct(request: APIRequestContext, productData: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Creating product (multipart)`);
+    logger.info(`Creating product`);
 
     const response = await request.post(this.base() + '/', {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
-      multipart: this.toMultipartFields(productData),
+      headers: this.productAuthHeaders(accessToken, {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+      }),
+      data: this.toMultipartFields(productData),
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Product created successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to create product, status: ${response.status()}`);
-      throw new Error(`Failed to create product with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async updateProduct(request: APIRequestContext, productData: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Updating product (multipart)`);
+    logger.info(`Updating product`);
 
     const response = await request.post(this.base() + '/update', {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
-      multipart: this.toMultipartFields(productData),
+      headers: this.productAuthHeaders(accessToken, {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+      }),
+      data: this.toMultipartFields(productData),
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Product updated successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to update product, status: ${response.status()}`);
-      throw new Error(`Failed to update product with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async getProductById(request: APIRequestContext, id: number, accessToken?: string) {
@@ -57,36 +62,22 @@ export class ProductsAPI extends APIPageObject {
       headers: {
         'Content-Type': 'application/json',
         compress: 'no-compress',
-        ...this.authHeaders(this.token(accessToken)),
+        ...this.productAuthHeaders(accessToken),
       },
       data: { id },
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Successfully retrieved product by ID`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get product by ID, status: ${response.status()}`);
-      throw new Error(`Failed to get product by ID with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async deleteProduct(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Deleting product with ID: ${id}`);
 
     const response = await request.delete(this.base() + `/${id}`, {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
+      headers: this.productAuthHeaders(accessToken, { compress: 'no-compress' }),
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Product deleted successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to delete product, status: ${response.status()}`);
-      throw new Error(`Failed to delete product with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async getAllProducts(request: APIRequestContext, paginationData: any, accessToken?: string) {
@@ -96,19 +87,12 @@ export class ProductsAPI extends APIPageObject {
       headers: {
         'Content-Type': 'application/json',
         compress: 'no-compress',
-        ...this.authHeaders(this.token(accessToken)),
+        ...this.productAuthHeaders(accessToken),
       },
       data: paginationData,
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Successfully retrieved all products`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get all products, status: ${response.status()}`);
-      throw new Error(`Failed to get all products with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async searchProducts(request: APIRequestContext, searchData: any, accessToken?: string) {
@@ -118,36 +102,22 @@ export class ProductsAPI extends APIPageObject {
       headers: {
         'Content-Type': 'application/json',
         compress: 'no-compress',
-        ...this.authHeaders(this.token(accessToken)),
+        ...this.productAuthHeaders(accessToken),
       },
       data: searchData,
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Successfully searched products`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to search products, status: ${response.status()}`);
-      throw new Error(`Failed to search products with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async getProductSpecifications(request: APIRequestContext, productId: number, accessToken?: string) {
     logger.info(`Getting product shipments for ID: ${productId}`);
 
     const response = await request.get(this.base() + `/shipments/${productId}`, {
-      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+      headers: this.productAuthHeaders(accessToken, { compress: 'no-compress' }),
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Successfully retrieved product specifications`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get product specifications, status: ${response.status()}`);
-      throw new Error(`Failed to get product specifications with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async getProductComponents(request: APIRequestContext, productId: number, accessToken?: string) {
@@ -157,19 +127,12 @@ export class ProductsAPI extends APIPageObject {
       headers: {
         'Content-Type': 'application/json',
         compress: 'no-compress',
-        ...this.authHeaders(this.token(accessToken)),
+        ...this.productAuthHeaders(accessToken),
       },
-      data: { id: productId },
+      data: { productId },
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Successfully retrieved product components`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get product components, status: ${response.status()}`);
-      throw new Error(`Failed to get product components with status: ${response.status()}`);
-    }
+    return this.result(response);
   }
 
   async validateProduct(request: APIRequestContext, productData: any, accessToken?: string) {
@@ -179,18 +142,61 @@ export class ProductsAPI extends APIPageObject {
       headers: {
         'Content-Type': 'application/json',
         compress: 'no-compress',
-        ...this.authHeaders(this.token(accessToken)),
+        ...this.productAuthHeaders(accessToken),
       },
       data: productData?.designation ? { designation: productData.designation } : productData,
     });
 
-    const responseData = await this.parseJsonBody(response);
-    if (response.ok()) {
-      logger.info(`Product validation completed`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to validate product, status: ${response.status()}`);
-      throw new Error(`Failed to validate product with status: ${response.status()}`);
-    }
+    return this.result(response);
+  }
+
+  async getAllProductsList(request: APIRequestContext, light = true, attributes: string[] = [], accessToken?: string) {
+    logger.info(`Getting products list`);
+
+    const response = await request.get(this.base() + `/all/${light}/${encodeURIComponent(JSON.stringify(attributes))}`, {
+      headers: this.productAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getProductByIdLight(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting light product by ID: ${id}`);
+
+    const response = await request.get(this.base() + `/light/${id}`, {
+      headers: this.productAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getArchivedProducts(request: APIRequestContext, archiveData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting archived products`);
+
+    const response = await request.post(this.base() + '/archive/', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.productAuthHeaders(accessToken),
+      },
+      data: archiveData,
+    });
+
+    return this.result(response);
+  }
+
+  async getProductInclude(request: APIRequestContext, id: number, includeData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting product includes for ID: ${id}`);
+
+    const response = await request.post(this.base() + `/getinclude/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.productAuthHeaders(accessToken),
+      },
+      data: includeData,
+    });
+
+    return this.result(response);
   }
 }

@@ -54,11 +54,12 @@ export class UsersAPI extends APIPageObject {
     return { status: response.status(), data: responseData };
   }
 
-  async checkTabelUnique(request: APIRequestContext, tabelData: any) {
+  async checkTabelUnique(request: APIRequestContext, tabelData: any, authToken?: string) {
     logger.info(`Checking tabel uniqueness:`, tabelData);
 
     const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/tabel/unique', tabelData, {
       compress: 'no-compress',
+      ...this.authHeaders(authToken),
     });
 
     if (response.ok()) {
@@ -71,12 +72,13 @@ export class UsersAPI extends APIPageObject {
     }
   }
 
-  async getAllUsers(request: APIRequestContext, light: boolean, includeRole: boolean) {
+  async getAllUsers(request: APIRequestContext, light: boolean, includeRole: boolean, authToken?: string) {
     logger.info(`Getting all users - light: ${light}, includeRole: ${includeRole}`);
 
     const response = await request.get(ENV.API_BASE_URL + `api/users/list/${light}/${includeRole}`, {
       headers: {
         compress: 'no-compress',
+        ...this.authHeaders(authToken),
       },
     });
 
@@ -97,12 +99,13 @@ export class UsersAPI extends APIPageObject {
     }
   }
 
-  async getAllUsersList(request: APIRequestContext) {
+  async getAllUsersList(request: APIRequestContext, authToken?: string) {
     logger.info(`Getting all users list (minimal data)`);
 
     const response = await request.get(ENV.API_BASE_URL + 'api/users/list', {
       headers: {
         compress: 'no-compress',
+        ...this.authHeaders(authToken),
       },
     });
 
@@ -124,11 +127,12 @@ export class UsersAPI extends APIPageObject {
     }
   }
 
-  async getAllUsersWithPagination(request: APIRequestContext, paginationData: any) {
+  async getAllUsersWithPagination(request: APIRequestContext, paginationData: any, authToken?: string) {
     logger.info(`Getting all users with pagination:`, paginationData);
 
     const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/pagination/all', paginationData, {
       compress: 'no-compress',
+      ...this.authHeaders(authToken),
     });
 
     if (response.ok()) {
@@ -141,11 +145,12 @@ export class UsersAPI extends APIPageObject {
     }
   }
 
-  async getArchivedUsers(request: APIRequestContext, archiveData: any) {
+  async getArchivedUsers(request: APIRequestContext, archiveData: any, authToken?: string) {
     logger.info(`Getting archived users:`, archiveData);
 
     const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/archive/', archiveData, {
       compress: 'no-compress',
+      ...this.authHeaders(authToken),
     });
 
     let responseData;

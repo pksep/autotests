@@ -6,15 +6,28 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 import { ENV } from './config';
 import { PARALLEL_SUITE_KEYS } from './testSuiteConfig';
+import { apiSuites } from './testSuiteConfig.api';
 
 const isParallel = process.env.TEST_SUITE === 'parallel' || ENV.TEST_SUITE === 'parallel';
+const selectedSuiteKey = process.env.TEST_SUITE || ENV.TEST_SUITE;
+const isApiSuite = Object.keys(apiSuites).includes(selectedSuiteKey);
+
+function parsePositiveInt(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+const configuredWorkers = parsePositiveInt(process.env.PLAYWRIGHT_WORKERS);
+const workers = configuredWorkers ?? (isParallel ? PARALLEL_SUITE_KEYS.length : isApiSuite ? '100%' : 1);
 
 export default defineConfig({
   testDir: process.env.TEST_DIR || ENV.TEST_DIR,
   timeout: 30000,
-  globalTimeout: isParallel ? 60 * 60 * 1000 : 30 * 60 * 1000, // U001+U005+U006 parallel can run longer than the old 30m cap
-  workers: isParallel ? PARALLEL_SUITE_KEYS.length : 1,
-  fullyParallel: isParallel, // required so multiple workers run when only one file (main.spec.ts) matches
+  globalTimeout: isParallel || isApiSuite ? 60 * 60 * 1000 : 30 * 60 * 1000, // parallel and API suites can run longer than the old 30m cap
+  workers,
+  fullyParallel: isParallel || isApiSuite, // required so multiple workers run when only one file (main.spec.ts) matches
   retries: 0,
   use: {
     baseURL: process.env.BASE_URL || ENV.BASE_URL, //setgit a this in your config.ts
