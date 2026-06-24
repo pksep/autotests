@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="366248">
+<fb version="0.19.6" size="366327">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
+    <error t="S">GET https://api.github.com/repos/pksep/autotests: 500 - </error>
     <inserted t="I">8</inserted>
-    <seconds t="F">9.034409707</seconds>
+    <seconds t="F">13.914472898</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-24T01:29:57Z</when>
+    <when t="T">2026-06-24T05:49:21Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23888,14 +23889,6 @@
     <when t="T">2026-06-23T10:23:18Z</when>
   </f>
   <f>
-    <_id t="I">1649</_id>
-    <_job t="I">78276</_job>
-    <_time t="T">2026-06-23T16:14:58Z</_time>
-    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-06-23T16:14:58Z</when>
-  </f>
-  <f>
     <_id t="I">1651</_id>
     <_job t="I">78321</_job>
     <_time t="T">2026-06-23T22:52:08Z</_time>
@@ -23923,5 +23916,13 @@
     <repository t="I">935866864</repository>
     <what t="S">iterate</what>
     <where t="S">github</where>
+  </f>
+  <f>
+    <_id t="I">1653</_id>
+    <_job t="I">78335</_job>
+    <_time t="T">2026-06-24T01:30:54Z</_time>
+    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-06-24T01:30:54Z</when>
   </f>
 </fb>
