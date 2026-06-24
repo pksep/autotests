@@ -3,13 +3,8 @@ import { ProductsAPI } from '../../pages/API/APIProducts';
 import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
-
-type ApiResult = {
-  status: number;
-  data?: any;
-};
 
 type ApiRow = Record<string, any>;
 
@@ -69,6 +64,27 @@ const shipmentPayload = (description: string, product: ApiRow, overrides: Record
     ...overrides,
   }),
 });
+
+const shCheckPayload = (shipment: ApiRow, description: string) => {
+  const now = new Date().toISOString();
+  const shipmentId = Number(shipment.id);
+
+  return {
+    dateOrder: shipment.date_order || now,
+    numberOrder: String(shipment.number_order || shipmentId),
+    dateShipments: shipment.date_shipments || now,
+    fabricNumber: String(shipment.fabric_number || `API-${shipmentId}`),
+    description,
+    nameCheck: `API shcheck ${shipmentId}`,
+    responsibleUserId: 'null',
+    createrUserId: 'null',
+    dateCreate: now,
+    dateShipmentsFakt: now,
+    docs: '[]',
+    childrens: JSON.stringify([{ id: shipmentId, shipped: 1, builderId: null, controllerId: null }]),
+    companyId: String(shipment.company_id || shipment.buyer_id || 0),
+  };
+};
 
 const productPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
@@ -183,6 +199,53 @@ export const runShipmentsAPINew = () => {
         accessToken,
       );
       expectNoServerError(attributes);
+    });
+
+    test('создает отметку отгрузки через POST /shcheck и откатывает ее', async ({ request }) => {
+      const dateRange = {
+        start: '1970-01-01T00:00:00.000Z',
+        end: '2100-12-31T23:59:59.999Z',
+      };
+      const shipments = await shipmentsAPI.getAllShipments(
+        request,
+        shipmentsPaginationDto({ status: ['Заказано'], dateRange }),
+        accessToken,
+      );
+      expectNoServerError(shipments);
+      expect(successCodes, JSON.stringify(shipments.data)).toContain(shipments.status);
+
+      const candidate = getRows<ApiRow>(shipments.data).find((row) => {
+        const quantity = Number(row.kol);
+        const shipped = Number(row.shipped || 0);
+        return row.id && quantity > shipped;
+      });
+      test.skip(!candidate, 'No active shipment with available quantity is available for shcheck.');
+
+      let createdShCheckId: number | undefined;
+      try {
+        const shCheck = await shipmentsAPI.createShCheck(
+          request,
+          shCheckPayload(candidate as ApiRow, `API shipment shcheck ${uniqueApiSuffix('shcheck')}`),
+          accessToken,
+        );
+        expectNoServerError(shCheck);
+        expect(successCodes, JSON.stringify(shCheck.data)).toContain(shCheck.status);
+
+        const data = getQueueData(shCheck.data);
+        createdShCheckId = Number(data?.id);
+        expect(createdShCheckId, JSON.stringify(shCheck.data)).toBeGreaterThan(0);
+
+        const created = await shipmentsAPI.getShCompleteById(request, createdShCheckId as number, accessToken);
+        expectNoServerError(created);
+        expect(successCodes, JSON.stringify(created.data)).toContain(created.status);
+        expect(Number(created.data?.id), JSON.stringify(created.data)).toBe(createdShCheckId);
+      } finally {
+        if (createdShCheckId) {
+          const rollback = await shipmentsAPI.rollbackShCheck(request, createdShCheckId, accessToken);
+          expectNoServerError(rollback);
+          expect(successCodes, JSON.stringify(rollback.data)).toContain(rollback.status);
+        }
+      }
     });
 
     test('читает найденную отгрузку, комплектацию, документы и include-модели', async ({ request }) => {

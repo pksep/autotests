@@ -70,6 +70,21 @@ export class ShipmentsAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async createShCheck(request: APIRequestContext, shCheckData: Record<string, unknown>, accessToken?: string) {
+    const response = await request.post(this.base() + '/shcheck', {
+      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
+      multipart: this.toMultipartFields(shCheckData),
+    });
+    return this.result(response);
+  }
+
+  async rollbackShCheck(request: APIRequestContext, shCheckId: number, accessToken?: string) {
+    const response = await request.delete(this.base() + `/combackcomplit/${shCheckId}`, {
+      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
+    });
+    return this.result(response);
+  }
+
   async getShCheckPagination(request: APIRequestContext, paginationData: any, accessToken?: string) {
     const response = await request.post(this.base() + '/shcheck/pagination', {
       headers: {
