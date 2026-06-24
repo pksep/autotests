@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="366327">
+<fb version="0.19.6" size="366251">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
-    <error t="S">GET https://api.github.com/repos/pksep/autotests: 500 - </error>
     <inserted t="I">8</inserted>
-    <seconds t="F">13.914472898</seconds>
+    <seconds t="F">10.796713506</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-24T05:49:21Z</when>
+    <when t="T">2026-06-24T10:01:24Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23905,24 +23904,24 @@
     <when t="T">2026-06-23T22:52:08Z</when>
   </f>
   <f>
-    <_id t="I">1652</_id>
-    <_job t="I">28068836504</_job>
-    <_time t="T">2026-06-24T01:29:50Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">13785984860</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">1653</_id>
     <_job t="I">78335</_job>
     <_time t="T">2026-06-24T01:30:54Z</_time>
     <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
     <what t="S">learn-eva</what>
     <when t="T">2026-06-24T01:30:54Z</when>
+  </f>
+  <f>
+    <_id t="I">1654</_id>
+    <_job t="I">28090608923</_job>
+    <_time t="T">2026-06-24T10:01:16Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">13802624157</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>

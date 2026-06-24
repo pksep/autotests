@@ -2,12 +2,11 @@
 - added: 8
   cycles: 1
   deleted: 8
-  error: 'GET https://api.github.com/repos/pksep/autotests: 500 - '
   inserted: 8
-  seconds: 13.914472898
+  seconds: 10.796713506
   version: 0.60.0
   what: judges-summary
-  when: 2026-06-24 05:49:21.482371667 Z
+  when: 2026-06-24 10:01:24.406601597 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -21638,20 +21637,20 @@
   start: *1
   what: earned-value
   when: 2026-06-23 22:52:08.507222455 Z
-- _id: 1652
-  _job: 28068836504
-  _time: 2026-06-24 01:29:50.779618900 Z
-  _version: 0.19.6/0.60.0/0.17.11
-  earliest_issue_was_found: 1
-  events_were_scanned: 13785984860
-  latest_issue_was_found: 529
-  min_pull_was_found: 529
-  repository: 935866864
-  what: iterate
-  where: github
 - _id: 1653
   _job: 78335
   _time: 2026-06-24 01:30:54.493599131 Z
   _version: 0.19.13/0.60.4/0.17.11!0.17.17
   what: learn-eva
   when: 2026-06-24 01:30:54.485164971 Z
+- _id: 1654
+  _job: 28090608923
+  _time: 2026-06-24 10:01:16.187977386 Z
+  _version: 0.19.6/0.60.0/0.17.11
+  earliest_issue_was_found: 1
+  events_were_scanned: 13802624157
+  latest_issue_was_found: 529
+  min_pull_was_found: 529
+  repository: 935866864
+  what: iterate
+  where: github
