@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="366489">
+<fb version="0.19.6" size="366486">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">13.381005263</seconds>
+    <seconds t="F">10.479245369</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-24T19:16:51Z</when>
+    <when t="T">2026-06-24T21:12:39Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23904,14 +23904,6 @@
     <when t="T">2026-06-23T22:52:08Z</when>
   </f>
   <f>
-    <_id t="I">1655</_id>
-    <_job t="I">78364</_job>
-    <_time t="T">2026-06-24T10:02:21Z</_time>
-    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-06-24T10:02:21Z</when>
-  </f>
-  <f>
     <_id t="I">1657</_id>
     <_job t="I">28098856124</_job>
     <_time t="T">2026-06-24T12:36:33Z</_time>
@@ -23930,12 +23922,20 @@
     <when t="T">2026-06-24T12:36:33Z</when>
   </f>
   <f>
-    <_id t="I">1658</_id>
-    <_job t="I">28123431758</_job>
-    <_time t="T">2026-06-24T19:16:40Z</_time>
+    <_id t="I">1659</_id>
+    <_job t="I">78422</_job>
+    <_time t="T">2026-06-24T19:17:48Z</_time>
+    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-06-24T19:17:48Z</when>
+  </f>
+  <f>
+    <_id t="I">1660</_id>
+    <_job t="I">28129891527</_job>
+    <_time t="T">2026-06-24T21:12:31Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">13831434921</events_were_scanned>
+    <events_were_scanned t="I">13836171210</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
