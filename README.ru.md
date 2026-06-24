@@ -215,3 +215,55 @@ TEST_SUITE=parallel pnpm test
 | Добавить новый набор | Реализовать runner в testcases, добавить запись в `testSuiteConfig.ui.ts` или `testSuiteConfig.api.ts`, запускать с `TEST_SUITE=NewKey` |
 
 Такой подход к `config.ts` и реестру наборов держит «какие тесты и куда бегут» в одном месте и даёт понятное управление проектом.
+
+---
+
+## 11. Docker-запуск API-автотестов по расписанию
+
+В корне проекта есть `Dockerfile`, который собирает контейнер для запуска Playwright API-наборов по cron-расписанию. По умолчанию запускается набор `all_api_tests`, формируются HTML-отчет Playwright и Allure-отчет, результаты сохраняются в `/app/reports`.
+
+### Сборка образа
+
+```bash
+docker build -t sep-erp-api-autotests .
+```
+
+### Разовый запуск
+
+```bash
+docker run --rm \
+  -e SCHEDULE_ENABLED=false \
+  -e API_BASE_URL=https://dev.pksep.ru/ \
+  -e LOGIN_TABEL=105 \
+  -e LOGIN_USERNAME=YourDisplayName \
+  -e LOGIN_PASSWORD=your_password_here \
+  -v "$PWD/reports:/app/reports" \
+  sep-erp-api-autotests
+```
+
+### Запуск по расписанию
+
+```bash
+docker run -d --name sep-erp-api-autotests \
+  -e CRON_SCHEDULE="0 6 * * *" \
+  -e RUN_ON_START=true \
+  -e API_BASE_URL=https://dev.pksep.ru/ \
+  -e LOGIN_TABEL=105 \
+  -e LOGIN_USERNAME=YourDisplayName \
+  -e LOGIN_PASSWORD=your_password_here \
+  -v "$PWD/reports:/app/reports" \
+  sep-erp-api-autotests
+```
+
+Полезные переменные:
+
+| Переменная | Значение по умолчанию | Назначение |
+|------------|------------------------|------------|
+| `TEST_SUITE` | `all_api_tests` | Какой API-набор запускать (`auth_api`, `users_api`, `all_api_tests` и т.д.) |
+| `CRON_SCHEDULE` | `0 6 * * *` | Расписание в cron-формате |
+| `RUN_ON_START` | `false` | Запустить тесты сразу при старте контейнера |
+| `SCHEDULE_ENABLED` | `true` | `false` включает разовый запуск и завершение контейнера |
+| `GENERATE_ALLURE` | `true` | Генерировать HTML-отчет Allure из `allure-results` |
+| `REPORTS_DIR` | `/app/reports` | Каталог для сохранения отчетов |
+
+Каждый запуск создает отдельную папку вида `reports/YYYYMMDD-HHMMSS/`. Внутри будут `playwright-report/`, `allure-report/`, `allure-results/`, `test-results/` и `status.env` с кодом завершения. Ссылка `reports/latest` указывает на последний запуск.
