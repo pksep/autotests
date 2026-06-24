@@ -9,6 +9,7 @@ import { runCBEDAPINew } from './testcases/API/APICBED.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
+import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
@@ -137,6 +138,17 @@ export const apiSuites = {
     ]
   },
 
+  production_tasks_api: {
+    description: 'Набор тестов Production Tasks API для проверки производственных заданий, связей, агрегатов и defensive-сценариев.',
+    tests: [
+      {
+        test: runProductionTasksAPINew,
+        description:
+          'Тестирует эндпоинты API производственных заданий: списки, count, чтение по id, задачи по пользователю/оборудованию/операции, агрегаты, связи с ass/metall и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
   all_api_tests: {
     description: 'Полный набор оставшихся API-тестов.',
     tests: [
@@ -194,6 +206,11 @@ export const apiSuites = {
         test: runMetaloworkingAPINew,
         description:
           'Тестирует эндпоинты API металлообработки: основную пагинацию, приход, операции, комплектацию по операциям, чтение по id, связь с деталями и defensive-сценарии.'
+      },
+      {
+        test: runProductionTasksAPINew,
+        description:
+          'Тестирует эндпоинты API производственных заданий: списки, count, чтение по id, задачи по пользователю/оборудованию/операции, агрегаты, связи с ass/metall и defensive-сценарии.'
       }
     ]
   }
