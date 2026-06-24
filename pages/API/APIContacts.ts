@@ -62,9 +62,29 @@ export class ContactsAPI extends APIPageObject {
     return { status: response.status(), data: await this.parseJsonBody(response) };
   }
 
+  async banContactsBulk(request: APIRequestContext, ids: number[] | string, accessToken?: string) {
+    const value = Array.isArray(ids) ? ids.join(',') : ids;
+    const response = await request.delete(this.base() + `/bulk/${value}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+    });
+    return { status: response.status(), data: await this.parseJsonBody(response) };
+  }
+
   async getContactById(request: APIRequestContext, id: number, accessToken?: string) {
     const response = await request.get(this.base() + `/${id}`, {
       headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
+    });
+    return { status: response.status(), data: await this.parseJsonBody(response) };
+  }
+
+  async getInclude(request: APIRequestContext, dto: any, accessToken?: string) {
+    const response = await request.post(this.base() + '/include', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
+      },
+      data: dto,
     });
     return { status: response.status(), data: await this.parseJsonBody(response) };
   }

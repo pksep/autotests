@@ -6,6 +6,8 @@
 import { runAuthAPINew } from './testcases/API/APIAuth.spec';
 import { runAssembleAPINew } from './testcases/API/APIAssemble.spec';
 import { runCBEDAPINew } from './testcases/API/APICBED.spec';
+import { runCompaniesAPINew } from './testcases/API/APICompanies.spec';
+import { runContactsAPINew } from './testcases/API/APIContacts.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
@@ -79,6 +81,28 @@ export const apiSuites = {
         test: runMaterialsAPINew,
         description:
           'Тестирует эндпоинты API материалов: создание типа и подтипа, создание/обновление/архивацию материала, пагинацию, include, aliases, restrictions, дефициты и defensive-сценарии.'
+      }
+    ]
+  },
+
+  contacts_api: {
+    description: 'Набор тестов Contacts API для проверки жизненного цикла контактов, связей с компаниями и defensive-сценариев.',
+    tests: [
+      {
+        test: runContactsAPINew,
+        description:
+          'Тестирует эндпоинты API контактов: создание, чтение, обновление, пагинацию, include компаний, архив, bulk archive и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  companies_api: {
+    description: 'Набор тестов Companies API для проверки жизненного цикла компаний, связей с контактами и defensive-сценариев.',
+    tests: [
+      {
+        test: runCompaniesAPINew,
+        description:
+          'Тестирует эндпоинты API компаний: создание, чтение, обновление, пагинацию, проверку имени, include контактов, открепление контакта, архив, bulk archive и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -181,6 +205,16 @@ export const apiSuites = {
         test: runMaterialsAPINew,
         description:
           'Тестирует эндпоинты API материалов: создание типа и подтипа, создание/обновление/архивацию материала, пагинацию, include, aliases, restrictions, дефициты и defensive-сценарии.'
+      },
+      {
+        test: runContactsAPINew,
+        description:
+          'Тестирует эндпоинты API контактов: создание, чтение, обновление, пагинацию, include компаний, архив, bulk archive и defensive-сценарии.'
+      },
+      {
+        test: runCompaniesAPINew,
+        description:
+          'Тестирует эндпоинты API компаний: создание, чтение, обновление, пагинацию, проверку имени, include контактов, открепление контакта, архив, bulk archive и defensive-сценарии.'
       },
       {
         test: runStockOrderAPINew,
