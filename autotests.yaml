@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 10.452113288
+  seconds: 9.034409707
   version: 0.60.0
   what: judges-summary
-  when: 2026-06-23 22:51:16.226896451 Z
+  when: 2026-06-24 01:29:57.678778038 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -21629,12 +21629,26 @@
   _version: 0.19.13/0.60.4/0.17.11!0.17.17
   what: learn-eva
   when: 2026-06-23 16:14:58.779588998 Z
-- _id: 1650
-  _job: 28062407679
-  _time: 2026-06-23 22:51:08.392200091 Z
+- _id: 1651
+  _job: 78321
+  _time: 2026-06-23 22:52:08.507008262 Z
+  _version: 0.19.13/0.60.4/0.17.11!0.17.17
+  ac: 0
+  cost_of_qod: 1.9752198685392564
+  ev: 0
+  pv: 4533
+  qod: 0
+  qod_per_day: 18.13402373959668
+  qod_per_sec: 0.0
+  start: *1
+  what: earned-value
+  when: 2026-06-23 22:52:08.507222455 Z
+- _id: 1652
+  _job: 28068836504
+  _time: 2026-06-24 01:29:50.779618900 Z
   _version: 0.19.6/0.60.0/0.17.11
   earliest_issue_was_found: 1
-  events_were_scanned: 13782356270
+  events_were_scanned: 13785984860
   latest_issue_was_found: 529
   min_pull_was_found: 529
   repository: 935866864
