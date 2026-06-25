@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="366724">
+<fb version="0.19.6" size="366725">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">9.743862978</seconds>
+    <seconds t="F">13.930184241</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-06-25T18:37:41Z</when>
+    <when t="T">2026-06-25T20:35:30Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -23949,11 +23949,11 @@
   </f>
   <f>
     <_id t="I">1666</_id>
-    <_job t="I">28192254160</_job>
-    <_time t="T">2026-06-25T18:37:33Z</_time>
+    <_job t="I">28198772763</_job>
+    <_time t="T">2026-06-25T20:35:19Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">13885550663</events_were_scanned>
+    <events_were_scanned t="I">13892178826</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
