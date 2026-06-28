@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 10.941613831
+  seconds: 11.634407535
   version: 0.60.0
   what: judges-summary
-  when: 2026-06-28 17:49:13.314197070 Z
+  when: 2026-06-28 19:58:28.145129509 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -20612,14 +20612,6 @@
   total_stars: 0
   what: dimensions-of-terrain
   when: 2026-05-02 10:32:49.702387171 Z
-- _id: 1303
-  _job: 70243
-  _time: 2026-05-02 10:33:21.749200067 Z
-  _version: 0.19.10/0.60.2/0.17.11!0.17.17
-  analyzers: 18
-  text: The average monthly turnover (1.0 developers) is increasing (R=1.00).
-  what: assessment
-  when: 2026-05-02 10:33:21.772763435 Z
 - _id: 1310
   _job: 25276815648
   _time: 2026-05-03 10:35:46.937821872 Z
@@ -21882,12 +21874,23 @@
   _version: 0.19.13/0.60.4/0.17.11!0.17.17
   what: learn-eva
   when: 2026-06-28 15:57:23.815329951 Z
-- _id: 1689
-  _job: 28330757605
-  _time: 2026-06-28 17:49:04.646930812 Z
+- _id: 1690
+  _job: 79045
+  _time: 2026-06-28 17:49:44.452664142 Z
+  _version: 0.19.13/0.60.4/0.17.11!0.17.17
+  analyzers: 18
+  text: |-
+    The average number of builds per week (111.5) is increasing (R=0.53).
+    The average number of commits per week (0.2) is decreasing (R=-0.83).
+    The average number of releases per month (0.0) is staying still.
+  what: assessment
+  when: 2026-06-28 17:49:44.498496864 Z
+- _id: 1691
+  _job: 28334162020
+  _time: 2026-06-28 19:58:19.073725230 Z
   _version: 0.19.6/0.60.0/0.17.11
   earliest_issue_was_found: 1
-  events_were_scanned: 14011947178
+  events_were_scanned: 14015145576
   latest_issue_was_found: 529
   min_pull_was_found: 529
   repository: 935866864
