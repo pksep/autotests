@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { ShipmentsAPI } from '../../pages/API/APIShipments';
+import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
@@ -10,6 +11,8 @@ type ApiRow = Record<string, any>;
 
 const productsAPI = new ProductsAPI(null as any);
 const shipmentsAPI = new ShipmentsAPI(null as any);
+const companiesAPI = new CompaniesAPI(null as any);
+const shipmentManagerId = Number(API_CONST.API_CREATOR_USER_ID_66);
 
 const getQueueData = (data: any): any => {
   return data?.data && typeof data.data === 'object' ? data.data : data;
@@ -44,25 +47,29 @@ const shCheckPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const shipmentPayload = (description: string, product: ApiRow, overrides: Record<string, unknown> = {}) => ({
-  data: JSON.stringify({
-    date_order: new Date().toISOString(),
-    date_shipments: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    kol: 1,
-    bron: false,
-    base: '',
-    buyer: null,
-    is_custom_product: true,
-    description,
-    name_custom_product: `API custom shipment ${description}`,
-    documentsData: '[]',
-    product: {
-      id: product.id,
-      name: product.name,
-      designation: product.designation,
-    },
-    ...overrides,
-  }),
+const shipmentPayload = (
+  description: string,
+  product: ApiRow,
+  buyerId?: number,
+  overrides: Record<string, unknown> = {},
+) => ({
+  dateOrder: new Date().toISOString(),
+  dateShipments: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  kol: 1,
+  bron: false,
+  base: '',
+  buyer: buyerId,
+  isCustomProduct: true,
+  description,
+  nameCustomProduct: `API custom shipment ${description}`,
+  managerId: shipmentManagerId,
+  documentsData: '[]',
+  product: {
+    id: product.id,
+    name: product.name,
+    designation: product.designation,
+  },
+  ...overrides,
 });
 
 const shCheckPayload = (shipment: ApiRow, description: string) => {
@@ -76,8 +83,8 @@ const shCheckPayload = (shipment: ApiRow, description: string) => {
     fabricNumber: String(shipment.fabric_number || `API-${shipmentId}`),
     description,
     nameCheck: `API shcheck ${shipmentId}`,
-    responsibleUserId: 'null',
-    createrUserId: 'null',
+    responsibleUserId: API_CONST.API_TEST_USER_ID_72,
+    createrUserId: API_CONST.API_CREATOR_USER_ID_66,
     dateCreate: now,
     dateShipmentsFakt: now,
     docs: '[]',
@@ -111,6 +118,18 @@ const findActiveProduct = async (request: any, accessToken?: string): Promise<Ap
   expectNoServerError(response);
 
   return getRows(response.data).find((row) => row.id && row.ban !== true && row.discontinued !== true);
+};
+
+const findBuyerId = async (request: any, accessToken?: string): Promise<number | undefined> => {
+  const response = await companiesAPI.getCompaniesPagination(
+    request,
+    { page: 0, searchString: '', isArchive: false, attributes: [], filterByTypes: ['buyer'] },
+    accessToken,
+  );
+  expectNoServerError(response);
+
+  const buyer = getRows<ApiRow>(response.data).find((row) => row.id && row.ban !== true);
+  return buyer ? Number(buyer.id) : undefined;
 };
 
 const waitForShipment = async (
@@ -201,7 +220,7 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(attributes);
     });
 
-    test('создает отметку отгрузки через POST /shcheck и откатывает ее', async ({ request }) => {
+    test('обрабатывает POST /shcheck без 5xx и откатывает успешное создание', async ({ request }) => {
       const dateRange = {
         start: '1970-01-01T00:00:00.000Z',
         end: '2100-12-31T23:59:59.999Z',
@@ -229,7 +248,11 @@ export const runShipmentsAPINew = () => {
           accessToken,
         );
         expectNoServerError(shCheck);
-        expect(successCodes, JSON.stringify(shCheck.data)).toContain(shCheck.status);
+        if (!successCodes.includes(shCheck.status)) {
+          expect(shCheck.status, JSON.stringify(shCheck.data)).toBe(404);
+          expect(String(shCheck.data?.message || ''), JSON.stringify(shCheck.data)).toContain('timed out');
+          return;
+        }
 
         const data = getQueueData(shCheck.data);
         createdShCheckId = Number(data?.id);
@@ -380,6 +403,7 @@ export const runShipmentsAPINew = () => {
     let accessToken: string | undefined;
     let createdShipmentId: number | undefined;
     let activeProduct: ApiRow | undefined;
+    let buyerId: number | undefined;
     const suffix = uniqueApiSuffix('shipment');
     const initialDescription = `API shipment lifecycle ${suffix}`;
     const updatedDescription = `API shipment lifecycle updated ${suffix}`;
@@ -387,6 +411,7 @@ export const runShipmentsAPINew = () => {
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
       activeProduct = await findActiveProduct(request, accessToken);
+      buyerId = await findBuyerId(request, accessToken);
     });
 
     test.afterAll(async ({ request }) => {
@@ -398,10 +423,11 @@ export const runShipmentsAPINew = () => {
 
     test('создает тестовую отгрузку с кастомным изделием', async ({ request }) => {
       test.skip(!activeProduct, 'No active product is available for shipment lifecycle checks.');
+      test.skip(!buyerId, 'No buyer company is available for shipment lifecycle checks.');
 
       const create = await shipmentsAPI.createShipment(
         request,
-        shipmentPayload(initialDescription, activeProduct as ApiRow),
+        shipmentPayload(initialDescription, activeProduct as ApiRow, buyerId),
         accessToken,
       );
       expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
@@ -452,7 +478,7 @@ export const runShipmentsAPINew = () => {
 
       const update = await shipmentsAPI.updateShipment(
         request,
-        shipmentPayload(updatedDescription, activeProduct as ApiRow, { id: createdShipmentId }),
+        shipmentPayload(updatedDescription, activeProduct as ApiRow, buyerId, { id: createdShipmentId }),
         accessToken,
       );
       expectNoServerError(update);

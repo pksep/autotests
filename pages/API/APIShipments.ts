@@ -22,8 +22,12 @@ export class ShipmentsAPI extends APIPageObject {
   async createShipment(request: APIRequestContext, shipmentData: Record<string, unknown>, accessToken?: string) {
     logger.info(`POST shipments (multipart)`);
     const response = await request.post(this.base(), {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
-      multipart: this.toMultipartFields(shipmentData),
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.authHeaders(this.token(accessToken)),
+        compress: 'no-compress',
+      },
+      data: shipmentData,
     });
     return this.result(response);
   }
@@ -31,8 +35,12 @@ export class ShipmentsAPI extends APIPageObject {
   async updateShipment(request: APIRequestContext, shipmentData: Record<string, unknown>, accessToken?: string) {
     logger.info(`PUT shipments`);
     const response = await request.put(this.base(), {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
-      multipart: this.toMultipartFields(shipmentData),
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.authHeaders(this.token(accessToken)),
+        compress: 'no-compress',
+      },
+      data: shipmentData,
     });
     return this.result(response);
   }
@@ -72,8 +80,12 @@ export class ShipmentsAPI extends APIPageObject {
 
   async createShCheck(request: APIRequestContext, shCheckData: Record<string, unknown>, accessToken?: string) {
     const response = await request.post(this.base() + '/shcheck', {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
-      multipart: this.toMultipartFields(shCheckData),
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.authHeaders(this.token(accessToken)),
+        compress: 'no-compress',
+      },
+      data: shCheckData,
     });
     return this.result(response);
   }
@@ -131,8 +143,13 @@ export class ShipmentsAPI extends APIPageObject {
   }
 
   async getItemsByEntity(request: APIRequestContext, entityType: string, entityId: number, accessToken?: string) {
-    const response = await request.get(this.base() + `/items/by-entity/${encodeURIComponent(entityType)}/${entityId}`, {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
+    const response = await request.post(this.base() + '/items/by-entity', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.authHeaders(this.token(accessToken)),
+        compress: 'no-compress',
+      },
+      data: { entityType, entityId },
     });
     return this.result(response);
   }
