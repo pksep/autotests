@@ -12,6 +12,7 @@ import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
+import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipmentFlow.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
@@ -173,6 +174,17 @@ export const apiSuites = {
     ]
   },
 
+  production_shipment_flow_api: {
+    description: 'Сквозной API-тест производства, комплектации, прихода и отгрузки изделия.',
+    tests: [
+      {
+        test: runProductionShipmentFlowAPI,
+        description:
+          'Создает изделие, сборочную единицу и деталь, запускает производство, делает ПЗ, отметки, комплектацию, приход и отгрузку с проверками остатков и дефицитов.'
+      }
+    ]
+  },
+
   all_api_tests: {
     description: 'Полный набор оставшихся API-тестов.',
     tests: [
@@ -245,6 +257,11 @@ export const apiSuites = {
         test: runProductionTasksAPINew,
         description:
           'Тестирует эндпоинты API производственных заданий: списки, count, чтение по id, задачи по пользователю/оборудованию/операции, агрегаты, связи с ass/metall и defensive-сценарии.'
+      },
+      {
+        test: runProductionShipmentFlowAPI,
+        description:
+          'Создает изделие, сборочную единицу и деталь, запускает производство, делает ПЗ, отметки, комплектацию, приход и отгрузку с проверками остатков и дефицитов.'
       }
     ]
   }
