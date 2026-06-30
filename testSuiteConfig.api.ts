@@ -15,6 +15,7 @@ import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
 import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipmentFlow.spec';
+import { runProviderDeliveriesAPINew } from './testcases/API/APIProviderDeliveries.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
@@ -119,6 +120,17 @@ export const apiSuites = {
         test: runInventoryAPINew,
         description:
           'Тестирует базовый жизненный цикл API непроизводственной техники и инвентаря: тип, подтип, наименование, чтение, архив, пагинации и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  provider_deliveries_api: {
+    description: 'Набор базовых тестов Deliveries API для проверки поставок, компаний-поставщиков, позиций, архива и defensive-сценариев.',
+    tests: [
+      {
+        test: runProviderDeliveriesAPINew,
+        description:
+          'Тестирует поставки: создание компании-поставщика, заказ поставщика с материалом, чтение позиций, архив и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -280,6 +292,11 @@ export const apiSuites = {
         test: runInventoryAPINew,
         description:
           'Тестирует базовый жизненный цикл API непроизводственной техники и инвентаря: тип, подтип, наименование, чтение, архив, пагинации и defensive-сценарии.'
+      },
+      {
+        test: runProviderDeliveriesAPINew,
+        description:
+          'Тестирует поставки: создание компании-поставщика, заказ поставщика с материалом, чтение позиций, архив и defensive-сценарии.'
       },
       {
         test: runContactsAPINew,
