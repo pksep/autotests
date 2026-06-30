@@ -9,6 +9,7 @@ import { runCBEDAPINew } from './testcases/API/APICBED.spec';
 import { runCompaniesAPINew } from './testcases/API/APICompanies.spec';
 import { runContactsAPINew } from './testcases/API/APIContacts.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
+import { runDocumentsAPINew } from './testcases/API/APIDocuments.spec';
 import { runEquipmentAPINew } from './testcases/API/APIEquipment.spec';
 import { runInventoryAPINew } from './testcases/API/APIInventory.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
@@ -120,6 +121,17 @@ export const apiSuites = {
         test: runInventoryAPINew,
         description:
           'Тестирует базовый жизненный цикл API непроизводственной техники и инвентаря: тип, подтип, наименование, чтение, архив, пагинации и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  documents_api: {
+    description: 'Набор тестов Documents API для проверки базового жизненного цикла файлов, поиска и defensive-сценариев.',
+    tests: [
+      {
+        test: runDocumentsAPINew,
+        description:
+          'Тестирует эндпоинты API документов: загрузку файла, чтение по id, поиск по параметрам, обновление метаданных, presign URL, архив и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -292,6 +304,11 @@ export const apiSuites = {
         test: runInventoryAPINew,
         description:
           'Тестирует базовый жизненный цикл API непроизводственной техники и инвентаря: тип, подтип, наименование, чтение, архив, пагинации и defensive-сценарии.'
+      },
+      {
+        test: runDocumentsAPINew,
+        description:
+          'Тестирует эндпоинты API документов: загрузку файла, чтение по id, поиск по параметрам, обновление метаданных, presign URL, архив и defensive-сценарии.'
       },
       {
         test: runProviderDeliveriesAPINew,

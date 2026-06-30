@@ -58,19 +58,109 @@ export class DocumentsAPI extends APIPageObject {
     }
   }
 
-  async getFileById(request: APIRequestContext, id: number, light: boolean) {
+  async getFileById(request: APIRequestContext, id: number, light: boolean, accessToken?: string) {
     logger.info(`Getting file by id: ${id}, light: ${light}`);
 
-    const response = await request.get(ENV.API_BASE_URL + `api/documents/${id}/${light}`);
+    return this.apiRequest(request, 'GET', ENV.API_BASE_URL + `api/documents/${id}/${light}`, {
+      accessToken,
+    });
+  }
 
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved file by id`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get file by id, status: ${response.status()}`);
-      throw new Error(`Failed to get file by id with status: ${response.status()}`);
-    }
+  async checkNameExisting(request: APIRequestContext, data: { name: string }, accessToken?: string) {
+    logger.info(`Checking document name: ${data.name}`);
+
+    return this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/documents/name/check', {
+      data,
+      accessToken,
+    });
+  }
+
+  async getDocumentsByParams(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting documents by params`);
+
+    return this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/documents/param', {
+      data,
+      accessToken,
+    });
+  }
+
+  async getDocumentNames(request: APIRequestContext, accessToken?: string) {
+    logger.info(`Getting document names`);
+
+    return this.apiRequest(request, 'GET', ENV.API_BASE_URL + 'api/documents/names', {
+      accessToken,
+    });
+  }
+
+  async presignPut(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting presigned upload url`);
+
+    return this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/documents/presign', {
+      data,
+      accessToken,
+    });
+  }
+
+  async getCdnFile(request: APIRequestContext, filename: string, accessToken?: string) {
+    logger.info(`Getting CDN file metadata`);
+
+    return this.apiRequest(request, 'GET', ENV.API_BASE_URL + `api/documents/cdn/${filename}`, {
+      accessToken,
+    });
+  }
+
+  async changeAvatar(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Changing document avatar flag: ${id}`);
+
+    return this.apiRequest(request, 'GET', ENV.API_BASE_URL + `api/documents/avachanges/${id}`, {
+      accessToken,
+    });
+  }
+
+  async getAvatarByEntity(request: APIRequestContext, typeEntity: string, idEntity: number, accessToken?: string) {
+    logger.info(`Getting avatar by entity: ${typeEntity}/${idEntity}`);
+
+    return this.apiRequest(request, 'GET', ENV.API_BASE_URL + `api/documents/avatar${typeEntity}/${idEntity}`, {
+      accessToken,
+    });
+  }
+
+  async updateDocument(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Updating document`);
+
+    return this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/documents/update', {
+      data,
+      accessToken,
+    });
+  }
+
+  async archiveDocument(request: APIRequestContext, id: number, unpin = false, accessToken?: string) {
+    logger.info(`Archiving document with id: ${id}, unpin: ${unpin}`);
+
+    return this.apiRequest(request, 'DELETE', ENV.API_BASE_URL + `api/documents/${id}/${unpin}`, {
+      accessToken,
+      headers: {
+        'user-id': '1',
+      },
+    });
+  }
+
+  async attachDocumentToEntity(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Attaching document to entity`);
+
+    return this.apiRequest(request, 'PUT', ENV.API_BASE_URL + 'api/documents/attach-to-entity', {
+      data,
+      accessToken,
+    });
+  }
+
+  async unpinDocuments(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Unpinning documents`);
+
+    return this.apiRequest(request, 'PUT', ENV.API_BASE_URL + 'api/documents/unpin-documents', {
+      data,
+      accessToken,
+    });
   }
 
   async changeDocumentType(request: APIRequestContext, typeData: any, userId: string) {

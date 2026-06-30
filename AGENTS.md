@@ -41,6 +41,39 @@
 - Client store interfaces: `sep_erp_client\sep_erp_client\src\stores\interfaces\**\*.ts`.
 - Component interfaces and table hooks: `sep_erp_client\sep_erp_client\src\components\**\interfaces\*.ts`, `src\components\**\interface\*.ts`, `src\components\**\extensions\*.ts`.
 
+## API Suite ↔ Module Map
+
+Each API suite maps 1:1 to one server module. When a suite needs endpoint/DTO reference, go straight to the module column — do not search the whole `src`. Route prefixes are read from the `@Controller(...)` decorator; DTOs live in the module's `dto/` folder (then `packages\zod-shared`).
+
+Paths are relative to `D:\Work\Git`.
+
+| Suite key (`TEST_SUITE`) | Spec | API page object | Server module | Route | DTO dir |
+|---|---|---|---|---|---|
+| `auth_api` | `autotests\testcases\API\APIAuth.spec.ts` | `autotests\pages\API\APIAuth.ts` | `sep_erp_server\sep_erp_server\src\modules\auth` | `/` | `modules\auth\dto` |
+| `users_api` | `autotests\testcases\API\APIUsers.spec.ts` | `autotests\pages\API\APIUsers.ts` | `sep_erp_server\sep_erp_server\src\modules\users` | `/users` | `modules\users\dto` |
+| `product_api` | `autotests\testcases\API\APIProducts.spec.ts` | `autotests\pages\API\APIProducts.ts` | `sep_erp_server\sep_erp_server\src\modules\product` | `/product` | `modules\product\dto` |
+| `details_api` | `autotests\testcases\API\APIDetails.spec.ts` | `autotests\pages\API\APIDetails.ts` | `sep_erp_server\sep_erp_server\src\modules\detal` | `/detal` | `modules\detal\dto` |
+| `cbed_api` | `autotests\testcases\API\APICBED.spec.ts` | `autotests\pages\API\APICBED.ts` | `sep_erp_server\sep_erp_server\src\modules\cbed` | `/cbed` | `modules\cbed\dto` |
+| `materials_api` | `autotests\testcases\API\APIMaterials.spec.ts` | `autotests\pages\API\APIMaterials.ts` | `sep_erp_server\sep_erp_server\src\modules\material` | `/material` | `modules\material\dto` |
+| `contacts_api` | `autotests\testcases\API\APIContacts.spec.ts` | `autotests\pages\API\APIContacts.ts` | `sep_erp_server\sep_erp_server\src\modules\contact` | `/contacts` | `modules\contact\dto` |
+| `companies_api` | `autotests\testcases\API\APICompanies.spec.ts` | `autotests\pages\API\APICompanies.ts` | `sep_erp_server\sep_erp_server\src\modules\company` | `/companies` | `modules\company\dto` |
+| `stock_order_api` | `autotests\testcases\API\APIStockOrder.spec.ts` | `autotests\pages\API\APIStockOrder.ts` | `sep_erp_server\sep_erp_server\src\modules\stock-order` | `/stock-order` | `modules\stock-order\dto` |
+| `shipments_api` | `autotests\testcases\API\APIShipments.spec.ts` | `autotests\pages\API\APIShipments.ts` | `sep_erp_server\sep_erp_server\src\modules\shipments` | `/shipments` | `modules\shipments\dto` |
+| `warehouse_api` | `autotests\testcases\API\APIWarehouse.spec.ts` | `autotests\pages\API\APIWarehouse.ts` | `sep_erp_server\sep_erp_server\src\modules\sclad` | `/sclad` | `modules\sclad\dto` |
+| `assemble_api` | `autotests\testcases\API\APIAssemble.spec.ts` | `autotests\pages\API\APIAssemble.ts` | `sep_erp_server\sep_erp_server\src\modules\assemble` | `/assemble` | `modules\assemble\dto` |
+| `metaloworking_api` | `autotests\testcases\API\APIMetaloworking.spec.ts` | `autotests\pages\API\APIMetaloworking.ts` | `sep_erp_server\sep_erp_server\src\modules\metaloworking` | `/metaloworking` | `modules\metaloworking\dto` |
+| `production_tasks_api` | `autotests\testcases\API\APIProductionTasks.spec.ts` | `autotests\pages\API\APIProductionTasks.ts` | `sep_erp_server\sep_erp_server\src\modules\production-tasks` | `/production-task` | `modules\production-tasks\dto` |
+
+Cross-module lookups (referenced by the suites above, but not their own suite):
+- Warehouse/deficits flags → `modules\deficits` (route `/deficits`).
+- Stock/assembly movements → `modules\moving`, `modules\movement-object`, `modules\movement-errors`.
+- Shared validation schemas (cross-cutting DTOs) → `sep_erp_server\sep_erp_server\packages\zod-shared`.
+
+Naming gotchas:
+- Suite `details_api` ↔ module `detal` (not `details`).
+- Suite `warehouse_api` ↔ module `sclad` (not `warehouse`).
+- Suite `production_tasks_api` ↔ route `/production-task` (singular), module `production-tasks` (plural).
+
 ## Lookup Routine
 
 1. Start from the autotest API object or UI page object that matches the feature.
