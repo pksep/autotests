@@ -10,6 +10,7 @@ import { runCompaniesAPINew } from './testcases/API/APICompanies.spec';
 import { runContactsAPINew } from './testcases/API/APIContacts.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runEquipmentAPINew } from './testcases/API/APIEquipment.spec';
+import { runInventoryAPINew } from './testcases/API/APIInventory.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
@@ -18,6 +19,7 @@ import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
 import { runTechProcessAPINew } from './testcases/API/APITechProcess.spec';
+import { runToolsAPINew } from './testcases/API/APITools.spec';
 import { runUsersAPINew } from './testcases/API/APIUsers.spec';
 import { runWarehouseAPINew } from './testcases/API/APIWarehouse.spec';
 
@@ -95,6 +97,28 @@ export const apiSuites = {
         test: runEquipmentAPINew,
         description:
           'Тестирует эндпоинты API оборудования: создание типа и подтипа, создание/обновление/архивацию оборудования, справочники, пагинации, проверки имен и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  tools_api: {
+    description: 'Набор базовых тестов Tools/Instrument API для проверки типов, подтипов, наименований, архива и defensive-сценариев.',
+    tests: [
+      {
+        test: runToolsAPINew,
+        description:
+          'Тестирует базовый жизненный цикл API инструмента и оснастки: тип, подтип, наименование, чтение, архив, пагинации и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  inventory_api: {
+    description: 'Набор базовых тестов Inventory API для проверки типов, подтипов, наименований, архива и defensive-сценариев.',
+    tests: [
+      {
+        test: runInventoryAPINew,
+        description:
+          'Тестирует базовый жизненный цикл API непроизводственной техники и инвентаря: тип, подтип, наименование, чтение, архив, пагинации и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -246,6 +270,16 @@ export const apiSuites = {
         test: runEquipmentAPINew,
         description:
           'Тестирует эндпоинты API оборудования: создание типа и подтипа, создание/обновление/архивацию оборудования, справочники, пагинации, проверки имен и defensive-сценарии.'
+      },
+      {
+        test: runToolsAPINew,
+        description:
+          'Тестирует базовый жизненный цикл API инструмента и оснастки: тип, подтип, наименование, чтение, архив, пагинации и defensive-сценарии.'
+      },
+      {
+        test: runInventoryAPINew,
+        description:
+          'Тестирует базовый жизненный цикл API непроизводственной техники и инвентаря: тип, подтип, наименование, чтение, архив, пагинации и defensive-сценарии.'
       },
       {
         test: runContactsAPINew,

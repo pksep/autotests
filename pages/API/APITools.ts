@@ -5,116 +5,174 @@ import logger from '../../lib/utils/logger';
 
 /** `api/instrument/*` — Nest `InstrumentController` on sep_erp_server. */
 export class ToolsAPI extends APIPageObject {
-  constructor(page: Page) {
+  constructor(page: Page | null) {
     super(page);
   }
 
   private base = () => ENV.API_BASE_URL + 'api/instrument';
 
+  private token(accessToken?: string) {
+    return accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined;
+  }
+
   async createToolType(request: APIRequestContext, typeData: any, accessToken?: string) {
     logger.info(`Creating instrument type:`, typeData);
-    const response = await request.post(this.base() + '/', {
-      headers: { ...this.authHeaders(accessToken), 'Content-Type': 'application/json', compress: 'no-compress' },
+    return this.apiRequest(request, 'POST', this.base() + '/', {
       data: typeData,
+      accessToken: this.token(accessToken),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`createToolType failed: ${response.status()}`);
-      throw new Error(`createToolType failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
+  }
+
+  async checkNameUnique(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/name/unique', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async checkNameExisting(request: APIRequestContext, dto: { name: string }, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/name/check', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getToolTypes(request: APIRequestContext, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + '/', {
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getToolTypeById(request: APIRequestContext, id: number, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + `/type/${id}`, {
+      accessToken: this.token(accessToken),
+    });
   }
 
   async updateToolType(request: APIRequestContext, typeData: any, accessToken?: string) {
     logger.info(`Updating instrument type:`, typeData);
-    const response = await request.post(this.base() + '/update', {
-      headers: { ...this.authHeaders(accessToken), 'Content-Type': 'application/json', compress: 'no-compress' },
+    return this.apiRequest(request, 'POST', this.base() + '/update', {
       data: typeData,
+      accessToken: this.token(accessToken),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`updateToolType failed: ${response.status()}`);
-      throw new Error(`updateToolType failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
+  }
+
+  async removeToolType(request: APIRequestContext, id: number, accessToken?: string) {
+    return this.apiRequest(request, 'DELETE', this.base() + `/${id}`, {
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async createToolSubtype(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/pt', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getToolSubtypeById(request: APIRequestContext, id: number, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + `/pt/${id}`, {
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getToolSubtypes(request: APIRequestContext, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + '/pt', {
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async updateToolSubtype(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/pt/update', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async removeToolSubtype(request: APIRequestContext, id: number, accessToken?: string) {
+    return this.apiRequest(request, 'DELETE', this.base() + `/pt/${id}`, {
+      accessToken: this.token(accessToken),
+    });
   }
 
   /** Creates instrument name (multipart). */
   async createTool(request: APIRequestContext, toolData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Creating instrument name:`, toolData);
     const response = await request.post(this.base() + '/nameinstrument', {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
       multipart: this.toMultipartFields(toolData),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) logger.error(`createTool failed: ${response.status()}`);
-    else logger.info(`Instrument name created`);
-    return { status: response.status(), data };
+    return this.apiResult(response);
   }
 
   async getOneTool(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Getting instrument name by id: ${id}`);
-    const response = await request.get(this.base() + `/name/${id}`, {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    return this.apiRequest(request, 'GET', this.base() + `/name/${id}`, {
+      accessToken: this.token(accessToken),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`getOneTool failed: ${response.status()}`);
-      throw new Error(`getOneTool failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
   }
 
   async updateTool(request: APIRequestContext, toolData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Updating instrument name:`, toolData);
     const response = await request.post(this.base() + '/nameinstrument/update', {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
       multipart: this.toMultipartFields(toolData),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`updateTool failed: ${response.status()}`);
-      throw new Error(`updateTool failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
+    return this.apiResult(response);
   }
 
   async removeFileTool(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Removing file from instrument, id: ${id}`);
-    const response = await request.delete(this.base() + `/file/${id}`, {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    return this.apiRequest(request, 'DELETE', this.base() + `/file/${id}`, {
+      accessToken: this.token(accessToken),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`removeFileTool failed: ${response.status()}`);
-      throw new Error(`removeFileTool failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
   }
 
   async banTool(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Archiving instrument name id: ${id}`);
-    const response = await request.delete(this.base() + `/ban/${id}`, {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    return this.apiRequest(request, 'DELETE', this.base() + `/ban/${id}`, {
+      accessToken: this.token(accessToken),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`banTool failed: ${response.status()}`);
-      throw new Error(`banTool failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
+  }
+
+  async getArchivedTools(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/nameinstrument/archive/', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
   }
 
   async getAllTools(request: APIRequestContext, accessToken?: string) {
     logger.info(`Getting all instrument names`);
-    const response = await request.get(this.base() + '/nameinstrument', {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
+    return this.apiRequest(request, 'GET', this.base() + '/nameinstrument', {
+      accessToken: this.token(accessToken),
     });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`getAllTools failed: ${response.status()}`);
-      throw new Error(`getAllTools failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
+  }
+
+  async getTypePagination(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/type/pagination', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getSubtypePagination(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/subtype/pagination', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getToolPagination(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/instrument/pagination', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getDeficitTools(request: APIRequestContext, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + '/instrumentdeficit/', {
+      accessToken: this.token(accessToken),
+    });
   }
 }
