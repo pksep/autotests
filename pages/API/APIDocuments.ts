@@ -4,8 +4,33 @@ import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
 
 export class DocumentsAPI extends APIPageObject {
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page | null) {
+    super(page as any);
+  }
+
+  async createDocuments(request: APIRequestContext, docs: Record<string, unknown>[], files: { name: string; mimeType: string; buffer: Buffer }[], accessToken?: string) {
+    logger.info(`Creating documents`);
+
+    const multipart: Record<string, any> = {
+      docs: JSON.stringify(docs),
+    };
+    files.forEach((file, index) => {
+      multipart[`document${index ? index : ''}`] = file;
+    });
+    if (files.length === 1) {
+      multipart.document = files[0];
+      delete multipart.document0;
+    }
+
+    const response = await request.post(ENV.API_BASE_URL + 'api/documents/add', {
+      headers: {
+        compress: 'no-compress',
+        ...this.authHeaders(accessToken),
+      },
+      multipart,
+    });
+
+    return { status: response.status(), data: await this.parseJsonBody(response) };
   }
 
   async attachFileToUser(request: APIRequestContext, userToUpdateId: number, fileId: number, unpin: boolean, userId: string) {
@@ -69,12 +94,13 @@ export class DocumentsAPI extends APIPageObject {
     }
   }
 
-  async deleteDocument(request: APIRequestContext, id: number, userId: string) {
+  async deleteDocument(request: APIRequestContext, id: number, userId: string, accessToken?: string) {
     logger.info(`Deleting document with id: ${id}`);
 
     const response = await request.delete(ENV.API_BASE_URL + `api/documents/${id}/false`, {
       headers: {
         'user-id': userId,
+        ...this.authHeaders(accessToken),
       },
     });
 

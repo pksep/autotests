@@ -21,6 +21,14 @@ export class TechProcessAPI extends APIPageObject {
     return { status: response.status(), data };
   }
 
+  async createOrUpdateTechProcessJson(request: APIRequestContext, techProcessData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`POST tech-process/ (json)`);
+    return this.apiRequest(request, 'POST', this.base() + '/', {
+      data: techProcessData,
+      accessToken,
+    });
+  }
+
   /** Обновление всех отгрузок “актуальных” (сервер: ShipmentsController.actualAllShipments). */
   async updateActualOperations(request: APIRequestContext, accessToken?: string) {
     logger.info(`PUT shipments/actual`);

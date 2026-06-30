@@ -9,6 +9,7 @@ import { runCBEDAPINew } from './testcases/API/APICBED.spec';
 import { runCompaniesAPINew } from './testcases/API/APICompanies.spec';
 import { runContactsAPINew } from './testcases/API/APIContacts.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
+import { runEquipmentAPINew } from './testcases/API/APIEquipment.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
@@ -16,6 +17,7 @@ import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipm
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
+import { runTechProcessAPINew } from './testcases/API/APITechProcess.spec';
 import { runUsersAPINew } from './testcases/API/APIUsers.spec';
 import { runWarehouseAPINew } from './testcases/API/APIWarehouse.spec';
 
@@ -82,6 +84,17 @@ export const apiSuites = {
         test: runMaterialsAPINew,
         description:
           'Тестирует эндпоинты API материалов: создание типа и подтипа, создание/обновление/архивацию материала, пагинацию, include, aliases, restrictions, дефициты и defensive-сценарии.'
+      }
+    ]
+  },
+
+  equipment_api: {
+    description: 'Набор тестов Equipment API для проверки жизненного цикла оборудования, типов, подтипов, архива и defensive-сценариев.',
+    tests: [
+      {
+        test: runEquipmentAPINew,
+        description:
+          'Тестирует эндпоинты API оборудования: создание типа и подтипа, создание/обновление/архивацию оборудования, справочники, пагинации, проверки имен и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -174,6 +187,17 @@ export const apiSuites = {
     ]
   },
 
+  tech_process_api: {
+    description: 'Набор тестов Tech Process API для проверки создания, обновления, чтения и defensive-сценариев техпроцессов.',
+    tests: [
+      {
+        test: runTechProcessAPINew,
+        description:
+          'Тестирует эндпоинты API техпроцессов: создание техпроцесса для детали, чтение по id, обновление описания, связь с деталью и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
   production_shipment_flow_api: {
     description: 'Сквозной API-тест производства, комплектации, прихода и отгрузки изделия.',
     tests: [
@@ -219,6 +243,11 @@ export const apiSuites = {
           'Тестирует эндпоинты API материалов: создание типа и подтипа, создание/обновление/архивацию материала, пагинацию, include, aliases, restrictions, дефициты и defensive-сценарии.'
       },
       {
+        test: runEquipmentAPINew,
+        description:
+          'Тестирует эндпоинты API оборудования: создание типа и подтипа, создание/обновление/архивацию оборудования, справочники, пагинации, проверки имен и defensive-сценарии.'
+      },
+      {
         test: runContactsAPINew,
         description:
           'Тестирует эндпоинты API контактов: создание, чтение, обновление, пагинацию, include компаний, архив, bulk archive и defensive-сценарии.'
@@ -257,6 +286,11 @@ export const apiSuites = {
         test: runProductionTasksAPINew,
         description:
           'Тестирует эндпоинты API производственных заданий: списки, count, чтение по id, задачи по пользователю/оборудованию/операции, агрегаты, связи с ass/metall и defensive-сценарии.'
+      },
+      {
+        test: runTechProcessAPINew,
+        description:
+          'Тестирует эндпоинты API техпроцессов: создание для детали, чтение по id, обновление, связь с деталью и defensive-сценарии.'
       },
       {
         test: runProductionShipmentFlowAPI,
