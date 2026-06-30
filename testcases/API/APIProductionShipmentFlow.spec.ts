@@ -850,7 +850,7 @@ export const runProductionShipmentFlowAPI = () => {
     let assembleProductId: number;
     let cbedKitId: number;
     let buyerId: number;
-    let preserveCreatedEntities = false;
+    let createdEntitiesCleanedUp = false;
     const suffix = uniqueApiSuffix('prod-flow');
     const names = {
       product: `API Flow Product ${suffix}`,
@@ -873,13 +873,17 @@ export const runProductionShipmentFlowAPI = () => {
       expect(Number(buyer.data?.id), JSON.stringify(buyer.data)).toBe(buyerId);
     });
 
-    test.afterAll(async ({ request }) => {
-      if (preserveCreatedEntities) return;
-
+    const cleanupCreatedEntities = async (request: APIRequestContext) => {
       if (shCheckId) await ignoreCleanupError(() => shipmentsAPI.rollbackShCheck(request, shCheckId, accessToken));
+      if (shipmentId) await ignoreCleanupError(() => shipmentsAPI.deleteShipment(request, shipmentId, accessToken));
       if (productId) await ignoreCleanupError(() => productsAPI.deleteProduct(request, productId, accessToken));
       if (cbedId) await ignoreCleanupError(() => cbedAPI.banCBED(request, cbedId, testUserId, accessToken));
       if (detailId) await ignoreCleanupError(() => detailsAPI.deleteDetail(request, String(detailId), testUserId, accessToken));
+      createdEntitiesCleanedUp = true;
+    };
+
+    test.afterAll(async ({ request }) => {
+      if (!createdEntitiesCleanedUp) await cleanupCreatedEntities(request);
     });
 
     test('сквозной API-сценарий: от создания изделия до отгрузки', async ({ request }) => {
@@ -1431,7 +1435,7 @@ export const runProductionShipmentFlowAPI = () => {
         await expectStock(request, 'product', productId, names.product, 0, 0, accessToken);
         await expectStock(request, 'cbed', cbedId, names.cbed, 0, 0, accessToken);
         await expectStock(request, 'detal', detailId, names.detail, 0, 0, accessToken);
-        preserveCreatedEntities = true;
+        await cleanupCreatedEntities(request);
       });
     });
   });
