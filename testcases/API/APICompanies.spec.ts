@@ -41,6 +41,48 @@ const materialPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const typeCharacteristics = () => ({
+  length: { edizmId: 6, znach: null, shortName: 'mm' },
+  width: { edizmId: 6, znach: null, shortName: 'mm' },
+  height: { edizmId: 6, znach: null, shortName: 'mm' },
+  wallThickness: { edizmId: 6, znach: null, shortName: 'mm' },
+  outsideDiameter: { edizmId: 6, znach: null, shortName: 'mm' },
+  thickness: { edizmId: 6, znach: null, shortName: 'mm' },
+  areaCrossSectional: { edizmId: 8, znach: null, shortName: 'm2' },
+});
+
+const materialCharacteristics = () => ({
+  density: { used: true, znach: 8, edizmId: 9, shortName: 'kg/m3' },
+  length: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  width: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  height: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  wallThickness: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  outsideDiameter: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  thickness: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  areaCrossSectional: { used: false, znach: 0, edizmId: 8, shortName: 'm2' },
+});
+
+const materialPayload = (
+  suffix: string,
+  rootParentId: number,
+  subtypeMaterialId: number,
+  overrides: Record<string, unknown> = {},
+) => ({
+  id: undefined,
+  name: `API Company Material ${suffix}`,
+  rootParentId,
+  subtypeMaterialId,
+  deliveryTime: 0,
+  description: `Created for Companies API autotest ${suffix}`,
+  attention: false,
+  units_measurement: [{ unitTypeId: 1, convertRate: 1, isBase: true }],
+  characteristics: materialCharacteristics(),
+  companyIds: '[]',
+  file_base: '[]',
+  material_aliases: [{ alias: `API Company Material Alias ${suffix}`, default: true }],
+  ...overrides,
+});
+
 const companyPayload = (suffix: string, contactIds: number[] = [], overrides: Record<string, unknown> = {}) => ({
   name: `API Company ${suffix}`,
   inn: `78${Math.floor(100000000 + Math.random() * 899999999)}`,
@@ -94,6 +136,8 @@ export const runCompaniesAPINew = () => {
     let companyId: number | undefined;
     let contactId: number | undefined;
     let linkedMaterialId: number | undefined;
+    let linkedMaterialTypeId: number | undefined;
+    let linkedMaterialSubtypeId: number | undefined;
     let companyName = '';
     let updatedCompanyName = '';
 
@@ -108,6 +152,18 @@ export const runCompaniesAPINew = () => {
       }
       if (companyId) {
         const response = await companiesAPI.banCompany(request, companyId, accessToken);
+        expectNoServerError(response);
+      }
+      if (linkedMaterialId) {
+        const response = await materialsAPI.banMaterial(request, linkedMaterialId, accessToken);
+        expectNoServerError(response);
+      }
+      if (linkedMaterialSubtypeId) {
+        const response = await materialsAPI.removeSubtypeMaterial(request, linkedMaterialSubtypeId, accessToken);
+        expectNoServerError(response);
+      }
+      if (linkedMaterialTypeId) {
+        const response = await materialsAPI.removeTypeMaterial(request, linkedMaterialTypeId, accessToken);
         expectNoServerError(response);
       }
     });
@@ -163,15 +219,61 @@ export const runCompaniesAPINew = () => {
       expect(companyId).toBeTruthy();
       expect(contactId).toBeTruthy();
 
-      const materials = await materialsAPI.getMaterialsPagination(request, materialPaginationDto({ pageSize: 1 }), accessToken);
-      expect(materials.status).toBe(201);
+      const suffix = uniqueApiSuffix('company-material');
+      const typeName = `API Company Material Type ${suffix}`;
+      const subtypeName = `API Company Material Subtype ${suffix}`;
 
-      const material = getRows<EntityLike>(materials.data).find((row) => row.id && row.ban !== true);
-      if (!material) {
-        test.skip(true, 'No active material is available to verify provider-material relation.');
-        return;
-      }
-      linkedMaterialId = Number(material.id);
+      const typeResponse = await materialsAPI.createTypeMaterial(
+        request,
+        { name: typeName, characteristics: typeCharacteristics(), instance_type: 1 },
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(typeResponse.data)).toContain(typeResponse.status);
+      expectNoServerError(typeResponse);
+      linkedMaterialTypeId = Number(typeResponse.data?.id);
+      expect(linkedMaterialTypeId, JSON.stringify(typeResponse.data)).toBeGreaterThan(0);
+
+      const subtypeResponse = await materialsAPI.createSubtypeMaterial(
+        request,
+        {
+          name: subtypeName,
+          density: 8,
+          id: null,
+          instance_type: 1,
+          parentMaterialIds: [linkedMaterialTypeId],
+        },
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(subtypeResponse.data)).toContain(subtypeResponse.status);
+      expectNoServerError(subtypeResponse);
+      linkedMaterialSubtypeId = Number(subtypeResponse.data?.id);
+      expect(linkedMaterialSubtypeId, JSON.stringify(subtypeResponse.data)).toBeGreaterThan(0);
+
+      const materialName = `API Company Material ${suffix}`;
+      const createMaterial = await materialsAPI.createAndUpdateMaterial(
+        request,
+        materialPayload(suffix, linkedMaterialTypeId as number, linkedMaterialSubtypeId as number),
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(createMaterial.data)).toContain(createMaterial.status);
+      expectNoServerError(createMaterial);
+
+      const materialSearch = await eventually(async () => {
+        const result = await materialsAPI.getMaterialsPagination(
+          request,
+          materialPaginationDto({ searchString: materialName }),
+          accessToken,
+        );
+        expectNoServerError(result);
+        return result;
+      }, (result) => getRows<EntityLike>(result.data).some((row) => row.name === materialName && row.ban !== true));
+
+      const material = materialSearch
+        ? getRows<EntityLike>(materialSearch.data).find((row) => row.name === materialName && row.ban !== true)
+        : undefined;
+      expect(material, `Material ${materialName} was not found after create`).toBeTruthy();
+      linkedMaterialId = Number(createMaterial.data?.id ?? material?.id);
+      expect(linkedMaterialId, JSON.stringify(createMaterial.data)).toBeGreaterThan(0);
 
       const update = await companiesAPI.updateCompany(
         request,
@@ -186,6 +288,11 @@ export const runCompaniesAPINew = () => {
       );
       expect(successCodes, JSON.stringify(update.data)).toContain(update.status);
       expectNoServerError(update);
+
+      const updatedCompany = await findCompanyByName(request, updatedCompanyName, accessToken);
+      expect(updatedCompany, `Company ${updatedCompanyName} was not found after material link update`).toBeTruthy();
+      expect(updatedCompany?.id).toBe(companyId);
+      expect(updatedCompany?.type, JSON.stringify(updatedCompany)).toContain('provider');
 
       const include = await companiesAPI.getInclude(request, { id: companyId, includes: ['materials'] }, accessToken);
       expectNoServerError(include);

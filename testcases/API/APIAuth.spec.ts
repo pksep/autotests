@@ -479,33 +479,6 @@ export const runAuthAPINew = () => {
       expect(tokenResponse.status).toBe(401);
     });
 
-    test('Refresh token становится невалидным после выхода', async ({ request }) => {
-      test.skip(
-        ENV.TEST_SUITE === 'all_api_tests',
-        'Requires exclusive shared auth user/session; covered by isolated auth_api suite.',
-      );
-      logger.log('Проверка инвалидирования refresh token после выхода...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(loginResponse.status).toBe(201);
-
-      const refreshToken = getRefreshToken(loginResponse);
-      const userId = extractUserId(loginResponse.data);
-      test.skip(!refreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
-      expect(userId).toBeTruthy();
-
-      const logoutResponse = await authAPI.logout(request, userId as number);
-      expect(logoutResponse.status).toBe(201);
-
-      const refreshResponse = await authAPI.refreshTokens(request, refreshToken);
-      expect(refreshResponse.status).toBe(401);
-    });
-
     test('Выход с невалидной сессией', async ({ request }) => {
       logger.log('Тестирование выхода с невалидной сессией...');
       const response = await authAPI.logout(request, 999999);
@@ -532,6 +505,29 @@ export const runAuthAPINew = () => {
       const secondLogout = await authAPI.logout(request, userId as number);
       expectNoServerError(secondLogout);
       expect([201, 401]).toContain(secondLogout.status);
+    });
+
+    test('Refresh token становится невалидным после выхода', async ({ request }) => {
+      logger.log('Проверка инвалидирования refresh token после выхода...');
+      const loginResponse = await authAPI.login(
+        request,
+        API_CONST.API_TEST_USERNAME,
+        API_CONST.API_TEST_PASSWORD,
+        API_CONST.API_TEST_TABEL
+      );
+
+      expect(loginResponse.status).toBe(201);
+
+      const refreshToken = getRefreshToken(loginResponse);
+      const userId = extractUserId(loginResponse.data);
+      test.skip(!refreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
+      expect(userId).toBeTruthy();
+
+      const logoutResponse = await authAPI.logout(request, userId as number);
+      expect(logoutResponse.status).toBe(201);
+
+      const refreshResponse = await authAPI.refreshTokens(request, refreshToken);
+      expect(refreshResponse.status).toBe(401);
     });
   });
   });

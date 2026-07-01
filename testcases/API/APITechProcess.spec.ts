@@ -8,7 +8,7 @@ import { TechProcessAPI } from '../../pages/API/APITechProcess';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectNotSuccessful, getRows, successCodes } from '../../lib/helpers/APIAssertions';
-import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
 
@@ -92,6 +92,70 @@ const productPayload = (suffix: string, overrides: Record<string, unknown> = {})
   ...overrides,
 });
 
+const entityPaginationDto = (designation: string, overrides: Record<string, unknown> = {}) => ({
+  page: 0,
+  searchString: designation,
+  isSortedByAttention: false,
+  isSortedByDate: true,
+  isSortedByOwn: false,
+  isSortedByOperations: false,
+  isDiscontinued: false,
+  enableIsDiscontinuedView: false,
+  ...overrides,
+});
+
+const findDetailByDesignation = async (
+  request: any,
+  designation: string,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await detailsAPI.getPaginationDetails(
+      request,
+      entityPaginationDto(designation),
+      testUserId,
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true));
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.designation === designation && row.ban !== true) : undefined;
+};
+
+const findCbedByDesignation = async (
+  request: any,
+  designation: string,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await cbedAPI.getCBEDPagination(
+      request,
+      entityPaginationDto(designation),
+      testUserId,
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true));
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.designation === designation && row.ban !== true) : undefined;
+};
+
+const findProductByDesignation = async (
+  request: any,
+  designation: string,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await productsAPI.getAllProducts(request, entityPaginationDto(designation), accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true));
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.designation === designation && row.ban !== true) : undefined;
+};
+
 const techProcessPayload = (
   entityId: number,
   description: string,
@@ -165,6 +229,27 @@ const findOperation = (techProcess: ApiRow, operationId: number): ApiRow | undef
   return getRows<ApiRow>(techProcess?.operations).find((operation) => operation.id === operationId);
 };
 
+const waitForOperationCalcType = async (
+  request: any,
+  techProcessId: number,
+  operationId: number,
+  expectedCalcType: string,
+  accessToken?: string,
+) => {
+  return eventually(
+    async () => techProcessAPI.getTechProcessById(request, String(techProcessId), accessToken),
+    (response) => {
+      if (!successCodes.includes(response.status)) return false;
+      return findOperation(response.data, operationId)?.workStartCalcType === expectedCalcType;
+    },
+    { attempts: 12, intervalMs: 750 },
+  );
+};
+
+const hasActiveOperation = (techProcess: ApiRow, operationId: number): boolean => {
+  return getRows<ApiRow>(techProcess?.operations).some((operation) => operation.id === operationId && operation.ban !== true);
+};
+
 export const runTechProcessAPINew = () => {
   logger.info('Starting Tech Process API coverage suite');
 
@@ -209,11 +294,13 @@ export const runTechProcessAPINew = () => {
     });
 
     test('создает тестовую деталь как владельца техпроцесса', async ({ request }) => {
-      const createDetail = await detailsAPI.createDetail(request, detailPayload(suffix), testUserId, accessToken);
+      const payload = detailPayload(suffix);
+      const createDetail = await detailsAPI.createDetail(request, payload, testUserId, accessToken);
       expect(successCodes, JSON.stringify(createDetail.data)).toContain(createDetail.status);
       expectNoServerError(createDetail);
 
-      detailId = Number(queueData(createDetail.data)?.id);
+      const createdDetail = await findDetailByDesignation(request, String(payload.designation), accessToken);
+      detailId = Number(queueData(createDetail.data)?.id ?? createdDetail?.id);
       expect(detailId, JSON.stringify(createDetail.data)).toBeGreaterThan(0);
     });
 
@@ -279,10 +366,12 @@ export const runTechProcessAPINew = () => {
     });
 
     test('создает техпроцессы для cbed и product владельцев', async ({ request }) => {
-      const createCbed = await cbedAPI.createCBED(request, cbedPayload(suffix), testUserId, accessToken);
+      const cbedData = cbedPayload(suffix);
+      const createCbed = await cbedAPI.createCBED(request, cbedData, testUserId, accessToken);
       expect(successCodes, JSON.stringify(createCbed.data)).toContain(createCbed.status);
       expectNoServerError(createCbed);
-      cbedId = Number(queueData(createCbed.data)?.id);
+      const createdCbed = await findCbedByDesignation(request, String(cbedData.designation), accessToken);
+      cbedId = Number(queueData(createCbed.data)?.id ?? createdCbed?.id);
       expect(cbedId, JSON.stringify(createCbed.data)).toBeGreaterThan(0);
 
       const cbedTech = await techProcessAPI.createOrUpdateTechProcess(
@@ -300,10 +389,12 @@ export const runTechProcessAPINew = () => {
       expectNoServerError(readCbedTech);
       expect(Number(readCbedTech.data?.id), JSON.stringify(readCbedTech.data)).toBe(cbedTechProcessId);
 
-      const createProduct = await productsAPI.createProduct(request, productPayload(suffix), accessToken);
+      const productData = productPayload(suffix);
+      const createProduct = await productsAPI.createProduct(request, productData, accessToken);
       expect(successCodes, JSON.stringify(createProduct.data)).toContain(createProduct.status);
       expectNoServerError(createProduct);
-      productId = Number(queueData(createProduct.data)?.id);
+      const createdProduct = await findProductByDesignation(request, String(productData.designation), accessToken);
+      productId = Number(queueData(createProduct.data)?.id ?? createdProduct?.id);
       expect(productId, JSON.stringify(createProduct.data)).toBeGreaterThan(0);
 
       const productTech = await techProcessAPI.createOrUpdateTechProcess(
@@ -460,11 +551,14 @@ export const runTechProcessAPINew = () => {
       expect(successCodes, JSON.stringify(switchToNextType.data)).toContain(switchToNextType.status);
       expectNoServerError(switchToNextType);
 
-      const afterSwitchToNext = await techProcessAPI.getTechProcessById(request, String(techProcessId), accessToken);
-      expectNoServerError(afterSwitchToNext);
-      expect(findOperation(afterSwitchToNext.data, createdOperations.auto)?.workStartCalcType, JSON.stringify(afterSwitchToNext.data)).toBe(
+      const afterSwitchToNext = await waitForOperationCalcType(
+        request,
+        techProcessId as number,
+        createdOperations.auto,
         'nextOperationWorkStart',
+        accessToken,
       );
+      expect(afterSwitchToNext, JSON.stringify(switchToNextType.data)).toBeTruthy();
 
       const switchBackToAutomatic = await operationAPI.updateOperation(
         request,
@@ -478,9 +572,14 @@ export const runTechProcessAPINew = () => {
       expect(successCodes, JSON.stringify(switchBackToAutomatic.data)).toContain(switchBackToAutomatic.status);
       expectNoServerError(switchBackToAutomatic);
 
-      const afterSwitchBack = await techProcessAPI.getTechProcessById(request, String(techProcessId), accessToken);
-      expectNoServerError(afterSwitchBack);
-      expect(findOperation(afterSwitchBack.data, createdOperations.auto)?.workStartCalcType, JSON.stringify(afterSwitchBack.data)).toBe('automatic');
+      const afterSwitchBack = await waitForOperationCalcType(
+        request,
+        techProcessId as number,
+        createdOperations.auto,
+        'automatic',
+        accessToken,
+      );
+      expect(afterSwitchBack, JSON.stringify(switchBackToAutomatic.data)).toBeTruthy();
 
       const updateTypeToPrev = await operationAPI.updateTypeOperation(
         request,
@@ -490,11 +589,14 @@ export const runTechProcessAPINew = () => {
       expect(successCodes, JSON.stringify(updateTypeToPrev.data)).toContain(updateTypeToPrev.status);
       expectNoServerError(updateTypeToPrev);
 
-      const afterTypeUpdate = await techProcessAPI.getTechProcessById(request, String(techProcessId), accessToken);
-      expectNoServerError(afterTypeUpdate);
-      expect(findOperation(afterTypeUpdate.data, createdOperations.auto)?.workStartCalcType, JSON.stringify(afterTypeUpdate.data)).toBe(
+      const afterTypeUpdate = await waitForOperationCalcType(
+        request,
+        techProcessId as number,
+        createdOperations.auto,
         'prevOperationReadinessDate',
+        accessToken,
       );
+      expect(afterTypeUpdate, JSON.stringify(updateTypeToPrev.data)).toBeTruthy();
 
       const updateTypeBackToAutomatic = await operationAPI.updateTypeOperation(
         request,
@@ -504,11 +606,16 @@ export const runTechProcessAPINew = () => {
       expect(successCodes, JSON.stringify(updateTypeBackToAutomatic.data)).toContain(updateTypeBackToAutomatic.status);
       expectNoServerError(updateTypeBackToAutomatic);
 
-      const afterTypeRollback = await techProcessAPI.getTechProcessById(request, String(techProcessId), accessToken);
-      expectNoServerError(afterTypeRollback);
-      expect(findOperation(afterTypeRollback.data, createdOperations.auto)?.workStartCalcType, JSON.stringify(afterTypeRollback.data)).toBe('automatic');
+      const afterTypeRollback = await waitForOperationCalcType(
+        request,
+        techProcessId as number,
+        createdOperations.auto,
+        'automatic',
+        accessToken,
+      );
+      expect(afterTypeRollback, JSON.stringify(updateTypeBackToAutomatic.data)).toBeTruthy();
 
-      const operationsWithTimeFields = getRows<ApiRow>(afterTypeRollback.data?.operations).filter((operation) =>
+      const operationsWithTimeFields = getRows<ApiRow>(afterTypeRollback!.data?.operations).filter((operation) =>
         Object.values(createdOperations).includes(operation.id),
       );
       for (const operation of operationsWithTimeFields) {
@@ -560,10 +667,17 @@ export const runTechProcessAPINew = () => {
         expect(successCodes).toContain(archiveOperation.status);
       }
 
-      const techAfterArchive = await techProcessAPI.getTechProcessById(request, String(techProcessId), accessToken);
-      expectNoServerError(techAfterArchive);
-      if (!clientErrorCodes.includes(techAfterArchive.status)) {
-        expect(getRows<ApiRow>(techAfterArchive.data?.operations).some((row) => row.id === operationId), JSON.stringify(techAfterArchive.data)).toBe(false);
+      const techAfterArchive = await eventually(async () => {
+        const response = await techProcessAPI.getTechProcessById(request, String(techProcessId), accessToken);
+        expectNoServerError(response);
+        return response;
+      }, (response) => clientErrorCodes.includes(response.status) || !hasActiveOperation(response.data, operationId), {
+        attempts: 12,
+        intervalMs: 1000,
+      });
+      expect(techAfterArchive, `Operation ${operationId} is still active after archive`).toBeTruthy();
+      if (techAfterArchive && !clientErrorCodes.includes(techAfterArchive.status)) {
+        expect(hasActiveOperation(techAfterArchive.data, operationId), JSON.stringify(techAfterArchive.data)).toBe(false);
       }
 
       operationIds.splice(operationIds.indexOf(operationId), 1);

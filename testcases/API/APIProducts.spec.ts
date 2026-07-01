@@ -105,6 +105,29 @@ const waitForProductInActiveSearch = async (
   return Boolean(response);
 };
 
+const createIsolatedProduct = async (
+  request: any,
+  suffix: string,
+  accessToken?: string,
+): Promise<{ id: number; designation: string; payload: Record<string, unknown> }> => {
+  const payload = productPayload(suffix);
+  const designation = String(payload.designation);
+
+  const createResponse = await productsAPI.createProduct(request, payload, accessToken);
+  expect([200, 201, 202], JSON.stringify(createResponse.data)).toContain(createResponse.status);
+  expectNoServerError(createResponse);
+
+  const createData = getQueueData(createResponse.data);
+  const created = await findProductByDesignation(request, designation, accessToken);
+  const id = Number(createData?.id ?? created?.id);
+
+  expect(id, JSON.stringify(createResponse.data)).toBeGreaterThan(0);
+  expect(created, `Product ${designation} was not found after create`).toBeTruthy();
+  expect(created?.ban, JSON.stringify(created)).toBe(false);
+
+  return { id, designation, payload };
+};
+
 /**
  * Full Product API coverage for create, read, update, archive and defensive checks.
  */
@@ -284,15 +307,18 @@ export const runProductsAPINew = () => {
     });
 
     test('возвращает список изделий без серверных ошибок', async ({ request }) => {
-      const response = await productsAPI.getAllProductsList(request, true, [], accessToken);
+      const product = await createIsolatedProduct(request, uniqueApiSuffix('product-list'), accessToken);
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+      try {
+        const response = await productsAPI.getAllProductsList(request, true, [], accessToken);
 
-      const rows = getRows(response.data);
-      test.skip(rows.length === 0, 'No active products are available on this environment.');
-      expectProductShape(rows[0]);
-      expect(rows[0].ban, JSON.stringify(rows[0])).toBe(false);
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+        expect(getRows<ProductLike>(response.data).some((row) => row.id === product.id), JSON.stringify(response.data)).toBe(true);
+      } finally {
+        const archive = await productsAPI.deleteProduct(request, product.id, accessToken);
+        expectNoServerError(archive);
+      }
     });
 
     test('пагинация поддерживает пустой результат со стабильной структурой', async ({ request }) => {
@@ -340,19 +366,21 @@ export const runProductsAPINew = () => {
     });
 
     test('include изделия обрабатывает пустой и неизвестный include без 5xx', async ({ request }) => {
-      const list = await productsAPI.getAllProducts(request, productPaginationDto({ pageSize: 1 }), accessToken);
-      expectNoServerError(list);
-      const product = getRows(list.data).find((row) => row.id);
-      test.skip(!product, 'No active product is available for include variants.');
+      const product = await createIsolatedProduct(request, uniqueApiSuffix('product-include'), accessToken);
 
-      for (const includes of [[], ['unknownInclude']]) {
-        const response = await productsAPI.getProductInclude(
-          request,
-          Number(product!.id),
-          { includes },
-          accessToken,
-        );
-        expectNoServerError(response);
+      try {
+        for (const includes of [[], ['unknownInclude']]) {
+          const response = await productsAPI.getProductInclude(
+            request,
+            product.id,
+            { includes },
+            accessToken,
+          );
+          expectNoServerError(response);
+        }
+      } finally {
+        const archive = await productsAPI.deleteProduct(request, product.id, accessToken);
+        expectNoServerError(archive);
       }
     });
 

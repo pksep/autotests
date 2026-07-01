@@ -5,25 +5,38 @@
 
 import { runAuthAPINew } from './testcases/API/APIAuth.spec';
 import { runAssembleAPINew } from './testcases/API/APIAssemble.spec';
+import { runActionsAPINew } from './testcases/API/APIActions.spec';
+import { runActionsChainAPINew } from './testcases/API/APIActionsChain.spec';
 import { runCBEDAPINew } from './testcases/API/APICBED.spec';
 import { runCompaniesAPINew } from './testcases/API/APICompanies.spec';
 import { runContactsAPINew } from './testcases/API/APIContacts.spec';
+import { runDeficitsAPINew } from './testcases/API/APIDeficits.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runDocumentsAPINew } from './testcases/API/APIDocuments.spec';
 import { runEquipmentAPINew } from './testcases/API/APIEquipment.spec';
 import { runInventoryAPINew } from './testcases/API/APIInventory.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
+import { runMarksAPINew } from './testcases/API/APIMarks.spec';
+import { runMovementErrorsAPINew } from './testcases/API/APIMovementErrors.spec';
+import { runMovementObjectAPINew } from './testcases/API/APIMovementObject.spec';
+import { runMovingAPINew } from './testcases/API/APIMoving.spec';
+import { runNotificationAPINew } from './testcases/API/APINotification.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
 import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipmentFlow.spec';
 import { runProviderDeliveriesAPINew } from './testcases/API/APIProviderDeliveries.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
+import { runOperationAPINew } from './testcases/API/APIOperation.spec';
+import { runRolesAPINew } from './testcases/API/APIRoles.spec';
 import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
+import { runSpecificationAPINew } from './testcases/API/APISpecification.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
 import { runTechProcessAPINew } from './testcases/API/APITechProcess.spec';
 import { runToolsAPINew } from './testcases/API/APITools.spec';
 import { runUsersAPINew } from './testcases/API/APIUsers.spec';
 import { runWarehouseAPINew } from './testcases/API/APIWarehouse.spec';
+import { runWaybillAPINew } from './testcases/API/APIWaybill.spec';
+import { runWaybillProviderFlowAPI } from './testcases/API/APIWaybillProviderFlow.spec';
 
 export const apiSuites = {
   auth_api: {
@@ -37,6 +50,105 @@ export const apiSuites = {
     ]
   },
 
+  deficits_api: {
+    description: 'Набор тестов Deficits API для таблиц дефицитов, дефицитов материалов и defensive-сценариев.',
+    tests: [
+      {
+        test: runDeficitsAPINew,
+        description:
+          'Тестирует эндпоинты api/deficits: table_deficit, materials, materialparents, materialonecshipments и безопасную обработку невалидных запросов.'
+      }
+    ]
+  },
+
+  marks_api: {
+    description: 'Набор тестов Marks API для отметок выполнения и результатов работ.',
+    tests: [
+      {
+        test: runMarksAPINew,
+        description:
+          'Тестирует эндпоинты api/marks: список отметок, результаты работ, отметки по операции, чтение по id и defensive-сценарии мутаций.'
+      }
+    ]
+  },
+
+  actions_api: {
+    description: 'Набор тестов Actions API для чтения действий по параметрам и defensive-сценариев.',
+    tests: [
+      {
+        test: runActionsAPINew,
+        description:
+          'Тестирует api/actions/get-by-params с базовыми фильтрами, поиском, спецсимволами и невалидным контрактом.'
+      }
+    ]
+  },
+
+  actions_chain_api: {
+    description: 'Набор тестов Actions Chain API для дерева дочерних действий.',
+    tests: [
+      {
+        test: runActionsChainAPINew,
+        description:
+          'Берет существующее действие через Actions API и проверяет чтение цепочки через api/actions-chain/childs/:id.'
+      }
+    ]
+  },
+
+  specification_api: {
+    description: 'Набор тестов Specification API для атрибутов, детей первого уровня и пересчета времени.',
+    tests: [
+      {
+        test: runSpecificationAPINew,
+        description:
+          'Тестирует api/specification/attributes, first-level-children, time/:type/:id и defensive-сценарии.'
+      }
+    ]
+  },
+
+  notification_api: {
+    description: 'Набор тестов Notification API для enrichment batch.',
+    tests: [
+      {
+        test: runNotificationAPINew,
+        description:
+          'Тестирует api/external/notifications/enrich/batch для одиночного и batch системных уведомлений и минимального невалидного объекта.'
+      }
+    ]
+  },
+
+  movement_object_api: {
+    description: 'Набор тестов Movement Object API для истории перемещений.',
+    tests: [
+      {
+        test: runMovementObjectAPINew,
+        description:
+          'Тестирует api/movement-object: историю с пагинацией, чтение одного перемещения и фильтрацию по родителям.'
+      }
+    ]
+  },
+
+  moving_api: {
+    description: 'Набор тестов Moving API для списка и создания перемещений.',
+    tests: [
+      {
+        test: runMovingAPINew,
+        description:
+          'Тестирует api/moving: получение списка, создание пустого перемещения и defensive-сценарий невалидного payload.'
+      }
+    ]
+  },
+
+  movement_errors_api: {
+    description: 'Набор тестов Movement Errors API для текущего пустого контроллера.',
+    tests: [
+      {
+        test: runMovementErrorsAPINew,
+        description:
+          'Проверяет, что неэкспонированные маршруты movement-errors возвращают клиентскую ошибку без 5xx.'
+      }
+    ]
+  },
+
   users_api: {
     description: 'Набор тестов Users API для проверки чтения, пагинации, ролей, архива и defensive-сценариев.',
     tests: [
@@ -44,6 +156,17 @@ export const apiSuites = {
         test: runUsersAPINew,
         description:
           'Тестирует эндпоинты API пользователей: списки, пагинацию, получение по id, уникальность табеля, архив, роли и безопасную обработку ошибочных мутаций.'
+      }
+    ]
+  },
+
+  roles_api: {
+    description: 'Набор тестов Roles API для проверки ролей, уникальности имен, архива и defensive-сценариев.',
+    tests: [
+      {
+        test: runRolesAPINew,
+        description:
+          'Тестирует эндпоинты API ролей: создание, чтение, обновление, архив, уникальность имени, права доступа и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -246,6 +369,39 @@ export const apiSuites = {
     ]
   },
 
+  operation_api: {
+    description: 'Набор тестов Operation API для проверки типов операций, справочников операций и defensive-сценариев.',
+    tests: [
+      {
+        test: runOperationAPINew,
+        description:
+          'Тестирует эндпоинты API операций: жизненный цикл типа операции, чтение типов/операций, статические выборки, уникальность имени и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  waybill_api: {
+    description: 'Набор тестов Waybill API для проверки накладных, пагинации, чтения и defensive-сценариев.',
+    tests: [
+      {
+        test: runWaybillAPINew,
+        description:
+          'Тестирует эндпоинты API накладных: пагинацию, последнюю накладную, чтение по id, актуальные поставки, связь с заказами склада и безопасную обработку ошибочных мутаций.'
+      }
+    ]
+  },
+
+  waybill_provider_flow_api: {
+    description: 'Сквозной API-тест накладной прихода от поставщика с setup заказа поставщику.',
+    tests: [
+      {
+        test: runWaybillProviderFlowAPI,
+        description:
+          'Создает компанию-поставщика и заказ материала, создает накладную прихода от поставщика, проверяет связь с заказом, обновление, архив накладной и cleanup заказа/компании.'
+      }
+    ]
+  },
+
   production_shipment_flow_api: {
     description: 'Сквозной API-тест производства, комплектации, прихода и отгрузки изделия.',
     tests: [
@@ -266,9 +422,59 @@ export const apiSuites = {
           'Тестирует эндпоинты API аутентификации, включая вход, проверку токена, обновление, выход и сценарии безопасности.'
       },
       {
+        test: runDeficitsAPINew,
+        description:
+          'Тестирует api/deficits: таблицы дефицитов, материалы, принадлежность материала и defensive-сценарии.'
+      },
+      {
+        test: runMarksAPINew,
+        description:
+          'Тестирует api/marks: отметки, результаты работ, отметки по операции и defensive-сценарии.'
+      },
+      {
+        test: runActionsAPINew,
+        description:
+          'Тестирует api/actions/get-by-params: базовое чтение, фильтры и defensive-сценарии.'
+      },
+      {
+        test: runActionsChainAPINew,
+        description:
+          'Тестирует api/actions-chain/childs/:id для существующего действия.'
+      },
+      {
+        test: runSpecificationAPINew,
+        description:
+          'Тестирует api/specification: attributes, first-level-children, пересчет времени и defensive-сценарии.'
+      },
+      {
+        test: runNotificationAPINew,
+        description:
+          'Тестирует api/external/notifications/enrich/batch для системных уведомлений.'
+      },
+      {
+        test: runMovementObjectAPINew,
+        description:
+          'Тестирует api/movement-object: историю перемещений и чтение по id.'
+      },
+      {
+        test: runMovingAPINew,
+        description:
+          'Тестирует api/moving: список, создание и defensive-сценарий.'
+      },
+      {
+        test: runMovementErrorsAPINew,
+        description:
+          'Тестирует текущий пустой api/movement-errors как неэкспонированный контракт без 5xx.'
+      },
+      {
         test: runUsersAPINew,
         description:
           'Тестирует эндпоинты API пользователей: списки, пагинацию, получение по id, уникальность табеля, архив, роли и безопасную обработку ошибочных мутаций.'
+      },
+      {
+        test: runRolesAPINew,
+        description:
+          'Тестирует эндпоинты API ролей: создание, чтение, обновление, архив, уникальность имени, права доступа и defensive-сценарии.'
       },
       {
         test: runProductsAPINew,
@@ -359,6 +565,21 @@ export const apiSuites = {
         test: runTechProcessAPINew,
         description:
           'Тестирует эндпоинты API техпроцессов: создание для детали, чтение по id, обновление, связь с деталью и defensive-сценарии.'
+      },
+      {
+        test: runOperationAPINew,
+        description:
+          'Тестирует эндпоинты API операций: жизненный цикл типа операции, чтение типов/операций, статические выборки, уникальность имени и defensive-сценарии.'
+      },
+      {
+        test: runWaybillAPINew,
+        description:
+          'Тестирует эндпоинты API накладных: пагинацию, последнюю накладную, чтение по id, актуальные поставки, связь с заказами склада и defensive-сценарии.'
+      },
+      {
+        test: runWaybillProviderFlowAPI,
+        description:
+          'Создает компанию-поставщика и заказ материала, создает накладную прихода от поставщика, проверяет связь с заказом, обновление, архив накладной и cleanup.'
       },
       {
         test: runProductionShipmentFlowAPI,

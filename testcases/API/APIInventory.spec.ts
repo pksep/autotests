@@ -197,6 +197,16 @@ export const runInventoryAPINew = () => {
       const updated = await findInventoryByName(request, updatedName, accessToken);
       expect(updated, `Inventory ${updatedName} was not found after update`).toBeTruthy();
       expect(updated?.id).toBe(inventoryId);
+
+      const persisted = await inventoryAPI.getOneInventory(request, inventoryId, accessToken);
+      expectNoServerError(persisted);
+      if (!clientErrorCodes.includes(persisted.status)) {
+        expect(successCodes).toContain(persisted.status);
+        expect(persisted.data?.id, JSON.stringify(persisted.data)).toBe(inventoryId);
+        expect(persisted.data?.name, JSON.stringify(persisted.data)).toBe(updatedName);
+        expect(persisted.data?.attention, JSON.stringify(persisted.data)).toBe(true);
+        expect(persisted.data?.description, JSON.stringify(persisted.data)).toBe('Updated by API autotest');
+      }
       inventoryName = updatedName;
     });
 
@@ -214,6 +224,17 @@ export const runInventoryAPINew = () => {
         return response;
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentInventoryId));
       expect(archived, `Inventory ${inventoryName} was not found in archive`).toBeTruthy();
+
+      const active = await inventoryAPI.getInventoryPagination(
+        request,
+        inventoryPaginationDto({ searchString: inventoryName }),
+        accessToken,
+      );
+      expectNoServerError(active);
+      if (!clientErrorCodes.includes(active.status)) {
+        expect(successCodes).toContain(active.status);
+        expect(getRows<ApiRow>(active.data).some((row) => row.id === currentInventoryId), JSON.stringify(active.data)).toBe(false);
+      }
       inventoryId = undefined;
 
       const archiveSubtype = await inventoryAPI.removeInventorySubtype(request, subtypeId as number, accessToken);

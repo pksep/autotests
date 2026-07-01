@@ -4,7 +4,7 @@ import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
-import { getAuthToken } from '../../lib/helpers/APITestUtils';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
   status: number;
@@ -15,6 +15,11 @@ type ApiRow = Record<string, any>;
 
 const detailsAPI = new DetailsAPI(null);
 const metaloworkingAPI = new MetaloworkingAPI(null);
+const testUserId = API_CONST.API_TEST_TABEL;
+
+const getQueueData = (data: any): any => {
+  return data?.data && typeof data.data === 'object' ? data.data : data;
+};
 
 const byParents = (overrides: Record<string, unknown> = {}) => ({
   productIds: [],
@@ -76,17 +81,119 @@ const detailPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const findActiveDetailId = async (request: any, accessToken?: string): Promise<number | undefined> => {
-  const response = await detailsAPI.getPaginationDetails(
-    request,
-    detailPaginationDto(),
-    API_CONST.API_TEST_TABEL,
-    accessToken,
-  );
-  expectNoServerError(response);
+const detailPayload = (suffix: string, overrides: Record<string, unknown> = {}) => ({
+  id: null,
+  techProcessID: null,
+  characteristic: [{ name: 'Масса детали', ez: 'кг', znach: 0 }],
+  name: `API Metaloworking Detail ${suffix}`,
+  designation: `API-METALOWORKING-DETAIL-${suffix}`,
+  discontinued: false,
+  responsible: '0',
+  description: `Created by Metaloworking API autotest ${suffix}`,
+  parametrs: {
+    preTime: { ez: 'ч', znach: 0 },
+    helperTime: { ez: 'ч', znach: 0 },
+    mainTime: { ez: 'ч', znach: 0 },
+  },
+  attention: false,
+  workpiece_characterization: { mass: 0, trash: 0 },
+  materialList: [],
+  mat_zag: null,
+  mat_zag_zam: null,
+  docs: null,
+  fileBase: [],
+  ...overrides,
+});
 
-  const detail = getRows(response.data).find((row) => row.id && row.ban !== true && row.discontinued !== true);
-  return detail ? Number(detail.id) : undefined;
+const findDetailByDesignation = async (
+  request: any,
+  designation: string,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await detailsAPI.getPaginationDetails(
+      request,
+      detailPaginationDto({ searchString: designation }),
+      testUserId,
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true));
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.designation === designation && row.ban !== true) : undefined;
+};
+
+const createIsolatedDetail = async (request: any, suffix: string, accessToken?: string): Promise<ApiRow> => {
+  const payload = detailPayload(suffix);
+  const create = await detailsAPI.createDetail(request, payload, testUserId, accessToken);
+  expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
+  expectNoServerError(create);
+
+  const created = await findDetailByDesignation(request, String(payload.designation), accessToken);
+  const id = Number(getQueueData(create.data)?.id ?? created?.id);
+  expect(id, JSON.stringify(create.data)).toBeGreaterThan(0);
+  return { ...(created as ApiRow), id, designation: String(payload.designation), name: String(payload.name) };
+};
+
+const metaloworkingPayload = (suffix: string, detailId: number, overrides: Record<string, unknown> = {}) => ({
+  numberOrder: `API-METAL-${suffix}`,
+  myKolvo: 1,
+  description: `API metaloworking ${suffix}`,
+  detalId: detailId,
+  actionSendlerId: Number(API_CONST.API_TEST_TABEL),
+  ...overrides,
+});
+
+const findMetaloworkingByDetail = async (
+  request: any,
+  detailId: number,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await metaloworkingAPI.getPagination(
+      request,
+      metaloworkingPaginationDto({ byParents: byParents({ detalIds: [detailId] }) }),
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => Number(row.detal_id ?? row.detalId) === detailId));
+
+  return response
+    ? getRows<ApiRow>(response.data).find((row) => Number(row.detal_id ?? row.detalId) === detailId)
+    : undefined;
+};
+
+const createIsolatedMetaloworking = async (
+  request: any,
+  suffix: string,
+  accessToken?: string,
+): Promise<{ detail: ApiRow; metaloworkingId: number }> => {
+  const detail = await createIsolatedDetail(request, suffix, accessToken);
+  const create = await metaloworkingAPI.create(request, metaloworkingPayload(suffix, Number(detail.id)), accessToken);
+  expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
+  expectNoServerError(create);
+
+  const created = await findMetaloworkingByDetail(request, Number(detail.id), accessToken);
+  const metaloworkingId = Number(create.data?.id ?? created?.id);
+  expect(metaloworkingId, JSON.stringify(create.data)).toBeGreaterThan(0);
+  return { detail, metaloworkingId };
+};
+
+const archiveIsolatedMetaloworking = async (
+  request: any,
+  fixture: { detail?: ApiRow; metaloworkingId?: number },
+  accessToken?: string,
+) => {
+  if (fixture.metaloworkingId) {
+    const archiveMetaloworking = await metaloworkingAPI.delete(request, fixture.metaloworkingId, accessToken);
+    expectNoServerError(archiveMetaloworking);
+  }
+  if (fixture.detail?.id) {
+    const archiveDetail = await detailsAPI.deleteDetail(request, String(fixture.detail.id), testUserId, accessToken);
+    expectNoServerError(archiveDetail);
+  }
 };
 
 export const runMetaloworkingAPINew = () => {
@@ -97,11 +204,9 @@ export const runMetaloworkingAPINew = () => {
 
     let accessToken: string | undefined;
     let firstMetaloworking: ApiRow | undefined;
-    let activeDetailId: number | undefined;
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
-      activeDetailId = await findActiveDetailId(request, accessToken);
     });
 
     test('возвращает основную страницу металлообработки без серверных ошибок', async ({ request }) => {
@@ -184,40 +289,42 @@ export const runMetaloworkingAPINew = () => {
       }
     });
 
-    test('читает металлообработку по id и light endpoint, если в базе есть активная МО', async ({ request }) => {
-      if (!firstMetaloworking) {
-        const response = await metaloworkingAPI.getPagination(request, metaloworkingPaginationDto(), accessToken);
-        expectNoServerError(response);
-        firstMetaloworking = getRows(response.data).find((row) => row.id);
-      }
+    test('читает изолированную металлообработку по id и light endpoint', async ({ request }) => {
+      const fixture = await createIsolatedMetaloworking(request, uniqueApiSuffix('metal-read'), accessToken);
+      const metaloworkingId = fixture.metaloworkingId;
 
-      test.skip(!firstMetaloworking, 'No active metaloworking rows are available on this environment.');
-      const metaloworkingId = Number(firstMetaloworking!.id);
+      try {
+        const byId = await metaloworkingAPI.getById(request, metaloworkingId, accessToken);
+        expectNoServerError(byId);
+        if (!clientErrorCodes.includes(byId.status)) {
+          expect(successCodes).toContain(byId.status);
+          expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(metaloworkingId);
+        }
 
-      const byId = await metaloworkingAPI.getById(request, metaloworkingId, accessToken);
-      expectNoServerError(byId);
-      if (!clientErrorCodes.includes(byId.status)) {
-        expect(successCodes).toContain(byId.status);
-        expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(metaloworkingId);
-      }
+        const light = await metaloworkingAPI.getByIdLight(request, metaloworkingId, accessToken);
+        expectNoServerError(light);
+        if (!clientErrorCodes.includes(light.status)) {
+          expect(successCodes).toContain(light.status);
+          expect(Number(light.data?.id), JSON.stringify(light.data)).toBe(metaloworkingId);
+        }
 
-      const light = await metaloworkingAPI.getByIdLight(request, metaloworkingId, accessToken);
-      expectNoServerError(light);
-      if (!clientErrorCodes.includes(light.status)) {
-        expect(successCodes).toContain(light.status);
-        expect(Number(light.data?.id), JSON.stringify(light.data)).toBe(metaloworkingId);
-      }
-
-      if (!clientErrorCodes.includes(byId.status) && !clientErrorCodes.includes(light.status)) {
-        expect(Object.keys(byId.data || {}).length).toBeGreaterThanOrEqual(Object.keys(light.data || {}).length);
+        if (!clientErrorCodes.includes(byId.status) && !clientErrorCodes.includes(light.status)) {
+          expect(Object.keys(byId.data || {}).length).toBeGreaterThanOrEqual(Object.keys(light.data || {}).length);
+        }
+      } finally {
+        await archiveIsolatedMetaloworking(request, fixture, accessToken);
       }
     });
 
-    test('проверяет связь металлообработки с деталью без серверных ошибок', async ({ request }) => {
-      test.skip(!activeDetailId, 'No active detail is available for metaloworking relation checks.');
+    test('проверяет связь изолированной металлообработки с деталью без серверных ошибок', async ({ request }) => {
+      const fixture = await createIsolatedMetaloworking(request, uniqueApiSuffix('metal-detail'), accessToken);
 
-      const byDetail = await metaloworkingAPI.getByDetalLight(request, activeDetailId as number, accessToken);
-      expectNoServerError(byDetail);
+      try {
+        const byDetail = await metaloworkingAPI.getByDetalLight(request, Number(fixture.detail.id), accessToken);
+        expectNoServerError(byDetail);
+      } finally {
+        await archiveIsolatedMetaloworking(request, fixture, accessToken);
+      }
     });
   });
 

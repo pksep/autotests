@@ -190,6 +190,16 @@ export const runToolsAPINew = () => {
       const updated = await findToolByName(request, updatedName, accessToken);
       expect(updated, `Tool ${updatedName} was not found after update`).toBeTruthy();
       expect(updated?.id).toBe(toolId);
+
+      const persisted = await toolsAPI.getOneTool(request, toolId, accessToken);
+      expectNoServerError(persisted);
+      if (!clientErrorCodes.includes(persisted.status)) {
+        expect(successCodes).toContain(persisted.status);
+        expect(persisted.data?.id, JSON.stringify(persisted.data)).toBe(toolId);
+        expect(persisted.data?.name, JSON.stringify(persisted.data)).toBe(updatedName);
+        expect(persisted.data?.attention, JSON.stringify(persisted.data)).toBe(true);
+        expect(persisted.data?.description, JSON.stringify(persisted.data)).toBe('Updated by API autotest');
+      }
       toolName = updatedName;
     });
 
@@ -207,6 +217,13 @@ export const runToolsAPINew = () => {
         return response;
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentToolId));
       expect(archived, `Tool ${toolName} was not found in archive`).toBeTruthy();
+
+      const active = await toolsAPI.getToolPagination(request, toolsPaginationDto({ searchString: toolName }), accessToken);
+      expectNoServerError(active);
+      if (!clientErrorCodes.includes(active.status)) {
+        expect(successCodes).toContain(active.status);
+        expect(getRows<ApiRow>(active.data).some((row) => row.id === currentToolId), JSON.stringify(active.data)).toBe(false);
+      }
       toolId = undefined;
 
       const archiveSubtype = await toolsAPI.removeToolSubtype(request, subtypeId as number, accessToken);

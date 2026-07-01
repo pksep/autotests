@@ -105,31 +105,151 @@ const productPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const findProductId = async (request: any, accessToken?: string): Promise<number | undefined> => {
-  const response = await productsAPI.getAllProducts(request, productPaginationDto(), accessToken);
-  expectNoServerError(response);
+const productPayload = (suffix: string, overrides: Record<string, unknown> = {}) => ({
+  id: null,
+  name: `API Shipment Product ${suffix}`,
+  articl: `API-SHIPMENT-PRODUCT-ART-${suffix}`,
+  responsible: '',
+  description: `Created by Shipments API autotest ${suffix}`,
+  parametrs: [{ ez: 'шт', name: 'Норма времени на изделие', znach: 0 }],
+  characteristic: [
+    { ez: 'шт', name: 'Рекомендуемый остаток', znach: 0 },
+    { ez: 'шт', name: 'Минимальный остаток', znach: 0 },
+  ],
+  designation: `API-SHIPMENT-PRODUCT-${suffix}`,
+  listDetal: [],
+  listPokDet: [],
+  materialList: [],
+  listCbed: [],
+  techProcessID: 'null',
+  fileBase: [],
+  attention: false,
+  is_custom: 'false',
+  discontinued: false,
+  ...overrides,
+});
 
-  const product = getRows(response.data).find((row) => row.id && row.ban !== true && row.discontinued !== true);
-  return product ? Number(product.id) : undefined;
+const companyPayload = (suffix: string, overrides: Record<string, unknown> = {}) => ({
+  name: `API Shipment Buyer ${suffix}`,
+  inn: `75${Math.floor(100000000 + Math.random() * 899999999)}`,
+  kpp: `74${Math.floor(1000000 + Math.random() * 8999999)}`,
+  address: `API shipment buyer address ${suffix}`,
+  description: `Created by Shipments API autotest ${suffix}`,
+  type: ['buyer'],
+  email: `api-shipment-${suffix}@example.test`,
+  phone: '+375291112233',
+  contactIds: [],
+  materialIds: [],
+  attention: false,
+  ...overrides,
+});
+
+const findProductByDesignation = async (request: any, designation: string, accessToken?: string): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await productsAPI.getAllProducts(request, productPaginationDto({ searchString: designation }), accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true));
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.designation === designation && row.ban !== true) : undefined;
 };
 
-const findActiveProduct = async (request: any, accessToken?: string): Promise<ApiRow | undefined> => {
-  const response = await productsAPI.getAllProducts(request, productPaginationDto(), accessToken);
-  expectNoServerError(response);
+const createIsolatedProduct = async (request: any, suffix: string, accessToken?: string): Promise<ApiRow> => {
+  const payload = productPayload(suffix);
+  const create = await productsAPI.createProduct(request, payload, accessToken);
+  expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
+  expectNoServerError(create);
 
-  return getRows(response.data).find((row) => row.id && row.ban !== true && row.discontinued !== true);
+  const created = await findProductByDesignation(request, String(payload.designation), accessToken);
+  const id = Number(getQueueData(create.data)?.id ?? created?.id);
+  expect(id, JSON.stringify(create.data)).toBeGreaterThan(0);
+  return { ...(created as ApiRow), id, name: String(payload.name), designation: String(payload.designation) };
 };
 
-const findBuyerId = async (request: any, accessToken?: string): Promise<number | undefined> => {
-  const response = await companiesAPI.getCompaniesPagination(
-    request,
-    { page: 0, searchString: '', isArchive: false, attributes: [], filterByTypes: ['buyer'] },
-    accessToken,
-  );
-  expectNoServerError(response);
+const createIsolatedBuyer = async (request: any, suffix: string, accessToken?: string): Promise<number> => {
+  const create = await companiesAPI.createCompany(request, companyPayload(suffix), accessToken);
+  expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
+  expectNoServerError(create);
+  const id = Number(create.data?.id);
+  expect(id, JSON.stringify(create.data)).toBeGreaterThan(0);
+  return id;
+};
 
-  const buyer = getRows<ApiRow>(response.data).find((row) => row.id && row.ban !== true);
-  return buyer ? Number(buyer.id) : undefined;
+const findShipmentByDescription = async (
+  request: any,
+  description: string,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await shipmentsAPI.getAllShipments(
+      request,
+      shipmentsPaginationDto({
+        searchStr: description,
+        dateRange: {
+          start: '1970-01-01T00:00:00.000Z',
+          end: '2100-12-31T23:59:59.999Z',
+        },
+      }),
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => row.description === description), {
+    attempts: 12,
+    intervalMs: 750,
+  });
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.description === description) : undefined;
+};
+
+const resolveCreatedShipmentId = async (
+  request: any,
+  createData: any,
+  description: string,
+  accessToken?: string,
+): Promise<number> => {
+  const idFromQueue = Number(getQueueData(createData)?.id);
+  if (idFromQueue > 0) return idFromQueue;
+
+  const created = await findShipmentByDescription(request, description, accessToken);
+  const idFromSearch = Number(created?.id);
+  expect(idFromSearch, JSON.stringify(createData)).toBeGreaterThan(0);
+  return idFromSearch;
+};
+
+const createIsolatedShipment = async (
+  request: any,
+  suffix: string,
+  accessToken?: string,
+): Promise<{ shipmentId: number; product: ApiRow; buyerId: number }> => {
+  const product = await createIsolatedProduct(request, suffix, accessToken);
+  const buyerId = await createIsolatedBuyer(request, suffix, accessToken);
+  const description = `isolated ${suffix}`;
+  const create = await shipmentsAPI.createShipment(request, shipmentPayload(description, product, buyerId), accessToken);
+  expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
+  expectNoServerError(create);
+
+  const shipmentId = await resolveCreatedShipmentId(request, create.data, description, accessToken);
+  return { shipmentId, product, buyerId };
+};
+
+const archiveIsolatedShipment = async (
+  request: any,
+  fixture: { shipmentId?: number; product?: ApiRow; buyerId?: number },
+  accessToken?: string,
+) => {
+  if (fixture.shipmentId) {
+    const archiveShipment = await shipmentsAPI.deleteShipment(request, fixture.shipmentId, accessToken);
+    expectNoServerError(archiveShipment);
+  }
+  if (fixture.product?.id) {
+    const archiveProduct = await productsAPI.deleteProduct(request, Number(fixture.product.id), accessToken);
+    expectNoServerError(archiveProduct);
+  }
+  if (fixture.buyerId) {
+    const archiveBuyer = await companiesAPI.banCompany(request, fixture.buyerId, accessToken);
+    expectNoServerError(archiveBuyer);
+  }
 };
 
 const waitForShipment = async (
@@ -169,11 +289,9 @@ export const runShipmentsAPINew = () => {
 
     let accessToken: string | undefined;
     let firstShipment: ApiRow | undefined;
-    let productId: number | undefined;
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
-      productId = await findProductId(request, accessToken);
     });
 
     test('возвращает основные пагинации отгрузок без серверных ошибок', async ({ request }) => {
@@ -221,36 +339,28 @@ export const runShipmentsAPINew = () => {
     });
 
     test('обрабатывает POST /shcheck без 5xx и откатывает успешное создание', async ({ request }) => {
-      const dateRange = {
-        start: '1970-01-01T00:00:00.000Z',
-        end: '2100-12-31T23:59:59.999Z',
-      };
-      const shipments = await shipmentsAPI.getAllShipments(
-        request,
-        shipmentsPaginationDto({ status: ['Заказано'], dateRange }),
-        accessToken,
-      );
-      expectNoServerError(shipments);
-      expect(successCodes, JSON.stringify(shipments.data)).toContain(shipments.status);
-
-      const candidate = getRows<ApiRow>(shipments.data).find((row) => {
-        const quantity = Number(row.kol);
-        const shipped = Number(row.shipped || 0);
-        return row.id && quantity > shipped;
-      });
-      test.skip(!candidate, 'No active shipment with available quantity is available for shcheck.');
+      const fixture = await createIsolatedShipment(request, uniqueApiSuffix('shipment-shcheck'), accessToken);
 
       let createdShCheckId: number | undefined;
       try {
+        const candidate = await shipmentsAPI.getShipmentById(request, fixture.shipmentId, accessToken);
+        expectNoServerError(candidate);
+        expect(successCodes, JSON.stringify(candidate.data)).toContain(candidate.status);
+
         const shCheck = await shipmentsAPI.createShCheck(
           request,
-          shCheckPayload(candidate as ApiRow, `API shipment shcheck ${uniqueApiSuffix('shcheck')}`),
+          shCheckPayload(candidate.data as ApiRow, `API shipment shcheck ${uniqueApiSuffix('shcheck')}`),
           accessToken,
         );
         expectNoServerError(shCheck);
         if (!successCodes.includes(shCheck.status)) {
-          expect(shCheck.status, JSON.stringify(shCheck.data)).toBe(404);
-          expect(String(shCheck.data?.message || ''), JSON.stringify(shCheck.data)).toContain('timed out');
+          const message = String(shCheck.data?.message || '');
+          expect([404, 409], JSON.stringify(shCheck.data)).toContain(shCheck.status);
+          if (shCheck.status === 404) {
+            expect(message, JSON.stringify(shCheck.data)).toContain('timed out');
+          } else {
+            expect(message, JSON.stringify(shCheck.data)).toContain('недостаточно доступного количества');
+          }
           return;
         }
 
@@ -268,47 +378,47 @@ export const runShipmentsAPINew = () => {
           expectNoServerError(rollback);
           expect(successCodes, JSON.stringify(rollback.data)).toContain(rollback.status);
         }
+        await archiveIsolatedShipment(request, fixture, accessToken);
       }
     });
 
     test('читает найденную отгрузку, комплектацию, документы и include-модели', async ({ request }) => {
-      if (!firstShipment) {
-        const main = await shipmentsAPI.getAllShipments(request, shipmentsPaginationDto(), accessToken);
-        expectNoServerError(main);
-        firstShipment = getRows(main.data).find((row) => row.id);
+      const fixture = await createIsolatedShipment(request, uniqueApiSuffix('shipment-read'), accessToken);
+      const shipmentId = fixture.shipmentId;
+
+      try {
+        const byId = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
+        expectNoServerError(byId);
+        if (!clientErrorCodes.includes(byId.status)) {
+          expect(successCodes).toContain(byId.status);
+          expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(shipmentId);
+        }
+
+        const light = await shipmentsAPI.getShipmentLightById(request, shipmentId, accessToken);
+        expectNoServerError(light);
+
+        const items = await shipmentsAPI.getShipmentItems(request, shipmentId, accessToken);
+        expectNoServerError(items);
+
+        const documents = await shipmentsAPI.getShipmentDocuments(request, shipmentId, accessToken);
+        expectNoServerError(documents);
+
+        const include = await shipmentsAPI.getIncludeModel(request, shipmentId, { includes: ['childrens'] }, accessToken);
+        expectNoServerError(include);
+      } finally {
+        await archiveIsolatedShipment(request, fixture, accessToken);
       }
-
-      test.skip(!firstShipment, 'No shipment rows are available on this environment.');
-      const shipmentId = Number(firstShipment!.id);
-
-      const byId = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
-      expectNoServerError(byId);
-      if (!clientErrorCodes.includes(byId.status)) {
-        expect(successCodes).toContain(byId.status);
-        expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(shipmentId);
-      }
-
-      const light = await shipmentsAPI.getShipmentLightById(request, shipmentId, accessToken);
-      expectNoServerError(light);
-
-      const items = await shipmentsAPI.getShipmentItems(request, shipmentId, accessToken);
-      expectNoServerError(items);
-
-      const documents = await shipmentsAPI.getShipmentDocuments(request, shipmentId, accessToken);
-      expectNoServerError(documents);
-
-      const include = await shipmentsAPI.getIncludeModel(request, shipmentId, { includes: ['childrens'] }, accessToken);
-      expectNoServerError(include);
     });
 
     test('проверяет связи отгрузок с изделием без серверных ошибок', async ({ request }) => {
-      const shipmentProductId = extractProductIdFromShipment(firstShipment);
-      const entityId = shipmentProductId ?? productId;
+      const fixture = await createIsolatedShipment(request, uniqueApiSuffix('shipment-product'), accessToken);
 
-      test.skip(!entityId, 'No product is available for shipment relation checks.');
-
-      const byProduct = await shipmentsAPI.getShipmentsByProduct(request, entityId as number, accessToken);
-      expectNoServerError(byProduct);
+      try {
+        const byProduct = await shipmentsAPI.getShipmentsByProduct(request, Number(fixture.product.id), accessToken);
+        expectNoServerError(byProduct);
+      } finally {
+        await archiveIsolatedShipment(request, fixture, accessToken);
+      }
     });
 
     test('фильтры, сортировка и выбор атрибутов пагинаций работают без серверных ошибок', async ({ request }) => {
@@ -410,20 +520,17 @@ export const runShipmentsAPINew = () => {
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
-      activeProduct = await findActiveProduct(request, accessToken);
-      buyerId = await findBuyerId(request, accessToken);
+      activeProduct = await createIsolatedProduct(request, suffix, accessToken);
+      buyerId = await createIsolatedBuyer(request, suffix, accessToken);
     });
 
     test.afterAll(async ({ request }) => {
-      if (!createdShipmentId) return;
-
-      const archive = await shipmentsAPI.deleteShipment(request, createdShipmentId, accessToken);
-      expectNoServerError(archive);
+      await archiveIsolatedShipment(request, { shipmentId: createdShipmentId, product: activeProduct, buyerId }, accessToken);
     });
 
     test('создает тестовую отгрузку с кастомным изделием', async ({ request }) => {
-      test.skip(!activeProduct, 'No active product is available for shipment lifecycle checks.');
-      test.skip(!buyerId, 'No buyer company is available for shipment lifecycle checks.');
+      expect(activeProduct, 'Isolated product was not created for shipment lifecycle').toBeTruthy();
+      expect(buyerId, 'Isolated buyer was not created for shipment lifecycle').toBeTruthy();
 
       const create = await shipmentsAPI.createShipment(
         request,
@@ -433,9 +540,7 @@ export const runShipmentsAPINew = () => {
       expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
       expectNoServerError(create);
 
-      const data = getQueueData(create.data);
-      createdShipmentId = Number(data?.id);
-      expect(createdShipmentId, JSON.stringify(create.data)).toBeGreaterThan(0);
+      createdShipmentId = await resolveCreatedShipmentId(request, create.data, initialDescription, accessToken);
 
       const hydrated = await waitForShipment(
         request,

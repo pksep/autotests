@@ -65,6 +65,22 @@ const findContactByName = async (request: any, initial: string, accessToken?: st
   return response ? getRows<EntityLike>(response.data).find((row) => row.initial === initial) : undefined;
 };
 
+const waitForContactInActiveSearch = async (
+  request: any,
+  initial: string,
+  contactId: number,
+  expectedPresent: boolean,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const result = await contactsAPI.getContactsPagination(request, contactPaginationDto({ searchString: initial }), accessToken);
+    expectNoServerError(result);
+    return result;
+  }, (result) => getRows<EntityLike>(result.data).some((row) => row.id === contactId) === expectedPresent);
+
+  return Boolean(response);
+};
+
 export const runContactsAPINew = () => {
   logger.info('Starting Contacts API coverage suite');
 
@@ -152,7 +168,23 @@ export const runContactsAPINew = () => {
 
       const updated = await findContactByName(request, updatedContactName, accessToken);
       expect(updated, `Contact ${updatedContactName} was not found after update`).toBeTruthy();
+      expect(updated?.id).toBe(contactId);
+      expect(updated?.initial).toBe(updatedContactName);
       expect(updated?.attention).toBe(true);
+
+      const byId = await contactsAPI.getContactById(request, contactId as number, accessToken);
+      expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+      expect(byId.data?.id, JSON.stringify(byId.data)).toBe(contactId);
+      expect(byId.data?.initial, JSON.stringify(byId.data)).toBe(updatedContactName);
+      expect(byId.data?.position, JSON.stringify(byId.data)).toBe('QA contact updated');
+
+      const include = await contactsAPI.getInclude(request, { id: contactId, includes: ['companies'] }, accessToken);
+      expectNoServerError(include);
+      if (!clientErrorCodes.includes(include.status)) {
+        expect(successCodes).toContain(include.status);
+        expect(Array.isArray(include.data?.companies), JSON.stringify(include.data)).toBe(true);
+        expect(include.data.companies.some((company: EntityLike) => company.id === companyId), JSON.stringify(include.data)).toBe(true);
+      }
     });
 
     test('архивирует контакт и проверяет архивную выдачу', async ({ request }) => {
@@ -172,6 +204,11 @@ export const runContactsAPINew = () => {
       }, (result) => getRows<EntityLike>(result.data).some((row) => row.id === contactId));
 
       expect(archived, `Contact ${updatedContactName} was not found in archive`).toBeTruthy();
+      expect(
+        getRows<EntityLike>(archived!.data).some((row) => row.id === contactId && row.ban === true),
+        JSON.stringify(archived!.data),
+      ).toBe(true);
+      expect(await waitForContactInActiveSearch(request, updatedContactName, contactId as number, false, accessToken)).toBe(true);
       contactId = undefined;
     });
   });

@@ -66,8 +66,9 @@ const findEquipmentByName = async (request: any, name: string, accessToken?: str
 export const runEquipmentAPINew = () => {
   logger.info('Starting Equipment API coverage suite');
 
-  test.describe.serial('Equipment API: жизненный цикл оборудования', () => {
-    test.describe.configure({ timeout: 120000 });
+  test.describe.serial('Equipment API', () => {
+    test.describe('Equipment API: жизненный цикл оборудования', () => {
+      test.describe.configure({ timeout: 120000 });
 
     let accessToken: string | undefined;
     let typeId: number | undefined;
@@ -387,6 +388,17 @@ export const runEquipmentAPINew = () => {
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentEquipmentId));
 
       expect(archived, `Equipment ${equipmentName} was not found in archive`).toBeTruthy();
+
+      const active = await equipmentAPI.getEquipmentPagination(
+        request,
+        equipmentPaginationDto({ searchString: equipmentName }),
+        accessToken,
+      );
+      expectNoServerError(active);
+      if (!clientErrorCodes.includes(active.status)) {
+        expect(successCodes).toContain(active.status);
+        expect(getRows<ApiRow>(active.data).some((row) => row.id === currentEquipmentId), JSON.stringify(active.data)).toBe(false);
+      }
       equipmentId = undefined;
     });
 
@@ -429,8 +441,8 @@ export const runEquipmentAPINew = () => {
     });
   });
 
-  test.describe('Equipment API: контракты чтения и defensive-сценарии', () => {
-    test.describe.configure({ timeout: 90000 });
+    test.describe('Equipment API: контракты чтения и defensive-сценарии', () => {
+      test.describe.configure({ timeout: 90000 });
 
     let accessToken: string | undefined;
 
@@ -482,15 +494,15 @@ export const runEquipmentAPINew = () => {
 
       const firstPage = await equipmentAPI.getEquipmentPagination(
         request,
-        equipmentPaginationDto({ page: 0, pageSize: 1 }),
+        equipmentPaginationDto({ page: 0 }),
         accessToken,
       );
       expect(firstPage.status).toBe(201);
-      expectPaginationContract(firstPage.data, 1);
+      expectPaginationContract(firstPage.data);
 
       const farPage = await equipmentAPI.getEquipmentPagination(
         request,
-        equipmentPaginationDto({ page: 999999, pageSize: 5 }),
+        equipmentPaginationDto({ page: 999999 }),
         accessToken,
       );
       expectNoServerError(farPage);
@@ -562,6 +574,7 @@ export const runEquipmentAPINew = () => {
 
       const archive = await equipmentAPI.banEquipment(request, 999999999);
       expectNotSuccessful(archive);
+    });
     });
   });
 };

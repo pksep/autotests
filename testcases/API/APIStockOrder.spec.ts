@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { DetailsAPI } from '../../pages/API/APIDetails';
-import { ProductsAPI } from '../../pages/API/APIProducts';
 import { StockOrderAPI } from '../../pages/API/APIStockOrder';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
@@ -12,12 +11,13 @@ type ApiResult = {
   data?: any;
 };
 
+type DetailLike = Record<string, any>;
 type StockOrderLike = Record<string, any>;
 type StockOrderItemLike = Record<string, any>;
 
 const detailsAPI = new DetailsAPI(null);
-const productsAPI = new ProductsAPI(null as any);
 const stockOrderAPI = new StockOrderAPI(null);
+const testUserId = API_CONST.API_TEST_TABEL;
 
 const getQueueData = (data: any): any => {
   return data?.data && typeof data.data === 'object' ? data.data : data;
@@ -62,27 +62,17 @@ const stockOrderToWayPaginationDto = (overrides: Record<string, unknown> = {}) =
   ...overrides,
 });
 
-const productPaginationDto = (overrides: Record<string, unknown> = {}) => ({
-  page: 0,
-  searchString: '',
-  isSortedByAttention: false,
-  isSortedByDate: true,
-  isSortedByOwn: false,
-  isSortedByOperations: false,
-  isDiscontinued: false,
-  enableIsDiscontinuedView: false,
-  ...overrides,
-});
-
 const detailPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
   searchString: '',
+  listCbed: [],
+  listDetal: [],
   isSortedByAttention: false,
-  isSortedByDate: true,
+  isSortedByDate: false,
   isSortedByOwn: false,
-  isSortedByOperations: false,
   isDiscontinued: false,
   enableIsDiscontinuedView: false,
+  isSortedByOperations: false,
   ...overrides,
 });
 
@@ -103,23 +93,68 @@ const stockOrderPayload = (entityType: string, entityId: number, suffix: string)
   },
 });
 
-const findActiveEntity = async (
+const expectedStockOrderType = (entityType: string) => (entityType === 'detal' ? 'metall' : entityType);
+
+const detailPayload = (suffix: string, overrides: Record<string, unknown> = {}) => ({
+  id: null,
+  techProcessID: null,
+  characteristic: [{ name: 'Масса детали', ez: 'кг', znach: 0 }],
+  name: `API Stock Detail ${suffix}`,
+  designation: `API-STOCK-DETAIL-${suffix}`,
+  discontinued: false,
+  responsible: '0',
+  description: `Created for Stock Order API autotest ${suffix}`,
+  parametrs: {
+    preTime: { ez: 'ч', znach: 0 },
+    helperTime: { ez: 'ч', znach: 0 },
+    mainTime: { ez: 'ч', znach: 0 },
+  },
+  attention: false,
+  workpiece_characterization: { mass: 0, trash: 0 },
+  materialList: [],
+  mat_zag: null,
+  mat_zag_zam: null,
+  docs: null,
+  fileBase: [],
+  ...overrides,
+});
+
+const findDetailByDesignation = async (
   request: any,
+  designation: string,
   accessToken?: string,
-): Promise<{ id: number; type: 'product' | 'detal' } | undefined> => {
-  const products = await productsAPI.getAllProducts(request, productPaginationDto(), accessToken);
-  expectNoServerError(products);
+): Promise<DetailLike | undefined> => {
+  const response = await eventually(async () => {
+    const response = await detailsAPI.getPaginationDetails(request, detailPaginationDto({ searchString: designation }), testUserId, accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.designation === designation && row.ban !== true));
 
-  const product = getRows(products.data).find((row) => row.id && row.ban !== true && row.discontinued !== true);
-  if (product) return { id: Number(product.id), type: 'product' };
+  return response ? getRows<DetailLike>(response.data).find((row) => row.designation === designation && row.ban !== true) : undefined;
+};
 
-  const details = await detailsAPI.getPaginationDetails(request, detailPaginationDto(), API_CONST.API_TEST_TABEL, accessToken);
-  expectNoServerError(details);
+const createIsolatedDetail = async (
+  request: any,
+  suffix: string,
+  accessToken?: string,
+): Promise<{ id: number; designation: string }> => {
+  const payload = detailPayload(suffix);
+  const designation = String(payload.designation);
 
-  const detail = getRows(details.data).find((row) => row.id && row.ban !== true && row.discontinued !== true);
-  if (detail) return { id: Number(detail.id), type: 'detal' };
+  const createResponse = await detailsAPI.createDetail(request, payload, testUserId, accessToken);
+  expect(successCodes, JSON.stringify(createResponse.data)).toContain(createResponse.status);
+  expectNoServerError(createResponse);
 
-  return undefined;
+  const createData = getQueueData(createResponse.data);
+  const created = await findDetailByDesignation(request, designation, accessToken);
+  const detailId = Number(createData?.id ?? created?.id);
+
+  expect(detailId, JSON.stringify(createResponse.data)).toBeGreaterThan(0);
+  expect(created, `Detail ${designation} was not found after create`).toBeTruthy();
+  expect(created?.name).toBe(payload.name);
+  expect(created?.ban).not.toBe(true);
+
+  return { id: detailId, designation };
 };
 
 const waitForStockOrderItems = async (
@@ -136,6 +171,57 @@ const waitForStockOrderItems = async (
   return response ? getRows(response.data) : [];
 };
 
+const waitForStockOrderById = async (
+  request: any,
+  stockOrderId: number,
+  predicate: (stockOrder: StockOrderLike) => boolean,
+  accessToken?: string,
+): Promise<StockOrderLike | undefined> => {
+  const response = await eventually(async () => {
+    const response = await stockOrderAPI.getOne(request, { id: stockOrderId, itemsSearchString: '', light: false }, accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => successCodes.includes(response.status) && response.data && predicate(response.data), { attempts: 10, intervalMs: 700 });
+
+  return response?.data;
+};
+
+const waitForArchivedStockOrder = async (
+  request: any,
+  stockOrderId: number,
+  accessToken?: string,
+): Promise<StockOrderLike | undefined> => {
+  const response = await eventually(async () => {
+    const response = await stockOrderAPI.getOne(request, { id: stockOrderId, itemsSearchString: '', light: false }, accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => successCodes.includes(response.status) && response.data?.id === stockOrderId && response.data?.ban === true, { attempts: 10, intervalMs: 700 });
+
+  return response?.data;
+};
+
+const expectRowsContainId = (rows: StockOrderLike[], id: number, context: unknown) => {
+  expect(rows.some((row) => Number(row.id) === id), JSON.stringify(context)).toBe(true);
+};
+
+const expectRowsContainStockOrderId = (rows: StockOrderLike[], stockOrderId: number, context: unknown) => {
+  expect(
+    rows.some((row) => Number(row.stock_order?.id ?? row.stockOrder?.id ?? row.stock_order_id ?? row.stockOrderId ?? row.id) === stockOrderId),
+    JSON.stringify(context),
+  ).toBe(true);
+};
+
+const getStockOrderItemEntityId = (item: StockOrderItemLike, entityType: string): number => {
+  const value =
+    item.object_id ??
+    item.objectId ??
+    (entityType === 'detal' ? item.detal_id : undefined) ??
+    (entityType === 'product' ? item.product_id : undefined) ??
+    (entityType === 'cbed' ? item.cbed_id : undefined);
+
+  return Number(value);
+};
+
 export const runStockOrderAPINew = () => {
   logger.info('Starting Stock Order API coverage suite');
 
@@ -145,22 +231,32 @@ export const runStockOrderAPINew = () => {
     let accessToken: string | undefined;
     let createdStockOrderId: number | undefined;
     let createdStockOrderItemId: number | undefined;
-    let entity: { id: number; type: 'product' | 'detal' } | undefined;
+    let createdDetailId: number | undefined;
+    let createdDetailDesignation: string | undefined;
+    let entity: { id: number; type: 'detal' } | undefined;
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
-      entity = await findActiveEntity(request, accessToken);
+      const detail = await createIsolatedDetail(request, uniqueApiSuffix('stock-detail'), accessToken);
+      createdDetailId = detail.id;
+      createdDetailDesignation = detail.designation;
+      entity = { id: detail.id, type: 'detal' };
     });
 
     test.afterAll(async ({ request }) => {
-      if (!createdStockOrderId) return;
+      if (createdStockOrderId) {
+        const archiveResponse = await stockOrderAPI.ban(request, createdStockOrderId, accessToken);
+        expectNoServerError(archiveResponse);
+      }
 
-      const archiveResponse = await stockOrderAPI.ban(request, createdStockOrderId, accessToken);
-      expectNoServerError(archiveResponse);
+      if (createdDetailId) {
+        const archiveDetailResponse = await detailsAPI.deleteDetail(request, String(createdDetailId), testUserId, accessToken);
+        expectNoServerError(archiveDetailResponse);
+      }
     });
 
     test('создает заказ склада для доступной производственной сущности', async ({ request }) => {
-      test.skip(!entity, 'No active product or detail is available for Stock Order create on this environment.');
+      expect(entity, 'Isolated detail was not created for Stock Order suite').toBeTruthy();
 
       const suffix = uniqueApiSuffix('stock');
       const createResponse = await stockOrderAPI.create(
@@ -178,6 +274,7 @@ export const runStockOrderAPINew = () => {
       expectStockOrderShape(createData);
       expect(createData.description).toBe(`Created by API autotest ${suffix}`);
       expect(createData.ban).toBe(false);
+      expect(createData.type ?? createData.type_object ?? createData.typeObject, JSON.stringify(createData)).toBe(expectedStockOrderType(entity!.type));
     });
 
     test('читает созданный заказ через one, pagination и связи с сущностью', async ({ request }) => {
@@ -191,11 +288,13 @@ export const runStockOrderAPINew = () => {
       expect(byId.status).toBe(200);
       expectStockOrderShape(byId.data);
       expect(byId.data.id).toBe(createdStockOrderId);
+      expect(byId.data.description).toContain('Created by API autotest');
 
       const items = await waitForStockOrderItems(request, createdStockOrderId as number, accessToken);
-      if (items.length > 0) {
-        expectStockOrderItemShape(items[0]);
-      }
+      expect(items.length, `No stock order items were created for order ${createdStockOrderId}`).toBeGreaterThan(0);
+      expectStockOrderItemShape(items[0]);
+      createdStockOrderItemId = Number(items[0].id);
+      expect(getStockOrderItemEntityId(items[0], entity!.type), JSON.stringify(items[0])).toBe(entity!.id);
 
       const pagination = await stockOrderAPI.getPagination(
         request,
@@ -204,13 +303,14 @@ export const runStockOrderAPINew = () => {
       );
       expect(pagination.status).toBe(201);
       expect(getCount(pagination.data), JSON.stringify(pagination.data)).toBeGreaterThanOrEqual(1);
-      expect(getRows(pagination.data).some((row) => row.id === createdStockOrderId)).toBe(true);
+      expectRowsContainId(getRows(pagination.data), createdStockOrderId as number, pagination.data);
 
       const byObject = await stockOrderAPI.getByObject(request, entity!.id, entity!.type, accessToken);
       expectNoServerError(byObject);
       if (!clientErrorCodes.includes(byObject.status)) {
         expect(successCodes).toContain(byObject.status);
         expect(Array.isArray(byObject.data), JSON.stringify(byObject.data)).toBe(true);
+        expectRowsContainStockOrderId(getRows(byObject.data), createdStockOrderId as number, byObject.data);
       }
 
       const byEntity = await stockOrderAPI.getItemsByEntity(request, entity!.type, entity!.id, accessToken);
@@ -218,6 +318,7 @@ export const runStockOrderAPINew = () => {
       if (!clientErrorCodes.includes(byEntity.status)) {
         expect(successCodes).toContain(byEntity.status);
         expect(Array.isArray(byEntity.data), JSON.stringify(byEntity.data)).toBe(true);
+        expectRowsContainId(getRows(byEntity.data), createdStockOrderItemId as number, byEntity.data);
       }
     });
 
@@ -235,8 +336,17 @@ export const runStockOrderAPINew = () => {
       expect(updateResponse.data?.id).toBe(createdStockOrderId);
       expect(updateResponse.data?.description).toBe('Updated by API autotest');
 
+      const persistedOrder = await waitForStockOrderById(
+        request,
+        createdStockOrderId as number,
+        (stockOrder) => stockOrder.description === 'Updated by API autotest',
+        accessToken,
+      );
+      expect(persistedOrder, `Updated stock order ${createdStockOrderId} was not persisted`).toBeTruthy();
+      expect(persistedOrder?.id).toBe(createdStockOrderId);
+
       const items = await waitForStockOrderItems(request, createdStockOrderId as number, accessToken);
-      if (items.length === 0) return;
+      expect(items.length, `No stock order items were found for order ${createdStockOrderId}`).toBeGreaterThan(0);
 
       createdStockOrderItemId = Number(items[0].id);
       expectStockOrderItemShape(items[0]);
@@ -263,6 +373,14 @@ export const runStockOrderAPINew = () => {
         expect(updateItemResponse.data?.id).toBe(createdStockOrderItemId);
       }
 
+      const updatedItemResponse = await stockOrderAPI.getItem(request, createdStockOrderItemId, accessToken);
+      expectNoServerError(updatedItemResponse);
+      if (!clientErrorCodes.includes(updatedItemResponse.status)) {
+        expect(successCodes).toContain(updatedItemResponse.status);
+        expect(updatedItemResponse.data?.id, JSON.stringify(updatedItemResponse.data)).toBe(createdStockOrderItemId);
+        expect(updatedItemResponse.data?.description, JSON.stringify(updatedItemResponse.data)).toBe('Updated item by API autotest');
+      }
+
       const readinessResponse = await stockOrderAPI.setWarehouseReadinessDate(
         request,
         {
@@ -286,32 +404,43 @@ export const runStockOrderAPINew = () => {
           accessToken,
         );
         expectNoServerError(dateResponse);
+        if (!clientErrorCodes.includes(dateResponse.status)) {
+          expect(successCodes).toContain(dateResponse.status);
+        }
       }
     });
 
     test('архивирует заказ склада и проверяет архивную выдачу', async ({ request }) => {
       test.skip(!createdStockOrderId, 'Stock Order was not created.');
       const stockOrderId = createdStockOrderId as number;
-
-      if (createdStockOrderItemId) {
-        const archiveItemResponse = await stockOrderAPI.banItem(request, createdStockOrderItemId, accessToken);
-        expectNoServerError(archiveItemResponse);
-      }
+      const beforeArchive = await stockOrderAPI.getOne(
+        request,
+        { id: stockOrderId, itemsSearchString: '', light: false },
+        accessToken,
+      );
+      expectNoServerError(beforeArchive);
+      expect(successCodes, JSON.stringify(beforeArchive.data)).toContain(beforeArchive.status);
+      const stockOrderNumber = beforeArchive.data?.number_order;
+      expect(stockOrderNumber, JSON.stringify(beforeArchive.data)).toBeTruthy();
 
       const archiveResponse = await stockOrderAPI.ban(request, stockOrderId, accessToken);
       expect(successCodes, JSON.stringify(archiveResponse.data)).toContain(archiveResponse.status);
       expectNoServerError(archiveResponse);
 
-      const archived = await stockOrderAPI.getPaginationByArchive(
+      const archived = await waitForArchivedStockOrder(request, stockOrderId, accessToken);
+      expect(archived, `Archived stock order ${stockOrderId} did not become ban=true on direct read`).toBeTruthy();
+      expect(archived?.ban, JSON.stringify(archived)).toBe(true);
+
+      const activeSearch = await stockOrderAPI.getPaginationByArchive(
         request,
-        true,
-        stockOrderArchivePaginationDto({ stockOrderIds: [stockOrderId] }),
+        false,
+        stockOrderArchivePaginationDto({ searchString: stockOrderNumber }),
         accessToken,
       );
-      expectNoServerError(archived);
-      if (!clientErrorCodes.includes(archived.status)) {
-        expect(successCodes).toContain(archived.status);
-        expect(getRows(archived.data).some((row) => row.id === stockOrderId)).toBe(true);
+      expectNoServerError(activeSearch);
+      if (!clientErrorCodes.includes(activeSearch.status)) {
+        expect(successCodes).toContain(activeSearch.status);
+        expect(getRows(activeSearch.data).some((row) => row.id === stockOrderId), JSON.stringify(activeSearch.data)).toBe(false);
       }
 
       if (entity) {
@@ -321,6 +450,11 @@ export const runStockOrderAPINew = () => {
 
       createdStockOrderId = undefined;
       createdStockOrderItemId = undefined;
+      if (createdDetailDesignation) {
+        const archiveDetailResponse = await detailsAPI.deleteDetail(request, String(entity!.id), testUserId, accessToken);
+        expectNoServerError(archiveDetailResponse);
+        createdDetailId = undefined;
+      }
     });
   });
 

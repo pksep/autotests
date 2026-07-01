@@ -208,6 +208,7 @@ export class DetailsAPI extends APIPageObject {
     const response = await request.post(ENV.API_BASE_URL + 'api/detal', {
       headers: headers,
       data: this.toMultipartFields(detailData),
+      timeout: 30000,
     });
 
     try {

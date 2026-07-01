@@ -27,6 +27,13 @@ export class OperationAPI extends APIPageObject {
     });
   }
 
+  async checkNameUnique(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/name/unique', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
   async createTypeOperation(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
     return this.apiRequest(request, 'POST', this.base() + '/typeoperation', {
       data: dto,
@@ -80,6 +87,19 @@ export class OperationAPI extends APIPageObject {
 
   async getOperationById(request: APIRequestContext, id: number, accessToken?: string) {
     return this.apiRequest(request, 'GET', this.base() + `/operation/get/${id}`, {
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async getAllOperations(request: APIRequestContext, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + '/operation/get/', {
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async updateOperationTech(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/operation/up/tech', {
+      data: dto,
       accessToken: this.token(accessToken),
     });
   }

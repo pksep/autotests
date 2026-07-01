@@ -108,6 +108,29 @@ const waitForArchivedCbed = async (
   return response ? getRows(response.data).find((row) => row.id === cbedId && row.ban === true) : undefined;
 };
 
+const createIsolatedCbed = async (
+  request: any,
+  suffix: string,
+  accessToken?: string,
+): Promise<{ id: number; designation: string; payload: Record<string, unknown> }> => {
+  const payload = cbedPayload(suffix);
+  const designation = String(payload.designation);
+
+  const createResponse = await cbedAPI.createCBED(request, payload, testUserId, accessToken);
+  expect(successCodes, JSON.stringify(createResponse.data)).toContain(createResponse.status);
+  expectNoServerError(createResponse);
+
+  const createData = getQueueData(createResponse.data);
+  const created = await findCbedByDesignation(request, designation, accessToken);
+  const id = Number(createData?.id ?? created?.id);
+
+  expect(id, JSON.stringify(createResponse.data)).toBeGreaterThan(0);
+  expect(created, `CBED ${designation} was not found after create`).toBeTruthy();
+  expect(created?.ban, JSON.stringify(created)).toBe(false);
+
+  return { id, designation, payload };
+};
+
 export const runCBEDAPINew = () => {
   logger.info('Starting CBED API coverage suite');
 
@@ -298,19 +321,16 @@ export const runCBEDAPINew = () => {
     });
 
     test('include сборочной единицы обрабатывает пустой и неизвестный include без 5xx', async ({ request }) => {
-      const list = await cbedAPI.getCBEDPagination(
-        request,
-        cbedPaginationDto({ pageSize: 1 }),
-        testUserId,
-        accessToken,
-      );
-      expectNoServerError(list);
-      const cbed = getRows(list.data).find((row) => row.id);
-      test.skip(!cbed, 'No active CBED is available for include variants.');
+      const cbed = await createIsolatedCbed(request, uniqueApiSuffix('cbed-include'), accessToken);
 
-      for (const includes of [[], ['unknownInclude']]) {
-        const response = await cbedAPI.getCBEDInclude(request, Number(cbed!.id), { includes }, accessToken);
-        expectNoServerError(response);
+      try {
+        for (const includes of [[], ['unknownInclude']]) {
+          const response = await cbedAPI.getCBEDInclude(request, cbed.id, { includes }, accessToken);
+          expectNoServerError(response);
+        }
+      } finally {
+        const archive = await cbedAPI.banCBED(request, cbed.id, testUserId, accessToken);
+        expectNoServerError(archive);
       }
     });
 
@@ -324,11 +344,14 @@ export const runCBEDAPINew = () => {
       const operations = await cbedAPI.getOperationInclude(request, cbedPaginationDto({ isSortedByOperations: true }), accessToken);
       expectNoServerError(operations);
 
-      const list = await cbedAPI.getCBEDPagination(request, cbedPaginationDto({ pageSize: 1 }), testUserId, accessToken);
-      const cbed = getRows(list.data).find((row) => row.id);
-      test.skip(!cbed, 'No active CBED is available for shipments check.');
-      const shipments = await cbedAPI.getCBEDShipmentsAndOrders(request, Number(cbed!.id), accessToken);
-      expectNoServerError(shipments);
+      const cbed = await createIsolatedCbed(request, uniqueApiSuffix('cbed-shipments'), accessToken);
+      try {
+        const shipments = await cbedAPI.getCBEDShipmentsAndOrders(request, cbed.id, accessToken);
+        expectNoServerError(shipments);
+      } finally {
+        const archive = await cbedAPI.banCBED(request, cbed.id, testUserId, accessToken);
+        expectNoServerError(archive);
+      }
     });
 
     test('проверка уникальности обозначения обрабатывает защитные payload без 5xx', async ({ request }) => {

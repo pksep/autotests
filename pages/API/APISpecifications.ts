@@ -5,8 +5,8 @@ import logger from '../../lib/utils/logger';
 
 /** `api/specification/*` — Nest `SpecificationController` (sep_erp_server). */
 export class SpecificationsAPI extends APIPageObject {
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page | null) {
+    super(page as any);
   }
 
   private base = () => ENV.API_BASE_URL + 'api/specification';
@@ -36,6 +36,19 @@ export class SpecificationsAPI extends APIPageObject {
     });
     const data = await this.parseJsonBody(response);
     return { status: response.status(), data };
+  }
+
+  async getFirstLevelChildren(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
+    logger.info(`POST specification/first-level-children`);
+    const response = await request.post(this.base() + '/first-level-children', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(accessToken),
+      },
+      data: dto,
+    });
+    return this.apiResult(response);
   }
 
   /**

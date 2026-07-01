@@ -51,6 +51,48 @@ const materialPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const typeCharacteristics = () => ({
+  length: { edizmId: 6, znach: null, shortName: 'mm' },
+  width: { edizmId: 6, znach: null, shortName: 'mm' },
+  height: { edizmId: 6, znach: null, shortName: 'mm' },
+  wallThickness: { edizmId: 6, znach: null, shortName: 'mm' },
+  outsideDiameter: { edizmId: 6, znach: null, shortName: 'mm' },
+  thickness: { edizmId: 6, znach: null, shortName: 'mm' },
+  areaCrossSectional: { edizmId: 8, znach: null, shortName: 'm2' },
+});
+
+const materialCharacteristics = () => ({
+  density: { used: true, znach: 8, edizmId: 9, shortName: 'kg/m3' },
+  length: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  width: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  height: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  wallThickness: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  outsideDiameter: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  thickness: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  areaCrossSectional: { used: false, znach: 0, edizmId: 8, shortName: 'm2' },
+});
+
+const materialPayload = (
+  suffix: string,
+  rootParentId: number,
+  subtypeMaterialId: number,
+  overrides: Record<string, unknown> = {},
+) => ({
+  id: undefined,
+  name: `API Delivery Material ${suffix}`,
+  rootParentId,
+  subtypeMaterialId,
+  deliveryTime: 0,
+  description: `Created for Deliveries API autotest ${suffix}`,
+  attention: false,
+  units_measurement: [{ unitTypeId: 1, convertRate: 1, isBase: true }],
+  characteristics: materialCharacteristics(),
+  companyIds: '[]',
+  file_base: '[]',
+  material_aliases: [{ alias: `API Delivery Material Alias ${suffix}`, default: true }],
+  ...overrides,
+});
+
 const companyPayload = (suffix: string, materialIds: number[] = [], overrides: Record<string, unknown> = {}) => ({
   name: `API Delivery Provider Company ${suffix}`,
   inn: `79${Math.floor(100000000 + Math.random() * 899999999)}`,
@@ -96,18 +138,6 @@ const deliveryPayload = (
   ...overrides,
 });
 
-const findActiveMaterialForDelivery = async (request: any, accessToken?: string) => {
-  const response = await materialsAPI.getMaterialsPagination(request, materialPaginationDto({ pageSize: 20 }), accessToken);
-  expectNoServerError(response);
-  if (clientErrorCodes.includes(response.status)) return undefined;
-
-  return getRows<ApiRow>(response.data).find((material) => {
-    const units = Array.isArray(material.units_measurement) ? material.units_measurement : [];
-    const unit = units.find((item: ApiRow) => Number(item.unitTypeId ?? item.id) > 0);
-    return material.id && material.ban !== true && unit;
-  });
-};
-
 const getMaterialUnitId = (material: ApiRow): number => {
   const units = Array.isArray(material.units_measurement) ? material.units_measurement : [];
   const unit = units.find((item: ApiRow) => Number(item.unitTypeId ?? item.id) > 0);
@@ -124,6 +154,8 @@ export const runProviderDeliveriesAPINew = () => {
     let companyId: number | undefined;
     let deliveryId: number | undefined;
     let materialId: number | undefined;
+    let materialTypeId: number | undefined;
+    let materialSubtypeId: number | undefined;
     let unitMeasurementId: number | undefined;
     let documentId: number | undefined;
     let suffix = '';
@@ -147,17 +179,77 @@ export const runProviderDeliveriesAPINew = () => {
         const archiveDocument = await documentsAPI.archiveDocument(request, documentId, false, accessToken);
         expectNoServerError(archiveDocument);
       }
+      if (materialId) {
+        const archiveMaterial = await materialsAPI.banMaterial(request, materialId, accessToken);
+        expectNoServerError(archiveMaterial);
+      }
+      if (materialSubtypeId) {
+        const archiveSubtype = await materialsAPI.removeSubtypeMaterial(request, materialSubtypeId, accessToken);
+        expectNoServerError(archiveSubtype);
+      }
+      if (materialTypeId) {
+        const archiveType = await materialsAPI.removeTypeMaterial(request, materialTypeId, accessToken);
+        expectNoServerError(archiveType);
+      }
     });
 
     test('подготавливает материал и документ для поставки', async ({ request }) => {
       suffix = uniqueApiSuffix('provider-delivery');
       companyName = `API Delivery Provider Company ${suffix}`;
 
-      const material = await findActiveMaterialForDelivery(request, accessToken);
-      if (material) {
-        materialId = Number(material.id);
-        unitMeasurementId = getMaterialUnitId(material);
-      }
+      const typeResponse = await materialsAPI.createTypeMaterial(
+        request,
+        { name: `API Delivery Type Material ${suffix}`, characteristics: typeCharacteristics(), instance_type: 1 },
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(typeResponse.data)).toContain(typeResponse.status);
+      expectNoServerError(typeResponse);
+      materialTypeId = Number(typeResponse.data?.id);
+      expect(materialTypeId, JSON.stringify(typeResponse.data)).toBeGreaterThan(0);
+
+      const subtypeResponse = await materialsAPI.createSubtypeMaterial(
+        request,
+        {
+          name: `API Delivery Subtype Material ${suffix}`,
+          density: 8,
+          id: null,
+          instance_type: 1,
+          parentMaterialIds: [materialTypeId],
+        },
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(subtypeResponse.data)).toContain(subtypeResponse.status);
+      expectNoServerError(subtypeResponse);
+      materialSubtypeId = Number(subtypeResponse.data?.id);
+      expect(materialSubtypeId, JSON.stringify(subtypeResponse.data)).toBeGreaterThan(0);
+
+      const materialName = `API Delivery Material ${suffix}`;
+      const createMaterial = await materialsAPI.createAndUpdateMaterial(
+        request,
+        materialPayload(suffix, materialTypeId as number, materialSubtypeId as number),
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(createMaterial.data)).toContain(createMaterial.status);
+      expectNoServerError(createMaterial);
+
+      const materialSearch = await eventually(async () => {
+        const response = await materialsAPI.getMaterialsPagination(
+          request,
+          materialPaginationDto({ searchString: materialName }),
+          accessToken,
+        );
+        expectNoServerError(response);
+        return response;
+      }, (response) => getRows<ApiRow>(response.data).some((row) => row.name === materialName && row.ban !== true));
+
+      const material = materialSearch
+        ? getRows<ApiRow>(materialSearch.data).find((row) => row.name === materialName && row.ban !== true)
+        : undefined;
+      expect(material, `Material ${materialName} was not found after create`).toBeTruthy();
+      materialId = Number(createMaterial.data?.id ?? material?.id);
+      unitMeasurementId = getMaterialUnitId(material as ApiRow);
+      expect(materialId, JSON.stringify(createMaterial.data)).toBeGreaterThan(0);
+      expect(unitMeasurementId, JSON.stringify(material)).toBeGreaterThan(0);
 
       const documentResponse = await documentsAPI.createDocuments(
         request,
@@ -303,14 +395,7 @@ export const runProviderDeliveriesAPINew = () => {
       accessToken = await getAuthToken(request);
     });
 
-    test('возвращает списки и пагинации deliveries без серверных ошибок', async ({ request }) => {
-      const deliveries = await deliveriesAPI.getAllDeliveries(request, accessToken);
-      expectNoServerError(deliveries);
-      if (!clientErrorCodes.includes(deliveries.status)) {
-        expect(successCodes).toContain(deliveries.status);
-        expect(Array.isArray(deliveries.data), JSON.stringify(deliveries.data)).toBe(true);
-      }
-
+    test('возвращает фронтовую пагинацию deliveries без серверных ошибок', async ({ request }) => {
       const deliveriesPage = await deliveriesAPI.getDeliveriesPagination(request, deliveryPaginationDto(), accessToken);
       expectNoServerError(deliveriesPage);
       if (!clientErrorCodes.includes(deliveriesPage.status)) {

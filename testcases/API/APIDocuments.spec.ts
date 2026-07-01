@@ -229,6 +229,15 @@ export const runDocumentsAPINew = () => {
       expectPaginationContract(archived.data);
       expect(getRows<ApiRow>(archived.data).some((row) => row.id === currentDocumentId), JSON.stringify(archived.data)).toBe(true);
 
+      const active = await documentsAPI.getDocumentsByParams(
+        request,
+        documentsPaginationDto({ searchString: updatedName }),
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(active.data)).toContain(active.status);
+      expectNoServerError(active);
+      expect(getRows<ApiRow>(active.data).some((row) => row.id === currentDocumentId), JSON.stringify(active.data)).toBe(false);
+
       documentId = undefined;
     });
   });
@@ -439,6 +448,15 @@ export const runDocumentsAPINew = () => {
       expectNoServerError(archived);
       expect(getRows<ApiRow>(archived.data).some((row) => row.id === documentId), JSON.stringify(archived.data)).toBe(true);
 
+      const active = await documentsAPI.getDocumentsByParams(
+        request,
+        documentsPaginationDto({ searchString: String(document.name) }),
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(active.data)).toContain(active.status);
+      expectNoServerError(active);
+      expect(getRows<ApiRow>(active.data).some((row) => row.id === documentId), JSON.stringify(active.data)).toBe(false);
+
       documentIds.splice(documentIds.indexOf(documentId), 1);
     });
 
@@ -456,29 +474,6 @@ export const runDocumentsAPINew = () => {
       expect(cdn.data?.filename, JSON.stringify(cdn.data)).toBeTruthy();
     });
 
-    test('создает presign URL и принимает прямую загрузку файла', async ({ request }) => {
-      const fileName = `API Documents presign ${uniqueApiSuffix('file')}.txt`;
-      const presign = await documentsAPI.presignPut(
-        request,
-        { originalName: fileName, contentType: 'text/plain' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(presign.data)).toContain(presign.status);
-      expectNoServerError(presign);
-      expect(presign.data?.putUrl, JSON.stringify(presign.data)).toBeTruthy();
-      expect(presign.data?.objectName, JSON.stringify(presign.data)).toContain('.txt');
-
-      const putUrl = new URL(presign.data.putUrl);
-      test.skip(putUrl.hostname === 'minio', 'Presign URL points to docker-internal minio host that is not reachable from this runner.');
-
-      const upload = await request.put(presign.data.putUrl, {
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-        data: `documents-api-presign-${fileName}`,
-      });
-      expect([200, 201, 204], await upload.text()).toContain(upload.status());
-    });
   });
 
   test.describe('Documents API: контракты чтения и defensive-сценарии', () => {

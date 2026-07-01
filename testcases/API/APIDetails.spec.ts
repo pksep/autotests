@@ -112,6 +112,29 @@ const waitForDetailInArchive = async (
   return Boolean(response);
 };
 
+const createIsolatedDetail = async (
+  request: any,
+  suffix: string,
+  accessToken?: string,
+): Promise<{ id: number; designation: string; payload: Record<string, unknown> }> => {
+  const payload = detailPayload(suffix);
+  const designation = String(payload.designation);
+
+  const createResponse = await detailsAPI.createDetail(request, payload, testUserId, accessToken);
+  expect(successCodes, JSON.stringify(createResponse.data)).toContain(createResponse.status);
+  expectNoServerError(createResponse);
+
+  const createData = getQueueData(createResponse.data);
+  const created = await findDetailByDesignation(request, designation, accessToken);
+  const id = Number(createData?.id ?? created?.id);
+
+  expect(id, JSON.stringify(createResponse.data)).toBeGreaterThan(0);
+  expect(created, `Detail ${designation} was not found after create`).toBeTruthy();
+  expect(created?.ban, JSON.stringify(created)).toBe(false);
+
+  return { id, designation, payload };
+};
+
 export const runDetailsAPINew = () => {
   logger.info('Starting Details API coverage suite');
 
@@ -253,15 +276,18 @@ export const runDetailsAPINew = () => {
     });
 
     test('возвращает список деталей без серверных ошибок', async ({ request }) => {
-      const response = await detailsAPI.getAllDetails(request, true, [], accessToken);
+      const detail = await createIsolatedDetail(request, uniqueApiSuffix('detail-list'), accessToken);
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+      try {
+        const response = await detailsAPI.getAllDetails(request, true, [], accessToken);
 
-      const rows = getRows(response.data);
-      test.skip(rows.length === 0, 'No active details are available on this environment.');
-      expectDetailShape(rows[0]);
-      expect(rows[0].ban, JSON.stringify(rows[0])).not.toBe(true);
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+        expect(getRows<DetailLike>(response.data).some((row) => row.id === detail.id), JSON.stringify(response.data)).toBe(true);
+      } finally {
+        const archive = await detailsAPI.deleteDetail(request, String(detail.id), testUserId, accessToken);
+        expectNoServerError(archive);
+      }
     });
 
     test('пагинация поддерживает пустой результат со стабильной структурой', async ({ request }) => {
@@ -301,23 +327,20 @@ export const runDetailsAPINew = () => {
     });
 
     test('include детали обрабатывает пустой и неизвестный include без 5xx', async ({ request }) => {
-      const list = await detailsAPI.getPaginationDetails(
-        request,
-        detailPaginationDto({ pageSize: 1 }),
-        testUserId,
-        accessToken,
-      );
-      expectNoServerError(list);
-      const detail = getRows(list.data).find((row) => row.id);
-      test.skip(!detail, 'No active detail is available for include variants.');
+      const detail = await createIsolatedDetail(request, uniqueApiSuffix('detail-include'), accessToken);
 
-      for (const includes of [[], ['unknownInclude']]) {
-        const response = await detailsAPI.getDetailById(
-          request,
-          { id: detail!.id, modelsInclude: includes, attributes: [] },
-          accessToken,
-        );
-        expectNoServerError(response);
+      try {
+        for (const includes of [[], ['unknownInclude']]) {
+          const response = await detailsAPI.getDetailById(
+            request,
+            { id: detail.id, modelsInclude: includes, attributes: [] },
+            accessToken,
+          );
+          expectNoServerError(response);
+        }
+      } finally {
+        const archive = await detailsAPI.deleteDetail(request, String(detail.id), testUserId, accessToken);
+        expectNoServerError(archive);
       }
     });
 

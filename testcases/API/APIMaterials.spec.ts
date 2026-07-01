@@ -118,6 +118,54 @@ const waitForMaterialInArchive = async (
   return Boolean(response);
 };
 
+const createIsolatedMaterial = async (
+  request: any,
+  suffix: string,
+  accessToken?: string,
+): Promise<{ materialId: number; materialName: string; typeId: number; subtypeId: number }> => {
+  const typeName = `API Type Material ${suffix}`;
+  const subtypeName = `API Subtype Material ${suffix}`;
+
+  const typeResponse = await materialsAPI.createTypeMaterial(
+    request,
+    { name: typeName, characteristics: typeCharacteristics(), instance_type: 1 },
+    accessToken,
+  );
+  expect(successCodes, JSON.stringify(typeResponse.data)).toContain(typeResponse.status);
+  expectNoServerError(typeResponse);
+  const typeId = Number(typeResponse.data?.id);
+  expect(typeId, JSON.stringify(typeResponse.data)).toBeGreaterThan(0);
+
+  const subtypeResponse = await materialsAPI.createSubtypeMaterial(
+    request,
+    {
+      name: subtypeName,
+      density: 8,
+      id: null,
+      instance_type: 1,
+      parentMaterialIds: [typeId],
+    },
+    accessToken,
+  );
+  expect(successCodes, JSON.stringify(subtypeResponse.data)).toContain(subtypeResponse.status);
+  expectNoServerError(subtypeResponse);
+  const subtypeId = Number(subtypeResponse.data?.id);
+  expect(subtypeId, JSON.stringify(subtypeResponse.data)).toBeGreaterThan(0);
+
+  const payload = materialPayload(suffix, typeId, subtypeId);
+  const materialName = String(payload.name);
+  const createMaterial = await materialsAPI.createAndUpdateMaterial(request, payload, accessToken);
+  expect(successCodes, JSON.stringify(createMaterial.data)).toContain(createMaterial.status);
+  expectNoServerError(createMaterial);
+
+  const material = await findMaterialByName(request, materialName, accessToken);
+  expect(material, `Material ${materialName} was not found after create`).toBeTruthy();
+  const materialId = Number(createMaterial.data?.id ?? material?.id);
+  expect(materialId, JSON.stringify(createMaterial.data)).toBeGreaterThan(0);
+
+  return { materialId, materialName, typeId, subtypeId };
+};
+
 export const runMaterialsAPINew = () => {
   logger.info('Starting Materials API coverage suite');
 
@@ -335,16 +383,38 @@ export const runMaterialsAPINew = () => {
       accessToken = await getAuthToken(request);
     });
 
-    test('возвращает страницу материалов без серверных ошибок', async ({ request }) => {
-      const response = await materialsAPI.getMaterialsPagination(request, materialPaginationDto(), accessToken);
+    test('возвращает страницу материалов с изолированным материалом без серверных ошибок', async ({ request }) => {
+      let fixture: Awaited<ReturnType<typeof createIsolatedMaterial>> | undefined;
+      try {
+        fixture = await createIsolatedMaterial(request, uniqueApiSuffix('material-page'), accessToken);
 
-      expect(response.status).toBe(201);
-      expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
+        const response = await materialsAPI.getMaterialsPagination(
+          request,
+          materialPaginationDto({ searchString: fixture.materialName }),
+          accessToken,
+        );
 
-      const rows = getRows(response.data);
-      test.skip(rows.length === 0, 'No active materials are available on this environment.');
-      expectMaterialShape(rows[0]);
-      expect(rows[0].ban, JSON.stringify(rows[0])).not.toBe(true);
+        expect(response.status).toBe(201);
+        expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(1);
+
+        const row = getRows(response.data).find((item) => item.id === fixture?.materialId);
+        expect(row, JSON.stringify(response.data)).toBeTruthy();
+        expectMaterialShape(row as MaterialLike);
+        expect(row?.ban, JSON.stringify(row)).not.toBe(true);
+      } finally {
+        if (fixture?.materialId) {
+          const archiveMaterial = await materialsAPI.banMaterial(request, fixture.materialId, accessToken);
+          expectNoServerError(archiveMaterial);
+        }
+        if (fixture?.subtypeId) {
+          const archiveSubtype = await materialsAPI.removeSubtypeMaterial(request, fixture.subtypeId, accessToken);
+          expectNoServerError(archiveSubtype);
+        }
+        if (fixture?.typeId) {
+          const archiveType = await materialsAPI.removeTypeMaterial(request, fixture.typeId, accessToken);
+          expectNoServerError(archiveType);
+        }
+      }
     });
 
     test('пагинация поддерживает пустой результат со стабильной структурой', async ({ request }) => {
