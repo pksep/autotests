@@ -5,22 +5,13 @@ import dotenv from 'dotenv';
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 import { ENV } from './config';
-import { PARALLEL_SUITE_KEYS } from './testSuiteConfig';
 import { apiSuites } from './testSuiteConfig.api';
 
 const isParallel = process.env.TEST_SUITE === 'parallel' || ENV.TEST_SUITE === 'parallel';
 const selectedSuiteKey = process.env.TEST_SUITE || ENV.TEST_SUITE;
 const isApiSuite = Object.keys(apiSuites).includes(selectedSuiteKey);
 
-function parsePositiveInt(value: string | undefined): number | undefined {
-  if (!value) return undefined;
-
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
-
-const configuredWorkers = parsePositiveInt(process.env.PLAYWRIGHT_WORKERS);
-const workers = configuredWorkers ?? (isParallel ? PARALLEL_SUITE_KEYS.length : isApiSuite ? '100%' : 1);
+const workers = 1;
 
 export default defineConfig({
   testDir: process.env.TEST_DIR || ENV.TEST_DIR,

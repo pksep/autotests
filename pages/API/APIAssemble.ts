@@ -137,6 +137,20 @@ export class AssembleAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async createAssembleKit(request: APIRequestContext, kitData: any, accessToken?: string) {
+    logger.info(`Creating assemble kit:`, kitData);
+
+    const response = await request.post(this.base() + '/complectkit/create', {
+      headers: this.assembleAuthHeaders(accessToken, {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+      }),
+      data: kitData,
+    });
+
+    return this.result(response);
+  }
+
   async getAllAssemblePlan(request: APIRequestContext, planData: any, accessToken?: string) {
     logger.info(`Getting all assemble plan:`, planData);
 
@@ -151,10 +165,80 @@ export class AssembleAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async getComplectKitById(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting assemble kit by ID: ${id}`);
+
+    const response = await request.get(this.base() + `/complectkit/${id}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getComplectKitByAssembly(request: APIRequestContext, assemblyId: number, accessToken?: string) {
+    logger.info(`Getting assemble kits by assembly ID: ${assemblyId}`);
+
+    const response = await request.get(this.base() + `/complectkit/getbyassembly/${assemblyId}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async updateResponsibleKit(request: APIRequestContext, id: number, userId: number, accessToken?: string) {
+    logger.info(`Updating assemble kit responsible: ${id} -> ${userId}`);
+
+    const response = await request.get(this.base() + `/complectkit/update_responsible/${id}/${userId}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getDisactiveKitsCount(request: APIRequestContext, type: string, accessToken?: string) {
+    logger.info(`Getting disactive assemble kit count for type: ${type}`);
+
+    const response = await request.get(this.base() + `/complectkit/disactive/count/${encodeURIComponent(type)}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getActiveKitsCountById(request: APIRequestContext, id: number, type: string, accessToken?: string) {
+    logger.info(`Getting active assemble kit count for ${type}:${id}`);
+
+    const response = await request.get(this.base() + `/complectkit/active/count/${id}/${encodeURIComponent(type)}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getRelativeKitChild(request: APIRequestContext, id: number, type: string, accessToken?: string) {
+    logger.info(`Getting relative kit child for ${type}:${id}`);
+
+    const response = await request.get(this.base() + `/relative/kit/child/${id}/${encodeURIComponent(type)}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
   async getById(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Getting assemble by ID: ${id}`);
 
     const response = await request.get(this.base() + `/${id}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getAssembleWaybill(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting assemble waybill by ID: ${id}`);
+
+    const response = await request.get(this.base() + `/waybill/${id}`, {
       headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
     });
 
@@ -171,10 +255,30 @@ export class AssembleAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async getByIzdLight(request: APIRequestContext, id: number, typeIzd: string, accessToken?: string) {
+    logger.info(`Getting light assemble by izd ${typeIzd}:${id}`);
+
+    const response = await request.get(this.base() + `/byizd/light/${id}/${encodeURIComponent(typeIzd)}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
   async getByIzd(request: APIRequestContext, id: number, typeIzd: string, accessToken?: string) {
     logger.info(`Getting assemble by izd ${typeIzd}:${id}`);
 
     const response = await request.get(this.base() + `/byizd/${id}/${encodeURIComponent(typeIzd)}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async countValueByEntity(request: APIRequestContext, id: number, typeIzd: string, accessToken?: string) {
+    logger.info(`Getting assemble kit value count by ${typeIzd}:${id}`);
+
+    const response = await request.get(this.base() + `/count_value_by_obj/${id}/${encodeURIComponent(typeIzd)}`, {
       headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
     });
 
@@ -204,6 +308,26 @@ export class AssembleAPI extends APIPageObject {
         compress: 'no-compress',
       }),
       data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async uncomplectKit(request: APIRequestContext, kitId: number, uncomplectQuantity: number, accessToken?: string) {
+    logger.info(`Uncomplect assemble kit ID: ${kitId}`);
+
+    const response = await request.delete(this.base() + `/uncomplect/${kitId}/${uncomplectQuantity}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async banComplect(request: APIRequestContext, kitId: number, accessToken?: string) {
+    logger.info(`Banning assemble kit ID: ${kitId}`);
+
+    const response = await request.delete(this.base() + `/complect/ban/${kitId}`, {
+      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
     });
 
     return this.result(response);

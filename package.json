@@ -9,6 +9,7 @@
   "scripts": {
     "pretest": "echo 'No pretest script'",
     "test": "npx playwright test",
+    "api:coverage": "node scripts/check-api-coverage.mjs",
     "test:parallel": "cross-env TEST_SUITE=parallel npx playwright test",
     "ui": "pnpm exec playwright test --ui",
     "allure:generate": "allure generate allure-results -o allure-report --clean",

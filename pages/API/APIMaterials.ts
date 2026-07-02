@@ -8,9 +8,7 @@ export class MaterialsAPI extends APIPageObject {
     super(page);
   }
 
-  private base() {
-    return ENV.API_BASE_URL + 'api/material';
-  }
+  private base = () => ENV.API_BASE_URL + 'api/material';
 
   private jsonHeaders(accessToken?: string) {
     return {
@@ -147,10 +145,93 @@ export class MaterialsAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async getMaterialsProviderPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting provider materials pagination with data:`, paginationData);
+
+    const response = await request.post(this.base() + '/pagination/materials-provider', {
+      headers: this.jsonHeaders(accessToken),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async getTypeMaterialsProviderPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting provider type materials pagination with data:`, paginationData);
+
+    const response = await request.post(this.base() + '/pagination/typematerials-provider', {
+      headers: this.jsonHeaders(accessToken),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
+  async getSubtypeMaterialsProviderPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting provider subtype materials pagination with data:`, paginationData);
+
+    const response = await request.post(this.base() + '/pagination/subtypematerials-provider', {
+      headers: this.jsonHeaders(accessToken),
+      data: paginationData,
+    });
+
+    return this.result(response);
+  }
+
   async getMaterialById(request: APIRequestContext, id: number, light = true, accessToken?: string) {
     logger.info(`Getting material by id: ${id}, light: ${light}`);
 
     const response = await request.get(this.base() + `/material/get/${id}/${light}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async getOneTypeMaterial(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting one type material by id: ${id}`);
+
+    const response = await request.get(this.base() + `/materials/one/${id}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async getSubtypeMaterialById(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting subtype material by id: ${id}`);
+
+    const response = await request.get(this.base() + `/typematerialid/${id}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async getRelativesProductionTask(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting material relatives production task by id: ${id}`);
+
+    const response = await request.get(this.base() + `/relatives/production/task/${id}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async getAllMaterialDeficit(request: APIRequestContext, accessToken?: string) {
+    logger.info(`Getting all material deficit`);
+
+    const response = await request.get(this.base() + '/materialdeficit', {
+      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
+    });
+
+    return this.result(response);
+  }
+
+  async attachFileToMaterial(request: APIRequestContext, materialId: number, fileId: number, accessToken?: string) {
+    logger.info(`Attaching file ${fileId} to material ${materialId}`);
+
+    const response = await request.get(this.base() + `/files/${materialId}/${fileId}`, {
       headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
     });
 

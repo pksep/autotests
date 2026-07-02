@@ -96,6 +96,18 @@ const kitPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const invalidAssembleKitPayload = (overrides: Record<string, unknown> = {}) => ({
+  kolvoCollected: 0,
+  assembleId: 999999999,
+  shipmentsIds: [],
+  listCbed: '[]',
+  listDetal: '[]',
+  listPokDet: '[]',
+  materialList: '[]',
+  actionSendlerId: Number(API_CONST.API_TEST_TABEL),
+  ...overrides,
+});
+
 const productPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
   searchString: '',
@@ -205,6 +217,19 @@ const createIsolatedAssemble = async (
   expect(assembleId, JSON.stringify(create.data)).toBeGreaterThan(0);
 
   return { assembleId, productId: product.id, productDesignation: product.designation };
+};
+
+const findAnyAssemble = async (request: any, accessToken?: string): Promise<ApiRow | undefined> => {
+  const response = await assembleAPI.getAllAssembleWithPagination(request, assemblePaginationDto({ page: 0, pageSize: 5 }), accessToken);
+  expectNoServerError(response);
+  return getRows<ApiRow>(response.data).find((row) => Number(row.id) > 0);
+};
+
+const getAssembleParent = (assemble: ApiRow): { id: number; type: string } => {
+  const type = String(assemble.type_izd ?? assemble.typeIzd ?? assemble.type ?? (assemble.product_id || assemble.productId ? 'product' : 'cbed'));
+  const id = Number(assemble.product_id ?? assemble.productId ?? assemble.cbed_id ?? assemble.cbedId ?? assemble.izd_id ?? assemble.izdId);
+
+  return { id, type };
 };
 
 export const runAssembleAPINew = () => {
@@ -328,6 +353,54 @@ export const runAssembleAPINew = () => {
         expectNoServerError(archive);
       }
     });
+
+    test('проверяет дополнительные read/count маршруты сборки без серверных ошибок', async ({ request }) => {
+      const assemble = firstAssemble ?? await findAnyAssemble(request, accessToken);
+      test.skip(!assemble, 'Нет доступной сборки для проверки дополнительных read/count маршрутов');
+
+      const assembleId = Number(assemble?.id);
+      const parent = getAssembleParent(assemble as ApiRow);
+      test.skip(!Number.isFinite(parent.id) || parent.id <= 0, `Не найден parent id в сборке: ${JSON.stringify(assemble)}`);
+
+      const byIzdLight = await assembleAPI.getByIzdLight(request, parent.id, parent.type, accessToken);
+      expectNoServerError(byIzdLight);
+
+      const waybill = await assembleAPI.getAssembleWaybill(request, assembleId, accessToken);
+      expectNoServerError(waybill);
+
+      const kitsByAssembly = await assembleAPI.getComplectKitByAssembly(request, assembleId, accessToken);
+      expectNoServerError(kitsByAssembly);
+      if (!clientErrorCodes.includes(kitsByAssembly.status)) {
+        expect(successCodes).toContain(kitsByAssembly.status);
+        expect(Array.isArray(getRows(kitsByAssembly.data)) || Array.isArray(kitsByAssembly.data), JSON.stringify(kitsByAssembly.data)).toBe(true);
+      }
+
+      const activeKits = await assembleAPI.getActiveKitsCountById(request, parent.id, parent.type, accessToken);
+      expectNoServerError(activeKits);
+      if (!clientErrorCodes.includes(activeKits.status)) {
+        expect(successCodes).toContain(activeKits.status);
+        expect(Number(activeKits.data), JSON.stringify(activeKits.data)).toBeGreaterThanOrEqual(0);
+      }
+
+      const valueByEntity = await assembleAPI.countValueByEntity(request, parent.id, parent.type, accessToken);
+      expectNoServerError(valueByEntity);
+      if (!clientErrorCodes.includes(valueByEntity.status)) {
+        expect(successCodes).toContain(valueByEntity.status);
+        expect(valueByEntity.data, JSON.stringify(valueByEntity.data)).toBeTruthy();
+      }
+    });
+
+    test('возвращает счетчики и относительные связи наборов без серверных ошибок', async ({ request }) => {
+      const disactiveAll = await assembleAPI.getDisactiveKitsCount(request, 'all', accessToken);
+      expectNoServerError(disactiveAll);
+      if (!clientErrorCodes.includes(disactiveAll.status)) {
+        expect(successCodes).toContain(disactiveAll.status);
+        expect(Number(disactiveAll.data), JSON.stringify(disactiveAll.data)).toBeGreaterThanOrEqual(0);
+      }
+
+      const relativeChild = await assembleAPI.getRelativeKitChild(request, 999999999, 'listCbed', accessToken);
+      expectNoServerError(relativeChild);
+    });
   });
 
   test.describe('Assemble API: defensive-сценарии', () => {
@@ -360,6 +433,9 @@ export const runAssembleAPINew = () => {
       const byId = await assembleAPI.getById(request, 999999999, accessToken);
       expectNoServerError(byId);
 
+      const byIzdLight = await assembleAPI.getByIzdLight(request, 999999999, 'product', accessToken);
+      expectNoServerError(byIzdLight);
+
       const byParent = await assembleAPI.getAssembleByParent(
         request,
         { id: 999999999, type: 'product' },
@@ -388,6 +464,38 @@ export const runAssembleAPINew = () => {
         API_CONST.API_TEST_TABEL,
       );
       expectNotSuccessful(noAuthCreate);
+    });
+
+    test('несуществующие assemble kit endpoints не приводят к серверным ошибкам', async ({ request }) => {
+      const missingKit = await assembleAPI.getComplectKitById(request, 999999999, accessToken);
+      expectNoServerError(missingKit);
+
+      const missingKitsByAssembly = await assembleAPI.getComplectKitByAssembly(request, 999999999, accessToken);
+      expectNoServerError(missingKitsByAssembly);
+
+      const invalidCreateKit = await assembleAPI.createAssembleKit(request, invalidAssembleKitPayload(), accessToken);
+      expectNoServerError(invalidCreateKit);
+
+      const invalidUpdateKit = await assembleAPI.updateAssemble(
+        request,
+        {
+          idKit: 999999999,
+          description: 'invalid kit update from API autotest',
+          receivingUserId: Number(API_CONST.API_TEST_TABEL),
+          docs: '[]',
+          addedQuantity: 0,
+          actionSendlerId: Number(API_CONST.API_TEST_TABEL),
+        },
+        API_CONST.API_TEST_TABEL,
+        accessToken,
+      );
+      expectNoServerError(invalidUpdateKit);
+
+      const uncomplectMissing = await assembleAPI.uncomplectKit(request, 999999999, 1, accessToken);
+      expectNoServerError(uncomplectMissing);
+
+      const invalidCount = await assembleAPI.countValueByEntity(request, 999999999, 'product', accessToken);
+      expectNoServerError(invalidCount);
     });
   });
 };

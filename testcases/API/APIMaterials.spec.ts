@@ -52,6 +52,15 @@ const materialPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const materialProviderPaginationDto = (overrides: Record<string, unknown> = {}) => ({
+  page: 0,
+  searchString: '',
+  typeId: null,
+  subTypeId: null,
+  providerId: null,
+  ...overrides,
+});
+
 const materialPayload = (
   suffix: string,
   rootParentId: number,
@@ -327,6 +336,20 @@ export const runMaterialsAPINew = () => {
     test('возвращает include, aliases, отгрузки и ограничения без серверных ошибок', async ({ request }) => {
       expect(createdMaterialId).toBeTruthy();
 
+      const typeById = await materialsAPI.getOneTypeMaterial(request, createdTypeId as number, accessToken);
+      expectNoServerError(typeById);
+      if (!clientErrorCodes.includes(typeById.status)) {
+        expect(successCodes).toContain(typeById.status);
+        expect(Number(typeById.data?.id), JSON.stringify(typeById.data)).toBe(createdTypeId);
+      }
+
+      const subtypeById = await materialsAPI.getSubtypeMaterialById(request, createdSubtypeId as number, accessToken);
+      expectNoServerError(subtypeById);
+      if (!clientErrorCodes.includes(subtypeById.status)) {
+        expect(successCodes).toContain(subtypeById.status);
+        expect(Number(subtypeById.data?.id), JSON.stringify(subtypeById.data)).toBe(createdSubtypeId);
+      }
+
       const includeResponse = await materialsAPI.getIncludeForMaterial(request, {
         id: createdMaterialId,
         includes: ['documents', 'companies'],
@@ -343,6 +366,17 @@ export const runMaterialsAPINew = () => {
         expect(successCodes).toContain(aliases.status);
         expect(Array.isArray(aliases.data), JSON.stringify(aliases.data)).toBe(true);
       }
+
+      const createdAlias = await materialsAPI.createMaterialAlias(
+        request,
+        {
+          material_id: createdMaterialId as number,
+          alias: `API Material Extra Alias ${uniqueApiSuffix('material-alias')}`,
+          default: false,
+        },
+        accessToken,
+      );
+      expectNoServerError(createdAlias);
 
       const shipments = await materialsAPI.getMaterialShipmentsAndOrders(request, createdMaterialId as number, accessToken);
       expectNoServerError(shipments);
@@ -458,6 +492,17 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(subtypePagination);
     });
 
+    test('provider-пагинации материалов, типов и подтипов не отвечают 5xx на базовые фильтры', async ({ request }) => {
+      const materialsProvider = await materialsAPI.getMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
+      expectNoServerError(materialsProvider);
+
+      const typesProvider = await materialsAPI.getTypeMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
+      expectNoServerError(typesProvider);
+
+      const subtypesProvider = await materialsAPI.getSubtypeMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
+      expectNoServerError(subtypesProvider);
+    });
+
     test('дефициты и справочники подтипов не отвечают 5xx на базовые фильтры', async ({ request }) => {
       const deficits = await materialsAPI.getMaterialDeficits(
         request,
@@ -471,6 +516,9 @@ export const runMaterialsAPINew = () => {
         accessToken,
       );
       expectNoServerError(deficits);
+
+      const allDeficit = await materialsAPI.getAllMaterialDeficit(request, accessToken);
+      expectNoServerError(allDeficit);
 
       const subtypes = await materialsAPI.getAllSubtypeMaterial(request, API_CONST.API_TEST_SUBTYPE_INSTANS, accessToken);
       expectNoServerError(subtypes);
