@@ -5,7 +5,7 @@ import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -475,15 +475,13 @@ export const runDeficitsAPINew = () => {
         { id: 'bad-id', minRemainder: 'bad', recommendedRemainder: null },
         accessToken,
       );
-      expectNotSuccessful(invalidUpdate);
+      expectClientError(invalidUpdate);
     });
 
-    test('позитивный materials/shipments/:id/:type зафиксирован как известный серверный дефект', async ({ request }) => {
+    test('materials/shipments/:id/:type возвращает данные без серверной ошибки', async ({ request }) => {
       const shipment = await createIsolatedShipment(request, accessToken);
 
       try {
-        test.fail(true, 'api/deficits/materials/shipments/:id/:type сейчас падает на сервере из-за include.map без return.');
-
         const response = await deficitsAPI.getMaterialForShipment(request, shipment.shipmentId, 'cbed', accessToken);
         expectNoServerError(response);
         if (!clientErrorCodes.includes(response.status)) {

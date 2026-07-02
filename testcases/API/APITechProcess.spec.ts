@@ -7,7 +7,7 @@ import { ProductsAPI } from '../../pages/API/APIProducts';
 import { TechProcessAPI } from '../../pages/API/APITechProcess';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -695,7 +695,7 @@ export const runTechProcessAPINew = () => {
         }),
         accessToken,
       );
-      expectNotSuccessful(badJson);
+      expectClientError(badJson);
 
       const nonexistent = await techProcessAPI.createOrUpdateTechProcess(
         request,
@@ -753,7 +753,7 @@ export const runTechProcessAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(invalidCreate);
+      expectClientError(invalidCreate);
 
       const invalidUpdate = await techProcessAPI.createOrUpdateTechProcess(
         request,
@@ -767,7 +767,7 @@ export const runTechProcessAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(invalidUpdate);
+      expectClientError(invalidUpdate);
     });
 
     test('мутация техпроцесса без авторизации не проходит успешно', async ({ request }) => {
@@ -779,7 +779,7 @@ export const runTechProcessAPINew = () => {
         operationList: '[]',
         docs: null,
       });
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
   });
 };

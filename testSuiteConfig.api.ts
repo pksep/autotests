@@ -7,13 +7,17 @@ import { runAuthAPINew } from './testcases/API/APIAuth.spec';
 import { runAssembleAPINew } from './testcases/API/APIAssemble.spec';
 import { runActionsAPINew } from './testcases/API/APIActions.spec';
 import { runActionsChainAPINew } from './testcases/API/APIActionsChain.spec';
+import { runBuyerAPINew } from './testcases/API/APIBuyer.spec';
 import { runCBEDAPINew } from './testcases/API/APICBED.spec';
+import { runCommentsAPINew } from './testcases/API/APIComments.spec';
 import { runCompaniesAPINew } from './testcases/API/APICompanies.spec';
 import { runContactsAPINew } from './testcases/API/APIContacts.spec';
 import { runDeficitsAPINew } from './testcases/API/APIDeficits.spec';
 import { runDetailsAPINew } from './testcases/API/APIDetails.spec';
 import { runDocumentsAPINew } from './testcases/API/APIDocuments.spec';
 import { runEquipmentAPINew } from './testcases/API/APIEquipment.spec';
+import { runExclusionAPINew } from './testcases/API/APIExclusion.spec';
+import { runExpenditureAPINew } from './testcases/API/APIExpenditure.spec';
 import { runInventoryAPINew } from './testcases/API/APIInventory.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
@@ -21,16 +25,22 @@ import { runMarksAPINew } from './testcases/API/APIMarks.spec';
 import { runMovementErrorsAPINew } from './testcases/API/APIMovementErrors.spec';
 import { runMovementObjectAPINew } from './testcases/API/APIMovementObject.spec';
 import { runMovingAPINew } from './testcases/API/APIMoving.spec';
+import { runNeo4jAPINew } from './testcases/API/APINeo4j.spec';
 import { runNotificationAPINew } from './testcases/API/APINotification.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
 import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipmentFlow.spec';
+import { runProviderAPINew } from './testcases/API/APIProvider.spec';
 import { runProviderDeliveriesAPINew } from './testcases/API/APIProviderDeliveries.spec';
+import { runRackAPINew } from './testcases/API/APIRack.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runOperationAPINew } from './testcases/API/APIOperation.spec';
 import { runRolesAPINew } from './testcases/API/APIRoles.spec';
+import { runSettingsAPINew } from './testcases/API/APISettings.spec';
 import { runShipmentsAPINew } from './testcases/API/APIShipments.spec';
+import { runSolidworksAPINew } from './testcases/API/APISolidworks.spec';
 import { runSpecificationAPINew } from './testcases/API/APISpecification.spec';
 import { runStockOrderAPINew } from './testcases/API/APIStockOrder.spec';
+import { runSupplyAPINew } from './testcases/API/APISupply.spec';
 import { runTechProcessAPINew } from './testcases/API/APITechProcess.spec';
 import { runToolsAPINew } from './testcases/API/APITools.spec';
 import { runUsersAPINew } from './testcases/API/APIUsers.spec';
@@ -46,6 +56,28 @@ export const apiSuites = {
         test: runAuthAPINew,
         description:
           'Тестирует эндпоинты API аутентификации, включая вход, проверку токена, обновление, выход и сценарии безопасности.'
+      }
+    ]
+  },
+
+  buyer_api: {
+    description: 'Набор тестов Buyer API для проверки покупателей, архива, include и defensive-сценариев.',
+    tests: [
+      {
+        test: runBuyerAPINew,
+        description:
+          'Тестирует api/buyer: создание, чтение, обновление, архив, пагинацию, include, attach-file endpoint и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  comments_api: {
+    description: 'Набор тестов Comments API для проверки комментариев по entity/thread и defensive-сценариев.',
+    tests: [
+      {
+        test: runCommentsAPINew,
+        description:
+          'Тестирует api/comments: чтение по entity/thread, создание, обновление, pin/unpin, удаление и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -149,6 +181,17 @@ export const apiSuites = {
     ]
   },
 
+  neo4j_api: {
+    description: 'Набор тестов Neo4j API для проверки дерева родственников и defensive-сценариев.',
+    tests: [
+      {
+        test: runNeo4jAPINew,
+        description:
+          'Тестирует api/neo4j/stairs/:itemType/:itemId: валидный контракт чтения и обработку неизвестного типа сущности.'
+      }
+    ]
+  },
+
   users_api: {
     description: 'Набор тестов Users API для проверки чтения, пагинации, ролей, архива и defensive-сценариев.',
     tests: [
@@ -226,6 +269,28 @@ export const apiSuites = {
     ]
   },
 
+  exclusion_api: {
+    description: 'Набор тестов Exclusion API для проверки исключений, пагинации и defensive-сценариев.',
+    tests: [
+      {
+        test: runExclusionAPINew,
+        description:
+          'Тестирует api/exclusion: создание, чтение по id, обновление, архив, пагинацию и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  expenditure_api: {
+    description: 'Набор тестов Expenditure API для проверки расходов со склада и defensive-сценариев.',
+    tests: [
+      {
+        test: runExpenditureAPINew,
+        description:
+          'Тестирует api/expenditure: чтение расходов, фильтры по типу/дате, поиск и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
   tools_api: {
     description: 'Набор базовых тестов Tools/Instrument API для проверки типов, подтипов, наименований, архива и defensive-сценариев.',
     tests: [
@@ -266,6 +331,61 @@ export const apiSuites = {
         test: runProviderDeliveriesAPINew,
         description:
           'Тестирует поставки: создание компании-поставщика, заказ поставщика с материалом, чтение позиций, архив и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  provider_api: {
+    description: 'Набор тестов Provider API для проверки поставщиков, архива, файлов и defensive-сценариев.',
+    tests: [
+      {
+        test: runProviderAPINew,
+        description:
+          'Тестирует api/provider: список, пагинацию, архив, проверку имени, чтение по id, attach-file, архивирование и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  rack_api: {
+    description: 'Набор тестов Rack API для проверки стеллажей, ячеек и defensive-сценариев.',
+    tests: [
+      {
+        test: runRackAPINew,
+        description:
+          'Тестирует api/rack: пагинацию, чтение по id, создание/обновление, операции с ячейками, архив и безопасную обработку ошибочных запросов.'
+      }
+    ]
+  },
+
+  settings_api: {
+    description: 'Набор тестов Settings API для проверки справочников, backup endpoints и defensive-сценариев.',
+    tests: [
+      {
+        test: runSettingsAPINew,
+        description:
+          'Тестирует api/settings: единицы измерения, типы, нормо-часы, inaction, список/скачивание/удаление/загрузку dump на фиктивных данных и defensive-сценарии.'
+      }
+    ]
+  },
+
+  solidworks_api: {
+    description: 'Набор тестов Solidworks API для неиспользуемого модуля интеграции.',
+    tests: [
+      {
+        test: runSolidworksAPINew,
+        description:
+          'Тестирует api/solidworks: поиск сущности и defensive multipart-мутации create/update без серверных ошибок.'
+      }
+    ]
+  },
+
+  supply_api: {
+    description: 'Набор тестов Supply API для номера заказа поставки.',
+    tests: [
+      {
+        test: runSupplyAPINew,
+        description:
+          'Тестирует api/supply/new-number-order и базовый контракт ответа без серверной ошибки.'
       }
     ]
   },
@@ -520,6 +640,31 @@ export const apiSuites = {
         test: runProviderDeliveriesAPINew,
         description:
           'Тестирует поставки: создание компании-поставщика, заказ поставщика с материалом, чтение позиций, архив и defensive-сценарии.'
+      },
+      {
+        test: runProviderAPINew,
+        description:
+          'Тестирует api/provider: поставщиков, пагинацию, архив, файлы и defensive-сценарии.'
+      },
+      {
+        test: runRackAPINew,
+        description:
+          'Тестирует api/rack: пагинацию, стеллажи, ячейки и defensive-сценарии.'
+      },
+      {
+        test: runSettingsAPINew,
+        description:
+          'Тестирует api/settings: справочники, backup endpoints и defensive-сценарии.'
+      },
+      {
+        test: runSolidworksAPINew,
+        description:
+          'Тестирует api/solidworks: поиск сущности и defensive multipart-мутации.'
+      },
+      {
+        test: runSupplyAPINew,
+        description:
+          'Тестирует api/supply/new-number-order.'
       },
       {
         test: runContactsAPINew,

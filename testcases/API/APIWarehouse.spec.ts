@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { WarehouseAPI } from '../../pages/API/APIWarehouse';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, expectSortedDescendingByKnownDate, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, expectSortedDescendingByKnownDate, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -226,10 +226,10 @@ export const runWarehouseAPINew = () => {
 
     test('невалидные типы и id обрабатываются без серверных ошибок', async ({ request }) => {
       const remains = await warehouseAPI.getWarehouseRemains(request, remainsDto('invalid-type'), accessToken);
-      expectNotSuccessful(remains);
+      expectClientError(remains);
 
       const revision = await warehouseAPI.getRevisionHistory(request, revisionDto('invalid-type'), accessToken);
-      expectNotSuccessful(revision);
+      expectClientError(revision);
 
       const byParents = await warehouseAPI.getNeedsByParents(request, 'detal', 999999999, accessToken);
       expectNoServerError(byParents);
@@ -254,7 +254,7 @@ export const runWarehouseAPINew = () => {
         accessToken,
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
 
     test('отрицательные и дробные остатки для несуществующего объекта отклоняются без 5xx', async ({ request }) => {
@@ -270,7 +270,7 @@ export const runWarehouseAPINew = () => {
           accessToken,
         );
 
-        expectNotSuccessful(response);
+        expectClientError(response);
       }
     });
 
@@ -285,7 +285,7 @@ export const runWarehouseAPINew = () => {
         },
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
   });
 };

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { InventoryAPI } from '../../pages/API/APIInventory';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -308,7 +308,7 @@ export const runInventoryAPINew = () => {
         inventoryPayload('invalid', 1, 1, { name: '', parentTypeId: 'null', parentSubtypeId: 'null', companyIds: '[]' }),
         accessToken,
       );
-      expectNotSuccessful(invalidCreate);
+      expectClientError(invalidCreate);
     });
   });
 };

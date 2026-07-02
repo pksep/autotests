@@ -2,7 +2,15 @@ import { test, expect } from '@playwright/test';
 import { MarksAPI } from '../../pages/API/APIMarks';
 import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectNoServerError,
+  expectClientError,
+  expectPaginationContract,
+  expectValidationError,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -209,20 +217,14 @@ export const runMarksAPINew = () => {
     });
 
     test('невалидные route id не приводят к 5xx', async ({ request }) => {
-      test.fail(true, 'Некорректные route id в Marks API сейчас могут отдавать 500/502 на dev вместо клиентской ошибки.');
       const byOperation = await marksAPI.getMarksByOperationRaw(request, 'bad-id', accessToken);
-      expectNoServerError(byOperation);
-      if (!clientErrorCodes.includes(byOperation.status)) {
-        expect(Array.isArray(byOperation.data), JSON.stringify(byOperation.data)).toBe(true);
-      }
+      expectValidationError(byOperation);
 
-      test.fail(true, 'GET /api/marks/mark/:include/:id на dev сейчас возвращает 502 вместо клиентской ошибки.');
       const byId = await marksAPI.getMarkByIdRaw(request, 'bad-id', 'false', accessToken);
-      expectNotSuccessful(byId);
+      expectValidationError(byId);
     });
 
     test('невалидные resultworks payload не приводят к успешной выдаче', async ({ request }) => {
-      test.fail(true, 'Некоторые невалидные resultworks payload сейчас приводят к 5xx на dev.');
       for (const dto of [
         resultWorksDto({ page: -1 }),
         resultWorksDto({ responsibleUserIds: 'bad-users' }),
@@ -230,7 +232,7 @@ export const runMarksAPINew = () => {
         resultWorksDto({ dateRange: { start: 'bad-date', end: 'also-bad-date' } }),
       ]) {
         const response = await marksAPI.getResultWorks(request, dto, accessToken);
-        expectNotSuccessful(response);
+        expectValidationError(response);
       }
     });
 
@@ -240,10 +242,10 @@ export const runMarksAPINew = () => {
         { kol: 'bad', brak: false, date_build: 'bad-date', user_id: 'bad-user', oper_id: 999999999, description: '' },
         accessToken,
       );
-      expectNotSuccessful(create);
+      expectClientError(create);
 
       const update = await marksAPI.updateMark(request, { id: 999999999, kol: 'bad' }, accessToken);
-      expectNotSuccessful(update);
+      expectClientError(update);
     });
 
     test('чтение без авторизации не падает, мутации без авторизации запрещены', async ({ request }) => {
@@ -257,13 +259,13 @@ export const runMarksAPINew = () => {
         request,
         { kol: 1, brak: true, date_build: new Date().toISOString(), user_id: 1, oper_id: 1, description: 'no auth' },
       );
-      expectNotSuccessful(create);
+      expectClientError(create);
 
       const update = await marksAPI.updateMark(request, { id: 1, kol: 1, description: 'no auth' });
-      expectNotSuccessful(update);
+      expectClientError(update);
 
       const remove = await marksAPI.deleteMark(request, 1);
-      expectNotSuccessful(remove);
+      expectClientError(remove);
     });
   });
 

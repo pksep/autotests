@@ -3,7 +3,17 @@ import { ContactsAPI } from '../../pages/API/APIContacts';
 import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectMissingResource,
+  expectNoServerError,
+  expectPaginationContract,
+  expectUnauthorizedOrForbidden,
+  expectValidationError,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type EntityLike = Record<string, any>;
@@ -247,14 +257,7 @@ export const runContactsAPINew = () => {
 
     test('обрабатывает несуществующий id и некорректный include без падения тестового раннера', async ({ request }) => {
       const byId = await contactsAPI.getContactById(request, 999999999, accessToken);
-      if (byId.status === 502) {
-        test.info().annotations.push({
-          type: 'known-api-defect',
-          description: 'GET /api/contacts/:id returns 502 for a missing contact instead of a 4xx response.',
-        });
-      } else {
-        expectNoServerError(byId);
-      }
+      expectMissingResource(byId);
 
       const include = await contactsAPI.getInclude(request, { id: 999999999, includes: ['companies'] }, accessToken);
       expectNoServerError(include);
@@ -264,35 +267,23 @@ export const runContactsAPINew = () => {
       const create = await contactsAPI.createContact(request, { initial: '', companyIds: [] }, accessToken);
       expectNoServerError(create);
       if (successCodes.includes(create.status)) {
-        test.info().annotations.push({
-          type: 'known-api-defect',
-          description: 'POST /api/contacts accepts an empty initial and creates a contact.',
-        });
         if (create.data?.id) {
           const cleanup = await contactsAPI.banContact(request, Number(create.data.id), accessToken);
           expectNoServerError(cleanup);
         }
-      } else {
-        expectNotSuccessful(create);
       }
+      expectValidationError(create);
 
       const update = await contactsAPI.updateContact(request, { id: 999999999, initial: '', companyIds: [] }, accessToken);
-      if (update.status === 502) {
-        test.info().annotations.push({
-          type: 'known-api-defect',
-          description: 'PUT /api/contacts returns 502 for an invalid update payload instead of validation/404.',
-        });
-      } else {
-        expectNotSuccessful(update);
-      }
+      expectMissingResource(update);
 
       const bulk = await contactsAPI.banContactsBulk(request, 'abc,def', accessToken);
-      expectNotSuccessful(bulk);
+      expectValidationError(bulk);
     });
 
     test('не пропускает мутации без авторизации', async ({ request }) => {
       const response = await contactsAPI.createContact(request, contactPayload(uniqueApiSuffix('noauth')));
-      expectNotSuccessful(response);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('обрабатывает защитные поисковые строки без 5xx', async ({ request }) => {

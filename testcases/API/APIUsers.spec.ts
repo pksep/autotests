@@ -3,7 +3,7 @@ import { UsersAPI } from '../../pages/API/APIUsers';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -260,6 +260,23 @@ export const runUsersAPINew = () => {
       expectNoSensitiveFields(response.data);
     });
 
+    test('читает и валидирует настройки таблицы пользователя без серверных ошибок', async ({ request }) => {
+      const listResponse = await usersAPI.getAllUsersList(request, accessToken);
+      expect(listResponse.status).toBe(200);
+      const user = getRows(listResponse.data).find((row) => row.id);
+      test.skip(!user, 'No active user id is available on this environment.');
+
+      const config = await usersAPI.getTableConfigByUserId(request, Number(user!.id), accessToken);
+      expectNoServerError(config);
+
+      const invalidUpdate = await usersAPI.setTableConfig(
+        request,
+        { userId: 999999999, tableName: '', config: null },
+        accessToken,
+      );
+      expectNoServerError(invalidUpdate);
+    });
+
     test('не отвечает серверной ошибкой для несуществующего id пользователя', async ({ request }) => {
       const response = await usersAPI.getUserById(request, '999999999', accessToken);
 
@@ -380,7 +397,7 @@ export const runUsersAPINew = () => {
     test('создание пользователя отклоняет невалидный payload без токена', async ({ request }) => {
       const response = await usersAPI.createUser(request, invalidCreateUserPayload(), 'api-users');
 
-      expectNotSuccessful(response);
+      expectClientError(response);
       expectNoSensitiveFields(response.data);
     });
 
@@ -392,21 +409,21 @@ export const runUsersAPINew = () => {
         API_CONST.API_TEST_EDGE_CASES.INVALID_TOKEN,
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
       expectNoSensitiveFields(response.data);
     });
 
     test('обновление пользователя отклоняет невалидный payload без токена', async ({ request }) => {
       const response = await usersAPI.updateUser(request, invalidUpdateUserPayload(), 'api-users');
 
-      expectNotSuccessful(response);
+      expectClientError(response);
       expectNoSensitiveFields(response.data);
     });
 
     test('выдача роли отклоняет несуществующую роль или пользователя без серверной ошибки', async ({ request }) => {
       const response = await usersAPI.issueRole(request, { value: 'api-nonexistent-role', userId: 999999999 });
 
-      expectNotSuccessful(response);
+      expectClientError(response);
       expectNoSensitiveFields(response.data);
     });
 
@@ -416,14 +433,14 @@ export const runUsersAPINew = () => {
         banReason: 'api negative probe',
       });
 
-      expectNotSuccessful(response);
+      expectClientError(response);
       expectNoSensitiveFields(response.data);
     });
 
     test('открепление файла отклоняет несуществующего пользователя или файл без серверной ошибки', async ({ request }) => {
       const response = await usersAPI.detachFile(request, '999999999', '999999999');
 
-      expectNotSuccessful(response);
+      expectClientError(response);
       expectNoSensitiveFields(response.data);
     });
 

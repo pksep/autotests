@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { MovingAPI } from '../../pages/API/APIMoving';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -55,7 +55,7 @@ export const runMovingAPINew = () => {
         accessToken,
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
   });
 };

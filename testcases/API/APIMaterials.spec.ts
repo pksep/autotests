@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -553,7 +553,7 @@ export const runMaterialsAPINew = () => {
         accessToken,
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
 
     test('чтение несуществующего id не приводит к серверным ошибкам', async ({ request }) => {
@@ -575,10 +575,10 @@ export const runMaterialsAPINew = () => {
           file_base: '[]',
         },
       );
-      expectNotSuccessful(createResponse);
+      expectClientError(createResponse);
 
       const deleteResponse = await materialsAPI.banMaterial(request, 999999999);
-      expectNotSuccessful(deleteResponse);
+      expectClientError(deleteResponse);
     });
   });
 };

@@ -4,7 +4,7 @@ import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -562,7 +562,7 @@ export const runEquipmentAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(invalidCreate);
+      expectClientError(invalidCreate);
     });
 
     test('мутации оборудования без авторизации не проходят успешно', async ({ request }) => {
@@ -570,10 +570,10 @@ export const runEquipmentAPINew = () => {
         request,
         { name: `API Equipment NoAuth ${uniqueApiSuffix('equipment')}` },
       );
-      expectNotSuccessful(createType);
+      expectClientError(createType);
 
       const archive = await equipmentAPI.banEquipment(request, 999999999);
-      expectNotSuccessful(archive);
+      expectClientError(archive);
     });
     });
   });

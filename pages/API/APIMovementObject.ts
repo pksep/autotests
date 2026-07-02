@@ -19,4 +19,8 @@ export class MovementObjectAPI extends APIPageObject {
   async getOneMovementObject(request: APIRequestContext, id: number, accessToken?: string) {
     return this.apiRequest(request, 'GET', this.base() + `/one/${id}`, { accessToken });
   }
+
+  async getOneMovementObjectRaw(request: APIRequestContext, id: string, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + `/one/${encodeURIComponent(id)}`, { accessToken });
+  }
 }

@@ -615,4 +615,14 @@ export class DetailsAPI extends APIPageObject {
 
     return this.result(response);
   }
+
+  async getRelativesProductionTask(request: APIRequestContext, detailId: number, authToken?: string) {
+    logger.info(`Getting relatives production task for detail ID: ${detailId}`);
+
+    const response = await request.get(this.base() + `/relatives/production/task/${detailId}`, {
+      headers: this.detailAuthHeaders(authToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
 }

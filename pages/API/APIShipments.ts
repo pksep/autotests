@@ -90,6 +90,18 @@ export class ShipmentsAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async updateShCheck(request: APIRequestContext, shCheckData: Record<string, unknown>, accessToken?: string) {
+    const response = await request.post(this.base() + '/shcheckupdate', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.authHeaders(this.token(accessToken)),
+        compress: 'no-compress',
+      },
+      data: shCheckData,
+    });
+    return this.result(response);
+  }
+
   async rollbackShCheck(request: APIRequestContext, shCheckId: number, accessToken?: string) {
     const response = await request.delete(this.base() + `/combackcomplit/${shCheckId}`, {
       headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
@@ -156,6 +168,18 @@ export class ShipmentsAPI extends APIPageObject {
 
   async setWarehouseReadinessDate(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
     const response = await request.put(this.base() + '/set/warehouse/date', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.authHeaders(this.token(accessToken)),
+      },
+      data: dto,
+    });
+    return this.result(response);
+  }
+
+  async updateReadyToShipStatus(request: APIRequestContext, id: number, dto: Record<string, unknown>, accessToken?: string) {
+    const response = await request.put(this.base() + `/status/ready-to-ship/${id}`, {
       headers: {
         'Content-Type': 'application/json',
         compress: 'no-compress',

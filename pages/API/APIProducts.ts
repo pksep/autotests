@@ -170,6 +170,16 @@ export class ProductsAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async getTechByProductId(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting tech process by product ID: ${id}`);
+
+    const response = await request.get(this.base() + `/tech_by_id_product/${id}`, {
+      headers: this.productAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
   async getArchivedProducts(request: APIRequestContext, archiveData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Getting archived products`);
 
@@ -199,4 +209,30 @@ export class ProductsAPI extends APIPageObject {
 
     return this.result(response);
   }
+
+  async actualAvatar(request: APIRequestContext, accessToken?: string) {
+    logger.info(`Actualizing product avatars`);
+
+    const response = await request.put(this.base() + '/ava/update', {
+      headers: this.productAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getProductDeficits(request: APIRequestContext, deficitData: Record<string, unknown>, accessToken?: string) {
+    logger.info(`Getting product deficits with data:`, deficitData);
+
+    const response = await request.post(this.base() + '/deficits', {
+      headers: {
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+        ...this.productAuthHeaders(accessToken),
+      },
+      data: deficitData,
+    });
+
+    return this.result(response);
+  }
+
 }

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { WaybillAPI } from '../../pages/API/APIWaybill';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectMissingResource, expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -163,7 +163,7 @@ export const runWaybillAPINew = () => {
 
     test('удаление несуществующей накладной не роняет сервис', async ({ request }) => {
       const remove = await waybillAPI.deleteWaybill(request, 999999999, accessToken);
-      expectNoServerError(remove);
+      expectMissingResource(remove);
     });
   });
 };

@@ -1,7 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { ActionsAPI } from '../../pages/API/APIActions';
 import { ActionsChainAPI } from '../../pages/API/APIActionsChain';
-import { clientErrorCodes, expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectMissingResource,
+  expectNoServerError,
+  expectValidationError,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -39,6 +46,18 @@ export const runActionsChainAPINew = () => {
         expect(chain.data?.id, JSON.stringify(chain.data)).toBeTruthy();
         expect(Array.isArray(chain.data?.child_actions ?? []), JSON.stringify(chain.data)).toBe(true);
       }
+    });
+
+    test.describe('Actions Chain API: defensive-сценарии', () => {
+      test('отклоняет несуществующий action id без 5xx и без ложного успеха', async ({ request }) => {
+        const response = await actionsChainAPI.getChilds(request, 999999999, accessToken);
+        expectMissingResource(response);
+      });
+
+      test('отклоняет нечисловой action id как validation error', async ({ request }) => {
+        const response = await actionsChainAPI.getChildsRaw(request, 'bad-id', accessToken);
+        expectValidationError(response);
+      });
     });
   });
 };

@@ -4,7 +4,7 @@ import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectMissingResource, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -643,13 +643,13 @@ export const runShipmentsAPINew = () => {
 
     test('несуществующие id и defensive-мутации обрабатываются стабильно', async ({ request }) => {
       const byId = await shipmentsAPI.getShipmentById(request, 999999999, accessToken);
-      expect(byId.status, JSON.stringify(byId.data)).toBeGreaterThanOrEqual(400);
+      expectMissingResource(byId);
 
       const light = await shipmentsAPI.getShipmentLightById(request, 999999999, accessToken);
       expectNoServerError(light);
 
       const items = await shipmentsAPI.getShipmentItems(request, 999999999, accessToken);
-      expect(items.status, JSON.stringify(items.data)).toBeGreaterThanOrEqual(400);
+      expectMissingResource(items);
 
       const byProduct = await shipmentsAPI.getShipmentsByProduct(request, 999999999, accessToken);
       expectNoServerError(byProduct);
@@ -662,7 +662,22 @@ export const runShipmentsAPINew = () => {
         { shipmentItemId: 999999999, date: null },
         accessToken,
       );
-      expectNoServerError(setWarehouseDate);
+      expectClientError(setWarehouseDate);
+
+      const updateShCheck = await shipmentsAPI.updateShCheck(
+        request,
+        { id: 999999999, childrens: '[]', docs: '[]' },
+        accessToken,
+      );
+      expectClientError(updateShCheck);
+
+      const readyToShip = await shipmentsAPI.updateReadyToShipStatus(
+        request,
+        999999999,
+        { readyToShip: true },
+        accessToken,
+      );
+      expectClientError(readyToShip);
     });
   });
 };

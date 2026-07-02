@@ -5,7 +5,7 @@ import { DocumentsAPI } from '../../pages/API/APIDocuments';
 import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -431,7 +431,7 @@ export const runProviderDeliveriesAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(invalidDelivery);
+      expectClientError(invalidDelivery);
 
       const noPositions = await deliveriesAPI.createDelivery(
         request,
@@ -447,7 +447,7 @@ export const runProviderDeliveriesAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(noPositions);
+      expectClientError(noPositions);
 
       const twoEntityIds = await deliveriesAPI.createDelivery(
         request,
@@ -474,7 +474,7 @@ export const runProviderDeliveriesAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(twoEntityIds);
+      expectClientError(twoEntityIds);
 
       const badMultiplicity = await deliveriesAPI.createDelivery(
         request,
@@ -500,7 +500,7 @@ export const runProviderDeliveriesAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(badMultiplicity);
+      expectClientError(badMultiplicity);
 
       const byCompany = await deliveriesAPI.getByCompany(request, 999999999, { searchString: '', status: ['ordered'] }, accessToken);
       expectNoServerError(byCompany);

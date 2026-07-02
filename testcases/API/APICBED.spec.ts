@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { CBEDAPI } from '../../pages/API/APICBED';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -248,6 +248,9 @@ export const runCBEDAPINew = () => {
 
       const techProcess = await cbedAPI.getTechByCBEDId(request, createdCbedId as number, accessToken);
       expectNoServerError(techProcess);
+
+      const relatives = await cbedAPI.getRelativesProductionTask(request, createdCbedId as number, accessToken);
+      expectNoServerError(relatives);
     });
 
     test('архивирует сборочную единицу и проверяет архивную выдачу', async ({ request }) => {
@@ -384,7 +387,7 @@ export const runCBEDAPINew = () => {
         accessToken,
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
 
     test('операции с несуществующим id не приводят к серверным ошибкам', async ({ request }) => {
@@ -392,7 +395,7 @@ export const runCBEDAPINew = () => {
       expectNoServerError(byId);
 
       const deleteResponse = await cbedAPI.banCBED(request, 999999999, testUserId, accessToken);
-      expectNotSuccessful(deleteResponse);
+      expectClientError(deleteResponse);
     });
 
     test('мутации сборочной единицы без авторизации не проходят успешно', async ({ request }) => {
@@ -401,10 +404,10 @@ export const runCBEDAPINew = () => {
         cbedPayload(`NOAUTH-${uniqueApiSuffix('cbed')}`),
         testUserId,
       );
-      expectNotSuccessful(createResponse);
+      expectClientError(createResponse);
 
       const deleteResponse = await cbedAPI.banCBED(request, 999999999, testUserId);
-      expectNotSuccessful(deleteResponse);
+      expectClientError(deleteResponse);
     });
   });
 };

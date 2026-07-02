@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { MovementObjectAPI } from '../../pages/API/APIMovementObject';
-import { clientErrorCodes, expectNoServerError, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectMissingResource,
+  expectNoServerError,
+  expectPaginationContract,
+  expectValidationError,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -71,6 +79,33 @@ export const runMovementObjectAPINew = () => {
       if (!clientErrorCodes.includes(response.status)) {
         expectPaginationContract(response.data);
       }
+    });
+
+    test.describe('Movement Object API: defensive-сценарии', () => {
+      test('отклоняет несуществующее перемещение без 5xx и без ложного успеха', async ({ request }) => {
+        const response = await movementObjectAPI.getOneMovementObject(request, 999999999, accessToken);
+        expectMissingResource(response);
+      });
+
+      test('отклоняет нечисловой id перемещения как validation error', async ({ request }) => {
+        const response = await movementObjectAPI.getOneMovementObjectRaw(request, 'bad-id', accessToken);
+        expectValidationError(response);
+      });
+
+      test('отклоняет невалидный payload истории перемещений как validation error', async ({ request }) => {
+        const response = await movementObjectAPI.getObjectsHistory(
+          request,
+          {
+            byParents: 'bad-parents',
+            isCheckChildrens: 'yes',
+            date: { start: 'bad-date', end: 'also-bad' },
+            page: -1,
+          },
+          accessToken,
+        );
+
+        expectValidationError(response);
+      });
     });
   });
 };

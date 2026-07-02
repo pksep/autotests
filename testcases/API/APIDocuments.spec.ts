@@ -3,7 +3,7 @@ import { DocumentsAPI } from '../../pages/API/APIDocuments';
 import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getRows, serverErrorCodes, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getRows, serverErrorCodes, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -542,7 +542,7 @@ export const runDocumentsAPINew = () => {
         accessToken,
       );
       expectNoServerError(invalidUpdate);
-      expectNotSuccessful(invalidUpdate);
+      expectClientError(invalidUpdate);
 
       const invalidAttach = await documentsAPI.attachDocumentToEntity(
         request,
@@ -550,7 +550,7 @@ export const runDocumentsAPINew = () => {
         accessToken,
       );
       expectNoServerError(invalidAttach);
-      expectNotSuccessful(invalidAttach);
+      expectClientError(invalidAttach);
 
       const invalidUnpin = await documentsAPI.unpinDocuments(
         request,
@@ -558,7 +558,7 @@ export const runDocumentsAPINew = () => {
         accessToken,
       );
       expectNoServerError(invalidUnpin);
-      expectNotSuccessful(invalidUnpin);
+      expectClientError(invalidUnpin);
     });
   });
 };

@@ -128,6 +128,12 @@ export class EquipmentAPI extends APIPageObject {
     });
   }
 
+  async removeFileEquipment(request: APIRequestContext, id: number, accessToken?: string) {
+    return this.apiRequest(request, 'DELETE', this.base() + `/file/${id}`, {
+      accessToken: this.token(accessToken),
+    });
+  }
+
   async getAllEquipment(request: APIRequestContext, light: boolean, accessToken?: string) {
     return this.apiRequest(request, 'GET', this.base() + `/eq/all/${light}`, {
       accessToken: this.token(accessToken),

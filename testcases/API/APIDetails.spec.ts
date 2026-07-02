@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { DetailsAPI } from '../../pages/API/APIDetails';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -246,6 +246,9 @@ export const runDetailsAPINew = () => {
 
       const techProcess = await detailsAPI.getTechProcessByDetailId(request, String(createdDetailId), accessToken);
       expectNoServerError(techProcess);
+
+      const relatives = await detailsAPI.getRelativesProductionTask(request, createdDetailId as number, accessToken);
+      expectNoServerError(relatives);
     });
 
     test('архивирует деталь и проверяет архивную выдачу', async ({ request }) => {
@@ -384,7 +387,7 @@ export const runDetailsAPINew = () => {
         accessToken,
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
 
     test('операции с несуществующим id не приводят к серверным ошибкам', async ({ request }) => {
@@ -392,7 +395,7 @@ export const runDetailsAPINew = () => {
       expectNoServerError(byId);
 
       const deleteResponse = await detailsAPI.deleteDetail(request, '999999999', testUserId, accessToken);
-      expectNotSuccessful(deleteResponse);
+      expectClientError(deleteResponse);
     });
 
     test('мутации детали без авторизации не проходят успешно', async ({ request }) => {
@@ -401,10 +404,10 @@ export const runDetailsAPINew = () => {
         detailPayload(`NOAUTH-${uniqueApiSuffix('detail')}`),
         testUserId,
       );
-      expectNotSuccessful(createResponse);
+      expectClientError(createResponse);
 
       const deleteResponse = await detailsAPI.deleteDetail(request, '999999999', testUserId);
-      expectNotSuccessful(deleteResponse);
+      expectClientError(deleteResponse);
     });
   });
 };

@@ -3,7 +3,7 @@ import { DetailsAPI } from '../../pages/API/APIDetails';
 import { StockOrderAPI } from '../../pages/API/APIStockOrder';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -554,7 +554,7 @@ export const runStockOrderAPINew = () => {
         accessToken,
       );
 
-      expectNotSuccessful(response);
+      expectClientError(response);
     });
 
     test('операции с несуществующими id не приводят к серверным ошибкам', async ({ request }) => {
@@ -573,7 +573,7 @@ export const runStockOrderAPINew = () => {
         { description: 'nonexistent stock order' },
         accessToken,
       );
-      expectNotSuccessful(updateResponse);
+      expectClientError(updateResponse);
     });
 
     test('мутации заказа склада без авторизации не проходят успешно', async ({ request }) => {
@@ -584,10 +584,10 @@ export const runStockOrderAPINew = () => {
           workersComplect: [{ my_kolvo: 1, shipments_kolvo: 0, object_id: 999999999 }],
         },
       );
-      expectNotSuccessful(createResponse);
+      expectClientError(createResponse);
 
       const archiveResponse = await stockOrderAPI.ban(request, 999999999);
-      expectNotSuccessful(archiveResponse);
+      expectClientError(archiveResponse);
     });
   });
 };

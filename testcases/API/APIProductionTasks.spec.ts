@@ -4,8 +4,8 @@ import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
   clientErrorCodes,
+  expectClientError,
   expectNoServerError,
-  expectNotSuccessful,
   expectPaginationContract,
   getCount,
   getRows,
@@ -1067,7 +1067,7 @@ export const runProductionTasksAPINew = () => {
         'invalid-subdivision',
         accessToken,
       );
-      expectNotSuccessful(invalidSubdivision);
+      expectClientError(invalidSubdivision);
 
       const invalidRelativeDate = await productionTasksAPI.getRelativeDateForEntity(
         request,
@@ -1075,14 +1075,14 @@ export const runProductionTasksAPINew = () => {
         999999999,
         accessToken,
       );
-      expectNotSuccessful(invalidRelativeDate);
+      expectClientError(invalidRelativeDate);
 
       const invalidTOperations = await productionTasksAPI.getTOperationList(
         request,
         { productionOperationType: 'invalid-type' },
         accessToken,
       );
-      expectNotSuccessful(invalidTOperations);
+      expectClientError(invalidTOperations);
     });
 
     test('невалидные мутации ПЗ отклоняются без серверных ошибок', async ({ request }) => {
@@ -1096,7 +1096,7 @@ export const runProductionTasksAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(invalidCreate);
+      expectClientError(invalidCreate);
 
       const invalidUpdate = await productionTasksAPI.updateProductionTask(
         request,
@@ -1108,21 +1108,21 @@ export const runProductionTasksAPINew = () => {
         },
         accessToken,
       );
-      expectNotSuccessful(invalidUpdate);
+      expectClientError(invalidUpdate);
 
       const invalidCreateOperationPos = await productionTasksAPI.createProductionOperationPos(
         request,
         invalidOperationPosDto(),
         accessToken,
       );
-      expectNotSuccessful(invalidCreateOperationPos);
+      expectClientError(invalidCreateOperationPos);
 
       const invalidUpdateOperationPos = await productionTasksAPI.updateProductionOperationPos(
         request,
         invalidOperationPosDto({ id: 999999999 }),
         accessToken,
       );
-      expectNotSuccessful(invalidUpdateOperationPos);
+      expectClientError(invalidUpdateOperationPos);
 
       const invalidStartTimeUser = await productionTasksAPI.setStartTimeByUser(
         request,
@@ -1139,21 +1139,21 @@ export const runProductionTasksAPINew = () => {
         { equipmentId: 999999999, time: new Date().toISOString() },
         accessToken,
       );
-      expectNotSuccessful(invalidStartTimeEquipment);
+      expectClientError(invalidStartTimeEquipment);
 
       const invalidBanOperationPos = await productionTasksAPI.banProductionOperationPos(
         request,
         999999999,
         accessToken,
       );
-      expectNotSuccessful(invalidBanOperationPos);
+      expectClientError(invalidBanOperationPos);
 
       const invalidBanTask = await productionTasksAPI.banProductionTask(
         request,
         999999999,
         accessToken,
       );
-      expectNotSuccessful(invalidBanTask);
+      expectClientError(invalidBanTask);
     });
 
     test('мутации без авторизации не проходят успешно', async ({ request }) => {
@@ -1163,26 +1163,26 @@ export const runProductionTasksAPINew = () => {
         type: 'ass',
         date_order: null,
       });
-      expectNotSuccessful(createResponse);
+      expectClientError(createResponse);
 
       const dueDateResponse = await productionTasksAPI.updateStatusProductionTask(request, {
         productionTaskId: 999999999,
         date: new Date().toISOString(),
       });
-      expectNotSuccessful(dueDateResponse);
+      expectClientError(dueDateResponse);
 
       const operationPosResponse = await productionTasksAPI.createProductionOperationPos(
         request,
         invalidOperationPosDto(),
       );
-      expectNotSuccessful(operationPosResponse);
+      expectClientError(operationPosResponse);
 
       const setResponsibleResponse = await productionTasksAPI.setResponsibleUser(
         request,
         999999999,
         999999999,
       );
-      expectNotSuccessful(setResponsibleResponse);
+      expectClientError(setResponsibleResponse);
     });
   });
 };

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -209,14 +209,14 @@ export const runOperationAPINew = () => {
         typeOperationPayload('', { equipmentIds: ['bad-id'] }),
         accessToken,
       );
-      expectNotSuccessful(invalidTypeCreate);
+      expectClientError(invalidTypeCreate);
 
       const invalidOperationCreate = await operationAPI.createOperation(
         request,
         invalidOperationPayload(),
         accessToken,
       );
-      expectNotSuccessful(invalidOperationCreate);
+      expectClientError(invalidOperationCreate);
 
       const invalidTechUpdate = await operationAPI.updateOperationTech(
         request,

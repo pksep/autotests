@@ -183,7 +183,13 @@ export class ProductionTasksAPI extends APIPageObject {
     accessToken?: string,
   ) {
     const query = typeOperationId ? `?typeOperationId=${typeOperationId}` : '';
-    return this.apiRequest(request, 'GET', this.base() + `/for-all-equipments${query}`, {
+    return this.apiRequest(request, 'GET', this.base() + '/for-all-equipments' + query, {
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async updateAllTaskRelative(request: APIRequestContext, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + '/update-all-task-relative', {
       accessToken: this.token(accessToken),
     });
   }

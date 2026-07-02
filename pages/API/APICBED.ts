@@ -137,6 +137,36 @@ export class CBEDAPI extends APIPageObject {
     return this.result(response);
   }
 
+  async getDrafts(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting CBED drafts by id: ${id}`);
+
+    const response = await request.get(this.base() + `/drafts/${id}`, {
+      headers: this.cbedAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async getRelativesProductionTask(request: APIRequestContext, id: number, accessToken?: string) {
+    logger.info(`Getting CBED relatives production task by id: ${id}`);
+
+    const response = await request.get(this.base() + `/relatives/production/task/${id}`, {
+      headers: this.cbedAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
+  async actualAvatar(request: APIRequestContext, accessToken?: string) {
+    logger.info(`Actualizing CBED avatars`);
+
+    const response = await request.put(this.base() + '/ava/update', {
+      headers: this.cbedAuthHeaders(accessToken, { compress: 'no-compress' }),
+    });
+
+    return this.result(response);
+  }
+
   async getAllCBED(request: APIRequestContext, full: boolean, page?: number, pageSize?: number, accessToken?: string) {
     logger.info(`Getting all CBEDs, full: ${full}, page: ${page}, pageSize: ${pageSize}`);
 

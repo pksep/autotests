@@ -2,7 +2,13 @@ import { test, expect } from '@playwright/test';
 import { NotificationsAPI } from '../../pages/API/APINotifications';
 import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { RolesAPI } from '../../pages/API/APIRoles';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  expectNoServerError,
+  expectUnauthorizedOrForbidden,
+  expectValidationError,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
@@ -247,20 +253,13 @@ export const runNotificationAPINew = () => {
         accessToken,
       );
 
-      expectNoServerError(response);
-      if (!clientErrorCodes.includes(response.status)) {
-        expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
-      }
+      expectValidationError(response);
     });
 
     test('invalid payload формы не приводят к 5xx', async ({ request }) => {
-      test.fail(true, 'Notification enrich batch с null/некорректными элементами на dev может возвращать 500.');
       for (const payload of [null, 'bad-payload', { uuid: 'object-not-array' }, [null], [{ event: 'info' }]]) {
         const response = await notificationsAPI.enrichBatchRaw(request, payload, API_CONST.API_TEST_USER_ID, accessToken);
-        expectNoServerError(response);
-        if (!clientErrorCodes.includes(response.status)) {
-          expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
-        }
+        expectValidationError(response);
       }
     });
 
@@ -279,7 +278,7 @@ export const runNotificationAPINew = () => {
         [systemNotification({ uuid: uniqueApiSuffix('notification-auth-no-token') })],
         API_CONST.API_TEST_USER_ID,
       );
-      expectNotSuccessful(noAuth);
+      expectUnauthorizedOrForbidden(noAuth);
 
       const invalidAuth = await notificationsAPI.enrichBatchRaw(
         request,
@@ -287,7 +286,7 @@ export const runNotificationAPINew = () => {
         API_CONST.API_TEST_USER_ID,
         'invalid-token',
       );
-      expectNotSuccessful(invalidAuth);
+      expectUnauthorizedOrForbidden(invalidAuth);
     });
   });
 };

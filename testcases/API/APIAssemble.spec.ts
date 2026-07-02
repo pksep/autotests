@@ -3,7 +3,7 @@ import { AssembleAPI } from '../../pages/API/APIAssemble';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -456,14 +456,14 @@ export const runAssembleAPINew = () => {
         API_CONST.API_TEST_TABEL,
         accessToken,
       );
-      expectNotSuccessful(invalidCreate);
+      expectClientError(invalidCreate);
 
       const noAuthCreate = await assembleAPI.createAssemble(
         request,
         { numberOrder: '', myKolvo: 0, description: '', izdId: null, type: 'cbed' },
         API_CONST.API_TEST_TABEL,
       );
-      expectNotSuccessful(noAuthCreate);
+      expectClientError(noAuthCreate);
     });
 
     test('несуществующие assemble kit endpoints не приводят к серверным ошибкам', async ({ request }) => {

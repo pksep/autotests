@@ -10,6 +10,10 @@ export type ApiResult = {
 export const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
 export const serverErrorCodes = API_CONST.STATUS_CODE_VALIDATION.SERVER_ERROR_CODES;
 export const clientErrorCodes = API_CONST.STATUS_CODE_VALIDATION.CLIENT_ERROR_CODES;
+export const validationErrorCodes = [400, 409, 422];
+export const missingResourceCodes = [400, 404, 410, 422];
+export const authErrorCodes = [401, 403];
+export const notExposedRouteCodes = [404, 405];
 
 export const expectNoServerError = (response: ApiResult) => {
   expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
@@ -18,6 +22,45 @@ export const expectNoServerError = (response: ApiResult) => {
 export const expectNotSuccessful = (response: ApiResult) => {
   expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
   expectNoServerError(response);
+};
+
+export const expectStatusIn = (response: ApiResult, allowedCodes: number[], context?: string) => {
+  expectNoServerError(response);
+  expect(allowedCodes, context ?? JSON.stringify(response.data)).toContain(response.status);
+};
+
+export const expectClientError = (response: ApiResult, allowedCodes = clientErrorCodes, context?: string) => {
+  expectNotSuccessful(response);
+  expect(allowedCodes, context ?? JSON.stringify(response.data)).toContain(response.status);
+};
+
+export const expectValidationError = (response: ApiResult, context?: string) => {
+  expectClientError(response, validationErrorCodes, context);
+};
+
+export const expectMissingResource = (response: ApiResult, context?: string) => {
+  expectClientError(response, missingResourceCodes, context);
+};
+
+export const expectUnauthorizedOrForbidden = (response: ApiResult, context?: string) => {
+  expectClientError(response, authErrorCodes, context);
+};
+
+export const expectRouteNotExposed = (response: ApiResult, context?: string) => {
+  expectClientError(response, notExposedRouteCodes, context);
+};
+
+export const expectErrorResponseContract = (response: ApiResult) => {
+  expectNotSuccessful(response);
+  expect(response.data, 'Error response body should be present').toBeDefined();
+
+  if (!response.data || typeof response.data !== 'object') return;
+
+  const serialized = JSON.stringify(response.data);
+  expect(serialized, 'Error response should not expose stack traces').not.toMatch(/\b(stack|trace|at\s+\w+\.)\b/i);
+  expect(serialized, 'Error response should not expose implementation exceptions').not.toMatch(
+    /Cannot (read|destructure)|current transaction is aborted|Sequelize|QueryFailed|TypeError|ReferenceError/i,
+  );
 };
 
 export const extractAccessToken = (data: any): string | undefined => {

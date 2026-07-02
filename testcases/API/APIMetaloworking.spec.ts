@@ -3,7 +3,7 @@ import { DetailsAPI } from '../../pages/API/APIDetails';
 import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -366,7 +366,7 @@ export const runMetaloworkingAPINew = () => {
         { numberOrder: '', myKolvo: 0, description: '', detalId: null },
         accessToken,
       );
-      expectNotSuccessful(invalidCreate);
+      expectClientError(invalidCreate);
 
       const invalidUpdate = await metaloworkingAPI.update(
         request,

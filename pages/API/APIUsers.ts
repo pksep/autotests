@@ -10,48 +10,40 @@ export class UsersAPI extends APIPageObject {
 
   async createUser(request: APIRequestContext, userData: any, _userId: string, authToken?: string) {
     logger.info(`Creating user with data:`, userData);
-
-    const headers = {
-      compress: 'no-compress',
-      ...this.authHeaders(authToken),
-    };
-
-    logger.log(`🔍 Creating user with headers:`, headers);
     logger.log(`🔍 Auth token: ${authToken ? authToken.substring(0, 50) + '...' : 'none'}`);
 
-    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users', userData, headers);
+    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/users', {
+      data: userData,
+      accessToken: authToken,
+    });
 
-    const responseData = await response.json();
+    logger.log(`🔍 Create user response status: ${response.status}`);
+    logger.log(`🔍 Create user response data:`, response.data);
 
-    logger.log(`🔍 Create user response status: ${response.status()}`);
-    logger.log(`🔍 Create user response data:`, responseData);
-
-    if (response.ok()) {
+    if (response.status >= 200 && response.status < 300) {
       logger.info(`User created successfully`);
     } else {
-      logger.error(`Failed to create user, status: ${response.status()}`);
+      logger.error(`Failed to create user, status: ${response.status}`);
     }
 
-    return { status: response.status(), data: responseData };
+    return response;
   }
 
   async updateUser(request: APIRequestContext, userData: any, _userId: string, authToken?: string) {
     logger.info(`Updating user with data:`, userData);
 
-    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/update', userData, {
-      compress: 'no-compress',
-      ...this.authHeaders(authToken),
+    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/users/update', {
+      data: userData,
+      accessToken: authToken,
     });
 
-    const responseData = await response.json();
-
-    if (response.ok()) {
+    if (response.status >= 200 && response.status < 300) {
       logger.info(`User updated successfully`);
     } else {
-      logger.error(`Failed to update user, status: ${response.status()}`);
+      logger.error(`Failed to update user, status: ${response.status}`);
     }
 
-    return { status: response.status(), data: responseData };
+    return response;
   }
 
   async checkTabelUnique(request: APIRequestContext, tabelData: any, authToken?: string) {
@@ -127,6 +119,24 @@ export class UsersAPI extends APIPageObject {
     }
   }
 
+  async getTableConfigByUserId(request: APIRequestContext, userId: string | number, authToken?: string) {
+    const response = await request.get(ENV.API_BASE_URL + `api/users/get/table/config/${userId}`, {
+      headers: {
+        compress: 'no-compress',
+        ...this.authHeaders(authToken),
+      },
+    });
+
+    return { status: response.status(), data: await this.parseJsonBody(response) };
+  }
+
+  async setTableConfig(request: APIRequestContext, configData: Record<string, unknown>, authToken?: string) {
+    return this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/users/set/table/config', {
+      data: configData,
+      accessToken: authToken,
+    });
+  }
+
   async getAllUsersWithPagination(request: APIRequestContext, paginationData: any, authToken?: string) {
     logger.info(`Getting all users with pagination:`, paginationData);
 
@@ -148,50 +158,34 @@ export class UsersAPI extends APIPageObject {
   async getArchivedUsers(request: APIRequestContext, archiveData: any, authToken?: string) {
     logger.info(`Getting archived users:`, archiveData);
 
-    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/archive/', archiveData, {
-      compress: 'no-compress',
-      ...this.authHeaders(authToken),
+    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/users/archive/', {
+      data: archiveData,
+      accessToken: authToken,
     });
 
-    let responseData;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = await response.text();
-      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-    }
-
-    if (response.ok()) {
+    if (response.status >= 200 && response.status < 300) {
       logger.info(`Successfully retrieved archived users`);
-      return { status: response.status(), data: responseData };
+      return response;
     } else {
-      logger.error(`Failed to get archived users, status: ${response.status()}`);
-      return { status: response.status(), data: responseData };
+      logger.error(`Failed to get archived users, status: ${response.status}`);
+      return response;
     }
   }
 
   async issueRole(request: APIRequestContext, roleData: any, authToken?: string) {
     logger.info(`Issuing role:`, roleData);
 
-    const response = await this.postWithJsonHeaders(request, ENV.API_BASE_URL + 'api/users/role', roleData, {
-      compress: 'no-compress',
-      ...this.authHeaders(authToken),
+    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/users/role', {
+      data: roleData,
+      accessToken: authToken,
     });
 
-    let responseData;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = await response.text();
-      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-    }
-
-    if (response.ok()) {
+    if (response.status >= 200 && response.status < 300) {
       logger.info(`Role issued successfully`);
-      return { status: response.status(), data: responseData };
+      return response;
     } else {
-      logger.error(`Failed to issue role, status: ${response.status()}`);
-      return { status: response.status(), data: responseData };
+      logger.error(`Failed to issue role, status: ${response.status}`);
+      return response;
     }
   }
 
@@ -227,30 +221,19 @@ export class UsersAPI extends APIPageObject {
   async changeUserRole(request: APIRequestContext, newRoleId: string, oldRoleId: string, authToken?: string) {
     logger.info(`Changing user role from ${oldRoleId} to ${newRoleId}`);
 
-    const response = await this.postWithJsonHeaders(
+    const response = await this.apiRequest(
       request,
+      'POST',
       ENV.API_BASE_URL + `api/users/role/${newRoleId}/${oldRoleId}`,
-      {},
-      {
-        compress: 'no-compress',
-        ...this.authHeaders(authToken),
-      },
+      { data: {}, accessToken: authToken },
     );
 
-    let responseData;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = await response.text();
-      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-    }
-
-    if (response.ok()) {
+    if (response.status >= 200 && response.status < 300) {
       logger.info(`User role changed successfully`);
-      return { status: response.status(), data: responseData };
+      return response;
     } else {
-      logger.error(`Failed to change user role, status: ${response.status()}`);
-      return { status: response.status(), data: responseData };
+      logger.error(`Failed to change user role, status: ${response.status}`);
+      return response;
     }
   }
 

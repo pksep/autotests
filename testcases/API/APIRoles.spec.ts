@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { RolesAPI } from '../../pages/API/APIRoles';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -152,7 +152,7 @@ export const runRolesAPINew = () => {
       }
 
       const createInvalid = await rolesAPI.createRole(request, rolePayload('', ''), 'api-roles', accessToken);
-      expectNotSuccessful(createInvalid);
+      expectClientError(createInvalid);
 
       const updateInvalid = await rolesAPI.updateRole(
         request,
@@ -160,7 +160,7 @@ export const runRolesAPINew = () => {
         'api-roles',
         accessToken,
       );
-      expectNotSuccessful(updateInvalid);
+      expectClientError(updateInvalid);
 
       const accessInvalid = await rolesAPI.updateRoleAccess(
         request,
@@ -168,7 +168,7 @@ export const runRolesAPINew = () => {
         'api-roles',
         accessToken,
       );
-      expectNotSuccessful(accessInvalid);
+      expectClientError(accessInvalid);
     });
   });
 };

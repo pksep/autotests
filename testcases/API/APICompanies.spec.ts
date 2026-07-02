@@ -4,7 +4,17 @@ import { ContactsAPI } from '../../pages/API/APIContacts';
 import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectMissingResource,
+  expectNoServerError,
+  expectPaginationContract,
+  expectUnauthorizedOrForbidden,
+  expectValidationError,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type EntityLike = Record<string, any>;
@@ -428,28 +438,23 @@ export const runCompaniesAPINew = () => {
       const create = await companiesAPI.createCompany(request, { name: '', type: [], contactIds: [] }, accessToken);
       expectNoServerError(create);
       if (successCodes.includes(create.status)) {
-        test.info().annotations.push({
-          type: 'known-api-defect',
-          description: 'POST /api/companies accepted a minimal invalid payload.',
-        });
         if (create.data?.id) {
           const cleanup = await companiesAPI.banCompany(request, Number(create.data.id), accessToken);
           expectNoServerError(cleanup);
         }
-      } else {
-        expectNotSuccessful(create);
       }
+      expectValidationError(create);
 
       const update = await companiesAPI.updateCompany(request, { id: 999999999, name: '', type: [], contactIds: [] }, accessToken);
-      expectNotSuccessful(update);
+      expectMissingResource(update);
 
       const bulk = await companiesAPI.banCompaniesBulk(request, 'abc,def', accessToken);
-      expectNotSuccessful(bulk);
+      expectValidationError(bulk);
     });
 
     test('не пропускает мутации без авторизации', async ({ request }) => {
       const response = await companiesAPI.createCompany(request, companyPayload(uniqueApiSuffix('noauth')));
-      expectNotSuccessful(response);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('обрабатывает защитные поисковые строки без 5xx', async ({ request }) => {

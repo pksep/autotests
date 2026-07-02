@@ -14,4 +14,10 @@ export class ActionsChainAPI extends APIPageObject {
       accessToken,
     });
   }
+
+  async getChildsRaw(request: APIRequestContext, id: string, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + `/childs/${encodeURIComponent(id)}`, {
+      accessToken,
+    });
+  }
 }

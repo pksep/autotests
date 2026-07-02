@@ -5,7 +5,14 @@ import { CBEDAPI } from '../../pages/API/APICBED';
 import { DetailsAPI } from '../../pages/API/APIDetails';
 import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectNoServerError,
+  expectClientError,
+  expectValidationError,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -546,17 +553,16 @@ export const runSpecificationAPINew = () => {
         { cbedIds: 'bad', detalIds: null, materialIds: {}, attributes: 'id' },
         accessToken,
       );
-      expectNotSuccessful(invalidAttributes);
+      expectClientError(invalidAttributes);
     });
 
-    test('known invalid specification dto остаются regression-тестами', async ({ request }) => {
-      test.fail(true, 'first-level-children с itemId строкой на dev возвращает 500 вместо клиентской ошибки.');
+    test('invalid first-level-children dto отклоняется как validation error', async ({ request }) => {
       const response = await specificationsAPI.getFirstLevelChildren(
         request,
         { itemId: 'bad-id', itemType: 'product' },
         accessToken,
       );
-      expectNotSuccessful(response);
+      expectValidationError(response);
     });
   });
 };

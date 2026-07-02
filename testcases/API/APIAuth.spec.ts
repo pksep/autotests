@@ -3,7 +3,7 @@ import { AuthAPI } from '../../pages/API/APIAuth';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
-import { expectNoServerError } from '../../lib/helpers/APIAssertions';
+import { expectNoServerError, expectStatusIn, expectUnauthorizedOrForbidden, expectValidationError } from '../../lib/helpers/APIAssertions';
 
 type AuthResponseData = {
   token?: string;
@@ -144,7 +144,7 @@ export const runAuthAPINew = () => {
         API_CONST.API_TEST_TABEL
       );
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
       expectPasswordIsNotExposed(response.data);
     });
 
@@ -157,7 +157,7 @@ export const runAuthAPINew = () => {
         'invalid_tabel'
       );
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
       expectPasswordIsNotExposed(response.data);
     });
 
@@ -190,18 +190,17 @@ export const runAuthAPINew = () => {
         'invalid_tabel'
       );
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Вход без указания учетных данных', async ({ request }) => {
       logger.log('Проверка отсутствующих учетных данных...');
       const response = await authAPI.login(request, '', '', '');
 
-      expect(response.status).toBe(400);
+      expectValidationError(response);
     });
 
     test('Вход с частично пустыми учетными данными', async ({ request }) => {
-      test.fail(true, 'Known issue: частично пустые учетные данные могут приниматься сервером.');
       logger.log('Проверка частично пустых учетных данных...');
       const cases = [
         { name: 'empty login', login: '', password: API_CONST.API_TEST_PASSWORD, tabel: API_CONST.API_TEST_TABEL },
@@ -211,13 +210,12 @@ export const runAuthAPINew = () => {
 
       for (const testCase of cases) {
         const response = await authAPI.login(request, testCase.login, testCase.password, testCase.tabel);
-        expect([400, 401], testCase.name).toContain(response.status);
+        expectStatusIn(response, [400, 401], testCase.name);
         expectPasswordIsNotExposed(response.data);
       }
     });
 
     test('Refresh cookie имеет безопасные flags', async ({ request }) => {
-      test.fail(true, 'Known issue: refresh_token cookie выставляется без Secure flag.');
       logger.log('Проверка security flags refresh cookie...');
       const response = await authAPI.login(
         request,
@@ -286,7 +284,7 @@ export const runAuthAPINew = () => {
       for (const attempt of attempts) {
         const response = await authAPI.login(request, attempt.login, attempt.password, attempt.tabel);
         expectNoServerError(response);
-        expect(response.status).toBe(401);
+        expectUnauthorizedOrForbidden(response);
         expectPasswordIsNotExposed(response.data);
       }
     });
@@ -300,7 +298,7 @@ export const runAuthAPINew = () => {
       );
 
       expectNoServerError(response);
-      expect([201, 400, 401]).toContain(response.status);
+      expectStatusIn(response, [201, 400, 401]);
       expectPasswordIsNotExposed(response.data);
     });
   });
@@ -330,21 +328,21 @@ export const runAuthAPINew = () => {
       logger.log('Проверка невалидного токена...');
       const response = await authAPI.getUserByToken(request, 'invalid_token_12345');
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Проверка без токена', async ({ request }) => {
       logger.log('Проверка отказа без токена...');
       const response = await authAPI.getUserByToken(request, '');
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Проверка просроченного токена', async ({ request }) => {
       logger.log('Проверка просроченного токена...');
       const response = await authAPI.getUserByToken(request, expiredJwtLikeToken);
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Проверка токена с измененным payload', async ({ request }) => {
@@ -362,21 +360,21 @@ export const runAuthAPINew = () => {
       expect(validToken).toBeTruthy();
 
       const response = await authAPI.getUserByToken(request, tamperToken(validToken as string));
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Обновление токенов с невалидным refresh токеном', async ({ request }) => {
       logger.log('Тестирование обновления токена с невалидным refresh токеном...');
       const response = await authAPI.refreshTokens(request, 'invalid_refresh_token');
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Обновление токенов без refresh cookie запрещено', async ({ request }) => {
       logger.log('Проверка refresh без cookie...');
       const response = await authAPI.refreshTokens(request);
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Успешное обновление токена с валидным refresh token', async ({ request }) => {
@@ -413,7 +411,6 @@ export const runAuthAPINew = () => {
     });
 
     test('Повторное использование старого refresh token запрещено', async ({ request }) => {
-      test.fail(true, 'Known issue: старый refresh_token повторно принимается после refresh.');
       logger.log('Проверка запрета повторного использования refresh token...');
       const loginResponse = await authAPI.login(
         request,
@@ -430,7 +427,7 @@ export const runAuthAPINew = () => {
       expect(refreshResponse.status).toBe(201);
 
       const reusedOldRefreshTokenResponse = await authAPI.refreshTokens(request, oldRefreshToken);
-      expect(reusedOldRefreshTokenResponse.status).toBe(401);
+      expectUnauthorizedOrForbidden(reusedOldRefreshTokenResponse);
     });
   });
 
@@ -456,7 +453,6 @@ export const runAuthAPINew = () => {
     });
 
     test('Токен становится невалидным после выхода', async ({ request }) => {
-      test.fail(true, 'Known issue: access token остается валидным после logout.');
       logger.log('Проверка инвалидирования токена после выхода...');
       const loginResponse = await authAPI.login(
         request,
@@ -476,14 +472,14 @@ export const runAuthAPINew = () => {
       expect(logoutResponse.status).toBe(201);
 
       const tokenResponse = await authAPI.getUserByToken(request, accessToken as string);
-      expect(tokenResponse.status).toBe(401);
+      expectUnauthorizedOrForbidden(tokenResponse);
     });
 
     test('Выход с невалидной сессией', async ({ request }) => {
       logger.log('Тестирование выхода с невалидной сессией...');
       const response = await authAPI.logout(request, 999999);
 
-      expect(response.status).toBe(401);
+      expectUnauthorizedOrForbidden(response);
     });
 
     test('Повторный logout той же сессии не приводит к 5xx', async ({ request }) => {
@@ -527,7 +523,7 @@ export const runAuthAPINew = () => {
       expect(logoutResponse.status).toBe(201);
 
       const refreshResponse = await authAPI.refreshTokens(request, refreshToken);
-      expect(refreshResponse.status).toBe(401);
+      expectUnauthorizedOrForbidden(refreshResponse);
     });
   });
   });

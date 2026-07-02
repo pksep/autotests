@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectNotSuccessful, expectPaginationContract, expectSortedDescendingByKnownDate, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, expectSortedDescendingByKnownDate, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -209,6 +209,13 @@ export const runProductsAPINew = () => {
       expectProductShape(light.data);
       expect(light.data.designation).toBe(createdDesignation);
 
+      const tech = await productsAPI.getTechByProductId(request, createdProductId as number, accessToken);
+      expectNoServerError(tech);
+      if (!clientErrorCodes.includes(tech.status)) {
+        expect(successCodes).toContain(tech.status);
+        expect(Number(tech.data?.id), JSON.stringify(tech.data)).toBe(createdProductId);
+      }
+
       const pagination = await productsAPI.getAllProducts(
         request,
         productPaginationDto({ searchString: createdDesignation }),
@@ -365,6 +372,28 @@ export const runProductsAPINew = () => {
       expectSortedDescendingByKnownDate(getRows(response.data));
     });
 
+    test('дефициты изделий возвращают стабильный контракт', async ({ request }) => {
+      const response = await productsAPI.getProductDeficits(
+        request,
+        {
+          productIds: [],
+          statusWorking: 'Все',
+          searchString: '',
+          shipmentIds: [],
+          page: 0,
+          isDiscontinued: false,
+          sort: [],
+        },
+        accessToken,
+      );
+
+      expectNoServerError(response);
+      if (!clientErrorCodes.includes(response.status)) {
+        expect(successCodes).toContain(response.status);
+        expectPaginationContract(response.data);
+      }
+    });
+
     test('include изделия обрабатывает пустой и неизвестный include без 5xx', async ({ request }) => {
       const product = await createIsolatedProduct(request, uniqueApiSuffix('product-include'), accessToken);
 
@@ -422,7 +451,7 @@ export const runProductsAPINew = () => {
       expectNoServerError(byId);
 
       const deleteResponse = await productsAPI.deleteProduct(request, 999999999, accessToken);
-      expectNotSuccessful(deleteResponse);
+      expectClientError(deleteResponse);
     });
 
     test('мутации изделия без авторизации не проходят успешно', async ({ request }) => {
@@ -430,10 +459,10 @@ export const runProductsAPINew = () => {
         request,
         productPayload(`NOAUTH-${uniqueApiSuffix('product')}`),
       );
-      expectNotSuccessful(createResponse);
+      expectClientError(createResponse);
 
       const deleteResponse = await productsAPI.deleteProduct(request, 999999999);
-      expectNotSuccessful(deleteResponse);
+      expectClientError(deleteResponse);
     });
   });
 };
