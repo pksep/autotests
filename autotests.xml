@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="369318">
+<fb version="0.19.6" size="369302">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">16.407644331</seconds>
+    <seconds t="F">11.765335487</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-07-03T11:16:20Z</when>
+    <when t="T">2026-07-03T15:36:33Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -24174,18 +24174,6 @@
     <when t="T">2026-06-30T15:18:42Z</when>
   </f>
   <f>
-    <_id t="I">1703</_id>
-    <_job t="I">79456</_job>
-    <_time t="T">2026-06-30T19:24:52Z</_time>
-    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
-    <analyzers t="I">18</analyzers>
-    <text t="S">The average number of builds per week (111.5) is increasing (R=0.53).
-The average number of commits per week (0.2) is decreasing (R=-0.83).
-The average number of releases per month (0.0) is staying still.</text>
-    <what t="S">assessment</what>
-    <when t="T">2026-06-30T19:24:52Z</when>
-  </f>
-  <f>
     <_id t="I">1709</_id>
     <_job t="I">28576616430</_job>
     <_time t="T">2026-07-02T08:34:15Z</_time>
@@ -24216,27 +24204,6 @@ The average number of releases per month (0.0) is staying still.</text>
     <when t="T">2026-07-02T08:35:11Z</when>
   </f>
   <f>
-    <_id t="I">1715</_id>
-    <_job t="I">79690</_job>
-    <_time t="T">2026-07-03T04:31:19Z</_time>
-    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-07-03T04:31:19Z</when>
-  </f>
-  <f>
-    <_id t="I">1716</_id>
-    <_job t="I">28656960824</_job>
-    <_time t="T">2026-07-03T11:16:06Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">14277052578</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">1717</_id>
     <_job t="I">28656960824</_job>
     <_time t="T">2026-07-03T11:16:08Z</_time>
@@ -24253,5 +24220,38 @@ The average number of releases per month (0.0) is staying still.</text>
     <total_stars t="I">1</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-07-03T11:16:08Z</when>
+  </f>
+  <f>
+    <_id t="I">1718</_id>
+    <_job t="I">79798</_job>
+    <_time t="T">2026-07-03T14:50:42Z</_time>
+    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
+    <analyzers t="I">18</analyzers>
+    <text t="S">The average number of builds per week (111.5) is increasing (R=0.53).
+The average number of commits per week (0.2) is decreasing (R=-0.83).
+The average number of releases per month (0.0) is staying still.</text>
+    <what t="S">assessment</what>
+    <when t="T">2026-07-03T14:50:42Z</when>
+  </f>
+  <f>
+    <_id t="I">1719</_id>
+    <_job t="I">79798</_job>
+    <_time t="T">2026-07-03T14:51:10Z</_time>
+    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-07-03T14:51:10Z</when>
+  </f>
+  <f>
+    <_id t="I">1720</_id>
+    <_job t="I">28670210100</_job>
+    <_time t="T">2026-07-03T15:36:24Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">14286740427</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
