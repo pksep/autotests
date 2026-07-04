@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 15.724786057
+  seconds: 10.247369785
   version: 0.60.0
   what: judges-summary
-  when: 2026-07-03 23:41:46.717485404 Z
+  when: 2026-07-04 05:28:42.024611695 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -21943,18 +21943,32 @@
     The average number of releases per month (0.0) is staying still.
   what: assessment
   when: 2026-07-03 14:50:42.123742599 Z
-- _id: 1719
-  _job: 79798
-  _time: 2026-07-03 14:51:10.206591910 Z
+- _id: 1721
+  _job: 80004
+  _time: 2026-07-04 02:47:03.031480557 Z
   _version: 0.19.13/0.60.4/0.17.11!0.17.17
   what: learn-eva
-  when: 2026-07-03 14:51:10.199728000 Z
-- _id: 1720
-  _job: 28688065807
-  _time: 2026-07-03 23:41:34.312988935 Z
+  when: 2026-07-04 02:47:03.024560600 Z
+- _id: 1722
+  _job: 80004
+  _time: 2026-07-04 02:47:03.423250994 Z
+  _version: 0.19.13/0.60.4/0.17.11!0.17.17
+  ac: 0
+  cost_of_qod: 13.656748430370863
+  ev: 0
+  pv: 65746
+  qod: 0
+  qod_per_day: 35.2104220177899
+  qod_per_sec: 0.0
+  start: *1
+  what: earned-value
+  when: 2026-07-04 02:47:03.423446410 Z
+- _id: 1723
+  _job: 28696245265
+  _time: 2026-07-04 05:28:34.153437933 Z
   _version: 0.19.6/0.60.0/0.17.11
   earliest_issue_was_found: 1
-  events_were_scanned: 14310510707
+  events_were_scanned: 14315463952
   latest_issue_was_found: 529
   min_pull_was_found: 529
   repository: 935866864
