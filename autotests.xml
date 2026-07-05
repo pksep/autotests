@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="370053">
+<fb version="0.19.6" size="370051">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">9.971842483</seconds>
+    <seconds t="F">7.419679869</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-07-05T21:39:31Z</when>
+    <when t="T">2026-07-05T22:38:49Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -24256,14 +24256,6 @@ The average number of releases per month (0.0) is staying still.</text>
     <when t="T">2026-07-04T17:41:34Z</when>
   </f>
   <f>
-    <_id t="I">1730</_id>
-    <_job t="I">80446</_job>
-    <_time t="T">2026-07-05T12:53:30Z</_time>
-    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-07-05T12:53:30Z</when>
-  </f>
-  <f>
     <_id t="I">1732</_id>
     <_job t="I">80480</_job>
     <_time t="T">2026-07-05T16:42:12Z</_time>
@@ -24305,5 +24297,13 @@ The average number of releases per month (0.0) is staying still.</text>
     <repository t="I">935866864</repository>
     <what t="S">iterate</what>
     <where t="S">github</where>
+  </f>
+  <f>
+    <_id t="I">1736</_id>
+    <_job t="I">80526</_job>
+    <_time t="T">2026-07-05T21:40:21Z</_time>
+    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-07-05T21:40:21Z</when>
   </f>
 </fb>
