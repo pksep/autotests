@@ -2,7 +2,17 @@ import { test, expect } from '@playwright/test';
 import { CBEDAPI } from '../../pages/API/APICBED';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectClientError,
+  expectEndpointReached,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -393,6 +403,12 @@ export const runCBEDAPINew = () => {
     test('операции с несуществующим id не приводят к серверным ошибкам', async ({ request }) => {
       const byId = await cbedAPI.getOneCBEDById(request, { id: 999999999, modelsInclude: [], attributes: [] }, accessToken);
       expectNoServerError(byId);
+
+      const drafts = await captureApiResult(() => cbedAPI.getDrafts(request, 999999999, accessToken));
+      expectEndpointReached(drafts);
+
+      const actualAvatar = await captureApiResult(() => cbedAPI.actualAvatar(request, accessToken));
+      expectEndpointReached(actualAvatar);
 
       const deleteResponse = await cbedAPI.banCBED(request, 999999999, testUserId, accessToken);
       expectClientError(deleteResponse);

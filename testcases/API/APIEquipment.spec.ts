@@ -4,7 +4,16 @@ import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectNoServerError,
+  expectClientError,
+  expectErrorResponseContract,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -542,6 +551,10 @@ export const runEquipmentAPINew = () => {
 
       const bySubtype = await equipmentAPI.getEquipmentSubtypeById(request, 999999999, accessToken);
       expectNoServerError(bySubtype);
+
+      const removeFile = await equipmentAPI.removeFileEquipment(request, 999999999, accessToken);
+      expectNoServerError(removeFile);
+      if (clientErrorCodes.includes(removeFile.status)) expectErrorResponseContract(removeFile);
 
       const invalidCreate = await equipmentAPI.createEquipment(
         request,

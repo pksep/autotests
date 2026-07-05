@@ -2,7 +2,17 @@ import { test, expect } from '@playwright/test';
 import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectClientError,
+  expectErrorResponseContract,
+  expectArrayResponse,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -18,6 +28,57 @@ const expectMaterialShape = (material: MaterialLike) => {
   expect(material).toBeTruthy();
   expect(typeof material.id, JSON.stringify(material)).toBe('number');
   expect(material.name, JSON.stringify(material)).toBeTruthy();
+  expect(typeof material.name, JSON.stringify(material)).toBe('string');
+  const typeValue =
+    material.rootParentId ??
+    material.typeMaterialsId ??
+    material.typeMaterialId ??
+    material.type_material_id ??
+    material.typeMaterial ??
+    material.type_material ??
+    material.rootParent;
+  expect(typeValue, JSON.stringify(material)).toBeDefined();
+  const subtypeValue =
+    material.subtypeMaterialId ??
+    material.subtype_material_id ??
+    material.subtypeMaterial ??
+    material.subtype_material;
+  expect(subtypeValue, JSON.stringify(material)).toBeDefined();
+  if ('rootParentId' in material && material.rootParentId !== null) {
+    expect(typeof material.rootParentId, JSON.stringify(material)).toBe('number');
+  }
+  if ('subtypeMaterialId' in material && material.subtypeMaterialId !== null) {
+    expect(typeof material.subtypeMaterialId, JSON.stringify(material)).toBe('number');
+  }
+  if ('ban' in material) {
+    expect(typeof material.ban, JSON.stringify(material)).toBe('boolean');
+  }
+};
+
+const expectTypeMaterialShape = (typeMaterial: MaterialLike) => {
+  expect(typeMaterial).toBeTruthy();
+  expect(typeof typeMaterial.id, JSON.stringify(typeMaterial)).toBe('number');
+  expect(typeMaterial.name, JSON.stringify(typeMaterial)).toBeTruthy();
+  expect(typeof typeMaterial.name, JSON.stringify(typeMaterial)).toBe('string');
+  if ('characteristics' in typeMaterial && typeMaterial.characteristics !== null) {
+    expect(typeof typeMaterial.characteristics, JSON.stringify(typeMaterial)).toBe('object');
+  }
+  if ('instance_type' in typeMaterial && typeMaterial.instance_type !== null) {
+    expect(['number', 'string'], JSON.stringify(typeMaterial)).toContain(typeof typeMaterial.instance_type);
+  }
+};
+
+const expectSubtypeMaterialShape = (subtypeMaterial: MaterialLike) => {
+  expect(subtypeMaterial).toBeTruthy();
+  expect(typeof subtypeMaterial.id, JSON.stringify(subtypeMaterial)).toBe('number');
+  expect(subtypeMaterial.name, JSON.stringify(subtypeMaterial)).toBeTruthy();
+  expect(typeof subtypeMaterial.name, JSON.stringify(subtypeMaterial)).toBe('string');
+  if ('density' in subtypeMaterial && subtypeMaterial.density !== null) {
+    expect(['number', 'string'], JSON.stringify(subtypeMaterial)).toContain(typeof subtypeMaterial.density);
+  }
+  if ('parentMaterialIds' in subtypeMaterial && subtypeMaterial.parentMaterialIds !== null) {
+    expect(Array.isArray(subtypeMaterial.parentMaterialIds), JSON.stringify(subtypeMaterial)).toBe(true);
+  }
 };
 
 const typeCharacteristics = () => ({
@@ -228,7 +289,7 @@ export const runMaterialsAPINew = () => {
       );
       expect(successCodes, JSON.stringify(typeResponse.data)).toContain(typeResponse.status);
       expectNoServerError(typeResponse);
-      expectMaterialShape(typeResponse.data);
+      expectTypeMaterialShape(typeResponse.data);
       createdTypeId = Number(typeResponse.data.id);
 
       const subtypeResponse = await materialsAPI.createSubtypeMaterial(
@@ -244,7 +305,7 @@ export const runMaterialsAPINew = () => {
       );
       expect(successCodes, JSON.stringify(subtypeResponse.data)).toContain(subtypeResponse.status);
       expectNoServerError(subtypeResponse);
-      expectMaterialShape(subtypeResponse.data);
+      expectSubtypeMaterialShape(subtypeResponse.data);
       createdSubtypeId = Number(subtypeResponse.data.id);
 
       createdPayload = materialPayload(suffix, createdTypeId, createdSubtypeId);
@@ -291,6 +352,7 @@ export const runMaterialsAPINew = () => {
         accessToken,
       );
       expect(pagination.status).toBe(201);
+      expectPaginationContract(pagination.data);
       expect(getCount(pagination.data), JSON.stringify(pagination.data)).toBeGreaterThanOrEqual(1);
       expect(getRows(pagination.data).some((row) => row.id === createdMaterialId)).toBe(true);
 
@@ -300,6 +362,7 @@ export const runMaterialsAPINew = () => {
         accessToken,
       );
       expect(aliasSearch.status).toBe(201);
+      expectPaginationContract(aliasSearch.data);
       expect(getRows(aliasSearch.data).some((row) => row.id === createdMaterialId)).toBe(true);
 
       const duplicateName = await materialsAPI.checkNameExisting(request, { name: createdName }, accessToken);
@@ -341,6 +404,7 @@ export const runMaterialsAPINew = () => {
       if (!clientErrorCodes.includes(typeById.status)) {
         expect(successCodes).toContain(typeById.status);
         expect(Number(typeById.data?.id), JSON.stringify(typeById.data)).toBe(createdTypeId);
+        expectTypeMaterialShape(typeById.data);
       }
 
       const subtypeById = await materialsAPI.getSubtypeMaterialById(request, createdSubtypeId as number, accessToken);
@@ -348,6 +412,7 @@ export const runMaterialsAPINew = () => {
       if (!clientErrorCodes.includes(subtypeById.status)) {
         expect(successCodes).toContain(subtypeById.status);
         expect(Number(subtypeById.data?.id), JSON.stringify(subtypeById.data)).toBe(createdSubtypeId);
+        expectSubtypeMaterialShape(subtypeById.data);
       }
 
       const includeResponse = await materialsAPI.getIncludeForMaterial(request, {
@@ -364,7 +429,7 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(aliases);
       if (!clientErrorCodes.includes(aliases.status)) {
         expect(successCodes).toContain(aliases.status);
-        expect(Array.isArray(aliases.data), JSON.stringify(aliases.data)).toBe(true);
+        expectArrayResponse(aliases.data);
       }
 
       const createdAlias = await materialsAPI.createMaterialAlias(
@@ -429,6 +494,7 @@ export const runMaterialsAPINew = () => {
         );
 
         expect(response.status).toBe(201);
+        expectPaginationContract(response.data);
         expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(1);
 
         const row = getRows(response.data).find((item) => item.id === fixture?.materialId);
@@ -459,6 +525,7 @@ export const runMaterialsAPINew = () => {
       );
 
       expect(response.status).toBe(201);
+      expectPaginationContract(response.data);
       expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
       expect(getRows(response.data)).toEqual([]);
     });
@@ -487,20 +554,50 @@ export const runMaterialsAPINew = () => {
     test('пагинация типов и подтипов материалов не отвечает 5xx на базовые фильтры', async ({ request }) => {
       const typePagination = await materialsAPI.getTypeMaterialsPagination(request, materialPaginationDto(), accessToken);
       expectNoServerError(typePagination);
+      if (!clientErrorCodes.includes(typePagination.status)) {
+        expect(successCodes).toContain(typePagination.status);
+        expectPaginationContract(typePagination.data);
+        const typeRow = getRows(typePagination.data)[0];
+        if (typeRow) expectTypeMaterialShape(typeRow);
+      }
 
       const subtypePagination = await materialsAPI.getSubtypeMaterialsPagination(request, materialPaginationDto(), accessToken);
       expectNoServerError(subtypePagination);
+      if (!clientErrorCodes.includes(subtypePagination.status)) {
+        expect(successCodes).toContain(subtypePagination.status);
+        expectPaginationContract(subtypePagination.data);
+        const subtypeRow = getRows(subtypePagination.data)[0];
+        if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
+      }
     });
 
     test('provider-пагинации материалов, типов и подтипов не отвечают 5xx на базовые фильтры', async ({ request }) => {
       const materialsProvider = await materialsAPI.getMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
       expectNoServerError(materialsProvider);
+      if (!clientErrorCodes.includes(materialsProvider.status)) {
+        expect(successCodes).toContain(materialsProvider.status);
+        expectPaginationContract(materialsProvider.data);
+        const materialRow = getRows(materialsProvider.data)[0];
+        if (materialRow) expectMaterialShape(materialRow);
+      }
 
       const typesProvider = await materialsAPI.getTypeMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
       expectNoServerError(typesProvider);
+      if (!clientErrorCodes.includes(typesProvider.status)) {
+        expect(successCodes).toContain(typesProvider.status);
+        expectPaginationContract(typesProvider.data);
+        const typeRow = getRows(typesProvider.data)[0];
+        if (typeRow) expectTypeMaterialShape(typeRow);
+      }
 
       const subtypesProvider = await materialsAPI.getSubtypeMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
       expectNoServerError(subtypesProvider);
+      if (!clientErrorCodes.includes(subtypesProvider.status)) {
+        expect(successCodes).toContain(subtypesProvider.status);
+        expectPaginationContract(subtypesProvider.data);
+        const subtypeRow = getRows(subtypesProvider.data)[0];
+        if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
+      }
     });
 
     test('дефициты и справочники подтипов не отвечают 5xx на базовые фильтры', async ({ request }) => {
@@ -516,12 +613,38 @@ export const runMaterialsAPINew = () => {
         accessToken,
       );
       expectNoServerError(deficits);
+      if (!clientErrorCodes.includes(deficits.status)) {
+        expect(successCodes).toContain(deficits.status);
+        expectPaginationContract(deficits.data);
+      }
 
       const allDeficit = await materialsAPI.getAllMaterialDeficit(request, accessToken);
       expectNoServerError(allDeficit);
+      if (!clientErrorCodes.includes(allDeficit.status)) {
+        expect(successCodes).toContain(allDeficit.status);
+        expectArrayResponse(allDeficit.data);
+      }
 
       const subtypes = await materialsAPI.getAllSubtypeMaterial(request, API_CONST.API_TEST_SUBTYPE_INSTANS, accessToken);
       expectNoServerError(subtypes);
+      if (!clientErrorCodes.includes(subtypes.status)) {
+        expect(successCodes).toContain(subtypes.status);
+        expectArrayResponse(subtypes.data);
+        const subtypeRow = subtypes.data[0];
+        if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
+      }
+
+      const allMaterials = await materialsAPI.getAllMaterials(request, accessToken);
+      expect(allMaterials.status).toBe(200);
+      expectArrayResponse(allMaterials.data);
+      const materialRow = allMaterials.data[0];
+      if (materialRow) expectMaterialShape(materialRow);
+
+      const materialTypes = await materialsAPI.actualMaterialLists(request, accessToken);
+      expect(materialTypes.status).toBe(200);
+      expectArrayResponse(materialTypes.data);
+      const typeRow = materialTypes.data[0];
+      if (typeRow) expectTypeMaterialShape(typeRow);
     });
 
     test('проверка уникальности имен обрабатывает защитные payload без 5xx', async ({ request }) => {
@@ -559,6 +682,25 @@ export const runMaterialsAPINew = () => {
     test('чтение несуществующего id не приводит к серверным ошибкам', async ({ request }) => {
       const byId = await materialsAPI.getMaterialById(request, 999999999, true, accessToken);
       expectNoServerError(byId);
+
+      const attachFile = await materialsAPI.attachFileToMaterial(request, 999999999, 999999999, accessToken);
+      expectNoServerError(attachFile);
+      if (clientErrorCodes.includes(attachFile.status)) expectErrorResponseContract(attachFile);
+
+      const relatives = await materialsAPI.getRelativesProductionTask(request, 999999999, accessToken);
+      expectNoServerError(relatives);
+      if (successCodes.includes(relatives.status)) expectArrayResponse(relatives.data);
+      if (clientErrorCodes.includes(relatives.status)) expectErrorResponseContract(relatives);
+    });
+
+    test('невалидное обновление типа и подтипа материала возвращает error contract', async ({ request }) => {
+      const subtype = await materialsAPI.updateSubtypeMaterial(request, { id: 999999999, name: '' }, accessToken);
+      expectClientError(subtype);
+      expectErrorResponseContract(subtype);
+
+      const type = await materialsAPI.updateTypeMaterial(request, { id: 999999999, name: '' }, accessToken);
+      expectClientError(type);
+      expectErrorResponseContract(type);
     });
 
     test('мутации материала без авторизации не проходят успешно', async ({ request }) => {

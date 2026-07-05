@@ -4,6 +4,7 @@ import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import {
   clientErrorCodes,
+  expectArrayResponse,
   expectNoServerError,
   expectClientError,
   expectPaginationContract,
@@ -214,6 +215,10 @@ export const runMarksAPINew = () => {
         expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
         expect(getRows(response.data), JSON.stringify(response.data)).toEqual([]);
       }
+
+      const byOperationPayload = await marksAPI.getMarkForOperation(request, { operationId: 999999999 }, accessToken);
+      expectNoServerError(byOperationPayload);
+      if (successCodes.includes(byOperationPayload.status)) expectArrayResponse(byOperationPayload.data);
     });
 
     test('невалидные route id не приводят к 5xx', async ({ request }) => {

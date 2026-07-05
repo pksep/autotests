@@ -2,7 +2,15 @@ import { test, expect } from '@playwright/test';
 import { ToolsAPI } from '../../pages/API/APITools';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectNoServerError,
+  expectClientError,
+  expectErrorResponseContract,
+  expectPaginationContract,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -294,6 +302,10 @@ export const runToolsAPINew = () => {
 
       const byTypeId = await toolsAPI.getToolTypeById(request, 999999999, accessToken);
       expectNoServerError(byTypeId);
+
+      const removeFile = await toolsAPI.removeFileTool(request, 999999999, accessToken);
+      expectNoServerError(removeFile);
+      if (clientErrorCodes.includes(removeFile.status)) expectErrorResponseContract(removeFile);
 
       const invalidCreate = await toolsAPI.createTool(
         request,

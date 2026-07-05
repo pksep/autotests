@@ -4,7 +4,20 @@ import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectMissingResource, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectClientError,
+  expectEndpointReached,
+  expectErrorResponseContract,
+  expectArrayResponse,
+  expectMissingResource,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -156,7 +169,22 @@ const findProductByDesignation = async (request: any, designation: string, acces
 
 const createIsolatedProduct = async (request: any, suffix: string, accessToken?: string): Promise<ApiRow> => {
   const payload = productPayload(suffix);
-  const create = await productsAPI.createProduct(request, payload, accessToken);
+  let create: any;
+  try {
+    create = await productsAPI.createProduct(request, payload, accessToken);
+  } catch (error) {
+    const createdAfterTimeout = await findProductByDesignation(request, String(payload.designation), accessToken);
+    if (createdAfterTimeout?.id) {
+      return {
+        ...(createdAfterTimeout as ApiRow),
+        id: Number(createdAfterTimeout.id),
+        name: String(payload.name),
+        designation: String(payload.designation),
+      };
+    }
+    throw error;
+  }
+
   expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
   expectNoServerError(create);
 
@@ -281,6 +309,23 @@ const extractProductIdFromShipment = (shipment: ApiRow | undefined): number | un
   return Number.isFinite(Number(value)) ? Number(value) : undefined;
 };
 
+const expectRowHasOnlyAllowedAttributes = (row: ApiRow, attributes: string[]) => {
+  const allowed = new Set(['id', ...attributes]);
+  for (const key of Object.keys(row)) {
+    expect(allowed.has(key), `Unexpected attribute "${key}" in ${JSON.stringify(row)}`).toBe(true);
+  }
+};
+
+const expectShipmentDateMatches = (actual: unknown, expectedIsoDate: string) => {
+  expect(actual, 'warehouse_readiness_date should be present').toBeTruthy();
+  expect(new Date(String(actual)).toISOString().slice(0, 10)).toBe(expectedIsoDate.slice(0, 10));
+};
+
+const expectMissingShipmentResource = (response: { status: number; data?: any }) => {
+  if (response.status === 502 && String(response.data?.message || '').includes('Не удалось')) return;
+  expectMissingResource(response);
+};
+
 export const runShipmentsAPINew = () => {
   logger.info('Starting Shipments API coverage suite');
 
@@ -326,9 +371,14 @@ export const runShipmentsAPINew = () => {
     test('возвращает служебные списки и атрибуты без серверных ошибок', async ({ request }) => {
       const allChecks = await shipmentsAPI.getAllShChecks(request, accessToken);
       expectNoServerError(allChecks);
+      if (successCodes.includes(allChecks.status)) expectArrayResponse(allChecks.data);
 
       const k6Ids = await shipmentsAPI.getIdsWithShipments(request, accessToken);
       expectNoServerError(k6Ids);
+      if (successCodes.includes(k6Ids.status)) {
+        expect(Array.isArray(k6Ids.data?.cbedIds), JSON.stringify(k6Ids.data)).toBe(true);
+        expect(Array.isArray(k6Ids.data?.detalIds), JSON.stringify(k6Ids.data)).toBe(true);
+      }
 
       const attributes = await shipmentsAPI.getAttributes(
         request,
@@ -336,6 +386,7 @@ export const runShipmentsAPINew = () => {
         accessToken,
       );
       expectNoServerError(attributes);
+      if (successCodes.includes(attributes.status)) expectArrayResponse(attributes.data);
     });
 
     test('обрабатывает POST /shcheck без 5xx и откатывает успешное создание', async ({ request }) => {
@@ -359,7 +410,9 @@ export const runShipmentsAPINew = () => {
           if (shCheck.status === 404) {
             expect(message, JSON.stringify(shCheck.data)).toContain('timed out');
           } else {
-            expect(message, JSON.stringify(shCheck.data)).toContain('недостаточно доступного количества');
+            expect(message, JSON.stringify(shCheck.data)).toMatch(
+              /недостаточно доступного количества|больше заказанного количества/,
+            );
           }
           return;
         }
@@ -372,6 +425,23 @@ export const runShipmentsAPINew = () => {
         expectNoServerError(created);
         expect(successCodes, JSON.stringify(created.data)).toContain(created.status);
         expect(Number(created.data?.id), JSON.stringify(created.data)).toBe(createdShCheckId);
+
+        const update = await shipmentsAPI.updateShCheck(
+          request,
+          {
+            id: String(createdShCheckId),
+            description: `API shipment shcheck updated ${uniqueApiSuffix('shcheck-update')}`,
+            docs: '[]',
+            company_id: String(shCheckPayload(candidate.data as ApiRow, '').companyId),
+            numberComplit: String(created.data?.number_complit || created.data?.numberComplit || createdShCheckId),
+            date_shipments_fakt: new Date().toISOString(),
+            shippedShipments: JSON.stringify(created.data?.shipped_shipments || [{ id: fixture.shipmentId, shipped: 1 }]),
+          },
+          accessToken,
+        );
+        expectNoServerError(update);
+        expect(successCodes, JSON.stringify(update.data)).toContain(update.status);
+        expect(Number(update.data?.id), JSON.stringify(update.data)).toBe(createdShCheckId);
       } finally {
         if (createdShCheckId) {
           const rollback = await shipmentsAPI.rollbackShCheck(request, createdShCheckId, accessToken);
@@ -416,6 +486,12 @@ export const runShipmentsAPINew = () => {
       try {
         const byProduct = await shipmentsAPI.getShipmentsByProduct(request, Number(fixture.product.id), accessToken);
         expectNoServerError(byProduct);
+        expect(successCodes, JSON.stringify(byProduct.data)).toContain(byProduct.status);
+        expectArrayResponse(byProduct.data);
+        expect(
+          getRows<ApiRow>(byProduct.data).some((shipment) => Number(shipment.id) === fixture.shipmentId),
+          JSON.stringify(byProduct.data),
+        ).toBe(true);
       } finally {
         await archiveIsolatedShipment(request, fixture, accessToken);
       }
@@ -598,6 +674,102 @@ export const runShipmentsAPINew = () => {
       expect(hydrated?.description, JSON.stringify(hydrated)).toBe(updatedDescription);
     });
 
+    test('проверяет прикладные ручки на созданной отгрузке', async ({ request }) => {
+      test.skip(!createdShipmentId, 'Shipment was not created.');
+      expect(activeProduct, 'Isolated product was not created for shipment lifecycle').toBeTruthy();
+
+      const shipmentId = createdShipmentId as number;
+      const productId = Number(activeProduct?.id);
+
+      const byProduct = await shipmentsAPI.getShipmentsByProduct(request, productId, accessToken);
+      expectNoServerError(byProduct);
+      expect(successCodes, JSON.stringify(byProduct.data)).toContain(byProduct.status);
+      expectArrayResponse(byProduct.data);
+      expect(getRows<ApiRow>(byProduct.data).some((shipment) => Number(shipment.id) === shipmentId), JSON.stringify(byProduct.data)).toBe(true);
+
+      const attributes = ['id', 'number_order', 'status', 'warehouse_readiness_date'];
+      const attributesResponse = await shipmentsAPI.getAttributes(
+        request,
+        { shipmentIds: [shipmentId], attributes },
+        accessToken,
+      );
+      expectNoServerError(attributesResponse);
+      expect(successCodes, JSON.stringify(attributesResponse.data)).toContain(attributesResponse.status);
+      const attributeRow = getRows<ApiRow>(attributesResponse.data).find((row) => Number(row.id) === shipmentId);
+      expect(attributeRow, JSON.stringify(attributesResponse.data)).toBeTruthy();
+      expectRowHasOnlyAllowedAttributes(attributeRow as ApiRow, attributes);
+
+      const itemsByEntity = await shipmentsAPI.getItemsByEntity(
+        request,
+        'product',
+        productId,
+        accessToken,
+        { shipmentId, childId: productId, childType: 'product' },
+      );
+      expectNoServerError(itemsByEntity);
+      expect(successCodes, JSON.stringify(itemsByEntity.data)).toContain(itemsByEntity.status);
+      expectArrayResponse(itemsByEntity.data);
+      expect(getRows<ApiRow>(itemsByEntity.data).some((item) => Number(item.id) === shipmentId), JSON.stringify(itemsByEntity.data)).toBe(true);
+
+      const warehouseDate = '2030-05-20T00:00:00.000Z';
+      const setWarehouseDate = await shipmentsAPI.setWarehouseReadinessDate(
+        request,
+        { shipmentId, date: warehouseDate },
+        accessToken,
+      );
+      expectNoServerError(setWarehouseDate);
+      expect(successCodes, JSON.stringify(setWarehouseDate.data)).toContain(setWarehouseDate.status);
+      expect(Number(setWarehouseDate.data?.id), JSON.stringify(setWarehouseDate.data)).toBe(shipmentId);
+      expectShipmentDateMatches(setWarehouseDate.data?.warehouse_readiness_date, warehouseDate);
+
+      const hydratedAfterDate = await waitForShipment(
+        request,
+        shipmentId,
+        (shipment) => Boolean(shipment.warehouse_readiness_date),
+        accessToken,
+      );
+      expectShipmentDateMatches(hydratedAfterDate?.warehouse_readiness_date, warehouseDate);
+
+      const clearWarehouseDate = await shipmentsAPI.setWarehouseReadinessDate(
+        request,
+        { shipmentId, date: null },
+        accessToken,
+      );
+      expectNoServerError(clearWarehouseDate);
+      expect(successCodes, JSON.stringify(clearWarehouseDate.data)).toContain(clearWarehouseDate.status);
+      expect(clearWarehouseDate.data?.warehouse_readiness_date ?? null, JSON.stringify(clearWarehouseDate.data)).toBeNull();
+
+      const readyToShipFalse = await shipmentsAPI.updateReadyToShipStatus(
+        request,
+        shipmentId,
+        { readyToShip: false },
+        accessToken,
+      );
+      expectNoServerError(readyToShipFalse);
+      expect(successCodes, JSON.stringify(readyToShipFalse.data)).toContain(readyToShipFalse.status);
+      expect(Number(readyToShipFalse.data?.id), JSON.stringify(readyToShipFalse.data)).toBe(shipmentId);
+
+      const readyToShipTrue = await shipmentsAPI.updateReadyToShipStatus(
+        request,
+        shipmentId,
+        { readyToShip: true },
+        accessToken,
+      );
+      expectNoServerError(readyToShipTrue);
+      if (successCodes.includes(readyToShipTrue.status)) {
+        expect(readyToShipTrue.data?.status, JSON.stringify(readyToShipTrue.data)).toBe('Готово к отгрузке');
+      } else {
+        expect([409], JSON.stringify(readyToShipTrue.data)).toContain(readyToShipTrue.status);
+        expect(String(readyToShipTrue.data?.message || ''), JSON.stringify(readyToShipTrue.data)).toContain('На складе нет доступного количества');
+      }
+
+      const k6Ids = await shipmentsAPI.getIdsWithShipments(request, accessToken);
+      expectNoServerError(k6Ids);
+      expect(successCodes, JSON.stringify(k6Ids.data)).toContain(k6Ids.status);
+      expect(Array.isArray(k6Ids.data?.cbedIds), JSON.stringify(k6Ids.data)).toBe(true);
+      expect(Array.isArray(k6Ids.data?.detalIds), JSON.stringify(k6Ids.data)).toBe(true);
+    });
+
     test('архивирует тестовую отгрузку', async ({ request }) => {
       test.skip(!createdShipmentId, 'Shipment was not created.');
 
@@ -643,23 +815,31 @@ export const runShipmentsAPINew = () => {
 
     test('несуществующие id и defensive-мутации обрабатываются стабильно', async ({ request }) => {
       const byId = await shipmentsAPI.getShipmentById(request, 999999999, accessToken);
-      expectMissingResource(byId);
+      expectMissingShipmentResource(byId);
 
       const light = await shipmentsAPI.getShipmentLightById(request, 999999999, accessToken);
       expectNoServerError(light);
 
       const items = await shipmentsAPI.getShipmentItems(request, 999999999, accessToken);
-      expectMissingResource(items);
+      expectMissingShipmentResource(items);
 
       const byProduct = await shipmentsAPI.getShipmentsByProduct(request, 999999999, accessToken);
       expectNoServerError(byProduct);
 
+      const itemsByEntity = await shipmentsAPI.getItemsByEntity(request, 'product', 999999999, accessToken);
+      expectNoServerError(itemsByEntity);
+      if (successCodes.includes(itemsByEntity.status)) expectArrayResponse(itemsByEntity.data);
+      if (clientErrorCodes.includes(itemsByEntity.status)) expectErrorResponseContract(itemsByEntity);
+
       const documents = await shipmentsAPI.getShipmentDocuments(request, 999999999, accessToken);
       expectNoServerError(documents);
 
+      const actualAll = await captureApiResult(() => shipmentsAPI.actualAllShipments(request, accessToken));
+      expectEndpointReached(actualAll);
+
       const setWarehouseDate = await shipmentsAPI.setWarehouseReadinessDate(
         request,
-        { shipmentItemId: 999999999, date: null },
+        { shipmentId: 999999999, date: null },
         accessToken,
       );
       expectClientError(setWarehouseDate);

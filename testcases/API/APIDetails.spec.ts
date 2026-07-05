@@ -2,7 +2,19 @@ import { test, expect } from '@playwright/test';
 import { DetailsAPI } from '../../pages/API/APIDetails';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectClientError,
+  expectEndpointReached,
+  expectErrorResponseContract,
+  expectArrayResponse,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -210,6 +222,10 @@ export const runDetailsAPINew = () => {
       expect(pagination.status).toBe(201);
       expect(getCount(pagination.data), JSON.stringify(pagination.data)).toBeGreaterThanOrEqual(1);
       expect(getRows(pagination.data).some((row) => row.id === createdDetailId)).toBe(true);
+
+      const specification = await detailsAPI.getDetailSpecification(request, String(createdDetailId), true, accessToken);
+      expectNoServerError(specification);
+      if (successCodes.includes(specification.status)) expectArrayResponse(specification.data);
     });
 
     test('обновляет деталь и проверяет новые значения', async ({ request }) => {
@@ -393,6 +409,25 @@ export const runDetailsAPINew = () => {
     test('операции с несуществующим id не приводят к серверным ошибкам', async ({ request }) => {
       const byId = await detailsAPI.getDetailById(request, { id: 999999999, modelsInclude: [], attributes: [] }, accessToken);
       expectNoServerError(byId);
+
+      const specification = await captureApiResult(() => detailsAPI.getDetailSpecification(request, '999999999', true, accessToken));
+      expectEndpointReached(specification);
+
+      const addFile = await detailsAPI.addDetailFile(
+        request,
+        { detalId: 999999999, documentIds: [999999999] },
+        '999999999',
+        accessToken,
+      );
+      expectNoServerError(addFile);
+      if (clientErrorCodes.includes(addFile.status)) expectErrorResponseContract(addFile);
+
+      const attributes = await detailsAPI.getAttributeByParamId(request, 999999999, ['id'], accessToken);
+      expectNoServerError(attributes);
+      if (clientErrorCodes.includes(attributes.status)) expectErrorResponseContract(attributes);
+
+      const actualAvatar = await captureApiResult(() => detailsAPI.updateDetailAvatar(request, accessToken));
+      expectEndpointReached(actualAvatar);
 
       const deleteResponse = await detailsAPI.deleteDetail(request, '999999999', testUserId, accessToken);
       expectClientError(deleteResponse);

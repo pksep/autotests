@@ -3,7 +3,17 @@ import { UsersAPI } from '../../pages/API/APIUsers';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectArrayResponse,
+  expectClientError,
+  expectErrorResponseContract,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -388,6 +398,12 @@ export const runUsersAPINew = () => {
 
       expectNoServerError(response);
       expectNoSensitiveFields(response.data);
+
+      const byTypeOperation = await usersAPI.attachFile(request, '999999999', accessToken);
+      expectNoServerError(byTypeOperation);
+      if (successCodes.includes(byTypeOperation.status)) expectArrayResponse(byTypeOperation.data);
+      if (clientErrorCodes.includes(byTypeOperation.status)) expectErrorResponseContract(byTypeOperation);
+      expectNoSensitiveFields(byTypeOperation.data);
     });
   });
 
@@ -425,6 +441,11 @@ export const runUsersAPINew = () => {
 
       expectClientError(response);
       expectNoSensitiveFields(response.data);
+
+      const changeRole = await usersAPI.changeUserRole(request, '999999999', '999999999', accessToken);
+      expectNoServerError(changeRole);
+      if (clientErrorCodes.includes(changeRole.status)) expectErrorResponseContract(changeRole);
+      expectNoSensitiveFields(changeRole.data);
     });
 
     test('бан пользователя отклоняет несуществующего пользователя без серверной ошибки', async ({ request }) => {

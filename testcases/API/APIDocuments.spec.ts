@@ -3,7 +3,18 @@ import { DocumentsAPI } from '../../pages/API/APIDocuments';
 import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getRows, serverErrorCodes, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectNoServerError,
+  expectClientError,
+  expectEndpointReached,
+  expectErrorResponseContract,
+  expectPaginationContract,
+  getRows,
+  serverErrorCodes,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
@@ -543,6 +554,12 @@ export const runDocumentsAPINew = () => {
       );
       expectNoServerError(invalidUpdate);
       expectClientError(invalidUpdate);
+
+      const changeType = await captureApiResult(() => documentsAPI.changeDocumentType(request, { id: missingId, type: 'missing' }, String(missingId)));
+      expectEndpointReached(changeType);
+      if (!(changeType instanceof Error) && clientErrorCodes.includes(changeType.status)) {
+        expectErrorResponseContract(changeType);
+      }
 
       const invalidAttach = await documentsAPI.attachDocumentToEntity(
         request,

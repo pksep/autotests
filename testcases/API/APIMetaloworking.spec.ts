@@ -3,7 +3,17 @@ import { DetailsAPI } from '../../pages/API/APIDetails';
 import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectClientError,
+  expectEndpointReached,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -375,6 +385,11 @@ export const runMetaloworkingAPINew = () => {
       );
       expectNoServerError(invalidUpdate);
 
+      const comback = await metaloworkingAPI.comback(request, 999999999, accessToken);
+      expectNoServerError(comback);
+
+      const shapeBid = await captureApiResult(() => metaloworkingAPI.createShapeBid(request, [], accessToken));
+      expectEndpointReached(shapeBid);
     });
   });
 };

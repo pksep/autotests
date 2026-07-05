@@ -396,6 +396,9 @@ export const runProviderDeliveriesAPINew = () => {
     });
 
     test('возвращает фронтовую пагинацию deliveries без серверных ошибок', async ({ request }) => {
+      const list = await deliveriesAPI.getAllDeliveries(request, accessToken);
+      expectNoServerError(list);
+
       const deliveriesPage = await deliveriesAPI.getDeliveriesPagination(request, deliveryPaginationDto(), accessToken);
       expectNoServerError(deliveriesPage);
       if (!clientErrorCodes.includes(deliveriesPage.status)) {

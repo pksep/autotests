@@ -58,6 +58,21 @@ export class DetailsAPI extends APIPageObject {
     }
   }
 
+  async getAttributeByParamId(request: APIRequestContext, id: number, attributes: string[], authToken?: string) {
+    logger.info(`Getting attributes by route param for detail ID: ${id}`);
+
+    const response = await request.post(this.base() + `/getattribute/${id}`, {
+      headers: this.detailAuthHeaders(authToken, {
+        accept: '*/*',
+        'Content-Type': 'application/json',
+        compress: 'no-compress',
+      }),
+      data: { attributes },
+    });
+
+    return this.result(response);
+  }
+
   async getIncludeById(request: APIRequestContext, id: string, includes: string[], authToken?: string) {
     logger.info(`Getting includes for detail ID: ${id}`);
 

@@ -1,10 +1,51 @@
 import { test, expect } from '@playwright/test';
 import { SettingsAPI } from '../../pages/API/APISettings';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectClientError, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  expectArrayResponse,
+  expectNoServerError,
+  expectClientError,
+  expectErrorResponseContract,
+  expectEndpointReached,
+  expectObjectResponse,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 const settingsAPI = new SettingsAPI(null as any);
+
+type SettingsRow = Record<string, any>;
+
+const expectEdizmShape = (edizm: SettingsRow) => {
+  expect(edizm).toBeTruthy();
+  expect(typeof edizm.id, JSON.stringify(edizm)).toBe('number');
+  expect(typeof edizm.name, JSON.stringify(edizm)).toBe('string');
+  expect(typeof edizm.short_name, JSON.stringify(edizm)).toBe('string');
+  if ('type_edizm' in edizm && edizm.type_edizm !== null) {
+    expect(Array.isArray(edizm.type_edizm), JSON.stringify(edizm)).toBe(true);
+  }
+};
+
+const expectTypeEdizmShape = (typeEdizm: SettingsRow) => {
+  expect(typeEdizm).toBeTruthy();
+  expect(typeof typeEdizm.id, JSON.stringify(typeEdizm)).toBe('number');
+  expect(typeof typeEdizm.name, JSON.stringify(typeEdizm)).toBe('string');
+  if ('edizm' in typeEdizm && typeEdizm.edizm !== null) {
+    expect(Array.isArray(typeEdizm.edizm), JSON.stringify(typeEdizm)).toBe(true);
+  }
+};
+
+const expectNormHoursShape = (normHours: SettingsRow) => {
+  expectObjectResponse(normHours);
+  expect(typeof normHours.id, JSON.stringify(normHours)).toBe('number');
+  expect(typeof normHours.value, JSON.stringify(normHours)).toBe('number');
+};
+
+const expectInactionShape = (inaction: SettingsRow) => {
+  expectObjectResponse(inaction);
+  expect(typeof inaction.id, JSON.stringify(inaction)).toBe('number');
+  expect(typeof inaction.inaction, JSON.stringify(inaction)).toBe('number');
+};
 
 export const runSettingsAPINew = () => {
   logger.info('Starting Settings API coverage suite');
@@ -18,18 +59,24 @@ export const runSettingsAPINew = () => {
       accessToken = await getAuthToken(request);
     });
 
-    test('читает единицы измерения, типы, нормо-часы и бездействие без 5xx', async ({ request }) => {
-      for (const response of [
-        await settingsAPI.getAllEdizm(request, accessToken),
-        await settingsAPI.getAllTypeEdizm(request, accessToken),
-        await settingsAPI.getNormHoursValue(request, accessToken),
-        await settingsAPI.inactionGet(request, accessToken),
-      ]) {
-        expectNoServerError(response);
-        if (!clientErrorCodes.includes(response.status)) {
-          expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
-        }
-      }
+    test('читает единицы измерения, типы, нормо-часы и бездействие с ожидаемым контрактом', async ({ request }) => {
+      const edizm = await settingsAPI.getAllEdizm(request, accessToken);
+      expect(edizm.status).toBe(200);
+      expectArrayResponse(edizm.data);
+      if (edizm.data[0]) expectEdizmShape(edizm.data[0]);
+
+      const typeEdizm = await settingsAPI.getAllTypeEdizm(request, accessToken);
+      expect(typeEdizm.status).toBe(200);
+      expectArrayResponse(typeEdizm.data);
+      if (typeEdizm.data[0]) expectTypeEdizmShape(typeEdizm.data[0]);
+
+      const normHours = await settingsAPI.getNormHoursValue(request, accessToken);
+      expect(normHours.status).toBe(200);
+      expectNormHoursShape(normHours.data);
+
+      const inaction = await settingsAPI.inactionGet(request, accessToken);
+      expect(inaction.status).toBe(200);
+      expectInactionShape(inaction.data);
     });
 
     test.skip('читает список backup-файлов и безопасно проверяет отсутствующий dump', async ({ request }) => {
@@ -47,18 +94,34 @@ export const runSettingsAPINew = () => {
       expectNoServerError(load);
     });
 
-    test('невалидные мутации справочников настроек не проходят успешно', async ({ request }) => {
+    test('обновляет inaction текущим значением с ожидаемым контрактом', async ({ request }) => {
+      const current = await settingsAPI.inactionGet(request, accessToken);
+      expect(current.status).toBe(200);
+      expectInactionShape(current.data);
+
+      const response = await settingsAPI.inactionChange(request, current.data.inaction, accessToken);
+      expect(response.status).toBe(200);
+      expectInactionShape(response.data);
+      expect(response.data.inaction).toBe(current.data.inaction);
+    });
+
+    test('невалидные мутации справочников настроек возвращают error contract', async ({ request }) => {
       const responses = [
-        await settingsAPI.createTypeEdizm(request, { name: '' }, accessToken),
-        await settingsAPI.createEdizm(request, { name: '', typeId: 999999999 }, accessToken),
-        await settingsAPI.updateEdizm(request, { id: 999999999, name: '' }, accessToken),
-        await settingsAPI.updateNormHoursValue(request, { id: 999999999, value: -1 }, accessToken),
-        await settingsAPI.inactionChange(request, -1, accessToken),
+        await settingsAPI.createTypeEdizm(request, { name: 123 }, accessToken),
+        await settingsAPI.createEdizm(request, { name: 123, short_name: false, typeEdizmId: 'bad' }, accessToken),
+        await settingsAPI.updateEdizm(request, { id: 'bad', name: 123, short_name: false }, accessToken),
+        await settingsAPI.updateNormHoursValue(request, { value: 'bad' }, accessToken),
       ];
 
       for (const response of responses) {
-        expectNoServerError(response);
+        expectClientError(response);
+        expectErrorResponseContract(response);
       }
+    });
+
+    test('maintenance endpoint создания новой БД достигается явно', async ({ request }) => {
+      const response = await captureApiResult(() => settingsAPI.newDB(request, accessToken));
+      expectEndpointReached(response);
     });
   });
 };

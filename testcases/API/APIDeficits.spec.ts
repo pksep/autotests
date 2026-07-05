@@ -5,7 +5,15 @@ import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
-import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectNoServerError,
+  expectClientError,
+  expectEndpointReached,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -476,6 +484,11 @@ export const runDeficitsAPINew = () => {
         accessToken,
       );
       expectClientError(invalidUpdate);
+    });
+
+    test('maintenance-пересчет дефицитов достигает endpoint', async ({ request }) => {
+      const response = await captureApiResult(() => deficitsAPI.updateAllDeficits(request, accessToken));
+      expectEndpointReached(response);
     });
 
     test('materials/shipments/:id/:type возвращает данные без серверной ошибки', async ({ request }) => {

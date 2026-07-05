@@ -3,7 +3,17 @@ import { AssembleAPI } from '../../pages/API/APIAssemble';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectClientError,
+  expectEndpointReached,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -12,9 +22,13 @@ type ApiResult = {
 };
 
 type ApiRow = Record<string, any>;
+const lzString = require('../../../sep_erp_server/sep_erp_server/node_modules/lz-string') as {
+  compressToBase64: (input: string) => string;
+};
 
 const assembleAPI = new AssembleAPI(null);
 const productsAPI = new ProductsAPI(null as any);
+const compressSpec = (value: unknown) => lzString.compressToBase64(JSON.stringify(value));
 
 const byParents = (overrides: Record<string, unknown> = {}) => ({
   productIds: [],
@@ -89,21 +103,41 @@ const assemblePlanDto = (overrides: Record<string, unknown> = {}) => ({
 });
 
 const kitPaginationDto = (overrides: Record<string, unknown> = {}) => ({
-  page: 0,
-  searchString: '',
-  type: 'all',
+  offset: 0,
+  currentPage: 0,
+  status: 'collected',
+  searchStr: '',
+  sortKitCount: 'all',
+  responsibleId: null,
+  assemblyId: null,
+  cbedsIds: [],
+  productIds: [],
   isShowDeactivate: false,
   ...overrides,
 });
+
+const emptyCompressedSpec = () => compressSpec([]);
 
 const invalidAssembleKitPayload = (overrides: Record<string, unknown> = {}) => ({
   kolvoCollected: 0,
   assembleId: 999999999,
   shipmentsIds: [],
-  listCbed: '[]',
-  listDetal: '[]',
-  listPokDet: '[]',
-  materialList: '[]',
+  listCbed: emptyCompressedSpec(),
+  listDetal: emptyCompressedSpec(),
+  listPokDet: emptyCompressedSpec(),
+  materialList: emptyCompressedSpec(),
+  actionSendlerId: Number(API_CONST.API_TEST_TABEL),
+  ...overrides,
+});
+
+const assembleKitPayload = (assembleId: number, overrides: Record<string, unknown> = {}) => ({
+  kolvoCollected: 1,
+  assembleId,
+  shipmentsIds: [],
+  listCbed: emptyCompressedSpec(),
+  listDetal: emptyCompressedSpec(),
+  listPokDet: emptyCompressedSpec(),
+  materialList: emptyCompressedSpec(),
   actionSendlerId: Number(API_CONST.API_TEST_TABEL),
   ...overrides,
 });
@@ -225,6 +259,63 @@ const findAnyAssemble = async (request: any, accessToken?: string): Promise<ApiR
   return getRows<ApiRow>(response.data).find((row) => Number(row.id) > 0);
 };
 
+const expectRowsAndCount = (response: ApiResult, maxRows?: number) => {
+  expectNoServerError(response);
+  if (clientErrorCodes.includes(response.status)) return;
+
+  expect(successCodes).toContain(response.status);
+  expectPaginationContract(response.data, maxRows);
+  const count = getCount(response.data);
+  const rows = getRows<ApiRow>(response.data);
+  expect(count, JSON.stringify(response.data)).toBeGreaterThanOrEqual(rows.length);
+  if (maxRows !== undefined) expect(rows.length, JSON.stringify(response.data)).toBeLessThanOrEqual(maxRows);
+};
+
+const expectAssembleRowShape = (row: ApiRow, expectedId?: number) => {
+  expect(row, JSON.stringify(row)).toBeTruthy();
+  expect(Number(row.id), JSON.stringify(row)).toBeGreaterThan(0);
+  if (expectedId) expect(Number(row.id), JSON.stringify(row)).toBe(expectedId);
+  expect(String(row.type_izd ?? row.typeIzd ?? row.type ?? ''), JSON.stringify(row)).toMatch(/product|cbed/);
+  expect(Number(row.product_id ?? row.productId ?? row.cbed_id ?? row.cbedId ?? row.izd_id ?? row.izdId), JSON.stringify(row)).toBeGreaterThan(0);
+};
+
+const expectKitShape = (kit: ApiRow, expected: { kitId?: number; assembleId?: number } = {}) => {
+  expect(kit, JSON.stringify(kit)).toBeTruthy();
+  expect(Number(kit.id), JSON.stringify(kit)).toBeGreaterThan(0);
+  if (expected.kitId) expect(Number(kit.id), JSON.stringify(kit)).toBe(expected.kitId);
+  if (expected.assembleId) expect(Number(kit.assemble_id ?? kit.assembleId), JSON.stringify(kit)).toBe(expected.assembleId);
+  expect(Number(kit.kolvo_collected ?? kit.kolvoCollected ?? kit.kolvo), JSON.stringify(kit)).toBeGreaterThanOrEqual(0);
+  expect(String(kit.status ?? ''), JSON.stringify(kit)).toBeTruthy();
+};
+
+const findKitByAssembly = async (request: any, assembleId: number, accessToken?: string): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const byAssembly = await assembleAPI.getComplectKitByAssembly(request, assembleId, accessToken);
+    expectNoServerError(byAssembly);
+    return byAssembly;
+  }, (byAssembly) => getRows<ApiRow>(byAssembly.data).some((kit) => Number(kit.id) > 0));
+
+  return response ? getRows<ApiRow>(response.data).find((kit) => Number(kit.id) > 0) : undefined;
+};
+
+const createIsolatedAssembleKit = async (
+  request: any,
+  accessToken?: string,
+): Promise<{ assembleId: number; productId: number; productDesignation: string; kitId: number }> => {
+  const assemble = await createIsolatedAssemble(request, accessToken);
+
+  const createKit = await assembleAPI.createAssembleKit(request, assembleKitPayload(assemble.assembleId), accessToken);
+  expect(successCodes, JSON.stringify(createKit.data)).toContain(createKit.status);
+  expectNoServerError(createKit);
+
+  const kit = await findKitByAssembly(request, assemble.assembleId, accessToken);
+  const kitId = Number(createKit.data?.id ?? createKit.data?.data?.id ?? kit?.id);
+  expect(kitId, JSON.stringify(createKit.data)).toBeGreaterThan(0);
+  expect(kit, `Complect kit for assemble ${assemble.assembleId} was not found after create`).toBeTruthy();
+
+  return { ...assemble, kitId };
+};
+
 const getAssembleParent = (assemble: ApiRow): { id: number; type: string } => {
   const type = String(assemble.type_izd ?? assemble.typeIzd ?? assemble.type ?? (assemble.product_id || assemble.productId ? 'product' : 'cbed'));
   const id = Number(assemble.product_id ?? assemble.productId ?? assemble.cbed_id ?? assemble.cbedId ?? assemble.izd_id ?? assemble.izdId);
@@ -272,16 +363,16 @@ export const runAssembleAPINew = () => {
 
     test('возвращает приход, план, операции и наборы без серверных ошибок', async ({ request }) => {
       const coming = await assembleAPI.getAssembleComing(request, assembleComingDto(), accessToken);
-      expectNoServerError(coming);
+      expectRowsAndCount(coming, 100);
 
       const plan = await assembleAPI.getAllAssemblePlan(request, assemblePlanDto(), accessToken);
-      expectNoServerError(plan);
+      expectRowsAndCount(plan);
 
       const operations = await assembleAPI.getOperationPagination(request, assembleOperationPaginationDto(), accessToken);
-      expectNoServerError(operations);
+      expectRowsAndCount(operations);
 
       const kits = await assembleAPI.getComplectKitPagination(request, kitPaginationDto(), accessToken);
-      expectNoServerError(kits);
+      expectRowsAndCount(kits, 25);
     });
 
     test('пагинации сборки поддерживают граничные значения page/pageSize', async ({ request }) => {
@@ -298,13 +389,13 @@ export const runAssembleAPINew = () => {
 
       const kits = await assembleAPI.getComplectKitPagination(
         request,
-        kitPaginationDto({ page: 999999, pageSize: 5 }),
+        kitPaginationDto({ currentPage: 999999 }),
         accessToken,
       );
       expectNoServerError(kits);
       if (!clientErrorCodes.includes(kits.status)) {
         expect(successCodes).toContain(kits.status);
-        expectPaginationContract(kits.data, 5);
+        expectPaginationContract(kits.data, 25);
       }
     });
 
@@ -318,6 +409,7 @@ export const runAssembleAPINew = () => {
         if (!clientErrorCodes.includes(byId.status)) {
           expect(successCodes).toContain(byId.status);
           expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(assembleId);
+          expectAssembleRowShape(byId.data, assembleId);
         }
 
         const light = await assembleAPI.getByIdLight(request, assembleId, accessToken);
@@ -325,6 +417,7 @@ export const runAssembleAPINew = () => {
         if (!clientErrorCodes.includes(light.status)) {
           expect(successCodes).toContain(light.status);
           expect(Number(light.data?.id), JSON.stringify(light.data)).toBe(assembleId);
+          expectAssembleRowShape(light.data, assembleId);
         }
 
         if (!clientErrorCodes.includes(byId.status) && !clientErrorCodes.includes(light.status)) {
@@ -339,18 +432,119 @@ export const runAssembleAPINew = () => {
       }
     });
 
-    test('проверяет связи сборки с родительскими сущностями без серверных ошибок', async ({ request }) => {
-      const parentEntity = await createIsolatedParentProduct(request, accessToken);
+    test('проверяет связи сборки с родительскими сущностями по реальной сборке', async ({ request }) => {
+      const created = await createIsolatedAssemble(request, accessToken);
+      const parentEntity = { id: created.productId, type: 'product' as const };
 
       try {
         const byParent = await assembleAPI.getAssembleByParent(request, parentEntity, accessToken);
         expectNoServerError(byParent);
+        if (!clientErrorCodes.includes(byParent.status)) {
+          expect(successCodes).toContain(byParent.status);
+          expect(Array.isArray(getRows(byParent.data)) || Array.isArray(byParent.data), JSON.stringify(byParent.data)).toBe(true);
+        }
 
         const byIzd = await assembleAPI.getByIzd(request, parentEntity.id, parentEntity.type, accessToken);
         expectNoServerError(byIzd);
+        if (!clientErrorCodes.includes(byIzd.status) && byIzd.data) {
+          expect(successCodes).toContain(byIzd.status);
+          expectAssembleRowShape(byIzd.data, created.assembleId);
+          expect(Number(byIzd.data.product_id ?? byIzd.data.productId ?? byIzd.data.cbed_id ?? byIzd.data.cbedId), JSON.stringify(byIzd.data)).toBe(parentEntity.id);
+        }
       } finally {
-        const archive = await productsAPI.deleteProduct(request, parentEntity.id, accessToken);
-        expectNoServerError(archive);
+        const archiveAssemble = await assembleAPI.deleteAssemble(request, created.assembleId, accessToken);
+        expectNoServerError(archiveAssemble);
+
+        const archiveProduct = await productsAPI.deleteProduct(request, created.productId, accessToken);
+        expectNoServerError(archiveProduct);
+      }
+    });
+
+    test('создает реальный комплект и читает его по id, сборке и pagination', async ({ request }) => {
+      const fixture = await createIsolatedAssembleKit(request, accessToken);
+
+      try {
+        const byId = await assembleAPI.getComplectKitById(request, fixture.kitId, accessToken);
+        expectNoServerError(byId);
+        if (!clientErrorCodes.includes(byId.status)) {
+          expect(successCodes).toContain(byId.status);
+          expectKitShape(byId.data, { kitId: fixture.kitId, assembleId: fixture.assembleId });
+        }
+
+        const byAssembly = await assembleAPI.getComplectKitByAssembly(request, fixture.assembleId, accessToken);
+        expectNoServerError(byAssembly);
+        if (!clientErrorCodes.includes(byAssembly.status)) {
+          expect(successCodes).toContain(byAssembly.status);
+          const rows = getRows<ApiRow>(byAssembly.data);
+          expect(rows.length, JSON.stringify(byAssembly.data)).toBeGreaterThanOrEqual(1);
+          expectKitShape(rows.find((kit) => Number(kit.id) === fixture.kitId) as ApiRow, {
+            kitId: fixture.kitId,
+            assembleId: fixture.assembleId,
+          });
+        }
+
+        const pagination = await assembleAPI.getComplectKitPagination(
+          request,
+          kitPaginationDto({ assemblyId: fixture.assembleId }),
+          accessToken,
+        );
+        expectRowsAndCount(pagination, 25);
+        if (!clientErrorCodes.includes(pagination.status)) {
+          const assembleRow = getRows<ApiRow>(pagination.data).find((row) => Number(row.id) === fixture.assembleId);
+          expect(assembleRow, JSON.stringify(pagination.data)).toBeTruthy();
+          expectAssembleRowShape(assembleRow as ApiRow, fixture.assembleId);
+          const kits = getRows<ApiRow>((assembleRow as ApiRow).assembly_kits ?? (assembleRow as ApiRow).assemblyKits);
+          expect(kits.some((kit) => Number(kit.id) === fixture.kitId), JSON.stringify(assembleRow)).toBe(true);
+        }
+      } finally {
+        const archiveAssemble = await assembleAPI.deleteAssemble(request, fixture.assembleId, accessToken);
+        expectNoServerError(archiveAssemble);
+
+        const archiveProduct = await productsAPI.deleteProduct(request, fixture.productId, accessToken);
+        expectNoServerError(archiveProduct);
+      }
+    });
+
+    test('обновляет реальный комплект и проверяет статус/количество, затем раскомплектовывает', async ({ request }) => {
+      const fixture = await createIsolatedAssembleKit(request, accessToken);
+      const description = `API assemble kit update ${uniqueApiSuffix('kit-update')}`;
+
+      try {
+        const update = await assembleAPI.updateAssemble(
+          request,
+          {
+            idKit: fixture.kitId,
+            description,
+            receivingUserId: Number(API_CONST.API_TEST_TABEL),
+            docs: '[]',
+            addedQuantity: 1,
+            actionSendlerId: Number(API_CONST.API_TEST_TABEL),
+          },
+          API_CONST.API_TEST_TABEL,
+          accessToken,
+        );
+        expectNoServerError(update);
+        if (!clientErrorCodes.includes(update.status)) {
+          expect(successCodes).toContain(update.status);
+          expectKitShape(update.data, { kitId: fixture.kitId, assembleId: fixture.assembleId });
+          expect(String(update.data.description ?? ''), JSON.stringify(update.data)).toBe(description);
+          expect(Number(update.data.kolvo_submitted ?? update.data.kolvoSubmitted), JSON.stringify(update.data)).toBeGreaterThanOrEqual(1);
+        }
+
+        const uncomplect = await assembleAPI.uncomplectKit(request, fixture.kitId, 1, accessToken);
+        expectNoServerError(uncomplect);
+        if (!clientErrorCodes.includes(uncomplect.status)) {
+          expect(successCodes).toContain(uncomplect.status);
+          expectKitShape(uncomplect.data, { kitId: fixture.kitId, assembleId: fixture.assembleId });
+          expect(Number(uncomplect.data.kolvo_collected ?? uncomplect.data.kolvoCollected), JSON.stringify(uncomplect.data)).toBe(0);
+          expect(uncomplect.data.ban, JSON.stringify(uncomplect.data)).toBe(true);
+        }
+      } finally {
+        const archiveAssemble = await assembleAPI.deleteAssemble(request, fixture.assembleId, accessToken);
+        expectNoServerError(archiveAssemble);
+
+        const archiveProduct = await productsAPI.deleteProduct(request, fixture.productId, accessToken);
+        expectNoServerError(archiveProduct);
       }
     });
 
@@ -472,6 +666,12 @@ export const runAssembleAPINew = () => {
 
       const missingKitsByAssembly = await assembleAPI.getComplectKitByAssembly(request, 999999999, accessToken);
       expectNoServerError(missingKitsByAssembly);
+
+      const banMissingComplect = await captureApiResult(() => assembleAPI.banComplect(request, 999999999, accessToken));
+      expectEndpointReached(banMissingComplect);
+
+      const updateMissingResponsible = await captureApiResult(() => assembleAPI.updateResponsibleKit(request, 999999999, 999999999, accessToken));
+      expectEndpointReached(updateMissingResponsible);
 
       const invalidCreateKit = await assembleAPI.createAssembleKit(request, invalidAssembleKitPayload(), accessToken);
       expectNoServerError(invalidCreateKit);

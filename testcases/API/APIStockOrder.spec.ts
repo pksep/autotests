@@ -3,7 +3,16 @@ import { DetailsAPI } from '../../pages/API/APIDetails';
 import { StockOrderAPI } from '../../pages/API/APIStockOrder';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  expectClientError,
+  expectErrorResponseContract,
+  expectNoServerError,
+  expectPaginationContract,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -566,6 +575,10 @@ export const runStockOrderAPINew = () => {
 
       const byEntity = await stockOrderAPI.getItemsByEntity(request, 'product', 999999999, accessToken);
       expectNoServerError(byEntity);
+
+      const banItem = await stockOrderAPI.banItem(request, 999999999, accessToken);
+      expectNoServerError(banItem);
+      if (clientErrorCodes.includes(banItem.status)) expectErrorResponseContract(banItem);
 
       const updateResponse = await stockOrderAPI.update(
         request,

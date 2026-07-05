@@ -2,7 +2,18 @@ import { test, expect } from '@playwright/test';
 import { WarehouseAPI } from '../../pages/API/APIWarehouse';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, expectSortedDescendingByKnownDate, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectClientError,
+  expectEndpointReached,
+  expectNoServerError,
+  expectPaginationContract,
+  expectSortedDescendingByKnownDate,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -240,6 +251,12 @@ export const runWarehouseAPINew = () => {
         accessToken,
       );
       expectNoServerError(byParent);
+
+      const complitAssembly = await captureApiResult(() => warehouseAPI.complitAssembly(request, 999999999, 'product', accessToken));
+      expectEndpointReached(complitAssembly);
+
+      const resetInSets = await captureApiResult(() => warehouseAPI.resetInSets(request, accessToken));
+      expectEndpointReached(resetInSets);
     });
 
     test('невалидная ревизия остатков отклоняется без серверных ошибок', async ({ request }) => {

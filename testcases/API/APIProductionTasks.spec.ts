@@ -3,9 +3,14 @@ import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
+  captureApiResult,
   clientErrorCodes,
+  expectArrayResponse,
   expectClientError,
+  expectEndpointReached,
+  expectErrorResponseContract,
   expectNoServerError,
+  expectObjectResponse,
   expectPaginationContract,
   getCount,
   getRows,
@@ -312,6 +317,27 @@ const extractDateValue = (value: unknown): string | undefined => {
   if (queueData !== record) return extractDateValue(queueData);
 
   return undefined;
+};
+
+const expectNumericContract = (response: { status: number; data?: any }, min = 0, max?: number) => {
+  expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
+  expect(Number.isFinite(Number(response.data)), JSON.stringify(response.data)).toBe(true);
+  expect(Number(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(min);
+  if (max !== undefined) expect(Number(response.data), JSON.stringify(response.data)).toBeLessThanOrEqual(max);
+};
+
+const expectNullableObjectContract = (data: unknown) => {
+  if (data === null) return;
+  expectObjectResponse(data);
+};
+
+const expectRelativeDateContract = (data: unknown) => {
+  expectObjectResponse(data);
+  const record = data as ApiRow;
+  expect(Array.isArray(record.productionOperationPositionsIds), JSON.stringify(data)).toBe(true);
+  if (record.relativeDate !== null) {
+    expect(Number.isFinite(Date.parse(record.relativeDate)), JSON.stringify(data)).toBe(true);
+  }
 };
 
 const expectNoServerErrorOrKnownBackendIssue = (response: { status: number; data?: any }, message: string) => {
@@ -885,6 +911,9 @@ export const runProductionTasksAPINew = () => {
         accessToken,
       );
       expectNoServerError(shipment);
+      if (!clientErrorCodes.includes(shipment.status)) {
+        expectNumericContract(shipment);
+      }
 
       const percent = await productionTasksAPI.getPercentByProductionTask(
         request,
@@ -893,6 +922,9 @@ export const runProductionTasksAPINew = () => {
         accessToken,
       );
       expectNoServerError(percent);
+      if (!clientErrorCodes.includes(percent.status)) {
+        expectNumericContract(percent, 0, 100);
+      }
 
       const tasksByEntity = await productionTasksAPI.getProductionTaskByEntity(
         request,
@@ -903,6 +935,10 @@ export const runProductionTasksAPINew = () => {
         accessToken,
       );
       expectNoServerError(tasksByEntity);
+      if (!clientErrorCodes.includes(tasksByEntity.status)) {
+        expect(successCodes, JSON.stringify(tasksByEntity.data)).toContain(tasksByEntity.status);
+        expectArrayResponse(getRows(tasksByEntity.data).length ? getRows(tasksByEntity.data) : tasksByEntity.data);
+      }
 
       const relativeDate = await productionTasksAPI.getRelativeDateForEntity(
         request,
@@ -911,6 +947,10 @@ export const runProductionTasksAPINew = () => {
         accessToken,
       );
       expectNoServerError(relativeDate);
+      if (!clientErrorCodes.includes(relativeDate.status)) {
+        expect(successCodes, JSON.stringify(relativeDate.data)).toContain(relativeDate.status);
+        expectRelativeDateContract(relativeDate.data);
+      }
 
       if (firstEntity) {
         const workload = await productionTasksAPI.getWorkloadByEntity(
@@ -919,6 +959,10 @@ export const runProductionTasksAPINew = () => {
           accessToken,
         );
         expectNoServerError(workload);
+        if (!clientErrorCodes.includes(workload.status)) {
+          expect(successCodes, JSON.stringify(workload.data)).toContain(workload.status);
+          expectArrayResponse(workload.data);
+        }
       }
     });
 
@@ -933,6 +977,10 @@ export const runProductionTasksAPINew = () => {
           accessToken,
         );
         expectNoServerError(equipmentStartTime);
+        if (!clientErrorCodes.includes(equipmentStartTime.status)) {
+          expect(successCodes, JSON.stringify(equipmentStartTime.data)).toContain(equipmentStartTime.status);
+          expectNullableObjectContract(equipmentStartTime.data);
+        }
       }
     });
 
@@ -998,6 +1046,9 @@ export const runProductionTasksAPINew = () => {
         setMissingEquipment,
         'Known ProductionTasks backend issue: assigning a missing equipment can return 500.',
       );
+      if (clientErrorCodes.includes(setMissingEquipment.status)) {
+        expectErrorResponseContract(setMissingEquipment);
+      }
     });
   });
 
@@ -1083,6 +1134,9 @@ export const runProductionTasksAPINew = () => {
         accessToken,
       );
       expectClientError(invalidTOperations);
+
+      const updateAllTaskRelative = await captureApiResult(() => productionTasksAPI.updateAllTaskRelative(request, accessToken));
+      expectEndpointReached(updateAllTaskRelative);
     });
 
     test('невалидные мутации ПЗ отклоняются без серверных ошибок', async ({ request }) => {

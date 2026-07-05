@@ -10,11 +10,15 @@ export class ProviderAPI extends APIPageObject {
   private base = () => ENV.API_BASE_URL + 'api/provider';
 
   async createProvider(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'POST', this.base(), {
-      data: this.toMultipartFields(dto),
-      accessToken,
-      json: false,
+    const response = await request.post(this.base(), {
+      headers: {
+        compress: 'no-compress',
+        ...this.authHeaders(accessToken),
+      },
+      multipart: this.toMultipartFields(dto),
     });
+
+    return this.apiResult(response);
   }
 
   async getProvidersPagination(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {

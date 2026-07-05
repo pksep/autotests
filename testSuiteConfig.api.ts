@@ -20,6 +20,7 @@ import { runExclusionAPINew } from './testcases/API/APIExclusion.spec';
 import { runExpenditureAPINew } from './testcases/API/APIExpenditure.spec';
 import { runInventoryAPINew } from './testcases/API/APIInventory.spec';
 import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
+import { runMaintenanceAPINew } from './testcases/API/APIMaintenance.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runMarksAPINew } from './testcases/API/APIMarks.spec';
 import { runMovementErrorsAPINew } from './testcases/API/APIMovementErrors.spec';
@@ -254,6 +255,17 @@ export const apiSuites = {
         test: runMaterialsAPINew,
         description:
           'Тестирует эндпоинты API материалов: создание типа и подтипа, создание/обновление/архивацию материала, пагинацию, include, aliases, restrictions, дефициты и defensive-сценарии.'
+      }
+    ]
+  },
+
+  maintenance_api: {
+    description: 'Отдельный набор глобальных maintenance API endpoint-ов; запускать осознанно, вне обычной регрессии.',
+    tests: [
+      {
+        test: runMaintenanceAPINew,
+        description:
+          'Проверяет достижимость глобальных пересчетов, актуализаций, reset/settings операций и других потенциально тяжелых maintenance endpoint-ов.'
       }
     ]
   },

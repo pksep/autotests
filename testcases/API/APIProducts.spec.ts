@@ -2,7 +2,20 @@ import { test, expect } from '@playwright/test';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectClientError, expectNoServerError, expectPaginationContract, expectSortedDescendingByKnownDate, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  captureApiResult,
+  clientErrorCodes,
+  expectClientError,
+  expectEndpointReached,
+  expectErrorResponseContract,
+  expectArrayResponse,
+  expectNoServerError,
+  expectPaginationContract,
+  expectSortedDescendingByKnownDate,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiResult = {
@@ -215,6 +228,10 @@ export const runProductsAPINew = () => {
         expect(successCodes).toContain(tech.status);
         expect(Number(tech.data?.id), JSON.stringify(tech.data)).toBe(createdProductId);
       }
+
+      const specifications = await productsAPI.getProductSpecifications(request, createdProductId as number, accessToken);
+      expectNoServerError(specifications);
+      if (successCodes.includes(specifications.status)) expectArrayResponse(specifications.data);
 
       const pagination = await productsAPI.getAllProducts(
         request,
@@ -449,6 +466,17 @@ export const runProductsAPINew = () => {
     test('операции с несуществующим id не приводят к серверным ошибкам', async ({ request }) => {
       const byId = await productsAPI.getProductById(request, 999999999, accessToken);
       expectNoServerError(byId);
+
+      const specifications = await productsAPI.getProductSpecifications(request, 999999999, accessToken);
+      expectNoServerError(specifications);
+      if (successCodes.includes(specifications.status)) expectArrayResponse(specifications.data);
+      if (clientErrorCodes.includes(specifications.status)) expectErrorResponseContract(specifications);
+
+      const operationInclude = await captureApiResult(() => productsAPI.searchProducts(request, { page: 0, pageSize: 1, searchString: '' }, accessToken));
+      expectEndpointReached(operationInclude);
+
+      const actualAvatar = await captureApiResult(() => productsAPI.actualAvatar(request, accessToken));
+      expectEndpointReached(actualAvatar);
 
       const deleteResponse = await productsAPI.deleteProduct(request, 999999999, accessToken);
       expectClientError(deleteResponse);

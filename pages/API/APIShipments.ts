@@ -154,14 +154,20 @@ export class ShipmentsAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getItemsByEntity(request: APIRequestContext, entityType: string, entityId: number, accessToken?: string) {
+  async getItemsByEntity(
+    request: APIRequestContext,
+    entityType: string,
+    entityId: number,
+    accessToken?: string,
+    overrides: Record<string, unknown> = {},
+  ) {
     const response = await request.post(this.base() + '/items/by-entity', {
       headers: {
         'Content-Type': 'application/json',
         ...this.authHeaders(this.token(accessToken)),
         compress: 'no-compress',
       },
-      data: { entityType, entityId },
+      data: { entityType, entityId, ...overrides },
     });
     return this.result(response);
   }
