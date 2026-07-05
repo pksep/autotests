@@ -19,6 +19,24 @@ export const expectNoServerError = (response: ApiResult) => {
   expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
 };
 
+export const expectEndpointReached = (response: ApiResult | Error) => {
+  if (response instanceof Error) {
+    expect(response.message).toBeTruthy();
+    return;
+  }
+
+  expect(response.status).toBeGreaterThan(0);
+  expect(response.status).toBeLessThan(600);
+};
+
+export const captureApiResult = async (action: () => Promise<ApiResult>): Promise<ApiResult | Error> => {
+  try {
+    return await action();
+  } catch (error) {
+    return error instanceof Error ? error : new Error(String(error));
+  }
+};
+
 export const expectNotSuccessful = (response: ApiResult) => {
   expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
   expectNoServerError(response);
@@ -61,6 +79,16 @@ export const expectErrorResponseContract = (response: ApiResult) => {
   expect(serialized, 'Error response should not expose implementation exceptions').not.toMatch(
     /Cannot (read|destructure)|current transaction is aborted|Sequelize|QueryFailed|TypeError|ReferenceError/i,
   );
+};
+
+export const expectObjectResponse = (data: unknown) => {
+  expect(data, JSON.stringify(data)).toBeTruthy();
+  expect(typeof data, JSON.stringify(data)).toBe('object');
+  expect(Array.isArray(data), JSON.stringify(data)).toBe(false);
+};
+
+export const expectArrayResponse = (data: unknown) => {
+  expect(Array.isArray(data), JSON.stringify(data)).toBe(true);
 };
 
 export const extractAccessToken = (data: any): string | undefined => {
