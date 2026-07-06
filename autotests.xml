@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="370292">
+<fb version="0.19.6" size="370291">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">18.305886612</seconds>
+    <seconds t="F">22.862417829</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-07-06T19:22:27Z</when>
+    <when t="T">2026-07-06T21:15:08Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -24274,14 +24274,6 @@ The average number of releases per month (0.0) is staying still.</text>
     <when t="T">2026-07-05T17:46:02Z</when>
   </f>
   <f>
-    <_id t="I">1738</_id>
-    <_job t="I">80596</_job>
-    <_time t="T">2026-07-06T09:41:41Z</_time>
-    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
-    <what t="S">learn-eva</what>
-    <when t="T">2026-07-06T09:41:41Z</when>
-  </f>
-  <f>
     <_id t="I">1740</_id>
     <_job t="I">80715</_job>
     <_time t="T">2026-07-06T16:46:41Z</_time>
@@ -24292,19 +24284,6 @@ The average number of commits per week (0.2) is decreasing (R=-0.83).
 The average number of releases per month (0.0) is staying still.</text>
     <what t="S">assessment</what>
     <when t="T">2026-07-06T16:46:41Z</when>
-  </f>
-  <f>
-    <_id t="I">1741</_id>
-    <_job t="I">28817216680</_job>
-    <_time t="T">2026-07-06T19:22:12Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">14434185229</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
   </f>
   <f>
     <_id t="I">1742</_id>
@@ -24323,5 +24302,26 @@ The average number of releases per month (0.0) is staying still.</text>
     <total_stars t="I">1</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-07-06T19:22:14Z</when>
+  </f>
+  <f>
+    <_id t="I">1743</_id>
+    <_job t="I">80737</_job>
+    <_time t="T">2026-07-06T19:23:18Z</_time>
+    <_version t="S">0.19.13/0.60.4/0.17.11!0.17.17</_version>
+    <what t="S">learn-eva</what>
+    <when t="T">2026-07-06T19:23:18Z</when>
+  </f>
+  <f>
+    <_id t="I">1744</_id>
+    <_job t="I">28823677524</_job>
+    <_time t="T">2026-07-06T21:14:50Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">14442249624</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
