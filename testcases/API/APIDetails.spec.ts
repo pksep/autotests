@@ -5,6 +5,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectClientError,
   expectEndpointReached,
   expectErrorResponseContract,
@@ -371,7 +372,7 @@ export const runDetailsAPINew = () => {
       expectNoServerError(deficits);
 
       const operations = await detailsAPI.getOperationInclude(request, detailPaginationDto({ isSortedByOperations: true }), accessToken);
-      expectNoServerError(operations);
+      expectApiContract(operations, { shape: 'pagination' });
     });
 
     test('проверка уникальности обозначения обрабатывает защитные payload без 5xx', async ({ request }) => {
@@ -419,11 +420,11 @@ export const runDetailsAPINew = () => {
         '999999999',
         accessToken,
       );
-      expectNoServerError(addFile);
+      expectApiContract(addFile);
       if (clientErrorCodes.includes(addFile.status)) expectErrorResponseContract(addFile);
 
       const attributes = await detailsAPI.getAttributeByParamId(request, 999999999, ['id'], accessToken);
-      expectNoServerError(attributes);
+      expectApiContract(attributes);
       if (clientErrorCodes.includes(attributes.status)) expectErrorResponseContract(attributes);
 
       const actualAvatar = await captureApiResult(() => detailsAPI.updateDetailAvatar(request, accessToken));

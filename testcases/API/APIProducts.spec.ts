@@ -5,6 +5,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectClientError,
   expectEndpointReached,
   expectErrorResponseContract,
@@ -474,6 +475,7 @@ export const runProductsAPINew = () => {
 
       const operationInclude = await captureApiResult(() => productsAPI.searchProducts(request, { page: 0, pageSize: 1, searchString: '' }, accessToken));
       expectEndpointReached(operationInclude);
+      if (!(operationInclude instanceof Error)) expectApiContract(operationInclude, { shape: 'pagination' });
 
       const actualAvatar = await captureApiResult(() => productsAPI.actualAvatar(request, accessToken));
       expectEndpointReached(actualAvatar);

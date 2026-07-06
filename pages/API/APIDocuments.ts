@@ -175,13 +175,12 @@ export class DocumentsAPI extends APIPageObject {
     });
 
     if (response.ok()) {
-      const responseData = await response.json();
       logger.info(`Document type changed successfully`);
-      return { status: response.status(), data: responseData };
     } else {
       logger.error(`Failed to change document type, status: ${response.status()}`);
-      throw new Error(`Failed to change document type with status: ${response.status()}`);
     }
+
+    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
   }
 
   async deleteDocument(request: APIRequestContext, id: number, userId: string, accessToken?: string) {

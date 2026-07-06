@@ -23,7 +23,7 @@ export class CommentsAPI extends APIPageObject {
   }
 
   private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
-    return { status: response.status(), data: await this.parseJsonBody(response) };
+    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
   }
 
   async getByEntity(request: APIRequestContext, entityType: string, entityId: number, page = 0, limit = 20, accessToken?: string) {

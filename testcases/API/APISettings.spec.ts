@@ -3,6 +3,7 @@ import { SettingsAPI } from '../../pages/API/APISettings';
 import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
+  expectApiContract,
   expectArrayResponse,
   expectNoServerError,
   expectClientError,
@@ -79,19 +80,19 @@ export const runSettingsAPINew = () => {
       expectInactionShape(inaction.data);
     });
 
-    test.skip('читает список backup-файлов и безопасно проверяет отсутствующий dump', async ({ request }) => {
+    test('читает список backup-файлов и безопасно проверяет отсутствующий dump', async ({ request }) => {
       const list = await settingsAPI.getAllDB(request, accessToken);
-      expectNoServerError(list);
+      expectApiContract(list, { shape: 'array' });
 
       const missingName = `api-missing-${uniqueApiSuffix('dump')}.dump`;
       const download = await settingsAPI.downloadDb(request, missingName, accessToken);
-      expectNoServerError(download);
+      expectApiContract(download);
 
       const drop = await settingsAPI.dropDumpDB(request, missingName, accessToken);
-      expectNoServerError(drop);
+      expectApiContract(drop);
 
       const load = await settingsAPI.loadDumpDb(request, missingName, false, accessToken);
-      expectNoServerError(load);
+      expectApiContract(load);
     });
 
     test('обновляет inaction текущим значением с ожидаемым контрактом', async ({ request }) => {

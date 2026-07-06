@@ -49,7 +49,7 @@ import { runWarehouseAPINew } from './testcases/API/APIWarehouse.spec';
 import { runWaybillAPINew } from './testcases/API/APIWaybill.spec';
 import { runWaybillProviderFlowAPI } from './testcases/API/APIWaybillProviderFlow.spec';
 
-export const apiSuites = {
+const apiSuitesByModule = {
   auth_api: {
     description: 'Набор тестов Auth API для проверки эндпоинтов аутентификации.',
     tests: [
@@ -745,4 +745,170 @@ export const apiSuites = {
       }
     ]
   }
+};
+
+type ApiSuiteKey = Exclude<keyof typeof apiSuitesByModule, 'all_api_tests'>;
+
+function collectApiTests(keys: readonly ApiSuiteKey[]) {
+  return keys.flatMap((key) => apiSuitesByModule[key].tests);
+}
+
+const allApiSuiteKeys = Object.keys(apiSuitesByModule).filter((key) => key !== 'all_api_tests') as ApiSuiteKey[];
+
+const apiFunctionalSuiteKeys = [
+  'assemble_api',
+  'cbed_api',
+  'comments_api',
+  'companies_api',
+  'contacts_api',
+  'deficits_api',
+  'details_api',
+  'documents_api',
+  'equipment_api',
+  'exclusion_api',
+  'inventory_api',
+  'marks_api',
+  'materials_api',
+  'metaloworking_api',
+  'notification_api',
+  'operation_api',
+  'production_shipment_flow_api',
+  'production_tasks_api',
+  'product_api',
+  'provider_api',
+  'provider_deliveries_api',
+  'roles_api',
+  'shipments_api',
+  'specification_api',
+  'stock_order_api',
+  'tech_process_api',
+  'tools_api',
+  'users_api',
+  'waybill_api',
+  'waybill_provider_flow_api',
+] as const satisfies readonly ApiSuiteKey[];
+
+const apiContractSuiteKeys = [
+  'actions_api',
+  'actions_chain_api',
+  'assemble_api',
+  'auth_api',
+  'cbed_api',
+  'comments_api',
+  'companies_api',
+  'contacts_api',
+  'deficits_api',
+  'details_api',
+  'documents_api',
+  'equipment_api',
+  'expenditure_api',
+  'inventory_api',
+  'marks_api',
+  'materials_api',
+  'metaloworking_api',
+  'movement_object_api',
+  'moving_api',
+  'neo4j_api',
+  'notification_api',
+  'operation_api',
+  'production_shipment_flow_api',
+  'production_tasks_api',
+  'product_api',
+  'provider_deliveries_api',
+  'rack_api',
+  'settings_api',
+  'shipments_api',
+  'specification_api',
+  'stock_order_api',
+  'supply_api',
+  'tech_process_api',
+  'tools_api',
+  'users_api',
+  'warehouse_api',
+  'waybill_api',
+  'waybill_provider_flow_api',
+] as const satisfies readonly ApiSuiteKey[];
+
+const apiNegativeSuiteKeys = [
+  'actions_chain_api',
+  'assemble_api',
+  'cbed_api',
+  'companies_api',
+  'contacts_api',
+  'details_api',
+  'documents_api',
+  'equipment_api',
+  'marks_api',
+  'materials_api',
+  'metaloworking_api',
+  'movement_errors_api',
+  'movement_object_api',
+  'neo4j_api',
+  'operation_api',
+  'production_tasks_api',
+  'product_api',
+  'rack_api',
+  'roles_api',
+  'settings_api',
+  'solidworks_api',
+  'specification_api',
+  'stock_order_api',
+  'tech_process_api',
+  'tools_api',
+  'users_api',
+  'warehouse_api',
+  'waybill_api',
+] as const satisfies readonly ApiSuiteKey[];
+
+const apiMaintenanceSuiteKeys = [
+  'assemble_api',
+  'cbed_api',
+  'deficits_api',
+  'details_api',
+  'maintenance_api',
+  'production_tasks_api',
+  'product_api',
+  'settings_api',
+  'shipments_api',
+  'warehouse_api',
+] as const satisfies readonly ApiSuiteKey[];
+
+const apiSmokeSuiteKeys = [
+  'assemble_api',
+  'deficits_api',
+  'metaloworking_api',
+  'production_shipment_flow_api',
+  'shipments_api',
+  'specification_api',
+  'stock_order_api',
+  'tech_process_api',
+  'waybill_provider_flow_api',
+] as const satisfies readonly ApiSuiteKey[];
+
+export const apiSuites = {
+  ...apiSuitesByModule,
+  api_functional_tests: {
+    description: 'API-тесты с уровнем покрытия functional из docs/api-coverage-matrix.md.',
+    tests: collectApiTests(apiFunctionalSuiteKeys),
+  },
+  api_contract_tests: {
+    description: 'API-тесты с уровнем покрытия contract из docs/api-coverage-matrix.md.',
+    tests: collectApiTests(apiContractSuiteKeys),
+  },
+  api_negative_tests: {
+    description: 'API-тесты с уровнем покрытия negative из docs/api-coverage-matrix.md.',
+    tests: collectApiTests(apiNegativeSuiteKeys),
+  },
+  api_maintenance_tests: {
+    description: 'API-тесты с уровнем покрытия maintenance из docs/api-coverage-matrix.md.',
+    tests: collectApiTests(apiMaintenanceSuiteKeys),
+  },
+  api_smoke_tests: {
+    description: 'API-тесты со smoke-пометками из route matrix в docs/api-coverage-matrix.md.',
+    tests: collectApiTests(apiSmokeSuiteKeys),
+  },
+  all_api_tests: {
+    description: 'Полный набор всех API-тестов из модульного API-реестра.',
+    tests: collectApiTests(allApiSuiteKeys),
+  },
 };

@@ -21,7 +21,7 @@ export class AssembleAPI extends APIPageObject {
   }
 
   private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
-    return { status: response.status(), data: await this.parseJsonBody(response) };
+    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
   }
 
   async createAssemble(request: APIRequestContext, assembleData: any, userId: string, accessToken?: string) {

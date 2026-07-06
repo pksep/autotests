@@ -6,6 +6,7 @@ import logger from '../../lib/utils/logger';
 type ApiResult = {
   status: number;
   data: any;
+  headers?: Record<string, string>;
 };
 
 export class CBEDAPI extends APIPageObject {
@@ -24,7 +25,7 @@ export class CBEDAPI extends APIPageObject {
   }
 
   private async result(response: Awaited<ReturnType<APIRequestContext['get']>>): Promise<ApiResult> {
-    return { status: response.status(), data: await this.parseJsonBody(response) };
+    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
   }
 
   async createCBED(request: APIRequestContext, cbedData: Record<string, unknown>, userId: string, accessToken?: string) {

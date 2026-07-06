@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { CommentsAPI } from '../../pages/API/APIComments';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectApiContract, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 const commentsAPI = new CommentsAPI(null);
@@ -47,6 +47,7 @@ export const runCommentsAPINew = () => {
         test.skip(true, `GET /api/comments/by-thread depends on external comment service here: ${response.status}`);
       }
       expectNoServerError(response);
+      expectApiContract(response);
     });
 
     test('создает, обновляет, pin/unpin и удаляет комментарий, если comment-service доступен', async ({ request }) => {

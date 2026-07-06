@@ -21,7 +21,7 @@ export class MetaloworkingAPI extends APIPageObject {
   }
 
   private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
-    return { status: response.status(), data: await this.parseJsonBody(response) };
+    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
   }
 
   async create(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {

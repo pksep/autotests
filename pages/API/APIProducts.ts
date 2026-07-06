@@ -24,7 +24,7 @@ export class ProductsAPI extends APIPageObject {
   }
 
   private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
-    return { status: response.status(), data: await this.parseJsonBody(response) };
+    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
   }
 
   async createProduct(request: APIRequestContext, productData: Record<string, unknown>, accessToken?: string) {

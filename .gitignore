@@ -26,6 +26,8 @@ pnpm-debug.log*
 /allure-results/
 /allure-report/
 /logs/
+/playwright-report-*/
+/tmp-playwright-report*/
 
 # IDE and Development Files
 .cursor/

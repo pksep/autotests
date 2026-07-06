@@ -6,6 +6,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectClientError,
   expectEndpointReached,
   expectNoServerError,
@@ -363,12 +364,15 @@ export const runAssembleAPINew = () => {
 
     test('возвращает приход, план, операции и наборы без серверных ошибок', async ({ request }) => {
       const coming = await assembleAPI.getAssembleComing(request, assembleComingDto(), accessToken);
+      expectApiContract(coming, { shape: 'pagination' });
       expectRowsAndCount(coming, 100);
 
       const plan = await assembleAPI.getAllAssemblePlan(request, assemblePlanDto(), accessToken);
+      expectApiContract(plan, { shape: 'pagination' });
       expectRowsAndCount(plan);
 
       const operations = await assembleAPI.getOperationPagination(request, assembleOperationPaginationDto(), accessToken);
+      expectApiContract(operations, { shape: 'pagination' });
       expectRowsAndCount(operations);
 
       const kits = await assembleAPI.getComplectKitPagination(request, kitPaginationDto(), accessToken);

@@ -19,7 +19,7 @@ export class DetailsAPI extends APIPageObject {
   }
 
   private async result(response: Awaited<ReturnType<APIRequestContext['get']>>) {
-    return { status: response.status(), data: await this.parseJsonBody(response) };
+    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
   }
 
   async getAttributeById(request: APIRequestContext, id: string, attributes: string[], authToken?: string) {

@@ -5,6 +5,7 @@ import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
 import {
   clientErrorCodes,
+  expectApiContract,
   expectArrayResponse,
   expectClientError,
   expectErrorResponseContract,
@@ -100,7 +101,9 @@ const postUsersPagination = async (request: any, data: Record<string, unknown>, 
     responseData = await response.text();
   }
 
-  return { status: response.status(), data: responseData };
+  const result = { status: response.status(), data: responseData, headers: response.headers() };
+  expectApiContract(result, { shape: 'pagination' });
+  return result;
 };
 
 const postTabelUnique = async (request: any, data: Record<string, unknown>, accessToken?: string): Promise<ApiResult> => {
@@ -120,7 +123,9 @@ const postTabelUnique = async (request: any, data: Record<string, unknown>, acce
     responseData = await response.text();
   }
 
-  return { status: response.status(), data: responseData };
+  const result = { status: response.status(), data: responseData, headers: response.headers() };
+  expectApiContract(result, { shape: 'number' });
+  return result;
 };
 
 /**
@@ -199,6 +204,7 @@ export const runUsersAPINew = () => {
         return;
       }
 
+      expectApiContract(response, { shape: 'pagination' });
       expect(response.status).toBe(201);
       expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
       expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
@@ -217,6 +223,7 @@ export const runUsersAPINew = () => {
         return;
       }
 
+      expectApiContract(response, { shape: 'pagination' });
       expect(response.status).toBe(201);
       expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
       expect(getRows(response.data)).toEqual([]);
@@ -233,6 +240,7 @@ export const runUsersAPINew = () => {
         expectNoSensitiveFields(firstPage.data);
         return;
       }
+      expectApiContract(firstPage, { shape: 'pagination' });
       expect(firstPage.status).toBe(201);
       expectPaginationContract(firstPage.data, 1);
       expectNoSensitiveFields(firstPage.data);
@@ -244,6 +252,7 @@ export const runUsersAPINew = () => {
       );
       expectNoServerError(farPage);
       if (!clientErrorCodes.includes(farPage.status)) {
+        expectApiContract(farPage, { shape: 'pagination' });
         expect(successCodes).toContain(farPage.status);
         expectPaginationContract(farPage.data, 5);
       }
@@ -264,6 +273,7 @@ export const runUsersAPINew = () => {
         return;
       }
 
+      expectApiContract(response, { shape: 'object' });
       expect(response.status).toBe(201);
       expect(response.data).toBeTruthy();
       expectUserShape(response.data as UserLike);
@@ -318,6 +328,7 @@ export const runUsersAPINew = () => {
         return;
       }
 
+      expectApiContract(response, { shape: 'number' });
       expect(response.status).toBe(201);
       expect(Number(response.data), JSON.stringify(response.data)).toBeGreaterThan(0);
     });

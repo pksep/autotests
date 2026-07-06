@@ -6,6 +6,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectNoServerError,
   expectClientError,
   expectEndpointReached,
@@ -557,6 +558,7 @@ export const runDocumentsAPINew = () => {
 
       const changeType = await captureApiResult(() => documentsAPI.changeDocumentType(request, { id: missingId, type: 'missing' }, String(missingId)));
       expectEndpointReached(changeType);
+      if (!(changeType instanceof Error)) expectApiContract(changeType);
       if (!(changeType instanceof Error) && clientErrorCodes.includes(changeType.status)) {
         expectErrorResponseContract(changeType);
       }

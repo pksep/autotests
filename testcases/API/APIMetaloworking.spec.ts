@@ -6,6 +6,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectClientError,
   expectEndpointReached,
   expectNoServerError,
@@ -198,7 +199,7 @@ const archiveIsolatedMetaloworking = async (
 ) => {
   if (fixture.metaloworkingId) {
     const archiveMetaloworking = await metaloworkingAPI.delete(request, fixture.metaloworkingId, accessToken);
-    expectNoServerError(archiveMetaloworking);
+    expectApiContract(archiveMetaloworking);
   }
   if (fixture.detail?.id) {
     const archiveDetail = await detailsAPI.deleteDetail(request, String(fixture.detail.id), testUserId, accessToken);
@@ -233,21 +234,21 @@ export const runMetaloworkingAPINew = () => {
 
     test('возвращает приход и операции металлообработки без серверных ошибок', async ({ request }) => {
       const coming = await metaloworkingAPI.getComingPagination(request, metaloworkingComingDto(), accessToken);
-      expectNoServerError(coming);
+      expectApiContract(coming, { shape: 'pagination' });
 
       const operations = await metaloworkingAPI.getOperationPagination(
         request,
         metaloworkingOperationPaginationDto(),
         accessToken,
       );
-      expectNoServerError(operations);
+      expectApiContract(operations, { shape: 'pagination' });
 
       const complectation = await metaloworkingAPI.getComplectationOperationPagination(
         request,
         metaloworkingOperationPaginationDto(),
         accessToken,
       );
-      expectNoServerError(complectation);
+      expectApiContract(complectation, { shape: 'pagination' });
     });
 
     test('пагинации металлообработки поддерживают граничные значения page/pageSize', async ({ request }) => {
@@ -331,7 +332,7 @@ export const runMetaloworkingAPINew = () => {
 
       try {
         const byDetail = await metaloworkingAPI.getByDetalLight(request, Number(fixture.detail.id), accessToken);
-        expectNoServerError(byDetail);
+        expectApiContract(byDetail);
       } finally {
         await archiveIsolatedMetaloworking(request, fixture, accessToken);
       }
@@ -383,13 +384,14 @@ export const runMetaloworkingAPINew = () => {
         { id: 999999999, numberOrder: '', myKolvo: 0, description: '', detalId: 999999999 },
         accessToken,
       );
-      expectNoServerError(invalidUpdate);
+      expectApiContract(invalidUpdate);
 
       const comback = await metaloworkingAPI.comback(request, 999999999, accessToken);
-      expectNoServerError(comback);
+      expectApiContract(comback);
 
       const shapeBid = await captureApiResult(() => metaloworkingAPI.createShapeBid(request, [], accessToken));
       expectEndpointReached(shapeBid);
+      if (!(shapeBid instanceof Error)) expectApiContract(shapeBid);
     });
   });
 };

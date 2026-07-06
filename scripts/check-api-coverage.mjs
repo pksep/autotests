@@ -400,16 +400,16 @@ function classifyCoverageLevel(source, callIndex, routeId) {
   if (maintenanceRouteIds.has(routeId)) return 'maintenance';
 
   const context = getCoverageContext(source, callIndex);
-  if (/expectEndpointReached\s*\(/.test(context)) return 'smoke';
   if (/expectClientError\s*\(|expectValidationError\s*\(|expectMissingResource\s*\(|expectUnauthorizedOrForbidden\s*\(|expectRouteNotExposed\s*\(|expectErrorResponseContract\s*\(/.test(context)) {
     return 'negative';
   }
   if (
-    /expectPaginationContract\s*\(|expectJsonResponseHeaders\s*\(|expectSensitiveFieldsAreNotExposed\s*\(|expectSortedDescendingByKnownDate\s*\(|expectObjectResponse\s*\(|expectArrayResponse\s*\(|expect\([^)]*\.status[^)]*\)\.toBe\s*\(|successCodes[\s\S]{0,160}\.status/.test(context)
+    /expectApiContract\s*\(|expectPaginationContract\s*\(|expectJsonResponseHeaders\s*\(|expectSensitiveFieldsAreNotExposed\s*\(|expectSortedDescendingByKnownDate\s*\(|expectObjectResponse\s*\(|expectArrayResponse\s*\(|expect\([^)]*\.status[^)]*\)\.toBe\s*\(|successCodes[\s\S]{0,160}\.status/.test(context)
   ) {
     if (/\b(create|update|archive|delete|ban|restore|rollback|unpin|attach|detach)\b/i.test(context)) return 'functional';
     return 'contract';
   }
+  if (/expectEndpointReached\s*\(/.test(context)) return 'smoke';
   if (/\.toBe\s*\(|\.toEqual\s*\(|\.toContain\s*\(|\.toBeTruthy\s*\(|\.toBeGreaterThan/.test(context)) {
     return 'functional';
   }

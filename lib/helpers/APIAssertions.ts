@@ -123,6 +123,33 @@ export const expectJsonResponseHeaders = (response: ApiResult) => {
   expect(contentType.toLowerCase()).toContain('application/json');
 };
 
+export const expectApiContract = (
+  response: ApiResult,
+  options: { shape?: 'any' | 'array' | 'object' | 'pagination' | 'number'; successCodesOverride?: number[] } = {},
+) => {
+  expectNoServerError(response);
+  expectJsonResponseHeaders(response);
+
+  if (clientErrorCodes.includes(response.status)) {
+    expectErrorResponseContract(response);
+    return;
+  }
+
+  expect(options.successCodesOverride ?? successCodes, JSON.stringify(response.data)).toContain(response.status);
+
+  if (options.shape === 'array') {
+    expectArrayResponse(response.data);
+  } else if (options.shape === 'object') {
+    expectObjectResponse(response.data);
+  } else if (options.shape === 'pagination') {
+    expectPaginationContract(response.data);
+  } else if (options.shape === 'number') {
+    expect(Number(response.data), JSON.stringify(response.data)).not.toBeNaN();
+  } else {
+    expect(response.data, JSON.stringify(response.data)).toBeDefined();
+  }
+};
+
 export const expectSensitiveFieldsAreNotExposed = (data: unknown) => {
   const sensitiveKeys = [
     'password',

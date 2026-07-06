@@ -5,6 +5,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectClientError,
   expectEndpointReached,
   expectNoServerError,
@@ -355,12 +356,12 @@ export const runCBEDAPINew = () => {
       expectNoServerError(deficits);
 
       const operations = await cbedAPI.getOperationInclude(request, cbedPaginationDto({ isSortedByOperations: true }), accessToken);
-      expectNoServerError(operations);
+      expectApiContract(operations, { shape: 'pagination' });
 
       const cbed = await createIsolatedCbed(request, uniqueApiSuffix('cbed-shipments'), accessToken);
       try {
         const shipments = await cbedAPI.getCBEDShipmentsAndOrders(request, cbed.id, accessToken);
-        expectNoServerError(shipments);
+        expectApiContract(shipments);
       } finally {
         const archive = await cbedAPI.banCBED(request, cbed.id, testUserId, accessToken);
         expectNoServerError(archive);
@@ -406,6 +407,7 @@ export const runCBEDAPINew = () => {
 
       const drafts = await captureApiResult(() => cbedAPI.getDrafts(request, 999999999, accessToken));
       expectEndpointReached(drafts);
+      if (!(drafts instanceof Error)) expectApiContract(drafts);
 
       const actualAvatar = await captureApiResult(() => cbedAPI.actualAvatar(request, accessToken));
       expectEndpointReached(actualAvatar);
