@@ -13,7 +13,6 @@ import {
   expectErrorResponseContract,
   expectPaginationContract,
   getRows,
-  serverErrorCodes,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
@@ -411,10 +410,6 @@ export const runDocumentsAPINew = () => {
       }
 
       const avatarEndpoint = await documentsAPI.getAvatarByEntity(request, 'equipment', equipmentId as number, accessToken);
-      test.fail(
-        serverErrorCodes.includes(avatarEndpoint.status),
-        'Known Documents API route issue: /documents/avatar:typeEntity/:idEntity is shadowed by /documents/:id/:light.',
-      );
       expectNoServerError(avatarEndpoint);
       if (!clientErrorCodes.includes(avatarEndpoint.status)) {
         expect(successCodes).toContain(avatarEndpoint.status);

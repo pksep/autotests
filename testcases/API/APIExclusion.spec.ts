@@ -64,12 +64,12 @@ export const runExclusionAPINew = () => {
       updatedValue = `API-EXCLUSION-UPDATED-${suffix}`;
 
       const create = await exclusionAPI.createExclusion(request, exclusionPayload(suffix), accessToken);
-      if (create.status >= 500 || clientErrorCodes.includes(create.status)) {
+      expectNoServerError(create);
+      if (clientErrorCodes.includes(create.status)) {
         test.skip(true, `POST /api/exclusion is not available on this environment: ${create.status}`);
       }
 
       expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
-      expectNoServerError(create);
 
       exclusionId = getExclusionId(create.data);
       expect(exclusionId, JSON.stringify(create.data)).toBeTruthy();
@@ -160,10 +160,10 @@ export const runExclusionAPINew = () => {
           exclusionPayload(uniqueApiSuffix('edge'), { exclusion }),
           accessToken,
         );
-        if (response.status >= 500 || clientErrorCodes.includes(response.status)) {
+        expectNoServerError(response);
+        if (clientErrorCodes.includes(response.status)) {
           test.skip(true, `POST /api/exclusion is not available for edge payloads on this environment: ${response.status}`);
         }
-        expectNoServerError(response);
 
         const id = getExclusionId(response.data);
         if (id) {

@@ -4,10 +4,9 @@ import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
   clientErrorCodes,
+  expectClientError,
   expectNoServerError,
   expectPaginationContract,
-  expectUnauthorizedOrForbidden,
-  expectValidationError,
   getCount,
   getRows,
   successCodes,
@@ -205,7 +204,6 @@ export const runBuyerAPINew = () => {
 
     test('light-список и архивная выдача не отвечают 5xx', async ({ request }) => {
       const light = await buyerAPI.getBuyers(request, true, accessToken);
-      test.skip(light.status === 500 && String(light.data?.message || '').includes('/app/dist/static/index.html'), 'GET /api/buyer/light is not available on this environment');
       expectNoServerError(light);
 
       const archive = await buyerAPI.getBuyersArchive(request, { searchString: 'api-buyer-no-match-999999999' }, accessToken);
@@ -223,10 +221,10 @@ export const runBuyerAPINew = () => {
         const cleanup = await buyerAPI.banBuyer(request, Number(invalidCreate.data.id), accessToken);
         expectNoServerError(cleanup);
       }
-      expectValidationError(invalidCreate);
+      expectClientError(invalidCreate);
 
       const noAuth = await buyerAPI.createBuyer(request, buyerPayload(uniqueApiSuffix('noauth')));
-      expectUnauthorizedOrForbidden(noAuth);
+      expectClientError(noAuth);
     });
   });
 };

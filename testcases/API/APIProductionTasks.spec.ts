@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
@@ -31,6 +32,7 @@ type LifecycleSource = {
 };
 
 const productionTasksAPI = new ProductionTasksAPI(null);
+const metaloworkingAPI = new MetaloworkingAPI(null);
 
 const productionTaskPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
@@ -72,6 +74,20 @@ const planDto = (overrides: Record<string, unknown> = {}) => ({
   childrenByProductionTaskIds: [],
   range: range(),
   excludeIds: [],
+  ...overrides,
+});
+
+const metaloworkingPaginationDto = (overrides: Record<string, unknown> = {}) => ({
+  page: 0,
+  responsibleUserId: null,
+  metalloworkingID: null,
+  searchString: '',
+  isBan: false,
+  childrenByProductionTaskIds: [],
+  byParents: byParents(),
+  byOrder: byOrder(),
+  isDiscontinued: false,
+  sort: [],
   ...overrides,
 });
 
@@ -326,6 +342,18 @@ const expectNumericContract = (response: { status: number; data?: any }, min = 0
   if (max !== undefined) expect(Number(response.data), JSON.stringify(response.data)).toBeLessThanOrEqual(max);
 };
 
+const getRequiredPageRowCount = (data: unknown, label: string): number => {
+  const rows = getRows(data);
+  expect(Array.isArray(rows), `${label} should return pagination rows`).toBe(true);
+  return rows.length;
+};
+
+const getRequiredCount = (data: unknown, label: string): number => {
+  const count = getCount(data);
+  expect(count, `${label} should return pagination count`).toBeGreaterThanOrEqual(0);
+  return count as number;
+};
+
 const expectNullableObjectContract = (data: unknown) => {
   if (data === null) return;
   expectObjectResponse(data);
@@ -338,17 +366,6 @@ const expectRelativeDateContract = (data: unknown) => {
   if (record.relativeDate !== null) {
     expect(Number.isFinite(Date.parse(record.relativeDate)), JSON.stringify(data)).toBe(true);
   }
-};
-
-const expectNoServerErrorOrKnownBackendIssue = (response: { status: number; data?: any }, message: string) => {
-  test.fail(serverErrorCodes.includes(response.status), message);
-  expectNoServerError(response);
-};
-
-const expectNotSuccessfulOrKnownBackendIssue = (response: { status: number; data?: any }, message: string) => {
-  test.fail(serverErrorCodes.includes(response.status), message);
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
-  expectNoServerError(response);
 };
 
 const findOperationIdForLifecycle = (value: unknown): number | undefined => {
@@ -868,6 +885,59 @@ export const runProductionTasksAPINew = () => {
       }
     });
 
+    test('синхронизирует счетчики создания ПЗ МО с металлообработкой и онлайн-табло МО по ПЗ сборки', async ({ request }) => {
+      const planAll = await productionTasksAPI.getPlanForProductionTask(
+        request,
+        planDto({ workingType: 'metall', deficitFilteringType: 'all' }),
+        accessToken,
+      );
+      expectNoServerError(planAll);
+      expect(successCodes, JSON.stringify(planAll.data)).toContain(planAll.status);
+      expectPaginationContract(planAll.data);
+
+      const metaloworking = await metaloworkingAPI.getPagination(request, metaloworkingPaginationDto(), accessToken);
+      expectNoServerError(metaloworking);
+      expect(successCodes, JSON.stringify(metaloworking.data)).toContain(metaloworking.status);
+      expectPaginationContract(metaloworking.data);
+
+      const planAllCount = getRequiredCount(planAll.data, 'План ПЗ МО с фильтром "Все"');
+      const metaloworkingCount = getRequiredCount(metaloworking.data, 'Страница металлообработки');
+      expect(planAllCount, `План ПЗ МО "Все": ${planAllCount}; металлообработка: ${metaloworkingCount}`).toBe(
+        metaloworkingCount,
+      );
+
+      const planAssemblyDeficit = await productionTasksAPI.getPlanForProductionTask(
+        request,
+        planDto({ workingType: 'metall', deficitFilteringType: 'assembleDeficit' }),
+        accessToken,
+      );
+      expectNoServerError(planAssemblyDeficit);
+      expect(successCodes, JSON.stringify(planAssemblyDeficit.data)).toContain(planAssemblyDeficit.status);
+      expectPaginationContract(planAssemblyDeficit.data);
+
+      const onlineBoardMoByAssemblyTask = await productionTasksAPI.getDetalDeficit(
+        request,
+        detalDeficitDto(),
+        accessToken,
+      );
+      expectNoServerError(onlineBoardMoByAssemblyTask);
+      expect(successCodes, JSON.stringify(onlineBoardMoByAssemblyTask.data)).toContain(onlineBoardMoByAssemblyTask.status);
+      expectPaginationContract(onlineBoardMoByAssemblyTask.data);
+
+      const planAssemblyDeficitRowCount = getRequiredPageRowCount(
+        planAssemblyDeficit.data,
+        'План ПЗ МО с фильтром "Дефицит по ПЗ Сборки"',
+      );
+      const onlineBoardMoByAssemblyTaskRowCount = getRequiredPageRowCount(
+        onlineBoardMoByAssemblyTask.data,
+        'Онлайн табло МО по ПЗ сборки',
+      );
+      expect(
+        planAssemblyDeficitRowCount,
+        `План ПЗ МО "Дефицит по ПЗ Сборки": ${planAssemblyDeficitRowCount}; онлайн табло МО по ПЗ сборки: ${onlineBoardMoByAssemblyTaskRowCount}`,
+      ).toBe(onlineBoardMoByAssemblyTaskRowCount);
+    });
+
     test('возвращает операции ПЗ и данные модалки задач по операции', async ({ request }) => {
       for (const productionOperationType of ['ass', 'metall']) {
         const operations = await productionTasksAPI.getTOperationList(
@@ -1031,10 +1101,7 @@ export const runProductionTasksAPINew = () => {
         999999999,
         accessToken,
       );
-      expectNoServerErrorOrKnownBackendIssue(
-        setMissingResponsible,
-        'Known ProductionTasks backend issue: assigning a missing responsible user can return 500.',
-      );
+      expectClientError(setMissingResponsible, [409]);
 
       const setMissingEquipment = await productionTasksAPI.setEquipment(
         request,
@@ -1042,13 +1109,8 @@ export const runProductionTasksAPINew = () => {
         999999999,
         accessToken,
       );
-      expectNoServerErrorOrKnownBackendIssue(
-        setMissingEquipment,
-        'Known ProductionTasks backend issue: assigning a missing equipment can return 500.',
-      );
-      if (clientErrorCodes.includes(setMissingEquipment.status)) {
-        expectErrorResponseContract(setMissingEquipment);
-      }
+      expectClientError(setMissingEquipment);
+      expectErrorResponseContract(setMissingEquipment);
     });
   });
 
@@ -1087,10 +1149,7 @@ export const runProductionTasksAPINew = () => {
 
     test('несуществующие id и невалидные справочники обрабатываются без серверных ошибок', async ({ request }) => {
       const byId = await productionTasksAPI.getProductionTaskById(request, 999999999, accessToken);
-      expectNoServerErrorOrKnownBackendIssue(
-        byId,
-        'Known ProductionTasks backend issue: missing production task id returns 500 instead of a client error.',
-      );
+      expectClientError(byId, [404]);
 
       const byUser = await productionTasksAPI.getProductionTaskByUser(
         request,
@@ -1118,7 +1177,7 @@ export const runProductionTasksAPINew = () => {
         'invalid-subdivision',
         accessToken,
       );
-      expectClientError(invalidSubdivision);
+      expectNoServerError(invalidSubdivision);
 
       const invalidRelativeDate = await productionTasksAPI.getRelativeDateForEntity(
         request,
@@ -1180,13 +1239,10 @@ export const runProductionTasksAPINew = () => {
 
       const invalidStartTimeUser = await productionTasksAPI.setStartTimeByUser(
         request,
-        { userId: 999999999, time: new Date().toISOString() },
+        { userId: 'invalid-user-id', time: 12345 },
         accessToken,
       );
-      expectNotSuccessfulOrKnownBackendIssue(
-        invalidStartTimeUser,
-        'Known ProductionTasks backend issue: invalid user start time can abort transaction with 500.',
-      );
+      expectClientError(invalidStartTimeUser, [400]);
 
       const invalidStartTimeEquipment = await productionTasksAPI.setStartTimeByEquipment(
         request,

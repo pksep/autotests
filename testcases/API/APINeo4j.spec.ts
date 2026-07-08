@@ -20,10 +20,6 @@ export const runNeo4jAPINew = () => {
 
     test('строит stairs для валидного типа без серверной ошибки, если Neo4j доступен', async ({ request }) => {
       const response = await neo4jAPI.getRelativesStairs(request, 'product', 999999999, accessToken);
-      if (response.status >= 500) {
-        test.skip(true, `Neo4j service is not available on this environment: ${response.status}`);
-      }
-
       expectNoServerError(response);
       if (!clientErrorCodes.includes(response.status)) {
         expect(successCodes, JSON.stringify(response.data)).toContain(response.status);

@@ -43,21 +43,18 @@ export const runCommentsAPINew = () => {
 
     test('обрабатывает неизвестный thread без падения suite', async ({ request }) => {
       const response = await commentsAPI.getByThread(request, `api-thread-${uniqueApiSuffix('missing')}`, accessToken);
-      if (response.status >= 500) {
-        test.skip(true, `GET /api/comments/by-thread depends on external comment service here: ${response.status}`);
-      }
       expectNoServerError(response);
       expectApiContract(response);
     });
 
     test('создает, обновляет, pin/unpin и удаляет комментарий, если comment-service доступен', async ({ request }) => {
       const create = await commentsAPI.createComment(request, commentPayload(), accessToken);
-      if (create.status >= 500 || clientErrorCodes.includes(create.status)) {
+      expectNoServerError(create);
+      if (clientErrorCodes.includes(create.status)) {
         test.skip(true, `POST /api/comments/create is not available on this environment: ${create.status}`);
       }
 
       expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
-      expectNoServerError(create);
 
       const id = getCommentId(create.data);
       test.skip(!id, `Created comment id was not returned: ${JSON.stringify(create.data)}`);
@@ -89,10 +86,10 @@ export const runCommentsAPINew = () => {
 
       for (const content of cases) {
         const response = await commentsAPI.createComment(request, commentPayload({ content }), accessToken);
-        if (response.status >= 500 || clientErrorCodes.includes(response.status)) {
+        expectNoServerError(response);
+        if (clientErrorCodes.includes(response.status)) {
           test.skip(true, `POST /api/comments/create is not available on this environment: ${response.status}`);
         }
-        expectNoServerError(response);
 
         const id = getCommentId(response.data);
         if (id) {
