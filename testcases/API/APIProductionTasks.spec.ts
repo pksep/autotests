@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
+import { UsersAPI } from '../../pages/API/APIUsers';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
@@ -32,7 +34,9 @@ type LifecycleSource = {
 };
 
 const productionTasksAPI = new ProductionTasksAPI(null);
+const equipmentAPI = new EquipmentAPI(null);
 const metaloworkingAPI = new MetaloworkingAPI(null);
+const usersAPI = new UsersAPI(null as any);
 
 const productionTaskPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
@@ -192,6 +196,203 @@ const invalidOperationPosDto = (overrides: Record<string, unknown> = {}) => ({
   operation_positions: 'invalid-positions',
   ...overrides,
 });
+
+const WORK_START_HOUR_UTC = 5;
+const WORK_END_HOUR_UTC = 13;
+const WORK_END_MINUTE_UTC = 30;
+const DATE_TOLERANCE_MS = 1000;
+
+const isWorkDay = (date: Date): boolean => {
+  const day = date.getUTCDay();
+  return day !== 0 && day !== 6;
+};
+
+const workDayStart = (date: Date): Date => {
+  const copy = new Date(date);
+  copy.setUTCHours(WORK_START_HOUR_UTC, 0, 0, 0);
+  return copy;
+};
+
+const workDayEnd = (date: Date): Date => {
+  const copy = new Date(date);
+  copy.setUTCHours(WORK_END_HOUR_UTC, WORK_END_MINUTE_UTC, 0, 0);
+  return copy;
+};
+
+const isAtWorkDayEnd = (date: Date): boolean =>
+  isWorkDay(date) &&
+  date.getUTCHours() === WORK_END_HOUR_UTC &&
+  date.getUTCMinutes() === WORK_END_MINUTE_UTC &&
+  date.getUTCSeconds() === 0 &&
+  date.getUTCMilliseconds() === 0;
+
+const moveToNextWorkDay = (date: Date): Date => {
+  const next = new Date(date);
+  do {
+    next.setUTCDate(next.getUTCDate() + 1);
+  } while (!isWorkDay(next));
+  next.setUTCHours(WORK_START_HOUR_UTC, 0, 0, 0);
+  return next;
+};
+
+const moveToPreviousWorkDay = (date: Date): Date => {
+  const prev = new Date(date);
+  do {
+    prev.setUTCDate(prev.getUTCDate() - 1);
+  } while (!isWorkDay(prev));
+  prev.setUTCHours(WORK_END_HOUR_UTC, WORK_END_MINUTE_UTC, 0, 0);
+  return prev;
+};
+
+const calculateEndDateLocal = (dateValue: string | Date, minutes: number): Date => {
+  let current = new Date(dateValue);
+  let remaining = Math.max(Number(minutes) || 0, 0);
+
+  if (!isWorkDay(current)) {
+    current = moveToNextWorkDay(current);
+  } else {
+    const currentMinute = current.getUTCHours() * 60 + current.getUTCMinutes();
+    const startMinute = WORK_START_HOUR_UTC * 60;
+    const endMinute = WORK_END_HOUR_UTC * 60 + WORK_END_MINUTE_UTC;
+    if (currentMinute < startMinute) current = workDayStart(current);
+    if (currentMinute >= endMinute) current = moveToNextWorkDay(current);
+  }
+
+  while (remaining > 0) {
+    const end = workDayEnd(current);
+    const available = Math.min(remaining, (end.getTime() - current.getTime()) / 60000);
+    if (available > 0) {
+      current = new Date(current.getTime() + available * 60000);
+      remaining -= available;
+    }
+    if (remaining > 0) current = moveToNextWorkDay(current);
+  }
+
+  if (isAtWorkDayEnd(current)) current = moveToNextWorkDay(current);
+
+  return current;
+};
+
+const calculateStartDateLocal = (dateValue: string | Date, minutes: number): Date => {
+  let current = new Date(dateValue);
+  let remaining = Math.max(Number(minutes) || 0, 0);
+
+  if (!isWorkDay(current)) {
+    current = moveToPreviousWorkDay(current);
+  } else {
+    const currentMinute = current.getUTCHours() * 60 + current.getUTCMinutes();
+    const startMinute = WORK_START_HOUR_UTC * 60;
+    const endMinute = WORK_END_HOUR_UTC * 60 + WORK_END_MINUTE_UTC;
+    if (currentMinute < startMinute) current = moveToPreviousWorkDay(current);
+    if (currentMinute > endMinute) current = workDayEnd(current);
+  }
+
+  while (remaining > 0) {
+    const start = workDayStart(current);
+    const available = Math.min(remaining, (current.getTime() - start.getTime()) / 60000);
+    if (available > 0) {
+      current = new Date(current.getTime() - available * 60000);
+      remaining -= available;
+    }
+    if (remaining > 0) current = moveToPreviousWorkDay(current);
+  }
+
+  return current;
+};
+
+const calculateDeltaTimeLocal = (calculatedCreateTime: string | Date, planReadyTime: string | Date): number => {
+  const calculatedDate = new Date(calculatedCreateTime);
+  const planDate = new Date(planReadyTime);
+  const sign = calculatedDate <= planDate ? 1 : -1;
+  const start = calculatedDate <= planDate ? calculatedDate : planDate;
+  const end = calculatedDate <= planDate ? planDate : calculatedDate;
+
+  let totalMinutes = 0;
+  const current = new Date(start);
+
+  while (current < end) {
+    if (!isWorkDay(current)) {
+      current.setUTCDate(current.getUTCDate() + 1);
+      current.setUTCHours(0, 0, 0, 0);
+      continue;
+    }
+
+    const actualStart = current > workDayStart(current) ? current : workDayStart(current);
+    const actualEnd = end < workDayEnd(current) ? end : workDayEnd(current);
+
+    if (actualStart < actualEnd) {
+      totalMinutes += (actualEnd.getTime() - actualStart.getTime()) / 60000;
+    }
+
+    current.setUTCDate(current.getUTCDate() + 1);
+    current.setUTCHours(0, 0, 0, 0);
+  }
+
+  return Math.round(totalMinutes) * sign;
+};
+
+const dateMs = (value: unknown): number | null => {
+  if (!value) return null;
+  const date = new Date(value as string);
+  if (!Number.isFinite(date.getTime())) return null;
+  return (isAtWorkDayEnd(date) ? moveToNextWorkDay(date) : date).getTime();
+};
+
+const expectSameDate = (actual: unknown, expected: unknown, context: string) => {
+  const actualMs = dateMs(actual);
+  const expectedMs = dateMs(expected);
+  const details = `${context}; actual=${actual ?? null}; expected=${expected ?? null}`;
+
+  if (expectedMs === null) {
+    expect(actualMs, details).toBeNull();
+    return;
+  }
+
+  expect(actualMs, details).not.toBeNull();
+  expect(Math.abs((actualMs as number) - expectedMs), details).toBeLessThanOrEqual(DATE_TOLERANCE_MS);
+};
+
+const getOperationDurationMinutes = (operation: ApiRow | undefined): number => {
+  const operationTime = operation?.operationTime;
+  if (operationTime && Number.isFinite(Number(operationTime.count))) return Number(operationTime.count);
+
+  const preTime = Number(operation?.preTime || 0);
+  const mainTime = Number(operation?.mainTime || 0);
+  const helperTime = Number(operation?.helperTime || 0);
+  const quantity = Number(operation?.quantityMax ?? operation?.countNeeds ?? 1);
+  const hasFormulaTime = [operation?.preTime, operation?.mainTime, operation?.helperTime].some((value) =>
+    Number.isFinite(Number(value)),
+  );
+  if (hasFormulaTime) return preTime + (mainTime + helperTime) * quantity;
+
+  return 0;
+};
+
+const getCalculatedOperationDurationMinutes = (operation: ApiRow | undefined): number | undefined => {
+  if (!operation?.calculateStartTime || !operation?.planReadyTime) return undefined;
+  return Math.abs(calculateDeltaTimeLocal(operation.calculateStartTime, operation.planReadyTime));
+};
+
+const getWorkStartCalcType = (position: ApiRow, operation: ApiRow): string => {
+  const directValue = operation.workStartCalcType || operation.typeOperation?.workStartCalcType;
+  if (directValue) return String(directValue);
+
+  const techProcessOperation = Array.isArray(position.techProcess?.operations)
+    ? position.techProcess.operations.find((item: ApiRow) => Number(item.id) === Number(operation.id))
+    : null;
+
+  return String(techProcessOperation?.workStartCalcType || techProcessOperation?.typeOperation?.workStartCalcType || 'automatic');
+};
+
+const getEquipmentRows = (data: unknown): ApiRow[] => {
+  const rows = getRows<ApiRow>(data);
+  if (rows.length) return rows;
+  if (Array.isArray(data)) return data as ApiRow[];
+  if (!data || typeof data !== 'object') return [];
+  return Object.values(data as ApiRow)
+    .flatMap((value) => (Array.isArray(value) ? value : []))
+    .filter((item): item is ApiRow => Boolean(item && typeof item === 'object' && Number.isFinite(Number(item.id))));
+};
 
 const findNumberByKeys = (value: unknown, keys: string[]): number | undefined => {
   const stack = [value];
@@ -1052,6 +1253,365 @@ export const runProductionTasksAPINew = () => {
           expectNullableObjectContract(equipmentStartTime.data);
         }
       }
+    });
+
+    test('проверяет расчёт дат операций ПЗ по всем оборудованиям', async ({ request }) => {
+      test.setTimeout(180000);
+
+      const allEquipment = await equipmentAPI.getAllEquipment(request, true, accessToken);
+      expectNoServerError(allEquipment);
+      expect(successCodes, JSON.stringify(allEquipment.data)).toContain(allEquipment.status);
+
+      const equipmentRows = getEquipmentRows(allEquipment.data).filter((equipment) => Number.isFinite(Number(equipment.id)));
+      test.skip(!equipmentRows.length, 'No equipment is available for production task date validation.');
+
+      const relativeDateCache = new Map<string, string | null>();
+      let checkedPositions = 0;
+
+      const getLastOperationRequiredReadyDate = async (position: ApiRow): Promise<string | null> => {
+        const entityType = position.entityType;
+        const entityId = Number(position.mainEntity?.id || position.productionEntityId);
+        if (!entityType || !Number.isFinite(entityId)) return null;
+
+        const cacheKey = `${entityType}:${entityId}`;
+        if (relativeDateCache.has(cacheKey)) return relativeDateCache.get(cacheKey) || null;
+
+        const relativeDate = await productionTasksAPI.getRelativeDateForEntity(
+          request,
+          String(entityType),
+          entityId,
+          accessToken,
+        );
+        expectNoServerError(relativeDate);
+
+        const value =
+          !clientErrorCodes.includes(relativeDate.status) && relativeDate.data?.relativeDate
+            ? String(relativeDate.data.relativeDate)
+            : null;
+        relativeDateCache.set(cacheKey, value);
+        return value;
+      };
+
+      for (const equipment of equipmentRows) {
+        const equipmentId = Number(equipment.id);
+        let page = 0;
+        let count = 0;
+        let previousEquipmentCalculatedCreateTime: unknown = null;
+
+        do {
+          const tasksByEquipment = await productionTasksAPI.getTaskByEquipment(
+            request,
+            byEquipmentDto(equipmentId, { page }),
+            accessToken,
+          );
+          expectNoServerError(tasksByEquipment);
+          if (clientErrorCodes.includes(tasksByEquipment.status)) break;
+
+          expect(successCodes, JSON.stringify(tasksByEquipment.data)).toContain(tasksByEquipment.status);
+          const positions = Array.isArray(tasksByEquipment.data?.positions)
+            ? (tasksByEquipment.data.positions as ApiRow[])
+            : [];
+          count = Number(tasksByEquipment.data?.count || positions.length);
+
+          for (const position of positions) {
+            const operation = position.mainOperation as ApiRow | undefined;
+            if (!operation?.id) continue;
+
+            const context = [
+              `equipment=${equipmentId}`,
+              `productionTask=${position.productionTaskId}`,
+              `productionOperationPosition=${position.productionOperationPositionId}`,
+              `operationPosition=${position.operationPostionsId}`,
+              `operation=${operation.id}`,
+              `idx=${operation.idx}`,
+            ].join(', ');
+
+            const duration = getOperationDurationMinutes(operation);
+            const expectedCalculatedCreateTime = position.startTime
+              ? calculateEndDateLocal(position.startTime, duration)
+              : null;
+            expectSameDate(
+              position.calculatedCreateTime,
+              expectedCalculatedCreateTime,
+              `Расчётная дата изготовления на операцию: ${context}`,
+            );
+
+            const expectedDeltaTime =
+              expectedCalculatedCreateTime && position.planReadyTime
+                ? calculateDeltaTimeLocal(expectedCalculatedCreateTime, position.planReadyTime)
+                : 0;
+            expect(
+              Number(position.deltaTime),
+              `Дельта операции: ${context}; actual=${position.deltaTime}; expected=${expectedDeltaTime}`,
+            ).toBe(expectedDeltaTime);
+
+            const prevOperation = position.prevOperation as ApiRow | null;
+            const nextOperation = position.nextOperation as ApiRow | null;
+            const workStartCalcType = getWorkStartCalcType(position, operation);
+
+            if (workStartCalcType === 'automatic' && previousEquipmentCalculatedCreateTime) {
+              expectSameDate(
+                position.startTime,
+                previousEquipmentCalculatedCreateTime,
+                `Начало работ автоматической операции равно расчётной дате предыдущей строки оборудования: ${context}`,
+              );
+            }
+
+            if (workStartCalcType === 'prevOperationReadinessDate') {
+              if (prevOperation?.calculateNeedsTime) {
+                expectSameDate(
+                  position.startTime,
+                  prevOperation.calculateNeedsTime,
+                  `Начало работ равно расчётной дате готовности предыдущей операции техпроцесса: ${context}`,
+                );
+              }
+            }
+
+            if (workStartCalcType === 'nextOperationWorkStart') {
+              const referenceStartTime = nextOperation?.startTime
+                ? nextOperation.startTime
+                : await getLastOperationRequiredReadyDate(position);
+              const expectedStartTime = referenceStartTime
+                ? calculateStartDateLocal(referenceStartTime, duration)
+                : null;
+              expectSameDate(
+                position.startTime,
+                expectedStartTime,
+                `Начало работ по началу следующей операции: ${context}`,
+              );
+            }
+
+            const expectedPlanReadyTime = nextOperation?.startTime
+              ? nextOperation.startTime
+              : await getLastOperationRequiredReadyDate(position);
+            expectSameDate(
+              position.planReadyTime,
+              expectedPlanReadyTime,
+              `Дата требуемой готовности на операцию: ${context}`,
+            );
+
+            checkedPositions += 1;
+            previousEquipmentCalculatedCreateTime = position.calculatedCreateTime;
+          }
+
+          page += 1;
+        } while (page * 50 < count);
+      }
+
+      expect(checkedPositions, 'No equipment production task operation positions were checked.').toBeGreaterThan(0);
+    });
+
+    test('проверяет расчёт дат операций ПЗ по всем сотрудникам', async ({ request }) => {
+      test.setTimeout(180000);
+
+      const allUsers = await usersAPI.getAllUsers(request, true, false, accessToken);
+      expectNoServerError(allUsers);
+      expect(successCodes, JSON.stringify(allUsers.data)).toContain(allUsers.status);
+
+      const userRows = getRows<ApiRow>(allUsers.data).filter((user) => Number.isFinite(Number(user.id)));
+      test.skip(!userRows.length, 'No users are available for production task date validation.');
+
+      const relativeDateCache = new Map<string, string | null>();
+      const operationDetailsCache = new Map<string, ApiRow[]>();
+      let checkedPositions = 0;
+
+      const getLastOperationRequiredReadyDate = async (position: ApiRow): Promise<string | null> => {
+        const entityType = position.entityType;
+        const entityId = Number(
+          position.entity?.id || position.mainEntity?.id || position.productionEntityId || position.productionItemId,
+        );
+        if (!entityType || !Number.isFinite(entityId)) return null;
+
+        const cacheKey = `${entityType}:${entityId}`;
+        if (relativeDateCache.has(cacheKey)) return relativeDateCache.get(cacheKey) || null;
+
+        const relativeDate = await productionTasksAPI.getRelativeDateForEntity(
+          request,
+          String(entityType),
+          entityId,
+          accessToken,
+        );
+        expectNoServerError(relativeDate);
+
+        const value =
+          !clientErrorCodes.includes(relativeDate.status) && relativeDate.data?.relativeDate
+            ? String(relativeDate.data.relativeDate)
+            : null;
+        relativeDateCache.set(cacheKey, value);
+        return value;
+      };
+
+      const getOperationDetailsRows = async (position: ApiRow, operation: ApiRow): Promise<ApiRow[]> => {
+        const entityType = String(position.operationPosType || 'ass') as 'ass' | 'metall';
+        const productionEntityId = Number(position.productionItemId || position.productionEntityId);
+        const productionTaskId = Number(position.productionTaskId);
+        const cacheKey = `${entityType}:${productionEntityId}:${productionTaskId}:${Number(operation.id)}`;
+
+        if (!operationDetailsCache.has(cacheKey)) {
+          const taskOperations = await productionTasksAPI.getTaskOperations(
+            request,
+            taskOperationsDto(entityType, productionEntityId, Number(operation.id), { productionTaskId }),
+            accessToken,
+          );
+          expectNoServerError(taskOperations);
+          let details: ApiRow[] = [];
+          if (!clientErrorCodes.includes(taskOperations.status)) {
+            expect(successCodes, JSON.stringify(taskOperations.data)).toContain(taskOperations.status);
+            details = Array.isArray(taskOperations.data?.allOperationPositions)
+              ? (taskOperations.data.allOperationPositions as ApiRow[])
+              : [];
+          }
+          operationDetailsCache.set(cacheKey, details);
+        }
+
+        return operationDetailsCache.get(cacheKey) || [];
+      };
+
+      for (const user of userRows) {
+        const userId = Number(user.id);
+        let page = 0;
+        let count = 0;
+
+        do {
+          const tasksByUser = await productionTasksAPI.getProductionTaskByUser(
+            request,
+            byUserDto(userId, { page }),
+            accessToken,
+          );
+          expectNoServerError(tasksByUser);
+          if (clientErrorCodes.includes(tasksByUser.status)) break;
+
+          expect(successCodes, JSON.stringify(tasksByUser.data)).toContain(tasksByUser.status);
+          const positions = Array.isArray(tasksByUser.data?.positions)
+            ? (tasksByUser.data.positions as ApiRow[])
+            : [];
+          count = Number(tasksByUser.data?.count || positions.length);
+
+          for (const position of positions) {
+            const operation = position.mainOperation as ApiRow | undefined;
+            if (!operation?.id) continue;
+
+            const context = [
+              `user=${userId}`,
+              `productionTask=${position.productionTaskId}`,
+              `productionOperationPosition=${position.productionOperationPositionId}`,
+              `operationPosition=${position.operationPositionId}`,
+              `operation=${operation.id}`,
+              `idx=${operation.idx}`,
+            ].join(', ');
+
+            const operationDetailsRows = await getOperationDetailsRows(position, operation);
+            const currentProductionOperationDetailsRows = operationDetailsRows
+              .filter((item) => Number(item.productionOperationId) === Number(position.productionOperationPositionId))
+              .sort(
+                (left, right) =>
+                  Number(left.idx ?? 0) - Number(right.idx ?? 0) ||
+                  Number(left.operationPositionId ?? 0) - Number(right.operationPositionId ?? 0),
+              );
+            const currentOperationDetailsIndex = currentProductionOperationDetailsRows.findIndex(
+              (item) => Number(item.operationPositionId) === Number(position.operationPositionId),
+            );
+            const operationDetails =
+              currentOperationDetailsIndex >= 0
+                ? currentProductionOperationDetailsRows[currentOperationDetailsIndex]
+                : undefined;
+            const prevOperationDetails =
+              currentOperationDetailsIndex > 0
+                ? currentProductionOperationDetailsRows[currentOperationDetailsIndex - 1]
+                : undefined;
+            const nextOperationDetails =
+              currentOperationDetailsIndex >= 0
+                ? currentProductionOperationDetailsRows[currentOperationDetailsIndex + 1]
+                : undefined;
+            const employeeStartTime = operationDetails?.calculateStartTime || null;
+            const duration = getOperationDurationMinutes(operationDetails || operation);
+            const expectedCalculatedCreateTime = position.startTime
+              ? calculateEndDateLocal(position.startTime, duration)
+              : null;
+            expectSameDate(
+              position.calculatedCreateTime,
+              expectedCalculatedCreateTime,
+              `Расчётная дата изготовления на операцию: ${context}`,
+            );
+
+            if (operationDetails?.calculateStartTime) {
+              const employeeDuration =
+                getCalculatedOperationDurationMinutes(operationDetails) ?? getOperationDurationMinutes(operationDetails);
+              const expectedEmployeeStartTime = operationDetails.planReadyTime
+                ? calculateStartDateLocal(operationDetails.planReadyTime, employeeDuration)
+                : null;
+              expectSameDate(
+                operationDetails.calculateStartTime,
+                expectedEmployeeStartTime,
+                `Расчётное начало работ сотрудника от расчётной даты изготовления: ${context}`,
+              );
+            }
+
+            const expectedDeltaTime =
+              expectedCalculatedCreateTime && position.planReadyTime
+                ? calculateDeltaTimeLocal(expectedCalculatedCreateTime, position.planReadyTime)
+                : 0;
+            expect(
+              Number(position.deltaTime),
+              `Дельта операции: ${context}; actual=${position.deltaTime}; expected=${expectedDeltaTime}`,
+            ).toBe(expectedDeltaTime);
+
+            const workStartCalcType = getWorkStartCalcType(position, operation);
+
+            if (workStartCalcType === 'automatic' && prevOperationDetails?.planReadyTime) {
+              expectSameDate(
+                employeeStartTime,
+                prevOperationDetails.planReadyTime,
+                `Расчётное начало работ автоматической операции равно расчётной дате предыдущей операции сотрудника: ${context}`,
+              );
+            }
+
+            if (workStartCalcType === 'prevOperationReadinessDate' && prevOperationDetails?.planReadyTime) {
+              expectSameDate(
+                employeeStartTime,
+                prevOperationDetails.planReadyTime,
+                `Начало работ равно расчётной дате готовности предыдущей операции техпроцесса: ${context}`,
+              );
+            }
+
+            if (workStartCalcType === 'nextOperationWorkStart') {
+              const nextStartTime =
+                nextOperationDetails?.calculateStartTime ||
+                (await getLastOperationRequiredReadyDate(position));
+              const employeeDuration =
+                getCalculatedOperationDurationMinutes(operationDetails) ??
+                getOperationDurationMinutes(operationDetails || operation);
+              const expectedStartTime = nextStartTime
+                ? calculateStartDateLocal(nextStartTime, employeeDuration)
+                : null;
+              expectSameDate(
+                employeeStartTime,
+                expectedStartTime,
+                `Начало работ по началу следующей операции: ${context}`,
+              );
+            }
+
+            const nextStartTime = nextOperationDetails?.calculateStartTime;
+            const expectedPlanReadyTime = nextStartTime
+              ? nextStartTime
+              : await getLastOperationRequiredReadyDate(position);
+            const actualPlanReadyTime = operationDetails?.planReadyTime || position.planReadyTime;
+            if (actualPlanReadyTime || !expectedPlanReadyTime) {
+              expectSameDate(
+                actualPlanReadyTime,
+                expectedPlanReadyTime,
+                `Дата требуемой готовности на операцию: ${context}`,
+              );
+            }
+
+            checkedPositions += 1;
+          }
+
+          page += 1;
+        } while (page * 40 < count);
+      }
+
+      expect(checkedPositions, 'No user production task operation positions were checked.').toBeGreaterThan(0);
     });
 
     test('обновляет start time пользователя и возвращает исходное значение', async ({ request }) => {
