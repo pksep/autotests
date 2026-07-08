@@ -405,6 +405,34 @@ const expectProductionQuantityFields = (
   expectSameNumber(created, ordered - Number(position.remainingByProductionTask || 0), `Количество отметок в ячейке операции: ${context}`);
 };
 
+const expectOperationCellFields = (
+  operation: ApiRow | null | undefined,
+  expectedIdx: number | null,
+  orderedQuantity: unknown,
+  executionQuantity: unknown,
+  context: string,
+) => {
+  if (expectedIdx === null) {
+    expect(operation?.id || null, `${context}; actual=${operation?.id ?? null}; expected=null`).toBeNull();
+    return;
+  }
+
+  expect(operation?.id, `${context}: операция должна быть заполнена`).toBeTruthy();
+  expectSameNumber(operation?.idx, expectedIdx, `idx операции: ${context}`);
+  expect(
+    Number(operation?.countCreated || 0),
+    `Количество отметок операции: ${context}; actual=${operation?.countCreated ?? null}`,
+  ).toBeGreaterThanOrEqual(0);
+
+  const expectedExecutionTime = getOperationFormulaDurationMinutes(operation || undefined, executionQuantity);
+  expect(expectedExecutionTime, `Время выполнения ячейки операции: ${context}`).toBeGreaterThanOrEqual(0);
+
+  const expectedDateExecute = operation?.startTime
+    ? calculateEndDateLocal(operation.startTime, getOperationDurationMinutes(operation))
+    : null;
+  expectSameDate(operation?.calculateNeedsTime || null, expectedDateExecute, `Дата выполнения ячейки операции: ${context}`);
+};
+
 const getWorkStartCalcType = (position: ApiRow, operation: ApiRow): string => {
   const directValue = operation.workStartCalcType || operation.typeOperation?.workStartCalcType;
   if (directValue) return String(directValue);
@@ -1386,6 +1414,27 @@ export const runProductionTasksAPINew = () => {
 
             const prevOperation = position.prevOperation as ApiRow | null;
             const nextOperation = position.nextOperation as ApiRow | null;
+            expectOperationCellFields(
+              prevOperation,
+              Number(operation.idx) > 1 ? Number(operation.idx) - 1 : null,
+              position.orderedByCurrentTask,
+              position.remainingByProductionTask,
+              `Предыдущая операция, страница оборудования: ${context}`,
+            );
+            expectOperationCellFields(
+              operation,
+              Number(operation.idx),
+              position.orderedByCurrentTask,
+              position.remainingByProductionTask,
+              `Текущая операция, страница оборудования: ${context}`,
+            );
+            expectOperationCellFields(
+              nextOperation,
+              nextOperation?.id ? Number(operation.idx) + 1 : null,
+              position.orderedByCurrentTask,
+              position.remainingByProductionTask,
+              `Следующая операция, страница оборудования: ${context}`,
+            );
             const workStartCalcType = getWorkStartCalcType(position, operation);
 
             if (workStartCalcType === 'automatic' && previousEquipmentCalculatedCreateTime) {
@@ -1603,6 +1652,29 @@ export const runProductionTasksAPINew = () => {
             ).toBe(expectedDeltaTime);
 
             const workStartCalcType = getWorkStartCalcType(position, operation);
+            const prevOperation = position.prevOperation as ApiRow | null;
+            const nextOperation = position.nextOperation as ApiRow | null;
+            expectOperationCellFields(
+              prevOperation,
+              prevOperation?.id ? Number(operation.idx) - 1 : null,
+              position.myQuantity,
+              position.myQuantity,
+              `Предыдущая операция, страница сотрудников: ${context}`,
+            );
+            expectOperationCellFields(
+              operation,
+              Number(operation.idx),
+              position.myQuantity,
+              position.myQuantity,
+              `Текущая операция, страница сотрудников: ${context}`,
+            );
+            expectOperationCellFields(
+              nextOperation,
+              nextOperation?.id ? Number(operation.idx) + 1 : null,
+              position.myQuantity,
+              position.myQuantity,
+              `Следующая операция, страница сотрудников: ${context}`,
+            );
 
             if (workStartCalcType === 'automatic' && prevOperationDetails?.planReadyTime) {
               expectSameDate(
