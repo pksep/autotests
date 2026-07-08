@@ -356,10 +356,14 @@ const getOperationDurationMinutes = (operation: ApiRow | undefined): number => {
   const operationTime = operation?.operationTime;
   if (operationTime && Number.isFinite(Number(operationTime.count))) return Number(operationTime.count);
 
+  return getOperationFormulaDurationMinutes(operation, Number(operation?.quantityMax ?? operation?.countNeeds ?? 1));
+};
+
+const getOperationFormulaDurationMinutes = (operation: ApiRow | undefined, quantityValue: unknown): number => {
   const preTime = Number(operation?.preTime || 0);
   const mainTime = Number(operation?.mainTime || 0);
   const helperTime = Number(operation?.helperTime || 0);
-  const quantity = Number(operation?.quantityMax ?? operation?.countNeeds ?? 1);
+  const quantity = Number(quantityValue || 0);
   const hasFormulaTime = [operation?.preTime, operation?.mainTime, operation?.helperTime].some((value) =>
     Number.isFinite(Number(value)),
   );
@@ -371,6 +375,34 @@ const getOperationDurationMinutes = (operation: ApiRow | undefined): number => {
 const getCalculatedOperationDurationMinutes = (operation: ApiRow | undefined): number | undefined => {
   if (!operation?.calculateStartTime || !operation?.planReadyTime) return undefined;
   return Math.abs(calculateDeltaTimeLocal(operation.calculateStartTime, operation.planReadyTime));
+};
+
+const expectSameNumber = (actual: unknown, expected: unknown, context: string, tolerance = 0.000001) => {
+  const actualNumber = Number(actual);
+  const expectedNumber = Number(expected);
+  const details = `${context}; actual=${actual ?? null}; expected=${expected ?? null}`;
+
+  expect(Number.isFinite(actualNumber), details).toBeTruthy();
+  expect(Number.isFinite(expectedNumber), details).toBeTruthy();
+  expect(Math.abs(actualNumber - expectedNumber), details).toBeLessThanOrEqual(tolerance);
+};
+
+const expectProductionQuantityFields = (
+  position: ApiRow,
+  operation: ApiRow,
+  orderedQuantity: unknown,
+  context: string,
+) => {
+  const ordered = Number(orderedQuantity);
+  const created = Number(operation.countCreated || 0);
+  const remaining = Math.max(ordered - created, 0);
+  const expectedTimeToPrepare = getOperationFormulaDurationMinutes(operation, ordered);
+
+  expectSameNumber(orderedQuantity, ordered, `Кол-во заказанное по ПЗ: ${context}`);
+  expectSameNumber(position.remainingByProductionTask, remaining, `Осталось сделать: ${context}`);
+  expectSameNumber(position.timeToPrepare, expectedTimeToPrepare, `Время на изготовление ч/мин: ${context}`);
+  expectSameNumber(created + Number(position.remainingByProductionTask || 0), ordered, `Отметки + осталось = заказано: ${context}`);
+  expectSameNumber(created, ordered - Number(position.remainingByProductionTask || 0), `Количество отметок в ячейке операции: ${context}`);
 };
 
 const getWorkStartCalcType = (position: ApiRow, operation: ApiRow): string => {
@@ -1326,6 +1358,13 @@ export const runProductionTasksAPINew = () => {
               `idx=${operation.idx}`,
             ].join(', ');
 
+            expectProductionQuantityFields(
+              position,
+              operation,
+              position.orderedByCurrentTask,
+              `страница оборудования: ${context}`,
+            );
+
             const duration = getOperationDurationMinutes(operation);
             const expectedCalculatedCreateTime = position.startTime
               ? calculateEndDateLocal(position.startTime, duration)
@@ -1499,6 +1538,13 @@ export const runProductionTasksAPINew = () => {
               `operation=${operation.id}`,
               `idx=${operation.idx}`,
             ].join(', ');
+
+            expectProductionQuantityFields(
+              position,
+              operation,
+              position.myQuantity,
+              `страница сотрудников: ${context}`,
+            );
 
             const operationDetailsRows = await getOperationDetailsRows(position, operation);
             const currentProductionOperationDetailsRows = operationDetailsRows
