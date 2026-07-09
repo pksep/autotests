@@ -1,3 +1,118 @@
 include:
   - project: 'github-mirror/ci-templates'
-    file: '/autotests.gitlab-ci.yml'
+    file: '/.gitlab-ci-template.yml'
+
+variables:
+  COMPONENT_NAME: "autotests"
+  IMAGE_NAME: "library/autotests"
+  DOCKERFILE_PATH: "Dockerfile"
+  ENV_SUFFIX: ""
+  ENV_FILE_DEST: ""
+  ENV_FILE_BUILD_ARG: ""
+  AUTOTESTS_TEST_SUITE:
+    value: "all_api_tests"
+    description: "TEST_SUITE для nightly CronJob."
+
+deploy:
+  stage: deploy
+  image:
+    name: alpine/k8s:1.33.5
+    entrypoint: [""]
+  needs:
+    - job: docker-build-and-push
+      artifacts: true
+  rules:
+    - if: '$DEPLOY_PROD == "false"'
+      when: on_success
+    - when: never
+  script:
+    - |
+      set -e
+      cat <<EOF | kubectl apply -n "$ENVIRONMENT" -f -
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: autotests-nightly
+        labels:
+          app: autotests
+          component: autotests-nightly
+      spec:
+        schedule: "0 0 * * *"
+        timeZone: Europe/Moscow
+        concurrencyPolicy: Forbid
+        successfulJobsHistoryLimit: 3
+        failedJobsHistoryLimit: 3
+        jobTemplate:
+          spec:
+            backoffLimit: 1
+            template:
+              metadata:
+                labels:
+                  app: autotests
+                  component: autotests-nightly
+              spec:
+                restartPolicy: Never
+                imagePullSecrets:
+                  - name: harbor-creds
+                containers:
+                  - name: autotests
+                    image: "$IMAGE"
+                    imagePullPolicy: IfNotPresent
+                    args:
+                      - run-once
+                    env:
+                      - name: BASE_URL
+                        value: "https://dev.pksep.ru/"
+                      - name: API_BASE_URL
+                        value: "https://dev.pksep.ru/"
+                      - name: TEST_SUITE
+                        value: "$AUTOTESTS_TEST_SUITE"
+                      - name: HEADLESS
+                        value: "true"
+                      - name: CI
+                        value: "true"
+                      - name: GENERATE_ALLURE
+                        value: "true"
+                      - name: REPORTS_DIR
+                        value: "/app/reports"
+                    envFrom:
+                      - secretRef:
+                          name: autotests-env
+                          optional: true
+                    resources:
+                      requests:
+                        cpu: 500m
+                        memory: 1Gi
+                      limits:
+                        cpu: "2"
+                        memory: 4Gi
+      EOF
+      kubectl get cronjob/autotests-nightly -n "$ENVIRONMENT"
+  environment:
+    name: $ENVIRONMENT
+
+run-autotests-now:
+  stage: deploy
+  image:
+    name: alpine/k8s:1.33.5
+    entrypoint: [""]
+  needs:
+    - job: deploy
+  rules:
+    - if: '$DEPLOY_PROD == "false"'
+      when: manual
+    - when: never
+  script:
+    - |
+      set -e
+      JOB_NAME="autotests-manual-${CI_PIPELINE_ID}"
+      kubectl create job "$JOB_NAME" --from=cronjob/autotests-nightly -n "$ENVIRONMENT"
+      kubectl wait --for=condition=complete --timeout=2h job/"$JOB_NAME" -n "$ENVIRONMENT"
+
+backup-prod:
+  rules:
+    - when: never
+
+deploy-prod:
+  rules:
+    - when: never
