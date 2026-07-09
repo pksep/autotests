@@ -1,0 +1,3 @@
+include:
+  - project: 'github-mirror/ci-templates'
+    file: '/autotests.gitlab-ci.yml'
