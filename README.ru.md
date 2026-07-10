@@ -208,6 +208,9 @@ TEST_SUITE=parallel pnpm test
 |--------|-----------|
 | Запустить один набор | Задать в config или в env `TEST_SUITE` равным ключу набора (напр. `U002`, `U004_1`) и выполнить `pnpm exec playwright test` |
 | Запустить все наборы параллельно (6 воркеров) | `pnpm run test:parallel` или задать `TEST_SUITE=parallel` и выполнить `pnpm test` |
+| Запустить быстрый API-набор | `pnpm run api:parallel-safe` (`TEST_SUITE=api_parallel_safe_tests`, 2 воркера) |
+| Запустить тяжелый API-набор последовательно | `pnpm run api:serial-heavy` (`TEST_SUITE=api_serial_heavy_tests`, 1 воркер) |
+| Запустить API в два этапа | `pnpm run api:split` |
 | Запуск без окна браузера | В config задать `HEADLESS: true` или в env `HEADLESS=true` |
 | Указать другое окружение | Задать в config или env `BASE_URL` / `API_BASE_URL` |
 | Увеличить детализацию логов | В env задать `LOG_LEVEL=info` или `LOG_LEVEL=debug` |

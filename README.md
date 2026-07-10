@@ -223,6 +223,9 @@ CI runs `pnpm run lint -- --max-warnings 5000` before tests. Use `lib/Constants/
 |------|--------|
 | Run one specific suite | Set `TEST_SUITE` in config or env to the suite key (e.g. `U002`, `U004_1`) and run `pnpm exec playwright test` |
 | Run all parallel suites (6 workers) | `pnpm run test:parallel` or set `TEST_SUITE=parallel` and run `pnpm test` |
+| Run the fast API suite | `pnpm run api:parallel-safe` (`TEST_SUITE=api_parallel_safe_tests`, 2 workers) |
+| Run the heavy API suite serially | `pnpm run api:serial-heavy` (`TEST_SUITE=api_serial_heavy_tests`, 1 worker) |
+| Run API in two stages | `pnpm run api:split` |
 | Run without opening browser | Set `HEADLESS: true` in config or `HEADLESS=true` in env |
 | Point to another environment | Set `BASE_URL` / `API_BASE_URL` in config or env |
 | See more logs | Set `LOG_LEVEL=info` or `LOG_LEVEL=debug` in env |

@@ -48,6 +48,7 @@ import { runUsersAPINew } from './testcases/API/APIUsers.spec';
 import { runWarehouseAPINew } from './testcases/API/APIWarehouse.spec';
 import { runWaybillAPINew } from './testcases/API/APIWaybill.spec';
 import { runWaybillProviderFlowAPI } from './testcases/API/APIWaybillProviderFlow.spec';
+import { runHealthChecksAPINew } from './testcases/API/APIHealthChecks.spec';
 
 const apiSuitesByModule = {
   auth_api: {
@@ -545,6 +546,17 @@ const apiSuitesByModule = {
     ]
   },
 
+  health_checks_api: {
+    description: 'Health-check API для всех UI-страниц и переиспользуемых модальных окон.',
+    tests: [
+      {
+        test: runHealthChecksAPINew,
+        description:
+          'Проверяет минимальные read-only API-зависимости страниц и модальных окон: успешные ответы для стабильных контрактов и отсутствие 5xx для optional/контекстных запросов.'
+      }
+    ]
+  },
+
   all_api_tests: {
     description: 'Полный набор оставшихся API-тестов.',
     tests: [
@@ -885,8 +897,36 @@ const apiSmokeSuiteKeys = [
   'waybill_provider_flow_api',
 ] as const satisfies readonly ApiSuiteKey[];
 
+const apiSerialHeavySuiteKeys = [
+  'assemble_api',
+  'maintenance_api',
+  'metaloworking_api',
+  'production_shipment_flow_api',
+  'production_tasks_api',
+  'settings_api',
+  'shipments_api',
+  'specification_api',
+  'warehouse_api',
+  'waybill_provider_flow_api',
+] as const satisfies readonly ApiSuiteKey[];
+
+const apiSerialHeavySuiteKeySet = new Set<ApiSuiteKey>(apiSerialHeavySuiteKeys);
+const apiParallelSafeSuiteKeys = allApiSuiteKeys.filter((key) => !apiSerialHeavySuiteKeySet.has(key));
+
+export const serialApiSuiteKeys = ['api_serial_heavy_tests'] as const;
+
 export const apiSuites = {
   ...apiSuitesByModule,
+  api_parallel_safe_tests: {
+    description:
+      'Быстрый API-набор без тяжелых flow, maintenance, specification, production tasks и других suite-ов, чувствительных к параллельной нагрузке.',
+    tests: collectApiTests(apiParallelSafeSuiteKeys),
+  },
+  api_serial_heavy_tests: {
+    description:
+      'Тяжелые API-наборы для последовательного запуска: flow, maintenance, specification, production tasks и нагрузочные складские/производственные сценарии.',
+    tests: collectApiTests(apiSerialHeavySuiteKeys),
+  },
   api_functional_tests: {
     description: 'API-тесты с уровнем покрытия functional из docs/api-coverage-matrix.md.',
     tests: collectApiTests(apiFunctionalSuiteKeys),

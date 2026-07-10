@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 import { ENV } from './config';
 import { testSuites, PARALLEL_SUITE_KEYS } from './testSuiteConfig';
-import { apiSuites } from './testSuiteConfig.api';
+import { apiSuites, serialApiSuiteKeys } from './testSuiteConfig.api';
 import { runSetup } from './setup';
 import logger from './lib/utils/logger';
 import { tagBrowserScript } from './lib/utils/scriptBadge';
@@ -41,6 +41,7 @@ function getSuiteLoginCredentials(suiteKey: string): SuiteLoginCredentials | und
 function registerSuite(suiteKey: TestSuiteKeys) {
   const suite = testSuites[suiteKey];
   const isApi = Object.keys(apiSuites).includes(suiteKey);
+  const isSerialApi = (serialApiSuiteKeys as readonly string[]).includes(suiteKey);
   
   if (!suite) {
     logger.error(`Suite "${suiteKey}" not found in registry. Skipping.`);
@@ -49,7 +50,7 @@ function registerSuite(suiteKey: TestSuiteKeys) {
   const describeSuite = isApi ? test.describe : test.describe.serial;
 
   describeSuite(`Test Suite: ${suiteKey} - ${suite.description}`, () => {
-    if (isApi) {
+    if (isApi && !isSerialApi) {
       test.describe.configure({ mode: 'parallel' });
     }
 
