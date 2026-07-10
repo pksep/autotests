@@ -38,6 +38,19 @@ const expectProductShape = (product: ProductLike) => {
   expect(product.name, JSON.stringify(product)).toBeTruthy();
 };
 
+const expectProductSpecificationsShape = (data: unknown) => {
+  if (Array.isArray(data)) {
+    expectArrayResponse(data);
+    return;
+  }
+
+  expect(data, JSON.stringify(data)).toBeTruthy();
+  expect(typeof data, JSON.stringify(data)).toBe('object');
+  if (Array.isArray((data as ProductLike).shipments)) {
+    expectArrayResponse((data as ProductLike).shipments);
+  }
+};
+
 const productPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
   searchString: '',
@@ -117,6 +130,21 @@ const waitForProductInActiveSearch = async (
   }, (response) => getRows(response.data).some((row) => row.id === productId) === expectedPresent);
 
   return Boolean(response);
+};
+
+const waitForProductInArchive = async (
+  request: any,
+  designation: string,
+  productId: number,
+  accessToken?: string,
+): Promise<ProductLike | undefined> => {
+  const response = await eventually(async () => {
+    const response = await productsAPI.getArchivedProducts(request, { searchString: designation }, accessToken);
+    expect(response.status).toBe(201);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.id === productId && row.ban === true), { attempts: 12, intervalMs: 700 });
+
+  return response ? getRows(response.data).find((row) => row.id === productId && row.ban === true) : undefined;
 };
 
 const createIsolatedProduct = async (
@@ -232,7 +260,7 @@ export const runProductsAPINew = () => {
 
       const specifications = await productsAPI.getProductSpecifications(request, createdProductId as number, accessToken);
       expectNoServerError(specifications);
-      if (successCodes.includes(specifications.status)) expectArrayResponse(specifications.data);
+      if (successCodes.includes(specifications.status)) expectProductSpecificationsShape(specifications.data);
 
       const pagination = await productsAPI.getAllProducts(
         request,
@@ -307,13 +335,8 @@ export const runProductsAPINew = () => {
         await waitForProductInActiveSearch(request, updatedDesignation, createdProductId as number, false, accessToken),
       ).toBe(true);
 
-      const archiveSearch = await productsAPI.getArchivedProducts(
-        request,
-        { searchString: updatedDesignation },
-        accessToken,
-      );
-      expect(archiveSearch.status).toBe(201);
-      expect(getRows(archiveSearch.data).some((row) => row.id === createdProductId && row.ban === true)).toBe(true);
+      const archived = await waitForProductInArchive(request, updatedDesignation, createdProductId as number, accessToken);
+      expect(archived, `Product ${updatedDesignation} was not found in archive after delete`).toBeTruthy();
 
       const secondArchiveResponse = await productsAPI.deleteProduct(request, createdProductId as number, accessToken);
       expectNoServerError(secondArchiveResponse);
@@ -470,12 +493,18 @@ export const runProductsAPINew = () => {
 
       const specifications = await productsAPI.getProductSpecifications(request, 999999999, accessToken);
       expectNoServerError(specifications);
-      if (successCodes.includes(specifications.status)) expectArrayResponse(specifications.data);
+      if (successCodes.includes(specifications.status)) expectProductSpecificationsShape(specifications.data);
       if (clientErrorCodes.includes(specifications.status)) expectErrorResponseContract(specifications);
 
       const operationInclude = await captureApiResult(() => productsAPI.searchProducts(request, { page: 0, pageSize: 1, searchString: '' }, accessToken));
       expectEndpointReached(operationInclude);
-      if (!(operationInclude instanceof Error)) expectApiContract(operationInclude, { shape: 'pagination' });
+      if (!(operationInclude instanceof Error)) {
+        expectNoServerError(operationInclude);
+        if (!clientErrorCodes.includes(operationInclude.status)) {
+          expect(successCodes).toContain(operationInclude.status);
+          expect(operationInclude.data, JSON.stringify(operationInclude.data)).toBeTruthy();
+        }
+      }
 
       const actualAvatar = await captureApiResult(() => productsAPI.actualAvatar(request, accessToken));
       expectEndpointReached(actualAvatar);

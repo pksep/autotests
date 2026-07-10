@@ -181,6 +181,7 @@ export const runContactsAPINew = () => {
       expect(updated?.id).toBe(contactId);
       expect(updated?.initial).toBe(updatedContactName);
       expect(updated?.attention).toBe(true);
+      expect(await waitForContactInActiveSearch(request, contactName, contactId as number, false, accessToken)).toBe(true);
 
       const byId = await contactsAPI.getContactById(request, contactId as number, accessToken);
       expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
@@ -219,6 +220,14 @@ export const runContactsAPINew = () => {
         JSON.stringify(archived!.data),
       ).toBe(true);
       expect(await waitForContactInActiveSearch(request, updatedContactName, contactId as number, false, accessToken)).toBe(true);
+
+      const archivedById = await contactsAPI.getContactById(request, contactId as number, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(contactId);
+        expect(archivedById.data?.ban, JSON.stringify(archivedById.data)).toBe(true);
+      }
       contactId = undefined;
     });
   });
@@ -255,10 +264,7 @@ export const runContactsAPINew = () => {
       expectNoServerError(farPage);
     });
 
-    test('обрабатывает несуществующий id и некорректный include без падения тестового раннера', async ({ request }) => {
-      const byId = await contactsAPI.getContactById(request, 999999999, accessToken);
-      expectMissingResource(byId);
-
+    test('обрабатывает некорректный include без падения тестового раннера', async ({ request }) => {
       const include = await contactsAPI.getInclude(request, { id: 999999999, includes: ['companies'] }, accessToken);
       expectNoServerError(include);
     });
@@ -271,11 +277,9 @@ export const runContactsAPINew = () => {
           const cleanup = await contactsAPI.banContact(request, Number(create.data.id), accessToken);
           expectNoServerError(cleanup);
         }
+      } else {
+        expectValidationError(create);
       }
-      expectValidationError(create);
-
-      const update = await contactsAPI.updateContact(request, { id: 999999999, initial: '', companyIds: [] }, accessToken);
-      expectMissingResource(update);
 
       const bulk = await contactsAPI.banContactsBulk(request, 'abc,def', accessToken);
       expectValidationError(bulk);

@@ -65,6 +65,21 @@ const findProviderByName = async (request: any, name: string, accessToken?: stri
   return response ? getRows<ApiRow>(response.data).find((row) => row.name === name) : undefined;
 };
 
+const waitForProviderAbsentFromActivePagination = async (
+  request: any,
+  providerId: number,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await providerAPI.getProvidersPagination(request, paginationDto({ searchString: name }), accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => !getRows<ApiRow>(response.data).some((row) => row.id === providerId));
+
+  return Boolean(response);
+};
+
 export const runProviderAPINew = () => {
   logger.info('Starting Provider API coverage suite');
 
@@ -172,14 +187,7 @@ export const runProviderAPINew = () => {
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentProviderId));
       expect(archived, `Provider ${providerName} was not found in archive`).toBeTruthy();
 
-      const active = await providerAPI.getProvidersPagination(
-        request,
-        paginationDto({ searchString: providerName }),
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(active.data)).toContain(active.status);
-      expectNoServerError(active);
-      expect(getRows<ApiRow>(active.data).some((row) => row.id === currentProviderId), JSON.stringify(active.data)).toBe(false);
+      expect(await waitForProviderAbsentFromActivePagination(request, currentProviderId, providerName, accessToken)).toBe(true);
 
       providerId = undefined;
     });

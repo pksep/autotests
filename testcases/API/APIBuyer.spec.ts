@@ -60,6 +60,22 @@ const findBuyerByName = async (request: any, name: string, accessToken?: string)
   return response ? getRows<BuyerLike>(response.data).find((row) => row.name === name && row.ban !== true) : undefined;
 };
 
+const waitForBuyerInActiveSearch = async (
+  request: any,
+  name: string,
+  buyerId: number,
+  expectedPresent: boolean,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const result = await buyerAPI.getBuyersPagination(request, buyerPaginationDto({ searchString: name }), accessToken);
+    expectNoServerError(result);
+    return result;
+  }, (result) => getRows<BuyerLike>(result.data).some((row) => row.id === buyerId && row.ban !== true) === expectedPresent);
+
+  return Boolean(response);
+};
+
 export const runBuyerAPINew = () => {
   logger.info('Starting Buyer API coverage suite');
 
@@ -101,6 +117,8 @@ export const runBuyerAPINew = () => {
       const created = await findBuyerByName(request, buyerName, accessToken);
       expect(created, `Buyer ${buyerName} was not found after create`).toBeTruthy();
       expectBuyerShape(created as BuyerLike);
+      expect(created?.id, JSON.stringify(created)).toBe(buyerId);
+      expect(created?.ban, JSON.stringify(created)).not.toBe(true);
     });
 
     test('читает покупателя по id, light-списку и include', async ({ request }) => {
@@ -148,6 +166,14 @@ export const runBuyerAPINew = () => {
       expect(updated, `Buyer ${updatedBuyerName} was not found after update`).toBeTruthy();
       expect(updated?.id).toBe(buyerId);
       expect(updated?.attention).toBe(true);
+      expect(await waitForBuyerInActiveSearch(request, buyerName, buyerId as number, false, accessToken)).toBe(true);
+
+      const byId = await buyerAPI.getById(request, buyerId as number, accessToken);
+      expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+      expectBuyerShape(byId.data);
+      expect(byId.data.name, JSON.stringify(byId.data)).toBe(updatedBuyerName);
+      expect(byId.data.description, JSON.stringify(byId.data)).toBe('Updated by Buyer API autotest');
+      expect(byId.data.attention, JSON.stringify(byId.data)).toBe(true);
     });
 
     test('архивирует покупателя и проверяет архивную выдачу', async ({ request }) => {
@@ -165,6 +191,11 @@ export const runBuyerAPINew = () => {
       }, (response) => getRows<BuyerLike>(response.data).some((row) => row.id === buyerId));
 
       expect(archived, `Buyer ${updatedBuyerName} was not found in archive`).toBeTruthy();
+      const archivedRow = getRows<BuyerLike>(archived!.data).find((row) => row.id === buyerId);
+      expect(archivedRow, JSON.stringify(archived!.data)).toBeTruthy();
+      expect(archivedRow?.name, JSON.stringify(archivedRow)).toBe(updatedBuyerName);
+      expect(archivedRow?.ban, JSON.stringify(archivedRow)).toBe(true);
+      expect(await waitForBuyerInActiveSearch(request, updatedBuyerName, buyerId as number, false, accessToken)).toBe(true);
       buyerId = undefined;
     });
   });

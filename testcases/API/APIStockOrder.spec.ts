@@ -209,6 +209,26 @@ const waitForArchivedStockOrder = async (
   return response?.data;
 };
 
+const waitForStockOrderAbsentFromActivePagination = async (
+  request: any,
+  stockOrderId: number,
+  searchString: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await stockOrderAPI.getPaginationByArchive(
+      request,
+      false,
+      stockOrderArchivePaginationDto({ searchString }),
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => !getRows(response.data).some((row) => row.id === stockOrderId), { attempts: 10, intervalMs: 700 });
+
+  return Boolean(response);
+};
+
 const expectRowsContainId = (rows: StockOrderLike[], id: number, context: unknown) => {
   expect(rows.some((row) => Number(row.id) === id), JSON.stringify(context)).toBe(true);
 };
@@ -440,17 +460,7 @@ export const runStockOrderAPINew = () => {
       expect(archived, `Archived stock order ${stockOrderId} did not become ban=true on direct read`).toBeTruthy();
       expect(archived?.ban, JSON.stringify(archived)).toBe(true);
 
-      const activeSearch = await stockOrderAPI.getPaginationByArchive(
-        request,
-        false,
-        stockOrderArchivePaginationDto({ searchString: stockOrderNumber }),
-        accessToken,
-      );
-      expectNoServerError(activeSearch);
-      if (!clientErrorCodes.includes(activeSearch.status)) {
-        expect(successCodes).toContain(activeSearch.status);
-        expect(getRows(activeSearch.data).some((row) => row.id === stockOrderId), JSON.stringify(activeSearch.data)).toBe(false);
-      }
+      expect(await waitForStockOrderAbsentFromActivePagination(request, stockOrderId, stockOrderNumber, accessToken)).toBe(true);
 
       if (entity) {
         const byEntity = await stockOrderAPI.getItemsByEntity(request, entity.type, entity.id, accessToken);

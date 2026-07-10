@@ -70,6 +70,21 @@ const findToolByName = async (request: any, name: string, accessToken?: string):
   return response ? getRows<ApiRow>(response.data).find((row) => row.name === name) : undefined;
 };
 
+const waitForToolAbsentFromActivePagination = async (
+  request: any,
+  toolId: number,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await toolsAPI.getToolPagination(request, toolsPaginationDto({ searchString: name }), accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => !getRows<ApiRow>(response.data).some((row) => row.id === toolId));
+
+  return Boolean(response);
+};
+
 export const runToolsAPINew = () => {
   logger.info('Starting Tools API coverage suite');
 
@@ -218,6 +233,9 @@ export const runToolsAPINew = () => {
       const archiveTool = await toolsAPI.banTool(request, currentToolId, accessToken);
       expectNoServerError(archiveTool);
       expect(successCodes, JSON.stringify(archiveTool.data)).toContain(archiveTool.status);
+      if (archiveTool.data && typeof archiveTool.data === 'object') {
+        expect(archiveTool.data.ban, JSON.stringify(archiveTool.data)).toBe(true);
+      }
 
       const archived = await eventually(async () => {
         const response = await toolsAPI.getArchivedTools(request, { searchString: toolName }, accessToken);
@@ -226,12 +244,7 @@ export const runToolsAPINew = () => {
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentToolId));
       expect(archived, `Tool ${toolName} was not found in archive`).toBeTruthy();
 
-      const active = await toolsAPI.getToolPagination(request, toolsPaginationDto({ searchString: toolName }), accessToken);
-      expectNoServerError(active);
-      if (!clientErrorCodes.includes(active.status)) {
-        expect(successCodes).toContain(active.status);
-        expect(getRows<ApiRow>(active.data).some((row) => row.id === currentToolId), JSON.stringify(active.data)).toBe(false);
-      }
+      expect(await waitForToolAbsentFromActivePagination(request, currentToolId, toolName, accessToken)).toBe(true);
       toolId = undefined;
 
       const archiveSubtype = await toolsAPI.removeToolSubtype(request, subtypeId as number, accessToken);

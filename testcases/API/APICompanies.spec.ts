@@ -136,6 +136,21 @@ const findCompanyByName = async (request: any, name: string, accessToken?: strin
   return response ? getRows<EntityLike>(response.data).find((row) => row.name === name) : undefined;
 };
 
+const waitForCompanyAbsentFromActivePagination = async (
+  request: any,
+  companyId: number,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const result = await companiesAPI.getCompaniesPagination(request, companyPaginationDto({ searchString: name }), accessToken);
+    expectNoServerError(result);
+    return result;
+  }, (result) => !getRows<EntityLike>(result.data).some((row) => row.id === companyId));
+
+  return Boolean(response);
+};
+
 export const runCompaniesAPINew = () => {
   logger.info('Starting Companies API coverage suite');
 
@@ -371,9 +386,13 @@ export const runCompaniesAPINew = () => {
 
     test('архивирует компанию и проверяет архивную выдачу', async ({ request }) => {
       expect(companyId).toBeTruthy();
+      const currentCompanyId = companyId as number;
       const response = await companiesAPI.banCompany(request, companyId as number, accessToken);
       expect(successCodes).toContain(response.status);
       expectNoServerError(response);
+      if (response.data && typeof response.data === 'object') {
+        expect(response.data.ban, JSON.stringify(response.data)).toBe(true);
+      }
 
       const archived = await eventually(async () => {
         const result = await companiesAPI.getCompaniesPagination(
@@ -383,9 +402,10 @@ export const runCompaniesAPINew = () => {
         );
         expectNoServerError(result);
         return result;
-      }, (result) => getRows<EntityLike>(result.data).some((row) => row.id === companyId));
+      }, (result) => getRows<EntityLike>(result.data).some((row) => row.id === currentCompanyId));
 
       expect(archived, `Company ${updatedCompanyName} was not found in archive`).toBeTruthy();
+      expect(await waitForCompanyAbsentFromActivePagination(request, currentCompanyId, updatedCompanyName, accessToken)).toBe(true);
       companyId = undefined;
     });
   });

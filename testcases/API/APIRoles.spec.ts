@@ -3,7 +3,7 @@ import { RolesAPI } from '../../pages/API/APIRoles';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
-import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
 
@@ -18,6 +18,34 @@ const expectRoleShape = (role: ApiRow) => {
   expect(role).toBeTruthy();
   expect(typeof role.id, JSON.stringify(role)).toBe('number');
   expect(role.name, JSON.stringify(role)).toBeTruthy();
+};
+
+const findActiveRoleByName = async (
+  request: any,
+  name: string,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const list = await rolesAPI.getAllRoles(request, accessToken);
+    expectNoServerError(list);
+    return list;
+  }, (list) => getRows<ApiRow>(list.data).some((row) => row.name === name && row.ban !== true));
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.name === name && row.ban !== true) : undefined;
+};
+
+const waitForRoleAbsentFromActiveList = async (
+  request: any,
+  id: number,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const list = await rolesAPI.getAllRoles(request, accessToken);
+    expectNoServerError(list);
+    return list;
+  }, (list) => !getRows<ApiRow>(list.data).some((row) => row.id === id));
+
+  return Boolean(response);
 };
 
 export const runRolesAPINew = () => {
@@ -40,7 +68,7 @@ export const runRolesAPINew = () => {
       expectNoServerError(cleanup);
     });
 
-    test('создает роль, проверяет уникальность и читает ее по name/id', async ({ request }) => {
+    test('создает роль, проверяет уникальность и читает ее по name/id/активному списку', async ({ request }) => {
       roleName = `API Role ${uniqueApiSuffix('role')}`;
 
       const uniqueBefore = await rolesAPI.checkRoleNameUnique(request, { name: roleName }, accessToken);
@@ -74,9 +102,13 @@ export const runRolesAPINew = () => {
         expect(successCodes).toContain(byId.status);
         expect(byId.data.id, JSON.stringify(byId.data)).toBe(roleId);
       }
+
+      const createdInList = await findActiveRoleByName(request, roleName, accessToken);
+      expect(createdInList, `Role ${roleName} was not found in active list after create`).toBeTruthy();
+      expect(createdInList?.id).toBe(roleId);
     });
 
-    test('обновляет описание и имя тестовой роли', async ({ request }) => {
+    test('обновляет описание и имя тестовой роли и проверяет активный список', async ({ request }) => {
       expect(roleId).toBeTruthy();
       roleName = `${roleName} Updated`;
 
@@ -90,17 +122,26 @@ export const runRolesAPINew = () => {
       expect(successCodes, JSON.stringify(update.data)).toContain(update.status);
       expect(update.data.id, JSON.stringify(update.data)).toBe(roleId);
       expect(update.data.name, JSON.stringify(update.data)).toBe(roleName);
+
+      const updatedInList = await findActiveRoleByName(request, roleName, accessToken);
+      expect(updatedInList, `Role ${roleName} was not found in active list after update`).toBeTruthy();
+      expect(updatedInList?.id).toBe(roleId);
+      expect(updatedInList?.description, JSON.stringify(updatedInList)).toBe('Updated by API autotest');
     });
 
-    test('архивирует тестовую роль', async ({ request }) => {
+    test('архивирует тестовую роль и проверяет отсутствие в активном списке', async ({ request }) => {
       expect(roleId).toBeTruthy();
+      const currentRoleId = roleId as number;
 
-      const remove = await rolesAPI.deleteRole(request, String(roleId), 'api-roles', accessToken);
+      const remove = await rolesAPI.deleteRole(request, String(currentRoleId), 'api-roles', accessToken);
       expectNoServerError(remove);
       expect(successCodes, JSON.stringify(remove.data)).toContain(remove.status);
       if (remove.data && typeof remove.data === 'object') {
         expect(remove.data.ban, JSON.stringify(remove.data)).toBe(true);
       }
+
+      expect(await waitForRoleAbsentFromActiveList(request, currentRoleId, accessToken)).toBe(true);
+
       roleId = undefined;
     });
   });

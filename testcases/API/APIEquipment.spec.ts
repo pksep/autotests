@@ -72,6 +72,21 @@ const findEquipmentByName = async (request: any, name: string, accessToken?: str
   return response ? getRows<ApiRow>(response.data).find((row) => row.name === name) : undefined;
 };
 
+const waitForEquipmentAbsentFromActivePagination = async (
+  request: any,
+  equipmentId: number,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await equipmentAPI.getEquipmentPagination(request, equipmentPaginationDto({ searchString: name }), accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => !getRows<ApiRow>(response.data).some((row) => row.id === equipmentId));
+
+  return Boolean(response);
+};
+
 export const runEquipmentAPINew = () => {
   logger.info('Starting Equipment API coverage suite');
 
@@ -389,6 +404,9 @@ export const runEquipmentAPINew = () => {
       const archive = await equipmentAPI.banEquipment(request, currentEquipmentId, accessToken);
       expect(successCodes, JSON.stringify(archive.data)).toContain(archive.status);
       expectNoServerError(archive);
+      if (archive.data && typeof archive.data === 'object') {
+        expect(archive.data.ban, JSON.stringify(archive.data)).toBe(true);
+      }
 
       const archived = await eventually(async () => {
         const response = await equipmentAPI.getArchivedEquipment(request, { searchString: equipmentName }, accessToken);
@@ -397,17 +415,9 @@ export const runEquipmentAPINew = () => {
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentEquipmentId));
 
       expect(archived, `Equipment ${equipmentName} was not found in archive`).toBeTruthy();
+      expect(getRows<ApiRow>(archived!.data).some((row) => row.id === currentEquipmentId), JSON.stringify(archived!.data)).toBe(true);
 
-      const active = await equipmentAPI.getEquipmentPagination(
-        request,
-        equipmentPaginationDto({ searchString: equipmentName }),
-        accessToken,
-      );
-      expectNoServerError(active);
-      if (!clientErrorCodes.includes(active.status)) {
-        expect(successCodes).toContain(active.status);
-        expect(getRows<ApiRow>(active.data).some((row) => row.id === currentEquipmentId), JSON.stringify(active.data)).toBe(false);
-      }
+      expect(await waitForEquipmentAbsentFromActivePagination(request, currentEquipmentId, equipmentName, accessToken)).toBe(true);
       equipmentId = undefined;
     });
 

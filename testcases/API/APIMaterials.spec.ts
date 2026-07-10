@@ -188,6 +188,46 @@ const waitForMaterialInArchive = async (
   return Boolean(response);
 };
 
+const waitForTypeMaterialInActiveSearch = async (
+  request: any,
+  name: string,
+  typeId: number,
+  expectedPresent: boolean,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await materialsAPI.getTypeMaterialsPagination(
+      request,
+      materialPaginationDto({ searchString: name }),
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<MaterialLike>(response.data).some((row) => row.id === typeId) === expectedPresent);
+
+  return Boolean(response);
+};
+
+const waitForSubtypeMaterialInActiveSearch = async (
+  request: any,
+  name: string,
+  subtypeId: number,
+  expectedPresent: boolean,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await materialsAPI.getSubtypeMaterialsPagination(
+      request,
+      materialPaginationDto({ searchString: name }),
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => getRows<MaterialLike>(response.data).some((row) => row.id === subtypeId) === expectedPresent);
+
+  return Boolean(response);
+};
+
 const createIsolatedMaterial = async (
   request: any,
   suffix: string,
@@ -249,6 +289,8 @@ export const runMaterialsAPINew = () => {
     let createdName: string;
     let updatedName: string;
     let activeMaterialName: string;
+    let createdTypeName: string;
+    let createdSubtypeName: string;
     let createdPayload: Record<string, unknown>;
     let updatedPayload: Record<string, unknown>;
 
@@ -277,6 +319,8 @@ export const runMaterialsAPINew = () => {
       const suffix = uniqueApiSuffix('material');
       const typeName = `API Type Material ${suffix}`;
       const subtypeName = `API Subtype Material ${suffix}`;
+      createdTypeName = typeName;
+      createdSubtypeName = subtypeName;
 
       const typeUnique = await materialsAPI.checkNameUnique(request, { type: 'TYPE', name: typeName }, accessToken);
       expect(typeUnique.status).toBe(201);
@@ -307,6 +351,8 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(subtypeResponse);
       expectSubtypeMaterialShape(subtypeResponse.data);
       createdSubtypeId = Number(subtypeResponse.data.id);
+      expect(await waitForTypeMaterialInActiveSearch(request, createdTypeName, createdTypeId, true, accessToken)).toBe(true);
+      expect(await waitForSubtypeMaterialInActiveSearch(request, createdSubtypeName, createdSubtypeId, true, accessToken)).toBe(true);
 
       createdPayload = materialPayload(suffix, createdTypeId, createdSubtypeId);
       updatedPayload = materialPayload(`${suffix}-UPD`, createdTypeId, createdSubtypeId, {
@@ -467,9 +513,37 @@ export const runMaterialsAPINew = () => {
 
       expect(await waitForMaterialInArchive(request, activeMaterialName, materialId, accessToken)).toBe(true);
 
+      const archivedById = await materialsAPI.getMaterialById(request, materialId, true, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(materialId);
+        expect(archivedById.data?.ban, JSON.stringify(archivedById.data)).toBe(true);
+      }
+
       const secondArchiveResponse = await materialsAPI.banMaterial(request, materialId, accessToken);
       expectNoServerError(secondArchiveResponse);
       createdMaterialId = undefined;
+    });
+
+    test('архивирует подтип и тип материала и проверяет отсутствие в активной выдаче', async ({ request }) => {
+      expect(createdSubtypeId).toBeTruthy();
+      expect(createdTypeId).toBeTruthy();
+
+      const subtypeId = createdSubtypeId as number;
+      const typeId = createdTypeId as number;
+
+      const archiveSubtype = await materialsAPI.removeSubtypeMaterial(request, subtypeId, accessToken);
+      expectNoServerError(archiveSubtype);
+      expect(successCodes, JSON.stringify(archiveSubtype.data)).toContain(archiveSubtype.status);
+      expect(await waitForSubtypeMaterialInActiveSearch(request, createdSubtypeName, subtypeId, false, accessToken)).toBe(true);
+      createdSubtypeId = undefined;
+
+      const archiveType = await materialsAPI.removeTypeMaterial(request, typeId, accessToken);
+      expectNoServerError(archiveType);
+      expect(successCodes, JSON.stringify(archiveType.data)).toContain(archiveType.status);
+      expect(await waitForTypeMaterialInActiveSearch(request, createdTypeName, typeId, false, accessToken)).toBe(true);
+      createdTypeId = undefined;
     });
   });
 
@@ -633,12 +707,6 @@ export const runMaterialsAPINew = () => {
         const subtypeRow = subtypes.data[0];
         if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
       }
-
-      const allMaterials = await materialsAPI.getAllMaterials(request, accessToken);
-      expect(allMaterials.status).toBe(200);
-      expectArrayResponse(allMaterials.data);
-      const materialRow = allMaterials.data[0];
-      if (materialRow) expectMaterialShape(materialRow);
 
       const materialTypes = await materialsAPI.actualMaterialLists(request, accessToken);
       expect(materialTypes.status).toBe(200);

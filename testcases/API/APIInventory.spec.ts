@@ -61,6 +61,21 @@ const findInventoryByName = async (request: any, name: string, accessToken?: str
   return response ? getRows<ApiRow>(response.data).find((row) => row.name === name) : undefined;
 };
 
+const waitForInventoryAbsentFromActivePagination = async (
+  request: any,
+  inventoryId: number,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await inventoryAPI.getInventoryPagination(request, inventoryPaginationDto({ searchString: name }), accessToken);
+    expectNoServerError(response);
+    return response;
+  }, (response) => !getRows<ApiRow>(response.data).some((row) => row.id === inventoryId));
+
+  return Boolean(response);
+};
+
 export const runInventoryAPINew = () => {
   logger.info('Starting Inventory API coverage suite');
 
@@ -217,6 +232,9 @@ export const runInventoryAPINew = () => {
       const archiveInventory = await inventoryAPI.banInventory(request, currentInventoryId, accessToken);
       expectNoServerError(archiveInventory);
       expect(successCodes, JSON.stringify(archiveInventory.data)).toContain(archiveInventory.status);
+      if (archiveInventory.data && typeof archiveInventory.data === 'object') {
+        expect(archiveInventory.data.ban, JSON.stringify(archiveInventory.data)).toBe(true);
+      }
 
       const archived = await eventually(async () => {
         const response = await inventoryAPI.getArchivedInventory(request, { searchString: inventoryName }, accessToken);
@@ -225,16 +243,7 @@ export const runInventoryAPINew = () => {
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentInventoryId));
       expect(archived, `Inventory ${inventoryName} was not found in archive`).toBeTruthy();
 
-      const active = await inventoryAPI.getInventoryPagination(
-        request,
-        inventoryPaginationDto({ searchString: inventoryName }),
-        accessToken,
-      );
-      expectNoServerError(active);
-      if (!clientErrorCodes.includes(active.status)) {
-        expect(successCodes).toContain(active.status);
-        expect(getRows<ApiRow>(active.data).some((row) => row.id === currentInventoryId), JSON.stringify(active.data)).toBe(false);
-      }
+      expect(await waitForInventoryAbsentFromActivePagination(request, currentInventoryId, inventoryName, accessToken)).toBe(true);
       inventoryId = undefined;
 
       const archiveSubtype = await inventoryAPI.removeInventorySubtype(request, subtypeId as number, accessToken);

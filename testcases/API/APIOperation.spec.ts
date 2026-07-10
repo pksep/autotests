@@ -3,7 +3,7 @@ import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
-import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ApiRow = Record<string, any>;
 
@@ -50,6 +50,48 @@ const expectTypeOperationShape = (row: ApiRow) => {
   expect(row.name, JSON.stringify(row)).toBeTruthy();
 };
 
+const findTypeOperationByName = async (
+  request: any,
+  name: string,
+  accessToken?: string,
+): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const list = await operationAPI.getTypeOperations(request, false, accessToken);
+    expectNoServerError(list);
+    return list;
+  }, (list) => getRows<ApiRow>(list.data).some((row) => row.name === name && row.ban !== true));
+
+  return response ? getRows<ApiRow>(response.data).find((row) => row.name === name && row.ban !== true) : undefined;
+};
+
+const waitForTypeOperationAbsent = async (
+  request: any,
+  id: number,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const list = await operationAPI.getTypeOperations(request, false, accessToken);
+    expectNoServerError(list);
+    return list;
+  }, (list) => !getRows<ApiRow>(list.data).some((row) => row.id === id));
+
+  return Boolean(response);
+};
+
+const waitForTypeOperationNameAbsent = async (
+  request: any,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const list = await operationAPI.getTypeOperations(request, false, accessToken);
+    expectNoServerError(list);
+    return list;
+  }, (list) => !getRows<ApiRow>(list.data).some((row) => row.name === name && row.ban !== true));
+
+  return Boolean(response);
+};
+
 export const runOperationAPINew = () => {
   logger.info('Starting Operation API coverage suite');
 
@@ -70,7 +112,7 @@ export const runOperationAPINew = () => {
       expectNoServerError(cleanup);
     });
 
-    test('создает тип операции и читает его по id', async ({ request }) => {
+    test('создает тип операции и читает его по id и активному списку', async ({ request }) => {
       typeOperationName = `API Type Operation ${uniqueApiSuffix('oper')}`;
 
       const uniqueBefore = await operationAPI.checkNameUnique(request, { name: typeOperationName }, accessToken);
@@ -99,10 +141,22 @@ export const runOperationAPINew = () => {
         expect(successCodes).toContain(byId.status);
         expect(byId.data.id, JSON.stringify(byId.data)).toBe(typeOperationId);
       }
+
+      const createdInList = await findTypeOperationByName(request, typeOperationName, accessToken);
+      expect(createdInList, `Type operation ${typeOperationName} was not found in active list after create`).toBeTruthy();
+      expect(createdInList?.id).toBe(typeOperationId);
+      expect(createdInList?.metaloworking ?? createdInList?.metalworking, JSON.stringify(createdInList)).toBe(true);
+
+      const uniqueAfterCreate = await operationAPI.checkNameUnique(request, { name: typeOperationName }, accessToken);
+      expectNoServerError(uniqueAfterCreate);
+      if (!clientErrorCodes.includes(uniqueAfterCreate.status)) {
+        expect(Number(uniqueAfterCreate.data), JSON.stringify(uniqueAfterCreate.data)).toBeGreaterThanOrEqual(1);
+      }
     });
 
-    test('обновляет тип операции', async ({ request }) => {
+    test('обновляет тип операции и проверяет новые поля в чтении', async ({ request }) => {
       expect(typeOperationId).toBeTruthy();
+      const previousName = typeOperationName;
       typeOperationName = `${typeOperationName} Updated`;
 
       const update = await operationAPI.updateTypeOperation(
@@ -119,14 +173,48 @@ export const runOperationAPINew = () => {
       expect(successCodes, JSON.stringify(update.data)).toContain(update.status);
       expect(update.data.id, JSON.stringify(update.data)).toBe(typeOperationId);
       expect(update.data.name, JSON.stringify(update.data)).toBe(typeOperationName);
+
+      const updatedInList = await findTypeOperationByName(request, typeOperationName, accessToken);
+      expect(updatedInList, `Type operation ${typeOperationName} was not found in active list after update`).toBeTruthy();
+      expect(updatedInList?.id).toBe(typeOperationId);
+      expect(updatedInList?.helperTime, JSON.stringify(updatedInList)).toBe(true);
+      expect(Number(updatedInList?.helperTimeMinute), JSON.stringify(updatedInList)).toBe(2);
+      expect(await waitForTypeOperationNameAbsent(request, previousName, accessToken)).toBe(true);
+
+      const byId = await operationAPI.getTypeOperationById(
+        request,
+        { id: typeOperationId, modelInclude: [] },
+        accessToken,
+      );
+      expectNoServerError(byId);
+      expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+      expect(byId.data?.name, JSON.stringify(byId.data)).toBe(typeOperationName);
+      expect(byId.data?.helperTime, JSON.stringify(byId.data)).toBe(true);
+      expect(Number(byId.data?.helperTimeMinute), JSON.stringify(byId.data)).toBe(2);
     });
 
-    test('архивирует тестовый тип операции', async ({ request }) => {
+    test('архивирует тестовый тип операции и проверяет отсутствие в активном списке', async ({ request }) => {
       expect(typeOperationId).toBeTruthy();
+      const currentTypeOperationId = typeOperationId as number;
 
-      const remove = await operationAPI.banTypeOperation(request, typeOperationId as number, accessToken);
+      const remove = await operationAPI.banTypeOperation(request, currentTypeOperationId, accessToken);
       expectNoServerError(remove);
       expect(successCodes, JSON.stringify(remove.data)).toContain(remove.status);
+      expect(remove.data?.ban, JSON.stringify(remove.data)).toBe(true);
+
+      expect(await waitForTypeOperationAbsent(request, currentTypeOperationId, accessToken)).toBe(true);
+
+      const byId = await operationAPI.getTypeOperationById(
+        request,
+        { id: currentTypeOperationId, modelInclude: [] },
+        accessToken,
+      );
+      expectNoServerError(byId);
+      if (!clientErrorCodes.includes(byId.status)) {
+        expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+        expect(byId.data?.ban, JSON.stringify(byId.data)).toBe(true);
+      }
+
       typeOperationId = undefined;
     });
   });

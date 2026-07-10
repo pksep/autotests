@@ -151,6 +151,48 @@ export const runNotificationAPINew = () => {
       rows.forEach(expectNotificationShape);
     });
 
+    test('сохраняет порядок и индивидуальные поля mixed batch после enrichment', async ({ request }) => {
+      const systemUuid = uniqueApiSuffix('notification-mixed-system');
+      const createUuid = uniqueApiSuffix('notification-mixed-create');
+      const updateUuid = uniqueApiSuffix('notification-mixed-update');
+      const payload = [
+        systemNotification({
+          uuid: systemUuid,
+          event: 'info',
+          title: 'Mixed system title',
+          message: 'Mixed system message',
+        }),
+        nonSystemNotification({
+          uuid: createUuid,
+          event: 'create',
+          entity: 'material',
+          entityId: 1,
+          changedFields: [],
+        }),
+        nonSystemNotification({
+          uuid: updateUuid,
+          event: 'update',
+          entity: 'material',
+          entityId: 1,
+          changedFields: [{ fieldName: 'name', oldValue: 'До', newValue: 'После' }],
+        }),
+      ];
+
+      const response = await notificationsAPI.enrichBatchRaw(request, payload, API_CONST.API_TEST_USER_ID, accessToken);
+      expectNoServerError(response);
+      expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
+
+      const rows = enrichedRows(response.data);
+      expect(rows).toHaveLength(payload.length);
+      expect(rows.map((row) => row.uuid)).toEqual([systemUuid, createUuid, updateUuid]);
+      expect(rows.map((row) => row.event)).toEqual(['info', 'create', 'update']);
+      rows.forEach(expectNotificationShape);
+      expect(rows[0].title, JSON.stringify(rows[0])).toBe('Mixed system title');
+      expect(rows[0].message, JSON.stringify(rows[0])).toBe('Mixed system message');
+      expect(rows[1].message, JSON.stringify(rows[1])).toMatch(/[А-Яа-яA-Za-z]/);
+      expect(rows[2].changes, JSON.stringify(rows[2])).toBeDefined();
+    });
+
     test('обогащает non-system create/update с changedFields и русским сообщением', async ({ request }) => {
       const create = nonSystemNotification({
         uuid: uniqueApiSuffix('notification-create-material'),

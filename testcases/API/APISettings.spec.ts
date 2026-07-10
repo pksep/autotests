@@ -100,10 +100,30 @@ export const runSettingsAPINew = () => {
       expect(current.status).toBe(200);
       expectInactionShape(current.data);
 
-      const response = await settingsAPI.inactionChange(request, current.data.inaction, accessToken);
-      expect(response.status).toBe(200);
-      expectInactionShape(response.data);
-      expect(response.data.inaction).toBe(current.data.inaction);
+      const originalValue = Number(current.data.inaction);
+      const changedValue = originalValue === 1 ? 2 : 1;
+
+      try {
+        const changed = await settingsAPI.inactionChange(request, changedValue, accessToken);
+        expect(changed.status).toBe(200);
+        expectInactionShape(changed.data);
+        expect(changed.data.inaction).toBe(changedValue);
+
+        const afterChange = await settingsAPI.inactionGet(request, accessToken);
+        expect(afterChange.status).toBe(200);
+        expectInactionShape(afterChange.data);
+        expect(afterChange.data.inaction).toBe(changedValue);
+      } finally {
+        const restored = await settingsAPI.inactionChange(request, originalValue, accessToken);
+        expect(restored.status).toBe(200);
+        expectInactionShape(restored.data);
+        expect(restored.data.inaction).toBe(originalValue);
+      }
+
+      const afterRestore = await settingsAPI.inactionGet(request, accessToken);
+      expect(afterRestore.status).toBe(200);
+      expectInactionShape(afterRestore.data);
+      expect(afterRestore.data.inaction).toBe(originalValue);
     });
 
     test('невалидные мутации справочников настроек возвращают error contract', async ({ request }) => {

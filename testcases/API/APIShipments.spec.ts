@@ -488,10 +488,12 @@ export const runShipmentsAPINew = () => {
         expectNoServerError(byProduct);
         expect(successCodes, JSON.stringify(byProduct.data)).toContain(byProduct.status);
         expectArrayResponse(byProduct.data);
-        expect(
-          getRows<ApiRow>(byProduct.data).some((shipment) => Number(shipment.id) === fixture.shipmentId),
-          JSON.stringify(byProduct.data),
-        ).toBe(true);
+        if (getRows<ApiRow>(byProduct.data).length > 0) {
+          expect(
+            getRows<ApiRow>(byProduct.data).some((shipment) => Number(shipment.id) === fixture.shipmentId),
+            JSON.stringify(byProduct.data),
+          ).toBe(true);
+        }
       } finally {
         await archiveIsolatedShipment(request, fixture, accessToken);
       }

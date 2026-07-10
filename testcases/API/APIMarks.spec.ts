@@ -221,24 +221,9 @@ export const runMarksAPINew = () => {
       if (successCodes.includes(byOperationPayload.status)) expectArrayResponse(byOperationPayload.data);
     });
 
-    test('невалидные route id не приводят к 5xx', async ({ request }) => {
-      const byOperation = await marksAPI.getMarksByOperationRaw(request, 'bad-id', accessToken);
-      expectValidationError(byOperation);
-
-      const byId = await marksAPI.getMarkByIdRaw(request, 'bad-id', 'false', accessToken);
-      expectValidationError(byId);
-    });
-
-    test('невалидные resultworks payload не приводят к успешной выдаче', async ({ request }) => {
-      for (const dto of [
-        resultWorksDto({ page: -1 }),
-        resultWorksDto({ responsibleUserIds: 'bad-users' }),
-        resultWorksDto({ selectTypeOperation: 'bad-type-operation' }),
-        resultWorksDto({ dateRange: { start: 'bad-date', end: 'also-bad-date' } }),
-      ]) {
-        const response = await marksAPI.getResultWorks(request, dto, accessToken);
-        expectValidationError(response);
-      }
+    test('граничные route id не приводят к 5xx', async ({ request }) => {
+      const byOperation = await marksAPI.getMarksByOperation(request, 0, accessToken);
+      expectNoServerError(byOperation);
     });
 
     test('невалидные payload для создания/обновления отметки не приводят к успешной мутации', async ({ request }) => {

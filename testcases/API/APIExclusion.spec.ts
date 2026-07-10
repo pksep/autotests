@@ -3,7 +3,7 @@ import { ExclusionAPI } from '../../pages/API/APIExclusion';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
-import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 type ExclusionLike = Record<string, any>;
 
@@ -34,6 +34,44 @@ const expectExclusionShape = (data: ExclusionLike) => {
   expect(data.exclusion, JSON.stringify(data)).toBeTruthy();
   expect(data.exclusionType, JSON.stringify(data)).toBeTruthy();
   expect(data.entityType, JSON.stringify(data)).toBeTruthy();
+};
+
+const findExclusionInPagination = async (
+  request: any,
+  exclusionId: number,
+  exclusion: string,
+  accessToken?: string,
+): Promise<ExclusionLike | undefined> => {
+  const response = await eventually(async () => {
+    const page = await exclusionAPI.getExclusionPagination(
+      request,
+      paginationDto({ searchString: exclusion }),
+      accessToken,
+    );
+    expectNoServerError(page);
+    return page;
+  }, (page) => getRows<ExclusionLike>(page.data).some((row) => row.id === exclusionId && row.exclusion === exclusion));
+
+  return response ? getRows<ExclusionLike>(response.data).find((row) => row.id === exclusionId) : undefined;
+};
+
+const waitForExclusionAbsentFromPagination = async (
+  request: any,
+  exclusionId: number,
+  exclusion: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const page = await exclusionAPI.getExclusionPagination(
+      request,
+      paginationDto({ searchString: exclusion }),
+      accessToken,
+    );
+    expectNoServerError(page);
+    return page;
+  }, (page) => !getRows<ExclusionLike>(page.data).some((row) => row.id === exclusionId));
+
+  return Boolean(response);
 };
 
 export const runExclusionAPINew = () => {
@@ -79,6 +117,10 @@ export const runExclusionAPINew = () => {
       expectNoServerError(byId);
       expectExclusionShape(byId.data);
       expect(byId.data.exclusion).toBe(createdValue);
+
+      const createdInPage = await findExclusionInPagination(request, exclusionId as number, createdValue, accessToken);
+      expect(createdInPage, `Exclusion ${createdValue} was not found in pagination after create`).toBeTruthy();
+      expect(createdInPage?.id).toBe(exclusionId);
     });
 
     test('обновляет исключение и видит его в пагинации', async ({ request }) => {
@@ -93,18 +135,34 @@ export const runExclusionAPINew = () => {
       expect(successCodes, JSON.stringify(update.data)).toContain(update.status);
       expectNoServerError(update);
 
-      const page = await exclusionAPI.getExclusionPagination(request, paginationDto(), accessToken);
-      expect(successCodes, JSON.stringify(page.data)).toContain(page.status);
-      expectPaginationContract(page.data);
-      expect(getRows<ExclusionLike>(page.data).some((row) => row.id === exclusionId && row.exclusion === updatedValue)).toBe(true);
+      const updatedInPage = await findExclusionInPagination(request, exclusionId as number, updatedValue, accessToken);
+      expect(updatedInPage, `Exclusion ${updatedValue} was not found in pagination after update`).toBeTruthy();
+      expect(updatedInPage?.id).toBe(exclusionId);
+
+      const byId = await exclusionAPI.getExclusionById(request, exclusionId as number, accessToken);
+      expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+      expectNoServerError(byId);
+      expect(byId.data?.exclusion, JSON.stringify(byId.data)).toBe(updatedValue);
     });
 
-    test('архивирует созданное исключение', async ({ request }) => {
+    test('архивирует созданное исключение и проверяет отсутствие в активной выдаче', async ({ request }) => {
       test.skip(!exclusionId, 'Исключение не создано на этом окружении');
+      const currentExclusionId = exclusionId as number;
 
-      const archive = await exclusionAPI.banExclusionById(request, exclusionId as number, accessToken);
+      const archive = await exclusionAPI.banExclusionById(request, currentExclusionId, accessToken);
       expect(successCodes, JSON.stringify(archive.data)).toContain(archive.status);
       expectNoServerError(archive);
+      expect(archive.data?.ban, JSON.stringify(archive.data)).toBe(true);
+
+      expect(await waitForExclusionAbsentFromPagination(request, currentExclusionId, updatedValue, accessToken)).toBe(true);
+
+      const byId = await exclusionAPI.getExclusionById(request, currentExclusionId, accessToken);
+      expectNoServerError(byId);
+      if (!clientErrorCodes.includes(byId.status)) {
+        expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+        expect(byId.data?.ban, JSON.stringify(byId.data)).toBe(true);
+      }
+
       exclusionId = undefined;
     });
   });

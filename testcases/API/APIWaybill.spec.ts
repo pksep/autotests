@@ -151,6 +151,15 @@ export const runWaybillAPINew = () => {
           expect(successCodes).toContain(byId.status);
           expect(byId.data?.description, JSON.stringify(byId.data)).toBe(updatedDescription);
         }
+
+        const afterUpdateList = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
+        expectNoServerError(afterUpdateList);
+        if (!clientErrorCodes.includes(afterUpdateList.status)) {
+          expect(successCodes).toContain(afterUpdateList.status);
+          const updatedRow = getRows<ApiRow>(afterUpdateList.data).find((row) => row.id === existingWaybill.id);
+          expect(updatedRow, JSON.stringify(afterUpdateList.data)).toBeTruthy();
+          expect(updatedRow?.description, JSON.stringify(updatedRow)).toBe(updatedDescription);
+        }
       } finally {
         const restore = await waybillAPI.updateWaybill(
           request,
@@ -158,6 +167,13 @@ export const runWaybillAPINew = () => {
           accessToken,
         );
         expectNoServerError(restore);
+
+        const restoredById = await waybillAPI.getWaybillById(request, existingWaybill.id, accessToken);
+        expectNoServerError(restoredById);
+        if (!clientErrorCodes.includes(restoredById.status)) {
+          expect(successCodes).toContain(restoredById.status);
+          expect(restoredById.data?.description ?? '', JSON.stringify(restoredById.data)).toBe(originalDescription);
+        }
       }
     });
 

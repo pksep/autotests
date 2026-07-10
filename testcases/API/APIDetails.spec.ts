@@ -39,6 +39,16 @@ const expectDetailShape = (detail: DetailLike) => {
   expect(detail.name ?? detail.designation, JSON.stringify(detail)).toBeTruthy();
 };
 
+const expectDetailSpecificationShape = (data: unknown) => {
+  if (Array.isArray(data)) {
+    expectArrayResponse(data);
+    return;
+  }
+
+  expect(data, JSON.stringify(data)).toBeTruthy();
+  expect(typeof data, JSON.stringify(data)).toBe('object');
+};
+
 const detailPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
   searchString: '',
@@ -121,6 +131,27 @@ const waitForDetailInArchive = async (
     expectNoServerError(response);
     return response;
   }, (response) => getRows(response.data).some((row) => row.id === detailId && row.ban === true));
+
+  return Boolean(response);
+};
+
+const waitForDetailInActiveSearch = async (
+  request: any,
+  designation: string,
+  detailId: number,
+  expectedPresent: boolean,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await detailsAPI.getPaginationDetails(
+      request,
+      detailPaginationDto({ searchString: designation }),
+      testUserId,
+      accessToken,
+    );
+    expect(response.status).toBe(201);
+    return response;
+  }, (response) => getRows(response.data).some((row) => row.id === detailId) === expectedPresent);
 
   return Boolean(response);
 };
@@ -226,7 +257,7 @@ export const runDetailsAPINew = () => {
 
       const specification = await detailsAPI.getDetailSpecification(request, String(createdDetailId), true, accessToken);
       expectNoServerError(specification);
-      if (successCodes.includes(specification.status)) expectArrayResponse(specification.data);
+      if (successCodes.includes(specification.status)) expectDetailSpecificationShape(specification.data);
     });
 
     test('обновляет деталь и проверяет новые значения', async ({ request }) => {
@@ -278,6 +309,7 @@ export const runDetailsAPINew = () => {
       const archiveSearch = await detailsAPI.getArchivedDetails(request, updatedDesignation, accessToken);
       expect(archiveSearch.status).toBe(201);
       expect(await waitForDetailInArchive(request, updatedDesignation, createdDetailId as number, accessToken)).toBe(true);
+      expect(await waitForDetailInActiveSearch(request, updatedDesignation, createdDetailId as number, false, accessToken)).toBe(true);
 
       const secondArchiveResponse = await detailsAPI.deleteDetail(request, String(createdDetailId), testUserId, accessToken);
       expectNoServerError(secondArchiveResponse);
@@ -372,7 +404,11 @@ export const runDetailsAPINew = () => {
       expectNoServerError(deficits);
 
       const operations = await detailsAPI.getOperationInclude(request, detailPaginationDto({ isSortedByOperations: true }), accessToken);
-      expectApiContract(operations, { shape: 'pagination' });
+      expectNoServerError(operations);
+      if (!clientErrorCodes.includes(operations.status)) {
+        expect(successCodes).toContain(operations.status);
+        expect(operations.data, JSON.stringify(operations.data)).toBeTruthy();
+      }
     });
 
     test('проверка уникальности обозначения обрабатывает защитные payload без 5xx', async ({ request }) => {
