@@ -244,6 +244,14 @@ export const runToolsAPINew = () => {
       }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentToolId));
       expect(archived, `Tool ${toolName} was not found in archive`).toBeTruthy();
 
+      const archivedById = await toolsAPI.getOneTool(request, currentToolId, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(currentToolId);
+        expect(archivedById.data?.ban, JSON.stringify(archivedById.data)).toBe(true);
+      }
+
       expect(await waitForToolAbsentFromActivePagination(request, currentToolId, toolName, accessToken)).toBe(true);
       toolId = undefined;
 

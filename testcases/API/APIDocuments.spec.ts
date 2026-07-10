@@ -266,6 +266,16 @@ export const runDocumentsAPINew = () => {
 
       const archived = await waitForDocumentInArchive(request, currentDocumentId, updatedName, accessToken);
       expect(archived, `Document ${updatedName} was not found in archive`).toBeTruthy();
+      expect(archived?.ban, JSON.stringify(archived)).toBe(true);
+
+      const archivedById = await documentsAPI.getFileById(request, currentDocumentId, true, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(currentDocumentId);
+        expect(archivedById.data?.ban, JSON.stringify(archivedById.data)).toBe(true);
+      }
+
       expect(await waitForDocumentAbsentFromActivePagination(request, currentDocumentId, updatedName, accessToken)).toBe(true);
 
       documentId = undefined;

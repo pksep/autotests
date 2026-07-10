@@ -141,10 +141,30 @@ export const runCommentsAPINew = () => {
         expect(successCodes, JSON.stringify(pin.data)).toContain(pin.status);
         expect(pin.data?.is_pinned ?? pin.data?.isPinned, JSON.stringify(pin.data)).toBe(true);
 
+        const pinnedInEntity = await eventually(async () => {
+          const response = await commentsAPI.getByEntity(request, 'cbed', entityId, 0, 10, accessToken);
+          expectNoServerError(response);
+          return response;
+        }, (response) => {
+          const comment = findCommentById(response.data, id as string);
+          return Boolean(comment && (comment.is_pinned ?? comment.isPinned) === true);
+        });
+        expect(findCommentById(pinnedInEntity?.data, id as string)?.is_pinned ?? findCommentById(pinnedInEntity?.data, id as string)?.isPinned).toBe(true);
+
         const unpin = await commentsAPI.unpinComment(request, id as string, accessToken);
         expectNoServerError(unpin);
         expect(successCodes, JSON.stringify(unpin.data)).toContain(unpin.status);
         expect(unpin.data?.is_pinned ?? unpin.data?.isPinned, JSON.stringify(unpin.data)).toBe(false);
+
+        const unpinnedInEntity = await eventually(async () => {
+          const response = await commentsAPI.getByEntity(request, 'cbed', entityId, 0, 10, accessToken);
+          expectNoServerError(response);
+          return response;
+        }, (response) => {
+          const comment = findCommentById(response.data, id as string);
+          return Boolean(comment && (comment.is_pinned ?? comment.isPinned) === false);
+        });
+        expect(findCommentById(unpinnedInEntity?.data, id as string)?.is_pinned ?? findCommentById(unpinnedInEntity?.data, id as string)?.isPinned).toBe(false);
 
         const remove = await commentsAPI.deleteComment(request, id as string, accessToken);
         expectNoServerError(remove);

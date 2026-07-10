@@ -162,12 +162,12 @@ const apiSuitesByModule = {
   },
 
   moving_api: {
-    description: 'Набор тестов Moving API для списка и создания перемещений.',
+    description: 'Набор тестов Moving API для списка, no-op create и defensive-сценариев.',
     tests: [
       {
         test: runMovingAPINew,
         description:
-          'Тестирует api/moving: получение списка, создание пустого перемещения и defensive-сценарий невалидного payload.'
+          'Тестирует api/moving: получение списка, no-op создание без фантомной записи и defensive-сценарий невалидного payload.'
       }
     ]
   },
@@ -603,7 +603,7 @@ const apiSuitesByModule = {
       {
         test: runMovingAPINew,
         description:
-          'Тестирует api/moving: список, создание и defensive-сценарий.'
+          'Тестирует api/moving: список, no-op создание без фантомной записи и defensive-сценарий.'
       },
       {
         test: runMovementErrorsAPINew,

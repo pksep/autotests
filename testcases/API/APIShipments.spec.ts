@@ -295,6 +295,34 @@ const waitForShipment = async (
   return response?.data;
 };
 
+const waitForShipmentAbsentFromActivePagination = async (
+  request: any,
+  shipmentId: number,
+  searchString: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await shipmentsAPI.getAllShipments(
+      request,
+      shipmentsPaginationDto({
+        searchStr: searchString,
+        dateRange: {
+          start: '1970-01-01T00:00:00.000Z',
+          end: '2100-12-31T23:59:59.999Z',
+        },
+      }),
+      accessToken,
+    );
+    expectNoServerError(response);
+    return response;
+  }, (response) => !getRows<ApiRow>(response.data).some((row) => Number(row.id) === shipmentId), {
+    attempts: 10,
+    intervalMs: 700,
+  });
+
+  return Boolean(response);
+};
+
 const extractProductIdFromShipment = (shipment: ApiRow | undefined): number | undefined => {
   if (!shipment) return undefined;
 
@@ -774,12 +802,22 @@ export const runShipmentsAPINew = () => {
 
     test('архивирует тестовую отгрузку', async ({ request }) => {
       test.skip(!createdShipmentId, 'Shipment was not created.');
+      const shipmentId = createdShipmentId as number;
 
-      const archive = await shipmentsAPI.deleteShipment(request, createdShipmentId as number, accessToken);
+      const archive = await shipmentsAPI.deleteShipment(request, shipmentId, accessToken);
       expectNoServerError(archive);
       expect(successCodes, JSON.stringify(archive.data)).toContain(archive.status);
 
-      const secondArchive = await shipmentsAPI.deleteShipment(request, createdShipmentId as number, accessToken);
+      expect(await waitForShipmentAbsentFromActivePagination(request, shipmentId, updatedDescription, accessToken)).toBe(true);
+
+      const archivedById = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status) && successCodes.includes(archivedById.status)) {
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(shipmentId);
+        expect(archivedById.data?.ban ?? archivedById.data?.isDeleted ?? true, JSON.stringify(archivedById.data)).not.toBe(false);
+      }
+
+      const secondArchive = await shipmentsAPI.deleteShipment(request, shipmentId, accessToken);
       expectNoServerError(secondArchive);
       createdShipmentId = undefined;
     });

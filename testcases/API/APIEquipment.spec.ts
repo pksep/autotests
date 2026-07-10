@@ -417,6 +417,14 @@ export const runEquipmentAPINew = () => {
       expect(archived, `Equipment ${equipmentName} was not found in archive`).toBeTruthy();
       expect(getRows<ApiRow>(archived!.data).some((row) => row.id === currentEquipmentId), JSON.stringify(archived!.data)).toBe(true);
 
+      const archivedById = await equipmentAPI.getEquipmentById(request, currentEquipmentId, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(currentEquipmentId);
+        expect(archivedById.data?.ban, JSON.stringify(archivedById.data)).toBe(true);
+      }
+
       expect(await waitForEquipmentAbsentFromActivePagination(request, currentEquipmentId, equipmentName, accessToken)).toBe(true);
       equipmentId = undefined;
     });

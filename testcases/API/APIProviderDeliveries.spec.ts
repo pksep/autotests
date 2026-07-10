@@ -451,6 +451,14 @@ export const runProviderDeliveriesAPINew = () => {
       expect(await waitForDeliveryAbsentFromPagination(request, currentDeliveryId, deliveryNumberOrder, accessToken)).toBe(true);
       expect(await waitForDeliveryAbsentFromCompanyList(request, currentCompanyId, currentDeliveryId, accessToken)).toBe(true);
 
+      const archivedById = await deliveriesAPI.getDeliveryById(request, currentDeliveryId, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(currentDeliveryId);
+        expect(archivedById.data?.ban ?? archivedById.data?.isDeleted ?? true, JSON.stringify(archivedById.data)).not.toBe(false);
+      }
+
       const archiveCompany = await companiesAPI.banCompany(request, currentCompanyId, accessToken);
       expectNoServerError(archiveCompany);
       if (!clientErrorCodes.includes(archiveCompany.status)) expect(successCodes).toContain(archiveCompany.status);
