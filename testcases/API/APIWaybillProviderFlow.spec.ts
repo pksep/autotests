@@ -6,6 +6,12 @@ import { WaybillAPI } from '../../pages/API/APIWaybill';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  expectNonNegativeQuantities,
+  expectRepeatOperationRejectedOrIdempotent,
+  expectRowLinkedToEntity,
+  readNumber,
+} from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
 
@@ -380,6 +386,8 @@ export const runWaybillProviderFlowAPI = () => {
 
       const position = await getDeliveryPosition(request, deliveryId, materialId, accessToken);
       expect(position, `Delivery position for material ${materialId} was not found`).toBeTruthy();
+      expectRowLinkedToEntity(position as ApiRow, 'material', materialId);
+      expectNonNegativeQuantities([position as ApiRow], ['orderedQuantity', 'ordered_quantity', 'quantity', 'count', 'totalAmount', 'total_amount']);
       deliveryPositionId = Number(position!.deliveryPositionId);
       expect(deliveryPositionId).toBeGreaterThan(0);
     });
@@ -414,6 +422,13 @@ export const runWaybillProviderFlowAPI = () => {
       expect(waybillId).toBeGreaterThan(0);
       expect(waybill!.type_сoming, JSON.stringify(waybill)).toBe(PROVIDER_TYPE);
       expect(waybill!.order_number, JSON.stringify(waybill)).toBe(deliveryNumberOrder);
+      expectNonNegativeQuantities([waybill as ApiRow]);
+      const linkedDeliveryId = readNumber(waybill as ApiRow, ['delivery_id', 'deliveryId']);
+      const nestedLinkedDeliveryId = Number(waybill!.deliveryLink?.deliveryId ?? waybill!.deliveryLink?.delivery_id);
+      expect(
+        linkedDeliveryId === deliveryId || nestedLinkedDeliveryId === deliveryId,
+        `Waybill ${waybillId} is not linked to delivery ${deliveryId}: ${JSON.stringify(waybill)}`,
+      ).toBe(true);
     });
 
     test('читает, обновляет и архивирует созданную накладную', async ({ request }) => {
@@ -444,6 +459,10 @@ export const runWaybillProviderFlowAPI = () => {
       if (archive.data && typeof archive.data === 'object') {
         expect(archive.data.ban, JSON.stringify(archive.data)).toBe(true);
       }
+
+      const secondArchive = await waybillAPI.deleteWaybill(request, waybillId as number, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
       waybillId = undefined;
     });
 

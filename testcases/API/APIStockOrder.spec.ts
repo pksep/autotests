@@ -14,6 +14,13 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  expectArchivedOnlyInArchiveSelection,
+  expectNonNegativeQuantities,
+  expectRepeatOperationRejectedOrIdempotent,
+  expectRowsLinkedToEntity,
+  expectValidDateField,
+} from '../../lib/helpers/APIDataInvariants';
 
 type ApiResult = {
   status: number;
@@ -322,6 +329,8 @@ export const runStockOrderAPINew = () => {
       const items = await waitForStockOrderItems(request, createdStockOrderId as number, accessToken);
       expect(items.length, `No stock order items were created for order ${createdStockOrderId}`).toBeGreaterThan(0);
       expectStockOrderItemShape(items[0]);
+      expectNonNegativeQuantities(items);
+      expectRowsLinkedToEntity(items, entity!.type, entity!.id);
       createdStockOrderItemId = Number(items[0].id);
       expect(getStockOrderItemEntityId(items[0], entity!.type), JSON.stringify(items[0])).toBe(entity!.id);
 
@@ -347,7 +356,10 @@ export const runStockOrderAPINew = () => {
       if (!clientErrorCodes.includes(byEntity.status)) {
         expect(successCodes).toContain(byEntity.status);
         expect(Array.isArray(byEntity.data), JSON.stringify(byEntity.data)).toBe(true);
-        expectRowsContainId(getRows(byEntity.data), createdStockOrderItemId as number, byEntity.data);
+        const rows = getRows<StockOrderItemLike>(byEntity.data);
+        expectRowsContainId(rows, createdStockOrderItemId as number, byEntity.data);
+        expectRowsLinkedToEntity(rows, entity!.type, entity!.id);
+        expectNonNegativeQuantities(rows);
       }
     });
 
@@ -435,6 +447,16 @@ export const runStockOrderAPINew = () => {
         expectNoServerError(dateResponse);
         if (!clientErrorCodes.includes(dateResponse.status)) {
           expect(successCodes).toContain(dateResponse.status);
+
+          const persistedDateItem = await stockOrderAPI.getItem(request, createdStockOrderItemId, accessToken);
+          expectNoServerError(persistedDateItem);
+          if (!clientErrorCodes.includes(persistedDateItem.status)) {
+            expect(successCodes).toContain(persistedDateItem.status);
+            expectValidDateField(
+              persistedDateItem.data,
+              ['warehouse_readiness_date', 'warehouseReadinessDate', 'readiness_date', 'readinessDate'],
+            );
+          }
         }
       }
     });
@@ -461,6 +483,32 @@ export const runStockOrderAPINew = () => {
       expect(archived?.ban, JSON.stringify(archived)).toBe(true);
 
       expect(await waitForStockOrderAbsentFromActivePagination(request, stockOrderId, stockOrderNumber, accessToken)).toBe(true);
+
+      const activePagination = await stockOrderAPI.getPaginationByArchive(
+        request,
+        false,
+        stockOrderArchivePaginationDto({ searchString: stockOrderNumber }),
+        accessToken,
+      );
+      const archivedPagination = await stockOrderAPI.getPaginationByArchive(
+        request,
+        true,
+        stockOrderArchivePaginationDto({ searchString: stockOrderNumber }),
+        accessToken,
+      );
+      expectNoServerError(activePagination);
+      expectNoServerError(archivedPagination);
+      if (!clientErrorCodes.includes(activePagination.status) && !clientErrorCodes.includes(archivedPagination.status)) {
+        expectArchivedOnlyInArchiveSelection(
+          getRows<StockOrderLike>(activePagination.data),
+          getRows<StockOrderLike>(archivedPagination.data),
+          stockOrderId,
+        );
+      }
+
+      const secondArchive = await stockOrderAPI.ban(request, stockOrderId, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(archiveResponse.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
 
       if (entity) {
         const byEntity = await stockOrderAPI.getItemsByEntity(request, entity.type, entity.id, accessToken);

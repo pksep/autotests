@@ -27,6 +27,7 @@ import { runMovementErrorsAPINew } from './testcases/API/APIMovementErrors.spec'
 import { runMovementObjectAPINew } from './testcases/API/APIMovementObject.spec';
 import { runMovingAPINew } from './testcases/API/APIMoving.spec';
 import { runNeo4jAPINew } from './testcases/API/APINeo4j.spec';
+import { runNegativeCoverageAPINew } from './testcases/API/APINegativeCoverage.spec';
 import { runNotificationAPINew } from './testcases/API/APINotification.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
 import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipmentFlow.spec';
@@ -146,6 +147,17 @@ const apiSuitesByModule = {
         test: runNotificationAPINew,
         description:
           'Тестирует api/external/notifications/enrich/batch для одиночного и batch системных уведомлений и минимального невалидного объекта.'
+      }
+    ]
+  },
+
+  negative_coverage_api: {
+    description: 'Dedicated negative API coverage for auth, validation, missing-resource and bulk-id scenarios.',
+    tests: [
+      {
+        test: runNegativeCoverageAPINew,
+        description:
+          'Проверяет 401/403 без токена или с поддельным токеном, 400/422 на битые DTO, 404/409 на несуществующие id и bulk-операции с частично невалидными id.'
       }
     ]
   },
@@ -855,6 +867,7 @@ const apiNegativeSuiteKeys = [
   'metaloworking_api',
   'movement_errors_api',
   'movement_object_api',
+  'negative_coverage_api',
   'neo4j_api',
   'operation_api',
   'production_tasks_api',

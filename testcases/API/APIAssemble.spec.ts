@@ -16,6 +16,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectParentChildReference } from '../../lib/helpers/APIDataInvariants';
 
 type ApiResult = {
   status: number;
@@ -446,6 +447,10 @@ export const runAssembleAPINew = () => {
         if (!clientErrorCodes.includes(byParent.status)) {
           expect(successCodes).toContain(byParent.status);
           expect(Array.isArray(getRows(byParent.data)) || Array.isArray(byParent.data), JSON.stringify(byParent.data)).toBe(true);
+          const rows = getRows<ApiRow>(byParent.data);
+          if (rows.length > 0) {
+            expectParentChildReference(rows, parentEntity);
+          }
         }
 
         const byIzd = await assembleAPI.getByIzd(request, parentEntity.id, parentEntity.type, accessToken);

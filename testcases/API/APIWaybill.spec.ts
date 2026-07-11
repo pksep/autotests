@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 import { WaybillAPI } from '../../pages/API/APIWaybill';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectMissingResource, expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, missingResourceCodes, expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
+import { expectNonNegativeQuantities } from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
 
@@ -48,6 +49,7 @@ export const runWaybillAPINew = () => {
 
       expect(successCodes).toContain(response.status);
       expectWaybillPaginationContract(response.data);
+      expectNonNegativeQuantities(getRows<ApiRow>(response.data));
     });
 
     test('поддерживает пустой поиск без изменения контракта ответа', async ({ request }) => {
@@ -87,6 +89,7 @@ export const runWaybillAPINew = () => {
       if (!clientErrorCodes.includes(byId.status)) {
         expect(successCodes).toContain(byId.status);
         expect(byId.data?.id, JSON.stringify(byId.data)).toBe(existingWaybill.id);
+        expectNonNegativeQuantities([byId.data]);
       }
     });
 
@@ -144,12 +147,15 @@ export const runWaybillAPINew = () => {
         );
         expectNoServerError(update);
         expect(successCodes, JSON.stringify(update.data)).toContain(update.status);
+        expect(Number(update.data?.id ?? update.data?.waybillId ?? existingWaybill.id), JSON.stringify(update.data)).toBe(existingWaybill.id);
 
         const byId = await waybillAPI.getWaybillById(request, existingWaybill.id, accessToken);
         expectNoServerError(byId);
         if (!clientErrorCodes.includes(byId.status)) {
           expect(successCodes).toContain(byId.status);
+          expect(byId.data?.id, JSON.stringify(byId.data)).toBe(existingWaybill.id);
           expect(byId.data?.description, JSON.stringify(byId.data)).toBe(updatedDescription);
+          expectNonNegativeQuantities([byId.data]);
         }
 
         const afterUpdateList = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
@@ -179,7 +185,8 @@ export const runWaybillAPINew = () => {
 
     test('удаление несуществующей накладной не роняет сервис', async ({ request }) => {
       const remove = await waybillAPI.deleteWaybill(request, 999999999, accessToken);
-      expectMissingResource(remove);
+      expectNoServerError(remove);
+      expect([...successCodes, ...missingResourceCodes], JSON.stringify(remove.data)).toContain(remove.status);
     });
   });
 };

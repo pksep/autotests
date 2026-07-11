@@ -18,9 +18,9 @@ const includeHealth = Boolean(args.includeHealth || process.env.API_COVERAGE_INC
 const coverageLevelRank = {
   missing: 0,
   smoke: 1,
-  negative: 2,
   maintenance: 2,
   contract: 3,
+  negative: 3.5,
   functional: 4,
 };
 

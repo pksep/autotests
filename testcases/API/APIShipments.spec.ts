@@ -19,6 +19,11 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  expectNonNegativeQuantities,
+  expectRepeatOperationRejectedOrIdempotent,
+  expectRowsLinkedToEntity,
+} from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
 
@@ -665,6 +670,8 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(byId);
       expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
       expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(createdShipmentId);
+      expect(Number(byId.data?.productId ?? byId.data?.product_id ?? byId.data?.product?.id), JSON.stringify(byId.data)).toBe(Number(activeProduct?.id));
+      expectNonNegativeQuantities([byId.data]);
 
       const main = await shipmentsAPI.getAllShipments(
         request,
@@ -674,6 +681,7 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(main);
       expect(successCodes, JSON.stringify(main.data)).toContain(main.status);
       expect(Array.isArray(getRows(main.data)), JSON.stringify(main.data)).toBe(true);
+      expectNonNegativeQuantities(getRows<ApiRow>(main.data));
 
       const list = await shipmentsAPI.getShipmentsListPagination(
         request,
@@ -715,7 +723,10 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(byProduct);
       expect(successCodes, JSON.stringify(byProduct.data)).toContain(byProduct.status);
       expectArrayResponse(byProduct.data);
-      expect(getRows<ApiRow>(byProduct.data).some((shipment) => Number(shipment.id) === shipmentId), JSON.stringify(byProduct.data)).toBe(true);
+      const byProductRows = getRows<ApiRow>(byProduct.data);
+      expect(byProductRows.some((shipment) => Number(shipment.id) === shipmentId), JSON.stringify(byProduct.data)).toBe(true);
+      expectNonNegativeQuantities(byProductRows);
+      expectRowsLinkedToEntity(byProductRows.filter((shipment) => Number(shipment.id) === shipmentId), 'product', productId);
 
       const attributes = ['id', 'number_order', 'status', 'warehouse_readiness_date'];
       const attributesResponse = await shipmentsAPI.getAttributes(
@@ -739,7 +750,9 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(itemsByEntity);
       expect(successCodes, JSON.stringify(itemsByEntity.data)).toContain(itemsByEntity.status);
       expectArrayResponse(itemsByEntity.data);
-      expect(getRows<ApiRow>(itemsByEntity.data).some((item) => Number(item.id) === shipmentId), JSON.stringify(itemsByEntity.data)).toBe(true);
+      const itemsByEntityRows = getRows<ApiRow>(itemsByEntity.data);
+      expect(itemsByEntityRows.some((item) => Number(item.id) === shipmentId), JSON.stringify(itemsByEntity.data)).toBe(true);
+      expectNonNegativeQuantities(itemsByEntityRows);
 
       const warehouseDate = '2030-05-20T00:00:00.000Z';
       const setWarehouseDate = await shipmentsAPI.setWarehouseReadinessDate(
@@ -819,6 +832,7 @@ export const runShipmentsAPINew = () => {
 
       const secondArchive = await shipmentsAPI.deleteShipment(request, shipmentId, accessToken);
       expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
       createdShipmentId = undefined;
     });
   });

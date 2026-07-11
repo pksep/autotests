@@ -8,7 +8,7 @@ import { ProductsAPI } from '../../pages/API/APIProducts';
 import { SettingsAPI } from '../../pages/API/APISettings';
 import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { WarehouseAPI } from '../../pages/API/APIWarehouse';
-import { captureApiResult, expectEndpointReached } from '../../lib/helpers/APIAssertions';
+import { captureApiResult, expectClientError, expectEndpointReached } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -72,6 +72,11 @@ export const runMaintenanceAPINew = () => {
       for (const response of responses) {
         expectEndpointReached(response);
       }
+    });
+
+    test('[defensive] maintenance/settings отклоняет скачивание несуществующего dump без авторизации', async ({ request }) => {
+      const response = await settingsAPI.downloadDb(request, 'api-negative-missing-dump.sql');
+      expectClientError(response, [401, 403, 404]);
     });
   });
 };

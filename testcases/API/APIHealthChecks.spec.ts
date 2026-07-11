@@ -1,6 +1,12 @@
 import { APIRequestContext, expect, test } from '@playwright/test';
 import { ENV } from '../../config';
-import { expectNoServerError, getCount, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  expectNoServerError,
+  expectUnauthorizedOrForbidden,
+  getCount,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -261,5 +267,24 @@ export const runHealthChecksAPINew = () => {
     registerHealthTests('Модальные окна', MODAL_HEALTH_PROBES, () => accessToken);
     registerDataTests('Данные таблиц страниц', PAGE_TABLE_DATA_PROBES, () => accessToken);
     registerDataTests('Данные таблиц модальных окон', MODAL_TABLE_DATA_PROBES, () => accessToken);
+
+    test('defensive-сценарий: auth check отклоняет невалидный токен', async ({ request }) => {
+      const response = await request.post(ENV.API_BASE_URL + 'api/auth/check', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer invalid.jwt.token',
+          compress: 'no-compress',
+        },
+        data: { token: 'invalid.jwt.token' },
+      });
+
+      const result = {
+        status: response.status(),
+        data: await parseBody(response),
+        headers: response.headers(),
+      };
+
+      expectUnauthorizedOrForbidden(result);
+    });
   });
 };

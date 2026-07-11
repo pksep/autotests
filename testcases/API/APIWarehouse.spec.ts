@@ -15,6 +15,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
+import { expectNonNegativeQuantities } from '../../lib/helpers/APIDataInvariants';
 
 type ApiResult = {
   status: number;
@@ -95,6 +96,7 @@ export const runWarehouseAPINew = () => {
         if (!clientErrorCodes.includes(response.status)) {
           expect(successCodes).toContain(response.status);
           expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+          expectNonNegativeQuantities(getRows<ApiRow>(response.data));
         }
       }
     });
@@ -108,6 +110,7 @@ export const runWarehouseAPINew = () => {
           expect(successCodes).toContain(response.status);
           expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
           expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+          expectNonNegativeQuantities(getRows<ApiRow>(response.data));
         }
       }
     });
@@ -137,6 +140,7 @@ export const runWarehouseAPINew = () => {
       if (!clientErrorCodes.includes(firstPage.status)) {
         expect(successCodes).toContain(firstPage.status);
         expectPaginationContract(firstPage.data, 1);
+        expectNonNegativeQuantities(getRows<ApiRow>(firstPage.data));
       }
 
       const farPage = await warehouseAPI.getWarehouseRemains(
@@ -148,6 +152,7 @@ export const runWarehouseAPINew = () => {
       if (!clientErrorCodes.includes(farPage.status)) {
         expect(successCodes).toContain(farPage.status);
         expectPaginationContract(farPage.data, 5);
+        expectNonNegativeQuantities(getRows<ApiRow>(farPage.data));
       }
     });
 
@@ -186,6 +191,7 @@ export const runWarehouseAPINew = () => {
       expectNoServerError(needsByParents);
       if (!clientErrorCodes.includes(needsByParents.status)) {
         expect(successCodes).toContain(needsByParents.status);
+        expectNonNegativeQuantities(getRows<ApiRow>(needsByParents.data));
       }
 
       const byParent = await warehouseAPI.getNeedsByParent(
