@@ -70,6 +70,13 @@ const materialDto = () => ({
   filterByAttention: false,
   filterByTime: true,
 });
+const warehouseRemainsDto = (entityType: string, overrides: Record<string, unknown> = {}) => ({
+  page: 0,
+  entityId: null,
+  searchString: '',
+  entityType,
+  ...overrides,
+});
 const userDto = () => ({
   light: true,
   ban: false,
@@ -118,7 +125,7 @@ const API_HEALTH_PROBES: HealthProbe[] = [
   { owner: 'UsersPage', title: 'users pagination', method: 'POST', path: 'api/users/pagination/all', data: userDto() },
   { owner: 'WarehouseExpensesPage', title: 'warehouse expenditure', method: 'POST', path: 'api/expenditure/by-params', data: pageDto(), allowClientError: true },
   { owner: 'WarehouseTaskForShipmentPage', title: 'shipments pagination', method: 'POST', path: 'api/shipments/pagination', data: pageDto(), allowClientError: true },
-  { owner: 'WasteStoragePage', title: 'warehouse remains for waste', method: 'POST', path: 'api/sclad/remains', data: pageDto({ type: 'waste' }), allowClientError: true },
+  { owner: 'WasteStoragePage', title: 'warehouse remains pagination', method: 'POST', path: 'api/sclad/remains', data: warehouseRemainsDto('material'), allowClientError: true },
 ];
 
 const MODAL_HEALTH_PROBES: HealthProbe[] = [
