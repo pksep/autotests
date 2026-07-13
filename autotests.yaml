@@ -3,10 +3,10 @@
   cycles: 1
   deleted: 8
   inserted: 8
-  seconds: 9.892832133
+  seconds: 15.006923607
   version: 0.60.0
   what: judges-summary
-  when: 2026-07-13 19:02:56.198319808 Z
+  when: 2026-07-13 20:42:10.368813964 Z
 - _id: 1
   _job: 22092682427
   _time: 2026-02-17 09:19:55.964720668 Z
@@ -22108,11 +22108,11 @@
   what: assessment
   when: 2026-07-13 01:14:40.196655584 Z
 - _id: 1768
-  _job: 29276854490
-  _time: 2026-07-13 19:02:48.756298236 Z
+  _job: 29283350804
+  _time: 2026-07-13 20:41:58.804791514 Z
   _version: 0.19.6/0.60.0/0.17.11
   earliest_issue_was_found: 1
-  events_were_scanned: 14907978364
+  events_were_scanned: 14914742978
   latest_issue_was_found: 529
   min_pull_was_found: 529
   repository: 935866864
