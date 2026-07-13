@@ -2,7 +2,14 @@ import { test, expect } from '@playwright/test';
 import { WaybillAPI } from '../../pages/API/APIWaybill';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, missingResourceCodes, expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import {
+  clientErrorCodes,
+  missingResourceCodes,
+  expectErrorResponseContract,
+  expectNoServerError,
+  getRows,
+  successCodes,
+} from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import { expectNonNegativeQuantities } from '../../lib/helpers/APIDataInvariants';
 
@@ -107,7 +114,9 @@ export const runWaybillAPINew = () => {
     test('невалидные id и фильтры не приводят к 5xx', async ({ request }) => {
       const missing = await waybillAPI.getWaybillById(request, 999999999, accessToken);
       expectNoServerError(missing);
-      if (!clientErrorCodes.includes(missing.status)) {
+      if (clientErrorCodes.includes(missing.status)) {
+        expectErrorResponseContract(missing);
+      } else {
         expect(successCodes).toContain(missing.status);
       }
 
