@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { API_CONST } from '../Constants/APIConstants';
+import type { ContractSchema } from './APIContractSchemas';
 
 export type ApiResult = {
   status: number;
@@ -170,6 +171,25 @@ export const expectPaginationContract = (data: unknown, pageSize?: number) => {
   expect(Array.isArray(rows), JSON.stringify(data)).toBe(true);
 };
 
+const formatSchemaIssues = (schema: ContractSchema, issues: { path: string; message: string }[]) =>
+  `${schema.name} mismatch:\n${issues.map((item) => `- ${item.path}: ${item.message}`).join('\n')}`;
+
+export const expectSchemaContract = <T = unknown>(
+  data: unknown,
+  schema: ContractSchema<T>,
+  context?: string,
+) => {
+  const result = schema.safeParse(data);
+  expect(
+    result.success,
+    [
+      context ? `Context: ${context}` : undefined,
+      !result.success ? formatSchemaIssues(schema, result.error.issues) : undefined,
+      `Body: ${formatBody(data)}`,
+    ].filter(Boolean).join('\n'),
+  ).toBe(true);
+};
+
 export const expectJsonResponseHeaders = (response: ApiResult) => {
   const contentType = response.headers?.['content-type'] || response.headers?.['Content-Type'];
   if (!contentType) return;
@@ -178,7 +198,12 @@ export const expectJsonResponseHeaders = (response: ApiResult) => {
 
 export const expectApiContract = (
   response: ApiResult,
-  options: { shape?: 'any' | 'array' | 'object' | 'pagination' | 'number'; successCodesOverride?: number[] } = {},
+  options: {
+    shape?: 'any' | 'array' | 'object' | 'pagination' | 'number';
+    successCodesOverride?: number[];
+    schema?: ContractSchema;
+    schemaContext?: string;
+  } = {},
 ) => {
   expectNoServerError(response);
   expectJsonResponseHeaders(response);
@@ -200,6 +225,10 @@ export const expectApiContract = (
     expect(Number(response.data), JSON.stringify(response.data)).not.toBeNaN();
   } else {
     expect(response.data, JSON.stringify(response.data)).toBeDefined();
+  }
+
+  if (options.schema) {
+    expectSchemaContract(response.data, options.schema, options.schemaContext);
   }
 };
 

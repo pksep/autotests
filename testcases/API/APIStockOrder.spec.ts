@@ -6,9 +6,11 @@ import logger from '../../lib/utils/logger';
 import {
   clientErrorCodes,
   expectClientError,
+  expectApiContract,
   expectErrorResponseContract,
   expectNoServerError,
   expectPaginationContract,
+  expectSchemaContract,
   getCount,
   getRows,
   successCodes,
@@ -21,6 +23,12 @@ import {
   expectRowsLinkedToEntity,
   expectValidDateField,
 } from '../../lib/helpers/APIDataInvariants';
+import {
+  arrayOf,
+  paginationOf,
+  stockOrderItemResponseSchema,
+  stockOrderResponseSchema,
+} from '../../lib/helpers/APIContractSchemas';
 
 type ApiResult = {
   status: number;
@@ -40,12 +48,14 @@ const getQueueData = (data: any): any => {
 };
 
 const expectStockOrderShape = (stockOrder: StockOrderLike) => {
+  expectSchemaContract(stockOrder, stockOrderResponseSchema);
   expect(stockOrder).toBeTruthy();
   expect(typeof stockOrder.id, JSON.stringify(stockOrder)).toBe('number');
   expect(stockOrder.number_order, JSON.stringify(stockOrder)).toBeTruthy();
 };
 
 const expectStockOrderItemShape = (item: StockOrderItemLike) => {
+  expectSchemaContract(item, stockOrderItemResponseSchema);
   expect(item).toBeTruthy();
   expect(typeof item.id, JSON.stringify(item)).toBe('number');
   expect(item.stock_order_id ?? item.stockOrderId, JSON.stringify(item)).toBeTruthy();
@@ -340,6 +350,7 @@ export const runStockOrderAPINew = () => {
         accessToken,
       );
       expect(pagination.status).toBe(201);
+      expectApiContract(pagination, { shape: 'pagination', schema: paginationOf(stockOrderResponseSchema) });
       expect(getCount(pagination.data), JSON.stringify(pagination.data)).toBeGreaterThanOrEqual(1);
       expectRowsContainId(getRows(pagination.data), createdStockOrderId as number, pagination.data);
 
@@ -355,7 +366,7 @@ export const runStockOrderAPINew = () => {
       expectNoServerError(byEntity);
       if (!clientErrorCodes.includes(byEntity.status)) {
         expect(successCodes).toContain(byEntity.status);
-        expect(Array.isArray(byEntity.data), JSON.stringify(byEntity.data)).toBe(true);
+        expectApiContract(byEntity, { shape: 'array', schema: arrayOf(stockOrderItemResponseSchema) });
         const rows = getRows<StockOrderItemLike>(byEntity.data);
         expectRowsContainId(rows, createdStockOrderItemId as number, byEntity.data);
         expectRowsLinkedToEntity(rows, entity!.type, entity!.id);
@@ -548,6 +559,7 @@ export const runStockOrderAPINew = () => {
 
       const mainPagination = await stockOrderAPI.getPagination(request, stockOrderPaginationDto(), accessToken);
       expect(mainPagination.status).toBe(201);
+      expectApiContract(mainPagination, { shape: 'pagination', schema: paginationOf(stockOrderResponseSchema) });
       expect(getCount(mainPagination.data), JSON.stringify(mainPagination.data)).toBeGreaterThanOrEqual(0);
       expect(Array.isArray(getRows(mainPagination.data)), JSON.stringify(mainPagination.data)).toBe(true);
 
@@ -558,6 +570,7 @@ export const runStockOrderAPINew = () => {
         accessToken,
       );
       expect(archivePagination.status).toBe(201);
+      expectApiContract(archivePagination, { shape: 'pagination', schema: paginationOf(stockOrderResponseSchema) });
       expect(getCount(archivePagination.data), JSON.stringify(archivePagination.data)).toBeGreaterThanOrEqual(0);
 
       const orderPagination = await stockOrderAPI.getOrderPagination(request, stockOrderToWayPaginationDto(), accessToken);
@@ -573,6 +586,7 @@ export const runStockOrderAPINew = () => {
       );
 
       expect(response.status).toBe(201);
+      expectApiContract(response, { shape: 'pagination', schema: paginationOf(stockOrderResponseSchema) });
       expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
       expect(getRows(response.data)).toEqual([]);
     });

@@ -5,6 +5,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectClientError,
   expectEndpointReached,
   expectNoServerError,
@@ -16,6 +17,11 @@ import {
 } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import { expectNonNegativeQuantities } from '../../lib/helpers/APIDataInvariants';
+import {
+  arrayOf,
+  paginationOf,
+  warehouseRemainResponseSchema,
+} from '../../lib/helpers/APIContractSchemas';
 
 type ApiResult = {
   status: number;
@@ -95,7 +101,7 @@ export const runWarehouseAPINew = () => {
 
         if (!clientErrorCodes.includes(response.status)) {
           expect(successCodes).toContain(response.status);
-          expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+          expectApiContract(response, { shape: 'array', schema: arrayOf(warehouseRemainResponseSchema) });
           expectNonNegativeQuantities(getRows<ApiRow>(response.data));
         }
       }
@@ -108,6 +114,7 @@ export const runWarehouseAPINew = () => {
 
         if (!clientErrorCodes.includes(response.status)) {
           expect(successCodes).toContain(response.status);
+          expectApiContract(response, { shape: 'pagination', schema: paginationOf(warehouseRemainResponseSchema) });
           expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
           expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
           expectNonNegativeQuantities(getRows<ApiRow>(response.data));
@@ -125,6 +132,7 @@ export const runWarehouseAPINew = () => {
       expectNoServerError(response);
       if (!clientErrorCodes.includes(response.status)) {
         expect(successCodes).toContain(response.status);
+        expectApiContract(response, { shape: 'pagination', schema: paginationOf(warehouseRemainResponseSchema) });
         expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
         expect(getRows(response.data)).toEqual([]);
       }
@@ -139,6 +147,7 @@ export const runWarehouseAPINew = () => {
       expectNoServerError(firstPage);
       if (!clientErrorCodes.includes(firstPage.status)) {
         expect(successCodes).toContain(firstPage.status);
+        expectApiContract(firstPage, { shape: 'pagination', schema: paginationOf(warehouseRemainResponseSchema) });
         expectPaginationContract(firstPage.data, 1);
         expectNonNegativeQuantities(getRows<ApiRow>(firstPage.data));
       }

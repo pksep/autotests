@@ -8,12 +8,14 @@ import {
   captureApiResult,
   clientErrorCodes,
   expectClientError,
+  expectApiContract,
   expectEndpointReached,
   expectErrorResponseContract,
   expectArrayResponse,
   expectMissingResource,
   expectNoServerError,
   expectPaginationContract,
+  expectSchemaContract,
   getCount,
   getRows,
   successCodes,
@@ -24,6 +26,11 @@ import {
   expectRepeatOperationRejectedOrIdempotent,
   expectRowsLinkedToEntity,
 } from '../../lib/helpers/APIDataInvariants';
+import {
+  arrayOf,
+  paginationOf,
+  shipmentResponseSchema,
+} from '../../lib/helpers/APIContractSchemas';
 
 type ApiRow = Record<string, any>;
 
@@ -377,6 +384,7 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(main);
       if (!clientErrorCodes.includes(main.status)) {
         expect(successCodes).toContain(main.status);
+        expectApiContract(main, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
         expect(getCount(main.data), JSON.stringify(main.data)).toBeGreaterThanOrEqual(0);
         expect(Array.isArray(getRows(main.data)), JSON.stringify(main.data)).toBe(true);
         firstShipment = getRows(main.data).find((row) => row.id);
@@ -391,6 +399,7 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(list);
       if (!clientErrorCodes.includes(list.status)) {
         expect(successCodes).toContain(list.status);
+        expectApiContract(list, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
         expect(getCount(list.data), JSON.stringify(list.data)).toBeGreaterThanOrEqual(0);
       }
 
@@ -549,6 +558,7 @@ export const runShipmentsAPINew = () => {
         expectNoServerError(response);
         if (!clientErrorCodes.includes(response.status)) {
           expect(successCodes).toContain(response.status);
+          expectApiContract(response, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
           expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
         }
       }
@@ -576,6 +586,7 @@ export const runShipmentsAPINew = () => {
       if (!clientErrorCodes.includes(main.status)) {
         expect(successCodes).toContain(main.status);
         expectPaginationContract(main.data, 1);
+        expectApiContract(main, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
       }
 
       const list = await shipmentsAPI.getShipmentsListPagination(
@@ -669,6 +680,7 @@ export const runShipmentsAPINew = () => {
       const byId = await shipmentsAPI.getShipmentById(request, createdShipmentId as number, accessToken);
       expectNoServerError(byId);
       expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+      expectSchemaContract(byId.data, shipmentResponseSchema);
       expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(createdShipmentId);
       expect(Number(byId.data?.productId ?? byId.data?.product_id ?? byId.data?.product?.id), JSON.stringify(byId.data)).toBe(Number(activeProduct?.id));
       expectNonNegativeQuantities([byId.data]);
@@ -680,6 +692,7 @@ export const runShipmentsAPINew = () => {
       );
       expectNoServerError(main);
       expect(successCodes, JSON.stringify(main.data)).toContain(main.status);
+      expectApiContract(main, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
       expect(Array.isArray(getRows(main.data)), JSON.stringify(main.data)).toBe(true);
       expectNonNegativeQuantities(getRows<ApiRow>(main.data));
 
@@ -722,7 +735,7 @@ export const runShipmentsAPINew = () => {
       const byProduct = await shipmentsAPI.getShipmentsByProduct(request, productId, accessToken);
       expectNoServerError(byProduct);
       expect(successCodes, JSON.stringify(byProduct.data)).toContain(byProduct.status);
-      expectArrayResponse(byProduct.data);
+      expectApiContract(byProduct, { shape: 'array', schema: arrayOf(shipmentResponseSchema) });
       const byProductRows = getRows<ApiRow>(byProduct.data);
       expect(byProductRows.some((shipment) => Number(shipment.id) === shipmentId), JSON.stringify(byProduct.data)).toBe(true);
       expectNonNegativeQuantities(byProductRows);

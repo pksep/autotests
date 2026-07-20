@@ -8,6 +8,7 @@ import logger from '../../lib/utils/logger';
 import {
   captureApiResult,
   clientErrorCodes,
+  expectApiContract,
   expectArrayResponse,
   expectClientError,
   expectEndpointReached,
@@ -15,12 +16,17 @@ import {
   expectNoServerError,
   expectObjectResponse,
   expectPaginationContract,
+  expectSchemaContract,
   getCount,
   getRows,
   serverErrorCodes,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  paginationOf,
+  productionTaskResponseSchema,
+} from '../../lib/helpers/APIContractSchemas';
 
 type ApiRow = Record<string, any>;
 type LifecycleType = 'ass' | 'metall';
@@ -1026,6 +1032,7 @@ export const runProductionTasksAPINew = () => {
       expectNoServerError(list);
       if (!clientErrorCodes.includes(list.status)) {
         expect(successCodes).toContain(list.status);
+        expectApiContract(list, { shape: 'pagination', schema: paginationOf(productionTaskResponseSchema) });
         expect(getCount(list.data), JSON.stringify(list.data)).toBeGreaterThanOrEqual(0);
         expect(Array.isArray(getRows(list.data)), JSON.stringify(list.data)).toBe(true);
       }
@@ -1038,6 +1045,7 @@ export const runProductionTasksAPINew = () => {
       expectNoServerError(listWithOperations);
       if (!clientErrorCodes.includes(listWithOperations.status)) {
         expect(successCodes).toContain(listWithOperations.status);
+        expectApiContract(listWithOperations, { shape: 'pagination', schema: paginationOf(productionTaskResponseSchema) });
         expectPaginationContract(listWithOperations.data, 5);
       }
 
@@ -1068,6 +1076,7 @@ export const runProductionTasksAPINew = () => {
       expectNoServerError(firstPage);
       if (!clientErrorCodes.includes(firstPage.status)) {
         expect(successCodes).toContain(firstPage.status);
+        expectApiContract(firstPage, { shape: 'pagination', schema: paginationOf(productionTaskResponseSchema) });
         expectPaginationContract(firstPage.data, 1);
       }
 
@@ -1079,6 +1088,7 @@ export const runProductionTasksAPINew = () => {
       expectNoServerError(farPage);
       if (!clientErrorCodes.includes(farPage.status)) {
         expect(successCodes).toContain(farPage.status);
+        expectApiContract(farPage, { shape: 'pagination', schema: paginationOf(productionTaskResponseSchema) });
         expectPaginationContract(farPage.data, 5);
       }
     });
@@ -1090,6 +1100,7 @@ export const runProductionTasksAPINew = () => {
       expectNoServerError(byId);
       if (!clientErrorCodes.includes(byId.status)) {
         expect(successCodes).toContain(byId.status);
+        expectSchemaContract(byId.data, productionTaskResponseSchema);
         expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(firstTaskId);
       }
     });
@@ -1167,7 +1178,7 @@ export const runProductionTasksAPINew = () => {
         expectNoServerError(plan);
         if (!clientErrorCodes.includes(plan.status)) {
           expect(successCodes).toContain(plan.status);
-          expectPaginationContract(plan.data);
+          expectApiContract(plan, { shape: 'pagination', schema: paginationOf(productionTaskResponseSchema) });
         }
 
         const onlineBoard = await productionTasksAPI.getOnlineBoard(

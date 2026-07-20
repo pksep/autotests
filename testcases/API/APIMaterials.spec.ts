@@ -7,13 +7,21 @@ import {
   expectClientError,
   expectErrorResponseContract,
   expectArrayResponse,
+  expectApiContract,
   expectNoServerError,
   expectPaginationContract,
+  expectSchemaContract,
   getCount,
   getRows,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  materialResponseSchema,
+  paginationOf,
+  subtypeMaterialResponseSchema,
+  typeMaterialResponseSchema,
+} from '../../lib/helpers/APIContractSchemas';
 
 type ApiResult = {
   status: number;
@@ -25,6 +33,7 @@ type MaterialLike = Record<string, any>;
 const materialsAPI = new MaterialsAPI(null as any);
 
 const expectMaterialShape = (material: MaterialLike) => {
+  expectSchemaContract(material, materialResponseSchema);
   expect(material).toBeTruthy();
   expect(typeof material.id, JSON.stringify(material)).toBe('number');
   expect(material.name, JSON.stringify(material)).toBeTruthy();
@@ -56,6 +65,7 @@ const expectMaterialShape = (material: MaterialLike) => {
 };
 
 const expectTypeMaterialShape = (typeMaterial: MaterialLike) => {
+  expectSchemaContract(typeMaterial, typeMaterialResponseSchema);
   expect(typeMaterial).toBeTruthy();
   expect(typeof typeMaterial.id, JSON.stringify(typeMaterial)).toBe('number');
   expect(typeMaterial.name, JSON.stringify(typeMaterial)).toBeTruthy();
@@ -69,6 +79,7 @@ const expectTypeMaterialShape = (typeMaterial: MaterialLike) => {
 };
 
 const expectSubtypeMaterialShape = (subtypeMaterial: MaterialLike) => {
+  expectSchemaContract(subtypeMaterial, subtypeMaterialResponseSchema);
   expect(subtypeMaterial).toBeTruthy();
   expect(typeof subtypeMaterial.id, JSON.stringify(subtypeMaterial)).toBe('number');
   expect(subtypeMaterial.name, JSON.stringify(subtypeMaterial)).toBeTruthy();
@@ -568,7 +579,7 @@ export const runMaterialsAPINew = () => {
         );
 
         expect(response.status).toBe(201);
-        expectPaginationContract(response.data);
+        expectApiContract(response, { shape: 'pagination', schema: paginationOf(materialResponseSchema) });
         expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(1);
 
         const row = getRows(response.data).find((item) => item.id === fixture?.materialId);
@@ -599,7 +610,7 @@ export const runMaterialsAPINew = () => {
       );
 
       expect(response.status).toBe(201);
-      expectPaginationContract(response.data);
+      expectApiContract(response, { shape: 'pagination', schema: paginationOf(materialResponseSchema) });
       expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
       expect(getRows(response.data)).toEqual([]);
     });
@@ -630,7 +641,7 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(typePagination);
       if (!clientErrorCodes.includes(typePagination.status)) {
         expect(successCodes).toContain(typePagination.status);
-        expectPaginationContract(typePagination.data);
+        expectApiContract(typePagination, { shape: 'pagination', schema: paginationOf(typeMaterialResponseSchema) });
         const typeRow = getRows(typePagination.data)[0];
         if (typeRow) expectTypeMaterialShape(typeRow);
       }
@@ -639,7 +650,7 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(subtypePagination);
       if (!clientErrorCodes.includes(subtypePagination.status)) {
         expect(successCodes).toContain(subtypePagination.status);
-        expectPaginationContract(subtypePagination.data);
+        expectApiContract(subtypePagination, { shape: 'pagination', schema: paginationOf(subtypeMaterialResponseSchema) });
         const subtypeRow = getRows(subtypePagination.data)[0];
         if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
       }
@@ -650,7 +661,7 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(materialsProvider);
       if (!clientErrorCodes.includes(materialsProvider.status)) {
         expect(successCodes).toContain(materialsProvider.status);
-        expectPaginationContract(materialsProvider.data);
+        expectApiContract(materialsProvider, { shape: 'pagination', schema: paginationOf(materialResponseSchema) });
         const materialRow = getRows(materialsProvider.data)[0];
         if (materialRow) expectMaterialShape(materialRow);
       }
@@ -659,7 +670,7 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(typesProvider);
       if (!clientErrorCodes.includes(typesProvider.status)) {
         expect(successCodes).toContain(typesProvider.status);
-        expectPaginationContract(typesProvider.data);
+        expectApiContract(typesProvider, { shape: 'pagination', schema: paginationOf(typeMaterialResponseSchema) });
         const typeRow = getRows(typesProvider.data)[0];
         if (typeRow) expectTypeMaterialShape(typeRow);
       }
@@ -668,7 +679,7 @@ export const runMaterialsAPINew = () => {
       expectNoServerError(subtypesProvider);
       if (!clientErrorCodes.includes(subtypesProvider.status)) {
         expect(successCodes).toContain(subtypesProvider.status);
-        expectPaginationContract(subtypesProvider.data);
+        expectApiContract(subtypesProvider, { shape: 'pagination', schema: paginationOf(subtypeMaterialResponseSchema) });
         const subtypeRow = getRows(subtypesProvider.data)[0];
         if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
       }
