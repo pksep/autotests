@@ -57,11 +57,16 @@ export class APIPageObject extends AbstractPage {
     }
   }
 
-  protected async apiResult(response: APIResponse): Promise<{ status: number; data: any; headers: Record<string, string> }> {
+  protected async apiResult(
+    response: APIResponse,
+    method?: string,
+  ): Promise<{ status: number; data: any; headers: Record<string, string>; method?: string; url?: string }> {
     return {
       status: response.status(),
       data: await this.parseJsonBody(response),
       headers: response.headers(),
+      method,
+      url: response.url(),
     };
   }
 
@@ -75,7 +80,7 @@ export class APIPageObject extends AbstractPage {
       accessToken?: string;
       json?: boolean;
     } = {},
-  ): Promise<{ status: number; data: any; headers: Record<string, string> }> {
+  ): Promise<{ status: number; data: any; headers: Record<string, string>; method?: string; url?: string }> {
     const headers = {
       ...(options.json === false ? {} : { 'Content-Type': 'application/json' }),
       compress: 'no-compress',
@@ -99,7 +104,7 @@ export class APIPageObject extends AbstractPage {
               ? await requestContext.delete(url, requestOptions)
               : await requestContext.patch(url, requestOptions);
 
-    return this.apiResult(response);
+    return this.apiResult(response, method);
   }
 
   /**

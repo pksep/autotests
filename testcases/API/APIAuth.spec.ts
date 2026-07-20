@@ -3,7 +3,13 @@ import { AuthAPI } from '../../pages/API/APIAuth';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
-import { expectNoServerError, expectStatusIn, expectUnauthorizedOrForbidden, expectValidationError } from '../../lib/helpers/APIAssertions';
+import {
+  expectNoServerError,
+  expectStatusIn,
+  expectUnauthorizedOrForbidden,
+  expectValidationError,
+  formatApiExpectation,
+} from '../../lib/helpers/APIAssertions';
 
 type AuthResponseData = {
   token?: string;
@@ -23,6 +29,8 @@ type AuthAPIResult = {
   data?: AuthResponseData | string;
   headers?: Record<string, string>;
   headersArray?: { name: string; value: string }[];
+  method?: string;
+  url?: string;
 };
 
 const extractAccessToken = (data: AuthResponseData | string | undefined): string | undefined => {
@@ -71,6 +79,10 @@ const getRefreshCookie = (response: AuthAPIResult): string | undefined => {
     .find((cookie) => cookie?.includes('refresh_token='));
 };
 
+const redactCookie = (cookie: string | undefined): string => {
+  return cookie?.replace(/[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '<jwt>') ?? '<missing>';
+};
+
 const expectPasswordIsNotExposed = (data: unknown) => {
   expect(JSON.stringify(data)).not.toContain(API_CONST.API_TEST_PASSWORD);
 };
@@ -115,8 +127,8 @@ export const runAuthAPINew = () => {
 
   const authAPI = new AuthAPI();
 
-  test.describe.serial('Auth API: последовательные проверки общей учетной записи', () => {
-  test.describe('Вход', () => {
+  test.describe('Auth API: проверки общей учетной записи', () => {
+    test.describe('Вход', () => {
     test.describe.configure({ timeout: 60000 });
 
     test('Успешный вход с корректными учетными данными', async ({ request }) => {
@@ -227,10 +239,20 @@ export const runAuthAPINew = () => {
       expect(response.status).toBe(201);
       const refreshCookie = getRefreshCookie(response);
       test.skip(!refreshCookie, 'Login response не содержит refresh_token Set-Cookie.');
+      const cookie = refreshCookie as string;
 
-      expect(refreshCookie).toContain('HttpOnly');
-      expect(refreshCookie).toContain('Secure');
-      expect(refreshCookie).toMatch(/SameSite=(Strict|Lax|None)/i);
+      expect(
+        cookie.includes('HttpOnly'),
+        formatApiExpectation(response, 'refresh cookie contains HttpOnly flag', `cookie: ${redactCookie(cookie)}`),
+      ).toBe(true);
+      expect(
+        cookie.includes('Secure'),
+        formatApiExpectation(response, 'refresh cookie contains Secure flag', `cookie: ${redactCookie(cookie)}`),
+      ).toBe(true);
+      expect(
+        /SameSite=(Strict|Lax|None)/i.test(cookie),
+        formatApiExpectation(response, 'refresh cookie contains SameSite flag', `cookie: ${redactCookie(cookie)}`),
+      ).toBe(true);
     });
 
     test('SQL-инъекция в учетных данных', async ({ request }) => {
@@ -301,9 +323,9 @@ export const runAuthAPINew = () => {
       expectStatusIn(response, [201, 400, 401]);
       expectPasswordIsNotExposed(response.data);
     });
-  });
+    });
 
-  test.describe('Проверка токена', () => {
+    test.describe('Проверка токена', () => {
     test.describe.configure({ timeout: 60000 });
 
     test('Проверка валидного токена', async ({ request }) => {
@@ -429,9 +451,9 @@ export const runAuthAPINew = () => {
       const reusedOldRefreshTokenResponse = await authAPI.refreshTokens(request, oldRefreshToken);
       expectUnauthorizedOrForbidden(reusedOldRefreshTokenResponse);
     });
-  });
+    });
 
-  test.describe('Выход', () => {
+    test.describe('Выход', () => {
     test.describe.configure({ timeout: 60000 });
 
     test('Успешный выход', async ({ request }) => {
@@ -525,6 +547,6 @@ export const runAuthAPINew = () => {
       const refreshResponse = await authAPI.refreshTokens(request, refreshToken);
       expectUnauthorizedOrForbidden(refreshResponse);
     });
-  });
+    });
   });
 };

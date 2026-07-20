@@ -45,7 +45,14 @@ export class AuthAPI extends APIPageObject {
       logger.info(`Login failed for user: ${username}, status: ${status} - This is expected for defensive testing`);
     }
 
-    return { status: status, data: responseData, headers: response.headers(), headersArray: response.headersArray() };
+    return {
+      status: status,
+      data: responseData,
+      headers: response.headers(),
+      headersArray: response.headersArray(),
+      method: 'POST',
+      url: response.url(),
+    };
   }
 
   async getUserByToken(request: APIRequestContext, token: string) {

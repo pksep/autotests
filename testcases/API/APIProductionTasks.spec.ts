@@ -167,6 +167,21 @@ const detalDeficitDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const onlineBoardMoByAssemblyTaskDto = (overrides: Record<string, unknown> = {}) =>
+  detalDeficitDto({
+    range: {
+      start: '1969-12-31T21:00:00.000Z',
+      end: '2100-01-01T20:59:59.999Z',
+    },
+    sort: [
+      {
+        sortField: 'calculatedCreateTime',
+        sortDesc: false,
+      },
+    ],
+    ...overrides,
+  });
+
 const resultWorksDto = (overrides: Record<string, unknown> = {}) => ({
   dateRange: {
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -613,6 +628,46 @@ const getRequiredCount = (data: unknown, label: string): number => {
   const count = getCount(data);
   expect(count, `${label} should return pagination count`).toBeGreaterThanOrEqual(0);
   return count as number;
+};
+
+const getRequiredUniqueDetalIds = (data: unknown, label: string): number[] => {
+  const rows = getRows<ApiRow>(data);
+  expect(Array.isArray(rows), `${label} should return pagination rows`).toBe(true);
+
+  const detailIds = rows.map((row) => {
+    const rawId = row.detalId ?? row.detal_id ?? row.detal?.id ?? row.detail?.id ?? row.entity?.id;
+    return Number(rawId);
+  });
+
+  const invalidRows = rows.filter((_, index) => !Number.isFinite(detailIds[index]) || detailIds[index] <= 0);
+  expect(invalidRows, `${label} should return rows with detail ids`).toHaveLength(0);
+
+  return [...new Set(detailIds)].sort((left, right) => left - right);
+};
+
+const getRequiredPaginatedUniqueDetalIds = async (
+  firstPageData: unknown,
+  label: string,
+  getPage: (page: number) => Promise<{ status: number; data?: any }>,
+): Promise<number[]> => {
+  const detailIds = new Set(getRequiredUniqueDetalIds(firstPageData, label));
+  const count = getRequiredCount(firstPageData, label);
+  const firstPageRows = getRows(firstPageData);
+  const pageSize = firstPageRows.length || 50;
+  const pageCount = Math.ceil(count / pageSize);
+
+  for (let page = 1; page < pageCount; page++) {
+    const response = await getPage(page);
+    expectNoServerError(response);
+    expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
+    expectPaginationContract(response.data);
+
+    for (const detalId of getRequiredUniqueDetalIds(response.data, `${label}, page ${page}`)) {
+      detailIds.add(detalId);
+    }
+  }
+
+  return [...detailIds].sort((left, right) => left - right);
 };
 
 const expectNullableObjectContract = (data: unknown) => {
@@ -1178,25 +1233,37 @@ export const runProductionTasksAPINew = () => {
 
       const onlineBoardMoByAssemblyTask = await productionTasksAPI.getDetalDeficit(
         request,
-        detalDeficitDto(),
+        onlineBoardMoByAssemblyTaskDto(),
         accessToken,
       );
       expectNoServerError(onlineBoardMoByAssemblyTask);
       expect(successCodes, JSON.stringify(onlineBoardMoByAssemblyTask.data)).toContain(onlineBoardMoByAssemblyTask.status);
       expectPaginationContract(onlineBoardMoByAssemblyTask.data);
 
-      const planAssemblyDeficitRowCount = getRequiredPageRowCount(
+      const planAssemblyDeficitDetalIds = await getRequiredPaginatedUniqueDetalIds(
         planAssemblyDeficit.data,
         'План ПЗ МО с фильтром "Дефицит по ПЗ Сборки"',
+        (page) =>
+          productionTasksAPI.getPlanForProductionTask(
+            request,
+            planDto({ page, workingType: 'metall', deficitFilteringType: 'assembleDeficit' }),
+            accessToken,
+          ),
       );
-      const onlineBoardMoByAssemblyTaskRowCount = getRequiredPageRowCount(
+      const onlineBoardMoByAssemblyTaskDetalIds = await getRequiredPaginatedUniqueDetalIds(
         onlineBoardMoByAssemblyTask.data,
         'Онлайн табло МО по ПЗ сборки',
+        (page) => productionTasksAPI.getDetalDeficit(request, onlineBoardMoByAssemblyTaskDto({ page }), accessToken),
       );
+
+      const uniqueDetalIdsComparisonMessage =
+        `План ПЗ МО "Дефицит по ПЗ Сборки": ${planAssemblyDeficitDetalIds.length} уникальных деталей (${planAssemblyDeficitDetalIds.join(', ')}); ` +
+        `онлайн табло МО по ПЗ сборки: ${onlineBoardMoByAssemblyTaskDetalIds.length} уникальных деталей (${onlineBoardMoByAssemblyTaskDetalIds.join(', ')})`;
+
       expect(
-        planAssemblyDeficitRowCount,
-        `План ПЗ МО "Дефицит по ПЗ Сборки": ${planAssemblyDeficitRowCount}; онлайн табло МО по ПЗ сборки: ${onlineBoardMoByAssemblyTaskRowCount}`,
-      ).toBe(onlineBoardMoByAssemblyTaskRowCount);
+        planAssemblyDeficitDetalIds,
+        uniqueDetalIdsComparisonMessage,
+      ).toEqual(onlineBoardMoByAssemblyTaskDetalIds);
     });
 
     test('возвращает операции ПЗ и данные модалки задач по операции', async ({ request }) => {
@@ -1326,6 +1393,7 @@ export const runProductionTasksAPINew = () => {
       test.skip(!equipmentRows.length, 'No equipment is available for production task date validation.');
 
       const relativeDateCache = new Map<string, string | null>();
+      const operationDetailsCache = new Map<string, ApiRow[]>();
       let checkedPositions = 0;
 
       const getLastOperationRequiredReadyDate = async (position: ApiRow): Promise<string | null> => {
@@ -1350,6 +1418,32 @@ export const runProductionTasksAPINew = () => {
             : null;
         relativeDateCache.set(cacheKey, value);
         return value;
+      };
+
+      const getOperationDetailsRows = async (position: ApiRow, operation: ApiRow): Promise<ApiRow[]> => {
+        const entityType = String(position.operationPosType || 'ass') as 'ass' | 'metall';
+        const productionEntityId = Number(position.productionItemId || position.productionEntityId);
+        const productionTaskId = Number(position.productionTaskId);
+        const cacheKey = `${entityType}:${productionEntityId}:${productionTaskId}:${Number(operation.id)}`;
+
+        if (!operationDetailsCache.has(cacheKey)) {
+          const taskOperations = await productionTasksAPI.getTaskOperations(
+            request,
+            taskOperationsDto(entityType, productionEntityId, Number(operation.id), { productionTaskId }),
+            accessToken,
+          );
+          expectNoServerError(taskOperations);
+          let details: ApiRow[] = [];
+          if (!clientErrorCodes.includes(taskOperations.status)) {
+            expect(successCodes, JSON.stringify(taskOperations.data)).toContain(taskOperations.status);
+            details = Array.isArray(taskOperations.data?.allOperationPositions)
+              ? (taskOperations.data.allOperationPositions as ApiRow[])
+              : [];
+          }
+          operationDetailsCache.set(cacheKey, details);
+        }
+
+        return operationDetailsCache.get(cacheKey) || [];
       };
 
       for (const equipment of equipmentRows) {
@@ -1414,6 +1508,26 @@ export const runProductionTasksAPINew = () => {
 
             const prevOperation = position.prevOperation as ApiRow | null;
             const nextOperation = position.nextOperation as ApiRow | null;
+            const operationDetailsRows = await getOperationDetailsRows(position, operation);
+            const currentProductionOperationDetailsRows = operationDetailsRows
+              .filter((item) => Number(item.productionOperationId) === Number(position.productionOperationPositionId))
+              .sort(
+                (left, right) =>
+                  Number(left.idx ?? 0) - Number(right.idx ?? 0) ||
+                  Number(left.operationPositionId ?? 0) - Number(right.operationPositionId ?? 0),
+              );
+            const currentOperationPositionId = Number(position.operationPostionsId || position.operationPositionId);
+            const currentOperationDetailsIndex = currentProductionOperationDetailsRows.findIndex(
+              (item) => Number(item.operationPositionId) === currentOperationPositionId,
+            );
+            const prevOperationDetails =
+              currentOperationDetailsIndex > 0
+                ? currentProductionOperationDetailsRows[currentOperationDetailsIndex - 1]
+                : undefined;
+            const nextOperationDetails =
+              currentOperationDetailsIndex >= 0
+                ? currentProductionOperationDetailsRows[currentOperationDetailsIndex + 1]
+                : undefined;
             expectOperationCellFields(
               prevOperation,
               Number(operation.idx) > 1 ? Number(operation.idx) - 1 : null,
@@ -1446,19 +1560,18 @@ export const runProductionTasksAPINew = () => {
             }
 
             if (workStartCalcType === 'prevOperationReadinessDate') {
-              if (prevOperation?.calculateNeedsTime) {
+              if (prevOperationDetails?.calculateNeedsTime) {
                 expectSameDate(
                   position.startTime,
-                  prevOperation.calculateNeedsTime,
+                  prevOperationDetails.calculateNeedsTime,
                   `Начало работ равно расчётной дате готовности предыдущей операции техпроцесса: ${context}`,
                 );
               }
             }
 
             if (workStartCalcType === 'nextOperationWorkStart') {
-              const referenceStartTime = nextOperation?.startTime
-                ? nextOperation.startTime
-                : await getLastOperationRequiredReadyDate(position);
+              const referenceStartTime =
+                nextOperationDetails?.startTime || (await getLastOperationRequiredReadyDate(position));
               const expectedStartTime = referenceStartTime
                 ? calculateStartDateLocal(referenceStartTime, duration)
                 : null;
@@ -1469,8 +1582,8 @@ export const runProductionTasksAPINew = () => {
               );
             }
 
-            const expectedPlanReadyTime = nextOperation?.startTime
-              ? nextOperation.startTime
+            const expectedPlanReadyTime = nextOperationDetails?.startTime
+              ? nextOperationDetails.startTime
               : await getLastOperationRequiredReadyDate(position);
             expectSameDate(
               position.planReadyTime,

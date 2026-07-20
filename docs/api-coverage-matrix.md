@@ -1,11 +1,11 @@
 # API Autotest Coverage Matrix
 
-Generated: 2026-07-10T21:30:16.252Z
+Generated: 2026-07-20T06:00:40.853Z
 
-Server routes: 440
+Server routes: 442
 Covered routes: 440
-Uncovered routes: 0
-Coverage: 100.0%
+Uncovered routes: 2
+Coverage: 99.5%
 Detected autotest calls: 634
 
 ## Coverage By Level
@@ -13,9 +13,10 @@ Detected autotest calls: 634
 | Coverage Level | Routes |
 |---|---:|
 | functional | 188 |
-| negative | 123 |
-| contract | 118 |
+| negative | 124 |
+| contract | 117 |
 | maintenance | 11 |
+| missing | 2 |
 
 ## Coverage By Module
 
@@ -50,6 +51,7 @@ Detected autotest calls: 634
 | product | 17 | 17 | 100.0% |
 | production-task | 33 | 33 | 100.0% |
 | provider | 8 | 8 | 100.0% |
+| queues | 2 | 0 | 0.0% |
 | rack | 8 | 8 | 100.0% |
 | roles | 8 | 8 | 100.0% |
 | sclad | 9 | 9 | 100.0% |
@@ -111,7 +113,7 @@ Detected autotest calls: 634
 | covered | negative | DELETE | `api/stock-order/items/:param` | `src/modules/stock-order/stock-order.controller.ts#bannedStockOrderItem` | api/stock-order/items/:param [negative] (testcases/API/APIStockOrder.spec.ts via pages/API/APIStockOrder.ts#banItem) |
 | covered | negative | DELETE | `api/users/ban` | `src/modules/users/users.controller.ts#banUser` | api/users/ban [negative] (testcases/API/APIUsers.spec.ts via pages/API/APIUsers.ts#banUser) |
 | covered | negative | DELETE | `api/users/files/:param/:param` | `src/modules/users/users.controller.ts#removeFileToUser` | api/users/files/:param/:param [negative] (testcases/API/APIUsers.spec.ts via pages/API/APIUsers.ts#detachFile) |
-| covered | functional | DELETE | `api/waybill/:param` | `src/modules/waybill/waybill.controller.ts#deleteWaybill` | api/waybill/:param [negative] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#deleteWaybill)<br>api/waybill/:param [functional] (testcases/API/APIWaybillProviderFlow.spec.ts via pages/API/APIWaybill.ts#deleteWaybill) |
+| covered | functional | DELETE | `api/waybill/:param` | `src/modules/waybill/waybill.controller.ts#deleteWaybill` | api/waybill/:param [contract] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#deleteWaybill)<br>api/waybill/:param [functional] (testcases/API/APIWaybillProviderFlow.spec.ts via pages/API/APIWaybill.ts#deleteWaybill) |
 | covered | negative | GET | `api/actions-chain/childs/:param` | `src/modules/actions-chain/actions-chain.controller.ts#getAllActionChilds` | api/actions-chain/childs/:param [negative] (testcases/API/APIActionsChain.spec.ts via pages/API/APIActionsChain.ts#getChilds)<br>api/actions-chain/childs/:param [negative] (testcases/API/APIActionsChain.spec.ts via pages/API/APIActionsChain.ts#getChildsRaw) |
 | covered | negative | GET | `api/assemble/:param` | `src/modules/assemble/assemble.controller.ts#getAssembleById` | api/assemble/:param [negative] (testcases/API/APIAssemble.spec.ts via pages/API/APIAssemble.ts#getById)<br>api/assemble/complects [contract] (testcases/API/APIAssemble.spec.ts via pages/API/APIAssemble.ts#getActualAssembleOrders) |
 | covered | contract | GET | `api/assemble/byizd/:param/:param` | `src/modules/assemble/assemble.controller.ts#getAssembleByIzdId` | api/assemble/byizd/:param/:param [contract] (testcases/API/APIAssemble.spec.ts via pages/API/APIAssemble.ts#getByIzd) |
@@ -225,6 +227,7 @@ Detected autotest calls: 634
 | covered | functional | GET | `api/provider/:param` | `src/modules/provider/provider.controller.ts#getOneProvider` | api/provider/:param [functional] (testcases/API/APIProvider.spec.ts via pages/API/APIProvider.ts#getOneProvider) |
 | covered | functional | GET | `api/provider/ban/:param` | `src/modules/provider/provider.controller.ts#banProviders` | api/provider/ban/:param [functional] (testcases/API/APIProvider.spec.ts via pages/API/APIProvider.ts#banProvider) |
 | covered | functional | GET | `api/provider/files/:param/:param` | `src/modules/provider/provider.controller.ts#attachFileToProvider` | api/provider/files/:param/:param [functional] (testcases/API/APIProvider.spec.ts via pages/API/APIProvider.ts#attachFileToProvider) |
+| missing | missing | GET | `api/queues/clean-completed` | `src/modules/bull-queue/bull-queue-dashboard.controller.ts#Header` | - |
 | covered | negative | GET | `api/rack/:param` | `src/modules/rack/rack.controller.ts#getOneRack` | api/rack/:param [negative] (testcases/API/APIRack.spec.ts via pages/API/APIRack.ts#getOneRack) |
 | covered | functional | GET | `api/roles` | `src/modules/roles/roles.controller.ts#getAllUser` | api/roles [functional] (testcases/API/APINotification.spec.ts via pages/API/APIRoles.ts#getAllRoles)<br>api/roles [functional] (testcases/API/APIRoles.spec.ts via pages/API/APIRoles.ts#getAllRoles) |
 | covered | functional | GET | `api/roles/:param` | `src/modules/roles/roles.controller.ts#getRole` | api/roles/:param [functional] (testcases/API/APIRoles.spec.ts via pages/API/APIRoles.ts#getRoleByName) |
@@ -265,7 +268,7 @@ Detected autotest calls: 634
 | covered | negative | GET | `api/users/role/:param` | `src/modules/users/users.controller.ts#getUserWithRole` | api/users/role/:param [negative] (testcases/API/APINegativeCoverage.spec.ts via direct request)<br>api/users/role/:param [negative] (testcases/API/APIUsers.spec.ts via pages/API/APIUsers.ts#getUsersByRoleId) |
 | covered | functional | GET | `api/waybill/:param` | `src/modules/waybill/waybill.controller.ts#ApiOperation` | api/waybill/:param [functional] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#getWaybillById)<br>api/waybill/:param [functional] (testcases/API/APIWaybillProviderFlow.spec.ts via pages/API/APIWaybill.ts#getWaybillById)<br>api/waybill/last [contract] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#getLastWaybill) |
 | covered | functional | GET | `api/waybill/deliveriedcoming` | `src/modules/waybill/waybill.controller.ts#ApiOperation` | api/waybill/:param [functional] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#getWaybillById)<br>api/waybill/:param [functional] (testcases/API/APIWaybillProviderFlow.spec.ts via pages/API/APIWaybill.ts#getWaybillById) |
-| covered | contract | GET | `api/waybill/getByStockOrder/:param/:param` | `src/modules/waybill/waybill.controller.ts#getByStockOrder` | api/waybill/getByStockOrder/:param/:param [contract] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#getByStockOrder) |
+| covered | negative | GET | `api/waybill/getByStockOrder/:param/:param` | `src/modules/waybill/waybill.controller.ts#getByStockOrder` | api/waybill/getByStockOrder/:param/:param [negative] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#getByStockOrder) |
 | covered | functional | GET | `api/waybill/last` | `src/modules/waybill/waybill.controller.ts#ApiOperation` | api/waybill/:param [functional] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#getWaybillById)<br>api/waybill/:param [functional] (testcases/API/APIWaybillProviderFlow.spec.ts via pages/API/APIWaybill.ts#getWaybillById)<br>api/waybill/last [contract] (testcases/API/APIWaybill.spec.ts via pages/API/APIWaybill.ts#getLastWaybill) |
 | covered | negative | POST | `api/actions/get-by-params` | `src/modules/actions/actions.controller.ts#getActionByParams` | api/actions/get-by-params [negative] (testcases/API/APIActions.spec.ts via pages/API/APIActions.ts#getByParams)<br>api/actions/get-by-params [contract] (testcases/API/APIActionsChain.spec.ts via pages/API/APIActions.ts#getByParams)<br>api/actions/get-by-params [negative] (testcases/API/APINegativeCoverage.spec.ts via direct request) |
 | covered | functional | POST | `api/assemble` | `src/modules/assemble/assemble.controller.ts#createAssemble` | api/assemble [functional] (testcases/API/APIAssemble.spec.ts via pages/API/APIAssemble.ts#createAssemble) |
@@ -425,6 +428,7 @@ Detected autotest calls: 634
 | covered | functional | POST | `api/provider/archive` | `src/modules/provider/provider.controller.ts#getAllArchive` | api/provider/archive [functional] (testcases/API/APIProvider.spec.ts via pages/API/APIProvider.ts#getArchive) |
 | covered | functional | POST | `api/provider/name/check` | `src/modules/provider/provider.controller.ts#checkNameExisting` | api/provider/name/check [functional] (testcases/API/APIProvider.spec.ts via pages/API/APIProvider.ts#checkNameExisting) |
 | covered | functional | POST | `api/provider/pagination` | `src/modules/provider/provider.controller.ts#getBuyersPagination` | api/provider/pagination [functional] (testcases/API/APIProvider.spec.ts via pages/API/APIProvider.ts#getProvidersPagination) |
+| missing | missing | POST | `api/queues/clean-completed` | `src/modules/bull-queue/bull-queue-dashboard.controller.ts#Header` | - |
 | covered | negative | POST | `api/rack` | `src/modules/rack/rack.controller.ts#createRack` | api/rack [negative] (testcases/API/APIRack.spec.ts via pages/API/APIRack.ts#createRack) |
 | covered | contract | POST | `api/rack/pagination` | `src/modules/rack/rack.controller.ts#getAllRacks` | api/rack/pagination [contract] (testcases/API/APIRack.spec.ts via pages/API/APIRack.ts#getAllRacks) |
 | covered | functional | POST | `api/roles` | `src/modules/roles/roles.controller.ts#create` | api/roles [functional] (testcases/API/APIRoles.spec.ts via pages/API/APIRoles.ts#createRole) |

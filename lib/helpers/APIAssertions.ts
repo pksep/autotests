@@ -5,6 +5,8 @@ export type ApiResult = {
   status: number;
   data?: any;
   headers?: Record<string, string>;
+  method?: string;
+  url?: string;
 };
 
 export const successCodes = API_CONST.STATUS_CODE_VALIDATION.SUCCESS_CODES;
@@ -15,8 +17,50 @@ export const missingResourceCodes = [400, 404, 410, 422];
 export const authErrorCodes = [401, 403];
 export const notExposedRouteCodes = [404, 405];
 
+const redactSensitiveValue = (key: string, value: unknown) => {
+  if (/password|token|cookie|authorization|secret/i.test(key)) return '<redacted>';
+  return value;
+};
+
+const formatBody = (data: unknown, maxLength = 1200) => {
+  let serialized: string;
+
+  try {
+    serialized = typeof data === 'string'
+      ? data
+      : JSON.stringify(data, (key, value) => redactSensitiveValue(key, value));
+  } catch {
+    serialized = String(data);
+  }
+
+  serialized = serialized
+    .replace(new RegExp(API_CONST.API_TEST_PASSWORD.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '<redacted>')
+    .replace(/[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '<jwt>');
+
+  return serialized.length > maxLength ? `${serialized.slice(0, maxLength)}...<truncated>` : serialized;
+};
+
+export const formatApiExpectation = (
+  response: ApiResult,
+  expected: string,
+  actual?: string,
+  context?: string,
+) => [
+  context ? `Context: ${context}` : undefined,
+  response.method ? `Method: ${response.method}` : undefined,
+  response.url ? `Endpoint: ${response.url}` : undefined,
+  `Expected: ${expected}`,
+  `Actual: ${actual ?? `HTTP ${response.status}; body: ${formatBody(response.data)}`}`,
+].filter(Boolean).join('\n');
+
 export const expectNoServerError = (response: ApiResult) => {
-  expect(serverErrorCodes, JSON.stringify(response.data)).not.toContain(response.status);
+  expect(
+    serverErrorCodes.includes(response.status),
+    formatApiExpectation(
+      response,
+      `HTTP status not in server error codes [${serverErrorCodes.join(', ')}]`,
+    ),
+  ).toBe(false);
 };
 
 export const expectEndpointReached = (response: ApiResult | Error) => {
@@ -38,18 +82,27 @@ export const captureApiResult = async (action: () => Promise<ApiResult>): Promis
 };
 
 export const expectNotSuccessful = (response: ApiResult) => {
-  expect(successCodes, JSON.stringify(response.data)).not.toContain(response.status);
+  expect(
+    successCodes.includes(response.status),
+    formatApiExpectation(response, `HTTP status not in success codes [${successCodes.join(', ')}]`),
+  ).toBe(false);
   expectNoServerError(response);
 };
 
 export const expectStatusIn = (response: ApiResult, allowedCodes: number[], context?: string) => {
   expectNoServerError(response);
-  expect(allowedCodes, context ?? JSON.stringify(response.data)).toContain(response.status);
+  expect(
+    allowedCodes.includes(response.status),
+    formatApiExpectation(response, `HTTP status in [${allowedCodes.join(', ')}]`, undefined, context),
+  ).toBe(true);
 };
 
 export const expectClientError = (response: ApiResult, allowedCodes = clientErrorCodes, context?: string) => {
   expectNotSuccessful(response);
-  expect(allowedCodes, context ?? JSON.stringify(response.data)).toContain(response.status);
+  expect(
+    allowedCodes.includes(response.status),
+    formatApiExpectation(response, `HTTP status in client error codes [${allowedCodes.join(', ')}]`, undefined, context),
+  ).toBe(true);
 };
 
 export const expectValidationError = (response: ApiResult, context?: string) => {

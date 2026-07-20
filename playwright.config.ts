@@ -11,7 +11,7 @@ const isParallel = process.env.TEST_SUITE === 'parallel' || ENV.TEST_SUITE === '
 const selectedSuiteKey = process.env.TEST_SUITE || ENV.TEST_SUITE;
 const isApiSuite = Object.keys(apiSuites).includes(selectedSuiteKey);
 
-const workers = 2;
+const workers = 1;
 
 export default defineConfig({
   testDir: process.env.TEST_DIR || ENV.TEST_DIR,
